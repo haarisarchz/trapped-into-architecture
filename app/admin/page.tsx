@@ -1,250 +1,335 @@
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function AdminDashboard() {
 
+  const router = useRouter();
+
+  const [jobs, setJobs] = useState<any[]>([]);
+
+  const [activeJobs, setActiveJobs] =
+    useState(0);
+
+  const [expiredJobs, setExpiredJobs] =
+    useState(0);
+
+  const [totalJobs, setTotalJobs] =
+    useState(0);
+
+  useEffect(() => {
+
+    fetchDashboardData();
+
+  }, []);
+
+  const fetchDashboardData = async () => {
+
+    const { data, error } =
+      await supabase
+        .from("jobs")
+        .select("*")
+        .order("posted_date", {
+          ascending: false,
+        });
+
+    if (error) {
+
+      console.log(error);
+
+      return;
+
+    }
+
+    if (data) {
+
+      setJobs(data);
+
+      setTotalJobs(data.length);
+
+      const today =
+        new Date().toISOString().split("T")[0];
+
+      const active =
+        data.filter(
+          (job) =>
+            !job.post_expiry_date ||
+            job.post_expiry_date >= today
+        );
+
+      const expired =
+        data.filter(
+          (job) =>
+            job.post_expiry_date &&
+            job.post_expiry_date < today
+        );
+
+      setActiveJobs(active.length);
+
+      setExpiredJobs(expired.length);
+
+    }
+
+  };
+
   return (
 
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-100 flex">
 
-      <Navbar />
+      {/* SIDEBAR */}
 
-      <section className="w-full px-6 lg:px-12 py-10">
+      <aside className="w-72 bg-black text-white min-h-screen p-6 flex flex-col justify-between">
 
-        {/* PAGE TITLE */}
+        <div>
 
-        <div className="mb-10">
+          {/* WEBSITE NAME */}
 
-          <h1 className="text-4xl font-bold">
-            Admin Dashboard
-          </h1>
+          <div className="mb-12">
 
-          <p className="text-gray-600 mt-2">
-            Manage jobs, applications and platform activity.
-          </p>
+            <h1 className="text-3xl font-bold">
+              Crafted Architecture
+            </h1>
+
+            <p className="text-gray-400 mt-1">
+              Admin Panel
+            </p>
+
+          </div>
+
+          {/* MENU */}
+
+          <div className="space-y-3">
+
+            <button
+              onClick={() =>
+                router.push("/admin")
+              }
+              className="w-full text-left px-5 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 transition"
+            >
+              Dashboard
+            </button>
+
+            <button
+              onClick={() =>
+                router.push("/admin/jobs")
+              }
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+            >
+              Manage Jobs
+            </button>
+
+            <button
+              onClick={() =>
+                router.push("/admin/add-job")
+              }
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+            >
+              Add New Job
+            </button>
+
+            <button
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+            >
+              Analytics
+            </button>
+
+            <button
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+            >
+              Settings
+            </button>
+
+          </div>
 
         </div>
 
-        {/* DASHBOARD LAYOUT */}
+        {/* WEBSITE BUTTON */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
+        <button
+          onClick={() =>
+            router.push("/")
+          }
+          className="border border-gray-700 rounded-2xl px-5 py-4 hover:bg-gray-800 transition"
+        >
+          View Website
+        </button>
 
-          {/* SIDEBAR */}
+      </aside>
 
-          <aside className="bg-white rounded-3xl border border-gray-200 shadow-md p-6 h-fit">
+      {/* MAIN */}
 
-            <h2 className="text-2xl font-bold mb-6">
-              Admin Panel
+      <section className="flex-1 p-10">
+
+        {/* HEADER */}
+
+        <div className="flex items-center justify-between mb-10">
+
+          <div>
+
+            <h1 className="text-4xl font-bold">
+              Dashboard
+            </h1>
+
+            <p className="text-gray-500 mt-2">
+              Welcome back
+            </p>
+
+          </div>
+
+          <button
+            onClick={() =>
+              router.push("/admin/add-job")
+            }
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-2xl font-semibold transition"
+          >
+            + Add New Job
+          </button>
+
+        </div>
+
+        {/* STATS */}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+
+          {/* ACTIVE JOBS */}
+
+          <div className="bg-white rounded-3xl p-6 shadow">
+
+            <p className="text-gray-500">
+              Active Jobs
+            </p>
+
+            <h2 className="text-4xl font-bold mt-3">
+              {activeJobs}
             </h2>
 
-            <div className="space-y-3">
+          </div>
 
-              <button className="w-full text-left px-4 py-3 rounded-2xl bg-black text-white font-medium">
-                Dashboard
-              </button>
+          {/* EXPIRED JOBS */}
 
-              <button className="w-full text-left px-4 py-3 rounded-2xl hover:bg-gray-100 transition">
-                Jobs
-              </button>
+          <div className="bg-white rounded-3xl p-6 shadow">
 
-              <button className="w-full text-left px-4 py-3 rounded-2xl hover:bg-gray-100 transition">
-                Add Job
-              </button>
+            <p className="text-gray-500">
+              Expired Jobs
+            </p>
 
-              <button className="w-full text-left px-4 py-3 rounded-2xl hover:bg-gray-100 transition">
-                Applications
-              </button>
+            <h2 className="text-4xl font-bold mt-3">
+              {expiredJobs}
+            </h2>
 
-              <button className="w-full text-left px-4 py-3 rounded-2xl hover:bg-gray-100 transition">
-                Settings
-              </button>
+          </div>
 
-            </div>
+          {/* TOTAL JOBS */}
 
-          </aside>
+          <div className="bg-white rounded-3xl p-6 shadow">
 
-          {/* MAIN CONTENT */}
+            <p className="text-gray-500">
+              Total Jobs
+            </p>
 
-          <div className="space-y-8">
+            <h2 className="text-4xl font-bold mt-3">
+              {totalJobs}
+            </h2>
 
-            {/* QUICK ACTIONS */}
+          </div>
 
-<div className="bg-white rounded-3xl p-8 shadow-md border">
+        </div>
 
-  <h2 className="text-2xl font-bold mb-6">
-    Quick Actions
-  </h2>
+       ```tsx
+{/* RECENT JOBS */}
 
-  <div className="flex flex-wrap gap-4">
+<div className="bg-white rounded-3xl p-8 shadow">
 
-    <button className="bg-black text-white px-6 py-3 rounded-2xl font-semibold hover:bg-gray-800 transition">
-
-      Add Job
-
-    </button>
-
-    <button className="border px-6 py-3 rounded-2xl font-semibold hover:bg-gray-100 transition">
-
-      Manage Jobs
-
-    </button>
-
-    <button className="border px-6 py-3 rounded-2xl font-semibold hover:bg-gray-100 transition">
-
-      View Website
-
-    </button>
-
-    <button className="border px-6 py-3 rounded-2xl font-semibold hover:bg-gray-100 transition">
-
-      Analytics
-
-    </button>
-
-  </div>
-
-</div>
-
-            {/* RECENT JOBS */}
-
-<div className="bg-white rounded-3xl p-8 shadow-md border">
-
-  <div className="flex items-center justify-between mb-8">
+  <div className="flex items-center justify-between mb-6">
 
     <h2 className="text-2xl font-bold">
       Recent Jobs
     </h2>
 
-    <button className="text-gray-500 hover:text-black transition">
-
-      View All
-
+    <button
+      onClick={() =>
+        router.push("/admin/jobs")
+      }
+      className="text-purple-600 font-medium"
+    >
+      View all jobs →
     </button>
 
   </div>
 
-  <div className="overflow-x-auto">
+  {/* TABLE HEADER */}
 
-    <table className="w-full">
+  <div className="hidden md:grid grid-cols-4 gap-4 border-b pb-4 mb-4 text-gray-500 font-medium">
 
-      <thead>
+    <div>Position</div>
 
-        <tr className="border-b">
+    <div>Location</div>
 
-          <th className="text-left py-4">
-            Position
-          </th>
+    <div>Firm</div>
 
-          <th className="text-left py-4">
-            Organization
-          </th>
+    <div>Posted Date</div>
 
-          <th className="text-left py-4">
-            City
-          </th>
+  </div>
 
-          <th className="text-left py-4">
-            Status
-          </th>
+  {/* JOB LIST */}
 
-        </tr>
+  <div className="space-y-3">
 
-      </thead>
+    {jobs
+      .slice(0, 5)
+      .map((job) => (
 
-      <tbody>
+        <div
+          key={job.id}
+          className="grid grid-cols-1 md:grid-cols-4 gap-4 border rounded-2xl px-5 py-4 items-center hover:bg-gray-50 transition"
+        >
 
-        <tr className="border-b">
+          {/* POSITION */}
 
-          <td className="py-5 font-semibold">
-            Junior Architect
-          </td>
+          <div>
 
-          <td className="py-5">
-            ABC Architects
-          </td>
+            <h3 className="font-semibold text-lg">
+              {job.position}
+            </h3>
 
-          <td className="py-5">
-            Chennai
-          </td>
+          </div>
 
-          <td className="py-5">
+          {/* LOCATION */}
 
-            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+          <div className="text-gray-600">
 
-              Active
+            {job.city}
 
-            </span>
+          </div>
 
-          </td>
+          {/* FIRM */}
 
-        </tr>
+          <div className="text-gray-600">
 
-        <tr className="border-b">
+            {job.firm_name}
 
-          <td className="py-5 font-semibold">
-            Interior Designer
-          </td>
+          </div>
 
-          <td className="py-5">
-            Studio Edge
-          </td>
+          {/* DATE */}
 
-          <td className="py-5">
-            Bangalore
-          </td>
+          <div className="text-gray-500 text-sm">
 
-          <td className="py-5">
+            {job.posted_date}
 
-            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+          </div>
 
-              Active
+        </div>
 
-            </span>
-
-          </td>
-
-        </tr>
-
-        <tr>
-
-          <td className="py-5 font-semibold">
-            Landscape Architect
-          </td>
-
-          <td className="py-5">
-            Green Studio
-          </td>
-
-          <td className="py-5">
-            Hyderabad
-          </td>
-
-          <td className="py-5">
-
-            <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm">
-
-              Expired
-
-            </span>
-
-          </td>
-
-        </tr>
-
-      </tbody>
-
-    </table>
+      ))}
 
   </div>
 
 </div>
-
-</div>
-</div>
+```
 
       </section>
-
-      <Footer />
 
     </main>
 

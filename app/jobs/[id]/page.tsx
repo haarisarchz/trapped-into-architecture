@@ -153,9 +153,7 @@ if (!job || error) {
 
             <div className="flex flex-wrap gap-3">
 
-  {job.skills_required
-    ?.split(",")
-    .map((skill: string) => (
+  {job.skills_required?.map((skill: string) => (
 
       <div
         key={skill.trim()}
@@ -200,17 +198,21 @@ if (!job || error) {
 
             </div>
 
-            <div>
+            {job.last_date_to_apply && (
 
-              <p className="text-sm text-gray-500">
-                Last Date To Apply
-              </p>
+  <div>
 
-              <p className="font-semibold mt-1">
-                {job.last_date_to_apply}
-              </p>
+    <p className="text-xs text-gray-500">
+      Last Date To Apply
+    </p>
 
-            </div>
+    <h3 className="text-lg font-semibold mt-1">
+      {job.last_date_to_apply}
+    </h3>
+
+  </div>
+
+)}
 
             <div>
 
@@ -228,13 +230,28 @@ if (!job || error) {
 
           {/* APPLY BUTTON */}
 
-          <a
-            href={job.applyLink}
-            target="_blank"
-            className="inline-block bg-black text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-800 transition"
-          >
-            Apply Now
-          </a>
+{job.post_expiry_date &&
+new Date(job.post_expiry_date) <
+  new Date() ? (
+
+  <button
+    disabled
+    className="inline-block bg-gray-300 text-gray-600 px-8 py-4 rounded-2xl text-lg font-semibold cursor-not-allowed"
+  >
+    Post Expired
+  </button>
+
+) : (
+
+  <a
+    href={job.apply_link}
+    target="_blank"
+    className="inline-block bg-black text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-800 transition"
+  >
+    Apply Now
+  </a>
+
+)}
 
         </div> {/* RIGHT CONTENT */}
 

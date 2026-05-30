@@ -32,6 +32,12 @@ export default function JobsPage() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
+ const [excludeExpired, setExcludeExpired] =
+  useState(false);
+
+  const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
+
+const [selectedSalary, setSelectedSalary] = useState<string[]>([]);
 
  const uniqueStates = [
   ...new Set(
@@ -80,26 +86,26 @@ const uniqueCities = [
     city: job.city,
     state: job.state,
     position: job.position,
-    experience: job.experience,
+    experience: Array.isArray(job.experience)
+  ? job.experience
+  : [],
     salary: job.salary,
 
-    qualifications:
-      typeof job.qualifications === "string"
-        ? job.qualifications.split(",")
-        : [],
+    qualifications: Array.isArray(job.qualifications)
+      ? job.qualifications
+      : [],
 
-    skillsRequired:
-      typeof job.skills_required === "string"
-        ? job.skills_required.split(",")
-        : [],
+    skills_required: Array.isArray(job.skills_required)
+      ? job.skills_required
+      : [],
 
     postedDate: job.posted_date,
     lastDateToApply: job.last_date_to_apply,
     postExpiryDate: job.post_expiry_date,
     jobDescription: job.job_description,
     applicationType: job.application_type,
-    applyLink: job.apply_link,
-    applicationEmail: job.application_email,
+    apply_link: job.apply_link,
+    application_email: job.application_email,
     source: job.source,
     image: job.image,
   }))
@@ -143,6 +149,8 @@ const uniqueCities = [
         setSelectedPositions([]);
         setSelectedQualifications([]);
         setSelectedSkills([]);
+        setSelectedExperience([]);
+setSelectedSalary([]);
       }}
       className="text-sm text-orange-500 font-medium"
     >
@@ -263,224 +271,279 @@ const uniqueCities = [
 
     {/* EXPERIENCE */}
 
-    <div>
+<div>
 
-      <h3 className="font-semibold mb-3">
-        Experience
-      </h3>
+  <h3 className="font-semibold mb-3">
+    Experience
+  </h3>
 
-      <input
-        type="range"
-        min="0"
-        max="20"
-        className="w-full"
-      />
+  <div className="space-y-2 text-sm">
 
-      <p className="text-sm text-gray-500 mt-2">
-        0 - 20+ Years
-      </p>
+    {[
+      ...new Set(
+        jobs.flatMap((job) =>
 
-    </div>
+          Array.isArray(job.experience)
+            ? job.experience.map((exp: string) => exp.trim())
+            : []
 
-    {/* SALARY */}
+        )
+      ),
+    ]
+      .filter(Boolean)
+      .map((experience: string, index) => (
 
-    <div>
+        <label
+          key={`${experience}-${index}`}
+          className="flex items-center gap-2"
+        >
 
-      <h3 className="font-semibold mb-3">
-        Salary Range
-      </h3>
+          <input
+            type="checkbox"
 
-      <input
-        type="range"
-        min="0"
-        max="100"
-        className="w-full"
-      />
+            checked={selectedExperience.includes(experience)}
 
-      <p className="text-sm text-gray-500 mt-2">
-        ₹0 - ₹50,00,000+
-      </p>
+            onChange={(e) => {
 
-    </div>
+              if (e.target.checked) {
 
-    {/* POSITION */}
+                setSelectedExperience([
+                  ...selectedExperience,
+                  experience
+                ]);
 
-    <div>
+              } else {
 
-      <h3 className="font-semibold mb-3">
-        Position
-      </h3>
+                setSelectedExperience(
+                  selectedExperience.filter(
+                    (exp) => exp !== experience
+                  )
+                );
 
-      <div className="space-y-2 text-sm">
+              }
 
-        {[
-          ...new Set(jobs.map((job) => job.position)),
-        ].map((position) => (
+            }}
+          />
 
-          <label
-            key={position}
-            className="flex items-center gap-2"
-          >
+          {experience}
 
-            <input
-              type="checkbox"
+        </label>
 
-              checked={selectedPositions.includes(position)}
-
-              onChange={(e) => {
-
-                if (e.target.checked) {
-
-                  setSelectedPositions([
-                    ...selectedPositions,
-                    position
-                  ]);
-
-                } else {
-
-                  setSelectedPositions(
-                    selectedPositions.filter(
-                      (p) => p !== position
-                    )
-                  );
-
-                }
-
-              }}
-            />
-
-            {position}
-
-          </label>
-
-        ))}
-
-      </div>
-
-    </div>
-
-    {/* QUALIFICATION */}
-
-    <div>
-
-      <h3 className="font-semibold mb-3">
-        Qualification
-      </h3>
-
-      <div className="space-y-2 text-sm">
-
-        {[
-          ...new Set(
-            jobs.flatMap(
-              (job) => job.qualifications
-            )
-          ),
-        ].map((qualification) => (
-
-          <label
-            key={qualification}
-            className="flex items-center gap-2"
-          >
-
-            <input
-              type="checkbox"
-
-              checked={selectedQualifications.includes(qualification)}
-
-              onChange={(e) => {
-
-                if (e.target.checked) {
-
-                  setSelectedQualifications([
-                    ...selectedQualifications,
-                    qualification
-                  ]);
-
-                } else {
-
-                  setSelectedQualifications(
-                    selectedQualifications.filter(
-                      (q) => q !== qualification
-                    )
-                  );
-
-                }
-
-              }}
-            />
-
-            {qualification}
-
-          </label>
-
-        ))}
-
-      </div>
-
-    </div>
-
-    {/* SKILLS */}
-
-    <div>
-
-      <h3 className="font-semibold mb-3">
-        Skills Required
-      </h3>
-
-      <div className="space-y-2 text-sm">
-
-        {[
-  ...new Set(
-    jobs.flatMap(
-      (job) => job.skillsRequired || []
-    )
-  ),
-].map((skill, index) => (
-
-  <label
-    key={`${skill}-${index}`}
-    className="flex items-center gap-2"
-  >
-
-    <input
-      type="checkbox"
-      checked={selectedSkills.includes(skill)}
-
-      onChange={(e) => {
-
-        if (e.target.checked) {
-
-          setSelectedSkills([
-            ...selectedSkills,
-            skill
-          ]);
-
-        } else {
-
-          setSelectedSkills(
-            selectedSkills.filter(
-              (s) => s !== skill
-            )
-          );
-
-        }
-
-      }}
-    />
-
-    {skill}
-
-  </label>
-
-))}
-
-      </div>
-
-    </div>
+      ))}
 
   </div>
 
 </div>
+
+    {/* SALARY */}
+
+<div>
+
+  <h3 className="font-semibold mb-3">
+    Salary Range
+  </h3>
+
+  <div className="space-y-2 text-sm">
+
+    {[
+      ...new Set(
+        jobs.map((job) => job.salary)
+      ),
+    ].map((salary) => (
+
+      <label
+        key={salary}
+        className="flex items-center gap-2"
+      >
+
+        <input
+          type="checkbox"
+
+          checked={selectedSalary.includes(salary)}
+
+          onChange={(e) => {
+
+            if (e.target.checked) {
+
+              setSelectedSalary([
+                ...selectedSalary,
+                salary
+              ]);
+
+            } else {
+
+              setSelectedSalary(
+                selectedSalary.filter(
+                  (sal) => sal !== salary
+                )
+              );
+
+            }
+
+          }}
+        />
+
+        {salary}
+
+      </label>
+
+    ))}
+
+  </div>
+
+</div>
+
+    {/* QUALIFICATION */}
+
+<div>
+
+  <h3 className="font-semibold mb-3">
+    Qualification
+  </h3>
+
+  <div className="space-y-2 text-sm">
+
+    {[
+      ...new Set(
+        jobs.flatMap((job) =>
+
+          Array.isArray(job.qualifications)
+            ? job.qualifications.map((q: string) => q.trim())
+            : []
+
+        )
+      ),
+    ]
+      .filter(Boolean)
+      .map((qualification, index) => (
+
+        <label
+          key={`${qualification}-${index}`}
+          className="flex items-center gap-2"
+        >
+
+          <input
+            type="checkbox"
+
+            checked={selectedQualifications.includes(qualification)}
+
+            onChange={(e) => {
+
+              if (e.target.checked) {
+
+                setSelectedQualifications([
+                  ...selectedQualifications,
+                  qualification
+                ]);
+
+              } else {
+
+                setSelectedQualifications(
+                  selectedQualifications.filter(
+                    (q) => q !== qualification
+                  )
+                );
+
+              }
+
+            }}
+          />
+
+          {qualification}
+
+        </label>
+
+      ))}
+
+  </div>
+
+</div>
+
+    {/* SKILLS */}
+
+<div>
+
+  <h3 className="font-semibold mb-3">
+    Skills Required
+  </h3>
+
+  <div className="space-y-2 text-sm">
+
+    {[
+      ...new Set(
+        jobs.flatMap((job) =>
+
+          Array.isArray(job.skills_required)
+            ? job.skills_required.map((skill: string) => skill.trim())
+            : []
+
+        )
+      ),
+    ]
+      .filter(Boolean)
+      .map((skill: string, index) => (
+
+        <label
+          key={`${skill}-${index}`}
+          className="flex items-center gap-2"
+        >
+
+          <input
+            type="checkbox"
+
+            checked={selectedSkills.includes(skill)}
+
+            onChange={(e) => {
+
+              if (e.target.checked) {
+
+                setSelectedSkills([
+                  ...selectedSkills,
+                  skill
+                ]);
+
+              } else {
+
+                setSelectedSkills(
+                  selectedSkills.filter(
+                    (s) => s !== skill
+                  )
+                );
+
+              }
+
+            }}
+          />
+
+          {skill}
+
+        </label>
+
+      ))}
+
+  </div>
+
+</div>
+
+<div className="mt-6 flex items-center gap-3">
+
+  <h3 className="font-semibold">
+    Exclude Expired Jobs
+  </h3>
+
+  <input
+    type="checkbox"
+    checked={excludeExpired}
+    onChange={() =>
+      setExcludeExpired(!excludeExpired)
+    }
+  />
+
+</div>
+
+    </div>
+
+  </div>
 
 
 {/* RIGHT SIDE */}
@@ -524,15 +587,15 @@ const uniqueCities = [
   </button>
 
   <button
-    onClick={() => setViewMode("dense")}
-    className={`px-4 py-3 ${
-      viewMode === "dense"
-        ? "bg-black text-white"
-        : "bg-white text-black"
-    }`}
-  >
-    <List size={18} />
-  </button>
+  onClick={() => setViewMode("dense")}
+  className={`px-4 py-3 transition ${
+    viewMode === "dense"
+      ? "bg-black text-white"
+      : "bg-white text-black hover:bg-gray-100"
+  }`}
+>
+  <List size={18} />
+</button>
 
 </div>
 
@@ -750,7 +813,10 @@ const uniqueCities = [
       : viewMode === "balanced"
       ? "grid grid-cols-1 xl:grid-cols-2 gap-5"
 
-      : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
+      : viewMode === "dense"
+      ? "grid grid-cols-1 md:grid-cols-2 gap-3"
+
+      : ""
   }
 >
  {jobs
@@ -782,16 +848,29 @@ const uniqueCities = [
     const skillsMatch =
       selectedSkills.length === 0 ||
 
-      job.skills_required?.some(
+      job.skillsRequired?.some(
         (skill: string) =>
 
           selectedSkills.includes(skill)
       );
 
+    const experienceMatch =
+      selectedExperience.length === 0 ||
+
+      job.experience?.some(
+        (exp: string) =>
+
+          selectedExperience.includes(exp)
+      );
+
+    const salaryMatch =
+      selectedSalary.length === 0 ||
+      selectedSalary.includes(job.salary);
+
     const searchMatch =
       searchQuery === "" ||
 
-      job.firm_name
+      job.firmName
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
 
@@ -803,7 +882,7 @@ const uniqueCities = [
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
 
-      job.skills_required?.some(
+      job.skillsRequired?.some(
         (skill: string) =>
 
           skill
@@ -813,17 +892,27 @@ const uniqueCities = [
             )
       );
 
+    const expiryMatch =
+      !excludeExpired ||
+
+      !job.postExpiryDate ||
+
+      new Date(job.postExpiryDate) >=
+        new Date();
+
     return (
       stateMatch &&
       cityMatch &&
       positionMatch &&
       qualificationMatch &&
       skillsMatch &&
-      searchMatch
+      experienceMatch &&
+      salaryMatch &&
+      searchMatch &&
+      expiryMatch
     );
 
   })
-
 
   .sort((a, b) => {
 
@@ -878,8 +967,8 @@ const uniqueCities = [
       post_expiry_date={job.postExpiryDate}
       job_description={job.jobDescription}
       application_type={job.applicationType}
-      apply_link={job.applyLink}
-      application_email={job.applicationEmail}
+      apply_link={job.apply_link}
+      application_email={job.application_email}
       source={job.source}
       image={job.image}
     />

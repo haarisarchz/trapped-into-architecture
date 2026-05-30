@@ -1,10 +1,12 @@
 "use client";
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+  useParams
+} from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { useState } from "react";
-import { useEffect } from "react";
 import {
   EXPERIENCE_OPTIONS,
   SALARY_OPTIONS,
@@ -40,13 +42,11 @@ const positionOptions = [
 ];
 
 export default function AddJobPage() {
-const [jobId, setJobId] = useState<string | null>(null);
 
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  setJobId(params.get("id"));
-}, []);
   const router = useRouter();
+  const params = useParams();
+
+const jobId = params.id;
   const [organizationType, setOrganizationType] =
     useState("Firm");
 
@@ -85,6 +85,9 @@ useEffect(() => {
   const [position, setPosition] =
     useState("");
 
+  const [experience, setExperience] =
+    useState("");
+
   const [salary, setSalary] =
     useState("");
 
@@ -114,97 +117,6 @@ useEffect(() => {
   const [dateType, setDateType] =
   useState("expiry");
  
-  useEffect(() => {
-
-  if (!jobId) return;
-
-  const fetchJob = async () => {
-
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("*")
-      .eq("id", jobId)
-      .single();
-
-    if (error) {
-
-      console.log(error);
-      return;
-
-    }
-
-    if (data) {
-
-  setFirmName(data.firm_name || "");
-  setOrganizationType(data.organization_type || "Firm");
-
-  setArea(data.area || "");
-  setCity(data.city || "");
-  setState(data.state || "");
-
-  setPosition(data.position || "");
-
-  /* EXPERIENCE */
-
-  setSelectedExperience(
-    Array.isArray(data.experience)
-      ? data.experience
-      : data.experience
-      ? [data.experience]
-      : []
-  );
-
-  /* SALARY */
-
-  setSalary(data.salary || "");
-
-  /* DATES */
-
-  setPostedDate(data.posted_date || "");
-  setLastDateToApply(data.last_date_to_apply || "");
-  setPostExpiryDate(data.post_expiry_date || "");
-
-  /* DESCRIPTION */
-
-  setJobDescription(data.job_description || "");
-
-  /* APPLICATION */
-
-  setapply_link(data.apply_link || "");
-  setapplication_email(data.application_email || "");
-
-  /* SOURCE */
-
-  setSource(data.source || "");
-
-  /* IMAGE */
-
-  setImage(data.image || "");
-  setImageUrl(data.image || "");
-
-  /* QUALIFICATIONS */
-
-  setQualifications(
-    Array.isArray(data.qualifications)
-      ? data.qualifications
-      : []
-  );
-
-  /* SKILLS */
-
-  setSkills(
-    Array.isArray(data.skills_required)
-      ? data.skills_required
-      : []
-  );
-
-}
-
-  };
-
-  fetchJob();
-
-}, [jobId]);
 
 const [uploadSuccess, setUploadSuccess] =
   useState(false);
@@ -339,38 +251,30 @@ const finalExpiryDate =
 
   const { data, error } = await supabase
   .from("jobs")
-  .insert([
-    {
-      firm_name: firmName,
-      area: area,
-      city: city,
-      state: state,
-      position: position,
+  .update({
 
-      experience: selectedExperience,
+    firm_name: firmName,
 
-      salary: salary,
+    position,
 
-      qualifications: qualifications,
+    city,
 
-      skills_required: skills,
+    state,
 
-posted_date: formattedToday,
+    salary,
 
-last_date_to_apply:
-  lastDateToApply || null,
+    experience,
 
-post_expiry_date:
-  finalExpiryDate,
+    qualifications,
 
-job_description: jobDescription,
-      apply_link: apply_link,
-      application_email: application_email,
-      source: source,
-      image: imageUrl,
-  
-    },
-  ]);
+    skills_required:
+      skills,
+
+    job_description:
+      jobDescription,
+
+  })
+  .eq("id", jobId);
 /* ERROR */
 
 if (error) {
@@ -636,72 +540,55 @@ router.push("/admin");
 
               {/* EXPERIENCE */}
 
-<div className="mb-6">
+              <div className="mb-6">
 
-  <label className="block mb-3 font-medium">
-    Experience Levels
-  </label>
+                <label className="block mb-3 font-medium">
+                  Experience Levels 
+                </label>
 
-  <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap lg:flex-nowrap gap-3 overflow-x-auto pb-2">
 
-    {EXPERIENCE_OPTIONS.map((exp) => {
+                  {EXPERIENCE_OPTIONS.map((exp) => (
 
-      const isSelected =
-        selectedExperience.includes(exp);
+                    <label
+                      key={exp}
+                      className="flex items-center gap-2 border rounded-full px-4 py-2 whitespace-nowrap cursor-pointer"
+                    >
 
-      return (
+                      <input
+                        type="checkbox"
+                        checked={selectedExperience.includes(exp)}
+                        onChange={() => {
 
-        <label
-          key={exp}
-          className={`
-            flex items-center gap-3 px-5 py-3 rounded-full border cursor-pointer transition whitespace-nowrap font-medium
-            ${
-              isSelected
-                ? "bg-black text-white border-black"
-                : "bg-white text-black border-gray-300 hover:bg-gray-100"
-            }
-          `}
-        >
+                          if (selectedExperience.includes(exp)) {
 
-          {/* CHECKBOX */}
+                            setSelectedExperience(
+                              selectedExperience.filter(
+                                (e) => e !== exp
+                              )
+                            );
 
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => {
+                          } else {
 
-              if (isSelected) {
+                            setSelectedExperience([
+                              ...selectedExperience,
+                              exp,
+                            ]);
 
-                setSelectedExperience(
-                  selectedExperience.filter(
-                    (e) => e !== exp
-                  )
-                );
+                          }
 
-              } else {
+                        }}
+                      />
 
-                setSelectedExperience([
-                  ...selectedExperience,
-                  exp,
-                ]);
+                      <span>{exp}</span>
 
-              }
+                    </label>
 
-            }}
-            className="w-4 h-4 accent-black"
-          />
+                  ))}
 
-          <span>{exp}</span>
+                </div>
 
-        </label>
-
-      );
-
-    })}
-
-  </div>
-
-</div>
+              </div>
 
               {/* QUALIFICATION + SALARY */}
 
@@ -1048,65 +935,51 @@ router.push("/admin");
 
               {/* IMAGE URL */}
 
-<div>
+              <div>
 
-  <label className="block mb-2 font-medium">
-    Upload Job Image{" "}
-    <span className="text-red-500 text-xl font-bold">*</span>
-  </label>
+                <label className="block mb-2 font-medium">
+  Upload Job Image <span className="text-red-500 text-xl font-bold">*</span>
+</label>
 
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleImageUpload}
-    className="w-full border rounded-2xl px-4 py-3"
-  />
+<input
+  type="file"
+  accept="image/*"
+  onChange={handleImageUpload}
+  className="w-full border rounded-2xl px-4 py-3"
+/>
 
-  {/* UPLOADING */}
+{uploadingImage && (
 
-  {uploadingImage && (
+  <div className="mt-3 flex items-center gap-2 text-blue-600">
 
-    <div className="mt-3 flex items-center gap-2 text-blue-600">
+    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
 
-      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+    <p>Uploading image...</p>
 
-      <p>Uploading image...</p>
+  </div>
 
-    </div>
+)}
 
-  )}
+{uploadSuccess && (
 
-  {/* SUCCESS */}
+  <div className="mt-3 flex items-center gap-2 text-green-600">
 
-  {uploadSuccess && (
+    <span className="text-xl">✓</span>
 
-    <div className="mt-3 flex items-center gap-2 text-green-600">
+    <p>Image uploaded successfully</p>
 
-      <span className="text-xl">✓</span>
+  </div>
 
-      <p>Image uploaded successfully</p>
+)}
 
-    </div>
+{imageUrl && (
+  <p className="text-green-600 mt-2">
+    Image uploaded successfully
+  </p>
+)}
 
-  )}
+              </div>
 
-  {/* IMAGE PREVIEW */}
-
-  {imageUrl && (
-
-    <div className="mt-5">
-
-      <img
-        src={imageUrl}
-        alt="Job Preview"
-        className="w-full max-w-md h-64 object-cover rounded-2xl border shadow-sm"
-      />
-
-    </div>
-
-  )}
-
-</div>
             </div>
             {/* APPLICATION BUTTON TYPE */}
 
