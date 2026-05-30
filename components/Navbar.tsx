@@ -1078,31 +1078,37 @@ return;
 /* CREATE PROFILE */
 
 if (authData.user) {
-const { error: profileError } =
-await supabase
-.from("profiles")
-.insert([
-{
-id: authData.user.id,
-username,
-full_name: fullName,
-email,
-phone,
-role: "user",
-bio: "",
-},
-]);
 
-if (profileError) {
-alert(profileError.message);
-return;
-}
+  console.log("AUTH USER:", authData.user);
 
-alert("Account created successfully!");
+  const { error: profileError } =
+    await supabase
+      .from("profiles")
+      .insert([
+        {
+          id: authData.user.id,
+          username,
+          full_name: fullName,
+          email,
+          phone,
+          role: "user",
+          bio: "",
+        },
+      ]);
 
-setShowAuthPopup(false);
+  if (profileError) {
+    console.log("PROFILE ERROR:", profileError);
+    alert(profileError.message);
+    return;
+  }
 
-router.push(`/profile/${username}`);
+  console.log("PROFILE CREATED");
+
+  alert("Account created successfully!");
+
+  setShowAuthPopup(false);
+
+  router.push(`/profile/${username}`);
 }
 
 }}
