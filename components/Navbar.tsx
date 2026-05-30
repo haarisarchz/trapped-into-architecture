@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function Navbar() {
   const router = useRouter();
@@ -959,7 +960,7 @@ window.location.reload();
 
 <button
   type="button"
-  onClick={() => {
+  onClick={async () => {
 
     /* GET VALUES */
 
@@ -998,12 +999,12 @@ window.location.reload();
         ) as HTMLInputElement
       )?.value.trim();
 
-    const contactMethod =
-      (
-        document.querySelector(
-          'input[name="contactMethod"]:checked'
-        ) as HTMLInputElement
-      )?.value;
+   const contactMethod =
+(
+  document.getElementById(
+    "contact-method"
+  ) as HTMLSelectElement
+)?.value;
 
     /* VALIDATIONS */
 
@@ -1043,171 +1044,88 @@ window.location.reload();
       return;
 
     }
+   /* CONTACT METHOD */
 
-    /* CONTACT METHOD */
+if (contactMethod === "email") {
+if (!email) {
+alert("Enter email");
+return;
+}
+}
 
-    if (contactMethod === "email") {
+if (contactMethod === "phone") {
+if (!phone) {
+alert("Enter phone number with country code");
+return;
+}
+}
 
-      if (!email) {
+/* CREATE USER IN SUPABASE AUTH */
 
-        alert("Enter email");
-        return;
+const {
+data: authData,
+error: authError,
+} = await supabase.auth.signUp({
+email,
+password,
+});
 
-      }
+if (authError) {
+alert(authError.message);
+return;
+}
 
-    }
+/* CREATE PROFILE */
 
-    if (contactMethod === "phone") {
+if (authData.user) {
+const { error: profileError } =
+await supabase
+.from("profiles")
+.insert([
+{
+id: authData.user.id,
+username,
+full_name: fullName,
+email,
+phone,
+role: "user",
+bio: "",
+},
+]);
 
-      if (!phone) {
+if (profileError) {
+alert(profileError.message);
+return;
+}
 
-        alert(
-          "Enter phone number with country code"
-        );
+alert("Account created successfully!");
 
-        return;
+setShowAuthPopup(false);
 
-      }
+router.push(`/profile/${username}`);
+}
 
-    }
+}}
+className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
 
-    /* GET EXISTING USERS */
-
-    const existingUsers =
-      JSON.parse(
-        localStorage.getItem("users") || "[]"
-      );
-
-    /* CHECK DUPLICATES */
-
-    const usernameExists =
-      existingUsers.find(
-        (u: any) =>
-          u.username.toLowerCase() ===
-          username.toLowerCase()
-      );
-
-    if (usernameExists) {
-
-      alert("Username already taken");
-      return;
-
-    }
-
-    const emailExists =
-      existingUsers.find(
-        (u: any) =>
-          u.email === email &&
-          email !== ""
-      );
-
-    if (emailExists) {
-
-      alert("Email already registered");
-      return;
-
-    }
-
-    const phoneExists =
-      existingUsers.find(
-        (u: any) =>
-          u.phone === phone &&
-          phone !== ""
-      );
-
-    if (phoneExists) {
-
-      alert(
-        "Phone number already registered"
-      );
-
-      return;
-
-    }
-
-    /* CREATE USER */
-
-    const newUser = {
-
-      id: Date.now(),
-
-      fullName,
-
-      username,
-
-      password,
-
-      email,
-
-      phone,
-
-      role: "user",
-
-      bio: "",
-
-      savedJobs: [],
-
-      appliedJobs: [],
-
-      createdAt:
-        new Date().toISOString(),
-
-    };
-
-    /* SAVE USERS */
-
-    localStorage.setItem(
-      "users",
-      JSON.stringify([
-        ...existingUsers,
-        newUser,
-      ])
-    );
-
-    /* AUTO LOGIN */
-
-    localStorage.setItem(
-      "currentUser",
-      JSON.stringify(newUser)
-    );
-
-    /* SUCCESS */
-
-    alert(
-      "Account created successfully!"
-    );
-
-    /* CLOSE POPUP */
-
-    setShowAuthPopup(false);
-
-    /* REDIRECT */
-
-    router.push(
-  `/profile/${newUser.username}`
-);
-
-  }}
-  className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
 >
 
-  Register
+Register
 
 </button>
 
-  </div>
+</div>
 
 )}
 
+</div>
 
-          </div>
+</div>
 
-        </div>
+)}
 
-      )}
+</>
 
-    </>
-
-  );
+);
 
 }
