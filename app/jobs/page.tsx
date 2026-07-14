@@ -38,6 +38,9 @@ export default function JobsPage() {
   const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
 
 const [selectedSalary, setSelectedSalary] = useState<string[]>([]);
+const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+const [showFilters, setShowFilters] = useState(false);
 
  const uniqueStates = [
   ...new Set(
@@ -124,17 +127,17 @@ const uniqueCities = [
 
       <Navbar />
 
-      <section className="p-10">
+      <section className="px-4 py-6 md:p-10">
 
-        <h1 className="text-5xl font-bold mb-8">
-          Architecture Jobs
+        <h1 className="text-2xl md:text-5xl font-bold mb-4">
+         Architecture Jobs
         </h1>
 
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
 
   {/* FILTER SIDEBAR */}
 
-<div className="w-72 bg-white p-6 rounded-2xl shadow-md h-fit border border-gray-200">
+<div className="hidden lg:block w-full lg:w-72 bg-white p-6 rounded-2xl shadow-md h-fit border border-gray-200">
 
   <div className="flex items-center justify-between mb-6">
 
@@ -548,11 +551,138 @@ setSelectedSalary([]);
 
 {/* RIGHT SIDE */}
 
+{/* MOBILE FILTER DRAWER */}
+
+{mobileFiltersOpen && (
+  <div className="fixed inset-0 z-50 lg:hidden">
+
+    {/* Dark overlay */}
+
+    <div
+      className="absolute inset-0 bg-black/50"
+      onClick={() => setMobileFiltersOpen(false)}
+    />
+
+    {/* Drawer */}
+
+    <div className="absolute right-0 top-0 h-full w-[85%] bg-white overflow-y-auto shadow-xl p-5">
+
+      <div className="flex justify-between items-center mb-6">
+
+        <h2 className="text-xl font-bold">
+          Filters
+        </h2>
+
+        <button
+          onClick={() => setMobileFiltersOpen(false)}
+          className="text-2xl"
+        >
+          ✕
+        </button>
+
+      </div>
+
+      {/* Move all your filter sections here later */}
+      
+    </div>
+
+  </div>
+)}
+
 <div className="flex-1">
+
+  {/* MOBILE CONTROLS */}
+
+<div className="lg:hidden mb-4 space-y-3">
+
+  {/* ROW 1 */}
+
+  <div className="flex gap-2">
+
+    <input
+      type="text"
+      placeholder="Search jobs..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      className="flex-1 border rounded-lg px-3 py-2 text-sm"
+    />
+
+    <select
+      value={sortBy}
+      onChange={(e) => setSortBy(e.target.value)}
+      className="w-40 border rounded-lg px-2 py-2 text-sm"
+    >
+      <option value="latest">Latest</option>
+      <option value="salaryHigh">High Salary</option>
+      <option value="salaryLow">Low Salary</option>
+      <option value="expiry">Expiry</option>
+    </select>
+
+  </div>
+
+  {/* ROW 2 */}
+
+  <div className="flex items-center justify-between">
+
+    <div className="flex items-center gap-2">
+
+      <span className="text-sm font-medium">
+        View
+      </span>
+
+      <div className="flex border rounded-xl overflow-hidden">
+
+        <button
+          onClick={() => setViewMode("visual")}
+          className={`px-3 py-2 ${
+            viewMode === "visual"
+              ? "bg-black text-white"
+              : "bg-white"
+          }`}
+        >
+          <LayoutGrid size={16} />
+        </button>
+
+        <button
+          onClick={() => setViewMode("balanced")}
+          className={`px-3 py-2 ${
+            viewMode === "balanced"
+              ? "bg-black text-white"
+              : "bg-white"
+          }`}
+        >
+          <Rows3 size={16} />
+        </button>
+
+        <button
+          onClick={() => setViewMode("dense")}
+          className={`px-3 py-2 ${
+            viewMode === "dense"
+              ? "bg-black text-white"
+              : "bg-white"
+          }`}
+        >
+          <List size={16} />
+        </button>
+
+      </div>
+
+    </div>
+
+    <button
+      onClick={() => setShowFilters(true)}
+      className="border rounded-xl px-4 py-2 flex items-center gap-2 bg-white"
+    >
+      Filter
+    </button>
+
+  </div>
+
+</div>
 
   {/* VIEW + SORT BAR */}
 
-<div className="flex justify-between items-center mb-3 gap-10">
+<div className="hidden lg:flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-4">
 
   {/* VIEW BY */}
 
@@ -981,6 +1111,42 @@ setSelectedSalary([]);
 </div> {/* closes flex gap-8 */}
 
 </section>
+
+{/* MOBILE FILTER DRAWER */}
+
+{showFilters && (
+
+  <div className="fixed inset-0 z-50 lg:hidden">
+
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setShowFilters(false)}
+    />
+
+    <div className="absolute right-0 top-0 h-full w-[85%] bg-white shadow-xl overflow-y-auto p-5">
+
+      <div className="flex items-center justify-between mb-5">
+
+        <h2 className="text-xl font-bold">
+          Filters
+        </h2>
+
+        <button
+          onClick={() => setShowFilters(false)}
+          className="text-2xl"
+        >
+          ×
+        </button>
+
+      </div>
+
+      {/* CUT & PASTE YOUR ENTIRE FILTER CONTENT HERE */}
+
+    </div>
+
+  </div>
+
+)}
 
 <Footer />
 

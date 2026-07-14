@@ -39,43 +39,46 @@ const [editedUser, setEditedUser] =
   useState<any>(null);
  useEffect(() => {
 
-  const users =
-    JSON.parse(
-      localStorage.getItem("users") || "[]"
-    );
+  const loadProfile = async () => {
 
-  const foundUser =
-    users.find(
-      (u: any) =>
-        u.username.toLowerCase() ===
-        String(username).toLowerCase()
-    );
+    const { data: profile, error } =
+      await supabase
+        .from("profiles")
+        .select("*")
+        .eq("username", username)
+        .single();
 
-  if (!foundUser) {
+    if (error || !profile) {
 
-    router.push("/");
-    return;
+      router.push("/");
+      return;
 
-  }
+    }
 
-  setUser(foundUser);
-  setEditedUser(foundUser);
-  setSavedJobs(
-  foundUser.savedJobs || []
-);
+    const formattedUser = {
 
-if (
-  foundUser.savedJobs &&
-  foundUser.savedJobs.length > 0
-) {
-  fetchSavedJobs(foundUser.savedJobs);
-}
+      id: profile.id,
+      username: profile.username,
+      fullName: profile.full_name,
+      displayName: profile.display_name,
+      email: profile.email,
+      phone: profile.phone,
+      role: profile.role,
+      bio: profile.bio,
+      dob: profile.dob,
+      profession: profile.profession,
+      education: profile.education,
 
-  setBio(foundUser.bio || "");
+    };
 
-  setProfileImage(
-    foundUser.profileImage || ""
-  );
+    setUser(formattedUser);
+    setEditedUser(formattedUser);
+
+    setBio(profile.bio || "");
+
+  };
+
+  loadProfile();
 
 }, [username]);
 
@@ -315,7 +318,9 @@ localStorage.setItem(
 
               {/* USER BASIC DETAILS */}
 
-              <div className="flex-1">
+              <div className="flex-1 flex justify-between items-start">
+
+                  <div>
 
   <h1 className="text-4xl font-bold">
 
@@ -342,6 +347,17 @@ localStorage.setItem(
     </p>
 
   </div>
+
+  </div>
+
+{["CEO", "super_admin", "admin"].includes(user.role) && (
+  <button
+    onClick={() => router.push("/admin")}
+    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl transition"
+  >
+    Admin Dashboard
+  </button>
+)}
 
 </div>
 </div>
@@ -409,46 +425,40 @@ localStorage.setItem(
       </h2>
 
       <button
-        onClick={() => {
+        onClick={async () => {
 
           if (isEditing) {
 
-            /* SAVE */
+           /* SAVE */
 
-            const users =
-              JSON.parse(
-                localStorage.getItem("users") || "[]"
-              );
+const { error } = await supabase
+  .from("profiles")
+  .update({
+    full_name: editedUser.fullName,
+    display_name: editedUser.displayName,
+    username: editedUser.username,
+    email: editedUser.email,
+    phone: editedUser.phone,
+    dob: editedUser.dob,
+    profession: editedUser.profession,
+    education: editedUser.education,
+    bio: editedUser.bio,
+  })
+  .eq("id", user.id);
 
-            const updatedUsers =
-              users.map((u: any) => {
+if (error) {
+  alert(error.message);
+  return;
+}
 
-                if (
-                  u.username === user.username
-                ) {
+localStorage.setItem(
+  "currentUser",
+  JSON.stringify(editedUser)
+);
 
-                  return editedUser;
+setUser(editedUser);
 
-                }
-
-                return u;
-
-              });
-
-            localStorage.setItem(
-              "users",
-              JSON.stringify(updatedUsers)
-            );
-
-            localStorage.setItem(
-              "currentUser",
-              JSON.stringify(editedUser)
-            );
-
-            setUser(editedUser);
-
-            alert("Profile updated");
-
+alert("Profile updated successfully");
           }
 
           setIsEditing(!isEditing);
@@ -719,9 +729,23 @@ localStorage.setItem(
 
       </div>
 
-    </div>
+    
 
-  </div>
+{/* ROLE */}
+
+<div>
+
+  <p className="text-sm text-gray-500 mb-2">
+    Role
+  </p>
+
+  <p className="text-lg font-medium">
+    {user.role}
+  </p>
+
+</div>
+</div>
+</div>
 
 )}
 
@@ -871,7 +895,7 @@ localStorage.setItem(
 
         {/* CONTENT */}
 
-        <div className="flex-1">
+        <div className="flex-1 flex justify-between items-start">
 
           <p className="text-sm text-gray-800">
 

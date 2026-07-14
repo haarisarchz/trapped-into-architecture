@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
@@ -17,8 +18,18 @@ const [showUserMenu, setShowUserMenu] =
   const [showAuthPopup, setShowAuthPopup] =
     useState(false);
 
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  const [showRegisterPassword, setShowRegisterPassword] =
+  useState(false);
+
     const [currentUser, setCurrentUser] =
   useState<any>(null);
+
+  const [mobileMenuOpen, setMobileMenuOpen] =
+useState(false);
 
   const [authTab, setAuthTab] =
     useState<"login" | "register">("login");
@@ -38,86 +49,60 @@ useEffect(() => {
 }, []);
 
   return (
-
     <>
 
-      <nav className="bg-black text-white px-8 py-5 flex items-center justify-between">
+  <nav className="bg-black text-white px-4 md:px-8 py-5 flex items-center justify-between relative">
 
-        {/* WEBSITE LOGO / NAME */}
+    {/* WEBSITE LOGO / NAME */}
 
-        <Link
-          href="/"
-          className="text-2xl font-bold hover:text-gray-300 transition"
-        >
-          Trapped Into Architecture
-        </Link>
+    <Link
+      href="/"
+      className="text-2xl font-bold"
+    >
+      Trapped Into Architecture
+    </Link>
 
-        {/* RIGHT SIDE */}
+    {/* MOBILE MENU BUTTON */}
 
-        <div className="flex items-center gap-8 text-lg">
+    <button
+      onClick={() =>
+        setMobileMenuOpen(!mobileMenuOpen)
+      }
+      className="md:hidden text-3xl"
+    >
+      ☰
+    </button>
 
-          {/* HOME */}
+    {/* RIGHT SIDE */}
 
-          <Link
-            href="/"
-            className="hover:text-gray-300 transition"
-          >
-            Home
-          </Link>
+    <div className="hidden md:flex items-center gap-8">
 
-          {/* JOBS */}
+      {/* HOME */}
 
-          <Link
-            href="/jobs"
-            className="hover:text-gray-300 transition"
-          >
-            Jobs
-          </Link>
+      <Link
+        href="/"
+        className="hover:text-gray-300 transition"
+      >
+        Home
+      </Link>
 
-          {/* PROFILE DROPDOWN */}
+      {/* JOBS */}
 
-          <div className="relative">
+      <Link
+        href="/jobs"
+        className="hover:text-gray-300 transition"
+      >
+        Jobs
+      </Link>
 
-            <button
-              onClick={() =>
-                setShowProfileMenu(!showProfileMenu)
-              }
-              className="flex items-center gap-2 hover:text-gray-300 transition"
-            >
+     {/* COMPANIES */}
 
-              Profile
-
-              <span className="text-sm">
-                ▼
-              </span>
-
-            </button>
-
-            {/* DROPDOWN */}
-
-            {showProfileMenu && (
-
-              <div className="absolute top-12 right-0 bg-white text-black rounded-2xl shadow-lg border w-56 overflow-hidden z-50">
-
-                <Link
-                  href="/companies"
-                  className="block px-5 py-4 hover:bg-gray-100 transition"
-                >
-                  Companies
-                </Link>
-
-                <Link
-                  href="/individuals"
-                  className="block px-5 py-4 hover:bg-gray-100 transition"
-                >
-                  Individuals
-                </Link>
-
-              </div>
-
-            )}
-
-          </div>
+<Link
+  href="/companies"
+  className="hover:text-gray-300 transition"
+>
+  Companies
+</Link>
 
           {/* PRACTICE EXAMS */}
 
@@ -152,8 +137,7 @@ useEffect(() => {
 
       <div className="flex items-center gap-2">
 
-  {currentUser.displayName ||
-    currentUser.fullName}
+  {currentUser.displayName}
 
   <span className="text-xs">
     ▼
@@ -168,8 +152,8 @@ useEffect(() => {
       <div className="absolute right-0 top-14 bg-white text-black rounded-2xl shadow-xl overflow-hidden w-56 z-50">
 
         <button
-          onClick={() => {
-
+          onClick={async () => {
+console.log(currentUser);
             router.push(
               `/profile/${currentUser.username}`
             );
@@ -217,7 +201,125 @@ useEffect(() => {
 )}
         </div>
 
-      </nav>
+{/* MOBILE MENU */}
+
+{mobileMenuOpen && (
+
+  <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50">
+
+    <Link
+      href="/"
+      className="block px-6 py-1 border-b border-gray-800"
+      onClick={() => setMobileMenuOpen(false)}
+    >
+      Home
+    </Link>
+
+    <Link
+      href="/jobs"
+      className="block px-6 py-1 border-b border-gray-800"
+      onClick={() => setMobileMenuOpen(false)}
+    >
+      Jobs
+    </Link>
+
+    <div className="border-b border-gray-800">
+
+      <div className="px-6 py-1 font-medium">
+        Profile
+      </div>
+
+      <Link
+        href="/companies"
+        className="block pl-10 py-1 text-gray-300"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        Companies
+      </Link>
+
+      <Link
+        href="/individuals"
+        className="block pl-10 py-1 text-gray-300"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        Individuals
+      </Link>
+
+    </div>
+
+    <Link
+      href="/practice-exams"
+      className="block px-6 py-1 border-b border-gray-800"
+      onClick={() => setMobileMenuOpen(false)}
+    >
+      Practice Exams
+    </Link>
+
+    <Link
+      href="/contact"
+      className="block px-6 py-1 border-b border-gray-800"
+      onClick={() => setMobileMenuOpen(false)}
+    >
+      Contact
+    </Link>
+
+    {currentUser ? (
+
+      <>
+        <button
+          onClick={() => {
+            router.push(`/profile/${currentUser.username}`);
+            setMobileMenuOpen(false);
+          }}
+          className="w-full text-left px-6 py-1 border-b border-gray-800"
+        >
+          My Profile
+        </button>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("currentUser");
+            window.location.href = "/";
+          }}
+          className="w-full text-left px-6 py-1 text-red-400"
+        >
+          Logout
+        </button>
+      </>
+
+    ) : (
+
+      <>
+        <button
+          onClick={() => {
+            setAuthTab("login");
+            setShowAuthPopup(true);
+            setMobileMenuOpen(false);
+          }}
+          className="w-full text-left px-6 py-4 border-b border-gray-800"
+        >
+          Login
+        </button>
+
+        <button
+          onClick={() => {
+            setAuthTab("register");
+            setShowAuthPopup(true);
+            setMobileMenuOpen(false);
+          }}
+          className="w-full text-left px-6 py-4"
+        >
+          Register
+        </button>
+      </>
+
+    )}
+
+  </div>
+
+)}
+
+</nav>
 
       {/* AUTH POPUP */}
 
@@ -314,13 +416,35 @@ useEffect(() => {
         </span>
       </label>
 
-      <input
-        id="login-password"
-        type="password"
-        placeholder="Enter password"
-        className="w-full border rounded-xl px-4 py-3"
-        required
-      />
+      <div className="relative">
+
+  <div className="relative">
+
+  <input
+    id="login-password"
+    type={showLoginPassword ? "text" : "password"}
+    placeholder="Enter password"
+    className="w-full border rounded-xl px-4 py-3 pr-12"
+    required
+  />
+
+  <button
+    type="button"
+    onClick={() =>
+      setShowLoginPassword(!showLoginPassword)
+    }
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
+  >
+    {showLoginPassword ? (
+  <EyeOff size={20} />
+) : (
+  <Eye size={20} />
+)}
+  </button>
+
+</div>
+
+</div>
 
     </div>
 
@@ -347,7 +471,7 @@ useEffect(() => {
     {/* LOGIN BUTTON */}
 
     <button
-      onClick={() => {
+      onClick={async () => {
 
         const identity =
           (
@@ -373,36 +497,39 @@ useEffect(() => {
 
         }
 
-        const users =
-  JSON.parse(
-    localStorage.getItem("users") || "[]"
-  );
+        const { data, error } =
+  await supabase.auth.signInWithPassword({
+    email: identity,
+    password,
+  });
 
-const foundUser =
-  users.find(
-    (u: any) =>
-      (
-        u.username === identity ||
-        u.email === identity ||
-        u.phone === identity
-      ) &&
-      u.password === password
-  );
+if (error) {
 
-if (!foundUser) {
-
-  alert(
-    "Invalid username/email/phone or password"
-  );
+  alert(error.message);
 
   return;
 
 }
 
-localStorage.setItem(
-  "currentUser",
-  JSON.stringify(foundUser)
-);
+if (data.user) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("email", data.user.email)
+    .single();
+
+  if (profile) {
+    localStorage.setItem(
+      "currentUser",
+      JSON.stringify({
+        fullName: profile.full_name,
+        displayName: profile.display_name,
+        email: profile.email,
+        username: profile.username,
+      })
+    );
+  }
+}
 
 setShowAuthPopup(false);
 
@@ -888,11 +1015,17 @@ window.location.reload();
 
   {/* PASSWORD INPUT */}
 
+  <div className="relative">
+
   <input
     id="register-password"
-    type="password"
+    type={
+      showRegisterPassword
+        ? "text"
+        : "password"
+    }
     placeholder="Create password"
-    className="w-full border rounded-xl px-4 py-3"
+    className="w-full border rounded-xl px-4 py-3 pr-12"
     required
     minLength={8}
     maxLength={16}
@@ -947,6 +1080,24 @@ window.location.reload();
     }}
   />
 
+  <button
+  type="button"
+  onClick={() =>
+    setShowRegisterPassword(
+      !showRegisterPassword
+    )
+  }
+  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
+>
+  {showRegisterPassword ? (
+    <EyeOff size={20} />
+  ) : (
+    <Eye size={20} />
+  )}
+</button>
+
+</div>
+
   {/* LIVE MESSAGE */}
 
   <p
@@ -958,170 +1109,149 @@ window.location.reload();
 
     {/* REGISTER BUTTON */}
 
-<button
-  type="button"
-  onClick={async () => {
+    <button
+      type="button"
+      onClick={async () => {
+        /* GET VALUES */
 
-    /* GET VALUES */
+        const fullName = (
+          document.getElementById(
+            "register-name"
+          ) as HTMLInputElement
+        )?.value.trim();
 
-    const fullName =
-      (
-        document.getElementById(
-          "register-name"
-        ) as HTMLInputElement
-      )?.value.trim();
+        const username = (
+          document.getElementById(
+            "register-username"
+          ) as HTMLInputElement
+        )?.value.trim();
 
-    const username =
-      (
-        document.getElementById(
-          "register-username"
-        ) as HTMLInputElement
-      )?.value.trim();
+        const password = (
+          document.getElementById(
+            "register-password"
+          ) as HTMLInputElement
+        )?.value;
 
-    const password =
-      (
-        document.getElementById(
-          "register-password"
-        ) as HTMLInputElement
-      )?.value;
+        const email = (
+          document.getElementById(
+            "register-email"
+          ) as HTMLInputElement
+        )?.value.trim();
 
-    const email =
-      (
-        document.getElementById(
-          "register-email"
-        ) as HTMLInputElement
-      )?.value.trim();
+        const phone = (
+          document.getElementById(
+            "register-phone"
+          ) as HTMLInputElement
+        )?.value.trim();
 
-    const phone =
-      (
-        document.getElementById(
-          "register-phone"
-        ) as HTMLInputElement
-      )?.value.trim();
+        const contactMethod = (
+          document.getElementById(
+            "contact-method"
+          ) as HTMLSelectElement
+        )?.value;
 
-   const contactMethod =
-(
-  document.getElementById(
-    "contact-method"
-  ) as HTMLSelectElement
-)?.value;
+        /* VALIDATIONS */
 
-    /* VALIDATIONS */
+        if (!fullName) {
+          alert("Enter full name");
+          return;
+        }
 
-    if (!fullName) {
+        /* USERNAME RULES */
 
-      alert("Enter full name");
-      return;
+        const usernameRegex = /^[a-zA-Z0-9._]{5,12}$/;
 
-    }
+        if (!usernameRegex.test(username)) {
+          alert(
+            "Username must be 5–12 characters and only contain letters, numbers, dots, or underscores."
+          );
+          return;
+        }
 
-    /* USERNAME RULES */
+        /* PASSWORD RULES */
 
-    const usernameRegex =
-      /^[a-zA-Z0-9._]{5,12}$/;
+        const passwordRegex =
+          /^[a-zA-Z0-9!@#$%^&*()_+={}:;"'<>,.?/-]{8,16}$/;
 
-    if (!usernameRegex.test(username)) {
+        if (!passwordRegex.test(password)) {
+          alert("Password must be 8–16 characters.");
+          return;
+        }
 
-      alert(
-        "Username must be 5–12 characters and only contain letters, numbers, dots, or underscores."
-      );
+        /* CONTACT METHOD */
 
-      return;
+        if (contactMethod === "email") {
+          if (!email) {
+            alert("Enter email");
+            return;
+          }
+        }
 
-    }
+        if (contactMethod === "phone") {
+          if (!phone) {
+            alert("Enter phone number with country code");
+            return;
+          }
+        }
 
-    /* PASSWORD RULES */
+        /* CREATE USER IN SUPABASE AUTH */
 
-    const passwordRegex =
-      /^[a-zA-Z0-9!@#$%^&*()_+={}:;"'<>,.?/-]{8,16}$/;
+        const { data: authData, error: authError } =
+          await supabase.auth.signUp({
+            email,
+            password,
+          });
 
-    if (!passwordRegex.test(password)) {
+        if (authError) {
+          alert(authError.message);
+          return;
+        }
 
-      alert(
-        "Password must be 8–16 characters."
-      );
+        /* CREATE PROFILE */
 
-      return;
+        if (authData.user) {
+          console.log("AUTH USER:", authData.user);
 
-    }
-   /* CONTACT METHOD */
+          const {
+            data: profileData,
+            error: profileError,
+          } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: authData.user.id,
+                username,
+                full_name: fullName,
+                email,
+                phone,
+                role: "user",
+                bio: "",
+              },
+            ])
+            .select();
 
-if (contactMethod === "email") {
-if (!email) {
-alert("Enter email");
-return;
-}
-}
+          console.log("PROFILE DATA:", profileData);
+          console.log("PROFILE ERROR:", profileError);
 
-if (contactMethod === "phone") {
-if (!phone) {
-alert("Enter phone number with country code");
-return;
-}
-}
+          if (profileError) {
+            alert(profileError.message);
+            return;
+          }
 
-/* CREATE USER IN SUPABASE AUTH */
+          console.log("PROFILE CREATED SUCCESSFULLY");
 
-const {
-data: authData,
-error: authError,
-} = await supabase.auth.signUp({
-email,
-password,
-});
+          alert("Account created successfully!");
 
-if (authError) {
-alert(authError.message);
-return;
-}
+          setShowAuthPopup(false);
 
-/* CREATE PROFILE */
-
-if (authData.user) {
-
-  console.log("AUTH USER:", authData.user);
-
-  const { error: profileError } =
-    await supabase
-      .from("profiles")
-      .insert([
-        {
-          id: authData.user.id,
-          username,
-          full_name: fullName,
-          email,
-          phone,
-          role: "user",
-          bio: "",
-        },
-      ]);
-
-  if (profileError) {
-    console.log("PROFILE ERROR:", profileError);
-    alert(profileError.message);
-    return;
-  }
-
-  console.log("PROFILE CREATED");
-
-  alert("Account created successfully!");
-
-  setShowAuthPopup(false);
-
-  router.push(`/profile/${username}`);
-}
-
-}}
-className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
-
->
-
-Register
-
-</button>
-
-</div>
-
+          router.push(`/profile/${username}`);
+        }
+      }}
+      className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
+    >
+      Register
+    </button>
+  </div>
 )}
 
 </div>
@@ -1129,9 +1259,6 @@ Register
 </div>
 
 )}
-
-</>
-
+  </>
 );
-
 }

@@ -8,36 +8,7 @@ import { useEffect } from "react";
 import {
   EXPERIENCE_OPTIONS,
   SALARY_OPTIONS,
-} from "@/app/constants/jobFilters";
-
-const existingFirms = [
-  "ABC Architects",
-  "Studio Edge",
-  "Design Habitat",
-];
-
-const existingCities = [
-  "Chennai",
-  "Bangalore",
-  "Hyderabad",
-  "Mumbai",
-];
-
-const existingStates = [
-  "Tamil Nadu",
-  "Karnataka",
-  "Telangana",
-  "Maharashtra",
-];
-
-const positionOptions = [
-  "Junior Architect",
-  "Senior Architect",
-  "Interior Designer",
-  "BIM Architect",
-  "Landscape Architect",
-  "3D Visualizer",
-];
+} from "@/app/constants/jobFilters"
 
 export default function AddJobPage() {
 const [jobId, setJobId] = useState<string | null>(null);
@@ -47,8 +18,61 @@ useEffect(() => {
   setJobId(params.get("id"));
 }, []);
   const router = useRouter();
-  const [organizationType, setOrganizationType] =
-    useState("Firm");
+
+  const [existingFirms, setExistingFirms] = useState<any[]>([]);
+const [existingCities, setExistingCities] = useState<string[]>([]);
+const [existingStates, setExistingStates] = useState<string[]>([]);
+
+const [positionOptions, setPositionOptions] = useState<string[]>([
+  "Junior Architect",
+  "Senior Architect",
+  "Senior Interior Designer",
+  "Junior Interior Designer",
+  "Landscape Architect",
+  "Urban Designer",
+  "Planning Consultant",
+  "Architectural Draftsperson",
+  "BIM Architect",
+  "BIM Modeler",
+  "Project Architect",
+  "Design Architect",
+  "Site Architect",
+  "Project Manager",
+  "Construction Manager",
+  "Quantity Surveyor",
+  "Estimator",
+  "3D Visualizer",
+  "Visualization Artist",
+  "Graphic Designer",
+  "Furniture Designer",
+  "Product Designer",
+  "Lighting Designer",
+  "MEP Engineer",
+  "Structural Engineer",
+  "Civil Engineer",
+  "Faculty",
+  "Research Associate",
+  "Architectural Intern",
+  "Architect",
+  "Interior Designer",
+  "Other",
+]);
+
+  const organizationTypes = [
+  "Firm",
+  "Construction Company",
+  "Institution",
+  "Developer",
+  "Consultancy",
+  "Government",
+  "NGO",
+  "Manufacturer",
+  "Other",
+];
+
+const [organizationType, setOrganizationType] = useState(
+  organizationTypes[0]
+);
 
   const [selectedExperience, setSelectedExperience] =
     useState<string[]>([]);
@@ -68,13 +92,59 @@ useEffect(() => {
   const [applicationType, setApplicationType] =
     useState("apply");
 
+  
   /* MAIN JOB STATES */
 
-  const [firmName, setFirmName] =
-    useState("");
+  const [firmName, setFirmName] = useState("");
 
-  const [area, setArea] =
-    useState("");
+const [companyLogo, setCompanyLogo] = useState("");
+const [companyDescription, setCompanyDescription] = useState("");
+const [companyWebsite, setCompanyWebsite] = useState("");
+const [companyEmail, setCompanyEmail] = useState("");
+const [companyPhone, setCompanyPhone] = useState("");
+const [companyFacebook, setCompanyFacebook] = useState("");
+const [companyInstagram, setCompanyInstagram] = useState("");
+const [companyLinkedin, setCompanyLinkedin] = useState("");
+const [companyTwitter, setCompanyTwitter] = useState("");
+const [companyWhatsapp, setCompanyWhatsapp] = useState("");
+const [sameAsPhone, setSameAsPhone] = useState(false);
+const [principalArchitect, setPrincipalArchitect] = useState("");
+const [employeeSize, setEmployeeSize] = useState("");
+const [foundedYear, setFoundedYear] = useState("");
+
+const [scheduleDate, setScheduleDate] = useState("");
+const [scheduleTime, setScheduleTime] = useState("");
+const [showSchedule, setShowSchedule] = useState(false);
+
+
+const loadCompanyDetails = async (companyName: string) => {
+  const { data, error } = await supabase
+    .from("companies")
+    .select("*")
+    .eq("firm_name", companyName)
+    .single();
+
+  if (error || !data) return;
+
+  setOrganizationType(data.organization_type || "Architecture Firm");
+  setArea(data.neighborhood || "");
+  setCity(data.city || "");
+  setState(data.state || "");
+
+  setCompanyLogo(data.logo_url || "");
+  setCompanyDescription(data.description || "");
+  setCompanyWebsite(data.website || "");
+  setCompanyEmail(data.email || "");
+  setCompanyPhone(data.phone || "");
+  setCompanyFacebook(data.facebook || "");
+  setCompanyInstagram(data.instagram || "");
+  setCompanyLinkedin(data.linkedin || "");
+  setPrincipalArchitect(data.principal_architect || "");
+  setEmployeeSize(data.employee_size || "");
+  setFoundedYear(data.founded_year?.toString() || "");
+};
+
+const [area, setArea] = useState("");
 
   const [city, setCity] =
     useState("");
@@ -113,7 +183,31 @@ useEffect(() => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [dateType, setDateType] =
   useState("expiry");
+  const [showCompanyDetails, setShowCompanyDetails] = useState(false);
  
+  useEffect(() => {
+  const loadCompanies = async () => {
+    const { data } = await supabase
+      .from("companies")
+      .select("*")
+      .order("name");
+
+    if (!data) return;
+
+    setExistingFirms(data);
+
+    setExistingCities([
+      ...new Set(data.map((c) => c.city).filter(Boolean)),
+    ]);
+
+    setExistingStates([
+      ...new Set(data.map((c) => c.state).filter(Boolean)),
+    ]);
+  };
+
+  loadCompanies();
+}, []);
+
   useEffect(() => {
 
   if (!jobId) return;
@@ -209,6 +303,25 @@ useEffect(() => {
 const [uploadSuccess, setUploadSuccess] =
   useState(false);
 
+  useEffect(() => {
+  const fetchCompanies = async () => {
+    const { data, error } = await supabase
+      .from("companies")
+      .select("firm_name");
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    setExistingFirms(
+      data.map((company) => company.firm_name)
+    );
+  };
+
+  fetchCompanies();
+}, []);
+
   const handleImageUpload = async (
   e: React.ChangeEvent<HTMLInputElement>
 ) => {
@@ -255,63 +368,69 @@ alert(JSON.stringify(error));
 
 /* PUBLISH FUNCTION */
 
-const handlePublishJob = async () => {
+const handleSaveDraft = async () => {
+  await handlePublishJob("draft");
+};
 
-if (uploadingImage) {
+const handleSchedule = async () => {
+  await handlePublishJob("scheduled");
+};
 
-  alert("Please wait until image upload finishes");
+const handlePublishJob = async (
+  status: "draft" | "scheduled" | "published" = "published"
+) => {
 
-  return;
+  // =====================================================
+  // STEP 1 - COMPANY CHECK (Will implement next)
+  // =====================================================
+  // 1. Check if the company already exists.
+  // 2. If it exists, get its company_id.
+  // 3. If it doesn't exist, create it and get the new company_id.
+  // 4. Save that company_id into the jobs table when publishing.
+  // =====================================================
+
+  if (status !== "draft") {
+
+  if (uploadingImage) {
+    alert("Please wait until image upload finishes");
+    return;
+  }
+
+  if (!imageUrl) {
+    alert("Please upload job image");
+    return;
+  }
 
 }
 
-if (!imageUrl) {
+  //* MINIMUM VALIDATION FOR DRAFT */
 
-  alert("Please upload job image");
-
+if (
+  status === "draft" &&
+  (
+    !firmName ||
+    !position
+  )
+) {
+  alert("Please enter at least the Company Name and Job Position to save a draft.");
   return;
-
 }
 
-  /* REQUIRED FIELD CHECK */
+/* FULL VALIDATION FOR PUBLISH & SCHEDULE */
 
-  if (
+if (
+  status !== "draft" &&
+  (
     !firmName ||
     !position ||
     !city ||
     !state ||
     !jobDescription
-  ) {
-
-    alert("Please fill all required fields");
-
-    return;
-
-  }
-
-  /* APPLICATION VALIDATION */
-
-  if (
-    applicationType === "apply" &&
-    !apply_link
-  ) {
-
-    alert("Please enter apply link");
-
-    return;
-
-  }
-
-  if (
-    applicationType === "email" &&
-    !application_email
-  ) {
-
-    alert("Please enter application email");
-
-    return;
-
-  }
+  )
+) {
+  alert("Please fill all required fields.");
+  return;
+}
 
   /* INSERT JOB */
 
@@ -348,29 +467,41 @@ const finalExpiryDate =
       position: position,
 
       experience: selectedExperience,
-
       salary: salary,
-
       qualifications: qualifications,
-
       skills_required: skills,
 
-posted_date: formattedToday,
+      posted_date:
+        status === "published"
+          ? formattedToday
+          : null,
 
-last_date_to_apply:
-  lastDateToApply || null,
+      scheduled_date:
+        status === "scheduled"
+          ? `${scheduleDate} ${scheduleTime}`
+          : null,
 
-post_expiry_date:
-  finalExpiryDate,
+      last_date_to_apply:
+        lastDateToApply || null,
 
-job_description: jobDescription,
+      post_expiry_date:
+        finalExpiryDate,
+
+      job_description: jobDescription,
+
       apply_link: apply_link,
       application_email: application_email,
+
       source: source,
+
       image: imageUrl,
-  
+
+      status: status,
     },
-  ]);
+  ])
+  .select()
+  .single();
+
 /* ERROR */
 
 if (error) {
@@ -381,32 +512,37 @@ if (error) {
   return;
 }
 
-/* SUCCESS */
+//* SUCCESS */
 
-alert("Job Published Successfully");
-
-/* REDIRECT TO ADMIN DASHBOARD */
+if (status === "draft") {
+  alert("Draft saved successfully.");
+} else if (status === "scheduled") {
+  alert("Job scheduled successfully.");
+} else {
+  alert("Job published successfully.");
+}
 
 router.push("/admin");
 
-  /* CLEAR FORM */
+/* CLEAR FORM */
 
-  setFirmName("");
-  setArea("");
-  setCity("");
-  setState("");
-  setPosition("");
-  setSalary("");
-  setSelectedExperience([]);
-  setQualifications([]);
-  setSkills([]);
-  setJobDescription("");
-  setapply_link("");
-  setapplication_email("");
-  setSource("");
-  setImage("");
-  setLastDateToApply("");
-  setPostExpiryDate("");
+setFirmName("");
+setArea("");
+setCity("");
+setState("");
+setPosition("");
+setSalary("");
+setSelectedExperience([]);
+setQualifications([]);
+setSkills([]);
+setJobDescription("");
+setapply_link("");
+setapplication_email("");
+setSource("");
+setImage("");
+setImageUrl("");
+setLastDateToApply("");
+setPostExpiryDate("");
 
 };
 
@@ -420,21 +556,30 @@ router.push("/admin");
 
           {/* PAGE TITLE */}
 
-          <div className="mb-10">
+<div className="flex justify-between items-start mb-10">
 
-            <h1 className="text-4xl font-bold">
-              Add New Job
-            </h1>
+  <div>
 
-            <p className="text-gray-600 mt-2">
-              Publish and manage job opportunities.
-            </p>
+    <h1 className="text-4xl font-bold">
+      Add New Job
+    </h1>
 
-          </div>
+    <p className="text-gray-600 mt-2">
+      Publish and manage job opportunities.
+    </p>
+
+  </div>
+
+  <button
+    onClick={() => router.push("/admin")}
+    className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition"
+  >
+    ← Dashboard
+  </button>
+
+</div>
 
           {/* FORM CONTAINER */}
-
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 space-y-7">
 
             {/* BASIC DETAILS */}
 
@@ -448,48 +593,59 @@ router.push("/admin");
 
                 {/* ORGANIZATION TYPE */}
 
-                <div>
+<div>
 
-                  <label className="block mb-2 font-medium">
-                    Organization Type 
-                  </label>
+  <label className="block mb-2 font-medium">
+    Organization Type
+  </label>
 
-                  <select
-                    value={organizationType}
-                    onChange={(e) =>
-                      setOrganizationType(e.target.value)
-                    }
-                    className="w-full border rounded-2xl px-4 py-3"
-                  >
+  <select
+    value={organizationType}
+    onChange={(e) => setOrganizationType(e.target.value)}
+    className="w-full border rounded-2xl px-4 py-3"
+  >
 
-                    <option>Firm</option>
-                    <option>Institution</option>
-                    <option>Organization</option>
-                    <option>Company</option>
+    {organizationTypes.map((type) => (
+      <option key={type} value={type}>
+        {type}
+      </option>
+    ))}
 
-                  </select>
+  </select>
 
-                </div>
-
+</div>
                 {/* ORGANIZATION NAME */}
 
-                <div>
+<div>
 
-                  <label className="block mb-2 font-medium">
-                    {organizationType} Name <span className="text-red-500 text-xl font-bold">*</span>
-                  </label>
+  <label className="block mb-2 font-medium">
+    {organizationType} Name <span className="text-red-500 text-xl font-bold">*</span>
+  </label>
 
-                  <input
-  type="text"
-  placeholder="Enter name"
-  value={firmName}
-  onChange={(e) =>
-    setFirmName(e.target.value)
-  }
-  className="w-full border rounded-2xl px-4 py-3"
-/>
+  <input
+    type="text"
+    placeholder="Enter name"
+    value={firmName}
+    onChange={async (e) => {
+  const value = e.target.value;
 
-                </div>
+  setFirmName(value);
+
+  await loadCompanyDetails(value);
+}}
+    list="firm-suggestions"
+    autoComplete="off"
+    className="w-full border rounded-2xl px-4 py-3"
+  />
+
+  <datalist id="firm-suggestions">
+    {existingFirms.map((firm) => (
+      <option key={firm} value={firm} />
+    ))}
+  </datalist>
+
+</div>
+
 
                 {/* POSITION */}
 
@@ -526,7 +682,6 @@ router.push("/admin");
 
               </div>
 
-            </div>
 
             {/* LOCATION */}
 
@@ -1197,24 +1352,473 @@ router.push("/admin");
               </div>
 
             </div>
-            {/* SUBMIT BUTTON */}
 
-           <button
+            {/* ACTION BUTTONS */}
+
+<div className="flex justify-center gap-4 mt-8 mb-6">
+  <button
   type="button"
-  disabled={uploadingImage}
-  onClick={handlePublishJob}
-  className={`px-8 py-4 rounded-2xl text-lg font-semibold transition ${
-    uploadingImage
-      ? "bg-gray-400 text-white cursor-not-allowed"
-      : "bg-black text-white hover:bg-gray-800"
-  }`}
+  onClick={handleSaveDraft}
+    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
+  >
+    Save Draft
+  </button>
+
+  <button
+  type="button"
+  onClick={() => setShowSchedule(true)}
+  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
 >
-  {uploadingImage
-    ? "Uploading Image..."
-    : "Publish Job"}
+  Schedule
 </button>
 
+  <button
+    type="button"
+    disabled={uploadingImage}
+    onClick={() => handlePublishJob("published")}
+    className={`px-8 py-4 rounded-2xl text-lg font-semibold transition ${
+      uploadingImage
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-black text-white hover:bg-gray-800"
+    }`}
+  >
+    {uploadingImage ? "Uploading Image..." : "Publish Job"}
+  </button>
+</div>
+          
+ <div className="flex-1 border-t border-black-300"></div>
+
+            {/* ================= ORGANIZATION INFORMATION ================= */}
+            <div className="mt-8 mb-6">
+  <h2 className="text-3xl font-bold">
+    Company Profile
+  </h2>
+</div>
+
+{/* Logo + Website */}
+
+<div className="grid md:grid-cols-2 gap-6">
+
+  <div>
+    <label className="block mb-2 font-medium">
+      {organizationType} Logo
+    </label>
+
+    <input
+      type="file"
+      className="w-full border rounded-2xl px-4 py-3"
+    />
+  </div>
+
+  <div>
+    <label className="block mb-2 font-medium">
+      Website
+    </label>
+
+    <input
+      type="url"
+      placeholder="https://"
+      value={companyWebsite}
+      onChange={(e) => setCompanyWebsite(e.target.value)}
+      className="w-full border rounded-2xl px-4 py-3"
+    />
+  </div>
+
+</div>
+
+{/* Email + Phone */}
+
+<div className="grid md:grid-cols-2 gap-6 mt-6">
+
+  <div>
+    <label className="block mb-2 font-medium">
+      Email
+    </label>
+
+    <input
+      type="email"
+      placeholder="office@example.com"
+      value={companyEmail}
+      onChange={(e) => setCompanyEmail(e.target.value)}
+      className="w-full border rounded-2xl px-4 py-3"
+    />
+  </div>
+
+  <div>
+    <label className="block mb-2 font-medium">
+      Phone Number
+    </label>
+
+    <input
+      type="text"
+      placeholder="+91 XXXXX XXXXX"
+      value={companyPhone}
+      onChange={(e) => {
+        const value = e.target.value;
+        setCompanyPhone(value);
+
+        if (sameAsPhone) {
+          setCompanyWhatsapp(value);
+        }
+      }}
+      className="w-full border rounded-2xl px-4 py-3"
+    />
+  </div>
+
+</div>
+
+{/* WhatsApp (Left) + Empty (Right) */}
+
+<div className="grid md:grid-cols-2 gap-6 mt-6">
+
+  <div>
+
+    <label className="block mb-2 font-medium">
+      WhatsApp Number
+    </label>
+
+    <div className="flex items-center gap-2 mb-2">
+
+      <input
+        type="checkbox"
+        checked={sameAsPhone}
+        onChange={(e) => {
+          const checked = e.target.checked;
+
+          setSameAsPhone(checked);
+
+          if (checked) {
+            setCompanyWhatsapp(companyPhone);
+          } else {
+            setCompanyWhatsapp("");
+          }
+        }}
+      />
+
+      <span className="text-sm">
+        Same as Phone Number
+      </span>
+
+    </div>
+
+    <input
+      type="text"
+      placeholder="+91 XXXXX XXXXX"
+      value={companyWhatsapp}
+      onChange={(e) => setCompanyWhatsapp(e.target.value)}
+      disabled={sameAsPhone}
+      className={`w-full border rounded-2xl px-4 py-3 ${
+        sameAsPhone ? "bg-gray-100 cursor-not-allowed" : ""
+      }`}
+    />
+
+  </div>
+
+  <div></div>
+
+</div>
+
+{/* Founded Year + Employee Size */}
+
+<div className="grid md:grid-cols-2 gap-6 mt-6">
+
+  <div>
+
+    <label className="block mb-2 font-medium">
+      Founded Year
+    </label>
+
+    <input
+      type="number"
+      min="1800"
+      max={new Date().getFullYear()}
+      value={foundedYear}
+      onChange={(e) => setFoundedYear(e.target.value)}
+      placeholder="Founded Year"
+      className="w-full border rounded-2xl px-4 py-3"
+    />
+
+  </div>
+
+  <div>
+
+    <label className="block mb-2 font-medium">
+      Employee Size
+    </label>
+
+    <select
+      value={employeeSize}
+      onChange={(e) => setEmployeeSize(e.target.value)}
+      className="w-full border rounded-2xl px-4 py-3"
+    >
+      <option value="">Select Employee Size</option>
+      <option>1–5</option>
+      <option>6–10</option>
+      <option>11–25</option>
+      <option>26–50</option>
+      <option>51–100</option>
+      <option>101–250</option>
+      <option>251–500</option>
+      <option>500+</option>
+    </select>
+
+  </div>
+
+</div>
+
+{/* About */}
+
+<div className="mt-6">
+
+  <label className="block mb-2 font-medium">
+    About {organizationType}
+  </label>
+
+  <textarea
+    rows={5}
+    placeholder={`Write about the ${organizationType.toLowerCase()}...`}
+    value={companyDescription}
+    onChange={(e) => setCompanyDescription(e.target.value)}
+    className="w-full border rounded-2xl px-4 py-3"
+  />
+
+</div>
+
+{/* ================= SOCIAL MEDIA ================= */}
+
+<h3 className="text-2xl font-semibold mt-10 mb-6">
+  Social Media
+</h3>
+
+<div className="grid md:grid-cols-2 gap-6">
+
+  <input
+    type="url"
+    placeholder="Facebook URL"
+    value={companyFacebook}
+    onChange={(e) => setCompanyFacebook(e.target.value)}
+    className="w-full border rounded-2xl px-4 py-3"
+  />
+
+  <input
+    type="url"
+    placeholder="Instagram URL"
+    value={companyInstagram}
+    onChange={(e) => setCompanyInstagram(e.target.value)}
+    className="w-full border rounded-2xl px-4 py-3"
+  />
+
+  <input
+    type="url"
+    placeholder="LinkedIn URL"
+    value={companyLinkedin}
+    onChange={(e) => setCompanyLinkedin(e.target.value)}
+    className="w-full border rounded-2xl px-4 py-3"
+  />
+
+  <input
+    type="url"
+    placeholder="X (Twitter) URL"
+    value={companyTwitter}
+    onChange={(e) => setCompanyTwitter(e.target.value)}
+    className="w-full border rounded-2xl px-4 py-3"
+  />
+
+</div>
+
+          {/* ACTION BUTTONS */}
+
+<div className="flex justify-center gap-4 mt-8 mb-6">
+  <button
+  type="button"
+  onClick={handleSaveDraft}
+    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
+  >
+    Save Draft
+  </button>
+
+  <button
+  type="button"
+  onClick={() => setShowSchedule(true)}
+  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
+>
+  Schedule
+</button>
+
+  <button
+    type="button"
+    disabled={uploadingImage}
+    onClick={() => handlePublishJob("published")}
+    className={`px-8 py-4 rounded-2xl text-lg font-semibold transition ${
+      uploadingImage
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-black text-white hover:bg-gray-800"
+    }`}
+  >
+    {uploadingImage ? "Uploading Image..." : "Publish Job"}
+  </button>
+</div>
+          
+ <div className="flex-1 border-t border-black-300"></div>  
+
           </div>
+          {/* ================= SCHEDULE MODAL ================= */}
+
+{showSchedule && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl p-8 w-full max-w-md">
+
+      <h2 className="text-2xl font-bold mb-6">
+        Schedule Job
+      </h2>
+
+      <div className="space-y-5">
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Date
+          </label>
+
+          <input
+            type="date"
+            value={scheduleDate}
+            onChange={(e) => setScheduleDate(e.target.value)}
+            className="w-full border rounded-xl px-4 py-3"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Time
+          </label>
+
+          <input
+            type="time"
+            value={scheduleTime}
+            onChange={(e) => setScheduleTime(e.target.value)}
+            className="w-full border rounded-xl px-4 py-3"
+          />
+        </div>
+
+        {scheduleDate && scheduleTime && (
+  <p className="mt-2 text-sm text-green-600">
+    Scheduled for{" "}
+    {new Date(`${scheduleDate}T${scheduleTime}`).toLocaleString("en-IN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })}
+
+    {(() => {
+      const diff =
+        new Date(`${scheduleDate}T${scheduleTime}`).getTime() -
+        new Date().getTime();
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+
+      return hours > 0 && hours < 24
+        ? ` (in ${hours} hour${hours > 1 ? "s" : ""})`
+        : "";
+    })()}
+  </p>
+)}
+
+      </div>
+
+      <div className="flex justify-end gap-3 mt-8">
+
+        <button
+          type="button"
+          onClick={() => setShowSchedule(false)}
+          className="px-6 py-3 border rounded-xl"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowSchedule(true)}
+          className="px-6 py-3 bg-black text-white rounded-xl"
+        >
+          Schedule
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+)}
+
+
+{/* ================= SCHEDULE POPUP ================= */}
+
+{showSchedule && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+    <div className="bg-white rounded-2xl p-8 w-full max-w-md">
+
+      <h2 className="text-2xl font-bold mb-6">
+        Schedule Job
+      </h2>
+
+      <div className="space-y-5">
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Schedule Date
+          </label>
+
+          <input
+            type="date"
+            value={scheduleDate}
+            onChange={(e) => setScheduleDate(e.target.value)}
+            className="w-full border rounded-xl px-4 py-3"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Schedule Time
+          </label>
+
+          <input
+            type="time"
+            value={scheduleTime}
+            onChange={(e) => setScheduleTime(e.target.value)}
+            className="w-full border rounded-xl px-4 py-3"
+          />
+        </div>
+
+      </div>
+
+      <div className="flex justify-end gap-3 mt-8">
+
+        <button
+          type="button"
+          onClick={() => setShowSchedule(false)}
+          className="px-6 py-3 border rounded-xl"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSchedule}
+          className="px-6 py-3 bg-black text-white rounded-xl"
+        >
+          Schedule Job
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
 
         </section>
 

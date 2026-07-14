@@ -7,23 +7,63 @@ import { supabase } from "@/lib/supabase";
 export default function AdminDashboard() {
 
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
 
   const [jobs, setJobs] = useState<any[]>([]);
 
-  const [activeJobs, setActiveJobs] =
-    useState(0);
+  const [activeJobs, setActiveJobs] = useState(0);
 
-  const [expiredJobs, setExpiredJobs] =
-    useState(0);
+const [expiredJobs, setExpiredJobs] = useState(0);
 
-  const [totalJobs, setTotalJobs] =
-    useState(0);
+const [draftJobs, setDraftJobs] = useState(0);
+
+const [scheduledJobs, setScheduledJobs] = useState(0);
+
+const [totalJobs, setTotalJobs] = useState(0);
 
   useEffect(() => {
 
-    fetchDashboardData();
+  checkAccess();
 
-  }, []);
+}, []);
+
+const checkAccess = async () => {
+
+  const currentUser =
+    JSON.parse(
+      localStorage.getItem("currentUser") || "null"
+    );
+
+  if (!currentUser) {
+
+    router.push("/");
+    return;
+
+  }
+
+  const { data: profile, error } =
+    await supabase
+      .from("profiles")
+      .select("role")
+      .eq("username", currentUser.username)
+      .single();
+
+  if (
+    error ||
+    !profile ||
+    profile.role !== "CEO"
+  ) {
+
+    router.push("/");
+    return;
+
+  }
+
+  await fetchDashboardData();
+
+  setLoading(false);
+
+};
 
   const fetchDashboardData = async () => {
 
@@ -45,35 +85,64 @@ export default function AdminDashboard() {
 
     if (data) {
 
-      setJobs(data);
+    setJobs(data);
 
-      setTotalJobs(data.length);
+setTotalJobs(data.length);
 
-      const today =
-        new Date().toISOString().split("T")[0];
+const today =
+new Date().toISOString().split("T")[0];
 
-      const active =
-        data.filter(
-          (job) =>
-            !job.post_expiry_date ||
-            job.post_expiry_date >= today
-        );
+const active =
+data.filter(
+(job) =>
+job.status === "published" &&
+(
+!job.post_expiry_date ||
+job.post_expiry_date >= today
+)
+);
 
-      const expired =
-        data.filter(
-          (job) =>
-            job.post_expiry_date &&
-            job.post_expiry_date < today
-        );
+const expired =
+data.filter(
+(job) =>
+job.status === "published" &&
+job.post_expiry_date &&
+job.post_expiry_date < today
+);
 
-      setActiveJobs(active.length);
+const drafts =
+data.filter(
+(job) =>
+job.status === "draft"
+);
 
-      setExpiredJobs(expired.length);
+const scheduled =
+data.filter(
+(job) =>
+job.status === "scheduled"
+);
+
+setActiveJobs(active.length);
+
+setExpiredJobs(expired.length);
+
+setDraftJobs(drafts.length);
+
+setScheduledJobs(scheduled.length);
 
     }
 
   };
 
+if (loading) {
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      Loading...
+    </div>
+  );
+
+}
   return (
 
     <main className="min-h-screen bg-gray-100 flex">
@@ -134,12 +203,26 @@ export default function AdminDashboard() {
             >
               Analytics
             </button>
-
+<button
+  onClick={() =>
+    router.push("/admin/companies")
+  }
+  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+>
+  Companies
+</button>
             <button
               className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
             >
               Settings
             </button>
+
+            <button
+  onClick={() => window.open("/jobs", "_blank")}
+  className="w-full mt-10 bg-white text-black py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+>
+  Visit Jobs Page
+</button>
 
           </div>
 
@@ -189,55 +272,88 @@ export default function AdminDashboard() {
 
         </div>
 
-        {/* STATS */}
+      {/* STATS */}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
 
-          {/* ACTIVE JOBS */}
+  {/* ACTIVE JOBS */}
 
-          <div className="bg-white rounded-3xl p-6 shadow">
+  <div
+    onClick={() => router.push("/admin/jobs?status=published")}
+    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+  >
+    <p className="text-gray-600 font-semibold text-center">
+      Active Jobs
+    </p>
 
-            <p className="text-gray-500">
-              Active Jobs
-            </p>
+    <h2 className="text-5xl font-bold text-center mt-6 text-green-600">
+      {activeJobs}
+    </h2>
+  </div>
 
-            <h2 className="text-4xl font-bold mt-3">
-              {activeJobs}
-            </h2>
+  {/* DRAFT JOBS */}
 
-          </div>
+  <div
+    onClick={() => router.push("/admin/jobs?status=draft")}
+    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+  >
+    <p className="text-gray-600 font-semibold text-center">
+      Draft Jobs
+    </p>
 
-          {/* EXPIRED JOBS */}
+    <h2 className="text-5xl font-bold text-center mt-6 text-yellow-500">
+      {draftJobs}
+    </h2>
+  </div>
 
-          <div className="bg-white rounded-3xl p-6 shadow">
+  {/* SCHEDULED JOBS */}
 
-            <p className="text-gray-500">
-              Expired Jobs
-            </p>
+  <div
+    onClick={() => router.push("/admin/jobs?status=scheduled")}
+    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+  >
+    <p className="text-gray-600 font-semibold text-center">
+      Scheduled Jobs
+    </p>
 
-            <h2 className="text-4xl font-bold mt-3">
-              {expiredJobs}
-            </h2>
+    <h2 className="text-5xl font-bold text-center mt-6 text-blue-600">
+      {scheduledJobs}
+    </h2>
+  </div>
 
-          </div>
+  {/* EXPIRED JOBS */}
 
-          {/* TOTAL JOBS */}
+  <div
+    onClick={() => router.push("/admin/jobs?status=expired")}
+    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+  >
+    <p className="text-gray-600 font-semibold text-center">
+      Expired Jobs
+    </p>
 
-          <div className="bg-white rounded-3xl p-6 shadow">
+    <h2 className="text-5xl font-bold text-center mt-6 text-red-600">
+      {expiredJobs}
+    </h2>
+  </div>
 
-            <p className="text-gray-500">
-              Total Jobs
-            </p>
+  {/* TOTAL JOBS */}
 
-            <h2 className="text-4xl font-bold mt-3">
-              {totalJobs}
-            </h2>
+  <div
+    onClick={() => router.push("/admin/jobs")}
+    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+  >
+    <p className="text-gray-600 font-semibold text-center">
+      Total Jobs
+    </p>
 
-          </div>
+    <h2 className="text-5xl font-bold text-center mt-6">
+      {totalJobs}
+    </h2>
+  </div>
 
-        </div>
+</div>
 
-       ```tsx
+
 {/* RECENT JOBS */}
 
 <div className="bg-white rounded-3xl p-8 shadow">

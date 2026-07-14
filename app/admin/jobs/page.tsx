@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -10,38 +10,79 @@ export default function AdminJobsPage() {
 
   const router = useRouter();
 
+  const searchParams = useSearchParams();
+
+const statusFilter =
+  searchParams.get("status");
+
   const [jobs, setJobs] = useState<any[]>([]);
 
   useEffect(() => {
 
-    fetchJobs();
+  fetchJobs();
 
-  }, []);
+}, [statusFilter]); 
 
   /* FETCH JOBS */
 
-  const fetchJobs = async () => {
+const fetchJobs = async () => {
 
-    const { data, error } =
-      await supabase
-        .from("jobs")
-        .select("*")
-        .order("id", {
-  ascending: false,
-});
+  let query = supabase
+    .from("jobs")
+    .select("*");
 
-    if (error) {
+  if (statusFilter === "active") {
+    query = query.eq("status", "published");
+  }
 
-      console.log(error);
+  if (statusFilter === "draft") {
+    query = query.eq("status", "draft");
+  }
 
-    } else {
+  if (statusFilter === "scheduled") {
+    query = query.eq("status", "scheduled");
+  }
 
-      setJobs(data || []);
+  const { data, error } = await query.order("id", {
+    ascending: false,
+  });
 
-    }
+  if (error) {
 
-  };
+    console.log(error);
+    return;
 
+  }
+
+  let filteredJobs = data || [];
+
+  if (statusFilter === "active") {
+
+    const today = new Date();
+
+    filteredJobs = filteredJobs.filter(
+      (job) =>
+        !job.post_expiry_date ||
+        new Date(job.post_expiry_date) >= today
+    );
+
+  }
+
+  if (statusFilter === "expired") {
+
+    const today = new Date();
+
+    filteredJobs = filteredJobs.filter(
+      (job) =>
+        job.post_expiry_date &&
+        new Date(job.post_expiry_date) < today
+    );
+
+  }
+
+  setJobs(filteredJobs);
+
+};
   /* DELETE JOB */
 
   const deleteJob = async (id: number) => {
@@ -78,18 +119,97 @@ export default function AdminJobsPage() {
 
         {/* PAGE TITLE */}
 
-        <div className="mb-10">
+<div className="flex justify-between items-start mb-10">
 
-          <h1 className="text-4xl font-bold">
-            Manage Jobs
-          </h1>
+  <div>
 
-          <p className="text-gray-600 mt-2">
-            View and manage all published jobs.
-          </p>
+    <h1 className="text-4xl font-bold">
+      Manage Jobs
+    </h1>
 
-        </div>
+    <p className="text-gray-600 mt-2">
+      View and manage all Active jobs.
+    </p>
 
+    {/* FILTERS */}
+
+<div className="flex flex-wrap gap-3 mt-8 mb-8">
+
+  <button
+    onClick={() => router.push("/admin/jobs")}
+    className={`px-5 py-2 rounded-full border transition ${
+      !statusFilter
+        ? "bg-black text-white border-black"
+        : "bg-white hover:bg-gray-100"
+    }`}
+  >
+    All Jobs
+  </button>
+
+  <button
+    onClick={() =>
+      router.push("/admin/jobs?status=active")
+    }
+    className={`px-5 py-2 rounded-full border transition ${
+      statusFilter === "active"
+        ? "bg-black text-white border-black"
+        : "bg-white hover:bg-gray-100"
+    }`}
+  >
+    Active
+  </button>
+
+  <button
+    onClick={() =>
+      router.push("/admin/jobs?status=draft")
+    }
+    className={`px-5 py-2 rounded-full border transition ${
+      statusFilter === "draft"
+        ? "bg-black text-white border-black"
+        : "bg-white hover:bg-gray-100"
+    }`}
+  >
+    Drafts
+  </button>
+
+  <button
+    onClick={() =>
+      router.push("/admin/jobs?status=scheduled")
+    }
+    className={`px-5 py-2 rounded-full border transition ${
+      statusFilter === "scheduled"
+        ? "bg-black text-white border-black"
+        : "bg-white hover:bg-gray-100"
+    }`}
+  >
+    Scheduled
+  </button>
+
+  <button
+    onClick={() =>
+      router.push("/admin/jobs?status=expired")
+    }
+    className={`px-5 py-2 rounded-full border transition ${
+      statusFilter === "expired"
+        ? "bg-black text-white border-black"
+        : "bg-white hover:bg-gray-100"
+    }`}
+  >
+    Expired
+  </button>
+
+</div>
+
+  </div>
+
+  <button
+    onClick={() => router.push("/admin")}
+    className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition"
+  >
+    ← Dashboard
+  </button>
+
+</div>
         {/* JOBS TABLE */}
 
         <div className="bg-white rounded-3xl shadow-md border overflow-hidden">
@@ -192,23 +312,31 @@ export default function AdminJobsPage() {
 
                       <td className="px-6 py-5">
 
-                        {isExpired ? (
+                        {job.status === "draft" ? (
 
-                          <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm">
+  <span className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm">
+    Draft
+  </span>
 
-                            Expired
+) : job.status === "scheduled" ? (
 
-                          </span>
+  <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm">
+    Scheduled
+  </span>
 
-                        ) : (
+) : isExpired ? (
 
-                          <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+  <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm">
+    Expired
+  </span>
 
-                            Active
+) : (
 
-                          </span>
+  <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
+    Active
+  </span>
 
-                        )}
+)}
 
                       </td>
 
