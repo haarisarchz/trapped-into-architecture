@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-export default function AdminJobsPage() {
+function AdminJobsContent() {
 
   const router = useRouter();
 
@@ -422,4 +422,12 @@ const fetchJobs = async () => {
 
   );
 
+}
+
+export default function AdminJobsPage() {
+  return (
+    <Suspense fallback={<div className="p-10">Loading...</div>}>
+      <AdminJobsContent />
+    </Suspense>
+  );
 }
