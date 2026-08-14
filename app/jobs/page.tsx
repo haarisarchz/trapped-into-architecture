@@ -949,6 +949,8 @@ setSelectedSalary([]);
       : ""
   }
 >
+
+  
  {jobs
   .filter((job: any) => {
 

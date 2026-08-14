@@ -115,7 +115,19 @@ const [foundedYear, setFoundedYear] = useState("");
 const [scheduleDate, setScheduleDate] = useState("");
 const [scheduleTime, setScheduleTime] = useState("");
 const [showSchedule, setShowSchedule] = useState(false);
+const [showSmartUpload, setShowSmartUpload] = useState(false);
 
+const [showUploadOptions, setShowUploadOptions] = useState(false);
+const [smartText, setSmartText] = useState("");
+
+const [smartImage, setSmartImage] = useState<File | null>(null);
+
+const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
+const [activeTab, setActiveTab] = useState("text");
+
+const [uploadMode, setUploadMode] = useState('text');
+const [previewData,setPreviewData]=useState(null);
+const [aiResult, setAiResult] = useState<any>(null);
 
 const loadCompanyDetails = async (companyName: string) => {
   const { data, error } = await supabase
@@ -184,6 +196,7 @@ const [area, setArea] = useState("");
   const [dateType, setDateType] =
   useState("expiry");
   const [showCompanyDetails, setShowCompanyDetails] = useState(false);
+  
  
   useEffect(() => {
   const loadCompanies = async () => {
@@ -546,9 +559,14 @@ setPostExpiryDate("");
 
 };
 
-  return (
+const handleSmartExtraction = async () => {
 
-    <main className="min-h-screen bg-gray-100">
+};
+
+  return (
+    <>
+
+    <main className="min-h-screen bg-gray-100 relative overflow-visible">
 
         <Navbar />
 
@@ -578,6 +596,7 @@ setPostExpiryDate("");
   </button>
 
 </div>
+
 
           {/* FORM CONTAINER */}
 
@@ -803,6 +822,7 @@ setPostExpiryDate("");
 
       const isSelected =
         selectedExperience.includes(exp);
+
 
       return (
 
@@ -1753,79 +1773,243 @@ setPostExpiryDate("");
   </div>
 )}
 
-
-{/* ================= SCHEDULE POPUP ================= */}
-
-{showSchedule && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-    <div className="bg-white rounded-2xl p-8 w-full max-w-md">
-
-      <h2 className="text-2xl font-bold mb-6">
-        Schedule Job
-      </h2>
-
-      <div className="space-y-5">
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Schedule Date
-          </label>
-
-          <input
-            type="date"
-            value={scheduleDate}
-            onChange={(e) => setScheduleDate(e.target.value)}
-            className="w-full border rounded-xl px-4 py-3"
-          />
-        </div>
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Schedule Time
-          </label>
-
-          <input
-            type="time"
-            value={scheduleTime}
-            onChange={(e) => setScheduleTime(e.target.value)}
-            className="w-full border rounded-xl px-4 py-3"
-          />
-        </div>
-
-      </div>
-
-      <div className="flex justify-end gap-3 mt-8">
-
-        <button
-          type="button"
-          onClick={() => setShowSchedule(false)}
-          className="px-6 py-3 border rounded-xl"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          onClick={handleSchedule}
-          className="px-6 py-3 bg-black text-white rounded-xl"
-        >
-          Schedule Job
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-)}
-
         </section>
 
-        <Footer />
-
+      <Footer />
       </main>
 
-    );
+      {/* ================= SMART JOB POPUP (9:16 RATIO) ================= */}
+      {showSmartUpload && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000000] p-4 backdrop-blur-md">
+          
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 transition-all duration-500">
+            
+            {/* LEFT PANE: PREVIEW BOX (Visible after extraction) */}
+            {String(loadingAI) === 'done' && (
+              <div className="bg-white rounded-[32px] w-[500px] h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
+                <div className="p-6 bg-gray-50 border-b">
+                  <h3 className="font-bold text-xl">🔎 Preview</h3>
+                  <p className="text-xs text-gray-500">Confirm detected details</p>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold">Firm</label>
+                    <p className="font-semibold border-b border-gray-100 pb-1">{firmName || "---"}</p>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold">Position</label>
+                    <p className="font-semibold border-b border-gray-100 pb-1">{position || "---"}</p>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold">Location</label>
+                    <p className="font-semibold border-b border-gray-100 pb-1">{city}, {state}</p>
+                  </div>
+                </div>
 
-  }
+                <div className="p-6">
+                  <button
+                    onClick={() => {
+                      setShowSmartUpload(false);
+                      setLoadingAI(false);
+                    }}
+                    className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold hover:bg-green-700 shadow-lg active:scale-95 transition-all"
+                  >
+                    Confirm & Auto-Fill
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* RIGHT PANE: UPLOAD BOX (9:16 Ratio) */}
+            <div className="bg-white rounded-[32px] w-[500px] h-[780px] shadow-2xl flex flex-col relative overflow-hidden border border-white/20">
+              <button
+                onClick={() => { setShowSmartUpload(false); setLoadingAI(false); }}
+                className="absolute right-5 top-5 bg-gray-100 text-gray-500 hover:text-black w-8 h-8 rounded-full flex items-center justify-center z-20"
+              >✕</button>
+
+              <div className="p-8 flex-1 flex flex-col">
+                <h2 className="text-2xl font-black mt-4 tracking-tight">Smart Job</h2>
+                <p className="text-gray-400 text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
+
+                <div className="flex-1 flex flex-col justify-center overflow-hidden">
+                  {uploadMode === 'image' && (
+                    <div className="w-full">
+                      {!smartImage ? (
+                        <label className="border-2 border-dashed border-gray-200 rounded-[2rem] p-6 flex flex-col items-center justify-center bg-gray-50 hover:border-black cursor-pointer transition-all aspect-[9/12]">
+                          <span className="text-4xl mb-3">🖼️</span>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Upload your image</span>
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => setSmartImage(e.target.files?.[0] || null)} 
+                          />
+                        </label>
+                      ) : (
+                        <div className="relative w-full aspect-[9/16] rounded-[2rem] overflow-hidden border bg-gray-100 flex items-center justify-center shadow-inner">
+                          <img 
+                            src={URL.createObjectURL(smartImage)} 
+                            alt="Selected" 
+                            className="max-w-full max-h-full object-contain p-2" 
+                          />
+                          <button 
+                            onClick={() => setSmartImage(null)}
+                            className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white w-6 h-6 rounded-full text-xs hover:bg-red-500 transition-colors"
+                          >✕</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {uploadMode === 'text' && (
+                    <textarea
+                      rows={12}
+                      value={smartText}
+                      onChange={(e) => setSmartText(e.target.value)}
+                      placeholder="Paste job text here..."
+                      className="w-full border-2 border-gray-100 rounded-3xl p-5 text-sm outline-none focus:border-black transition-all h-[320px] resize-none"
+                    />
+                  )}
+
+                  {uploadMode === 'url' && (
+                    <input
+                      type="url"
+                      placeholder="Paste link here..."
+                      className="w-full border-2 border-gray-100 rounded-full px-6 py-4 text-sm outline-none focus:border-black transition-all"
+                    />
+                  )}
+                </div>
+
+                <button
+  disabled={loadingAI === "loading"}
+  onClick={async () => {
+    try {
+      setLoadingAI("loading");
+
+      const response = await fetch("/api/extract-job", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: smartText,
+        }),
+      });
+
+      const result = await response.json();
+
+      const ai = JSON.parse(result.result);
+
+      // Preview
+      setFirmName(ai.firm_name || "");
+      setOrganizationType(ai.organization_type || "");
+      setCompanyDescription(ai.company_description || "");
+      setCompanyWebsite(ai.company_website || "");
+      setCompanyEmail(ai.company_email || "");
+      setCompanyPhone(ai.company_phone || "");
+      setPrincipalArchitect(ai.principal_architect || "");
+      setEmployeeSize(ai.employee_size || "");
+      setFoundedYear(ai.founded_year || "");
+
+      setArea(ai.area || "");
+      setCity(ai.city || "");
+      setState(ai.state || "");
+
+      setPosition(ai.position || "");
+
+      setSelectedExperience(ai.experience || []);
+
+      setSalary(ai.salary || "");
+
+      setPostedDate(ai.posted_date || "");
+      setLastDateToApply(ai.last_date_to_apply || "");
+      setPostExpiryDate(ai.post_expiry_date || "");
+
+      setJobDescription(ai.job_description || "");
+
+      setSkills(ai.skills || []);
+      setQualifications(ai.qualifications || []);
+
+      setapply_link(ai.apply_link || "");
+      setapplication_email(ai.application_email || "");
+
+      setSource(ai.source || "");
+
+      setLoadingAI("done");
+
+    } catch (err) {
+      console.error(err);
+      alert("Extraction Failed");
+      setLoadingAI(false);
+    }
+  }}
+  className={`mt-6 w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${
+    loadingAI === "loading"
+      ? "bg-gray-100 text-gray-400"
+      : "bg-black text-white hover:bg-gray-800 shadow-xl"
+  }`}
+>
+  {loadingAI === "loading" ? (
+    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+  ) : (
+    "✨ Extract Details"
+  )}
+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= FLOATING ACTION BUTTON (FORCED BOTTOM RIGHT) ================= */}
+      <div 
+        style={{ position: 'fixed', bottom: '40px', right: '40px', zIndex: 999999 }} 
+        className="flex flex-col items-end"
+      >
+        {showUploadOptions && (
+          <div className="flex flex-col gap-3 mb-5 items-end animate-in fade-in slide-in-from-bottom-5 duration-300">
+            <button
+              onClick={() => { setUploadMode('image'); setShowSmartUpload(true); setShowUploadOptions(false); }}
+              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-gray-50 transition-all"
+            >
+              <span className="bg-blue-50 p-2 rounded-xl text-lg">📷</span> 
+              <div className="flex flex-col">
+                <span className="text-sm">Image</span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold">Extract from Pic</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setUploadMode('text'); setShowSmartUpload(true); setShowUploadOptions(false); }}
+              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-gray-50 transition-all"
+            >
+              <span className="bg-green-50 p-2 rounded-xl text-lg">📄</span>
+              <div className="flex flex-col">
+                <span className="text-sm">Text</span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold">Paste & Summarize</span>
+              </div>
+            </button>
+            <button
+              onClick={() => { setUploadMode('url'); setShowSmartUpload(true); setShowUploadOptions(false); }}
+              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-gray-50 transition-all"
+            >
+              <span className="bg-purple-50 p-2 rounded-xl text-lg">🌐</span>
+              <div className="flex flex-col">
+                <span className="text-sm">Link</span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold">Import from URL</span>
+              </div>
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowUploadOptions(!showUploadOptions)}
+          className={`bg-black text-white rounded-full px-8 py-5 shadow-2xl flex items-center justify-center gap-3 transition-all active:scale-90 ${showUploadOptions ? 'bg-red-500 scale-90' : 'hover:scale-105'}`}
+        >
+          <span className="text-2xl">{showUploadOptions ? '✕' : '🧠'}</span>
+          <span className="font-bold text-lg tracking-tight">Smart Job Upload</span>
+        </button>
+      </div>
+    </>
+  );
+}

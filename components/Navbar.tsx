@@ -38,6 +38,10 @@ useEffect(() => {
   const storedUser =
     localStorage.getItem("currentUser");
 
+    const isAdmin =
+  currentUser &&
+  ["CEO", "admin", "super_admin"].includes(currentUser.role);
+
   if (storedUser) {
 
     setCurrentUser(
@@ -124,57 +128,58 @@ useEffect(() => {
 
           {/* LOGIN REGISTER BUTTON */}
 
-          {currentUser ? (
-
+{currentUser ? (
   <div className="relative">
-
     <button
-  onClick={() =>
-    setShowUserMenu(!showUserMenu)
-      }
+      onClick={() => setShowUserMenu(!showUserMenu)}
       className="border border-white px-5 py-2 rounded-xl hover:bg-white hover:text-black transition"
     >
-
       <div className="flex items-center gap-2">
-
-  {currentUser.displayName}
-
-  <span className="text-xs">
-    ▼
-  </span>
-
-</div>
-
+        {currentUser.displayName}
+      </div>
     </button>
 
     {showUserMenu && (
-
-      <div className="absolute right-0 top-14 bg-white text-black rounded-2xl shadow-xl overflow-hidden w-56 z-50">
+      <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white text-black shadow-lg overflow-hidden">
 
         <button
-          onClick={async () => {
-console.log(currentUser);
-            router.push(
-              `/profile/${currentUser.username}`
-            );
-
-            setShowProfileMenu(false);
-
+          onClick={() => {
+            router.push(`/profile/${currentUser.username}`);
+            setShowUserMenu(false);
           }}
           className="w-full text-left px-5 py-4 hover:bg-gray-100"
         >
           My Profile
         </button>
 
+        {["CEO", "admin", "super_admin"].includes(currentUser.role) && (
+          <>
+            <button
+              onClick={() => {
+                router.push("/admin");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-100"
+            >
+              Admin Dashboard
+            </button>
+
+            <button
+              onClick={() => {
+                router.push("/admin/add-job");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-100"
+            >
+              Add New Job
+            </button>
+          </>
+        )}
+
         <button
           onClick={() => {
-
-            localStorage.removeItem(
-              "currentUser"
-            );
-
+            localStorage.removeItem("currentUser");
             window.location.href = "/";
-
           }}
           className="w-full text-left px-5 py-4 hover:bg-gray-100 text-red-500"
         >
@@ -182,23 +187,17 @@ console.log(currentUser);
         </button>
 
       </div>
-
     )}
-
   </div>
-
 ) : (
-
   <button
-    onClick={() =>
-      setShowAuthPopup(true)
-    }
+    onClick={() => setShowAuthPopup(true)}
     className="border border-white px-5 py-2 rounded-xl hover:bg-white hover:text-black transition"
   >
     Login / Register
   </button>
-
 )}
+
         </div>
 
 {/* MOBILE MENU */}
