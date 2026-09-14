@@ -353,7 +353,7 @@ localStorage.setItem(
 {["CEO", "super_admin", "admin"].includes(user.role) && (
   <button
     onClick={() => router.push("/admin")}
-    className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl transition"
+    className="bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-xl transition"
   >
     Admin Dashboard
   </button>

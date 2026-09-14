@@ -381,12 +381,33 @@ const handlePublishJob = async (
 ) => {
 
   // =====================================================
-  // STEP 1 - COMPANY CHECK (Will implement next)
+  // STEP 1 - COMPANY CHECK
   // =====================================================
-  // 1. Check if the company already exists.
-  // 2. If it exists, get its company_id.
-  // 3. If it doesn't exist, create it and get the new company_id.
-  // 4. Save that company_id into the jobs table when publishing.
+  if (status !== "draft" && firmName) {
+    const { data: existingCompany } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("firm_name", firmName)
+      .maybeSingle();
+
+    if (!existingCompany) {
+      const companySlug = firmName
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "");
+        
+      await supabase.from("companies").insert([
+        {
+          firm_name: firmName,
+          slug: companySlug,
+          city: city,
+          state: state,
+          organization_type: organizationType,
+        },
+      ]);
+    }
+  }
   // =====================================================
 
   if (status !== "draft") {

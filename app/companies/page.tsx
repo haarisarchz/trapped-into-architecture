@@ -371,11 +371,11 @@ const specialisations = useMemo(() => {
 
   {/* ================= MAIN LAYOUT ================= */}
 
-<div className="flex gap-8 mt-8 items-start w-full">
+<div className="flex flex-col lg:flex-row gap-8 mt-8 items-start w-full">
 
   {/* ================= LEFT FILTER SIDEBAR ================= */}
 
-  <aside className="w-72 bg-white rounded-3xl shadow p-7 sticky top-24 h-fit">
+  <aside className="hidden lg:block w-full lg:w-72 bg-white rounded-3xl shadow p-7 sticky top-24 h-fit">
 
     <div className="flex justify-between items-center mb-7">
       <h2 className="text-3xl font-bold">
@@ -815,7 +815,7 @@ ${
           <div
             className={`
               rounded-full
-              bg-purple-600
+              bg-black
               text-white
               flex
               items-center
@@ -907,8 +907,8 @@ ${
 
           <span
             className={`
-              bg-purple-100
-              text-purple-700
+              bg-gray-200
+              text-gray-900
               rounded-full
 
               ${
@@ -925,7 +925,7 @@ ${
   onClick={() =>
     router.push(`/companies/${company.slug}`)
   }
-  className="text-purple-600 font-semibold hover:underline"
+  className="text-black font-semibold hover:underline"
 >
   View →
 </button>

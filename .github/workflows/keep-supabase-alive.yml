@@ -1,0 +1,29 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Runs at 12:00 UTC every day
+    - cron: '0 12 * * *'
+  workflow_dispatch: # Allows you to manually trigger it from the GitHub Actions tab
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: "https://bcifyymjfktabtsmocnc.supabase.co"
+          SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjaWZ5eW1qZmt0YWJ0c21vY25jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMzU2MDYsImV4cCI6MjA5NDcxMTYwNn0.FNk_rSL4FDQL0puOyc_0-xGXgEmqieZ-cmc6yYLNa2Y"
+        run: |
+          echo "Pinging Supabase to keep it awake..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            --request GET "${SUPABASE_URL}/rest/v1/jobs?select=id&limit=1" \
+            --header "apikey: ${SUPABASE_ANON_KEY}" \
+            --header "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Successfully pinged Supabase (Status: $HTTP_STATUS)"
+          else
+            echo "Failed to ping Supabase (Status: $HTTP_STATUS)"
+            exit 1
+          fi

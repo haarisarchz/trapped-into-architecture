@@ -145,11 +145,11 @@ if (loading) {
 }
   return (
 
-    <main className="min-h-screen bg-gray-100 flex">
+    <main className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
 
       {/* SIDEBAR */}
 
-      <aside className="w-72 bg-black text-white min-h-screen p-6 flex flex-col justify-between">
+      <aside className="hidden md:flex md:w-72 bg-black text-white min-h-screen p-6 flex-col justify-between">
 
         <div>
 
@@ -175,7 +175,7 @@ if (loading) {
               onClick={() =>
                 router.push("/admin")
               }
-              className="w-full text-left px-5 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 transition"
+              className="w-full text-left px-5 py-4 rounded-2xl bg-black hover:bg-gray-900 transition"
             >
               Dashboard
             </button>
@@ -243,7 +243,7 @@ if (loading) {
 
       {/* MAIN */}
 
-      <section className="flex-1 p-10">
+      <section className="flex-1 p-4 md:p-10">
 
         {/* HEADER */}
 
@@ -265,7 +265,7 @@ if (loading) {
             onClick={() =>
               router.push("/admin/add-job")
             }
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-2xl font-semibold transition"
+            className="bg-black hover:bg-gray-900 text-white px-6 py-4 rounded-2xl font-semibold transition"
           >
             + Add New Job
           </button>
@@ -368,7 +368,7 @@ if (loading) {
       onClick={() =>
         router.push("/admin/jobs")
       }
-      className="text-purple-600 font-medium"
+      className="text-black font-medium"
     >
       View all jobs →
     </button>

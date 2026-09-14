@@ -31,7 +31,7 @@ export default function CompaniesPage() {
           </div>
 
           <button
-            className="bg-purple-600 text-white px-6 py-3 rounded-xl"
+            className="bg-black text-white px-6 py-3 rounded-xl"
           >
             + Add Company
           </button>
