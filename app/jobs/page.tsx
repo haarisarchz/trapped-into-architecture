@@ -66,70 +66,63 @@ const uniqueCities = [
   ),
 ];
   useEffect(() => {
-
-  const fetchJobs = async () => {
-
-    const { data, error } =
-      await supabase
-        .from("jobs")
-        .select("*");
-
-    if (error) {
-
-      console.log(error);
-
-    } else {
-
-      setJobs(
-  data.map((job) => ({
-    id: job.id,
-    firmName: job.firm_name,
-    organizationType: job.organization_type,
-    area: job.area,
-    city: job.city,
-    state: job.state,
-    position: job.position,
-    experience: Array.isArray(job.experience)
-  ? job.experience
-  : [],
-    salary: job.salary,
-
-    qualifications: Array.isArray(job.qualifications)
-      ? job.qualifications
-      : [],
-
-    skills_required: Array.isArray(job.skills_required)
-      ? job.skills_required
-      : [],
-
-    postedDate: job.posted_date,
-    lastDateToApply: job.last_date_to_apply,
-    postExpiryDate: job.post_expiry_date,
-    jobDescription: job.job_description,
-    applicationType: job.application_type,
-    apply_link: job.apply_link,
-    application_email: job.application_email,
-    source: job.source,
-    image: job.image,
-  }))
-);
-
-    }
-
-  };
-
-  fetchJobs();
-
-}, []);
+    const fetchJobs = async () => {
+      const { data, error } = await supabase.from("jobs").select("*");
+      if (error) {
+        console.log(error);
+      } else {
+        if (data && data.length > 0) {
+          setJobs(
+            data.map((job) => ({
+              id: job.id,
+              firmName: job.firm_name,
+              organizationType: job.organization_type,
+              area: job.area,
+              city: job.city,
+              state: job.state,
+              position: job.position,
+              experience: Array.isArray(job.experience) ? job.experience : [],
+              salary: job.salary,
+              qualifications: Array.isArray(job.qualifications) ? job.qualifications : [],
+              skills_required: Array.isArray(job.skills_required) ? job.skills_required : [],
+              postedDate: job.posted_date,
+              lastDateToApply: job.last_date_to_apply,
+              postExpiryDate: job.post_expiry_date,
+              jobDescription: job.job_description,
+              applicationType: job.application_type,
+              apply_link: job.apply_link,
+              application_email: job.application_email,
+              source: job.source,
+              image: job.image,
+            }))
+          );
+        } else {
+          // FALLBACK MOCK DATA FOR PREVIEW
+          setJobs([
+            {
+              id: 'job-1', firmName: 'Studio Lotus', city: 'New Delhi', state: 'Delhi', position: 'Junior Architect', experience: ['1-3 Years'], salary: '₹3L - ₹5L', qualifications: ['B.Arch'], skills_required: ['AutoCAD', 'SketchUp'], postedDate: '2023-10-01', image: null
+            },
+            {
+              id: 'job-2', firmName: 'Morphogenesis', city: 'Mumbai', state: 'Maharashtra', position: 'Senior Interior Designer', experience: ['5+ Years'], salary: '₹8L - ₹12L', qualifications: ['B.Des', 'B.Arch'], skills_required: ['Revit', '3ds Max'], postedDate: '2023-10-05', image: null
+            },
+            {
+              id: 'job-3', firmName: 'Bimal Patel Architects', city: 'Ahmedabad', state: 'Gujarat', position: 'Urban Planner', experience: ['3-5 Years'], salary: '₹6L - ₹9L', qualifications: ['M.Plan'], skills_required: ['GIS', 'AutoCAD'], postedDate: '2023-10-10', image: null
+            },
+            {
+              id: 'job-4', firmName: 'Architecture Brio', city: 'Mumbai', state: 'Maharashtra', position: 'Architectural Intern', experience: ['Fresher'], salary: 'Stipend', qualifications: ['B.Arch Student'], skills_required: ['SketchUp', 'Photoshop'], postedDate: '2023-10-15', image: null
+            }
+          ]);
+        }
+      }
+    };
+    fetchJobs();
+  }, []);
 
   return (
-    <main className="min-h-screen bg-gray-100">
-
+    <main className="min-h-screen bg-gray-100 text-black">
       <Navbar />
-
-      <section className="px-4 py-6 md:p-10">
-
-        <h1 className="text-2xl md:text-5xl font-bold mb-4">
+      <section className="px-4 py-6 md:p-10 text-black">
+        <h1 className="text-2xl md:text-5xl font-bold mb-4 text-black">
          Architecture Jobs
         </h1>
 
