@@ -32,21 +32,36 @@ const [showUserMenu, setShowUserMenu] =
 useState(false);
 
   const [authTab, setAuthTab] =
-    useState<"login" | "register">("login");
-useEffect(() => {
+    useState<"login" | "register" | "forgot">("login");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
-  const storedUser =
-    localStorage.getItem("currentUser");
+  useEffect(() => {
+    const storedUser = localStorage.getItem("currentUser");
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
 
-  if (storedUser) {
-
-    setCurrentUser(
-      JSON.parse(storedUser)
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event) => {
+        if (event === "PASSWORD_RECOVERY") {
+          router.push("/reset-password");
+        }
+      }
     );
 
-  }
+    if (
+      typeof window !== "undefined" &&
+      window.location.hash.includes("type=recovery")
+    ) {
+      router.push("/reset-password" + window.location.hash);
+    }
 
-}, []);
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [router]);
 
   return (
     <>
@@ -461,6 +476,7 @@ console.log(currentUser);
 
       <button
         type="button"
+        onClick={() => setAuthTab("forgot")}
         className="text-gray-500 hover:text-black transition"
       >
         Forgot Password?
@@ -1251,6 +1267,92 @@ window.location.reload();
     >
       Register
     </button>
+  </div>
+)}
+
+{/* FORGOT PASSWORD */}
+{authTab === "forgot" && (
+  <div className="space-y-5">
+    <h2 className="text-3xl font-bold text-center">Reset Password</h2>
+    <p className="text-sm text-gray-500 text-center">
+      Enter your registered email and we'll send you a password reset link.
+    </p>
+
+    {forgotSent ? (
+      <div className="text-center py-4 space-y-4">
+        <div className="p-3 bg-green-50 text-green-700 text-sm rounded-xl border border-green-200">
+          Check your inbox! We sent a reset link to <strong>{forgotEmail}</strong>.
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setForgotSent(false);
+            setAuthTab("login");
+          }}
+          className="text-sm font-semibold underline text-black hover:opacity-75"
+        >
+          Back to Login
+        </button>
+      </div>
+    ) : (
+      <>
+        <div>
+          <label className="block mb-2 font-medium">
+            Email Address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            value={forgotEmail}
+            onChange={(e) => setForgotEmail(e.target.value)}
+            placeholder="Enter your registered email"
+            className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+            required
+          />
+        </div>
+
+        <button
+          type="button"
+          disabled={forgotLoading}
+          onClick={async () => {
+            if (!forgotEmail) {
+              alert("Please enter your email address.");
+              return;
+            }
+            setForgotLoading(true);
+            try {
+              const { error } = await supabase.auth.resetPasswordForEmail(
+                forgotEmail,
+                {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                }
+              );
+              if (error) {
+                alert(error.message);
+              } else {
+                setForgotSent(true);
+              }
+            } catch (err: any) {
+              alert(err.message || "Failed to send reset email.");
+            } finally {
+              setForgotLoading(false);
+            }
+          }}
+          className="w-full bg-black text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
+        >
+          {forgotLoading ? "Sending Link..." : "Send Reset Link"}
+        </button>
+
+        <div className="text-center pt-2">
+          <button
+            type="button"
+            onClick={() => setAuthTab("login")}
+            className="text-sm text-gray-500 hover:text-black transition"
+          >
+            ← Back to Login
+          </button>
+        </div>
+      </>
+    )}
   </div>
 )}
 
