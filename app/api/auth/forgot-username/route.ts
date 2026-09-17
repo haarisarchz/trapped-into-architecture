@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       // Once custom domain is added in Resend, can use: support@trappedintoarchitecture.com
       const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
 
-      await resend.emails.send({
+      const { data: sendData, error: sendError } = await resend.emails.send({
         from: fromEmail,
         to: cleanEmail,
         subject: "Your Trapped Into Architecture Username",
