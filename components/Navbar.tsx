@@ -32,10 +32,15 @@ const [showUserMenu, setShowUserMenu] =
 useState(false);
 
   const [authTab, setAuthTab] =
-    useState<"login" | "register" | "forgot">("login");
+    useState<"login" | "register" | "forgot" | "forgot-username">("login");
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+
+  const [forgotUsernameEmail, setForgotUsernameEmail] = useState("");
+  const [forgotUsernameLoading, setForgotUsernameLoading] = useState(false);
+  const [foundUsername, setFoundUsername] = useState<string | null>(null);
+  const [forgotUsernameError, setForgotUsernameError] = useState("");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("currentUser");
@@ -466,9 +471,14 @@ console.log(currentUser);
     {/* FORGOT OPTIONS */}
 
     <div className="flex justify-between text-sm">
-
       <button
         type="button"
+        onClick={() => {
+          setForgotUsernameError("");
+          setFoundUsername(null);
+          setForgotUsernameEmail("");
+          setAuthTab("forgot-username");
+        }}
         className="text-gray-500 hover:text-black transition"
       >
         Forgot Username?
@@ -481,43 +491,42 @@ console.log(currentUser);
       >
         Forgot Password?
       </button>
-
     </div>
 
     {/* LOGIN BUTTON */}
-
     <button
       onClick={async () => {
+        const identity = (
+          document.getElementById("login-identity") as HTMLInputElement
+        ).value.trim();
 
-        const identity =
-          (
-            document.getElementById(
-              "login-identity"
-            ) as HTMLInputElement
-          ).value;
-
-        const password =
-          (
-            document.getElementById(
-              "login-password"
-            ) as HTMLInputElement
-          ).value;
+        const password = (
+          document.getElementById("login-password") as HTMLInputElement
+        ).value;
 
         if (!identity || !password) {
-
-          alert(
-            "Please fill all required fields."
-          );
-
+          alert("Please fill all required fields.");
           return;
-
         }
 
-        const { data, error } =
-  await supabase.auth.signInWithPassword({
-    email: identity,
-    password,
-  });
+        let loginEmail = identity;
+        if (!loginEmail.includes("@")) {
+          // Look up user's email if they typed their username or phone
+          const { data: matchedProfile } = await supabase
+            .from("profiles")
+            .select("email")
+            .or(`username.eq.${loginEmail},phone.eq.${loginEmail}`)
+            .maybeSingle();
+
+          if (matchedProfile?.email) {
+            loginEmail = matchedProfile.email;
+          }
+        }
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: loginEmail,
+          password,
+        });
 
 if (error) {
 
@@ -1340,6 +1349,118 @@ window.location.reload();
           className="w-full bg-black text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
         >
           {forgotLoading ? "Sending Link..." : "Send Reset Link"}
+        </button>
+
+        <div className="text-center pt-2">
+          <button
+            type="button"
+            onClick={() => setAuthTab("login")}
+            className="text-sm text-gray-500 hover:text-black transition"
+          >
+            ← Back to Login
+          </button>
+        </div>
+      </>
+    )}
+  </div>
+)}
+
+{/* FORGOT USERNAME */}
+{authTab === "forgot-username" && (
+  <div className="space-y-5">
+    <h2 className="text-3xl font-bold text-center">Find Username</h2>
+    <p className="text-sm text-gray-500 text-center">
+      Enter the email address associated with your account to look up your username.
+    </p>
+
+    {foundUsername ? (
+      <div className="text-center py-4 space-y-4">
+        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">
+            Your Username
+          </p>
+          <p className="text-2xl font-bold text-black select-all">
+            @{foundUsername}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setAuthTab("login");
+            setTimeout(() => {
+              const input = document.getElementById(
+                "login-identity"
+              ) as HTMLInputElement;
+              if (input) input.value = foundUsername;
+            }, 100);
+          }}
+          className="w-full bg-black text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition"
+        >
+          Log In with this Username
+        </button>
+      </div>
+    ) : (
+      <>
+        {forgotUsernameError && (
+          <div className="p-3 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200">
+            {forgotUsernameError}
+          </div>
+        )}
+
+        <div>
+          <label className="block mb-2 font-medium">
+            Registered Email Address <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            value={forgotUsernameEmail}
+            onChange={(e) => {
+              setForgotUsernameEmail(e.target.value);
+              setForgotUsernameError("");
+            }}
+            placeholder="Enter your registered email"
+            className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+            required
+          />
+        </div>
+
+        <button
+          type="button"
+          disabled={forgotUsernameLoading}
+          onClick={async () => {
+            if (!forgotUsernameEmail.trim()) {
+              setForgotUsernameError("Please enter your email address.");
+              return;
+            }
+            setForgotUsernameLoading(true);
+            setForgotUsernameError("");
+            try {
+              const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("username")
+                .eq("email", forgotUsernameEmail.trim().toLowerCase())
+                .maybeSingle();
+
+              if (error) {
+                setForgotUsernameError(error.message);
+              } else if (!profile || !profile.username) {
+                setForgotUsernameError(
+                  "No account found with this email address."
+                );
+              } else {
+                setFoundUsername(profile.username);
+              }
+            } catch (err: any) {
+              setForgotUsernameError(
+                err.message || "Failed to find username."
+              );
+            } finally {
+              setForgotUsernameLoading(false);
+            }
+          }}
+          className="w-full bg-black text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
+        >
+          {forgotUsernameLoading ? "Searching..." : "Find My Username"}
         </button>
 
         <div className="text-center pt-2">
