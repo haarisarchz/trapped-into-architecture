@@ -542,6 +542,7 @@ if (data.user) {
         displayName: profile.display_name,
         email: profile.email,
         username: profile.username,
+        role: profile.role,
       })
     );
   }
