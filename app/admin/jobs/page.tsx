@@ -12,8 +12,8 @@ function AdminJobsContent() {
 
   const searchParams = useSearchParams();
 
-const statusFilter =
-  searchParams.get("status");
+const statusFilter = searchParams.get("status");
+const typeFilter = searchParams.get("type");
 
   const [jobs, setJobs] = useState<any[]>([]);
 
