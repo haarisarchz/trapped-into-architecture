@@ -86,6 +86,19 @@ if (!job || error) {
 
 <div className="flex flex-wrap gap-4 mb-5">
 
+    {job.employment_type && (
+    <div className="bg-gray-50 rounded-xl px-4 py-3 border min-w-[160px]">
+      <p className="text-xs text-gray-500">Employment Type</p>
+      <h3 className="text-lg font-semibold mt-1">{job.employment_type}</h3>
+    </div>
+  )}
+  {job.workplace_type && (
+    <div className="bg-gray-50 rounded-xl px-4 py-3 border min-w-[160px]">
+      <p className="text-xs text-gray-500">Workplace</p>
+      <h3 className="text-lg font-semibold mt-1">{job.workplace_type}</h3>
+    </div>
+  )}
+
   {/* EXPERIENCE */}
 
   {job.experience && (

@@ -99,6 +99,15 @@ useEffect(() => {
         Jobs
       </Link>
 
+      {/* INTERNSHIPS */}
+
+      <Link
+        href="/internships"
+        className="hover:text-gray-300 transition"
+      >
+        Internships
+      </Link>
+
      {/* COMPANIES */}
 
 <Link
@@ -220,6 +229,14 @@ useEffect(() => {
       onClick={() => setMobileMenuOpen(false)}
     >
       Jobs
+    </Link>
+
+    <Link
+      href="/internships"
+      className="block px-6 py-1 border-b border-gray-800"
+      onClick={() => setMobileMenuOpen(false)}
+    >
+      Internships
     </Link>
 
     <div className="border-b border-gray-800">

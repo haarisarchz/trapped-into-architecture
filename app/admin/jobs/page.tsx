@@ -21,7 +21,7 @@ const statusFilter =
 
   fetchJobs();
 
-}, [statusFilter]); 
+}, [statusFilter, typeFilter]); 
 
   /* FETCH JOBS */
 

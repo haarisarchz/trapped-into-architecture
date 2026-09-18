@@ -74,6 +74,9 @@ const [organizationType, setOrganizationType] = useState(
   organizationTypes[0]
 );
 
+const [employmentType, setEmploymentType] = useState("Full-time");
+const [workplaceType, setWorkplaceType] = useState("On-site");
+
   const [selectedExperience, setSelectedExperience] =
     useState<string[]>([]);
 
@@ -469,11 +472,59 @@ const formattedExpiry =
 const finalExpiryDate =
   lastDateToApply || formattedExpiry;
 
+  // =====================================================
+  // STEP 1 - COMPANY UPSERT
+  // =====================================================
+  let currentCompanyId = null;
+  if (firmName) {
+    const { data: existingCompany, error: findError } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('firm_name', firmName)
+      .single();
+
+    if (existingCompany?.id) {
+      currentCompanyId = existingCompany.id;
+    } else {
+      const { data: newCompany, error: insertError } = await supabase
+        .from('companies')
+        .insert([{ 
+          firm_name: firmName,
+          organization_type: organizationType,
+          neighborhood: area,
+          city: city,
+          state: state,
+          logo_url: companyLogo,
+          description: companyDescription,
+          website: companyWebsite,
+          email: companyEmail,
+          phone: companyPhone,
+          whatsapp: companyWhatsapp,
+          facebook: companyFacebook,
+          instagram: companyInstagram,
+          linkedin: companyLinkedin,
+          twitter: companyTwitter,
+          principal_architect: principalArchitect,
+          employee_size: employeeSize,
+          founded_year: foundedYear ? parseInt(foundedYear, 10) : null
+        }])
+        .select('id')
+        .single();
+        
+      if (newCompany?.id) {
+        currentCompanyId = newCompany.id;
+      }
+    }
+  }
+
   const { data, error } = await supabase
   .from("jobs")
   .insert([
     {
       firm_name: firmName,
+      company_id: currentCompanyId,
+      employment_type: employmentType,
+      workplace_type: workplaceType,
       area: area,
       city: city,
       state: state,
@@ -1080,6 +1131,36 @@ const handleSmartExtraction = async () => {
               <h2 className="text-2xl font-bold mb-6">
                 Job Details
               </h2>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block mb-2 font-medium">Employment Type</label>
+                  <select
+                    value={employmentType}
+                    onChange={(e) => setEmploymentType(e.target.value)}
+                    className="w-full border rounded-2xl px-4 py-3"
+                  >
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Temporary">Temporary</option>
+                    <option value="Freelance">Freelance</option>
+                    <option value="Internship">Internship</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-2 font-medium">Workplace Type</label>
+                  <select
+                    value={workplaceType}
+                    onChange={(e) => setWorkplaceType(e.target.value)}
+                    className="w-full border rounded-2xl px-4 py-3"
+                  >
+                    <option value="On-site">On-site</option>
+                    <option value="Hybrid">Hybrid</option>
+                    <option value="Remote">Remote</option>
+                  </select>
+                </div>
+              </div>
 
               {/* DESCRIPTION */}
 
