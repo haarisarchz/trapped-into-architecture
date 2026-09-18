@@ -1155,7 +1155,7 @@ const handleSmartExtraction = async () => {
 
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block mb-2 font-medium">Employment Type</label>
+                  <label className="block mb-2 font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
                   <select
                     value={employmentType}
                     onChange={(e) => setEmploymentType(e.target.value)}
