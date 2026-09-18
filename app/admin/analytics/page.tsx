@@ -12,7 +12,13 @@ export default function AnalyticsPage() {
     async function fetchData() {
       try {
         const res = await fetch("/api/ga/report");
-        const json = await res.json();
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (e) {
+          throw new Error("Failed to load analytics: " + text.slice(0, 50));
+        }
         if (json.error) {
           setError(json.error);
         } else {

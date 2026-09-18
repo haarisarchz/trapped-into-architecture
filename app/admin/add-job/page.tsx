@@ -74,7 +74,7 @@ const [organizationType, setOrganizationType] = useState(
   organizationTypes[0]
 );
 
-const [employmentType, setEmploymentType] = useState("Full-time");
+const [employmentType, setEmploymentType] = useState("");
 const [workplaceType, setWorkplaceType] = useState("On-site");
 
   const [selectedExperience, setSelectedExperience] =
@@ -1140,6 +1140,7 @@ const handleSmartExtraction = async () => {
                     onChange={(e) => setEmploymentType(e.target.value)}
                     className="w-full border rounded-2xl px-4 py-3"
                   >
+                    <option value="" disabled>Select Employment Type</option>
                     <option value="Full-time">Full-time</option>
                     <option value="Part-time">Part-time</option>
                     <option value="Contract">Contract</option>
