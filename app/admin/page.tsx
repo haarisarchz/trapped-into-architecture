@@ -196,6 +196,7 @@ if (loading) {
             </button>
 
             <button
+              onClick={() => router.push("/admin/analytics")}
               className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
             >
               Analytics
