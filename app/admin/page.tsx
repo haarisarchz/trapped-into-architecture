@@ -48,11 +48,8 @@ const checkAccess = async () => {
       .eq("username", currentUser.username)
       .single();
 
-  if (
-    error ||
-    !profile ||
-    profile.role !== "CEO"
-  ) {
+  const allowedRoles = ["super_admin", "super admin", "admin", "ceo"];
+  if (error || !profile || !allowedRoles.includes((profile.role || "").toLowerCase().trim())) {
 
     router.push("/");
     return;
