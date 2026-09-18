@@ -45,40 +45,7 @@ const { data: jobs = [] } = await supabase
   .select("*");
 
 if (!job || error) {
-
-  const jobJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "JobPosting",
-    "title": job.position,
-    "description": job.job_description,
-    "datePosted": job.posted_date || new Date().toISOString(),
-    "validThrough": job.post_expiry_date || undefined,
-    "employmentType": job.employment_type === "Full-time" ? "FULL_TIME" :
-                      job.employment_type === "Part-time" ? "PART_TIME" :
-                      job.employment_type === "Contract" ? "CONTRACTOR" :
-                      job.employment_type === "Internship" ? "INTERN" : "OTHER",
-    "hiringOrganization": {
-      "@type": "Organization",
-      "name": job.firm_name,
-      "logo": job.image || undefined
-    },
-    "jobLocation": {
-      "@type": "Place",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": job.city,
-        "addressRegion": job.state,
-        "addressCountry": "US"
-      }
-    }
-  };
-
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobJsonLd) }}
-      />
     <main className="p-10">
       <h1 className="text-5xl font-bold">
         Job Not Found
