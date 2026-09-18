@@ -32,41 +32,25 @@ const [showUserMenu, setShowUserMenu] =
 useState(false);
 
   const [authTab, setAuthTab] =
-    useState<"login" | "register" | "forgot" | "forgot-username">("login");
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotLoading, setForgotLoading] = useState(false);
-  const [forgotSent, setForgotSent] = useState(false);
+    useState<"login" | "register">("login");
+useEffect(() => {
 
-  const [forgotUsernameEmail, setForgotUsernameEmail] = useState("");
-  const [forgotUsernameLoading, setForgotUsernameLoading] = useState(false);
-  const [forgotUsernameSent, setForgotUsernameSent] = useState(false);
-  const [forgotUsernameError, setForgotUsernameError] = useState("");
+  const storedUser =
+    localStorage.getItem("currentUser");
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("currentUser");
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
+    const isAdmin =
+  currentUser &&
+  currentUser?.role && ["ceo", "admin", "super_admin", "owner"].includes(currentUser.role.toLowerCase());
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event) => {
-        if (event === "PASSWORD_RECOVERY") {
-          router.push("/reset-password");
-        }
-      }
+  if (storedUser) {
+
+    setCurrentUser(
+      JSON.parse(storedUser)
     );
 
-    if (
-      typeof window !== "undefined" &&
-      window.location.hash.includes("type=recovery")
-    ) {
-      router.push("/reset-password" + window.location.hash);
-    }
+  }
 
-    return () => {
-      authListener?.subscription?.unsubscribe();
-    };
-  }, [router]);
+}, []);
 
   return (
     <>
@@ -115,6 +99,15 @@ useState(false);
         Jobs
       </Link>
 
+      {/* INTERNSHIPS */}
+
+      <Link
+        href="/internships"
+        className="hover:text-gray-300 transition"
+      >
+        Internships
+      </Link>
+
      {/* COMPANIES */}
 
 <Link
@@ -144,57 +137,58 @@ useState(false);
 
           {/* LOGIN REGISTER BUTTON */}
 
-          {currentUser ? (
-
+{currentUser ? (
   <div className="relative">
-
     <button
-  onClick={() =>
-    setShowUserMenu(!showUserMenu)
-      }
+      onClick={() => setShowUserMenu(!showUserMenu)}
       className="border border-white px-5 py-2 rounded-xl hover:bg-white hover:text-black transition"
     >
-
       <div className="flex items-center gap-2">
-
-  {currentUser.displayName}
-
-  <span className="text-xs">
-    ▼
-  </span>
-
-</div>
-
+        {currentUser.displayName}
+      </div>
     </button>
 
     {showUserMenu && (
-
-      <div className="absolute right-0 top-14 bg-white text-black rounded-2xl shadow-xl overflow-hidden w-56 z-50">
+      <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white text-black shadow-lg overflow-hidden">
 
         <button
-          onClick={async () => {
-console.log(currentUser);
-            router.push(
-              `/profile/${currentUser.username}`
-            );
-
-            setShowProfileMenu(false);
-
+          onClick={() => {
+            router.push(`/profile/${currentUser.username}`);
+            setShowUserMenu(false);
           }}
           className="w-full text-left px-5 py-4 hover:bg-gray-100"
         >
           My Profile
         </button>
 
+        {currentUser?.role && ["ceo", "admin", "super_admin", "owner"].includes(currentUser.role.toLowerCase()) && (
+          <>
+            <button
+              onClick={() => {
+                router.push("/admin");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-100"
+            >
+              Admin Dashboard
+            </button>
+
+            <button
+              onClick={() => {
+                router.push("/admin/add-job");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-100"
+            >
+              Add New Job
+            </button>
+          </>
+        )}
+
         <button
           onClick={() => {
-
-            localStorage.removeItem(
-              "currentUser"
-            );
-
+            localStorage.removeItem("currentUser");
             window.location.href = "/";
-
           }}
           className="w-full text-left px-5 py-4 hover:bg-gray-100 text-red-500"
         >
@@ -202,23 +196,17 @@ console.log(currentUser);
         </button>
 
       </div>
-
     )}
-
   </div>
-
 ) : (
-
   <button
-    onClick={() =>
-      setShowAuthPopup(true)
-    }
+    onClick={() => setShowAuthPopup(true)}
     className="border border-white px-5 py-2 rounded-xl hover:bg-white hover:text-black transition"
   >
     Login / Register
   </button>
-
 )}
+
         </div>
 
 {/* MOBILE MENU */}
@@ -241,6 +229,14 @@ console.log(currentUser);
       onClick={() => setMobileMenuOpen(false)}
     >
       Jobs
+    </Link>
+
+    <Link
+      href="/internships"
+      className="block px-6 py-1 border-b border-gray-800"
+      onClick={() => setMobileMenuOpen(false)}
+    >
+      Internships
     </Link>
 
     <div className="border-b border-gray-800">
@@ -471,14 +467,9 @@ console.log(currentUser);
     {/* FORGOT OPTIONS */}
 
     <div className="flex justify-between text-sm">
+
       <button
         type="button"
-        onClick={() => {
-          setForgotUsernameError("");
-          setForgotUsernameSent(false);
-          setForgotUsernameEmail("");
-          setAuthTab("forgot-username");
-        }}
         className="text-gray-500 hover:text-black transition"
       >
         Forgot Username?
@@ -486,47 +477,47 @@ console.log(currentUser);
 
       <button
         type="button"
-        onClick={() => setAuthTab("forgot")}
         className="text-gray-500 hover:text-black transition"
       >
         Forgot Password?
       </button>
+
     </div>
 
     {/* LOGIN BUTTON */}
+
     <button
       onClick={async () => {
-        const identity = (
-          document.getElementById("login-identity") as HTMLInputElement
-        ).value.trim();
 
-        const password = (
-          document.getElementById("login-password") as HTMLInputElement
-        ).value;
+        const identity =
+          (
+            document.getElementById(
+              "login-identity"
+            ) as HTMLInputElement
+          ).value;
+
+        const password =
+          (
+            document.getElementById(
+              "login-password"
+            ) as HTMLInputElement
+          ).value;
 
         if (!identity || !password) {
-          alert("Please fill all required fields.");
+
+          alert(
+            "Please fill all required fields."
+          );
+
           return;
+
         }
 
-        let loginEmail = identity;
-        if (!loginEmail.includes("@")) {
-          // Look up user's email if they typed their username or phone
-          const { data: matchedProfile } = await supabase
-            .from("profiles")
-            .select("email")
-            .or(`username.eq.${loginEmail},phone.eq.${loginEmail}`)
-            .maybeSingle();
-
-          if (matchedProfile?.email) {
-            loginEmail = matchedProfile.email;
-          }
-        }
-
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: loginEmail,
-          password,
-        });
+        const { data, error } =
+  await supabase.auth.signInWithPassword({
+    email: identity,
+    password,
+  });
 
 if (error) {
 
@@ -1276,194 +1267,6 @@ window.location.reload();
     >
       Register
     </button>
-  </div>
-)}
-
-{/* FORGOT PASSWORD */}
-{authTab === "forgot" && (
-  <div className="space-y-5">
-    <h2 className="text-3xl font-bold text-center">Reset Password</h2>
-    <p className="text-sm text-gray-500 text-center">
-      Enter your registered email and we'll send you a password reset link.
-    </p>
-
-    {forgotSent ? (
-      <div className="text-center py-4 space-y-4">
-        <div className="p-3 bg-green-50 text-green-700 text-sm rounded-xl border border-green-200">
-          Check your inbox! We sent a reset link to <strong>{forgotEmail}</strong>.
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setForgotSent(false);
-            setAuthTab("login");
-          }}
-          className="text-sm font-semibold underline text-black hover:opacity-75"
-        >
-          Back to Login
-        </button>
-      </div>
-    ) : (
-      <>
-        <div>
-          <label className="block mb-2 font-medium">
-            Email Address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            value={forgotEmail}
-            onChange={(e) => setForgotEmail(e.target.value)}
-            placeholder="Enter your registered email"
-            className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-            required
-          />
-        </div>
-
-        <button
-          type="button"
-          disabled={forgotLoading}
-          onClick={async () => {
-            if (!forgotEmail) {
-              alert("Please enter your email address.");
-              return;
-            }
-            setForgotLoading(true);
-            try {
-              const { error } = await supabase.auth.resetPasswordForEmail(
-                forgotEmail,
-                {
-                  redirectTo: `${window.location.origin}/reset-password`,
-                }
-              );
-              if (error) {
-                alert(error.message);
-              } else {
-                setForgotSent(true);
-              }
-            } catch (err: any) {
-              alert(err.message || "Failed to send reset email.");
-            } finally {
-              setForgotLoading(false);
-            }
-          }}
-          className="w-full bg-black text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
-        >
-          {forgotLoading ? "Sending Link..." : "Send Reset Link"}
-        </button>
-
-        <div className="text-center pt-2">
-          <button
-            type="button"
-            onClick={() => setAuthTab("login")}
-            className="text-sm text-gray-500 hover:text-black transition"
-          >
-            ← Back to Login
-          </button>
-        </div>
-      </>
-    )}
-  </div>
-)}
-
-{/* FORGOT USERNAME */}
-{authTab === "forgot-username" && (
-  <div className="space-y-5">
-    <h2 className="text-3xl font-bold text-center">Forgot Username</h2>
-    <p className="text-sm text-gray-500 text-center">
-      Enter your registered email and we'll send your username to your inbox.
-    </p>
-
-    {forgotUsernameSent ? (
-      <div className="text-center py-4 space-y-4">
-        <div className="p-4 bg-green-50 text-green-800 text-sm rounded-2xl border border-green-200 text-left space-y-2">
-          <p className="font-semibold">Check your email!</p>
-          <p className="text-green-700 leading-relaxed">
-            If an account is associated with <strong>{forgotUsernameEmail}</strong>, we have sent your username to your inbox. Please check your inbox and spam folder.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setForgotUsernameSent(false);
-            setAuthTab("login");
-          }}
-          className="w-full bg-black text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition"
-        >
-          Return to Login
-        </button>
-      </div>
-    ) : (
-      <>
-        {forgotUsernameError && (
-          <div className="p-3 bg-red-50 text-red-700 text-sm rounded-xl border border-red-200">
-            {forgotUsernameError}
-          </div>
-        )}
-
-        <div>
-          <label className="block mb-2 font-medium">
-            Registered Email Address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            value={forgotUsernameEmail}
-            onChange={(e) => {
-              setForgotUsernameEmail(e.target.value);
-              setForgotUsernameError("");
-            }}
-            placeholder="Enter your registered email"
-            className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-            required
-          />
-        </div>
-
-        <button
-          type="button"
-          disabled={forgotUsernameLoading}
-          onClick={async () => {
-            if (!forgotUsernameEmail.trim()) {
-              setForgotUsernameError("Please enter your email address.");
-              return;
-            }
-            setForgotUsernameLoading(true);
-            setForgotUsernameError("");
-            try {
-              const res = await fetch("/api/auth/forgot-username", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: forgotUsernameEmail.trim() }),
-              });
-
-              const data = await res.json();
-              if (!res.ok) {
-                setForgotUsernameError(data.error || "Failed to send email.");
-              } else {
-                setForgotUsernameSent(true);
-              }
-            } catch (err: any) {
-              setForgotUsernameError(
-                err.message || "Something went wrong. Please try again."
-              );
-            } finally {
-              setForgotUsernameLoading(false);
-            }
-          }}
-          className="w-full bg-black text-white py-3.5 rounded-xl font-medium hover:opacity-90 transition disabled:opacity-50"
-        >
-          {forgotUsernameLoading ? "Sending Email..." : "Email My Username"}
-        </button>
-
-        <div className="text-center pt-2">
-          <button
-            type="button"
-            onClick={() => setAuthTab("login")}
-            className="text-sm text-gray-500 hover:text-black transition"
-          >
-            ← Back to Login
-          </button>
-        </div>
-      </>
-    )}
   </div>
 )}
 

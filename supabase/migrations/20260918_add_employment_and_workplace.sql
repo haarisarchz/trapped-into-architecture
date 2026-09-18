@@ -1,0 +1,4 @@
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS employment_type TEXT NOT NULL DEFAULT 'Full-time';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS workplace_type TEXT NOT NULL DEFAULT 'On-site';
+ALTER TABLE companies ADD CONSTRAINT unique_firm_name UNIQUE (firm_name);
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id);

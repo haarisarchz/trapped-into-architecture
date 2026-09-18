@@ -80,7 +80,7 @@ const uniqueCities = [
 
     } else {
 
-      const filteredData = data.filter((job: any) => job.employment_type !== 'Internship');
+      const filteredData = data.filter((job: any) => job.employment_type === 'Internship');
 
       setJobs(
         filteredData.map((job) => ({
@@ -129,7 +129,7 @@ const uniqueCities = [
       <section className="px-4 py-6 md:p-10">
 
         <h1 className="text-2xl md:text-5xl font-bold mb-4">
-         Architecture Jobs
+         Architecture Internships
         </h1>
 
         <div className="flex flex-col lg:flex-row gap-8">
