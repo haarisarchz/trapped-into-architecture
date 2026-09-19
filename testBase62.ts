@@ -9,7 +9,7 @@ export const encodeUuid = (uuid: string): string => {
     encoded = BASE62[Number(rem)] + encoded;
     num = num / 62n;
   }
-  return encoded.padStart(22, "0");
+  return encoded.padStart(22, "0"); // 128-bit is max ~22 chars in base62
 };
 
 export const decodeUuid = (shortId: string): string | null => {
@@ -26,14 +26,4 @@ export const decodeUuid = (shortId: string): string | null => {
   } catch (e) {
     return null;
   }
-};
-
-export const generateCompanySlug = (name: string) => {
-  if (!name) return "company";
-  return name.toLowerCase().trim().replace(/\\s+/g, "-").replace(/[^\\w-]+/g, "");
-};
-
-export const generateJobUrl = (job: any) => {
-  if (!job || !job.id) return '#';
-  return `/jobs/${encodeUuid(job.id)}`;
 };

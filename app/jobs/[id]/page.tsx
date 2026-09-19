@@ -3,15 +3,22 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Bookmark, BookmarkCheck } from "lucide-react";
-import { generateJobUrl } from "@/utils/jobUrl";
+import { generateJobUrl, decodeUuid } from "@/utils/jobUrl";
 import ShareButtons from "@/components/ShareButtons";
 
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id: rawId } = await params;
+  let id = rawId;
   const uuidMatch = rawId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-  const id = uuidMatch ? uuidMatch[0] : rawId;
+  if (uuidMatch) {
+    id = uuidMatch[0];
+  } else if (rawId.length === 22 && !rawId.includes("-")) {
+    const decoded = decodeUuid(rawId);
+    if (decoded) id = decoded;
+  }
   const { data: job } = await supabase.from("jobs").select("*").eq("id", id).single();
   
   if (!job) {
