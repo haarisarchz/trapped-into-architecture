@@ -618,7 +618,7 @@ const handleSmartExtraction = async () => {
   return (
     <>
 
-    <main className="min-h-screen bg-gray-100 relative overflow-visible">
+    <main className="min-h-screen bg-white relative overflow-visible">
 
         <Navbar />
 
@@ -885,7 +885,7 @@ const handleSmartExtraction = async () => {
             ${
               isSelected
                 ? "bg-black text-white border-black"
-                : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                : "bg-white text-black border-gray-300 hover:bg-white"
             }
           `}
         >
@@ -1462,7 +1462,7 @@ const handleSmartExtraction = async () => {
   <button
   type="button"
   onClick={handleSaveDraft}
-    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
+    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
   >
     Save Draft
   </button>
@@ -1470,7 +1470,7 @@ const handleSmartExtraction = async () => {
   <button
   type="button"
   onClick={() => setShowSchedule(true)}
-  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
+  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
@@ -1611,7 +1611,7 @@ const handleSmartExtraction = async () => {
       onChange={(e) => setCompanyWhatsapp(e.target.value)}
       disabled={sameAsPhone}
       className={`w-full border rounded-2xl px-4 py-3 ${
-        sameAsPhone ? "bg-gray-100 cursor-not-allowed" : ""
+        sameAsPhone ? "bg-white cursor-not-allowed" : ""
       }`}
     />
 
@@ -1735,7 +1735,7 @@ const handleSmartExtraction = async () => {
   <button
   type="button"
   onClick={handleSaveDraft}
-    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
+    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
   >
     Save Draft
   </button>
@@ -1743,7 +1743,7 @@ const handleSmartExtraction = async () => {
   <button
   type="button"
   onClick={() => setShowSchedule(true)}
-  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-100 transition"
+  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
@@ -1870,7 +1870,7 @@ const handleSmartExtraction = async () => {
             {/* LEFT PANE: PREVIEW BOX (Visible after extraction) */}
             {String(loadingAI) === 'done' && (
               <div className="bg-white rounded-[32px] w-[500px] h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
-                <div className="p-6 bg-gray-50 border-b">
+                <div className="p-6 bg-white border-b">
                   <h3 className="font-bold text-xl">🔎 Preview</h3>
                   <p className="text-xs text-gray-500">Confirm detected details</p>
                 </div>
@@ -1908,7 +1908,7 @@ const handleSmartExtraction = async () => {
             <div className="bg-white rounded-[32px] w-[500px] h-[780px] shadow-2xl flex flex-col relative overflow-hidden border border-white/20">
               <button
                 onClick={() => { setShowSmartUpload(false); setLoadingAI(false); }}
-                className="absolute right-5 top-5 bg-gray-100 text-gray-500 hover:text-black w-8 h-8 rounded-full flex items-center justify-center z-20"
+                className="absolute right-5 top-5 bg-white text-gray-500 hover:text-black w-8 h-8 rounded-full flex items-center justify-center z-20"
               >✕</button>
 
               <div className="p-8 flex-1 flex flex-col">
@@ -1919,7 +1919,7 @@ const handleSmartExtraction = async () => {
                   {uploadMode === 'image' && (
                     <div className="w-full">
                       {!smartImage ? (
-                        <label className="border-2 border-dashed border-gray-200 rounded-[2rem] p-6 flex flex-col items-center justify-center bg-gray-50 hover:border-black cursor-pointer transition-all aspect-[9/12]">
+                        <label className="border-2 border-dashed border-gray-200 rounded-[2rem] p-6 flex flex-col items-center justify-center bg-white hover:border-black cursor-pointer transition-all aspect-[9/12]">
                           <span className="text-4xl mb-3">🖼️</span>
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Upload your image</span>
                           <input 
@@ -1930,7 +1930,7 @@ const handleSmartExtraction = async () => {
                           />
                         </label>
                       ) : (
-                        <div className="relative w-full aspect-[9/16] rounded-[2rem] overflow-hidden border bg-gray-100 flex items-center justify-center shadow-inner">
+                        <div className="relative w-full aspect-[9/16] rounded-[2rem] overflow-hidden border bg-white flex items-center justify-center shadow-inner">
                           <img 
                             src={URL.createObjectURL(smartImage)} 
                             alt="Selected" 
@@ -2029,7 +2029,7 @@ const handleSmartExtraction = async () => {
   }}
   className={`mt-6 w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${
     loadingAI === "loading"
-      ? "bg-gray-100 text-gray-400"
+      ? "bg-white text-gray-400"
       : "bg-black text-white hover:bg-gray-800 shadow-xl"
   }`}
 >
@@ -2054,7 +2054,7 @@ const handleSmartExtraction = async () => {
           <div className="flex flex-col gap-3 mb-5 items-end animate-in fade-in slide-in-from-bottom-5 duration-300">
             <button
               onClick={() => { setUploadMode('image'); setShowSmartUpload(true); setShowUploadOptions(false); }}
-              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-gray-50 transition-all"
+              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
               <span className="bg-blue-50 p-2 rounded-xl text-lg">📷</span> 
               <div className="flex flex-col">
@@ -2064,7 +2064,7 @@ const handleSmartExtraction = async () => {
             </button>
             <button
               onClick={() => { setUploadMode('text'); setShowSmartUpload(true); setShowUploadOptions(false); }}
-              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-gray-50 transition-all"
+              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
               <span className="bg-green-50 p-2 rounded-xl text-lg">📄</span>
               <div className="flex flex-col">
@@ -2074,7 +2074,7 @@ const handleSmartExtraction = async () => {
             </button>
             <button
               onClick={() => { setUploadMode('url'); setShowSmartUpload(true); setShowUploadOptions(false); }}
-              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-gray-50 transition-all"
+              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
               <span className="bg-purple-50 p-2 rounded-xl text-lg">🌐</span>
               <div className="flex flex-col">

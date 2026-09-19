@@ -255,7 +255,7 @@ localStorage.setItem(
 
           <div className="mb-8">
 
-            <h1 className="text-4xl font-bold">
+            <h1 className="text-4xl font-bold text-black">
               My Profile
             </h1>
 
@@ -350,14 +350,7 @@ localStorage.setItem(
 
   </div>
 
-{["CEO", "super_admin", "admin"].includes(user.role) && (
-  <button
-    onClick={() => router.push("/admin")}
-    className="bg-black hover:bg-gray-900 text-white px-6 py-3 rounded-xl transition"
-  >
-    Admin Dashboard
-  </button>
-)}
+
 
 </div>
 </div>

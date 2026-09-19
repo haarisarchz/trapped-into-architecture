@@ -34,22 +34,22 @@ useState(false);
   const [authTab, setAuthTab] =
     useState<"login" | "register">("login");
 useEffect(() => {
-
-  const storedUser =
-    localStorage.getItem("currentUser");
-
-    const isAdmin =
-  currentUser &&
-  currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, ""));
-
+  const storedUser = localStorage.getItem("currentUser");
   if (storedUser) {
-
-    setCurrentUser(
-      JSON.parse(storedUser)
-    );
-
+    const parsed = JSON.parse(storedUser);
+    setCurrentUser(parsed);
+    
+    // Auto-patch missing role for older sessions
+    if (!parsed.role && parsed.username) {
+      supabase.from("profiles").select("role").eq("username", parsed.username).single().then(({data}) => {
+        if (data && data.role) {
+          parsed.role = data.role;
+          localStorage.setItem("currentUser", JSON.stringify(parsed));
+          setCurrentUser({...parsed});
+        }
+      });
+    }
   }
-
 }, []);
 
   return (
@@ -156,7 +156,7 @@ useEffect(() => {
             router.push(`/profile/${currentUser.username}`);
             setShowUserMenu(false);
           }}
-          className="w-full text-left px-5 py-4 hover:bg-gray-100"
+          className="w-full text-left px-5 py-4 hover:bg-red-50 text-red-500 font-bold"
         >
           My Profile
         </button>
@@ -287,10 +287,33 @@ useEffect(() => {
             router.push(`/profile/${currentUser.username}`);
             setMobileMenuOpen(false);
           }}
-          className="w-full text-left px-6 py-1 border-b border-gray-800"
+          className="w-full text-left px-6 py-3 border-b border-gray-800 text-red-500 font-bold"
         >
           My Profile
         </button>
+        
+        {currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+          <>
+            <button
+              onClick={() => {
+                router.push("/admin");
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-6 py-3 border-b border-gray-800 font-bold text-red-500"
+            >
+              Admin Dashboard
+            </button>
+            <button
+              onClick={() => {
+                router.push("/admin/add-job");
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-6 py-3 border-b border-gray-800 font-bold text-red-500"
+            >
+              Add New Job
+            </button>
+          </>
+        )}
 
         <button
           onClick={() => {

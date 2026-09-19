@@ -142,7 +142,7 @@ if (loading) {
 }
   return (
 
-    <main className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
+    <main className="min-h-screen bg-white flex flex-col md:flex-row">
 
       {/* SIDEBAR */}
 
@@ -397,7 +397,7 @@ if (loading) {
 
         <div
           key={job.id}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 border rounded-2xl px-5 py-4 items-center hover:bg-gray-50 transition"
+          className="grid grid-cols-1 md:grid-cols-4 gap-4 border rounded-2xl px-5 py-4 items-center hover:bg-white transition"
         >
 
           {/* POSITION */}

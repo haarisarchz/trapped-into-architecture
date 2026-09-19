@@ -40,7 +40,7 @@ export default function CompaniesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-white">
       <Navbar />
       <section className="w-full px-6 lg:px-12 py-10">
         <div className="flex justify-between items-center mb-8">
@@ -53,7 +53,7 @@ export default function CompaniesPage() {
         <div className="bg-white rounded-3xl shadow border overflow-hidden">
           <div className="overflow-x-auto">
           <table className="w-full text-left min-w-[600px]">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-white border-b">
               <tr>
                 <th className="px-6 py-5">Company</th>
                 <th className="px-6 py-5">Location</th>
@@ -64,7 +64,7 @@ export default function CompaniesPage() {
             <tbody>
               {companies.length > 0 ? (
                 companies.map((c, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
+                  <tr key={i} className="hover:bg-white">
                     <td className="px-6 py-4 border-b">
                       <div className="font-semibold">{c.firm_name}</div>
                     </td>

@@ -127,7 +127,7 @@ const fetchJobs = async () => {
 
   return (
 
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-white">
 
       <Navbar />
 
@@ -156,7 +156,7 @@ const fetchJobs = async () => {
     className={`px-5 py-2 rounded-full border transition ${
       !statusFilter
         ? "bg-black text-white border-black"
-        : "bg-white hover:bg-gray-100"
+        : "bg-white hover:bg-white"
     }`}
   >
     All Jobs
@@ -169,7 +169,7 @@ const fetchJobs = async () => {
     className={`px-5 py-2 rounded-full border transition ${
       statusFilter === "active"
         ? "bg-black text-white border-black"
-        : "bg-white hover:bg-gray-100"
+        : "bg-white hover:bg-white"
     }`}
   >
     Active
@@ -182,7 +182,7 @@ const fetchJobs = async () => {
     className={`px-5 py-2 rounded-full border transition ${
       statusFilter === "draft"
         ? "bg-black text-white border-black"
-        : "bg-white hover:bg-gray-100"
+        : "bg-white hover:bg-white"
     }`}
   >
     Drafts
@@ -195,7 +195,7 @@ const fetchJobs = async () => {
     className={`px-5 py-2 rounded-full border transition ${
       statusFilter === "scheduled"
         ? "bg-black text-white border-black"
-        : "bg-white hover:bg-gray-100"
+        : "bg-white hover:bg-white"
     }`}
   >
     Scheduled
@@ -208,7 +208,7 @@ const fetchJobs = async () => {
     className={`px-5 py-2 rounded-full border transition ${
       statusFilter === "expired"
         ? "bg-black text-white border-black"
-        : "bg-white hover:bg-gray-100"
+        : "bg-white hover:bg-white"
     }`}
   >
     Expired
@@ -236,7 +236,7 @@ const fetchJobs = async () => {
 
               {/* TABLE HEAD */}
 
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-white border-b">
 
                 <tr>
 
@@ -288,7 +288,7 @@ const fetchJobs = async () => {
 
                     <tr
   key={job.id}
-  className="border-b hover:bg-gray-50 transition"
+  className="border-b hover:bg-white transition"
 >
                       {/* POSITION */}
 
@@ -375,7 +375,7 @@ const fetchJobs = async () => {
     );
 
   }}
-  className="px-4 py-2 rounded-xl border hover:bg-gray-100 transition"
+  className="px-4 py-2 rounded-xl border hover:bg-white transition"
 >
   View
 </button>
@@ -393,7 +393,7 @@ const fetchJobs = async () => {
     );
 
   }}
-  className="px-4 py-2 rounded-xl border hover:bg-gray-100 transition"
+  className="px-4 py-2 rounded-xl border hover:bg-white transition"
 >
   Edit
 </button>
