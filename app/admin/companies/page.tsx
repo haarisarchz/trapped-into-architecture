@@ -51,7 +51,8 @@ export default function CompaniesPage() {
         </div>
 
         <div className="bg-white rounded-3xl shadow border overflow-hidden">
-          <table className="w-full text-left">
+          <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[600px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-6 py-5">Company</th>
@@ -83,6 +84,7 @@ export default function CompaniesPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </section>
       <Footer />
