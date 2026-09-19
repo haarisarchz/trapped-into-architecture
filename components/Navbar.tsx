@@ -40,7 +40,7 @@ useEffect(() => {
 
     const isAdmin =
   currentUser &&
-  currentUser?.role && ["super_admin", "super admin", "admin", "ceo"].includes(currentUser.role.toLowerCase().trim());
+  currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, ""));
 
   if (storedUser) {
 
@@ -161,7 +161,7 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["super_admin", "super admin", "admin", "ceo"].includes(currentUser.role.toLowerCase().trim()) && (
+        {currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
           <>
             <button
               onClick={() => {

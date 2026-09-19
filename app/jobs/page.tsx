@@ -72,8 +72,7 @@ const uniqueCities = [
 
     const { data, error } =
       await supabase
-        .from("jobs")
-        .select("*");
+        .from("jobs").select("*").eq("status", "published");
 
     if (error) {
 
