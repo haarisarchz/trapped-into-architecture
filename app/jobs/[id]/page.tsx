@@ -18,13 +18,20 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
   
   return {
-    title: `${job.position} at ${job.firm_name}`,
-    description: `${job.firm_name} is hiring a ${job.position} in ${job.city}, ${job.state}. ${job.employment_type || ""} ${job.workplace_type || ""}`,
+    title: `${job.position} — ${job.firm_name} | Trapped Into Architecture`,
+    description: `${job.position} opportunity at ${job.firm_name} in ${job.city}, ${job.state}.`,
     openGraph: {
-      title: `${job.position} | ${job.firm_name}`,
-      description: `Apply for the ${job.position} position at ${job.firm_name} in ${job.city}.`,
+      title: `${job.position} — ${job.firm_name} | Trapped Into Architecture`,
+      description: `${job.position} opportunity at ${job.firm_name} in ${job.city}, ${job.state}.`,
+      url: `https://trappedintoarchitecture.com${generateJobUrl(job)}`,
       images: job.image ? [job.image] : [],
     },
+    twitter: {
+      card: "summary_large_image",
+      title: `${job.position} — ${job.firm_name} | Trapped Into Architecture`,
+      description: `${job.position} opportunity at ${job.firm_name} in ${job.city}, ${job.state}.`,
+      images: job.image ? [job.image] : [],
+    }
   };
 }
 
@@ -132,7 +139,17 @@ export default async function JobDetailsPage({
                   </Link>
 
                   <p className="text-gray-500 mt-1">
-                    {job.city}{job.state ? `, ${job.state}` : ""}
+                    <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="hover:underline hover:text-gray-800 transition">
+                      {job.city}
+                    </Link>
+                    {job.state ? (
+                      <>
+                        ,{" "}
+                        <Link href={`/jobs?state=${encodeURIComponent(job.state)}`} className="hover:underline hover:text-gray-800 transition">
+                          {job.state}
+                        </Link>
+                      </>
+                    ) : ""}
                   </p>
 
                   {/* TAGS */}
@@ -184,10 +201,10 @@ export default async function JobDetailsPage({
                     )}
                     
                     <div className="ml-auto flex items-center gap-4">
-                      <div className="flex items-center text-gray-500 text-sm">
-                        <span className="mr-1">♡</span> {job.save_count || 0} saved
+                      <div className="flex items-center gap-1 text-gray-700 font-semibold text-base px-2 py-1.5 transition">
+                        <span className="text-xl leading-none">♡</span> {job.save_count || 0}
                       </div>
-                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} initialShares={job.share_count || 0} />
+                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} />
                     </div>
                   </div>
 

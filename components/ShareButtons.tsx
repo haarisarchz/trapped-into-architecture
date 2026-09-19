@@ -1,18 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import { Share2, Copy, Check } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Share, Copy, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-export default function ShareButtons({ url, jobId, initialShares = 0 }: { url: string, jobId: string, initialShares?: number }) {
+export default function ShareButtons({ 
+  url, 
+  jobId, 
+  companyName, 
+  position, 
+  experience,
+  initialShares = 0,
+  iconOnly = false
+}: { 
+  url: string, 
+  jobId: string, 
+  companyName: string,
+  position: string,
+  experience?: string,
+  initialShares?: number,
+  iconOnly?: boolean
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareCount, setShareCount] = useState(initialShares);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const trackShare = async () => {
-    // Optimistic UI update
     setShareCount(prev => prev + 1);
-    
     try {
       const { data } = await supabase.from('jobs').select('share_count').eq('id', jobId).single();
       if (data) {
@@ -23,7 +48,16 @@ export default function ShareButtons({ url, jobId, initialShares = 0 }: { url: s
     }
   };
 
-  const copyLink = async () => {
+  const getShareText = () => {
+    let text = `Name: ${companyName}\nPosition: ${position}\n`;
+    if (experience) text += `Experience: ${experience}\n`;
+    text += `\nFor more details, visit:\n${url}`;
+    return text;
+  };
+
+  const copyLink = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -31,27 +65,55 @@ export default function ShareButtons({ url, jobId, initialShares = 0 }: { url: s
     setIsOpen(false);
   };
 
+  const nativeShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${position} at ${companyName}`,
+          text: getShareText(),
+          // URL is included in the text to ensure formatting, but we can also pass it
+        });
+        trackShare();
+      } catch (err) {
+        console.error("Native share failed", err);
+      }
+    }
+  };
+
+  const shareText = encodeURIComponent(getShareText());
+  
   const shareLinks = [
-    { name: "WhatsApp", icon: <span className="font-bold">💬</span>, href: `https://wa.me/?text=${encodeURIComponent(url)}` },
+    { name: "WhatsApp", icon: <span className="font-bold text-green-500">W</span>, href: `https://wa.me/?text=${shareText}` },
     { name: "Facebook", icon: <span className="font-bold text-blue-600">f</span>, href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}` },
-    { name: "X (Twitter)", icon: <span className="font-bold text-[14px]">X</span>, href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}` },
-    { name: "Email", icon: <span>✉️</span>, href: `mailto:?subject=Check out this job&body=${encodeURIComponent(url)}` },
+    { name: "Telegram", icon: <span className="font-bold text-blue-400">T</span>, href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${shareText}` },
+    { name: "Email", icon: <span>✉</span>, href: `mailto:?subject=${encodeURIComponent(`${position} — ${companyName}`)}&body=${shareText}` },
   ];
 
   return (
-    <div className="relative">
-      <div className="flex items-center gap-2">
+    <div className="relative inline-block" ref={menuRef}>
+      <div className="flex items-center gap-1">
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (navigator.share && /android|iphone|ipad|ipod/i.test(navigator.userAgent)) {
+              nativeShare(e);
+            } else {
+              setIsOpen(!isOpen);
+            }
+          }}
+          aria-label={`Share ${position} job`}
+          className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-full transition"
         >
-          <Share2 size={16} /> Share
+          <Share size={18} />
         </button>
-        <span className="text-sm text-gray-500">↗ {shareCount} shares</span>
+        <span className="text-sm font-semibold text-gray-700">{shareCount}</span>
       </div>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-50 p-2 animate-in fade-in zoom-in duration-200">
+        <div className="absolute right-0 bottom-full mb-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-50 p-2 text-left">
           <button
             onClick={copyLink}
             className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
@@ -68,7 +130,8 @@ export default function ShareButtons({ url, jobId, initialShares = 0 }: { url: s
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 trackShare();
                 setIsOpen(false);
               }}

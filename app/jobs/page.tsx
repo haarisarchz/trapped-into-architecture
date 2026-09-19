@@ -14,13 +14,14 @@ import {
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function JobsPage() {
+function JobsPageContent() {
 
-  const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const searchParams = useSearchParams();
+  const [selectedStates, setSelectedStates] = useState<string[]>(searchParams.get("state") ? [searchParams.get("state") as string] : []);
 
-  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [selectedCities, setSelectedCities] = useState<string[]>(searchParams.get("city") ? [searchParams.get("city") as string] : []);
 
-  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<string[]>(searchParams.get("position") ? [searchParams.get("position") as string] : []);
 
   const [selectedQualifications, setSelectedQualifications] = useState<string[]>([]);
 
@@ -1152,5 +1153,13 @@ setSelectedSalary([]);
 <Footer />
 
 </main>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <JobsPageContent />
+    </Suspense>
   );
 }
