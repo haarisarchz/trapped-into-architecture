@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (jobs) {
     jobs.forEach((job) => {
       sitemapData.push({
-        url: `${BASE_URL}/jobs/${job.id}`,
+        url: `${BASE_URL}${generateJobUrl(job)}`,
         lastModified: job.updated_at || job.posted_date || new Date(),
         changeFrequency: 'weekly',
         priority: 0.7,

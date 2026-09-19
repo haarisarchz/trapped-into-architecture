@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import { generateJobUrl } from "@/utils/jobUrl";
 import { Metadata } from "next";
 
 export async function generateMetadata({
@@ -235,7 +236,7 @@ export default async function CompanyPage({
                         </p>
                       </div>
                       <Link
-                        href={`/jobs/${job.id}`}
+                        href={generateJobUrl(job)}
                         className="bg-black text-white px-6 py-3 rounded-xl text-center hover:bg-gray-900 transition"
                       >
                         View Job

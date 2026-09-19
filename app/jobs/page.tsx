@@ -11,7 +11,8 @@ import {
   List,
 } from "lucide-react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function JobsPage() {
 

@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { generateJobUrl } from "@/utils/jobUrl";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 

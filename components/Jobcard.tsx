@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { generateJobUrl } from "@/utils/jobUrl";
+import ShareButtons from "@/components/ShareButtons";
 import {
   Bookmark,
   BookmarkCheck,
@@ -41,6 +43,8 @@ type JobCardProps = {
   image: string;
 
   viewMode: string;
+  save_count?: number;
+  share_count?: number;
 };
 
 export default function JobCard({
@@ -64,6 +68,8 @@ export default function JobCard({
   source,
   image,
   viewMode,
+  save_count = 0,
+  share_count = 0,
 }: JobCardProps) {
   const isExpired =
   post_expiry_date &&
@@ -147,7 +153,7 @@ const isSaved =
 
     return (
 
-       <Link href={`/jobs/${id}`}>
+       <Link href={generateJobUrl({ id, firm_name, position })}>
 
         <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 border border-gray-200 cursor-pointer group">
 
@@ -236,7 +242,7 @@ const isSaved =
 
     return (
 
-  <Link href={`/jobs/${id}`}>
+  <Link href={generateJobUrl({ id, firm_name, position })}>
 
     <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition border border-gray-200 flex h-[240px]">
 
@@ -341,7 +347,7 @@ const isSaved =
 
 return (
 
-  <Link href={`/jobs/${id}`}>
+  <Link href={generateJobUrl({ id, firm_name, position })}>
 
     <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 px-4 py-3 flex items-center gap-3">
 

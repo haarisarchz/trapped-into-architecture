@@ -403,7 +403,7 @@ const handlePublishJob = async (
     const { data: existingCompany } = await supabase
       .from("companies")
       .select("id")
-      .eq("firm_name", firmName)
+      .ilike("firm_name", firmName.trim())
       .maybeSingle();
 
     if (!existingCompany) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { generateJobUrl } from "@/utils/jobUrl";
 import { useRouter } from "next/navigation";
 import { Search, MapPin, Building2, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -148,7 +149,7 @@ export default function InteractiveHome({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {liveJobs.length > 0 ? liveJobs.map((job) => (
-              <Link href={`/jobs/${job.id}`} key={job.id} className="bg-white border rounded-3xl p-6 hover:shadow-xl hover:-translate-y-1 transition group flex flex-col justify-between">
+              <Link href={generateJobUrl(job)} key={job.id} className="bg-white border rounded-3xl p-6 hover:shadow-xl hover:-translate-y-1 transition group flex flex-col justify-between">
                 <div>
                   <h3 className="font-bold text-xl mb-1 group-hover:text-gray-600 transition">{job.position}</h3>
                   <p className="text-gray-500 mb-4">{job.firm_name}</p>

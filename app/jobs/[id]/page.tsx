@@ -2,11 +2,15 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { generateJobUrl } from "@/utils/jobUrl";
+import ShareButtons from "@/components/ShareButtons";
 
 import { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const uuidMatch = rawId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+  const id = uuidMatch ? uuidMatch[0] : rawId;
   const { data: job } = await supabase.from("jobs").select("*").eq("id", id).single();
   
   if (!job) {
@@ -29,7 +33,9 @@ export default async function JobDetailsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id: rawId } = await params;
+  const uuidMatch = rawId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+  const id = uuidMatch ? uuidMatch[0] : rawId;
 
   const { data: job, error } = await supabase
     .from("jobs")
@@ -70,7 +76,8 @@ export default async function JobDetailsPage({
 
   const cityJobs = jobs.filter((j: any) => j.city === job.city).slice(0, 5);
   const positionJobs = jobs.filter((j: any) => j.position === job.position).slice(0, 5);
-  const recentJobs = jobs.slice(0, 5);
+  const recentJobs = [...jobs].sort((a,b) => new Date(b.created_at || b.posted_date).getTime() - new Date(a.created_at || a.posted_date).getTime()).slice(0, 5);
+  const popularJobs = [...jobs].sort((a,b) => (b.save_count || 0) - (a.save_count || 0)).slice(0, 5);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -153,7 +160,7 @@ export default async function JobDetailsPage({
                   </div>
 
                   {/* CTA BUTTONS */}
-                  <div className="flex flex-wrap gap-3 mt-6">
+                  <div className="flex flex-wrap items-center gap-3 mt-6">
                     {isExpired ? (
                       <button disabled className="bg-gray-200 text-gray-500 px-6 py-3 rounded-xl text-base font-semibold cursor-not-allowed">
                         Post Expired
@@ -175,6 +182,13 @@ export default async function JobDetailsPage({
                         )}
                       </>
                     )}
+                    
+                    <div className="ml-auto flex items-center gap-4">
+                      <div className="flex items-center text-gray-500 text-sm">
+                        <span className="mr-1">♡</span> {job.save_count || 0} saved
+                      </div>
+                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} initialShares={job.share_count || 0} />
+                    </div>
                   </div>
 
                 </div>
@@ -251,66 +265,88 @@ export default async function JobDetailsPage({
           {/* SIDEBAR */}
           <aside className="space-y-6">
 
-            {/* JOBS IN SAME CITY */}
-            {cityJobs.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold">Jobs in {job.city}</h2>
-                  <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
-                </div>
-                <div className="space-y-3">
-                  {cityJobs.map((cj: any) => (
-                    <Link key={cj.id} href={`/jobs/${cj.id}`} className="block border rounded-xl p-3 hover:bg-gray-50 transition">
-                      <h3 className="font-semibold">{cj.position}</h3>
-                      <p className="text-gray-500 text-sm mt-0.5">{cj.firm_name}</p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+  {/* SAME POSITION JOBS */}
+  {positionJobs.length > 0 && (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold">{job.position} Jobs</h2>
+        <Link href={`/jobs?position=${encodeURIComponent(job.position)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+      </div>
+      <div className="space-y-3">
+        {positionJobs.map((pj: any) => (
+          <Link key={pj.id} href={generateJobUrl(pj)} className="block border rounded-xl p-3 hover:bg-gray-50 transition">
+            <h3 className="font-semibold">{pj.position}</h3>
+            <p className="text-gray-500 text-sm mt-0.5">{pj.firm_name} · {pj.city}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )}
 
-            {/* SAME POSITION JOBS */}
-            {positionJobs.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold">{job.position} Jobs</h2>
-                  <Link href={`/jobs?position=${encodeURIComponent(job.position)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
-                </div>
-                <div className="space-y-3">
-                  {positionJobs.map((pj: any) => (
-                    <Link key={pj.id} href={`/jobs/${pj.id}`} className="block border rounded-xl p-3 hover:bg-gray-50 transition">
-                      <h3 className="font-semibold">{pj.position}</h3>
-                      <p className="text-gray-500 text-sm mt-0.5">{pj.firm_name} · {pj.city}</p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+  {/* JOBS IN SAME CITY */}
+  {cityJobs.length > 0 && (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold">Jobs in {job.city}</h2>
+        <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+      </div>
+      <div className="space-y-3">
+        {cityJobs.map((cj: any) => (
+          <Link key={cj.id} href={generateJobUrl(cj)} className="block border rounded-xl p-3 hover:bg-gray-50 transition">
+            <h3 className="font-semibold">{cj.position}</h3>
+            <p className="text-gray-500 text-sm mt-0.5">{cj.firm_name}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )}
 
-            {/* RECENT JOBS */}
-            {recentJobs.length > 0 && (
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold">Recent Jobs</h2>
-                  <Link href="/jobs" className="text-sm text-gray-500 hover:text-black transition">View All</Link>
-                </div>
-                <div className="space-y-2">
-                  {recentJobs.map((rj: any) => (
-                    <Link key={rj.id} href={`/jobs/${rj.id}`} className="block py-2 border-b last:border-none hover:bg-gray-50 transition px-1 rounded">
-                      <p className="text-sm text-gray-700">
-                        <span className="font-semibold text-black">{rj.firm_name}</span>
-                        {" "}is hiring{" "}
-                        <span className="font-semibold text-black">{rj.position}</span>
-                        {" "}in{" "}
-                        <span className="text-gray-500">{rj.city}</span>
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
+  {/* POPULAR JOBS */}
+  {popularJobs.length > 0 && (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold">Popular Jobs</h2>
+        <Link href="/jobs" className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+      </div>
+      <div className="space-y-2">
+        {popularJobs.map((pj: any) => (
+          <Link key={pj.id} href={generateJobUrl(pj)} className="block py-2 border-b last:border-none hover:bg-gray-50 transition px-1 rounded">
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-black">{pj.firm_name}</span>
+              {" "}is hiring{" "}
+              <span className="font-semibold text-black">{pj.position}</span>
+            </p>
+            <p className="text-xs text-gray-500 mt-1">♡ {pj.save_count || 0} saved</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )}
 
-          </aside>
+  {/* RECENT JOBS */}
+  {recentJobs.length > 0 && (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold">Recent Jobs</h2>
+        <Link href="/jobs" className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+      </div>
+      <div className="space-y-2">
+        {recentJobs.map((rj: any) => (
+          <Link key={rj.id} href={generateJobUrl(rj)} className="block py-2 border-b last:border-none hover:bg-gray-50 transition px-1 rounded">
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-black">{rj.firm_name}</span>
+              {" "}is hiring{" "}
+              <span className="font-semibold text-black">{rj.position}</span>
+              {" "}in{" "}
+              <span className="text-gray-500">{rj.city}</span>
+            </p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )}
+
+  </aside>
 
         </div>
 

@@ -852,7 +852,7 @@ alert("Profile updated successfully");
       <div
         key={job.id}
         onClick={() =>
-          router.push(`/jobs/${job.id}`)
+          router.push(generateJobUrl(job))
         }
         className="
           bg-white
