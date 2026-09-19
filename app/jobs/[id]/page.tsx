@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { Bookmark, BookmarkCheck } from "lucide-react";
 import { generateJobUrl } from "@/utils/jobUrl";
 import ShareButtons from "@/components/ShareButtons";
 
@@ -71,7 +72,7 @@ export default async function JobDetailsPage({
     );
   }
 
-  const companySlug = company?.slug || job.firm_name?.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+  const companySlug = company?.slug || job.firm_name?.toLowerCase().trim().replace(/s+/g, "-").replace(/[^w-]+/g, "");
   const isExpired = job.post_expiry_date && new Date(job.post_expiry_date) < new Date();
 
   const hasSkills = job.skills_required && Array.isArray(job.skills_required) && job.skills_required.filter(Boolean).length > 0;
@@ -189,6 +190,7 @@ export default async function JobDetailsPage({
                             Apply Now →
                           </a>
                         )}
+                        <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} variant="button" />
                         {job.application_email && (
                           <a href={`mailto:${job.application_email}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-6 py-3 rounded-xl text-base font-semibold border-2 border-black hover:bg-gray-50 transition">
                             Email Now
@@ -201,10 +203,10 @@ export default async function JobDetailsPage({
                     )}
                     
                     <div className="ml-auto flex items-center gap-4">
-                      <div className="flex items-center gap-1 text-gray-700 font-semibold text-base px-2 py-1.5 transition">
-                        <span className="text-xl leading-none">♡</span> {job.save_count || 0}
+                      <div className="flex items-center gap-1.5 text-gray-700 font-semibold text-lg px-2 py-1.5" aria-label="Save count">
+                        <Bookmark size={20} className="text-gray-500" /> {job.save_count || 0}
                       </div>
-                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} />
+                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} variant="statistic" />
                     </div>
                   </div>
 

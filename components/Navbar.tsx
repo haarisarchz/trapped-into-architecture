@@ -34,6 +34,15 @@ useState(false);
   const [authTab, setAuthTab] =
     useState<"login" | "register">("login");
 useEffect(() => {
+  const handleOpenAuth = (e) => {
+    setAuthTab(e.detail);
+    setShowAuthPopup(true);
+  };
+  window.addEventListener('openAuth', handleOpenAuth);
+  return () => window.removeEventListener('openAuth', handleOpenAuth);
+}, []);
+
+useEffect(() => {
   const storedUser = localStorage.getItem("currentUser");
   if (storedUser) {
     const parsed = JSON.parse(storedUser);
@@ -69,6 +78,7 @@ useEffect(() => {
       <button 
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         className="flex items-center gap-2 text-lg font-medium hover:text-gray-300 transition"
+        aria-label="Open navigation menu"
       >
         <span className="text-2xl">☰</span>
         <span>Menu</span>
@@ -77,7 +87,65 @@ useEffect(() => {
       <div>
         {currentUser ? (
           currentUser.displayName && currentUser.displayName.trim() !== "" ? (
-            <span className="font-semibold text-gray-200">{currentUser.displayName}</span>
+            <div className="relative">
+              <button 
+                onClick={() => setShowUserMenu(!showUserMenu)} 
+                className="font-semibold text-gray-200 hover:text-white transition flex items-center gap-1"
+                aria-label="Open account menu"
+              >
+                {currentUser.displayName}
+                <span className="text-xs">▼</span>
+              </button>
+              
+    {showUserMenu && (
+      <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white text-black shadow-lg overflow-hidden z-[100] border border-gray-100">
+        <button
+          onClick={() => {
+            router.push(`/profile/${currentUser.username}`);
+            setShowUserMenu(false);
+          }}
+          className="w-full text-left px-5 py-4 hover:bg-red-50 text-red-500 font-bold border-b border-gray-100"
+        >
+          My Profile
+        </button>
+
+        {currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+          <>
+            <button
+              onClick={() => {
+                router.push("/admin");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+            >
+              Admin Dashboard
+            </button>
+
+            <button
+              onClick={() => {
+                router.push("/admin/add-job");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+            >
+              Add New Job
+            </button>
+          </>
+        )}
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("currentUser");
+            window.location.href = "/";
+          }}
+          className="w-full text-left px-5 py-4 hover:bg-gray-50 text-red-600 font-medium"
+        >
+          Logout
+        </button>
+      </div>
+    )}
+
+            </div>
           ) : (
             <button 
               onClick={() => {
