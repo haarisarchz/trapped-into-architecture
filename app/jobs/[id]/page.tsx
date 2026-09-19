@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-
+import Link from "next/link";
 
 import { Metadata } from "next";
 
@@ -10,9 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const { data: job } = await supabase.from("jobs").select("*").eq("id", id).single();
   
   if (!job) {
-    return {
-      title: "Job Not Found",
-    };
+    return { title: "Job Not Found" };
   }
   
   return {
@@ -31,491 +29,294 @@ export default async function JobDetailsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-
   const { id } = await params;
 
-const { data: job, error } = await supabase
-  .from("jobs")
-  .select("*")
-  .eq("id", id)
-  .single();
+  const { data: job, error } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("id", id)
+    .single();
 
-const { data: jobs = [] } = await supabase
-  .from("jobs")
-  .select("*");
+  const { data: company } = await supabase
+    .from("companies")
+    .select("slug")
+    .eq("firm_name", job?.firm_name || "")
+    .maybeSingle();
 
-if (!job || error) {
+  const { data: jobs = [] } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("status", "published")
+    .neq("id", id)
+    .limit(20);
+
+  if (!job || error) {
+    return (
+      <main className="p-10">
+        <h1 className="text-5xl font-bold">Job Not Found</h1>
+      </main>
+    );
+  }
+
+  const companySlug = company?.slug || job.firm_name?.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+  const isExpired = job.post_expiry_date && new Date(job.post_expiry_date) < new Date();
+
+  const hasSkills = job.skills_required && Array.isArray(job.skills_required) && job.skills_required.filter(Boolean).length > 0;
+  const hasQualifications = job.qualifications && ((Array.isArray(job.qualifications) && job.qualifications.filter(Boolean).length > 0) || (typeof job.qualifications === "string" && job.qualifications.trim()));
+  const hasDescription = job.job_description && job.job_description.trim();
+  const hasSalary = job.salary && job.salary.trim();
+  const hasExperience = job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
+  const hasSource = job.source && job.source.trim();
+
+  const cityJobs = jobs.filter((j: any) => j.city === job.city).slice(0, 5);
+  const positionJobs = jobs.filter((j: any) => j.position === job.position).slice(0, 5);
+  const recentJobs = jobs.slice(0, 5);
+
   return (
-    <main className="p-10">
-      <h1 className="text-5xl font-bold">
-        Job Not Found
-      </h1>
-    </main>
-  );
-}
-
-  return (
-
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-50">
       <Navbar />
 
-      {/* CONTENT */}
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
-      <section className="w-full px-4 lg:px-15 py-15">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
+        {/* BREADCRUMB */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+          <Link href="/" className="hover:text-black transition">Home</Link>
+          <span>/</span>
+          <Link href="/jobs" className="hover:text-black transition">Jobs</Link>
+          <span>/</span>
+          <span className="text-black font-medium truncate">{job.position}</span>
+        </nav>
 
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden flex flex-col lg:flex-row items-start">
-          {/* LEFT IMAGE */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
 
-<div className="lg:w-[38%] bg-gray-100 flex items-start justify-center p-4">
+          {/* MAIN CONTENT */}
+          <div className="space-y-6">
 
-  {job.image ? (
-  <img
-    src={job.image}
-    alt={job.position}
-    className="w-full object-contain rounded-2xl"
-  />
-) : (
-  <div className="w-full h-[300px] bg-gray-200 rounded-2xl flex items-center justify-center text-gray-500">
-    No Image Available
-  </div>
-)}
+            {/* HERO CARD */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="flex flex-col md:flex-row">
 
-</div>
+                {/* IMAGE */}
+                {job.image && (
+                  <div className="md:w-[38%] bg-gray-50 flex items-start justify-center p-4">
+                    <img
+                      src={job.image}
+                      alt={job.position}
+                      className="w-full object-contain rounded-xl"
+                    />
+                  </div>
+                )}
 
-{/* RIGHT CONTENT */}
+                {/* INFO */}
+                <div className="flex-1 p-6 sm:p-8">
 
-<div className="flex-1 p-8">
+                  {/* POSITION — clickable */}
+                  <Link href={`/jobs?position=${encodeURIComponent(job.position)}`} className="group">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-gray-600 transition">
+                      {job.position}
+                    </h1>
+                  </Link>
 
-          {/* TITLE */}
+                  {/* COMPANY — clickable */}
+                  <Link href={`/companies/${companySlug}`} className="group">
+                    <p className="text-lg text-gray-700 mt-1 group-hover:text-black group-hover:underline transition">
+                      {job.firm_name}
+                    </p>
+                  </Link>
 
-          <div className="mb-5">
+                  <p className="text-gray-500 mt-1">
+                    {job.city}{job.state ? `, ${job.state}` : ""}
+                  </p>
 
-            <h1 className="text-3xl font-bold">
-              {job.position}
-            </h1>
+                  {/* TAGS */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {job.employment_type && (
+                      <span className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200">
+                        {job.employment_type}
+                      </span>
+                    )}
+                    {job.workplace_type && (
+                      <span className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200">
+                        {job.workplace_type}
+                      </span>
+                    )}
+                    {hasExperience && (
+                      <span className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200">
+                        {Array.isArray(job.experience) ? job.experience.join(", ") : job.experience}
+                      </span>
+                    )}
+                    {hasSalary && (
+                      <span className="bg-green-50 text-green-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-green-200">
+                        {job.salary}
+                      </span>
+                    )}
+                  </div>
 
-            <p className="text-xl text-gray-700 mt-1">
-              {job.firm_name}
-            </p>
+                  {/* CTA BUTTONS */}
+                  <div className="flex flex-wrap gap-3 mt-6">
+                    {isExpired ? (
+                      <button disabled className="bg-gray-200 text-gray-500 px-6 py-3 rounded-xl text-base font-semibold cursor-not-allowed">
+                        Post Expired
+                      </button>
+                    ) : (
+                      <>
+                        {job.apply_link && (
+                          <a href={job.apply_link} target="_blank" rel="noopener noreferrer" className="bg-black text-white px-6 py-3 rounded-xl text-base font-semibold hover:bg-gray-800 transition">
+                            Apply Now →
+                          </a>
+                        )}
+                        {job.application_email && (
+                          <a href={`mailto:${job.application_email}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-6 py-3 rounded-xl text-base font-semibold border-2 border-black hover:bg-gray-50 transition">
+                            Email Now
+                          </a>
+                        )}
+                        {!job.apply_link && !job.application_email && (
+                          <span className="text-gray-500 text-sm italic">No application method provided</span>
+                        )}
+                      </>
+                    )}
+                  </div>
 
-            <p className="text-gray-500 mt-1 text-lg">
-              {job.city}, {job.state}
-            </p>
-
-          </div>
-
-          {/* QUICK INFO */}
-
-<div className="flex flex-wrap gap-4 mb-5">
-
-    {job.employment_type && (
-    <div className="bg-gray-50 rounded-xl px-4 py-3 border min-w-[160px]">
-      <p className="text-xs text-gray-500">Employment Type</p>
-      <h3 className="text-lg font-semibold mt-1">{job.employment_type}</h3>
-    </div>
-  )}
-  {job.workplace_type && (
-    <div className="bg-gray-50 rounded-xl px-4 py-3 border min-w-[160px]">
-      <p className="text-xs text-gray-500">Workplace</p>
-      <h3 className="text-lg font-semibold mt-1">{job.workplace_type}</h3>
-    </div>
-  )}
-
-  {/* EXPERIENCE */}
-
-  {job.experience && (
-
-    <div className="bg-gray-50 rounded-xl px-4 py-3 border min-w-[160px]">
-
-      <p className="text-xs text-gray-500">
-        Experience
-      </p>
-
-      <h3 className="text-lg font-semibold mt-1">
-        {job.experience}
-      </h3>
-
-    </div>
-
-  )}
-
-  {/* SALARY */}
-
-  {job.salary && (
-
-    <div className="bg-gray-50 rounded-xl px-4 py-3 border min-w-[200px]">
-
-      <p className="text-xs text-gray-500">
-        Salary
-      </p>
-
-      <h3 className="text-lg font-semibold mt-1">
-        {job.salary}
-      </h3>
-
-    </div>
-
-  )}
-
-  {/* QUALIFICATION */}
-
-  {job.qualifications?.length > 0 && (
-
-    <div className="bg-gray-50 rounded-xl px-4 py-3 border min-w-[180px]">
-
-      <p className="text-xs text-gray-500">
-        Qualification
-      </p>
-
-      <h3 className="text-lg font-semibold mt-1">
-        {Array.isArray(job.qualifications)
-  ? job.qualifications.join(", ")
-  : job.qualifications}
-      </h3>
-
-    </div>
-
-  )}
-
-</div>
-          {/* SKILLS */}
-
-          <div className="mb-5">
-
-            <h2 className="text-2xl font-bold mb-2">
-              Skills Required
-            </h2>
-
-            <div className="flex flex-wrap gap-3">
-
-  {job.skills_required?.map((skill: string) => (
-
-      <div
-        key={skill.trim()}
-        className="bg-black text-white px-4 py-2 rounded-full text-sm"
-      >
-        {skill.trim()}
-      </div>
-
-    ))}
-
-</div>
-
-          </div>
-
-          {/* DESCRIPTION */}
-
-          <div className="mb-5">
-
-            <h2 className="text-2xl font-bold mb-2">
-              Job Description
-            </h2>
-
-            <p className="text-gray-700 leading-8 text-lg">
-              {job.job_description}
-            </p>
-
-          </div>
-
-          {/* DATES */}
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-5">
-
-            <div>
-
-              <p className="text-sm text-gray-500">
-                Posted Date
-              </p>
-
-              <p className="font-semibold mt-1">
-                {job.posted_date}
-              </p>
-
+                </div>
+              </div>
             </div>
 
-            {job.last_date_to_apply && (
+            {/* QUALIFICATIONS */}
+            {hasQualifications && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+                <h2 className="text-xl font-bold mb-4 text-gray-900">Qualifications</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  {Array.isArray(job.qualifications) ? job.qualifications.join(", ") : job.qualifications}
+                </p>
+              </div>
+            )}
 
-  <div>
+            {/* SKILLS */}
+            {hasSkills && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+                <h2 className="text-xl font-bold mb-4 text-gray-900">Skills Required</h2>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills_required.filter(Boolean).map((skill: string) => (
+                    <span key={skill.trim()} className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm font-medium">
+                      {skill.trim()}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-    <p className="text-xs text-gray-500">
-      Last Date To Apply
-    </p>
+            {/* DESCRIPTION */}
+            {hasDescription && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+                <h2 className="text-xl font-bold mb-4 text-gray-900">Job Description</h2>
+                <div className="text-gray-700 leading-8 whitespace-pre-line">
+                  {job.job_description}
+                </div>
+              </div>
+            )}
 
-    <h3 className="text-lg font-semibold mt-1">
-      {job.last_date_to_apply}
-    </h3>
-
-  </div>
-
-)}
-
-            <div>
-
-              <p className="text-sm text-gray-500">
-                Post Expiry Date
-              </p>
-
-              <p className="font-semibold mt-1">
-                {job.post_expiry_date}
-              </p>
-
+            {/* DATES */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+              <h2 className="text-xl font-bold mb-4 text-gray-900">Job Details</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {job.posted_date && (
+                  <div>
+                    <p className="text-sm text-gray-500">Posted Date</p>
+                    <p className="font-semibold mt-1">{job.posted_date}</p>
+                  </div>
+                )}
+                {job.last_date_to_apply && (
+                  <div>
+                    <p className="text-sm text-gray-500">Last Date To Apply</p>
+                    <p className="font-semibold mt-1">{job.last_date_to_apply}</p>
+                  </div>
+                )}
+                {job.post_expiry_date && (
+                  <div>
+                    <p className="text-sm text-gray-500">Post Expiry Date</p>
+                    <p className="font-semibold mt-1">{job.post_expiry_date}</p>
+                  </div>
+                )}
+                {hasSource && (
+                  <div>
+                    <p className="text-sm text-gray-500">Source</p>
+                    <p className="font-semibold mt-1">{job.source}</p>
+                  </div>
+                )}
+              </div>
             </div>
 
           </div>
 
-          {/* APPLY BUTTON */}
-
-{job.post_expiry_date &&
-new Date(job.post_expiry_date) <
-  new Date() ? (
-
-  <button
-    disabled
-    className="inline-block bg-gray-300 text-gray-600 px-8 py-4 rounded-2xl text-lg font-semibold cursor-not-allowed"
-  >
-    Post Expired
-  </button>
-
-) : (
-
-  <a
-    href={job.apply_link}
-    target="_blank"
-    className="inline-block bg-black text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-gray-800 transition"
-  >
-    Apply Now
-  </a>
-
-)}
-
-        </div> {/* RIGHT CONTENT */}
-
-      </div> {/* MAIN CONTAINER */}
-
-        {/* SIDEBAR */}
-
-<aside className="space-y-6">
-
-  {/* JOBS IN SAME CITY */}
-
-  <div className="bg-white rounded-3xl p-6 shadow-lg border">
-
-    <div className="flex items-center justify-between mb-5">
-
-      <h2 className="text-xl font-bold">
-        Jobs In {job.city}
-      </h2>
-
-      <button className="text-sm font-medium text-gray-500 hover:text-black transition">
-        View All
-      </button>
-
-    </div>
-
-    <div className="space-y-3">
-
-      {jobs?.filter(
-          (cityJob) =>
-            cityJob.id !== job.id &&
-            cityJob.city === job.city
-        )
-        .slice(0, 5)
-        .map((cityJob) => (
-
-          <div
-            key={cityJob.id}
-            className="border rounded-2xl p-4 hover:bg-gray-50 transition cursor-pointer"
-          >
-
-            <h3 className="font-semibold text-lg">
-              {cityJob.position}
-            </h3>
-
-            <p className="text-gray-600 text-sm mt-1">
-              {cityJob.firmName}
-            </p>
-
-            <p className="text-gray-400 text-sm mt-1">
-              {cityJob.city}
-            </p>
-
-          </div>
-
-        ))}
-
-    </div>
-
-  </div>
-
-  {/* SAME POSITION JOBS */}
-
-  <div className="bg-white rounded-3xl p-6 shadow-lg border">
-
-    <div className="flex items-center justify-between mb-5">
-
-      <h2 className="text-xl font-bold">
-        {job.position} Jobs
-      </h2>
-
-      <button className="text-sm font-medium text-gray-500 hover:text-black transition">
-        View All
-      </button>
-
-    </div>
-
-    <div className="space-y-3">
-
-      {jobs?.filter(
-          (positionJob) =>
-            positionJob.id !== job.id &&
-            positionJob.position === job.position
-        )
-        .slice(0, 5)
-        .map((positionJob) => (
-
-          <div
-            key={positionJob.id}
-            className="border rounded-2xl p-4 hover:bg-gray-50 transition cursor-pointer"
-          >
-
-            <h3 className="font-semibold text-lg">
-              {positionJob.position}
-            </h3>
-
-            <p className="text-gray-600 text-sm mt-1">
-              {positionJob.firmName}
-            </p>
-
-            <p className="text-gray-400 text-sm mt-1">
-              {positionJob.city}
-            </p>
-
-          </div>
-
-        ))}
-
-    </div>
-
-  </div>
-
-  {/* RECENT JOBS */}
-
-<div className="bg-white rounded-3xl p-6 shadow-lg border">
-
-  <div className="flex items-center justify-between mb-2">
-
-    <h2 className="text-xl font-bold">
-      Recent Jobs
-    </h2>
-
-    <button className="text-sm font-medium text-gray-500 hover:text-black transition">
-      View All
-    </button>
-
-  </div>
-
-  <div className="space-y-2">
-
-    {jobs?.slice(0, 5).map((recentJob) => (
-
-      <div
-        key={recentJob.id}
-        className="py-3 border-b last:border-none"
-      >
-
-        <p className="text-sm leading-7 text-gray-700">
-
-          <span className="font-semibold text-black">
-            {recentJob.firmName}
-          </span>
-
-          {" "}is hiring{" "}
-
-          <span className="font-semibold text-black">
-            {recentJob.position}
-          </span>
-
-          {" "}in{" "}
-
-          <span className="text-gray-500">
-            {recentJob.city}
-          </span>
-
-        </p>
-
-      </div>
-
-    ))}
-
-  </div>
-
-</div>
-
-
-
-{/* POPULAR JOBS */}
-
-<div className="bg-white rounded-3xl p-6 shadow-lg border">
-
-  <div className="flex items-center justify-between mb-2">
-
-    <h2 className="text-xl font-bold">
-      Popular Jobs
-    </h2>
-
-    <button className="text-sm font-medium text-gray-500 hover:text-black transition">
-      View All
-    </button>
-
-  </div>
-
-  <div className="space-y-4">
-
-    {jobs?.slice(0, 5).map((popularJob) => (
-
-      <div
-        key={popularJob.id}
-        className="py-3 border-b last:border-none"
-      >
-
-        <p className="text-sm leading-7 text-gray-700">
-
-          <span className="font-semibold text-black">
-            {popularJob.firmName}
-          </span>
-
-          {" "}is hiring{" "}
-
-          <span className="font-semibold text-black">
-            {popularJob.position}
-          </span>
-
-          {" "}in{" "}
-
-          <span className="text-gray-500">
-            {popularJob.city}
-          </span>
-
-        </p>
-
-      </div>
-
-    ))}
-
-  </div>
-
-</div>
-
-</aside>
-
-</div>
+          {/* SIDEBAR */}
+          <aside className="space-y-6">
+
+            {/* JOBS IN SAME CITY */}
+            {cityJobs.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold">Jobs in {job.city}</h2>
+                  <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+                </div>
+                <div className="space-y-3">
+                  {cityJobs.map((cj: any) => (
+                    <Link key={cj.id} href={`/jobs/${cj.id}`} className="block border rounded-xl p-3 hover:bg-gray-50 transition">
+                      <h3 className="font-semibold">{cj.position}</h3>
+                      <p className="text-gray-500 text-sm mt-0.5">{cj.firm_name}</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SAME POSITION JOBS */}
+            {positionJobs.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold">{job.position} Jobs</h2>
+                  <Link href={`/jobs?position=${encodeURIComponent(job.position)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+                </div>
+                <div className="space-y-3">
+                  {positionJobs.map((pj: any) => (
+                    <Link key={pj.id} href={`/jobs/${pj.id}`} className="block border rounded-xl p-3 hover:bg-gray-50 transition">
+                      <h3 className="font-semibold">{pj.position}</h3>
+                      <p className="text-gray-500 text-sm mt-0.5">{pj.firm_name} · {pj.city}</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* RECENT JOBS */}
+            {recentJobs.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold">Recent Jobs</h2>
+                  <Link href="/jobs" className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+                </div>
+                <div className="space-y-2">
+                  {recentJobs.map((rj: any) => (
+                    <Link key={rj.id} href={`/jobs/${rj.id}`} className="block py-2 border-b last:border-none hover:bg-gray-50 transition px-1 rounded">
+                      <p className="text-sm text-gray-700">
+                        <span className="font-semibold text-black">{rj.firm_name}</span>
+                        {" "}is hiring{" "}
+                        <span className="font-semibold text-black">{rj.position}</span>
+                        {" "}in{" "}
+                        <span className="text-gray-500">{rj.city}</span>
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </aside>
+
+        </div>
 
       </section>
-      
-      <Footer />
 
+      <Footer />
     </main>
   );
-
 }

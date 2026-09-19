@@ -1,12 +1,27 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 function AdminJobsContent() {
+  const [highlightId, setHighlightId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hid = params.get("highlight");
+    if (hid) {
+      setHighlightId(hid);
+      setTimeout(() => {
+        const el = document.getElementById(`job-${hid}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 500);
+      setTimeout(() => setHighlightId(null), 4000);
+    }
+  }, []);
+
 
   const router = useRouter();
 

@@ -539,60 +539,58 @@ const finalExpiryDate =
   }
 
   const { data, error } = await supabase
-  .from("jobs")
-  .insert([
-    {
-      firm_name: firmName,
-      company_id: currentCompanyId,
-      employment_type: employmentType,
-      workplace_type: workplaceType,
-      area: area,
-      city: city,
-      state: state,
-      position: position,
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
-      experience: selectedExperience,
-      salary: salary,
-      qualifications: qualifications,
-      skills_required: skills,
+  const jobPayload = {
+    firm_name: firmName,
+    company_id: currentCompanyId,
+    employment_type: employmentType,
+    workplace_type: workplaceType,
+    area: area,
+    city: city,
+    state: state,
+    position: position,
+    experience: selectedExperience,
+    salary: salary,
+    qualifications: qualifications,
+    skills_required: skills,
+    posted_date: status === "published" ? formattedToday : null,
+    scheduled_date: status === "scheduled" ? `${scheduleDate} ${scheduleTime}` : null,
+    last_date_to_apply: lastDateToApply || null,
+    post_expiry_date: finalExpiryDate,
+    job_description: jobDescription,
+    apply_link: apply_link,
+    application_email: application_email,
+    source: source,
+    image: imageUrl,
+    status: status,
+  };
 
-      posted_date:
-        status === "published"
-          ? formattedToday
-          : null,
-
-      scheduled_date:
-        status === "scheduled"
-          ? `${scheduleDate} ${scheduleTime}`
-          : null,
-
-      last_date_to_apply:
-        lastDateToApply || null,
-
-      post_expiry_date:
-        finalExpiryDate,
-
-      job_description: jobDescription,
-
-      apply_link: apply_link,
-      application_email: application_email,
-
-      source: source,
-
-      image: imageUrl,
-
-      status: status,
-    },
-  ])
-  .select()
-  .single();
+  let jobData: any, jobError: any;
+  if (jobId) {
+    const res = await supabase.from("jobs").update(jobPayload).eq("id", jobId).select().single();
+    jobData = res.data;
+    jobError = res.error;
+  } else {
+    if (currentUser) {
+      (jobPayload as any).moderator = currentUser.displayName || currentUser.username || currentUser.fullName || "Admin";
+    }
+    const res = await supabase.from("jobs").insert([jobPayload]).select().single();
+    jobData = res.data;
+    jobError = res.error;
+    
+    if (jobData && jobData.id) {
+      setJobId(jobData.id);
+      window.history.replaceState(null, "", `/admin/add-job?id=${jobData.id}`);
+    }
+  }
 
 /* ERROR */
 
-if (error) {
-  console.log("SUPABASE ERROR:", error);
+if (jobError) {
+  console.log("SUPABASE ERROR:", jobError);
 
-  alert(JSON.stringify(error));
+  alert(JSON.stringify(jobError));
 
   return;
 }
@@ -607,27 +605,9 @@ if (status === "draft") {
   alert("Job published successfully.");
 }
 
-router.push("/admin");
-
-/* CLEAR FORM */
-
-setFirmName("");
-setArea("");
-setCity("");
-setState("");
-setPosition("");
-setSalary("");
-setSelectedExperience([]);
-setQualifications([]);
-setSkills([]);
-setJobDescription("");
-setapply_link("");
-setapplication_email("");
-setSource("");
-setImage("");
-setImageUrl("");
-setLastDateToApply("");
-setPostExpiryDate("");
+if (status !== "draft") {
+  router.push("/admin");
+}
 
 };
 
