@@ -274,7 +274,7 @@ setSelectedSalary([]);
         jobs.flatMap((job) =>
 
           Array.isArray(job.experience)
-            ? job.experience.map((exp: string) => exp.trim())
+            ? job.experience.map((exp: any) => typeof exp === 'string' ? exp.trim() : String(exp || ''))
             : []
 
         )
@@ -398,7 +398,7 @@ setSelectedSalary([]);
         jobs.flatMap((job) =>
 
           Array.isArray(job.qualifications)
-            ? job.qualifications.map((q: string) => q.trim())
+            ? job.qualifications.map((q: any) => typeof q === 'string' ? q.trim() : String(q || ''))
             : []
 
         )
@@ -464,7 +464,7 @@ setSelectedSalary([]);
         jobs.flatMap((job) =>
 
           Array.isArray(job.skills_required)
-            ? job.skills_required.map((skill: string) => skill.trim())
+            ? job.skills_required.map((skill: any) => typeof skill === 'string' ? skill.trim() : String(skill || ''))
             : []
 
         )

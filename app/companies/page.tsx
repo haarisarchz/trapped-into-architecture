@@ -157,7 +157,7 @@ const softwares = useMemo(() => {
       list.push(
         ...String(job.required_software)
           .split(",")
-          .map((x) => x.trim())
+          .map((x: any) => typeof x === "string" ? x.trim() : String(x || ""))
       );
 
     }
