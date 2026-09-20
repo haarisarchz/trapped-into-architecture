@@ -42,6 +42,7 @@ export default function CompaniesPage() {
 
     const [selectedFirmSize, setSelectedFirmSize] = useState<string[]>([]);
 const [activeJobsOnly, setActiveJobsOnly] = useState(false);
+const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
 
@@ -334,48 +335,9 @@ const specialisations = useMemo(() => {
 
   if (loading) {
 
-    return (
-
-      <main className="min-h-screen flex items-center justify-center">
-
-        Loading...
-
-      </main>
-
-    );
-
-  }
-
-  return (
-
-    <main className="min-h-screen bg-gray-100">
-
-      <Navbar />
-
-      <section className="w-full px-6 lg:px-12 py-10">
-
-        <div className="mb-10">
-
-          <h1 className="text-5xl font-bold">
-
-            Companies
-
-          </h1>
-
-          <p className="text-gray-600 mt-2">
-
-            Explore architecture firms across India.
-
-          </p>
-
-
-  {/* ================= MAIN LAYOUT ================= */}
-
-<div className="flex flex-col lg:flex-row gap-8 mt-8 items-start w-full">
-
-  {/* ================= LEFT FILTER SIDEBAR ================= */}
-
-  <aside className="hidden lg:block w-full lg:w-72 bg-white rounded-3xl shadow p-7 sticky top-24 h-fit">
+    
+  const renderFilters = () => (
+    <aside className="w-full">
 
     <div className="flex justify-between items-center mb-7">
       <h2 className="text-3xl font-bold">
@@ -662,6 +624,85 @@ const specialisations = useMemo(() => {
     </label>
 
   </aside>
+  );
+  
+  return (
+
+      <main className="min-h-screen flex items-center justify-center">
+
+        Loading...
+
+      
+  {/* MOBILE FILTER DRAWER */}
+  {mobileFiltersOpen && (
+    <div className="fixed inset-0 z-[200] flex">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 transition-opacity"
+        onClick={() => setMobileFiltersOpen(false)}
+      />
+      {/* Drawer */}
+      <div className="relative w-full max-w-xs bg-white h-full shadow-xl flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold">Filters</h2>
+          <button 
+            onClick={() => setMobileFiltersOpen(false)}
+            className="text-gray-400 hover:text-black transition"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto flex-1">
+          {renderFilters()}
+        </div>
+        <div className="p-6 border-t border-gray-100 bg-gray-50">
+          <button 
+            onClick={() => setMobileFiltersOpen(false)}
+            className="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition"
+          >
+            Show Results
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+  
+</main>
+
+    );
+
+  }
+
+  return (
+
+    <main className="min-h-screen bg-gray-100">
+
+      <Navbar />
+
+      <section className="w-full px-6 lg:px-12 py-10">
+
+        <div className="mb-10">
+
+          <h1 className="text-5xl font-bold">
+
+            Companies
+
+          </h1>
+
+          <p className="text-gray-600 mt-2">
+
+            Explore architecture firms across India.
+
+          </p>
+
+
+  {/* ================= MAIN LAYOUT ================= */}
+
+<div className="flex flex-col lg:flex-row gap-8 mt-8 items-start w-full">
+
+  {/* ================= LEFT FILTER SIDEBAR ================= */}
+
+  {renderFilters()}
 
   {/* ================= RIGHT CONTENT ================= */}
 

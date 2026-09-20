@@ -220,14 +220,7 @@ useEffect(() => {
   Companies
 </Link>
 
-          {/* PRACTICE EXAMS */}
-
-          <Link
-            href="/practice-exams"
-            className="hover:text-gray-300 transition"
-          >
-            Practice Exams
-          </Link>
+          
 
           {/* CONTACT */}
 
@@ -321,8 +314,8 @@ useEffect(() => {
     <Link href="/jobs" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
     <Link href="/companies" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
     <Link href="/internships" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
-    <Link href="/resources" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Resources</Link>
-    <Link href="/practice-exams" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Practice Exams</Link>
+    
+    
     
     {!currentUser && (
       <div className="flex bg-gray-900">

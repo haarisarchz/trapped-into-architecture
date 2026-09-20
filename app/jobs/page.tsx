@@ -40,7 +40,7 @@ function JobsPageContent() {
   const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
 
 const [selectedSalary, setSelectedSalary] = useState<string[]>([]);
-const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
 
 const [showFilters, setShowFilters] = useState(false);
 
@@ -122,22 +122,9 @@ const uniqueCities = [
 
 }, []);
 
-  return (
-    <main className="min-h-screen bg-gray-100">
-
-      <Navbar />
-
-      <section className="px-4 py-6 md:p-10">
-
-        <h1 className="text-2xl md:text-5xl font-bold mb-4">
-         Architecture Jobs
-        </h1>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-
-  {/* FILTER SIDEBAR */}
-
-<div className="hidden lg:block w-full lg:w-72 bg-white p-6 rounded-2xl shadow-md h-fit border border-gray-200">
+  
+  const renderFilters = (isMobile = false) => (
+    <div className={isMobile ? "w-full" : "hidden lg:block w-full lg:w-72 bg-white p-6 rounded-2xl shadow-md h-fit border border-gray-200"}>
 
   <div className="flex items-center justify-between mb-6">
 
@@ -547,20 +534,38 @@ setSelectedSalary([]);
     </div>
 
   </div>
+  );
+  
+  return (
+    <main className="min-h-screen bg-gray-100">
+
+      <Navbar />
+
+      <section className="px-4 py-6 md:p-10">
+
+        <h1 className="text-2xl md:text-5xl font-bold mb-4">
+         Architecture Jobs
+        </h1>
+
+        <div className="flex flex-col lg:flex-row gap-8">
+
+  {/* FILTER SIDEBAR */}
+
+{renderFilters(false)}
 
 
 {/* RIGHT SIDE */}
 
 {/* MOBILE FILTER DRAWER */}
 
-{mobileFiltersOpen && (
+{showFilters && (
   <div className="fixed inset-0 z-50 lg:hidden">
 
     {/* Dark overlay */}
 
     <div
       className="absolute inset-0 bg-black/50"
-      onClick={() => setMobileFiltersOpen(false)}
+      onClick={() => setShowFilters(false)}
     />
 
     {/* Drawer */}
@@ -574,7 +579,7 @@ setSelectedSalary([]);
         </h2>
 
         <button
-          onClick={() => setMobileFiltersOpen(false)}
+          onClick={() => setShowFilters(false)}
           className="text-2xl"
         >
           ✕
@@ -1142,7 +1147,7 @@ setSelectedSalary([]);
 
       </div>
 
-      {/* CUT & PASTE YOUR ENTIRE FILTER CONTENT HERE */}
+      {renderFilters(true)}
 
     </div>
 

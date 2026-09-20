@@ -79,8 +79,8 @@ export default function Footer() {
             <li><Link href="/jobs" className="hover:text-white transition block p-1 -m-1">Browse Jobs</Link></li>
             <li><a href="#" onClick={handleCreateProfile} className="hover:text-white transition block p-1 -m-1">Create Profile</a></li>
             <li><a href="#" onClick={handleSavedJobs} className="hover:text-white transition block p-1 -m-1">Saved Jobs</a></li>
-            <li><Link href="/career-advice" className="hover:text-white transition block p-1 -m-1">Career Advice</Link></li>
-            <li><Link href="/resume-tips" className="hover:text-white transition block p-1 -m-1">Resume Tips</Link></li>
+            
+            
           </ul>
         </div>
 

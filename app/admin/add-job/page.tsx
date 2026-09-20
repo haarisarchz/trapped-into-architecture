@@ -129,6 +129,7 @@ const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
 const [activeTab, setActiveTab] = useState("text");
 
 const [uploadMode, setUploadMode] = useState('text');
+const [autoPublishSocial, setAutoPublishSocial] = useState(true);
 const [previewData,setPreviewData]=useState(null);
 const [aiResult, setAiResult] = useState<any>(null);
 
@@ -352,7 +353,7 @@ const [uploadSuccess, setUploadSuccess] =
   const fileName =
     `${Date.now()}-${file.name}`;
 
-  const { error } = await supabase.storage
+  const { data, error } = await supabase.storage
     .from("job-images")
     .upload(fileName, file);
 
@@ -575,7 +576,7 @@ const finalExpiryDate =
     if (currentUser) {
       (jobPayload as any).moderator = currentUser.displayName || currentUser.username || currentUser.fullName || "Admin";
     }
-    const res = await supabase.from("jobs").insert([jobPayload]).select().single();
+    const res = await supabase.from("jobs").insert([jobPayload]).select().single().select().single();
     jobData = res.data;
     jobError = res.error;
     
@@ -594,6 +595,18 @@ if (jobError) {
 
   return;
 }
+
+
+      //* TRIGGER SOCIAL PUBLISHING */
+      if (status === "published" && autoPublishSocial && data && data.id) {
+        // Do not await to avoid blocking UI unnecessarily
+        fetch("/api/publish/social", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: data.id })
+        }).catch(err => console.error("Social publish request failed", err));
+      }
+    
 
 //* SUCCESS */
 
