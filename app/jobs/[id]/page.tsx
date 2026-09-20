@@ -197,7 +197,7 @@ export default async function JobDetailsPage({
                             Apply Now →
                           </a>
                         )}
-                        <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} variant="button" />
+                        <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} organizationType={job.organization_type} location={`${job.city}, ${job.state}`} variant="button" />
                         {job.application_email && (
                           <a href={`mailto:${job.application_email}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-6 py-3 rounded-xl text-base font-semibold border-2 border-black hover:bg-gray-50 transition">
                             Email Now
@@ -213,7 +213,7 @@ export default async function JobDetailsPage({
                       <div className="flex items-center gap-1.5 text-gray-700 font-semibold text-lg px-2 py-1.5" aria-label="Save count">
                         <Bookmark size={20} className="text-gray-500" /> {job.save_count || 0}
                       </div>
-                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} variant="statistic" />
+                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} experience={job.experience} initialShares={job.share_count || 0} organizationType={job.organization_type} location={`${job.city}, ${job.state}`} variant="statistic" />
                     </div>
                   </div>
 

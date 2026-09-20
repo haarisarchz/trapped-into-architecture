@@ -101,7 +101,7 @@ useEffect(() => {
       <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white text-black shadow-lg overflow-hidden z-[100] border border-gray-100">
         <button
           onClick={() => {
-            router.push(`/profile/${currentUser.username}`);
+            router.push(`/profile/${currentUser.username}?highlight=displayName`);
             setShowUserMenu(false);
           }}
           className="w-full text-left px-5 py-4 hover:bg-red-50 text-red-500 font-bold border-b border-gray-100"
@@ -312,159 +312,48 @@ useEffect(() => {
 
         </div>
 
-{/* MOBILE MENU */}
+  </div>
 
+  {/* MOBILE MENU */}
 {mobileMenuOpen && (
-
-  <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50">
-
-    <Link
-      href="/"
-      className="block px-6 py-1 border-b border-gray-800"
-      onClick={() => setMobileMenuOpen(false)}
-    >
-      Home
-    </Link>
-
-    <Link
-      href="/jobs"
-      className="block px-6 py-1 border-b border-gray-800"
-      onClick={() => setMobileMenuOpen(false)}
-    >
-      Jobs
-    </Link>
-
-    <Link
-      href="/internships"
-      className="block px-6 py-1 border-b border-gray-800"
-      onClick={() => setMobileMenuOpen(false)}
-    >
-      Internships
-    </Link>
-
-    <div className="border-b border-gray-800">
-
-      <div className="px-6 py-1 font-medium">
-        Profile
-      </div>
-
-      <Link
-        href="/companies"
-        className="block pl-10 py-1 text-gray-300"
-        onClick={() => setMobileMenuOpen(false)}
-      >
-        Companies
-      </Link>
-
-      <Link
-        href="/individuals"
-        className="block pl-10 py-1 text-gray-300"
-        onClick={() => setMobileMenuOpen(false)}
-      >
-        Individuals
-      </Link>
-
-    </div>
-
-    <Link
-      href="/practice-exams"
-      className="block px-6 py-1 border-b border-gray-800"
-      onClick={() => setMobileMenuOpen(false)}
-    >
-      Practice Exams
-    </Link>
-
-    <Link
-      href="/contact"
-      className="block px-6 py-1 border-b border-gray-800"
-      onClick={() => setMobileMenuOpen(false)}
-    >
-      Contact
-    </Link>
-
-    {currentUser ? (
-
-      <>
-        <button
-          onClick={() => {
-            router.push(`/profile/${currentUser.username}`);
-            setMobileMenuOpen(false);
-          }}
-          className="w-full text-left px-6 py-3 border-b border-gray-800 text-red-500 font-bold"
-        >
-          My Profile
-        </button>
-        
-        {currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[s_]+/g, "")) && (
-          <>
-            <button
-              onClick={() => {
-                router.push("/admin");
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left px-6 py-3 border-b border-gray-800 font-bold text-red-500"
-            >
-              Admin Dashboard
-            </button>
-            <button
-              onClick={() => {
-                router.push("/admin/add-job");
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left px-6 py-3 border-b border-gray-800 font-bold text-red-500"
-            >
-              Add New Job
-            </button>
-          </>
-        )}
-
-        <button
-          onClick={() => {
-            localStorage.removeItem("currentUser");
-            window.location.href = "/";
-          }}
-          className="w-full text-left px-6 py-1 text-red-400"
-        >
-          Logout
-        </button>
-      </>
-
-    ) : (
-
-      <>
+  <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50 shadow-2xl flex flex-col">
+    <Link href="/" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+    <Link href="/jobs" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
+    <Link href="/companies" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
+    <Link href="/internships" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
+    <Link href="/resources" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Resources</Link>
+    <Link href="/practice-exams" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Practice Exams</Link>
+    
+    {!currentUser && (
+      <div className="flex bg-gray-900">
         <button
           onClick={() => {
             setAuthTab("login");
             setShowAuthPopup(true);
             setMobileMenuOpen(false);
           }}
-          className="w-full text-left px-6 py-4 border-b border-gray-800"
+          className="flex-1 text-center px-6 py-4 font-bold hover:bg-gray-800 transition border-r border-gray-800"
         >
           Login
         </button>
-
         <button
           onClick={() => {
             setAuthTab("register");
             setShowAuthPopup(true);
             setMobileMenuOpen(false);
           }}
-          className="w-full text-left px-6 py-4"
+          className="flex-1 text-center px-6 py-4 font-bold hover:bg-gray-800 transition"
         >
           Register
         </button>
-      </>
-
+      </div>
     )}
-
   </div>
-
 )}
-
-  </div>
 </nav>
 
-      {/* AUTH POPUP */}
+
+{/* AUTH POPUP */}
 
       {showAuthPopup && (
 

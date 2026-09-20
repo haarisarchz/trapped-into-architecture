@@ -10,6 +10,8 @@ export default function ShareButtons({
   companyName, 
   position, 
   experience,
+  organizationType,
+  location,
   initialShares = 0,
   variant = "icon"
 }: { 
@@ -18,6 +20,8 @@ export default function ShareButtons({
   companyName: string,
   position: string,
   experience?: string,
+  organizationType?: string,
+  location?: string,
   initialShares?: number,
   variant?: "icon" | "button" | "statistic"
 }) {
@@ -49,9 +53,25 @@ export default function ShareButtons({
   };
 
   const getShareText = () => {
-    let text = `Name: ${companyName}\nPosition: ${position}\n`;
-    if (experience) text += `Experience: ${experience}\n`;
-    text += `\nFor more details, visit:\n${url}`;
+    let orgTypeLabel = "Firm Name";
+    if (organizationType) {
+      if (organizationType.toLowerCase().includes('college')) orgTypeLabel = "College Name";
+      else if (organizationType.toLowerCase().includes('consultancy')) orgTypeLabel = "Consultancy Name";
+      else if (organizationType.toLowerCase().includes('studio')) orgTypeLabel = "Studio Name";
+    }
+    
+    let text = `${orgTypeLabel}: ${companyName}\n`;
+    if (location) {
+      text += `Location: ${location}\n`;
+    }
+    
+    let combinedPosition = position;
+    if (experience && experience.trim() !== '') {
+      combinedPosition += ` (${experience.trim()})`;
+    }
+    text += `Position: ${combinedPosition}\n`;
+    
+    text += `\nFor more details visit:\n${url}`;
     return text;
   };
 

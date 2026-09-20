@@ -19,6 +19,7 @@ export default function ProfilePage() {
 
   const router = useRouter();
 const params = useParams();
+const searchParams = useSearchParams();
 const [activeTab, setActiveTab] =
   useState("personal");
 const username =

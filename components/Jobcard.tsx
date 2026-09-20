@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 type JobCardProps = {
   id: string;
   firm_name: string;
+  organization_type?: string;
   area: string;
   city: string;
   state: string;
@@ -33,7 +34,7 @@ type JobCardProps = {
 
 export default function JobCard({
   id,
-  firm_name,
+  firm_name, organization_type,
   area,
   city,
   state,

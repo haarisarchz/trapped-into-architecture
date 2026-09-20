@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import Link from "next/link";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { Metadata } from "next";
+import { Building2, Globe, Mail, MapPin, Briefcase } from "lucide-react";
 
 export async function generateMetadata({
   params,
@@ -11,24 +12,39 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  let companyData = null;
+
   const { data: company } = await supabase
     .from("companies")
     .select("firm_name, company_description, logo_url")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!company) {
+  if (company) {
+    companyData = company;
+  } else {
+    // Fallback to jobs table if company not explicitly created
+    const { data: jobs } = await supabase
+      .from("jobs")
+      .select("firm_name, city, state")
+      .eq("status", "published");
+      
+    if (jobs) {
+      const match = jobs.find(j => {
+        const genSlug = (j.firm_name || "").toLowerCase().trim().replace(/\\s+/g, "-").replace(/[^\\w-]+/g, "");
+        return genSlug === slug;
+      });
+      if (match) companyData = { firm_name: match.firm_name, company_description: "" };
+    }
+  }
+
+  if (!companyData) {
     return { title: "Company Not Found" };
   }
 
   return {
-    title: `${company.firm_name} | Architecture Jobs`,
-    description: company.company_description || `View architecture jobs and company profile for ${company.firm_name}`,
-    openGraph: {
-      title: `${company.firm_name} | Architecture Jobs`,
-      description: company.company_description || `View architecture jobs and company profile for ${company.firm_name}`,
-      images: company.logo_url ? [{ url: company.logo_url }] : [],
-    },
+    title: `${companyData.firm_name} | Trapped Into Architecture`,
+    description: companyData.company_description || `View architecture jobs and company profile for ${companyData.firm_name}`,
   };
 }
 
@@ -39,282 +55,174 @@ export default async function CompanyPage({
 }) {
   const { slug } = await params;
 
-  // 1. Fetch Company
-  const { data: company } = await supabase
+  let company: any = null;
+  const { data: companyRecord } = await supabase
     .from("companies")
     .select("*")
     .eq("slug", slug)
     .maybeSingle();
 
+  company = companyRecord;
+
+  // Always fetch open jobs for this company slug
+  // We need to fetch all published jobs, then filter by slug in JS to handle both real companies and legacy jobs
+  const { data: allJobs } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+
+  const companyJobs = (allJobs || []).filter(j => {
+    const genSlug = (j.firm_name || "").toLowerCase().trim().replace(/\\s+/g, "-").replace(/[^\\w-]+/g, "");
+    return genSlug === slug;
+  });
+
+  // If no company record exists, but we have jobs, construct a virtual company
+  if (!company && companyJobs.length > 0) {
+    const representativeJob = companyJobs[0];
+    company = {
+      firm_name: representativeJob.firm_name,
+      organization_type: representativeJob.organization_type || "Firm",
+      city: representativeJob.city,
+      state: representativeJob.state,
+      logo_url: representativeJob.image || "", // Use job image as fallback logo if exists
+      company_description: "",
+      website_link: "",
+      contact_email: representativeJob.application_email || "",
+      linkedin: "",
+      instagram: "",
+    };
+  }
+
   if (!company) {
     return (
-      <main className="min-h-screen">
+      <main className="min-h-screen flex flex-col bg-gray-50">
         <Navbar />
-        <div className="max-w-7xl mx-auto py-24 text-center">
-          <h1 className="text-4xl font-bold">Company Not Found</h1>
+        <div className="flex-1 flex flex-col items-center justify-center p-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">Company Not Found</h1>
+          <p className="text-gray-500 mb-8">The company you are looking for does not exist or has no active listings.</p>
+          <Link href="/companies" className="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition">
+            Browse All Companies
+          </Link>
         </div>
         <Footer />
       </main>
     );
   }
 
-  // 2. Fetch Active Jobs for this company
-  const { data: jobs } = await supabase
-    .from("jobs")
-    .select("*")
-    .eq("firm_name", company.firm_name);
-
-  const activeJobs = jobs || [];
-
-  // 3. Fetch Similar Companies (same org type)
-  const { data: similarCompanies } = await supabase
-    .from("companies")
-    .select("firm_name, slug, city, logo_url")
-    .eq("organization_type", company.organization_type)
-    .neq("id", company.id)
-    .limit(3);
-
-  // 4. Fetch Companies in same city
-  const { data: cityCompanies } = await supabase
-    .from("companies")
-    .select("firm_name, slug, logo_url")
-    .eq("city", company.city)
-    .neq("id", company.id)
-    .limit(3);
-
-  // 5. Fetch Recently Added Companies
-  const { data: recentCompanies } = await supabase
-    .from("companies")
-    .select("firm_name, slug, logo_url")
-    .neq("id", company.id)
-    .order("created_at", { ascending: false })
-    .limit(3);
-
-  // JSON-LD Schema
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: company.firm_name,
-    description: company.company_description,
-    url: company.website,
-    logo: company.logo_url,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: company.city,
-      addressRegion: company.state,
-    }
-  };
+  const location = [company.city, company.state].filter(Boolean).join(", ");
 
   return (
-    <main className="min-h-screen bg-gray-100">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+    <main className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
 
-      <section className="max-w-7xl mx-auto px-6 py-8">
-        <Link href="/companies" className="inline-block mb-6 text-black hover:underline">
-          ← Back to Companies
-        </Link>
+      <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 md:py-16">
+        {/* COMPANY HEADER */}
+        <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-start mb-10">
+          {/* LOGO */}
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
+            {company.logo_url ? (
+              <img src={company.logo_url} alt={company.firm_name} className="w-full h-full object-cover" />
+            ) : (
+              <Building2 size={40} className="text-gray-400" />
+            )}
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* LEFT COLUMN */}
-          <div className="lg:col-span-9 space-y-8">
-            
-            {/* HERO */}
-            <div className="bg-white rounded-3xl shadow p-8">
-              <div className="flex flex-col sm:flex-row items-start gap-6">
-                {/* Logo */}
-                <div className="w-28 h-28 rounded-full bg-gray-100 border shadow flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {company.logo_url ? (
-                    <img
-                      src={company.logo_url}
-                      alt={company.firm_name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-5xl font-bold text-gray-400">
-                      {company.firm_name.charAt(0)}
-                    </div>
-                  )}
-                </div>
-
-                {/* Company Info */}
-                <div className="flex-1">
-                  <h1 className="text-4xl font-bold">{company.firm_name}</h1>
-                  <p className="text-black mt-2">{company.organization_type}</p>
-                  <p className="text-gray-500 mt-2">
-                    📍 {company.city}, {company.state}
-                  </p>
-
-                  <div className="flex flex-wrap gap-3 mt-5">
-                    <span className="px-4 py-2 rounded-full bg-gray-200 text-gray-900 text-sm">
-                      {activeJobs.length} Active Jobs
-                    </span>
-                    <span className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm">
-                      {company.state}
-                    </span>
-                    <span className="px-4 py-2 rounded-full bg-green-100 text-green-700 text-sm">
-                      Verified Company
-                    </span>
-                  </div>
-                </div>
+          {/* DETAILS */}
+          <div className="flex-1">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{company.firm_name}</h1>
+                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg">
+                  {company.organization_type || "Firm"}
+                </span>
               </div>
             </div>
 
-            {/* ABOUT + CONTACT */}
-            <div className="grid lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 bg-white rounded-3xl shadow p-8">
-                <h2 className="text-2xl font-bold mb-5">About Company</h2>
-                <p className="text-gray-600 leading-8 whitespace-pre-line">
-                  {company.company_description ||
-                    "This company has not added its profile yet. Once verified, the complete company description, vision, services, founder information and practice philosophy will appear here."}
-                </p>
-
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mt-8">
-                  <div>
-                    <h4 className="font-semibold">Founder</h4>
-                    <p className="text-gray-500">{company.founder || "Not Available"}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Founded</h4>
-                    <p className="text-gray-500">{company.founded_year || "Not Available"}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Company Size</h4>
-                    <p className="text-gray-500">{company.employee_size || company.company_size || "Not Available"}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Specialisation</h4>
-                    <p className="text-gray-500">{company.specialisation || "Architecture"}</p>
-                  </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-gray-600 text-sm md:text-base mb-6">
+              {location && (
+                <div className="flex items-center gap-2">
+                  <MapPin size={18} className="text-gray-400" />
+                  {location}
                 </div>
-              </div>
-
-              <div className="space-y-6">
-                <div className="bg-white rounded-3xl shadow p-6">
-                  <h2 className="text-xl font-bold mb-5">Contact</h2>
-                  <div className="space-y-4 text-gray-600">
-                    <p>📍 {company.city}, {company.state}</p>
-                    <p>📧 {company.email || "Not Available"}</p>
-                    <p>📞 {company.phone || "Not Available"}</p>
-                    <p className="truncate">🌐 {company.website ? <a href={company.website} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">{company.website}</a> : "Not Available"}</p>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-3xl shadow p-6">
-                  <h2 className="text-xl font-bold mb-5">Company Statistics</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-100 rounded-xl p-4 text-center">
-                      <h3 className="text-2xl font-bold">{activeJobs.length}</h3>
-                      <p className="text-sm text-gray-500">Jobs</p>
-                    </div>
-                    <div className="bg-gray-100 rounded-xl p-4 text-center">
-                      <h3 className="text-2xl font-bold">0</h3>
-                      <p className="text-sm text-gray-500">Projects</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* JOBS TAB */}
-            <div className="bg-white rounded-3xl shadow p-8">
-              <h2 className="text-2xl font-bold mb-6">Current Openings</h2>
-              {activeJobs.length > 0 ? (
-                <div className="space-y-5">
-                  {activeJobs.map((job: any) => (
-                    <div
-                      key={job.id}
-                      className="border rounded-2xl p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
-                    >
-                      <div>
-                        <h3 className="text-xl font-semibold">{job.position}</h3>
-                        <p className="text-gray-500 mt-2">
-                          {job.city}, {job.state}
-                        </p>
-                      </div>
-                      <Link
-                        href={generateJobUrl(job)}
-                        className="bg-black text-white px-6 py-3 rounded-xl text-center hover:bg-gray-900 transition"
-                      >
-                        View Job
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No active jobs found for this company.</p>
+              )}
+              {company.website_link && (
+                <a href={company.website_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-black transition">
+                  <Globe size={18} className="text-gray-400" />
+                  Website
+                </a>
+              )}
+              {company.contact_email && (
+                <a href={`mailto:${company.contact_email}`} className="flex items-center gap-2 hover:text-black transition">
+                  <Mail size={18} className="text-gray-400" />
+                  Email
+                </a>
               )}
             </div>
 
-          </div> {/* END LEFT COLUMN */}
-
-          {/* RIGHT SIDEBAR */}
-          <aside className="lg:col-span-3 space-y-6">
-            {/* Similar Companies */}
-            <div className="bg-white rounded-2xl border p-5 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg">Similar Companies</h3>
+            {company.company_description && (
+              <div className="prose prose-sm md:prose-base text-gray-700 max-w-none border-t border-gray-100 pt-6">
+                <p className="whitespace-pre-wrap">{company.company_description}</p>
               </div>
-              <div className="space-y-4">
-                {similarCompanies && similarCompanies.length > 0 ? (
-                  similarCompanies.map((sim: any) => (
-                    <Link key={sim.slug} href={`/companies/${sim.slug}`} className="flex items-center gap-3 pb-3 border-b last:border-0 hover:bg-gray-50 p-2 rounded-lg transition">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-                        {sim.logo_url && <img src={sim.logo_url} alt={sim.firm_name} className="w-full h-full object-cover"/>}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm truncate max-w-[150px]">{sim.firm_name}</p>
-                        <p className="text-xs text-gray-500">{sim.city}</p>
-                      </div>
-                    </Link>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No similar companies found.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Companies in City */}
-            <div className="bg-white rounded-2xl border p-5 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg">Companies in {company.city}</h3>
-              </div>
-              <div className="space-y-4">
-                {cityCompanies && cityCompanies.length > 0 ? (
-                  cityCompanies.map((sim: any) => (
-                    <Link key={sim.slug} href={`/companies/${sim.slug}`} className="block pb-3 border-b last:border-0 hover:text-black transition">
-                      <p className="font-medium text-sm truncate">{sim.firm_name}</p>
-                    </Link>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No other companies in this city.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Recently Added */}
-            <div className="bg-white rounded-2xl border p-5 shadow-sm">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg">Recently Added</h3>
-              </div>
-              <div className="space-y-4">
-                {recentCompanies && recentCompanies.length > 0 ? (
-                  recentCompanies.map((sim: any) => (
-                    <Link key={sim.slug} href={`/companies/${sim.slug}`} className="block pb-3 border-b last:border-0 hover:text-black transition">
-                      <p className="font-medium text-sm truncate">{sim.firm_name}</p>
-                    </Link>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">None recently added.</p>
-                )}
-              </div>
-            </div>
-          </aside>
+            )}
+          </div>
         </div>
-      </section>
+
+        {/* OPEN POSITIONS */}
+        <div>
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Current Open Positions</h2>
+            <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-bold">
+              {companyJobs.length} {companyJobs.length === 1 ? 'Job' : 'Jobs'}
+            </span>
+          </div>
+
+          {companyJobs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {companyJobs.map((job: any) => (
+                <Link
+                  key={job.id}
+                  href={generateJobUrl(job)}
+                  className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-300 transition group flex flex-col justify-between"
+                >
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-red-500 transition mb-2">
+                      {job.position}
+                    </h3>
+                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                      <Briefcase size={16} />
+                      {job.experience ? job.experience : "Experience not specified"}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {job.employment_type && (
+                      <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md border border-gray-200">
+                        {job.employment_type}
+                      </span>
+                    )}
+                    {job.workplace_type && (
+                      <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md border border-gray-200">
+                        {job.workplace_type}
+                      </span>
+                    )}
+                    {(job.city || job.state) && (
+                      <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md border border-gray-200 flex items-center gap-1">
+                        <MapPin size={12} />
+                        {[job.city, job.state].filter(Boolean).join(", ")}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl p-8 text-center border border-gray-100">
+              <p className="text-gray-500">No open positions available at this time.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       <Footer />
     </main>
   );
