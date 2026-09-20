@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Bookmark, BookmarkCheck } from "lucide-react";
-import { generateJobUrl, decodeUuid } from "@/utils/jobUrl";
+import { generateJobUrl, decodeUuid, generateCompanySlug } from "@/utils/jobUrl";
 import ShareButtons from "@/components/ShareButtons";
 
 import { Metadata } from "next";
@@ -49,8 +49,14 @@ export default async function JobDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: rawId } = await params;
+  let id = rawId;
   const uuidMatch = rawId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-  const id = uuidMatch ? uuidMatch[0] : rawId;
+  if (uuidMatch) {
+    id = uuidMatch[0];
+  } else if (rawId.length === 22 && !rawId.includes("-")) {
+    const decoded = decodeUuid(rawId);
+    if (decoded) id = decoded;
+  }
 
   const { data: job, error } = await supabase
     .from("jobs")
@@ -79,7 +85,7 @@ export default async function JobDetailsPage({
     );
   }
 
-  const companySlug = company?.slug || job.firm_name?.toLowerCase().trim().replace(/s+/g, "-").replace(/[^w-]+/g, "");
+  const companySlug = company?.slug || generateCompanySlug(job.firm_name);
   const isExpired = job.post_expiry_date && new Date(job.post_expiry_date) < new Date();
 
   const hasSkills = job.skills_required && Array.isArray(job.skills_required) && job.skills_required.filter(Boolean).length > 0;

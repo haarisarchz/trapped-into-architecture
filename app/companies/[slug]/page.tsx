@@ -2,7 +2,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
-import { generateJobUrl } from "@/utils/jobUrl";
+import { generateJobUrl, generateCompanySlug } from "@/utils/jobUrl";
 import { Metadata } from "next";
 import { Building2, Globe, Mail, MapPin, Briefcase } from "lucide-react";
 
@@ -31,7 +31,7 @@ export async function generateMetadata({
       
     if (jobs) {
       const match = jobs.find(j => {
-        const genSlug = (j.firm_name || "").toLowerCase().trim().replace(/\\s+/g, "-").replace(/[^\\w-]+/g, "");
+        const genSlug = generateCompanySlug(j.firm_name || "");
         return genSlug === slug;
       });
       if (match) companyData = { firm_name: match.firm_name, company_description: "" };
@@ -73,7 +73,7 @@ export default async function CompanyPage({
     .order("created_at", { ascending: false });
 
   const companyJobs = (allJobs || []).filter(j => {
-    const genSlug = (j.firm_name || "").toLowerCase().trim().replace(/\\s+/g, "-").replace(/[^\\w-]+/g, "");
+    const genSlug = generateCompanySlug(j.firm_name || "");
     return genSlug === slug;
   });
 

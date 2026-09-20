@@ -30,7 +30,7 @@ export const decodeUuid = (shortId: string): string | null => {
 
 export const generateCompanySlug = (name: string) => {
   if (!name) return "company";
-  return name.toLowerCase().trim().replace(/\\s+/g, "-").replace(/[^\\w-]+/g, "");
+  return name.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
 };
 
 export const generateJobUrl = (job: any) => {
