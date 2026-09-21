@@ -113,10 +113,33 @@ Schema:
       throw new Error("Information could not be structured correctly. Please try again.");
     }
 
-  } catch (error: any) {
+    } catch (error: any) {
     console.error("Gemini Extraction Error:", error);
+    
+    let userMessage = "Failed to extract job details";
+    
+    // Check if the error message is a JSON string from Google API
+    try {
+      if (error.message && error.message.includes('{')) {
+        const parsed = JSON.parse(error.message);
+        if (parsed.error && parsed.error.status === 'UNAVAILABLE') {
+          userMessage = "AI extraction temporarily failed. Please try again.";
+        } else if (parsed.error && parsed.error.message) {
+          userMessage = "AI extraction temporarily failed. Please try again.";
+        }
+      } else if (error.message) {
+        if (error.message.includes('fetch')) {
+           userMessage = error.message;
+        } else {
+           userMessage = "AI extraction temporarily failed. Please try again.";
+        }
+      }
+    } catch(e) {
+      userMessage = error.message || "Failed to extract job details";
+    }
+
     return NextResponse.json(
-      { error: error.message || "Failed to extract job details" },
+      { error: userMessage },
       { status: 500 }
     );
   }
