@@ -3,9 +3,12 @@ import { GoogleGenAI } from "@google/genai";
 
 export async function POST(req: Request) {
   try {
+    // SECURITY: The API key is securely loaded server-side.
+    // It checks standard variable names.
     const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    if (!apiKey) return NextResponse.json({ keys: Object.keys(process.env).filter(k => k.includes("GEMINI") || k.includes("GOOGLE") || k.includes("API")) });
+    
     if (!apiKey) {
+      console.error("Gemini configuration is missing. Required environment variable: GEMINI_API_KEY");
       return NextResponse.json(
         { error: "AI extraction is not configured correctly. Please contact the administrator." },
         { status: 500 }
