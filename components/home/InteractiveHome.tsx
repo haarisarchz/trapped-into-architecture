@@ -275,7 +275,6 @@ export default function InteractiveHome({
         </div>
       </section>
 
-    </main>
+        </main>
   );
-}
 }
