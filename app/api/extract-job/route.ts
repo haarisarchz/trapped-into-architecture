@@ -3,7 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 
 export async function POST(req: Request) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    if (!apiKey) return NextResponse.json({ keys: Object.keys(process.env).filter(k => k.includes("GEMINI") || k.includes("GOOGLE") || k.includes("API")) });
     if (!apiKey) {
       return NextResponse.json(
         { error: "AI extraction is not configured correctly. Please contact the administrator." },
