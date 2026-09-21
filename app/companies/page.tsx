@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { Search, MapPin, Building2, SlidersHorizontal, X } from "lucide-react";
+import { Search, MapPin, Building2, SlidersHorizontal, X, LayoutGrid, Rows3, List } from "lucide-react";
 import Link from "next/link";
 import CompanyActions from "@/components/CompanyActions";
 import { generateCompanySlug } from "@/utils/jobUrl";
@@ -268,14 +268,40 @@ export default function CompaniesPage() {
               </div>
             ) : (
               <>
-                <div className="mb-6 text-sm font-medium text-gray-500">
-                  Showing {filteredCompanies.length} compan{filteredCompanies.length === 1 ? 'y' : 'ies'}
+                
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-sm font-medium text-gray-500">
+                    Showing {filteredCompanies.length} compan{filteredCompanies.length === 1 ? "y" : "ies"}
+                  </div>
+                  <div className="flex border rounded-xl overflow-hidden bg-white">
+                    <button
+                      onClick={() => setViewMode("visual")}
+                      className={`px-3 py-2 ${viewMode === "visual" ? "bg-black text-white" : "bg-white text-gray-500 hover:text-black"}`}
+                      title="Grid View"
+                    >
+                      <LayoutGrid size={16} />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("balanced")}
+                      className={`px-3 py-2 ${viewMode === "balanced" ? "bg-black text-white" : "bg-white text-gray-500 hover:text-black"}`}
+                      title="List View"
+                    >
+                      <Rows3 size={16} />
+                    </button>
+                    <button
+                      onClick={() => setViewMode("dense")}
+                      className={`px-3 py-2 ${viewMode === "dense" ? "bg-black text-white" : "bg-white text-gray-500 hover:text-black"}`}
+                      title="Compact View"
+                    >
+                      <List size={16} />
+                    </button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className={`grid gap-6 ${viewMode === "visual" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3" : "grid-cols-1"}`}>
                   {filteredCompanies.map((company: any) => (
-                    <div key={company.slug} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col h-full group">
+                    <div key={company.slug} className={`bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition flex group ${viewMode === "visual" ? "flex-col h-full" : "flex-row items-center gap-6"}`}>
                       
-                      <div className="flex justify-between items-start mb-4">
+                      <div className={`flex justify-between items-start ${viewMode === "visual" ? "mb-4" : "mb-0 shrink-0"}`}>
                         <Link href={`/companies/${company.slug}`} className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shrink-0 group-hover:scale-105 transition-transform">
                           {company.logo ? (
                             <img src={company.logo} alt={company.company} className="w-full h-full object-cover" />
@@ -286,16 +312,18 @@ export default function CompaniesPage() {
                         {/* Removed CompanyActions from grid card to keep it clean, can add back if needed */}
                       </div>
 
-                      <div className="flex-1">
+                      <div className={`flex-1 ${viewMode !== "visual" && "flex items-center justify-between gap-6"}`}>
+                        <div className="flex-1">
                         <Link href={`/companies/${company.slug}`}>
                           <h3 className="font-bold text-lg text-gray-900 group-hover:text-orange-600 transition line-clamp-1 mb-1">
                             {company.company}
                           </h3>
                         </Link>
-                        <p className="text-sm text-gray-500 mb-4 line-clamp-1">{company.organizationType}</p>
+                        <p className={`text-sm text-gray-500 line-clamp-1 ${viewMode === "visual" ? "mb-4" : "mb-0"}`}>{company.organizationType}</p>
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs font-medium pt-4 border-t border-gray-50">
+                      <div className={`flex items-center justify-between text-xs font-medium ${viewMode === "visual" ? "pt-4 border-t border-gray-50" : "shrink-0 gap-6"}`}>
                         <div className="flex items-center gap-1 text-gray-600">
                           <MapPin size={14} />
                           <span className="line-clamp-1">{company.city || company.state || "India"}</span>
