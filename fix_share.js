@@ -1,9 +1,7 @@
 const fs = require('fs');
 let code = fs.readFileSync('components/ShareButtons.tsx', 'utf8');
 
-code = code.replace(/\\`/g, '`');
-code = code.replace(/\\\$/g, '$');
-code = code.replace(/\\\\n/g, '\\n');
+code = code.split("combinedPosition += ` (${experience.trim()})`;").join("combinedPosition += ` (${Array.isArray(experience) ? experience.join(', ') : (typeof experience === 'string' ? experience.trim() : String(experience))})`;");
 
 fs.writeFileSync('components/ShareButtons.tsx', code);
-console.log('Fixed ShareButtons backslashes');
+console.log('Fixed ShareButtons.tsx completely');

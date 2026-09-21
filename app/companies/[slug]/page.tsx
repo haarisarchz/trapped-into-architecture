@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import CompanyActions from "@/components/CompanyActions";
 import { generateJobUrl, generateCompanySlug } from "@/utils/jobUrl";
 import { Metadata } from "next";
 import { Building2, Globe, Mail, MapPin, Briefcase } from "lucide-react";
@@ -136,6 +137,10 @@ export default async function CompanyPage({
                 <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg">
                   {company.organization_type || "Firm"}
                 </span>
+              </div>
+              
+              <div className="md:ml-auto shrink-0 pt-2 md:pt-0">
+                <CompanyActions slug={slug} companyName={company.firm_name} variant="page" />
               </div>
             </div>
 

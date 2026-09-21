@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { LayoutGrid, Rows3, List } from "lucide-react";
 import { useRouter } from "next/navigation";
+import CompanyActions from "@/components/CompanyActions";
 
 export default function CompaniesPage() {
 
@@ -42,6 +43,14 @@ export default function CompaniesPage() {
 
     const [selectedFirmSize, setSelectedFirmSize] = useState<string[]>([]);
 const [activeJobsOnly, setActiveJobsOnly] = useState(false);
+const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+const [currentUser, setCurrentUser] = useState<any>(null);
+useEffect(() => {
+  if(typeof window !== "undefined") {
+    const str = localStorage.getItem("currentUser");
+    if(str) setCurrentUser(JSON.parse(str));
+  }
+}, []);
 const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -50,64 +59,73 @@ const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   }, []);
 
+    const [realCompanies, setRealCompanies] = useState<any[]>([]);
+
   const fetchCompanies = async () => {
+    // Fetch jobs
+    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("*").eq("status", "published");
+    if (jobsError) console.log(jobsError);
+    else setJobs(jobsData || []);
 
-    const { data, error } =
-      await supabase
-        .from("jobs")
-        .select("*");
-
-    if (error) {
-
-      console.log(error);
-
-    } else {
-
-      setJobs(data || []);
-
-    }
+    // Fetch real companies
+    const { data: companiesData, error: compError } = await supabase.from("companies").select("*");
+    if (compError) console.log(compError);
+    else setRealCompanies(companiesData || []);
 
     setLoading(false);
-
   };
 
   const companies = useMemo(() => {
   const grouped: any = {};
 
+  // First, add all REAL companies
+  realCompanies.forEach((comp) => {
+    grouped[comp.firm_name] = {
+      company: comp.firm_name,
+      slug: comp.slug,
+      city: comp.city || "",
+      state: comp.state || "",
+      organizationType: comp.organization_type || "Architecture Firm",
+      logo: comp.logo_url || "",
+      totalJobs: 0,
+      software: []
+    };
+  });
+
+  // Then add jobs, incrementing count or creating fallback company
   jobs.forEach((job) => {
     const name = job.firm_name || "Unknown Company";
 
     if (!grouped[name]) {
-     grouped[name] = {
-
-  company: name,
-
-  slug: name
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, ""),
-
-  city: job.city || "",
-
-  state: job.state || "",
-
-  organizationType:
-    job.organization_type ||
-    "Architecture Firm",
-
-  logo: job.company_logo || "",
-
-  totalJobs: 0,
-
-};
+      grouped[name] = {
+        company: name,
+        slug: name
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/[^\w-]+/g, ""),
+        city: job.city || "",
+        state: job.state || "",
+        organizationType: job.organization_type || "Architecture Firm",
+        logo: job.company_logo || "",
+        totalJobs: 0,
+        software: []
+      };
     }
 
     grouped[name].totalJobs++;
+
+    // Aggregate software
+    if (job.required_software) {
+      const sw = Array.isArray(job.required_software)
+        ? job.required_software
+        : String(job.required_software).split(",").map(x => x.trim());
+      grouped[name].software = [...new Set([...grouped[name].software, ...sw])].filter(Boolean);
+    }
   });
 
   return Object.values(grouped);
-}, [jobs]);
+}, [jobs, realCompanies]);
 
 const categories = useMemo(
   () =>
@@ -279,6 +297,12 @@ const specialisations = useMemo(() => {
 
   // ACTIVE JOBS
 
+  
+  if (showFavoritesOnly) {
+    const favs = currentUser?.favoriteCompanies || [];
+    data = data.filter((company: any) => favs.includes(company.slug));
+  }
+
   if (activeJobsOnly) {
 
     data = data.filter(
@@ -354,6 +378,7 @@ const renderFilters = () => (
           setSelectedSpecialisation([]);
           setSelectedFirmSize([]);
           setActiveJobsOnly(false);
+          setShowFavoritesOnly(false);
           setSearch("");
         }}
         className="text-orange-500 text-sm hover:text-orange-600"
