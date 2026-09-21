@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { Phone, Mail, MessageCircle, MapPin, Globe, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import { Phone, Mail, MessageCircle, MapPin, Globe, } from "lucide-react";
 
 export default function ContactPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -133,22 +133,22 @@ export default function ContactPage() {
               )}
               {settings?.facebook && (
                 <a href={settings.facebook} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600 transition" title="Facebook">
-                  <Facebook size={24} />
+                  <span className="font-bold">FB</span>
                 </a>
               )}
               {settings?.twitter && (
                 <a href={settings.twitter} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-black transition" title="X / Twitter">
-                  <Twitter size={24} />
+                  <span className="font-bold">X</span>
                 </a>
               )}
               {settings?.instagram && (
                 <a href={settings.instagram} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-pink-600 transition" title="Instagram">
-                  <Instagram size={24} />
+                  <span className="font-bold">IG</span>
                 </a>
               )}
               {settings?.linkedin && (
                 <a href={settings.linkedin} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-500 transition" title="LinkedIn">
-                  <Linkedin size={24} />
+                  <span className="font-bold">IN</span>
                 </a>
               )}
             </div>

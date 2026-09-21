@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Facebook, Instagram, Linkedin, Twitter, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 export default function Footer() {
   const router = useRouter();
@@ -81,22 +81,22 @@ export default function Footer() {
             )}
             {settings?.facebook && (
               <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition" title="Facebook">
-                <Facebook size={20} />
+                <span className="font-bold">FB</span>
               </a>
             )}
             {settings?.instagram && (
               <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-pink-500 transition" title="Instagram">
-                <Instagram size={20} />
+                <span className="font-bold">IG</span>
               </a>
             )}
             {settings?.twitter && (
               <a href={settings.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-white transition" title="X / Twitter">
-                <Twitter size={20} />
+                <span className="font-bold">X</span>
               </a>
             )}
             {settings?.linkedin && (
               <a href={settings.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition" title="LinkedIn">
-                <Linkedin size={20} />
+                <span className="font-bold">IN</span>
               </a>
             )}
           </div>
