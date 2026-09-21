@@ -334,9 +334,10 @@ const specialisations = useMemo(() => {
 }, [jobs]);
 
   if (loading) {
+  return <main className="min-h-screen flex items-center justify-center">Loading...</main>;
+}
 
-    
-  const renderFilters = () => (
+const renderFilters = () => (
     <aside className="w-full">
 
     <div className="flex justify-between items-center mb-7">
@@ -626,52 +627,7 @@ const specialisations = useMemo(() => {
   </aside>
   );
   
-  return (
-
-      <main className="min-h-screen flex items-center justify-center">
-
-        Loading...
-
-      
-  {/* MOBILE FILTER DRAWER */}
-  {mobileFiltersOpen && (
-    <div className="fixed inset-0 z-[200] flex">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 transition-opacity"
-        onClick={() => setMobileFiltersOpen(false)}
-      />
-      {/* Drawer */}
-      <div className="relative w-full max-w-xs bg-white h-full shadow-xl flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold">Filters</h2>
-          <button 
-            onClick={() => setMobileFiltersOpen(false)}
-            className="text-gray-400 hover:text-black transition"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="p-6 overflow-y-auto flex-1">
-          {renderFilters()}
-        </div>
-        <div className="p-6 border-t border-gray-100 bg-gray-50">
-          <button 
-            onClick={() => setMobileFiltersOpen(false)}
-            className="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition"
-          >
-            Show Results
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
   
-</main>
-
-    );
-
-  }
 
   return (
 
@@ -986,6 +942,39 @@ ${
 
       </section>
 
+      {/* MOBILE FILTER DRAWER */}
+  {mobileFiltersOpen && (
+    <div className="fixed inset-0 z-[200] flex">
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 transition-opacity"
+        onClick={() => setMobileFiltersOpen(false)}
+      />
+      {/* Drawer */}
+      <div className="relative w-full max-w-xs bg-white h-full shadow-xl flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold">Filters</h2>
+          <button 
+            onClick={() => setMobileFiltersOpen(false)}
+            className="text-gray-400 hover:text-black transition"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto flex-1">
+          {renderFilters()}
+        </div>
+        <div className="p-6 border-t border-gray-100 bg-gray-50">
+          <button 
+            onClick={() => setMobileFiltersOpen(false)}
+            className="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition"
+          >
+            Show Results
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
       <Footer />
 
     </main>
