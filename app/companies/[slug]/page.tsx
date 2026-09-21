@@ -74,6 +74,7 @@ export default async function CompanyPage({
     .order("created_at", { ascending: false });
 
   const companyJobs = (allJobs || []).filter(j => {
+    if (companyRecord && j.company_id && j.company_id === companyRecord.id) return true;
     const genSlug = generateCompanySlug(j.firm_name || "");
     return genSlug === slug;
   });

@@ -1,73 +1,32 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { LayoutGrid, Rows3, List } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Search, MapPin, Building2, SlidersHorizontal, X } from "lucide-react";
+import Link from "next/link";
 import CompanyActions from "@/components/CompanyActions";
 
 export default function CompaniesPage() {
-
-  const router = useRouter();
-
   const [jobs, setJobs] = useState<any[]>([]);
-
+  const [realCompanies, setRealCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [viewMode, setViewMode] = useState<
-    "visual" | "balanced" | "dense"
-  >("balanced");
-
   const [search, setSearch] = useState("");
-
-  const [sortBy, setSortBy] =
-    useState("Most Jobs");
-
-  const [selectedStates, setSelectedStates] =
-    useState<string[]>([]);
-
-  const [selectedCities, setSelectedCities] =
-    useState<string[]>([]);
-
-  const [selectedCategories, setSelectedCategories] =
-    useState<string[]>([]);
-
-  const [selectedSoftware, setSelectedSoftware] =
-    useState<string[]>([]);
-
-  const [selectedSpecialisation,
-    setSelectedSpecialisation] =
-    useState<string[]>([]);
-
-    const [selectedFirmSize, setSelectedFirmSize] = useState<string[]>([]);
-const [activeJobsOnly, setActiveJobsOnly] = useState(false);
-const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-const [currentUser, setCurrentUser] = useState<any>(null);
-useEffect(() => {
-  if(typeof window !== "undefined") {
-    const str = localStorage.getItem("currentUser");
-    if(str) setCurrentUser(JSON.parse(str));
-  }
-}, []);
-const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [selectedCities, setSelectedCities] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false); // Mobile toggle
 
   useEffect(() => {
-
     fetchCompanies();
-
   }, []);
 
-    const [realCompanies, setRealCompanies] = useState<any[]>([]);
-
   const fetchCompanies = async () => {
-    // Fetch jobs
     const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("*").eq("status", "published");
     if (jobsError) console.log(jobsError);
     else setJobs(jobsData || []);
 
-    // Fetch real companies
     const { data: companiesData, error: compError } = await supabase.from("companies").select("*");
     if (compError) console.log(compError);
     else setRealCompanies(companiesData || []);
@@ -75,935 +34,286 @@ const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
     setLoading(false);
   };
 
-  const companies = useMemo(() => {
-  const grouped: any = {};
+    const companies = useMemo(() => {
+    const grouped: any = {};
+    const idToName: any = {};
 
-  // First, add all REAL companies
-  realCompanies.forEach((comp) => {
-    grouped[comp.firm_name] = {
-      company: comp.firm_name,
-      slug: comp.slug,
-      city: comp.city || "",
-      state: comp.state || "",
-      organizationType: comp.organization_type || "Architecture Firm",
-      logo: comp.logo_url || "",
-      totalJobs: 0,
-      software: []
-    };
-  });
-
-  // Then add jobs, incrementing count or creating fallback company
-  jobs.forEach((job) => {
-    const name = job.firm_name || "Unknown Company";
-
-    if (!grouped[name]) {
-      grouped[name] = {
-        company: name,
-        slug: name
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, "-")
-          .replace(/[^\w-]+/g, ""),
-        city: job.city || "",
-        state: job.state || "",
-        organizationType: job.organization_type || "Architecture Firm",
-        logo: job.company_logo || "",
+    // 1. Add all REAL companies
+    realCompanies.forEach((comp) => {
+      grouped[comp.firm_name] = {
+        company: comp.firm_name,
+        slug: comp.slug,
+        city: comp.city || "",
+        state: comp.state || "",
+        organizationType: comp.organization_type || "Architecture Firm",
+        logo: comp.logo_url || "",
         totalJobs: 0,
-        software: []
       };
-    }
-
-    grouped[name].totalJobs++;
-
-    // Aggregate software
-    if (job.required_software) {
-      const sw = Array.isArray(job.required_software)
-        ? job.required_software
-        : String(job.required_software).split(",").map(x => x.trim());
-      grouped[name].software = [...new Set([...grouped[name].software, ...sw])].filter(Boolean);
-    }
-  });
-
-  return Object.values(grouped);
-}, [jobs, realCompanies]);
-
-const categories = useMemo(
-  () =>
-    [...new Set(companies.map((c: any) => c.organizationType))]
-      .filter(Boolean)
-      .sort(),
-  [companies]
-);
-
-const states = useMemo(
-  () =>
-    [...new Set(companies.map((c: any) => c.state))]
-      .filter(Boolean)
-      .sort(),
-  [companies]
-);
-
-const cities = useMemo(() => {
-
-  const filtered =
-    selectedStates.length === 0
-      ? companies
-      : companies.filter((c: any) =>
-          selectedStates.includes(c.state)
-        );
-
-  return [...new Set(filtered.map((c: any) => c.city))]
-    .filter(Boolean)
-    .sort();
-
-}, [companies, selectedStates]);
-
-const softwares = useMemo(() => {
-
-  const list: string[] = [];
-
-  jobs.forEach((job: any) => {
-
-    if (!job.required_software) return;
-
-    if (Array.isArray(job.required_software)) {
-
-      list.push(...job.required_software);
-
-    } else {
-
-      list.push(
-        ...String(job.required_software)
-          .split(",")
-          .map((x: any) => typeof x === "string" ? x.trim() : String(x || ""))
-      );
-
-    }
-
-  });
-
-  return [...new Set(list)].sort();
-
-}, [jobs]);
-
-const specialisations = useMemo(() => {
-
-  return [
-    ...new Set(
-      jobs.map((j: any) => j.specialisation)
-    ),
-  ]
-    .filter(Boolean)
-    .sort();
-
-    const filteredCompanies = useMemo(() => {
-
-  let data = [...companies];
-
-  // SEARCH
-
-  if (search.trim() !== "") {
-
-    const keyword = search.toLowerCase();
-
-    data = data.filter((company: any) =>
-
-      company.company.toLowerCase().includes(keyword) ||
-
-      company.city.toLowerCase().includes(keyword) ||
-
-      company.state.toLowerCase().includes(keyword) ||
-
-      company.organizationType
-        .toLowerCase()
-        .includes(keyword)
-
-    );
-
-  }
-
-  // CATEGORY
-
-  if (selectedCategories.length > 0) {
-
-    data = data.filter((company: any) =>
-
-      selectedCategories.includes(
-        company.organizationType
-      )
-
-    );
-
-  }
-
-  // STATE
-
-  if (selectedStates.length > 0) {
-
-    data = data.filter((company: any) =>
-
-      selectedStates.includes(company.state)
-
-    );
-
-  }
-
-  // CITY
-
-  if (selectedCities.length > 0) {
-
-    data = data.filter((company: any) =>
-
-      selectedCities.includes(company.city)
-
-    );
-
-  }
-
-  // SOFTWARE
-
-  if (selectedSoftware.length > 0) {
-
-    data = data.filter((company: any) => {
-
-      const software = Array.isArray(company.software)
-
-        ? company.software
-
-        : String(company.software)
-            .split(",");
-
-      return selectedSoftware.some((x) =>
-        software.includes(x)
-      );
-
+      if (comp.id) {
+        idToName[comp.id] = comp.firm_name;
+      }
     });
 
-  }
+    // 2. Add jobs (increment count and fallback company creation)
+    jobs.forEach((job) => {
+      let name = job.firm_name || "Unknown Company";
+      
+      // If job has a company_id and we know it, use the real company's name
+      if (job.company_id && idToName[job.company_id]) {
+        name = idToName[job.company_id];
+      }
 
-  // SPECIALISATION
+      if (!grouped[name]) {
+        grouped[name] = {
+          company: name,
+          slug: name.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, ""),
+          city: job.city || "",
+          state: job.state || "",
+          organizationType: job.organization_type || "Architecture Firm",
+          logo: job.company_logo || job.image || "",
+          totalJobs: 0,
+        };
+      }
+      grouped[name].totalJobs++;
+    });
 
-  if (selectedSpecialisation.length > 0) {
+    return Object.values(grouped);
+  }, [jobs, realCompanies]);
 
-    data = data.filter((company: any) =>
+  const categories = useMemo(() => [...new Set(companies.map((c: any) => c.organizationType))].filter(Boolean).sort(), [companies]);
+  const states = useMemo(() => [...new Set(companies.map((c: any) => c.state))].filter(Boolean).sort(), [companies]);
+  const cities = useMemo(() => {
+    const filtered = selectedStates.length === 0 ? companies : companies.filter((c: any) => selectedStates.includes(c.state));
+    return [...new Set(filtered.map((c: any) => c.city))].filter(Boolean).sort();
+  }, [companies, selectedStates]);
 
-      selectedSpecialisation.includes(
-        company.specialisation
-      )
+  const filteredCompanies = useMemo(() => {
+    let data = [...companies];
 
-    );
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter((c: any) => 
+        c.company.toLowerCase().includes(q) || 
+        c.city?.toLowerCase().includes(q) ||
+        c.state?.toLowerCase().includes(q)
+      );
+    }
 
-  }
+    if (selectedCategories.length > 0) {
+      data = data.filter((c: any) => selectedCategories.includes(c.organizationType));
+    }
+    if (selectedStates.length > 0) {
+      data = data.filter((c: any) => selectedStates.includes(c.state));
+    }
+    if (selectedCities.length > 0) {
+      data = data.filter((c: any) => selectedCities.includes(c.city));
+    }
 
-  // ACTIVE JOBS
+    return data;
+  }, [companies, search, selectedCategories, selectedStates, selectedCities]);
 
-  
-  if (showFavoritesOnly) {
-    const favs = currentUser?.favoriteCompanies || [];
-    data = data.filter((company: any) => favs.includes(company.slug));
-  }
+  const toggleFilter = (list: string[], setList: (v: string[]) => void, value: string) => {
+    if (list.includes(value)) setList(list.filter((x) => x !== value));
+    else setList([...list, value]);
+  };
 
-  if (activeJobsOnly) {
-
-    data = data.filter(
-      (company: any) =>
-        company.totalJobs > 0
-    );
-
-  }
-
-  // SORT
-
-  if (sortBy === "A-Z") {
-
-    data.sort((a: any, b: any) =>
-      a.company.localeCompare(b.company)
-    );
-
-  }
-
-  if (sortBy === "Most Jobs") {
-
-    data.sort(
-      (a: any, b: any) =>
-        b.totalJobs - a.totalJobs
-    );
-
-  }
-
-  return data;
-
-}, [
-
-  companies,
-
-  search,
-
-  sortBy,
-
-  selectedStates,
-
-  selectedCities,
-
-  selectedCategories,
-
-  selectedSoftware,
-
-  selectedSpecialisation,
-
-  activeJobsOnly,
-
-]);
-
-}, [jobs]);
+  const clearFilters = () => {
+    setSearch("");
+    setSelectedStates([]);
+    setSelectedCities([]);
+    setSelectedCategories([]);
+  };
 
   if (loading) {
-  return <main className="min-h-screen flex items-center justify-center">Loading...</main>;
-}
-
-const renderFilters = () => (
-    <aside className="w-full">
-
-    <div className="flex justify-between items-center mb-7">
-      <h2 className="text-3xl font-bold">
-        Filters
-      </h2>
-
-      <button
-        onClick={() => {
-          setSelectedStates([]);
-          setSelectedCities([]);
-          setSelectedCategories([]);
-          setSelectedSoftware([]);
-          setSelectedSpecialisation([]);
-          setSelectedFirmSize([]);
-          setActiveJobsOnly(false);
-          setShowFavoritesOnly(false);
-          setSearch("");
-        }}
-        className="text-orange-500 text-sm hover:text-orange-600"
-      >
-        Clear Filters
-      </button>
-    </div>
-
-    {/* COMPANY CATEGORY */}
-
-    <div className="mb-8">
-
-      <h3 className="font-semibold mb-3">
-        Company Category
-      </h3>
-
-      {categories.map((category) => (
-
-        <label
-          key={category}
-          className="flex items-center gap-2 mb-2 cursor-pointer"
-        >
-
-          <input
-            type="checkbox"
-            checked={selectedCategories.includes(category)}
-            onChange={(e) =>
-
-              e.target.checked
-                ? setSelectedCategories([
-                    ...selectedCategories,
-                    category,
-                  ])
-                : setSelectedCategories(
-                    selectedCategories.filter(
-                      (x) => x !== category
-                    )
-                  )
-            }
-          />
-
-          {category}
-
-        </label>
-
-      ))}
-
-    </div>
-
-    {/* STATE */}
-
-    <div className="mb-8">
-
-      <h3 className="font-semibold mb-3">
-        State
-      </h3>
-
-      {states.map((state) => (
-
-        <label
-          key={state}
-          className="flex items-center gap-2 mb-2 cursor-pointer"
-        >
-
-          <input
-            type="checkbox"
-            checked={selectedStates.includes(state)}
-            onChange={(e) =>
-
-              e.target.checked
-                ? setSelectedStates([
-                    ...selectedStates,
-                    state,
-                  ])
-                : setSelectedStates(
-                    selectedStates.filter(
-                      (x) => x !== state
-                    )
-                  )
-            }
-          />
-
-          {state}
-
-        </label>
-
-      ))}
-
-    </div>
-
-    {/* CITY */}
-
-    <div className="mb-8">
-
-      <h3 className="font-semibold mb-3">
-        City
-      </h3>
-
-      {cities.map((city) => (
-
-        <label
-          key={city}
-          className="flex items-center gap-2 mb-2 cursor-pointer"
-        >
-
-          <input
-            type="checkbox"
-            checked={selectedCities.includes(city)}
-            onChange={(e) =>
-
-              e.target.checked
-                ? setSelectedCities([
-                    ...selectedCities,
-                    city,
-                  ])
-                : setSelectedCities(
-                    selectedCities.filter(
-                      (x) => x !== city
-                    )
-                  )
-            }
-          />
-
-          {city}
-
-        </label>
-
-      ))}
-
-    </div>
-
-    {/* SOFTWARE */}
-
-    <div className="mb-8">
-
-      <h3 className="font-semibold mb-3">
-        Software
-      </h3>
-
-      {softwares.map((software) => (
-
-        <label
-          key={software}
-          className="flex items-center gap-2 mb-2 cursor-pointer"
-        >
-
-          <input
-            type="checkbox"
-            checked={selectedSoftware.includes(software)}
-            onChange={(e) =>
-
-              e.target.checked
-                ? setSelectedSoftware([
-                    ...selectedSoftware,
-                    software,
-                  ])
-                : setSelectedSoftware(
-                    selectedSoftware.filter(
-                      (x) => x !== software
-                    )
-                  )
-            }
-          />
-
-          {software}
-
-        </label>
-
-      ))}
-
-    </div>
-
-    {/* SPECIALISATION */}
-
-    <div className="mb-8">
-
-      <h3 className="font-semibold mb-3">
-        Specialisation
-      </h3>
-
-      {specialisations.map((item) => (
-
-        <label
-          key={item}
-          className="flex items-center gap-2 mb-2 cursor-pointer"
-        >
-
-          <input
-            type="checkbox"
-            checked={selectedSpecialisation.includes(item)}
-            onChange={(e) =>
-
-              e.target.checked
-                ? setSelectedSpecialisation([
-                    ...selectedSpecialisation,
-                    item,
-                  ])
-                : setSelectedSpecialisation(
-                    selectedSpecialisation.filter(
-                      (x) => x !== item
-                    )
-                  )
-            }
-          />
-
-          {item}
-
-        </label>
-
-      ))}
-
-    </div>
-
-    {/* FIRM SIZE */}
-
-    <div className="mb-8">
-
-      <h3 className="font-semibold mb-3">
-        Firm Size
-      </h3>
-
-      {["1-10","11-50","51-200","200+"].map((size)=>(
-
-        <label
-          key={size}
-          className="flex items-center gap-2 mb-2 cursor-pointer"
-        >
-
-          <input
-            type="checkbox"
-            checked={selectedFirmSize.includes(size)}
-            onChange={(e)=>
-
-              e.target.checked
-                ? setSelectedFirmSize([
-                    ...selectedFirmSize,
-                    size,
-                  ])
-                : setSelectedFirmSize(
-                    selectedFirmSize.filter(
-                      (x)=>x!==size
-                    )
-                  )
-            }
-          />
-
-          {size} Employees
-
-        </label>
-
-      ))}
-
-    </div>
-
-    {/* HIRING NOW */}
-
-    <label className="flex items-center gap-2 font-medium cursor-pointer">
-
-      <input
-        type="checkbox"
-        checked={activeJobsOnly}
-        onChange={() =>
-          setActiveJobsOnly(!activeJobsOnly)
-        }
-      />
-
-      Hiring Now
-
-    </label>
-
-  </aside>
-  );
-  
-  
+    return (
+      <main className="min-h-screen bg-gray-50 flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-xl font-bold animate-pulse text-gray-500">Loading Companies...</div>
+        </div>
+      </main>
+    );
+  }
 
   return (
-
-    <main className="min-h-screen bg-gray-100">
-
+    <main className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden">
       <Navbar />
 
-      <section className="w-full px-6 lg:px-12 py-10">
-
-        <div className="mb-10">
-
-          <h1 className="text-5xl font-bold">
-
-            Companies
-
-          </h1>
-
-          <p className="text-gray-600 mt-2">
-
-            Explore architecture firms across India.
-
-          </p>
-
-
-  {/* ================= MAIN LAYOUT ================= */}
-
-<div className="flex flex-col lg:flex-row gap-8 mt-8 items-start w-full">
-
-  {/* ================= LEFT FILTER SIDEBAR ================= */}
-
-  {renderFilters()}
-
-  {/* ================= RIGHT CONTENT ================= */}
-
-  <div className="flex-1 min-w-0 w-full">
-
-    {/* TOOLBAR */}
-
-    <div className="flex items-center gap-5 mb-8">
-
-      <div className="flex items-center gap-3">
-
-        <span className="font-semibold whitespace-nowrap">
-          View By :
-        </span>
-
-        <div className="flex border rounded-xl overflow-hidden">
-
-          <button
-            onClick={() => setViewMode("visual")}
-            className={`px-4 py-3 ${
-              viewMode === "visual"
-                ? "bg-black text-white"
-                : "bg-white"
-            }`}
-          >
-            <LayoutGrid size={18}/>
-          </button>
-
-          <button
-            onClick={() => setViewMode("balanced")}
-            className={`px-4 py-3 ${
-              viewMode === "balanced"
-                ? "bg-black text-white"
-                : "bg-white"
-            }`}
-          >
-            <Rows3 size={18}/>
-          </button>
-
-          <button
-            onClick={() => setViewMode("dense")}
-            className={`px-4 py-3 ${
-              viewMode === "dense"
-                ? "bg-black text-white"
-                : "bg-white"
-            }`}
-          >
-            <List size={18}/>
-          </button>
-
+      <section className="w-full px-6 lg:px-12 py-10 max-w-[1440px] mx-auto flex-1">
+        
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Companies</h1>
+          <p className="text-lg text-gray-600">Explore architecture firms across India.</p>
         </div>
 
-      </div>
-
-      <input
-        value={search}
-        onChange={(e)=>setSearch(e.target.value)}
-        placeholder="Search companies..."
-        className="flex-1 border rounded-xl px-5 py-3"
-      />
-
-      <div className="flex items-center gap-3">
-
-        <span className="font-semibold">
-          Sort By :
-        </span>
-
-        <select
-          value={sortBy}
-          onChange={(e)=>setSortBy(e.target.value)}
-          className="border rounded-xl px-5 py-3"
-        >
-          <option>Most Jobs</option>
-          <option>A-Z</option>
-          <option>Recently Added</option>
-        </select>
-
-      </div>
-
-    </div>
-
-
-    {/* COMPANY CARDS */}
-
-<div
-  className={
-    viewMode === "visual"
-      ? "grid grid-cols-1 lg:grid-cols-3 gap-8 w-full"
-
-      : viewMode === "balanced"
-      ? "grid grid-cols-2 xl:grid-cols-4 gap-6 w-full"
-
-      : "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 w-full auto-rows-min"
-  }
->
-  {companies.map((company: any) => (
-    <div
-      key={company.company}
-    className={`
-bg-white
-rounded-3xl
-shadow
-hover:shadow-xl
-transition
-overflow-hidden
-
-${
-  viewMode === "dense"
-    ? "flex items-center px-4 py-3 h-28"
-    : ""
-}
-`}
-    >
-
-      {/* ================= LOGO ================= */}
-
-      <div
-        className={`
-          bg-gray-100
-          flex
-          items-center
-          justify-center
-
-          ${
-            viewMode === "visual"
-              ? "h-40"
-              : viewMode === "balanced"
-              ? "h-28"
-              : "w-16 h-16 rounded-full ml-3 flex-shrink-0"
-          }
-        `}
-      >
-
-        {company.logo ? (
-          <img
-            src={company.logo}
-            alt={company.company}
-            className={`
-              object-contain
-
-              ${
-                viewMode === "visual"
-                  ? "w-24 h-24"
-                  : viewMode === "balanced"
-                  ? "w-16 h-16"
-                  : "w-12 h-12 rounded-full"
-              }
-            `}
-          />
-        ) : (
-          <div
-            className={`
-              rounded-full
-              bg-black
-              text-white
-              flex
-              items-center
-              justify-center
-              font-bold
-
-              ${
-                viewMode === "visual"
-                  ? "w-24 h-24 text-5xl"
-                  : viewMode === "balanced"
-                  ? "w-16 h-16 text-3xl"
-                  : "w-12 h-12 text-xl"
-              }
-            `}
-          >
-            {company.company.charAt(0)}
+        {/* Mobile Search & Filter Toggle */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-8 lg:hidden">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input 
+              type="text" 
+              placeholder="Search companies or locations..."
+              className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-        )}
-
-      </div>
-
-      {/* ================= CONTENT ================= */}
-
-      <div
-        className={
-          viewMode === "dense"
-            ? "flex-1 px-4"
-            : viewMode === "balanced"
-            ? "p-4"
-            : "p-6"
-        }
-      >
-
-        <h2
-          className={`
-            font-bold
-
-            ${
-              viewMode === "visual"
-                ? "text-2xl"
-                : viewMode === "balanced"
-                ? "text-lg"
-                : "text-lg"
-            }
-          `}
-        >
-          {company.company}
-        </h2>
-
-        <p
-          className={`
-            text-gray-500
-
-            ${
-              viewMode === "dense"
-                ? "text-xs mt-1"
-                : "text-sm mt-2"
-            }
-          `}
-        >
-          {company.organizationType}
-        </p>
-
-        <p
-          className={`
-            text-gray-500
-
-            ${
-              viewMode === "dense"
-                ? "text-xs mt-1"
-                : "text-sm mt-2"
-            }
-          `}
-        >
-          📍 {company.city}, {company.state}
-        </p>
-
-        <div
-          className={`
-            flex justify-between items-center
-
-            ${
-              viewMode === "dense"
-                ? "mt-2"
-                : "mt-5"
-            }
-          `}
-        >
-
-          <span
-            className={`
-              bg-gray-200
-              text-gray-900
-              rounded-full
-
-              ${
-                viewMode === "dense"
-                  ? "px-2 py-0.5 text-[11px]"
-                  : "px-3 py-1 text-sm"
-              }
-            `}
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-full font-semibold shrink-0"
           >
-            {company.totalJobs} Jobs
-          </span>
-
-         <button
-  onClick={() =>
-    router.push(`/companies/${company.slug}`)
-  }
-  className="text-black font-semibold hover:underline"
->
-  View →
-</button>
-
+            <SlidersHorizontal size={20} />
+            Filters
+          </button>
         </div>
 
-      </div>
+        <div className="flex flex-col lg:flex-row gap-8 w-full">
+          
+          {/* Sidebar Filters */}
+          <aside className={`lg:w-72 shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 sticky top-24">
+              
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Filters</h2>
+                <button onClick={clearFilters} className="text-sm text-gray-500 hover:text-black">Clear All</button>
+              </div>
 
-    </div>
-  ))}
-</div>
+              {/* Desktop Search */}
+              <div className="hidden lg:block relative mb-8">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input 
+                  type="text" 
+                  placeholder="Search..."
+                  className="w-full pl-10 pr-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-gray-400"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
 
-  </div>
+              {/* Category Filter */}
+              {categories.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-3 text-sm text-gray-900">Category</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                    {categories.map((cat: any) => (
+                      <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                          checked={selectedCategories.includes(cat)}
+                          onChange={() => toggleFilter(selectedCategories, setSelectedCategories, cat)}
+                        />
+                        <span className="text-sm text-gray-600 group-hover:text-black">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-</div>
-</div>
+              {/* State Filter */}
+              {states.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-3 text-sm text-gray-900">State</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                    {states.map((st: any) => (
+                      <label key={st} className="flex items-center gap-3 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                          checked={selectedStates.includes(st)}
+                          onChange={() => toggleFilter(selectedStates, setSelectedStates, st)}
+                        />
+                        <span className="text-sm text-gray-600 group-hover:text-black">{st}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
+              {/* City Filter */}
+              {cities.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3 text-sm text-gray-900">City</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                    {cities.map((city: any) => (
+                      <label key={city} className="flex items-center gap-3 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                          checked={selectedCities.includes(city)}
+                          onChange={() => toggleFilter(selectedCities, setSelectedCities, city)}
+                        />
+                        <span className="text-sm text-gray-600 group-hover:text-black">{city}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </aside>
+
+          {/* Results Area */}
+          <div className="flex-1 min-w-0">
+            {filteredCompanies.length === 0 ? (
+              <div className="bg-white p-16 rounded-3xl border border-gray-100 shadow-sm text-center">
+                <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">No companies found</h3>
+                <p className="text-gray-500 mb-6">Try adjusting your filters or search query.</p>
+                <button onClick={clearFilters} className="text-black font-semibold hover:underline">
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6 text-sm font-medium text-gray-500">
+                  Showing {filteredCompanies.length} compan{filteredCompanies.length === 1 ? 'y' : 'ies'}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredCompanies.map((company: any) => (
+                    <div key={company.slug} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col h-full group">
+                      
+                      <div className="flex justify-between items-start mb-4">
+                        <Link href={`/companies/${company.slug}`} className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shrink-0 group-hover:scale-105 transition-transform">
+                          {company.logo ? (
+                            <img src={company.logo} alt={company.company} className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 className="w-8 h-8 text-gray-300" />
+                          )}
+                        </Link>
+                        {/* Removed CompanyActions from grid card to keep it clean, can add back if needed */}
+                      </div>
+
+                      <div className="flex-1">
+                        <Link href={`/companies/${company.slug}`}>
+                          <h3 className="font-bold text-lg text-gray-900 group-hover:text-orange-600 transition line-clamp-1 mb-1">
+                            {company.company}
+                          </h3>
+                        </Link>
+                        <p className="text-sm text-gray-500 mb-4 line-clamp-1">{company.organizationType}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs font-medium pt-4 border-t border-gray-50">
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <MapPin size={14} />
+                          <span className="line-clamp-1">{company.city || company.state || "India"}</span>
+                        </div>
+                        <div className="bg-gray-100 px-3 py-1 rounded-full text-black">
+                          {company.totalJobs} {company.totalJobs === 1 ? "Job" : "Jobs"}
+                        </div>
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          
+        </div>
       </section>
-
-      {/* MOBILE FILTER DRAWER */}
-  {mobileFiltersOpen && (
-    <div className="fixed inset-0 z-[200] flex">
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/50 transition-opacity"
-        onClick={() => setMobileFiltersOpen(false)}
-      />
-      {/* Drawer */}
-      <div className="relative w-full max-w-xs bg-white h-full shadow-xl flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold">Filters</h2>
-          <button 
-            onClick={() => setMobileFiltersOpen(false)}
-            className="text-gray-400 hover:text-black transition"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="p-6 overflow-y-auto flex-1">
-          {renderFilters()}
-        </div>
-        <div className="p-6 border-t border-gray-100 bg-gray-50">
-          <button 
-            onClick={() => setMobileFiltersOpen(false)}
-            className="w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition"
-          >
-            Show Results
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
       <Footer />
-
     </main>
-
   );
-
 }
