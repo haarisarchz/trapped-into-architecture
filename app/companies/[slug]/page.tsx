@@ -71,7 +71,7 @@ export default async function CompanyPage({
     .from("jobs")
     .select("*")
     .eq("status", "published")
-    .order("created_at", { ascending: false });
+    .order("posted_date", { ascending: false });
 
   const companyJobs = (allJobs || []).filter(j => {
     if (companyRecord && j.company_id && j.company_id === companyRecord.id) return true;
