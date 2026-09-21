@@ -1878,11 +1878,11 @@ const handleSmartExtraction = async () => {
       {showSmartUpload && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000000] p-4 backdrop-blur-md">
           
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 transition-all duration-500">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 transition-all duration-500 w-full max-w-[1050px] mx-auto p-2">
             
             {/* LEFT PANE: PREVIEW BOX (Visible after extraction) */}
             {String(loadingAI) === 'done' && (
-              <div className="bg-white rounded-[32px] w-[500px] h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
+              <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="p-6 bg-white border-b">
                   <h3 className="font-bold text-xl">🔎 Preview</h3>
                   <p className="text-xs text-gray-500">Confirm detected details</p>
@@ -1918,7 +1918,7 @@ const handleSmartExtraction = async () => {
             )}
 
             {/* RIGHT PANE: UPLOAD BOX (9:16 Ratio) */}
-            <div className="bg-white rounded-[32px] w-[500px] h-[780px] shadow-2xl flex flex-col relative overflow-hidden border border-white/20">
+            <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col relative overflow-hidden border border-white/20">
               <button
                 onClick={() => { setShowSmartUpload(false); setLoadingAI(false); }}
                 className="absolute right-5 top-5 bg-white text-gray-500 hover:text-black w-8 h-8 rounded-full flex items-center justify-center z-20"
@@ -1983,24 +1983,32 @@ const handleSmartExtraction = async () => {
     try {
       setLoadingAI("loading");
 
+      let formData = new FormData();
+      formData.append("mode", uploadMode);
+      if (uploadMode === "text") {
+        if (!smartText) throw new Error("Please paste text to extract.");
+        formData.append("text", smartText);
+      } else if (uploadMode === "image") {
+        if (!smartImage) throw new Error("Please upload an image to extract.");
+        formData.append("image", smartImage);
+      } else {
+        throw new Error("Mode not supported yet.");
+      }
+
       const response = await fetch("/api/extract-job", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          text: smartText,
-        }),
+        body: formData,
       });
 
       const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Failed to extract");
 
-      const ai = JSON.parse(result.result);
+      const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
 
       // Preview
-      setFirmName(ai.firm_name || "");
+      setFirmName(ai.company || "");
       setOrganizationType(ai.organization_type || "");
-      setCompanyDescription(ai.company_description || "");
+      setCompanyDescription(ai.description || "");
       setCompanyWebsite(ai.company_website || "");
       setCompanyEmail(ai.company_email || "");
       setCompanyPhone(ai.company_phone || "");
@@ -2019,7 +2027,7 @@ const handleSmartExtraction = async () => {
       setSalary(ai.salary || "");
 
       setPostedDate(ai.posted_date || "");
-      setLastDateToApply(ai.last_date_to_apply || "");
+      setLastDateToApply(ai.deadline || "");
       setPostExpiryDate(ai.post_expiry_date || "");
 
       setJobDescription(ai.job_description || "");
@@ -2028,7 +2036,7 @@ const handleSmartExtraction = async () => {
       setQualifications(ai.qualifications || []);
 
       setapply_link(ai.apply_link || "");
-      setapplication_email(ai.application_email || "");
+      setapplication_email(ai.applicationEmail || "");
 
       setSource(ai.source || "");
 
