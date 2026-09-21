@@ -1932,7 +1932,7 @@ const handleSmartExtraction = async () => {
                   {uploadMode === 'image' && (
                     <div className="w-full">
                       {!smartImage ? (
-                        <label className="border-2 border-dashed border-gray-200 rounded-[2rem] p-6 flex flex-col items-center justify-center bg-white hover:border-black cursor-pointer transition-all aspect-[9/12]">
+                        <label className="border-2 border-dashed border-gray-200 rounded-[2rem] p-6 flex flex-col items-center justify-center bg-white hover:border-black cursor-pointer transition-all h-[40vh] min-h-[200px] max-h-[350px]">
                           <span className="text-4xl mb-3">🖼️</span>
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Upload your image</span>
                           <input 
@@ -1943,11 +1943,11 @@ const handleSmartExtraction = async () => {
                           />
                         </label>
                       ) : (
-                        <div className="relative w-full aspect-[9/16] rounded-[2rem] overflow-hidden border bg-white flex items-center justify-center shadow-inner">
+                        <div className="relative w-full h-[40vh] min-h-[200px] max-h-[350px] rounded-[2rem] overflow-hidden border bg-gray-100 flex items-center justify-center shadow-inner">
                           <img 
                             src={URL.createObjectURL(smartImage)} 
                             alt="Selected" 
-                            className="max-w-full max-h-full object-contain p-2" 
+                            className="w-full h-full object-contain p-2" 
                           />
                           <button 
                             onClick={() => setSmartImage(null)}
