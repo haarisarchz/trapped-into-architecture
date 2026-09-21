@@ -209,11 +209,18 @@ if (loading) {
 >
   Companies
 </button>
-            <button
-              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
-            >
-              Settings
-            </button>
+<button
+  onClick={() => router.push("/admin/users")}
+  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+>
+  Users
+</button>
+<button
+  onClick={() => router.push("/admin/contact")}
+  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+>
+  Contact
+</button>
 
             <button
   onClick={() => window.open("/jobs", "_blank")}

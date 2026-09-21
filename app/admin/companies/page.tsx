@@ -48,6 +48,9 @@ export default function CompaniesPage() {
             <h1 className="text-4xl font-bold">Companies</h1>
             <p className="text-gray-600 mt-2">Manage registered companies.</p>
           </div>
+          <button onClick={() => router.push("/admin")} className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0">
+            ← Back to Dashboard
+          </button>
         </div>
 
         <div className="bg-white rounded-3xl shadow border overflow-hidden">

@@ -220,9 +220,9 @@ const fetchJobs = async () => {
 
   <button
     onClick={() => router.push("/admin")}
-    className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition"
+    className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0"
   >
-    ← Dashboard
+    ← Back to Dashboard
   </button>
 
 </div>

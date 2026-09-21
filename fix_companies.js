@@ -1,17 +1,53 @@
 const fs = require('fs');
-let page = fs.readFileSync('app/admin/companies/page.tsx', 'utf8');
+let code = fs.readFileSync('app/companies/page.tsx', 'utf8');
 
-// The original table has `<table className="w-full text-left">`
-// Let's just do a regex replace
-page = page.replace(
-  /<table className="w-full text-left">/,
-  '<div className="overflow-x-auto">\n          <table className="w-full text-left min-w-[600px]">'
-);
+const newMemo = `  const companies = useMemo(() => {
+    const grouped: any = {};
+    const idToName: any = {};
 
-page = page.replace(
-  /<\/table>\n\s*<\/div>\n\s*<\/section>/,
-  '</table>\n          </div>\n        </div>\n      </section>'
-);
+    // 1. Add all REAL companies
+    realCompanies.forEach((comp) => {
+      grouped[comp.firm_name] = {
+        company: comp.firm_name,
+        slug: comp.slug,
+        city: comp.city || "",
+        state: comp.state || "",
+        organizationType: comp.organization_type || "Architecture Firm",
+        logo: comp.logo_url || "",
+        totalJobs: 0,
+      };
+      if (comp.id) {
+        idToName[comp.id] = comp.firm_name;
+      }
+    });
 
-fs.writeFileSync('app/admin/companies/page.tsx', page);
-console.log('Fixed company table overflow');
+    // 2. Add jobs (increment count and fallback company creation)
+    jobs.forEach((job) => {
+      let name = job.firm_name || "Unknown Company";
+      
+      // If job has a company_id and we know it, use the real company's name
+      if (job.company_id && idToName[job.company_id]) {
+        name = idToName[job.company_id];
+      }
+
+      if (!grouped[name]) {
+        grouped[name] = {
+          company: name,
+          slug: name.toLowerCase().trim().replace(/\\s+/g, "-").replace(/[^\\w-]+/g, ""),
+          city: job.city || "",
+          state: job.state || "",
+          organizationType: job.organization_type || "Architecture Firm",
+          logo: job.company_logo || job.image || "",
+          totalJobs: 0,
+        };
+      }
+      grouped[name].totalJobs++;
+    });
+
+    return Object.values(grouped);
+  }, [jobs, realCompanies]);`;
+
+code = code.replace(/const companies = useMemo\(\(\) => \{[\s\S]*?return Object\.values\(grouped\);\n  \}, \[jobs, realCompanies\]\);/, newMemo);
+
+fs.writeFileSync('app/companies/page.tsx', code);
+console.log('Fixed company page grouping');

@@ -37,7 +37,12 @@ export default function AnalyticsPage() {
     <main className="min-h-screen bg-gray-100">
       <Navbar />
       <section className="w-full px-6 lg:px-12 py-10">
-        <h1 className="text-4xl font-bold mb-8">Platform Analytics</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">Platform Analytics</h1>
+          <button onClick={() => router.push("/admin")} className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0">
+            ← Back to Dashboard
+          </button>
+        </div>
         
         {loading && <div className="text-gray-500">Loading data...</div>}
         

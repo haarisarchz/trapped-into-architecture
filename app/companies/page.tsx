@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Search, MapPin, Building2, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import CompanyActions from "@/components/CompanyActions";
+import { generateCompanySlug } from "@/utils/jobUrl";
 
 export default function CompaniesPage() {
   const [jobs, setJobs] = useState<any[]>([]);
@@ -66,7 +67,7 @@ export default function CompaniesPage() {
       if (!grouped[name]) {
         grouped[name] = {
           company: name,
-          slug: name.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, ""),
+          slug: generateCompanySlug(name),
           city: job.city || "",
           state: job.state || "",
           organizationType: job.organization_type || "Architecture Firm",
