@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 export default function ContactSettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("");
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     whatsapp: "",
@@ -39,8 +40,10 @@ export default function ContactSettingsPage() {
       .eq("username", currentUser.username)
       .single();
 
+    const roleNormalized = (profile.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    setUserRole(roleNormalized);
     const allowedRoles = ["superadmin", "admin", "ceo"];
-    if (error || !profile || !allowedRoles.includes((profile.role || "").toLowerCase().replace(/[\s_]+/g, ""))) {
+    if (error || !profile || !allowedRoles.includes(roleNormalized)) {
       router.push("/");
       return;
     }
@@ -53,7 +56,6 @@ export default function ContactSettingsPage() {
     if (data) {
       setSettings({
         whatsapp: data.whatsapp || "",
-        telegram: data.telegram || "",
         facebook: data.facebook || "",
         instagram: data.instagram || "",
         x_twitter: data.x_twitter || "",
@@ -70,6 +72,10 @@ export default function ContactSettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (userRole !== "superadmin" && userRole !== "ceo") {
+      alert("Only CEO or Super Admin can update contact settings.");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("site_settings").upsert({
       id: "global",

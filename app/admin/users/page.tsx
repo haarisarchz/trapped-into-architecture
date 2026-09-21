@@ -145,8 +145,8 @@ export default function AdminUsersPage() {
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>
-                      <option value="superadmin">Super Admin</option>
-                      <option value="ceo">CEO</option>
+                      <option value="Super_Admin">Super Admin</option>
+                      <option value="CEO">CEO</option>
                     </select>
                   </td>
                 </tr>
