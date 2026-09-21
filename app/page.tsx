@@ -54,6 +54,21 @@ export default async function Home() {
     .order("created_at", { ascending: false })
     .limit(6);
 
+  // Fetch Recent Jobs
+  const { data: recentJobs } = await supabase
+    .from("jobs")
+    .select("*")
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(6);
+
+  // Fetch Site Settings
+  const { data: siteSettings } = await supabase
+    .from("site_settings")
+    .select("*")
+    .eq("id", "global")
+    .maybeSingle();
+
   // Fetch Statistics
   const { count: usersCount } = await supabase
     .from("profiles")
@@ -90,10 +105,10 @@ export default async function Home() {
       <Navbar />
 
       <InteractiveHome 
-        topCities={topCities} 
-        topPositions={topPositions} 
+        recentJobs={recentJobs || []} 
         recentCompanies={recentCompanies || []} 
-        stats={stats} 
+        stats={stats}
+        siteSettings={siteSettings} 
       />
 
       <Footer />

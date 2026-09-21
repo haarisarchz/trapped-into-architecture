@@ -1,20 +1,16 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { GraduationCap } from "lucide-react";
+import { Clock } from "lucide-react";
 
 export default function PracticeExamsPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="max-w-4xl mx-auto py-32 px-6 flex flex-col items-center justify-center text-center min-h-[60vh]">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-          <GraduationCap className="w-10 h-10 text-gray-400" />
-        </div>
-        <h1 className="text-4xl font-bold mb-4">Practice Exams</h1>
-        <p className="text-xl text-gray-500 max-w-2xl">
-          Get ready to ace your architecture licensing and certification exams. Our interactive practice tests are in development.
-          <br/><br/>
-          <span className="font-bold text-black border border-gray-200 px-4 py-2 rounded-full inline-block mt-2 bg-gray-50">Coming Soon</span>
+      <div className="flex-1 flex flex-col items-center justify-center py-20 px-6 text-center">
+        <Clock className="w-16 h-16 text-gray-300 mb-6" />
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">Coming Soon</h1>
+        <p className="text-lg text-gray-600 max-w-lg">
+          Practice exams are under development. Check back later to test your skills!
         </p>
       </div>
       <Footer />

@@ -19,6 +19,8 @@ export default function ContactSettingsPage() {
     phone: "",
     email: "",
     about_us: "",
+    about_history: "",
+    about_mission: "",
   });
 
   useEffect(() => {
@@ -59,6 +61,8 @@ export default function ContactSettingsPage() {
         phone: data.phone || "",
         email: data.email || "",
         about_us: data.about_us || "",
+        about_history: data.about_history || "",
+        about_mission: data.about_mission || "",
       });
     }
     setLoading(false);

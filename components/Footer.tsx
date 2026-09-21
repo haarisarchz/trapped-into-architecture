@@ -8,6 +8,18 @@ export default function Footer() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
+  const [settings, setSettings] = useState<any>(null);
+  
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { supabase } = require('@/lib/supabase');
+        const { data } = await supabase.from('site_settings').select('*').eq('id', 'global').maybeSingle();
+        if(data) setSettings(data);
+      } catch(e) {}
+    };
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {

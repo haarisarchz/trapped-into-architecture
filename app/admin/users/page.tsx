@@ -12,6 +12,8 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [admins, setAdmins] = useState<any[]>([]);
   const [jobCounts, setJobCounts] = useState<Record<string, number>>({});
+  const [adminJobsMap, setAdminJobsMap] = useState<Record<string, any[]>>({});
+  const [expandedAdmin, setExpandedAdmin] = useState<string | null>(null);
 
   useEffect(() => {
     checkAccess();
@@ -49,15 +51,19 @@ export default function AdminUsersPage() {
       setUsers(allUsers);
       setAdmins(allAdmins);
 
-      const { data: jobsData } = await supabase.from("jobs").select("username");
+      const { data: jobsData } = await supabase.from("jobs").select("*");
       if (jobsData) {
         const counts: Record<string, number> = {};
+        const jobsMap: Record<string, any[]> = {};
         jobsData.forEach(job => {
           if (job.username) {
             counts[job.username] = (counts[job.username] || 0) + 1;
+            if (!jobsMap[job.username]) jobsMap[job.username] = [];
+            jobsMap[job.username].push(job);
           }
         });
         setJobCounts(counts);
+        setAdminJobsMap(jobsMap);
       }
     }
     setLoading(false);
