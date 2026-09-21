@@ -65,6 +65,7 @@ const [editedUser, setEditedUser] =
       bio: profile.bio,
       dob: profile.dob,
       profession: profile.profession,
+      profession: profile.profession,
       education: profile.education,
 
     };
@@ -420,6 +421,20 @@ localStorage.setItem(
 
           if (isEditing) {
 
+            // VALIDATION
+            const validProfessions = [
+              "Practising Architect",
+              "Academician",
+              "Undergraduate Student",
+              "Postgraduate Student",
+              "Research Scholar"
+            ];
+            
+            if (!editedUser.profession || !validProfessions.includes(editedUser.profession)) {
+              alert("Please select a valid Profession. It is a required field.");
+              return;
+            }
+
            /* SAVE */
 
 const { error } = await supabase
@@ -660,14 +675,13 @@ alert("Profile updated successfully");
 
       <div>
 
-        <p className="text-sm text-gray-500 mb-2">
-          Profession
+        <p className="text-gray-500 mb-1">
+          Profession <span className="text-red-500">*</span>
         </p>
 
         {isEditing ? (
 
-          <input
-            type="text"
+          <select
             value={editedUser?.profession || ""}
             onChange={(e) =>
               setEditedUser({
@@ -675,13 +689,20 @@ alert("Profile updated successfully");
                 profession: e.target.value,
               })
             }
-            className="w-full border rounded-xl px-4 py-3"
-          />
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+          >
+            <option value="" disabled>Select Profession</option>
+            <option value="Practising Architect">Practising Architect</option>
+            <option value="Academician">Academician</option>
+            <option value="Undergraduate Student">Undergraduate Student</option>
+            <option value="Postgraduate Student">Postgraduate Student</option>
+            <option value="Research Scholar">Research Scholar</option>
+          </select>
 
         ) : (
 
-          <p className="text-lg font-medium">
-            {user.profession || "Not added"}
+          <p className="text-lg font-semibold text-black">
+            {user.profession || "Not Set"}
           </p>
 
         )}

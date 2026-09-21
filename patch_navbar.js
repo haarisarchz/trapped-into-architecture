@@ -1,21 +1,8 @@
 const fs = require('fs');
 let code = fs.readFileSync('components/Navbar.tsx', 'utf8');
 
-if (!code.includes('const [settings, setSettings]')) {
-  code = code.replace(
-    /const \[mobileMenuOpen, setMobileMenuOpen\] =\s*useState\(false\);/,
-    'const [mobileMenuOpen, setMobileMenuOpen] = useState(false);\n  const [settings, setSettings] = useState<any>(null);'
-  );
+code = code.replace(/currentUser\.displayName && currentUser\.displayName\.trim\(\) !== ""/g, '(currentUser.displayName && currentUser.displayName.trim() !== "" && currentUser.profession && currentUser.profession.trim() !== "")');
+code = code.replace(/>\s*Set Display Name\s*<\/button>/g, '>Complete Profile</button>');
+code = code.replace(/role: profile.role,/g, 'role: profile.role,\n        profession: profile.profession,');
 
-  code = code.replace(
-    /useEffect\(\(\) => \{\s*const handleOpenAuth/g,
-    'useEffect(() => {\n    supabase.from("site_settings").select("logo_url").eq("id", "global").maybeSingle().then(({data}) => {\n      if(data) setSettings(data);\n    });\n  }, []);\n\n  useEffect(() => {\n  const handleOpenAuth'
-  );
-
-  code = code.replace(
-    />\s*Trapped Into Architecture\s*<\/Link>/g,
-    '>{settings?.logo_url ? <img src={settings.logo_url} alt="Site Logo" className="h-8 md:h-10 object-contain inline-block" /> : "Trapped Into Architecture"}</Link>'
-  );
-
-  fs.writeFileSync('components/Navbar.tsx', code);
-}
+fs.writeFileSync('components/Navbar.tsx', code);

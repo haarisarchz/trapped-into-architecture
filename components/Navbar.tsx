@@ -90,7 +90,7 @@ useEffect(() => {
 
       <div>
         {currentUser ? (
-          currentUser.displayName && currentUser.displayName.trim() !== "" ? (
+          (currentUser.displayName && currentUser.displayName.trim() !== "" && currentUser.profession && currentUser.profession.trim() !== "") ? (
             <div className="relative">
               <button 
                 onClick={() => setShowUserMenu(!showUserMenu)} 
@@ -156,9 +156,7 @@ useEffect(() => {
                 router.push(`/profile/${currentUser.username}`);
               }} 
               className="text-red-400 font-bold hover:text-red-300 transition"
-            >
-              Set Display Name
-            </button>
+            >Complete Profile</button>
           )
         ) : (
           <div className="flex gap-4">
@@ -554,6 +552,7 @@ if (data.user) {
         email: profile.email,
         username: profile.username,
         role: profile.role,
+        profession: profile.profession,
       })
     );
   }
