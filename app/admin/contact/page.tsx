@@ -12,10 +12,9 @@ export default function ContactSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     whatsapp: "",
-    telegram: "",
     facebook: "",
     instagram: "",
-    x_twitter: "",
+    twitter: "",
     linkedin: "",
     phone: "",
     email: "",
@@ -40,7 +39,7 @@ export default function ContactSettingsPage() {
       .eq("username", currentUser.username)
       .single();
 
-    const roleNormalized = (profile.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    const roleNormalized = (profile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
     setUserRole(roleNormalized);
     const allowedRoles = ["superadmin", "admin", "ceo"];
     if (error || !profile || !allowedRoles.includes(roleNormalized)) {
@@ -58,7 +57,7 @@ export default function ContactSettingsPage() {
         whatsapp: data.whatsapp || "",
         facebook: data.facebook || "",
         instagram: data.instagram || "",
-        x_twitter: data.x_twitter || "",
+        twitter: data.twitter || "",
         linkedin: data.linkedin || "",
         phone: data.phone || "",
         email: data.email || "",
@@ -140,20 +139,44 @@ export default function ContactSettingsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1">X / Twitter Link</label>
-                  <input type="text" value={settings.x_twitter} onChange={e => setSettings({...settings, x_twitter: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
+                  <input type="text" value={settings.twitter} onChange={e => setSettings({...settings, twitter: e.target.value})} className="w-full px-4 py-2 border rounded-xl" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6">
-            <h2 className="font-bold mb-4">About Us Content</h2>
-            <textarea 
-              value={settings.about_us} 
-              onChange={e => setSettings({...settings, about_us: e.target.value})} 
-              className="w-full px-4 py-2 border rounded-xl min-h-[200px]" 
-              placeholder="Enter the public About Us text..." 
-            />
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 space-y-6">
+            <h2 className="font-bold mb-4">Company Content</h2>
+            
+            <div>
+              <label className="block text-sm font-semibold mb-1">About Us</label>
+              <textarea 
+                value={settings.about_us} 
+                onChange={e => setSettings({...settings, about_us: e.target.value})} 
+                className="w-full px-4 py-2 border rounded-xl min-h-[120px]" 
+                placeholder="Enter the public About Us text..." 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1">History</label>
+              <textarea 
+                value={settings.about_history} 
+                onChange={e => setSettings({...settings, about_history: e.target.value})} 
+                className="w-full px-4 py-2 border rounded-xl min-h-[120px]" 
+                placeholder="Enter company history..." 
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-1">Mission</label>
+              <textarea 
+                value={settings.about_mission} 
+                onChange={e => setSettings({...settings, about_mission: e.target.value})} 
+                className="w-full px-4 py-2 border rounded-xl min-h-[120px]" 
+                placeholder="Enter company mission..." 
+              />
+            </div>
           </div>
 
           <button disabled={saving} type="submit" className="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 disabled:opacity-50">
