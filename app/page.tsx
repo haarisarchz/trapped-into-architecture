@@ -48,21 +48,11 @@ export default async function Home() {
     .map(([position]) => position);
 
   // Fetch Companies
-  const { data: recentCompaniesData } = await supabase
-      .from("companies")
-      .select("firm_name, slug, city, logo_url")
-      .order("created_at", { ascending: false })
-      .limit(4);
-
-    // Fetch job counts for these companies
-    const recentCompanies = await Promise.all((recentCompaniesData || []).map(async (company) => {
-      const { count } = await supabase
-        .from("jobs")
-        .select("*", { count: "exact", head: true })
-        .eq("company", company.firm_name)
-        .eq("status", "published");
-      return { ...company, open_jobs: count || 0 };
-    }));
+  const { data: recentCompanies } = await supabase
+    .from("companies")
+    .select("firm_name, slug, city, logo_url")
+    .order("created_at", { ascending: false })
+    .limit(6);
 
   // Fetch Recent Jobs
   const { data: recentJobs } = await supabase
@@ -84,7 +74,6 @@ export default async function Home() {
     .from("profiles")
     .select("*", { count: "exact", head: true });
 
-  const { count: internshipsCount } = await supabase.from("jobs").select("*", { count: "exact", head: true }).eq("status", "published").ilike("employment_type", "%Internship%");
   const { count: jobsCount } = await supabase
     .from("jobs")
     .select("*", { count: "exact", head: true })
@@ -97,7 +86,6 @@ export default async function Home() {
   const stats = {
     users: usersCount || 0,
     jobs: jobsCount || 0,
-    internships: internshipsCount || 0,
     companies: companiesCount || 0,
   };
 

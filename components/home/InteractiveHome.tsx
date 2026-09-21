@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { generateJobUrl } from "@/utils/jobUrl";
-import { Search, MapPin, Building2, ArrowRight, MessageCircle, Globe, Mail, Smartphone, Send } from "lucide-react";
-
+import { Search, MapPin, Building2, ArrowRight, MessageCircle, Globe, Mail, Smartphone } from "lucide-react";
 
 export default function InteractiveHome({
   recentJobs = [],
@@ -18,220 +16,60 @@ export default function InteractiveHome({
   stats: any;
   siteSettings: any;
 }) {
-  const router = useRouter();
   const [jobTab, setJobTab] = useState<"recent" | "popular">("recent");
-  const [companyTab, setCompanyTab] = useState<"featured" | "popular" | "all">("all");
-  const [searchQuery, setSearchQuery] = useState("");
   
+  // For Jobs, we will just use recentJobs for both tabs for now unless we have a popularity metric
   const displayJobs = recentJobs.slice(0, 6);
-  const heroJobs = recentJobs.slice(0, 4);
-  const displayCompanies = recentCompanies.slice(0, 6);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/jobs?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
+  // For Companies
+  const [companyTab, setCompanyTab] = useState<"featured" | "popular" | "all">("all");
+  const displayCompanies = recentCompanies.slice(0, 6);
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
-      {/* 1. HERO SECTION */}
-      <section className="bg-white border-b border-gray-100 py-12 lg:py-20 px-6 lg:px-12">
-        <div className="max-w-7xl mx-auto">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
-            
-            {/* LEFT: Intro & Search */}
-            <div className="lg:col-span-7 flex flex-col justify-center">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight mb-4 leading-tight">
-                Trapped Into Architecture
-              </h1>
-              <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-xl">
-                Find your next opportunity in architecture.
-                <br/>
-                <span className="text-gray-500 text-base md:text-lg">Jobs • Internships • Companies • Career Connections</span>
-              </p>
-              
-              <form onSubmit={handleSearch} className="flex items-center w-full max-w-2xl bg-gray-50 border border-gray-200 rounded-full p-2 mb-10 shadow-sm focus-within:ring-2 focus-within:ring-black focus-within:border-transparent transition-all">
-                <Search className="text-gray-400 ml-4 mr-2" size={24} />
-                <input
-                  type="text"
-                  placeholder="Search jobs, companies, positions..."
-                  className="flex-1 bg-transparent border-none outline-none py-3 text-lg"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button type="submit" className="bg-black text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition">
-                  Search
-                </button>
-              </form>
-
-              {/* STATS */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 border-t border-gray-100 pt-8">
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{stats?.jobs || 0}</div>
-                  <div className="text-sm text-gray-500 font-medium">Open Jobs</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{stats?.internships || 0}</div>
-                  <div className="text-sm text-gray-500 font-medium">Internships</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{stats?.companies || 0}</div>
-                  <div className="text-sm text-gray-500 font-medium">Companies</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900">{heroJobs.length || 0}</div>
-                  <div className="text-sm text-gray-500 font-medium">New Opportunities</div>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT: Latest Opportunities Widget */}
-            <div className="lg:col-span-5 w-full">
-              <div className="bg-gray-50 rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    Latest Opportunities
-                  </h2>
-                  <Link href="/jobs" className="text-sm text-gray-500 hover:text-black font-medium transition">
-                    View all →
-                  </Link>
-                </div>
-                
-                <div className="flex flex-col gap-4">
-                  {heroJobs.length === 0 ? (
-                    <div className="text-gray-500 py-4 text-center text-sm">No current opportunities. <Link href="/companies" className="text-black underline">Explore Companies</Link></div>
-                  ) : (
-                    heroJobs.map(job => (
-                      <Link href={`/jobs/${job.id}`} key={job.id} className="bg-white p-4 rounded-2xl border border-gray-100 hover:border-gray-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-2">
-                        <div>
-                          <h3 className="font-bold text-gray-900 line-clamp-1">{job.position}</h3>
-                          <div className="text-sm text-gray-500 flex items-center gap-2">
-                            <Building2 size={14} /> <span className="line-clamp-1">{job.company}</span>
-                          </div>
-                        </div>
-                        {job.city && (
-                          <div className="text-xs font-medium text-gray-600 bg-gray-50 px-3 py-1 rounded-full whitespace-nowrap w-fit">
-                            {job.city}
-                          </div>
-                        )}
-                      </Link>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 2. EXPLORE COMPANIES / HIRING WIDGET */}
-      <section className="bg-white py-12 px-6 lg:px-12 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-gray-900">Companies Hiring</h2>
-            <Link href="/companies" className="text-sm font-semibold text-gray-500 hover:text-black transition">
-              View all companies →
+      {/* 1. INTRODUCTION */}
+      <section className="bg-white py-16 md:py-24 px-6 lg:px-12 text-center border-b border-gray-100">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
+            Find Your Next Architecture Role
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Trapped Into Architecture is India's premier job board connecting talented architects with top firms. Discover remote jobs, internships, and full-time opportunities.
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/jobs" className="bg-black text-white px-8 py-4 rounded-full font-semibold hover:bg-gray-800 transition w-full sm:w-auto">
+              Browse Jobs
+            </Link>
+            <Link href="/companies" className="bg-white text-black border border-gray-300 px-8 py-4 rounded-full font-semibold hover:bg-gray-50 transition w-full sm:w-auto">
+              Explore Companies
             </Link>
           </div>
-
-          {displayCompanies.length === 0 ? (
-            <div className="text-center text-gray-500 py-8 bg-gray-50 rounded-2xl border border-gray-100">Companies will appear here as opportunities are added.</div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {displayCompanies.map((company) => (
-                <Link 
-                  href={`/companies/${company.slug}`}
-                  key={company.slug}
-                  className="bg-gray-50 hover:bg-gray-100 p-4 rounded-3xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center mb-3 overflow-hidden shadow-sm">
-                    {company.logo_url ? (
-                      <img src={company.logo_url} alt={company.firm_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Building2 className="text-gray-300 w-6 h-6" />
-                    )}
-                  </div>
-                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-1 w-full">{company.firm_name}</h3>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-1 w-full">{company.city || "Various"}</p>
-                  <div className="mt-3 text-[10px] uppercase tracking-wider font-bold text-gray-400 bg-white px-2 py-1 rounded-md shadow-sm border border-gray-100">
-                    {company.open_jobs || 0} open jobs
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
-      {/* 3. CONNECT WITH US (SOCIAL & CHANNELS) */}
-      <section className="py-12 px-6 lg:px-12 bg-gray-50 text-center w-full border-b border-gray-200">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect With Us</h2>
-          <p className="text-gray-500 mb-8 max-w-xl mx-auto">Stay connected with architecture opportunities and community updates across our official channels.</p>
-          
-          <div className="flex flex-wrap justify-center gap-4">
-            
-            {siteSettings?.whatsapp && (
-              <a href={siteSettings.whatsapp.startsWith('http') ? siteSettings.whatsapp : 'https://wa.me/' + siteSettings.whatsapp.replace(/[^0-9]/g, '')} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-green-50 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-green-100 p-2 rounded-full text-green-600 group-hover:bg-green-600 group-hover:text-white transition"><MessageCircle size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">Direct WhatsApp</span>
-              </a>
-            )}
-            {siteSettings?.email && (
-              <a href={'mailto:' + siteSettings.email} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-red-50 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-red-100 p-2 rounded-full text-red-600 group-hover:bg-red-600 group-hover:text-white transition"><Mail size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">Email Us</span>
-              </a>
-            )}
-            {siteSettings?.website_url && (
-              <a href={siteSettings.website_url} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-purple-50 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-purple-100 p-2 rounded-full text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition"><Globe size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">Website</span>
-              </a>
-            )}
-            {siteSettings?.whatsapp_channel_url && (
-              <a href={siteSettings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-green-50 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-green-100 p-2 rounded-full text-green-600 group-hover:bg-green-600 group-hover:text-white transition"><MessageCircle size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">WhatsApp Channel</span>
-              </a>
-            )}
-            {siteSettings?.telegram_channel_url && (
-              <a href={siteSettings.telegram_channel_url} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-blue-50 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-blue-100 p-2 rounded-full text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition"><Send size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">Telegram Channel</span>
-              </a>
-            )}
-            {siteSettings?.instagram && (
-              <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-pink-50 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-pink-100 p-2 rounded-full text-pink-600 group-hover:bg-pink-600 group-hover:text-white transition"><Globe size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">Instagram Page</span>
-              </a>
-            )}
-            {siteSettings?.facebook && (
-              <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-blue-50 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-blue-100 p-2 rounded-full text-blue-700 group-hover:bg-blue-700 group-hover:text-white transition"><Globe size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">Facebook Page</span>
-              </a>
-            )}
-            {siteSettings?.twitter && (
-              <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row items-center gap-3 bg-white hover:bg-gray-100 border border-gray-200 px-6 py-4 rounded-2xl transition group w-full sm:w-auto min-w-[200px]">
-                <div className="bg-gray-200 p-2 rounded-full text-black group-hover:bg-black group-hover:text-white transition"><Globe size={20} /></div>
-                <span className="font-bold text-gray-800 text-sm">X Page</span>
-              </a>
-            )}
+      {/* 2. PLATFORM STATISTICS */}
+      <section className="py-12 px-6 lg:px-12 bg-black text-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
+          <div className="pt-6 md:pt-0">
+            <div className="text-4xl md:text-5xl font-bold mb-2">{stats?.jobs || 0}</div>
+            <div className="text-gray-400 font-medium">Jobs Available</div>
+          </div>
+          <div className="pt-6 md:pt-0">
+            <div className="text-4xl md:text-5xl font-bold mb-2">{stats?.companies || 0}</div>
+            <div className="text-gray-400 font-medium">Companies Listed</div>
+          </div>
+          <div className="pt-6 md:pt-0">
+            <div className="text-4xl md:text-5xl font-bold mb-2">{stats?.users || 0}</div>
+            <div className="text-gray-400 font-medium">Registered Users</div>
           </div>
         </div>
       </section>
 
-      {/* 4. MAIN JOBS SECTION (Keeping the original expanded view if they scroll down) */}
+      {/* 3. JOBS SECTION */}
       <section className="py-16 px-6 lg:px-12 max-w-7xl mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6 md:mb-0">Explore More Jobs</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6 md:mb-0">Latest Opportunities</h2>
+          
           <div className="flex bg-gray-100 p-1 rounded-full w-fit">
             <button 
               onClick={() => setJobTab("recent")}
@@ -260,40 +98,84 @@ export default function InteractiveHome({
                 key={job.id}
                 className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition group"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-gray-900 line-clamp-1 group-hover:text-blue-600 transition">{job.position}</h3>
-                    <p className="text-gray-500 text-sm mt-1">{job.company}</p>
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100">
+                    {job.image ? (
+                      <img src={job.image} alt={job.firm_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="text-gray-400 w-6 h-6" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-orange-600 transition line-clamp-1">{job.position}</h3>
+                    <p className="text-gray-500 text-sm">{job.firm_name}</p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {job.city && (
-                    <span className="flex items-center gap-1 bg-gray-50 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
-                      <MapPin size={12} /> {job.city}
-                    </span>
-                  )}
-                  {job.employment_type && (
-                    <span className="flex items-center gap-1 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-medium">
-                      {job.employment_type}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
-                  <span className="text-xs font-medium text-gray-400">
-                    {job.created_at ? new Date(job.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ''}
+                <div className="flex items-center gap-4 text-xs font-medium text-gray-600">
+                  <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-md">
+                    <MapPin size={14} />
+                    {job.city || "India"}
                   </span>
-                  <span className="text-black font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                    View <ArrowRight size={14} />
-                  </span>
+                  {job.workplace_type && (
+                    <span className="bg-gray-50 px-2 py-1 rounded-md">{job.workplace_type}</span>
+                  )}
                 </div>
               </Link>
             ))}
           </div>
         )}
+        
         <div className="mt-10 text-center">
           <Link href="/jobs" className="inline-flex items-center gap-2 text-black font-semibold hover:gap-3 transition-all">
             View All Jobs <ArrowRight size={18} />
           </Link>
+        </div>
+      </section>
+
+      {/* 4. COMPANIES SECTION */}
+      <section className="py-16 px-6 lg:px-12 bg-white w-full border-t border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6 md:mb-0">Explore Companies</h2>
+            
+            <div className="flex bg-gray-100 p-1 rounded-full w-fit">
+              <button onClick={() => setCompanyTab("all")} className={`px-6 py-2 rounded-full text-sm font-medium transition ${companyTab === "all" ? "bg-white shadow text-black" : "text-gray-600"}`}>All</button>
+              <button onClick={() => setCompanyTab("featured")} className={`px-6 py-2 rounded-full text-sm font-medium transition ${companyTab === "featured" ? "bg-white shadow text-black" : "text-gray-600"}`}>Featured</button>
+              <button onClick={() => setCompanyTab("popular")} className={`px-6 py-2 rounded-full text-sm font-medium transition ${companyTab === "popular" ? "bg-white shadow text-black" : "text-gray-600"}`}>Popular</button>
+            </div>
+          </div>
+
+          {displayCompanies.length === 0 ? (
+            <div className="bg-gray-50 p-12 rounded-3xl border border-gray-200 text-center text-gray-500">
+              No companies listed yet.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {displayCompanies.map((company) => (
+                <Link 
+                  href={`/companies/${company.slug}`}
+                  key={company.slug}
+                  className="bg-gray-50 hover:bg-gray-100 p-6 rounded-3xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200 aspect-square"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mb-4 overflow-hidden shadow-sm">
+                    {company.logo_url ? (
+                      <img src={company.logo_url} alt={company.firm_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="text-gray-300 w-8 h-8" />
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{company.firm_name}</h3>
+                  {company.city && <p className="text-xs text-gray-500 mt-1">{company.city}</p>}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-10 text-center">
+            <Link href="/companies" className="inline-flex items-center gap-2 text-black font-semibold hover:gap-3 transition-all">
+              View All Companies <ArrowRight size={18} />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -339,10 +221,10 @@ export default function InteractiveHome({
                 </select>
                 <select className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none">
                   <option>Select Duration</option>
-                  <option>1 Month — ₹199</option>
-                  <option>3 Months — ₹1249</option>
-                  <option>6 Months — ₹1449</option>
-                  <option>1 Year — ₹1799</option>
+                  <option>1 Month — ₹99</option>
+                  <option>3 Months — ₹249</option>
+                  <option>6 Months — ₹449</option>
+                  <option>1 Year — ₹799</option>
                 </select>
               </div>
             </div>
@@ -356,6 +238,44 @@ export default function InteractiveHome({
         </div>
       </section>
 
+      {/* 6. CONNECT WITH US */}
+      <section className="py-16 px-6 lg:px-12 bg-white text-center w-full border-t border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-900 mb-8">Connect With Us</h2>
+        <div className="flex flex-wrap justify-center gap-6">
+          {siteSettings?.whatsapp_channel_url && (
+            <a href={siteSettings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-green-600 font-medium">
+              <MessageCircle size={20} /> WhatsApp Channel
+            </a>
+          )}
+          {siteSettings?.telegram_channel_url && (
+            <a href={siteSettings.telegram_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-500 font-medium">
+              <Globe size={20} /> Telegram Channel
+            </a>
+          )}
+          {siteSettings?.instagram && (
+            <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-pink-600 font-medium">
+              <Globe size={20} /> Instagram Page
+            </a>
+          )}
+          {siteSettings?.facebook && (
+            <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-800 font-medium">
+              <Globe size={20} /> Facebook Page
+            </a>
+          )}
+          {siteSettings?.twitter && (
+            <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-400 font-medium">
+              <Globe size={20} /> X Page
+            </a>
+          )}
+          
+          {/* Fallback if no settings */}
+          {!siteSettings?.whatsapp_channel_url && !siteSettings?.telegram_channel_url && !siteSettings?.instagram && !siteSettings?.facebook && !siteSettings?.twitter && (
+            <p className="text-gray-500">Social channels will appear here once configured in the Admin Dashboard.</p>
+          )}
+        </div>
+      </section>
+
     </main>
   );
+}
 }
