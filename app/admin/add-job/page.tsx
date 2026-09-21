@@ -122,6 +122,7 @@ const [showSmartUpload, setShowSmartUpload] = useState(false);
 
 const [showUploadOptions, setShowUploadOptions] = useState(false);
 const [smartText, setSmartText] = useState("");
+const [smartUrl, setSmartUrl] = useState("");
 
 const [smartImage, setSmartImage] = useState<File | null>(null);
 
@@ -1969,9 +1970,7 @@ const handleSmartExtraction = async () => {
                   )}
 
                   {uploadMode === 'url' && (
-                    <input
-                      type="url"
-                      placeholder="Paste link here..."
+                    <input type="url" value={smartUrl} onChange={(e)=>setSmartUrl(e.target.value)} placeholder="Paste link here..."
                       className="w-full border-2 border-gray-100 rounded-full px-6 py-4 text-sm outline-none focus:border-black transition-all"
                     />
                   )}
@@ -1991,6 +1990,9 @@ const handleSmartExtraction = async () => {
       } else if (uploadMode === "image") {
         if (!smartImage) throw new Error("Please upload an image to extract.");
         formData.append("image", smartImage);
+      } else if (uploadMode === "url") {
+        if (!smartUrl) throw new Error("Please paste a URL to extract.");
+        formData.append("url", smartUrl);
       } else {
         throw new Error("Mode not supported yet.");
       }
@@ -2003,48 +2005,59 @@ const handleSmartExtraction = async () => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to extract");
 
-      const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
+            const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
+
+      // Normalization helpers
+      const normEmp = (e) => {
+        if(!e) return "";
+        const low = e.toLowerCase().replace(/[^a-z]/g, '');
+        if(low.includes('full')) return 'Full-time';
+        if(low.includes('part')) return 'Part-time';
+        if(low.includes('contract')) return 'Contract';
+        if(low.includes('temp')) return 'Temporary';
+        if(low.includes('free')) return 'Freelance';
+        if(low.includes('intern')) return 'Internship';
+        return "";
+      };
+      
+      const normWork = (w) => {
+        if(!w) return "";
+        const low = w.toLowerCase().replace(/[^a-z]/g, '');
+        if(low.includes('remot') || low.includes('wfh') || low.includes('home')) return 'Remote / Work from Home';
+        if(low.includes('hyb')) return 'Hybrid';
+        if(low.includes('site') || low.includes('office')) return 'On-site';
+        return "";
+      };
 
       // Preview
-      setFirmName(ai.company || "");
+      setFirmName(ai.company || ai.firm_name || "");
       setOrganizationType(ai.organization_type || "");
-      setCompanyDescription(ai.description || "");
-      setCompanyWebsite(ai.company_website || "");
-      setCompanyEmail(ai.company_email || "");
-      setCompanyPhone(ai.company_phone || "");
-      setPrincipalArchitect(ai.principal_architect || "");
-      setEmployeeSize(ai.employee_size || "");
-      setFoundedYear(ai.founded_year || "");
-
-      setArea(ai.area || "");
+      
       setCity(ai.city || "");
       setState(ai.state || "");
 
-      setPosition(ai.position || "");
+      setPosition(ai.position || ai.job_title || "");
 
-      setSelectedExperience(ai.experience || []);
+      // Handle experience carefully (frontend expects array or string?)
+      if (Array.isArray(ai.experience)) setSelectedExperience(ai.experience);
+      else if (ai.experience) setSelectedExperience([ai.experience]);
 
-      setSalary(ai.salary || "");
+      if (ai.employmentType || ai.employment_type) setEmploymentType(normEmp(ai.employmentType || ai.employment_type));
+      if (ai.workplaceType || ai.workplace_type) setWorkplaceType(normWork(ai.workplaceType || ai.workplace_type));
 
-      setPostedDate(ai.posted_date || "");
-      setLastDateToApply(ai.deadline || "");
-      setPostExpiryDate(ai.post_expiry_date || "");
+      setJobDescription(ai.description || ai.job_description || "");
 
-      setJobDescription(ai.job_description || "");
+      setLastDateToApply(ai.deadline || ai.application_deadline || "");
 
-      setSkills(ai.skills || []);
-      setQualifications(ai.qualifications || []);
-
-      setapply_link(ai.apply_link || "");
-      setapplication_email(ai.applicationEmail || "");
-
-      setSource(ai.source || "");
+      setapplication_email(ai.applicationEmail || ai.application_email || ai.email || "");
+      setapply_link(ai.apply_link || ai.website || ai.website_url || "");
+      if(ai.phone || ai.contact_phone) setCompanyPhone(ai.phone || ai.contact_phone);
 
       setLoadingAI("done");
 
     } catch (err) {
       console.error(err);
-      alert("Extraction Failed");
+      alert(err.message || "Extraction Failed");
       setLoadingAI(false);
     }
   }}
