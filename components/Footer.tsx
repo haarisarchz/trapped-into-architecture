@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Facebook, Instagram, Linkedin, Twitter, MessageCircle } from "lucide-react";
 
 export default function Footer() {
   const router = useRouter();
@@ -42,11 +43,6 @@ export default function Footer() {
       router.push(`/profile/${username}?tab=saved-jobs`);
     } else {
       alert("Please login to view saved jobs");
-      // Could open auth popup but it's not directly accessible from Footer without context passing.
-      // Easiest is to redirect to home or login page if one exists. For now, alert is safe, but 
-      // let's push them to a safe place. Wait, I should make sure it actually opens login.
-      // But there is no /login route. The app uses a popup in Navbar. 
-      // I'll emit a custom event to trigger the auth popup if possible, or just push to /?auth=login
       window.dispatchEvent(new CustomEvent('openAuth', { detail: 'login' }));
     }
   };
@@ -66,10 +62,44 @@ export default function Footer() {
         
         {/* BRAND */}
         <div>
-          <h2 className="text-xl md:text-2xl font-bold mb-3">Trapped Into Architecture</h2>
+          <div className="mb-4 flex items-center">
+            {settings?.logo_url ? (
+               <img src={settings.logo_url} alt="Site Logo" className="h-10 object-contain" />
+            ) : (
+               <h2 className="text-xl md:text-2xl font-bold">Trapped Into Architecture</h2>
+            )}
+          </div>
           <p className="text-gray-400 leading-6 text-sm md:text-base">
             Careers, knowledge, opportunities and growth for architecture students and professionals.
           </p>
+          
+          <div className="mt-6 flex items-center gap-4 text-gray-400">
+            {settings?.whatsapp_channel_url && (
+              <a href={settings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="hover:text-green-500 transition" title="WhatsApp Channel">
+                <MessageCircle size={20} />
+              </a>
+            )}
+            {settings?.facebook && (
+              <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition" title="Facebook">
+                <Facebook size={20} />
+              </a>
+            )}
+            {settings?.instagram && (
+              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-pink-500 transition" title="Instagram">
+                <Instagram size={20} />
+              </a>
+            )}
+            {settings?.twitter && (
+              <a href={settings.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-white transition" title="X / Twitter">
+                <Twitter size={20} />
+              </a>
+            )}
+            {settings?.linkedin && (
+              <a href={settings.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition" title="LinkedIn">
+                <Linkedin size={20} />
+              </a>
+            )}
+          </div>
         </div>
 
         {/* QUICK LINKS */}
@@ -91,8 +121,6 @@ export default function Footer() {
             <li><Link href="/jobs" className="hover:text-white transition block p-1 -m-1">Browse Jobs</Link></li>
             <li><a href="#" onClick={handleCreateProfile} className="hover:text-white transition block p-1 -m-1">Create Profile</a></li>
             <li><a href="#" onClick={handleSavedJobs} className="hover:text-white transition block p-1 -m-1">Saved Jobs</a></li>
-            
-            
           </ul>
         </div>
 
@@ -100,9 +128,26 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-semibold mb-3">Contact</h3>
           <ul className="space-y-2 text-gray-400 text-sm md:text-base">
-            <li><a href="mailto:admin.ti2a@gmail.com" className="hover:text-white transition block p-1 -m-1">admin.ti2a@gmail.com</a></li>
-            <li><a href="https://wa.me/918608609661" target="_blank" rel="noopener noreferrer" className="hover:text-white transition block p-1 -m-1">+91 8608609661</a></li>
-            <li className="p-1 -m-1">Madurai, India</li>
+            <li>
+              <a href={`mailto:${settings?.email || 'admin.ti2a@gmail.com'}`} className="hover:text-white transition block p-1 -m-1">
+                {settings?.email || 'admin.ti2a@gmail.com'}
+              </a>
+            </li>
+            <li>
+              <a href={settings?.phone ? `tel:${settings.phone}` : 'tel:+918608609661'} className="hover:text-white transition block p-1 -m-1">
+                {settings?.phone || '+91 8608609661'}
+              </a>
+            </li>
+            {settings?.whatsapp && (
+              <li>
+                <a href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition block p-1 -m-1">
+                  Message on WhatsApp
+                </a>
+              </li>
+            )}
+            <li className="p-1 -m-1 mt-2">
+              {settings?.contact_address || 'Madurai, India'}
+            </li>
           </ul>
         </div>
 
@@ -110,7 +155,7 @@ export default function Footer() {
 
       {/* BOTTOM BAR */}
       <div className="border-t border-gray-800 py-4 text-center text-gray-500 text-xs md:text-sm">
-        © 2026 Trapped Into Architecture. All rights reserved.
+        © {new Date().getFullYear()} Trapped Into Architecture. All rights reserved.
       </div>
     </footer>
   );

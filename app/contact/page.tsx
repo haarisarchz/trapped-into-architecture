@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { Phone, Mail, MessageCircle, MapPin } from "lucide-react";
+import { Phone, Mail, MessageCircle, MapPin, Globe, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 
 export default function ContactPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -19,9 +19,14 @@ export default function ContactPage() {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const { data } = await supabase.from("site_settings").select("*").eq("id", "global").maybeSingle();
-      setSettings(data);
-      setLoading(false);
+      try {
+        const { data } = await supabase.from("site_settings").select("*").eq("id", "global").maybeSingle();
+        if (data) setSettings(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchSettings();
   }, []);
@@ -30,8 +35,6 @@ export default function ContactPage() {
     e.preventDefault();
     setStatus("submitting");
     
-    // In a real app, this might go to a contact_messages table or send an email.
-    // For now we just mock the success.
     setTimeout(() => {
       setStatus("success");
       setFormData({ name: "", email: "", phone: "", message: "" });
@@ -58,6 +61,8 @@ export default function ContactPage() {
           <div>
             <h2 className="text-2xl font-bold mb-6 text-gray-900">Get in Touch</h2>
             <div className="space-y-6">
+              
+              {/* Direct Contacts */}
               {settings?.email && (
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
@@ -88,18 +93,64 @@ export default function ContactPage() {
                     <MessageCircle className="text-green-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900">WhatsApp</div>
-                    <a href={settings.whatsapp} target="_blank" rel="noreferrer" className="text-gray-600 hover:text-green-600">Message Us</a>
+                    <div className="font-semibold text-gray-900">Direct WhatsApp</div>
+                    <a href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="text-gray-600 hover:text-green-600">Message Us</a>
+                  </div>
+                </div>
+              )}
+              
+              {settings?.contact_address && (
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                    <MapPin className="text-gray-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Address</div>
+                    <div className="text-gray-600 whitespace-pre-wrap">{settings.contact_address}</div>
+                  </div>
+                </div>
+              )}
+              
+              {settings?.website_url && (
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                    <Globe className="text-gray-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Website</div>
+                    <a href={settings.website_url} target="_blank" rel="noreferrer" className="text-gray-600 hover:text-black">{settings.website_url.replace(/^https?:\/\//, '')}</a>
                   </div>
                 </div>
               )}
             </div>
 
-            <h3 className="font-bold text-gray-900 mt-10 mb-4">Follow Us</h3>
-            <div className="flex gap-4">
-              {settings?.instagram && <a href={settings.instagram} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-pink-600">Instagram</a>}
-              {settings?.linkedin && <a href={settings.linkedin} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600">LinkedIn</a>}
-              {settings?.facebook && <a href={settings.facebook} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-800">Facebook</a>}
+            <h3 className="font-bold text-gray-900 mt-10 mb-4">Official Channels</h3>
+            <div className="flex gap-4 items-center">
+              {settings?.whatsapp_channel_url && (
+                <a href={settings.whatsapp_channel_url} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-green-500 transition" title="WhatsApp Channel">
+                  <MessageCircle size={24} />
+                </a>
+              )}
+              {settings?.facebook && (
+                <a href={settings.facebook} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600 transition" title="Facebook">
+                  <Facebook size={24} />
+                </a>
+              )}
+              {settings?.twitter && (
+                <a href={settings.twitter} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-black transition" title="X / Twitter">
+                  <Twitter size={24} />
+                </a>
+              )}
+              {settings?.instagram && (
+                <a href={settings.instagram} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-pink-600 transition" title="Instagram">
+                  <Instagram size={24} />
+                </a>
+              )}
+              {settings?.linkedin && (
+                <a href={settings.linkedin} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-500 transition" title="LinkedIn">
+                  <Linkedin size={24} />
+                </a>
+              )}
             </div>
           </div>
 

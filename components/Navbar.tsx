@@ -28,12 +28,18 @@ const [showUserMenu, setShowUserMenu] =
     const [currentUser, setCurrentUser] =
   useState<any>(null);
 
-  const [mobileMenuOpen, setMobileMenuOpen] =
-useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settings, setSettings] = useState<any>(null);
 
   const [authTab, setAuthTab] =
     useState<"login" | "register">("login");
 useEffect(() => {
+    supabase.from("site_settings").select("logo_url").eq("id", "global").maybeSingle().then(({data}) => {
+      if(data) setSettings(data);
+    });
+  }, []);
+
+  useEffect(() => {
   const handleOpenAuth = (e) => {
     setAuthTab(e.detail);
     setShowAuthPopup(true);
@@ -69,9 +75,7 @@ useEffect(() => {
   {/* MOBILE HEADER - 2 LINES */}
   <div className="md:hidden flex flex-col w-full">
     <div className="w-full text-center py-4 border-b border-gray-800">
-      <Link href="/" className="text-xl font-bold tracking-widest uppercase">
-        Trapped Into Architecture
-      </Link>
+      <Link href="/" className="text-xl font-bold tracking-widest uppercase">{settings?.logo_url ? <img src={settings.logo_url} alt="Site Logo" className="h-8 md:h-10 object-contain inline-block" /> : "Trapped Into Architecture"}</Link>
     </div>
     
     <div className="flex items-center justify-between px-4 py-3">
@@ -178,9 +182,7 @@ useEffect(() => {
 
   {/* DESKTOP HEADER */}
   <div className="hidden md:flex px-8 py-5 items-center justify-between w-full">
-    <Link href="/" className="text-2xl font-bold">
-      Trapped Into Architecture
-    </Link>
+    <Link href="/" className="text-2xl font-bold">{settings?.logo_url ? <img src={settings.logo_url} alt="Site Logo" className="h-8 md:h-10 object-contain inline-block" /> : "Trapped Into Architecture"}</Link>
 
     <div className="flex items-center gap-8">
 
