@@ -66,8 +66,8 @@ export default function ShareButtons({
     }
     
     let combinedPosition = position;
-    if (experience && experience.trim() !== '') {
-      combinedPosition += ` (${experience.trim()})`;
+    if (experience && (typeof experience === "string" ? experience.trim() !== "" : (Array.isArray(experience) ? experience.length > 0 : true))) {
+      combinedPosition += ` (${Array.isArray(experience) ? experience.join(', ') : (typeof experience === 'string' ? experience.trim() : String(experience))})`;
     }
     text += `Position: ${combinedPosition}\n`;
     
