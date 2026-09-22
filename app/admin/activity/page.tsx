@@ -69,11 +69,7 @@ export default function AdminActivityPage() {
       setAdmins(allAdmins);
 
       let jobsQuery = supabase.from("jobs").select("*");
-      if (!isCEO) {
-        jobsQuery = jobsQuery.eq("author_id", user.id);
-      }
       
-      // Apply date filtering to the DB Query directly
       if (start) {
         jobsQuery = jobsQuery.gte("posted_date", start + "T00:00:00Z");
       }
@@ -83,7 +79,12 @@ export default function AdminActivityPage() {
         jobsQuery = jobsQuery.lt("posted_date", nextDay.toISOString().split("T")[0] + "T00:00:00Z");
       }
       
-      const { data: jobsData } = await jobsQuery;
+      const { data: rawJobsData } = await jobsQuery;
+      
+      let jobsData = rawJobsData || [];
+      if (!isCEO) {
+        jobsData = jobsData.filter((job: any) => !job.author_id || job.author_id === user.id);
+      }
       if (jobsData) {
         const jobsMap: Record<string, any[]> = {};
         jobsData.forEach(job => {

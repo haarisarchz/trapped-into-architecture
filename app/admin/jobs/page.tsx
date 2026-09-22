@@ -42,33 +42,35 @@ const typeFilter = searchParams.get("type");
   /* FETCH JOBS */
 
 const fetchJobs = async () => {
+    const user = JSON.parse(
+      localStorage.getItem("currentUser") || "null"
+    );
 
-  let query = supabase.from("jobs").select("*, profiles(display_name, full_name, username)");
+    let query = supabase
+      .from("jobs")
+      .select("*");
 
-  if (statusFilter === "active") {
-    query = query.eq("status", "published");
-  }
+    if (statusFilter && !["active", "expired"].includes(statusFilter)) {
+      query = query.eq("status", statusFilter);
+    }
 
-  if (statusFilter === "draft") {
-    query = query.eq("status", "draft");
-  }
+    const { data, error } = await query.order("id", {
+      ascending: false,
+    });
 
-  if (statusFilter === "scheduled") {
-    query = query.eq("status", "scheduled");
-  }
+    if (error) {
+      console.log(error);
+      return;
+    }
 
-  const { data, error } = await query.order("id", {
-    ascending: false,
-  });
+    let filteredJobs = data || [];
 
-  if (error) {
+    // Enforce role locally to prevent schema crash if migration hasn't run
+    const roleStr = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    if (roleStr !== "ceo") {
+      filteredJobs = filteredJobs.filter((job: any) => !job.author_id || job.author_id === user?.id);
+    }
 
-    console.log(error);
-    return;
-
-  }
-
-  let filteredJobs = data || [];
 
   if (statusFilter === "active") {
 

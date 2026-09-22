@@ -2,6 +2,7 @@
 
 import { generateJobUrl } from "@/utils/jobUrl";
 import ShareButtons from "@/components/ShareButtons";
+import SaveButton from "@/components/SaveButton";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

@@ -23,9 +23,10 @@ export default function CompaniesPage() {
 
   const fetchCompanies = async () => {
     // Fetch all companies and their creators
-    const { data: companiesData, error: companiesError } = await supabase
+        const { data: companiesData, error: companiesError } = await supabase
       .from("companies")
-      .select("*, profiles(display_name, full_name, username)");
+      .select("*");
+      // Intentionally removed profiles relationship to prevent schema crash before migration
     if (companiesError) return console.error(companiesError);
 
     // Fetch jobs to count them

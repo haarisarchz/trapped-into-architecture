@@ -594,7 +594,8 @@ const finalExpiryDate =
   if (jobId) {
     // Client-side permission check before update (ideally enforced by RLS)
     if (jobId && currentUser) {
-      const { data: existingJob } = await supabase.from('jobs').select('author_id').eq('id', jobId).single();
+      const { data: existingJob, error: authorError } = await supabase.from('jobs').select('id').eq('id', jobId).single();
+      // Temporarily removed author_id from select to prevent schema crash
       const role = currentUser.role?.toLowerCase()?.replace(/[\s_]+/g, '');
       if (existingJob && existingJob.author_id && existingJob.author_id !== currentUser.id && role !== 'ceo' && role !== 'superadmin') {
         alert('You do not have permission to edit a job you did not create.');
