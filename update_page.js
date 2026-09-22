@@ -1,37 +1,49 @@
 const fs = require('fs');
 let code = fs.readFileSync('app/page.tsx', 'utf8');
 
-if (!code.includes('internshipsCount')) {
-  code = code.replace(
-    'const { count: jobsCount } = await supabase',
-    'const { count: internshipsCount } = await supabase.from("jobs").select("*", { count: "exact", head: true }).eq("status", "published").ilike("employment_type", "%Internship%");\n  const { count: jobsCount } = await supabase'
-  );
+code = code.replace(
+  '.order("created_at", { ascending: false })',
+  '.order("posted_date", { ascending: false })'
+);
 
-  code = code.replace(
-    'jobs: jobsCount || 0,',
-    'jobs: jobsCount || 0,\n    internships: internshipsCount || 0,'
-  );
+const companyLogic = `
+  // Fetch real companies
+  const { data: allRealCompanies } = await supabase.from('companies').select('*');
+  const groupedCompanies = {};
+  const idToName = {};
 
-  // Update recentCompanies to include open job counts
-  code = code.replace(
-    /const \{ data: recentCompanies \} = await supabase[\s\S]*?\.limit\(6\);/,
-    `const { data: recentCompaniesData } = await supabase
-      .from("companies")
-      .select("firm_name, slug, city, logo_url")
-      .order("created_at", { ascending: false })
-      .limit(4);
+  (allRealCompanies || []).forEach(comp => {
+    if (!comp.firm_name) return;
+    groupedCompanies[comp.firm_name] = {
+      firm_name: comp.firm_name,
+      slug: comp.slug || comp.firm_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      city: comp.city || '',
+      logo_url: comp.logo_url || '',
+      organization_type: comp.organization_type || 'Architecture Firm'
+    };
+    if (comp.id) idToName[comp.id] = comp.firm_name;
+  });
 
-    // Fetch job counts for these companies
-    const recentCompanies = await Promise.all((recentCompaniesData || []).map(async (company) => {
-      const { count } = await supabase
-        .from("jobs")
-        .select("*", { count: "exact", head: true })
-        .eq("company", company.firm_name)
-        .eq("status", "published");
-      return { ...company, open_jobs: count || 0 };
-    }));`
-  );
+  const { data: allPublishedJobs } = await supabase.from('jobs').select('firm_name, company_id, city, organization_type').eq('status', 'published');
+  
+  (allPublishedJobs || []).forEach(job => {
+    let name = job.firm_name;
+    if (job.company_id && idToName[job.company_id]) name = idToName[job.company_id];
+    if (!name) return;
+    if (!groupedCompanies[name]) {
+      groupedCompanies[name] = {
+        firm_name: name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        city: job.city || '',
+        organization_type: job.organization_type || 'Architecture Firm',
+        logo_url: ''
+      };
+    }
+  });
 
-  fs.writeFileSync('app/page.tsx', code);
-  console.log('Updated app/page.tsx');
-}
+  const recentCompanies = Object.values(groupedCompanies).slice(0, 6);
+`;
+
+code = code.replace(/const \{ data: recentCompanies \} = await supabase[\s\S]*?\.limit\(6\);/, companyLogic);
+
+fs.writeFileSync('app/page.tsx', code);
