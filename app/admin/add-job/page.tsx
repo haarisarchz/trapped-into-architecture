@@ -575,7 +575,7 @@ const finalExpiryDate =
     jobError = res.error;
   } else {
     if (currentUser) {
-      (jobPayload as any).moderator = currentUser.displayName || currentUser.username || currentUser.fullName || "Admin";
+      // Removed invalid moderator field injection to prevent schema cache error
     }
     const res = await supabase.from("jobs").insert([jobPayload]).select().single().select().single();
     jobData = res.data;
