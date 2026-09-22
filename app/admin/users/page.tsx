@@ -16,11 +16,24 @@ export default function AdminUsersPage() {
 
   const checkAccess = async () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    const roleStr = currentUser?.role?.toLowerCase()?.replace(/[\s_]+/g, "");
-    if (!currentUser || roleStr !== 'ceo') {
+    if (!currentUser) {
       router.push("/admin");
       return;
     }
+    
+    // Fetch actual role from DB to avoid stale localStorage
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("username", currentUser.username)
+      .single();
+      
+    const roleStr = (profile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    if (roleStr !== 'ceo') {
+      router.push("/admin");
+      return;
+    }
+    
     fetchData();
   };
 

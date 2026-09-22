@@ -93,7 +93,7 @@ export default async function Home() {
     .from("jobs")
     .select("*")
     .eq("status", "published")
-    .order("created_at", { ascending: false })
+    .order("posted_date", { ascending: false })
     .limit(6);
 
   // Fetch Site Settings

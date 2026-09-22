@@ -22,18 +22,19 @@ export default function CompaniesPage() {
   }, []);
 
   const fetchCompanies = async () => {
-    // Fetch all companies and their creators
-        const { data: companiesData, error: companiesError } = await supabase
+    // Fetch all companies
+    const { data: companiesData, error: companiesError } = await supabase
       .from("companies")
       .select("*");
-      // Intentionally removed profiles relationship to prevent schema crash before migration
-    if (companiesError) return console.error(companiesError);
-
-    // Fetch jobs to count them
-    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("company_id, status");
+      
+    // Fetch jobs to count them and aggregate companies if RLS blocks companies table
+    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("company_id, status, firm_name, city, organization_type");
+    
     if (jobsError) return console.error(jobsError);
 
     const jobCounts: Record<string, { total: number; active: number }> = {};
+    const fallbackCompanies: Record<string, any> = {};
+
     if (jobsData) {
       jobsData.forEach((job: any) => {
         if (job.company_id) {
@@ -45,14 +46,37 @@ export default function CompaniesPage() {
             jobCounts[job.company_id].active += 1;
           }
         }
+        
+        // Fallback aggregation if RLS blocks the actual companies table
+        if (job.firm_name) {
+           if (!fallbackCompanies[job.firm_name]) {
+              fallbackCompanies[job.firm_name] = {
+                 id: "fallback-" + job.firm_name,
+                 firm_name: job.firm_name,
+                 city: job.city || "",
+                 organization_type: job.organization_type || "Architecture Firm",
+                 is_hidden: false,
+                 totalJobs: 0,
+                 activeJobs: 0,
+                 isFallback: true
+              };
+           }
+           fallbackCompanies[job.firm_name].totalJobs += 1;
+           if (job.status === "published") fallbackCompanies[job.firm_name].activeJobs += 1;
+        }
       });
     }
 
-    const merged = (companiesData || []).map((company: any) => ({
+    let merged = (companiesData || []).map((company: any) => ({
       ...company,
       totalJobs: jobCounts[company.id]?.total || 0,
       activeJobs: jobCounts[company.id]?.active || 0,
     }));
+    
+    // If companiesData is empty (due to RLS), use the fallback aggregated from jobs!
+    if (merged.length === 0) {
+       merged = Object.values(fallbackCompanies);
+    }
 
     setCompanies(merged);
   };

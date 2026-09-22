@@ -50,12 +50,15 @@ const checkAccess = async () => {
       .single();
 
   const allowedRoles = ["superadmin", "admin", "ceo"];
-  if (error || !profile || !allowedRoles.includes((profile.role || "").toLowerCase().replace(/[\s_]+/g, ""))) {
-
+  const normalizedRole = (profile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  
+  if (error || !profile || !allowedRoles.includes(normalizedRole)) {
     router.push("/");
     return;
-
   }
+  
+  // Actually set the userRole so the UI buttons render!
+  setUserRole(normalizedRole);
 
   await fetchDashboardData();
 
