@@ -45,13 +45,12 @@ export default function AdminActivityPage() {
     }
     setCurrentUser(user);
     setUserRole(roleStr);
-    fetchData(user, roleStr);
+    fetchData(user, roleStr, startDate, endDate);
   };
 
-  const fetchData = async (user: any, role: string) => {
+  const fetchData = async (user: any, role: string, start?: string, end?: string) => {
     setLoading(true);
     
-    // Fetch settings to get rupees_per_post if it exists
     const { data: settingsData } = await supabase.from("site_settings").select("*").single();
     if (settingsData && settingsData.rupees_per_post) {
       setRupeesPerPost(settingsData.rupees_per_post);
@@ -59,7 +58,6 @@ export default function AdminActivityPage() {
 
     const isCEO = role === "ceo";
 
-    // Fetch profiles
     let profilesQuery = supabase.from("profiles").select("*");
     if (!isCEO) {
       profilesQuery = profilesQuery.eq("id", user.id);
@@ -67,14 +65,22 @@ export default function AdminActivityPage() {
     const { data: profilesData } = await profilesQuery.order("created_at", { ascending: false });
     
     if (profilesData) {
-      // Filter strictly to admin roles, though for non-CEO it's just themselves
       const allAdmins = profilesData.filter(p => ["admin", "superadmin", "ceo"].includes((p.role || "").toLowerCase().replace(/[\s_]+/g, "")));
       setAdmins(allAdmins);
 
-      // Fetch jobs
       let jobsQuery = supabase.from("jobs").select("*");
       if (!isCEO) {
         jobsQuery = jobsQuery.eq("author_id", user.id);
+      }
+      
+      // Apply date filtering to the DB Query directly
+      if (start) {
+        jobsQuery = jobsQuery.gte("posted_date", start + "T00:00:00Z");
+      }
+      if (end) {
+        const nextDay = new Date(end);
+        nextDay.setDate(nextDay.getDate() + 1);
+        jobsQuery = jobsQuery.lt("posted_date", nextDay.toISOString().split("T")[0] + "T00:00:00Z");
       }
       
       const { data: jobsData } = await jobsQuery;
@@ -92,25 +98,12 @@ export default function AdminActivityPage() {
     setLoading(false);
   };
 
-  const filterByDate = (jobs: any[]) => {
-    if (!startDate && !endDate) return jobs;
-    return jobs.filter(job => {
-      const jobDate = new Date(job.posted_date || job.created_at || new Date());
-      // reset time for proper comparison
-      jobDate.setHours(0,0,0,0);
-      
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0,0,0,0);
-        if (jobDate < start) return false;
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(0,0,0,0);
-        if (jobDate > end) return false;
-      }
-      return true;
-    });
+  const filterByDate = (jobs: any[]) => jobs; // Handled server-side now
+
+  const handleSubmitDateRange = () => {
+    if (currentUser && userRole) {
+      fetchData(currentUser, userRole, startDate, endDate);
+    }
   };
 
   const updateRupeesPerPost = async (val: number) => {

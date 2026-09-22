@@ -86,8 +86,8 @@ const uniqueCities = [
       setJobs(
         filteredData.map((job) => ({
           id: job.id,
-          firmName: job.firm_name,
-          organizationType: job.organization_type,
+          firm_name: job.firm_name,
+          organization_type: job.organization_type,
           area: job.area,
           city: job.city,
           state: job.state,
@@ -102,11 +102,11 @@ const uniqueCities = [
           skills_required: Array.isArray(job.skills_required)
             ? job.skills_required
             : [],
-          postedDate: job.posted_date,
-          lastDateToApply: job.last_date_to_apply,
-          postExpiryDate: job.post_expiry_date,
-          jobDescription: job.job_description,
-          applicationType: job.application_type,
+          posted_date: job.posted_date,
+          last_date_to_apply: job.last_date_to_apply,
+          post_expiry_date: job.post_expiry_date,
+          job_description: job.job_description,
+          application_type: job.application_type,
           apply_link: job.apply_link,
           application_email: job.application_email,
           source: job.source,
@@ -985,7 +985,7 @@ setSelectedSalary([]);
     const skillsMatch =
       selectedSkills.length === 0 ||
 
-      job.skillsRequired?.some(
+      job.skills_required?.some(
         (skill: string) =>
 
           selectedSkills.includes(skill)
@@ -1007,7 +1007,7 @@ setSelectedSalary([]);
     const searchMatch =
       searchQuery === "" ||
 
-      job.firmName
+      job.firm_name
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
 
@@ -1019,7 +1019,7 @@ setSelectedSalary([]);
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
 
-      job.skillsRequired?.some(
+      job.skills_required?.some(
         (skill: string) =>
 
           skill
@@ -1032,9 +1032,9 @@ setSelectedSalary([]);
     const expiryMatch =
       !excludeExpired ||
 
-      !job.postExpiryDate ||
+      !job.post_expiry_date ||
 
-      new Date(job.postExpiryDate) >=
+      new Date(job.post_expiry_date) >=
         new Date();
 
     return (
@@ -1090,7 +1090,7 @@ setSelectedSalary([]);
       key={index}
       id={job.id}
       viewMode={viewMode}
-      firm_name={job.firmName}
+      firm_name={job.firm_name}
       area={job.area}
       city={job.city}
       state={job.state}
@@ -1098,12 +1098,12 @@ setSelectedSalary([]);
       experience={job.experience}
       salary={job.salary}
       qualifications={job.qualifications}
-      skills_required={job.skillsRequired}
-      posted_date={job.postedDate}
-      last_date_to_apply={job.lastDateToApply}
-      post_expiry_date={job.postExpiryDate}
-      job_description={job.jobDescription}
-      application_type={job.applicationType}
+      skills_required={job.skills_required}
+      posted_date={job.posted_date}
+      last_date_to_apply={job.last_date_to_apply}
+      post_expiry_date={job.post_expiry_date}
+      job_description={job.job_description}
+      application_type={job.application_type}
       apply_link={job.apply_link}
       application_email={job.application_email}
       source={job.source}
