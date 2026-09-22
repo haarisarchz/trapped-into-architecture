@@ -221,17 +221,17 @@ export default function InteractiveHome({
           )}
           {siteSettings?.instagram && (
             <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-pink-600 font-medium">
-              <Instagram size={20} /> Instagram Page
+              <InstagramIcon size={20} /> Instagram Page
             </a>
           )}
           {siteSettings?.facebook && (
             <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-800 font-medium">
-              <Facebook size={20} /> Facebook Page
+              <FacebookIcon size={20} /> Facebook Page
             </a>
           )}
           {siteSettings?.twitter && (
             <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-400 font-medium">
-              <Twitter size={20} /> X Page
+              <TwitterIcon size={20} /> X Page
             </a>
           )}
           
