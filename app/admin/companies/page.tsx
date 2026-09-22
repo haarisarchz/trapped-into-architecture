@@ -4,89 +4,163 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Edit2, EyeOff, Eye } from "lucide-react";
 
 export default function CompaniesPage() {
   const router = useRouter();
   const [companies, setCompanies] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+    if (!user) {
+      router.push("/");
+      return;
+    }
+    setCurrentUser(user);
     fetchCompanies();
   }, []);
 
   const fetchCompanies = async () => {
-    // Fetch all companies
-    const { data: companiesData, error: companiesError } = await supabase.from("companies").select("*");
+    // Fetch all companies and their creators
+    const { data: companiesData, error: companiesError } = await supabase
+      .from("companies")
+      .select("*, profiles(display_name, full_name, username)");
     if (companiesError) return console.error(companiesError);
 
     // Fetch jobs to count them
-    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("company_id");
+    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("company_id, status");
     if (jobsError) return console.error(jobsError);
 
-    const jobCounts: Record<string, number> = {};
+    const jobCounts: Record<string, { total: number; active: number }> = {};
     if (jobsData) {
       jobsData.forEach((job: any) => {
         if (job.company_id) {
-          jobCounts[job.company_id] = (jobCounts[job.company_id] || 0) + 1;
+          if (!jobCounts[job.company_id]) {
+            jobCounts[job.company_id] = { total: 0, active: 0 };
+          }
+          jobCounts[job.company_id].total += 1;
+          if (job.status === "published") {
+            jobCounts[job.company_id].active += 1;
+          }
         }
       });
     }
 
     const merged = (companiesData || []).map((company: any) => ({
       ...company,
-      jobCount: jobCounts[company.id] || 0,
+      totalJobs: jobCounts[company.id]?.total || 0,
+      activeJobs: jobCounts[company.id]?.active || 0,
     }));
 
     setCompanies(merged);
   };
 
+  const handleHideToggle = async (company: any) => {
+    const action = company.is_hidden ? "Unhide" : "Hide";
+    const confirmMessage = company.is_hidden 
+      ? "Unhide this company? It will become visible in public listings again." 
+      : "Hide this company?\\n\\nThis will remove the company from public company listings. Existing job records will not be deleted.";
+      
+    if (confirm(confirmMessage)) {
+      const { error } = await supabase
+        .from("companies")
+        .update({ is_hidden: !company.is_hidden })
+        .eq("id", company.id);
+        
+      if (!error) {
+        fetchCompanies();
+      } else {
+        alert("Error updating visibility");
+      }
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <section className="w-full px-6 lg:px-12 py-10">
+      <section className="flex-1 w-full px-6 lg:px-12 py-10 max-w-[1400px] mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold">Companies</h1>
-            <p className="text-gray-600 mt-2">Manage registered companies.</p>
+            <p className="text-gray-600 mt-2">Manage registered companies and their visibility.</p>
           </div>
           <button onClick={() => router.push("/admin")} className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0">
             ← Back to Dashboard
           </button>
         </div>
 
-        <div className="bg-white rounded-3xl shadow border overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[600px]">
-            <thead className="bg-white border-b">
-              <tr>
-                <th className="px-6 py-5">Company</th>
-                <th className="px-6 py-5">Location</th>
-                <th className="px-6 py-5">Jobs</th>
-                <th className="px-6 py-5">Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {companies.length > 0 ? (
-                companies.map((c, i) => (
-                  <tr key={i} className="hover:bg-white">
-                    <td className="px-6 py-4 border-b">
-                      <div className="font-semibold">{c.firm_name}</div>
-                    </td>
-                    <td className="px-6 py-4 border-b">
-                      {c.city} {c.state ? `, ${c.state}` : ""}
-                    </td>
-                    <td className="px-6 py-4 border-b">{c.jobCount}</td>
-                    <td className="px-6 py-4 border-b">{c.organization_type}</td>
-                  </tr>
-                ))
-              ) : (
+            <table className="w-full text-left min-w-[1000px]">
+              <thead className="bg-gray-50 border-b border-gray-200 text-sm text-gray-600 uppercase">
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-gray-500">
-                    No companies registered yet.
-                  </td>
+                  <th className="px-6 py-4 font-semibold">Company</th>
+                  <th className="px-6 py-4 font-semibold">Location</th>
+                  <th className="px-6 py-4 font-semibold">Created By</th>
+                  <th className="px-6 py-4 font-semibold">Jobs (Total / Active)</th>
+                  <th className="px-6 py-4 font-semibold">Visibility</th>
+                  <th className="px-6 py-4 font-semibold text-right">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {companies.length > 0 ? (
+                  companies.map((c, i) => (
+                    <tr key={i} className="hover:bg-gray-50 transition">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          {c.logo_url ? (
+                            <img src={c.logo_url} alt="Logo" className="w-10 h-10 object-contain rounded-md border bg-white" />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded-md border flex items-center justify-center text-gray-400 text-xs">No Logo</div>
+                          )}
+                          <div>
+                            <div className="font-bold text-gray-900">{c.firm_name}</div>
+                            <div className="text-sm text-gray-500">{c.organization_type || "Architecture Firm"}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-700">
+                        {c.city} {c.state ? `, ${c.state}` : ""}
+                      </td>
+                      <td className="px-6 py-4 text-gray-700">
+                        {c.profiles?.display_name || c.profiles?.full_name || c.profiles?.username || "Admin"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-medium text-gray-900">{c.totalJobs}</span> / <span className="text-green-600 font-medium">{c.activeJobs} active</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {c.is_hidden ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Hidden
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Visible
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          <button onClick={() => alert("Company editing will be implemented in the specific company edit modal/page.")} className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit Company">
+                            <Edit2 size={18} />
+                          </button>
+                          <button onClick={() => handleHideToggle(c)} className={`p-2 rounded-lg transition ${c.is_hidden ? "text-gray-500 hover:text-green-600 hover:bg-green-50" : "text-gray-500 hover:text-red-600 hover:bg-red-50"}`} title={c.is_hidden ? "Unhide Company" : "Hide Company"}>
+                            {c.is_hidden ? <Eye size={18} /> : <EyeOff size={18} />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      No companies found. Add a job to auto-create a company.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -94,4 +168,3 @@ export default function CompaniesPage() {
     </main>
   );
 }
-

@@ -43,9 +43,7 @@ const typeFilter = searchParams.get("type");
 
 const fetchJobs = async () => {
 
-  let query = supabase
-    .from("jobs")
-    .select("*");
+  let query = supabase.from("jobs").select("*, profiles(display_name, full_name, username)");
 
   if (statusFilter === "active") {
     query = query.eq("status", "published");
@@ -311,7 +309,7 @@ const fetchJobs = async () => {
                       {/* POSTED BY */}
 
                       <td className="px-6 py-5">
-                        {job.moderator || "Admin"}
+                        {job.profiles?.display_name || job.profiles?.full_name || job.profiles?.username || "Admin"}
                       </td>
 
                       {/* POSTED ON */}

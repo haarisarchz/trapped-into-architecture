@@ -55,7 +55,7 @@ export default function ContactSettingsPage() {
 
     const roleNormalized = (profile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
     setUserRole(roleNormalized);
-    const allowedRoles = ["superadmin", "ceo"];
+    const allowedRoles = ["ceo"];
     if (error || !profile || !allowedRoles.includes(roleNormalized)) {
       router.push("/");
       return;
@@ -97,8 +97,8 @@ export default function ContactSettingsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (userRole !== "superadmin" && userRole !== "ceo") {
-      alert("Only CEO or Super Admin can update contact settings.");
+    if (userRole !== "ceo") {
+      alert("Only CEO can update contact settings.");
       return;
     }
     setSaving(true);

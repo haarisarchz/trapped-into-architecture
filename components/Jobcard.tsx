@@ -58,52 +58,14 @@ export default function JobCard({
 }: JobCardProps) {
   const router = useRouter();
   
-  const [isSaved, setIsSaved] = useState(false);
-  const [saveCount, setSaveCount] = useState(save_count);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userStr = localStorage.getItem("currentUser");
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-        setIsSaved(user.savedJobs?.includes(id));
-      }
-    }
-  }, [id]);
+  
 
   const isExpired =
     post_expiry_date && new Date(post_expiry_date) < new Date();
 
-  const saveJob = () => {
-    if (!currentUser) {
-      alert("Please login first");
-      return;
-    }
-
-    const savedJobs = currentUser.savedJobs || [];
-    let newSavedJobs;
-
-    if (savedJobs.includes(id)) {
-      newSavedJobs = savedJobs.filter((jobId: string) => jobId !== id);
-      setSaveCount((prev) => Math.max(0, prev - 1));
-      setIsSaved(false);
-    } else {
-      newSavedJobs = [...savedJobs, id];
-      setSaveCount((prev) => prev + 1);
-      setIsSaved(true);
-    }
-
-    currentUser.savedJobs = newSavedJobs;
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
-
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const updatedUsers = users.map((u: any) =>
-      u.username === currentUser.username ? currentUser : u
-    );
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-  };
+  
 
   const getCompanySlug = (name: string) => {
     return name.toLowerCase().trim().replace(/s+/g, "-").replace(/[^w-]+/g, "");
@@ -143,24 +105,17 @@ export default function JobCard({
             )}
             
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveJob(); }}
-                  aria-label={`Save ${position} job`}
-                  className={`p-2 rounded-full transition ${isSaved ? "bg-black text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-                >
-                  {isSaved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-                </button>
-                <span className="text-sm font-semibold text-gray-700">{saveCount}</span>
-              </div>
+              <SaveButton jobId={id} initialSaves={save_count} />
               <ShareButtons 
-                url={jobUrlString} 
-                jobId={id} 
-                companyName={firm_name} 
-                position={position} 
-                experience={experience} 
-                initialShares={share_count} 
-              />
+  url={jobUrlString} 
+  jobId={id} 
+  companyName={firm_name} 
+  position={position} 
+  organizationType={organization_type}
+  city={city}
+  state={state}
+  initialShares={share_count} 
+/>
             </div>
           </div>
 
@@ -202,24 +157,17 @@ export default function JobCard({
               )}
 
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveJob(); }}
-                    aria-label={`Save ${position} job`}
-                    className={`p-2 rounded-full transition ${isSaved ? "bg-black text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-                  >
-                    {isSaved ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-                  </button>
-                  <span className="text-sm font-semibold text-gray-700">{saveCount}</span>
-                </div>
+                <SaveButton jobId={id} initialSaves={save_count} />
                 <ShareButtons 
-                  url={jobUrlString} 
-                  jobId={id} 
-                  companyName={firm_name} 
-                  position={position} 
-                  experience={experience} 
-                  initialShares={share_count} 
-                />
+  url={jobUrlString} 
+  jobId={id} 
+  companyName={firm_name} 
+  position={position} 
+  organizationType={organization_type}
+  city={city}
+  state={state}
+  initialShares={share_count} 
+/>
               </div>
             </div>
 
@@ -285,25 +233,18 @@ export default function JobCard({
           <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap">Active</span>
         )}
         
-        <div className="flex items-center gap-1 ml-2">
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveJob(); }}
-            aria-label={`Save ${position} job`}
-            className={`p-2 rounded-full transition ${isSaved ? "bg-black text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-          >
-            {isSaved ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
-          </button>
-          <span className="text-xs font-semibold text-gray-700">{saveCount}</span>
-        </div>
+        <SaveButton jobId={id} initialSaves={save_count} />
         
         <ShareButtons 
-          url={jobUrlString} 
-          jobId={id} 
-          companyName={firm_name} 
-          position={position} 
-          experience={experience} 
-          initialShares={share_count} 
-        />
+  url={jobUrlString} 
+  jobId={id} 
+  companyName={firm_name} 
+  position={position} 
+  organizationType={organization_type}
+  city={city}
+  state={state}
+  initialShares={share_count} 
+/>
       </div>
     </div>
   );

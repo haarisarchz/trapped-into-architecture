@@ -8,12 +8,7 @@ import { supabase } from "@/lib/supabase";
 export default function AdminUsersPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("users"); // 'users' or 'admins'
   const [users, setUsers] = useState<any[]>([]);
-  const [admins, setAdmins] = useState<any[]>([]);
-  const [jobCounts, setJobCounts] = useState<Record<string, number>>({});
-  const [adminJobsMap, setAdminJobsMap] = useState<Record<string, any[]>>({});
-  const [expandedAdmin, setExpandedAdmin] = useState<string | null>(null);
 
   useEffect(() => {
     checkAccess();
@@ -21,19 +16,9 @@ export default function AdminUsersPage() {
 
   const checkAccess = async () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!currentUser) {
-      router.push("/");
-      return;
-    }
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("username", currentUser.username)
-      .single();
-
-    const allowedRoles = ["superadmin", "admin", "ceo"];
-    if (error || !profile || !allowedRoles.includes((profile.role || "").toLowerCase().replace(/[\s_]+/g, ""))) {
-      router.push("/");
+    const roleStr = currentUser?.role?.toLowerCase()?.replace(/[\s_]+/g, "");
+    if (!currentUser || roleStr !== 'ceo') {
+      router.push("/admin");
       return;
     }
     fetchData();
@@ -45,121 +30,57 @@ export default function AdminUsersPage() {
     const { data: profilesData } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
     
     if (profilesData) {
-      const allUsers = profilesData;
-      const allAdmins = profilesData.filter(p => ["admin", "superadmin", "ceo"].includes((p.role || "").toLowerCase().replace(/[\s_]+/g, "")));
-      
-      setUsers(allUsers);
-      setAdmins(allAdmins);
-
-      const { data: jobsData } = await supabase.from("jobs").select("*");
-      if (jobsData) {
-        const counts: Record<string, number> = {};
-        const jobsMap: Record<string, any[]> = {};
-        jobsData.forEach(job => {
-          if (job.username) {
-            counts[job.username] = (counts[job.username] || 0) + 1;
-            if (!jobsMap[job.username]) jobsMap[job.username] = [];
-            jobsMap[job.username].push(job);
-          }
-        });
-        setJobCounts(counts);
-        setAdminJobsMap(jobsMap);
-      }
+      setUsers(profilesData);
     }
     setLoading(false);
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
-    if (error) {
-      alert("Failed to update role: " + error.message);
-    } else {
-      alert("Role updated successfully.");
-      fetchData(); // refresh data
-    }
-  };
-
-  if (loading) return <div className="p-10 text-center font-bold">Loading...</div>;
-
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="max-w-6xl mx-auto py-12 px-6">
+      <section className="flex-1 w-full px-6 lg:px-12 py-10 max-w-[1400px] mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <button onClick={() => router.push('/admin')} className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0">
+          <div>
+            <h1 className="text-4xl font-bold">Manage Users</h1>
+            <p className="text-gray-600 mt-2">View and manage registered users and administrators.</p>
+          </div>
+          <button onClick={() => router.push("/admin")} className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0">
             ← Back to Dashboard
           </button>
         </div>
 
-        <div className="flex border-b mb-6">
-          <button 
-            className={`px-6 py-3 font-semibold ${activeTab === 'users' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
-            onClick={() => setActiveTab("users")}
-          >
-            All Users
-          </button>
-          <button 
-            className={`px-6 py-3 font-semibold ${activeTab === 'admins' ? 'border-b-2 border-black text-black' : 'text-gray-500'}`}
-            onClick={() => setActiveTab("admins")}
-          >
-            Administrators
-          </button>
-        </div>
-
-        <div className="bg-white border rounded-xl overflow-x-auto shadow-sm">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="p-4 font-bold text-sm">Name / Username</th>
-                <th className="p-4 font-bold text-sm">Email / Phone</th>
-                <th className="p-4 font-bold text-sm">Registered</th>
-                {activeTab === 'admins' && <th className="p-4 font-bold text-sm">Posts Created</th>}
-                <th className="p-4 font-bold text-sm">Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(activeTab === 'users' ? users : admins).map(user => (
-                <tr key={user.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4">
-                    <div className="font-semibold">{user.display_name || "Unknown"}</div>
-                    <div className="text-xs text-gray-500">@{user.username || user.id.slice(0, 8)}</div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-sm">{user.email || "N/A"}</div>
-                    {user.phone && <div className="text-xs text-gray-500">{user.phone}</div>}
-                  </td>
-                  <td className="p-4 text-sm text-gray-600">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </td>
-                  {activeTab === 'admins' && (
-                    <td className="p-4 text-sm font-bold">
-                      {jobCounts[user.username] || 0}
-                    </td>
-                  )}
-                  <td className="p-4">
-                    <select 
-                      value={user.role || 'user'} 
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      className="border rounded p-1 text-sm bg-white"
-                    >
-                      <option value="user">User</option>
-                      <option value="admin">Admin</option>
-                      <option value="Super_Admin">Super Admin</option>
-                      <option value="CEO">CEO</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-              {(activeTab === 'users' ? users : admins).length === 0 && (
+        {loading ? (
+          <div className="text-center py-20">Loading data...</div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+            <table className="w-full text-left min-w-[800px]">
+              <thead className="bg-gray-50 border-b border-gray-200 text-sm text-gray-600 uppercase">
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">No records found.</td>
+                  <th className="px-6 py-4 font-semibold">User</th>
+                  <th className="px-6 py-4 font-semibold">Role</th>
+                  <th className="px-6 py-4 font-semibold">Joined</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {users.map((u, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4">
+                      <div className="font-bold text-gray-900">{u.display_name || u.full_name || u.username || 'User'}</div>
+                      <div className="text-sm text-gray-500">{u.email}</div>
+                    </td>
+                    <td className="px-6 py-4 capitalize text-gray-700">
+                      {u.role || "User"}
+                    </td>
+                    <td className="px-6 py-4 text-gray-500">
+                      {new Date(u.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
       <Footer />
     </main>
   );

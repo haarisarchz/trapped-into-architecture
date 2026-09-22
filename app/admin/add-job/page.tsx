@@ -351,8 +351,25 @@ const [uploadSuccess, setUploadSuccess] =
   setUploadingImage(true);
   setUploadSuccess(false);
 
-  const fileName =
-    `${Date.now()}-${file.name}`;
+    // Generate SEO friendly file name
+  let safeFirm = firmName ? firmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+  let safePosition = position ? position.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+  let seoName = '';
+  if (safeFirm && safePosition) {
+    seoName = `${safeFirm}-hiring-${safePosition}`;
+  } else if (safeFirm) {
+    seoName = safeFirm;
+  } else if (safePosition) {
+    seoName = safePosition;
+  } else {
+    seoName = `job-${jobId || 'post'}`;
+  }
+  seoName = seoName.replace(/-+/g, '-');
+  
+  const extMatch = file.name.match(/.[0-9a-z]+$/i);
+  const ext = extMatch ? extMatch[0].toLowerCase() : '';
+  
+  const fileName = `${seoName}-${Date.now()}${ext}`;
 
   const { data, error } = await supabase.storage
     .from("job-images")
@@ -415,15 +432,20 @@ const handlePublishJob = async (
         .replace(/\s+/g, "-")
         .replace(/[^\w-]+/g, "");
         
-      await supabase.from("companies").insert([
+      const { data: newComp, error: newCompErr } = await supabase.from("companies").insert([
         {
           firm_name: firmName,
           slug: companySlug,
           city: city,
           state: state,
           organization_type: organizationType,
+          created_by: currentUser?.id || null
         },
-      ]);
+      ]).select().single();
+      
+      if (newComp) {
+        currentCompanyId = newComp.id;
+      }
     }
   }
   // =====================================================
@@ -570,12 +592,22 @@ const finalExpiryDate =
 
   let jobData: any, jobError: any;
   if (jobId) {
+    // Client-side permission check before update (ideally enforced by RLS)
+    if (jobId && currentUser) {
+      const { data: existingJob } = await supabase.from('jobs').select('author_id').eq('id', jobId).single();
+      const role = currentUser.role?.toLowerCase()?.replace(/[\s_]+/g, '');
+      if (existingJob && existingJob.author_id && existingJob.author_id !== currentUser.id && role !== 'ceo' && role !== 'superadmin') {
+        alert('You do not have permission to edit a job you did not create.');
+        setSaving(false);
+        return;
+      }
+    }
     const res = await supabase.from("jobs").update(jobPayload).eq("id", jobId).select().single();
     jobData = res.data;
     jobError = res.error;
   } else {
     if (currentUser) {
-      // Removed invalid moderator field injection to prevent schema cache error
+      (jobPayload as any).author_id = currentUser.id;
     }
     const res = await supabase.from("jobs").insert([jobPayload]).select().single().select().single();
     jobData = res.data;

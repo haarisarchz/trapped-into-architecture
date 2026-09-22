@@ -8,6 +8,7 @@ export default function AdminDashboard() {
 
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState("");
 
   const [jobs, setJobs] = useState<any[]>([]);
 
@@ -167,6 +168,12 @@ if (loading) {
           {/* MENU */}
 
           <div className="space-y-3">
+            <button
+              onClick={() => router.push("/admin/activity")}
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition text-blue-400 font-medium"
+            >
+              Admin Activity
+            </button>
 
             <button
               onClick={() =>
@@ -209,18 +216,22 @@ if (loading) {
 >
   Companies
 </button>
+{userRole === "ceo" && (
 <button
   onClick={() => router.push("/admin/users")}
   className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
 >
   Users
 </button>
+)}
+{userRole === "ceo" && (
 <button
   onClick={() => router.push("/admin/contact")}
   className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
 >
   Contact
 </button>
+)}
 
             <button
   onClick={() => window.open("/jobs", "_blank")}
