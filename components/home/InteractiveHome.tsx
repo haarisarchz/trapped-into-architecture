@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { generateJobUrl } from "@/utils/jobUrl";
-import { Search, MapPin, Building2, ArrowRight, MessageCircle, Globe, Mail, Smartphone } from "lucide-react";
+import { Search, MapPin, Building2, ArrowRight, MessageCircle, Globe, Mail, Smartphone, Send } from "lucide-react";
+import { InstagramIcon, FacebookIcon, TwitterIcon } from "@/components/icons/SocialIcons";
 
 export default function InteractiveHome({
   recentJobs = [],
