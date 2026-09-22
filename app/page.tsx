@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   }
 };
 
+export const revalidate = 0;
+
 export default async function Home() {
   // Fetch Top Cities
   const { data: topCitiesData } = await supabase

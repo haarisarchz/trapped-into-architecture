@@ -179,62 +179,28 @@ export default function InteractiveHome({
         </div>
       </section>
 
-      {/* 5. ARCHITECTURE SERVICES & ALERTS */}
+      {/* 5. ARCHITECTURE SERVICES */}
       <section className="py-16 px-6 lg:px-12 bg-gray-900 text-white w-full">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
-          
-          {/* Services */}
-          <div>
-            <h2 className="text-3xl font-bold mb-8">Architecture Services</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link href="#" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600">
-                <h3 className="font-semibold text-lg mb-2">Hire a Software Tutor</h3>
-                <p className="text-gray-400 text-sm">Master BIM, CAD, and rendering tools with expert tutors.</p>
-              </Link>
-              <Link href="#" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600">
-                <h3 className="font-semibold text-lg mb-2">Hire an Architect</h3>
-                <p className="text-gray-400 text-sm">Find the perfect architect for your next project.</p>
-              </Link>
-              <Link href="#" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600">
-                <h3 className="font-semibold text-lg mb-2">Portfolio Critique</h3>
-                <p className="text-gray-400 text-sm">Get expert feedback on your architecture portfolio.</p>
-              </Link>
-              <Link href="#" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600">
-                <h3 className="font-semibold text-lg mb-2">Resume Builder</h3>
-                <p className="text-gray-400 text-sm">Create an ATS-friendly architecture resume.</p>
-              </Link>
-            </div>
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold mb-8 text-center">Architecture Services</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link href="/contact?service=software-tutor" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600 flex flex-col justify-center">
+              <h3 className="font-semibold text-lg mb-2">Hire a Software Tutor</h3>
+              <p className="text-gray-400 text-sm">Master BIM, CAD, and rendering tools with expert tutors.</p>
+            </Link>
+            <Link href="/contact?service=architect" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600 flex flex-col justify-center">
+              <h3 className="font-semibold text-lg mb-2">Hire an Architect</h3>
+              <p className="text-gray-400 text-sm">Find the perfect architect for your next project.</p>
+            </Link>
+            <Link href="/contact?service=portfolio-critique" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600 flex flex-col justify-center">
+              <h3 className="font-semibold text-lg mb-2">Portfolio Critique</h3>
+              <p className="text-gray-400 text-sm">Get expert feedback on your architecture portfolio.</p>
+            </Link>
+            <a href="https://thecosmofolio.com/" target="_blank" rel="noopener noreferrer" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600 flex flex-col justify-center">
+              <h3 className="font-semibold text-lg mb-2">Portfolio Builder</h3>
+              <p className="text-gray-400 text-sm">Build your architecture portfolio in seconds.</p>
+            </a>
           </div>
-
-          {/* Job Alerts */}
-          <div className="bg-white text-black p-8 md:p-10 rounded-3xl shadow-xl flex flex-col justify-center">
-            <h2 className="text-3xl font-bold mb-4">Get Instant Job Updates</h2>
-            <p className="text-gray-600 mb-8">Subscribe to receive instant notifications via Email, WhatsApp, or Telegram when new jobs match your criteria.</p>
-            
-            <div className="space-y-4 mb-8">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <select className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none">
-                  <option>Select Notification Channel</option>
-                  <option>Email</option>
-                  <option>WhatsApp</option>
-                  <option>Telegram</option>
-                </select>
-                <select className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none">
-                  <option>Select Duration</option>
-                  <option>1 Month — ₹99</option>
-                  <option>3 Months — ₹249</option>
-                  <option>6 Months — ₹449</option>
-                  <option>1 Year — ₹799</option>
-                </select>
-              </div>
-            </div>
-
-            <button className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition">
-              Subscribe Now (Pending Payment)
-            </button>
-            <p className="text-xs text-center text-gray-400 mt-4">*Payment integration coming soon.</p>
-          </div>
-
         </div>
       </section>
 
@@ -249,22 +215,22 @@ export default function InteractiveHome({
           )}
           {siteSettings?.telegram_channel_url && (
             <a href={siteSettings.telegram_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-500 font-medium">
-              <Globe size={20} /> Telegram Channel
+              <Send size={20} /> Telegram Channel
             </a>
           )}
           {siteSettings?.instagram && (
             <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-pink-600 font-medium">
-              <Globe size={20} /> Instagram Page
+              <Instagram size={20} /> Instagram Page
             </a>
           )}
           {siteSettings?.facebook && (
             <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-800 font-medium">
-              <Globe size={20} /> Facebook Page
+              <Facebook size={20} /> Facebook Page
             </a>
           )}
           {siteSettings?.twitter && (
             <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-400 font-medium">
-              <Globe size={20} /> X Page
+              <Twitter size={20} /> X Page
             </a>
           )}
           
