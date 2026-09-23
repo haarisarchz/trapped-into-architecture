@@ -5,6 +5,50 @@ import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+
+const LockedRoleField = ({ userObj, currentUser, onSave }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(userObj.role || "User");
+  const isSelf = userObj.id === currentUser?.id;
+  
+  const handleConfirm = () => {
+     if (selectedRole === (userObj.role || "User")) {
+        setIsEditing(false);
+        return;
+     }
+     if (true) {
+        onSave(userObj.id, selectedRole);
+        setIsEditing(false);
+     }
+  };
+  
+  return (
+     <div className="flex items-center gap-3">
+        {isEditing ? (
+           <>
+              <select value={selectedRole} onChange={e => setSelectedRole(e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:outline-none">
+                 <option value="User">User</option>
+                 <option value="Admin">Admin</option>
+                 <option value="Super_Admin">Super_Admin</option>
+                 <option value="CEO">CEO</option>
+              </select>
+              <button onClick={handleConfirm} className="bg-black text-white text-xs px-3 py-1 rounded">Save</button>
+              <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-black text-xs">Cancel</button>
+           </>
+        ) : (
+           <>
+              <span className="capitalize">{userObj.role || "User"}</span>
+              {!isSelf && (
+                 <button onClick={() => setIsEditing(true)} className="text-blue-500 hover:text-blue-700 text-xs">
+                    ✎ Edit Role
+                 </button>
+              )}
+           </>
+        )}
+     </div>
+  );
+};
+
 export default function AdminUsersPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -44,6 +88,7 @@ export default function AdminUsersPage() {
     checkAccess();
   }, []);
 
+  const [loggedUser, setLoggedUser] = useState<any>(null);
   const checkAccess = async () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
     if (!currentUser) {
@@ -63,7 +108,7 @@ export default function AdminUsersPage() {
       router.push("/admin");
       return;
     }
-    
+    setLoggedUser(currentUser);
     fetchData();
   };
 
@@ -118,17 +163,8 @@ export default function AdminUsersPage() {
                       <div className="font-bold text-gray-900">{u.display_name || u.full_name || u.username || 'User'}</div>
                       <div className="text-sm text-gray-500">{u.email}</div>
                     </td>
-                    <td className="px-6 py-4 capitalize text-gray-700">
-                      <select
-                        value={u.role || "user"}
-                        onChange={(e) => handleRoleChange(u.id, u.display_name || u.full_name || u.username || 'User', u.role, e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm bg-white cursor-pointer hover:border-gray-400 focus:outline-none"
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                        <option value="superadmin">Super_Admin</option>
-                        <option value="ceo">CEO</option>
-                      </select>
+                    <td className="px-6 py-4 text-gray-700">
+                      <LockedRoleField userObj={u} currentUser={loggedUser} onSave={(uid: string, newR: string) => handleRoleChange(uid, u.display_name || u.username || 'User', u.role, newR)} />
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {new Date(u.created_at).toLocaleDateString()}
