@@ -32,6 +32,8 @@ const statusFilter = searchParams.get("status");
 const typeFilter = searchParams.get("type");
 
   const [jobs, setJobs] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  useEffect(() => { setCurrentUser(JSON.parse(localStorage.getItem("currentUser") || "null")); }, []);
 
   useEffect(() => {
 

@@ -17,6 +17,7 @@ export default function AdminActivityPage() {
   const [expandedAdmin, setExpandedAdmin] = useState<string | null>(null);
 
   // Date range and config
+  const [datePreset, setDatePreset] = useState("this_month");
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setDate(1);
@@ -100,12 +101,49 @@ export default function AdminActivityPage() {
 
   const filterByDate = (jobs: any[]) => jobs; // Handled server-side now
 
+  
+  useEffect(() => {
+    if (datePreset === "custom") return;
+    if (!currentUser || !userRole) return;
+    
+    const now = new Date();
+    let start = "";
+    let end = "";
+    
+    if (datePreset === "this_month") {
+      start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    } else if (datePreset === "last_month") {
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+      end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+    } else if (datePreset === "last_3_months") {
+      start = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()).toISOString().split('T')[0];
+    } else if (datePreset === "last_6_months") {
+      start = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()).toISOString().split('T')[0];
+    } else if (datePreset === "last_1_year") {
+      start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+    } else if (datePreset === "lifetime") {
+      start = "";
+      end = "";
+    }
+    
+    setStartDate(start);
+    setEndDate(end);
+    fetchData(currentUser, userRole, start, end);
+  }, [datePreset]);
+
   const handleSubmitDateRange = () => {
     if (currentUser && userRole) {
       fetchData(currentUser, userRole, startDate, endDate);
     }
   };
 
+  const handleUpdateIndividualRate = async (adminId: string, newRate: number) => {
+    // Graceful fail if column doesn't exist yet
+    try {
+      await supabase.from("profiles").update({ rupees_per_post: newRate }).eq("id", adminId);
+      setAdmins(admins.map(a => a.id === adminId ? { ...a, rupees_per_post: newRate } : a));
+    } catch(e) {}
+  };
   const updateRupeesPerPost = async (val: number) => {
     setRupeesPerPost(val);
     if (userRole === "ceo") {
@@ -167,19 +205,7 @@ export default function AdminActivityPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-500 mb-1">₹ per Post</label>
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 font-medium">₹</span>
-                  <input 
-                    type="number" 
-                    value={rupeesPerPost} 
-                    onChange={e => updateRupeesPerPost(Number(e.target.value))} 
-                    disabled={userRole !== "ceo"}
-                    className="border border-gray-300 rounded-lg px-4 py-2 w-24 text-right disabled:bg-gray-100" 
-                  />
-                </div>
-              </div>
+              
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -193,7 +219,7 @@ export default function AdminActivityPage() {
                 const draftsCount = filteredAdminJobs.filter(j => j.status === 'draft').length;
                 const scheduledCount = filteredAdminJobs.filter(j => j.status === 'scheduled').length;
                 
-                const earnings = publishedCount * rupeesPerPost;
+                const earnings = publishedCount * (admin.rupees_per_post || rupeesPerPost || 10);
                 
                 const isExpanded = expandedAdmin === admin.id;
 

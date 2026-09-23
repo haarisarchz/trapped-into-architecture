@@ -235,7 +235,6 @@ export default function ContactSettingsPage() {
                   <input type="url" value={settings.whatsapp_channel_url} onChange={e => setSettings({...settings, whatsapp_channel_url: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="https://whatsapp.com/channel/..." />
                 </div>
 
-                <LockedField label="Official Website URL" type="url" value={settings.website_url} onChange={e => setSettings({...settings, website_url: e.target.value})} />
 
                 <LockedField label="Facebook Page URL" type="url" value={settings.facebook} onChange={e => setSettings({...settings, facebook: e.target.value})} />
 

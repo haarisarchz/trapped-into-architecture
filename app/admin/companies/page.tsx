@@ -22,71 +22,62 @@ export default function CompaniesPage() {
   }, []);
 
   const fetchCompanies = async () => {
-    // Fetch all companies
-    const { data: companiesData, error: companiesError } = await supabase
-      .from("companies")
-      .select("*");
-      
-    // Fetch jobs to count them and aggregate companies if RLS blocks companies table
-        // Fetch jobs to count them
+    // 1. Fetch real companies
+    const { data: companiesData } = await supabase.from("companies").select("*");
+    
+    // 2. Fetch profiles
     const { data: profilesData } = await supabase.from("profiles").select("id, display_name, full_name, username");
     const profilesMap: Record<string, any> = {};
     if (profilesData) profilesData.forEach(p => profilesMap[p.id] = p);
     
-    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("company_id, status, firm_name, city, organization_type, author_id, posted_date");
+    // 3. Fetch jobs
+    const { data: jobsData } = await supabase.from("jobs").select("company_id, status, firm_name, city, organization_type, author_id, posted_date");
     
-    if (jobsError) return console.error(jobsError);
-
-    const jobCounts: Record<string, { total: number; active: number }> = {};
-    const fallbackCompanies: Record<string, any> = {};
-
+    const grouped: Record<string, any> = {};
+    
+    // Add real companies first
+    if (companiesData) {
+       companiesData.forEach(comp => {
+         if (!comp.firm_name) return;
+         grouped[comp.firm_name] = {
+            ...comp,
+            totalJobs: 0,
+            activeJobs: 0,
+            profiles: comp.created_by ? profilesMap[comp.created_by] : null
+         };
+       });
+    }
+    
+    // Merge jobs
     if (jobsData) {
-      jobsData.forEach((job: any) => {
-        if (job.company_id) {
-          if (!jobCounts[job.company_id]) {
-            jobCounts[job.company_id] = { total: 0, active: 0 };
+       jobsData.forEach((job: any) => {
+          let name = job.firm_name;
+          if (!name) return;
+          
+          if (!grouped[name]) {
+             grouped[name] = {
+                id: "fallback-" + name,
+                firm_name: name,
+                city: job.city || "",
+                organization_type: job.organization_type || "Architecture Firm",
+                is_hidden: false,
+                created_by: job.author_id,
+                created_at: job.posted_date,
+                profiles: job.author_id ? profilesMap[job.author_id] : null,
+                totalJobs: 0,
+                activeJobs: 0,
+                isFallback: true
+             };
           }
-          jobCounts[job.company_id].total += 1;
-          if (job.status === "published") {
-            jobCounts[job.company_id].active += 1;
+          
+          grouped[name].totalJobs += 1;
+          if (job.status === 'published') {
+             grouped[name].activeJobs += 1;
           }
-        }
-        
-        // Fallback aggregation if RLS blocks the actual companies table
-        if (job.firm_name) {
-           if (!fallbackCompanies[job.firm_name]) {
-              fallbackCompanies[job.firm_name] = {
-                 id: "fallback-" + job.firm_name,
-                 firm_name: job.firm_name,
-                 city: job.city || "",
-                 organization_type: job.organization_type || "Architecture Firm",
-                 is_hidden: false,
-                 totalJobs: 0,
-                 activeJobs: 0,
-                 created_by: job.author_id,
-                 created_at: job.posted_date,
-                 isFallback: true
-              };
-           }
-           fallbackCompanies[job.firm_name].totalJobs += 1;
-           if (job.status === "published") fallbackCompanies[job.firm_name].activeJobs += 1;
-        }
-      });
+       });
     }
-
-    let merged = (companiesData || []).map((company: any) => ({
-      ...company,
-      totalJobs: jobCounts[company.id]?.total || 0,
-      activeJobs: jobCounts[company.id]?.active || 0,
-      profiles: company.created_by ? profilesMap[company.created_by] : null
-    }));
     
-    // If companiesData is empty (due to RLS), use the fallback aggregated from jobs!
-    if (merged.length === 0) {
-       merged = Object.values(fallbackCompanies).map(c => ({ ...c, profiles: c.created_by ? profilesMap[c.created_by] : null }));
-    }
-
-    setCompanies(merged);
+    setCompanies(Object.values(grouped));
   };
 
   const handleHideToggle = async (company: any) => {
@@ -158,7 +149,27 @@ export default function CompaniesPage() {
                         {c.city} {c.state ? `, ${c.state}` : ""}
                       </td>
                       <td className="px-6 py-4 text-gray-700">
-                        {c.profiles?.display_name || c.profiles?.full_name || c.profiles?.username || "Admin"}
+                        {(() => {
+                           if (!c.profiles) return "Admin";
+                           
+                           const userRole = (currentUser?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+                           
+                           // If CEO, see everything
+                           if (userRole === "ceo") {
+                             return c.profiles.display_name || c.profiles.full_name || c.profiles.username || "Admin";
+                           }
+                           
+                           // If own company, see own name
+                           if (currentUser?.id === c.created_by) {
+                             return c.profiles.display_name || c.profiles.full_name || c.profiles.username || "Admin";
+                           }
+                           
+                           // Otherwise show role label
+                           const pRole = (c.profiles.role || "Admin").toLowerCase().replace(/[\s_]+/g, "");
+                           if (pRole === "ceo") return "CEO";
+                           if (pRole === "superadmin") return "Super Admin";
+                           return "Admin";
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-gray-700">
                         {c.created_at ? new Date(c.created_at).toLocaleDateString() : "-"}

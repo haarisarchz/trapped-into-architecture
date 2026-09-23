@@ -9,6 +9,21 @@ export default function AdminUsersPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
+  const [sortOption, setSortOption] = useState("recent");
+  
+  const sortedUsers = [...users].sort((a, b) => {
+     if (sortOption === "username_asc") {
+        const nameA = a.display_name || a.full_name || a.username || '';
+        const nameB = b.display_name || b.full_name || b.username || '';
+        return nameA.localeCompare(nameB);
+     }
+     if (sortOption === "oldest") {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+     }
+     // recent
+     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
 
   
   const handleRoleChange = async (userId: string, userName: string, oldRole: string, newRole: string) => {
@@ -70,7 +85,12 @@ export default function AdminUsersPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold">Manage Users</h1>
-            <p className="text-gray-600 mt-2">View and manage registered users and administrators.</p>
+            <p className="text-gray-600 mt-2 mb-4">View and manage registered users and administrators.</p>
+            <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="border border-gray-300 rounded px-3 py-2 text-sm bg-white cursor-pointer focus:outline-none">
+               <option value="recent">Date Joined - Recent First</option>
+               <option value="oldest">Date Joined - Oldest First</option>
+               <option value="username_asc">Username - Ascending</option>
+            </select>
           </div>
           <button onClick={() => router.push("/admin")} className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0">
             ← Back to Dashboard
@@ -84,14 +104,16 @@ export default function AdminUsersPage() {
             <table className="w-full text-left min-w-[800px]">
               <thead className="bg-gray-50 border-b border-gray-200 text-sm text-gray-600 uppercase">
                 <tr>
+                  <th className="px-6 py-4 font-semibold w-16">S.No.</th>
                   <th className="px-6 py-4 font-semibold">User</th>
                   <th className="px-6 py-4 font-semibold">Role</th>
                   <th className="px-6 py-4 font-semibold">Joined</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {users.map((u, i) => (
-                  <tr key={i} className="hover:bg-gray-50 transition">
+                {sortedUsers.map((u, i) => (
+                  <tr key={u.id || i} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 text-gray-500 font-medium">{i + 1}</td>
                     <td className="px-6 py-4">
                       <div className="font-bold text-gray-900">{u.display_name || u.full_name || u.username || 'User'}</div>
                       <div className="text-sm text-gray-500">{u.email}</div>
