@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -249,14 +250,12 @@ if (loading) {
 
         {/* WEBSITE BUTTON */}
 
-        <button
-          onClick={() =>
-            router.push("/")
-          }
-          className="border border-gray-700 rounded-2xl px-5 py-4 hover:bg-gray-800 transition"
+        <Link
+          href="/"
+          className="border border-gray-700 rounded-2xl px-5 py-4 hover:bg-gray-800 transition text-center block w-full"
         >
           View Website
-        </button>
+        </Link>
 
       </aside>
 
