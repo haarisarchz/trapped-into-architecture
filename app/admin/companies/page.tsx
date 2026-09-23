@@ -28,7 +28,12 @@ export default function CompaniesPage() {
       .select("*");
       
     // Fetch jobs to count them and aggregate companies if RLS blocks companies table
-    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("company_id, status, firm_name, city, organization_type");
+        // Fetch jobs to count them
+    const { data: profilesData } = await supabase.from("profiles").select("id, display_name, full_name, username");
+    const profilesMap: Record<string, any> = {};
+    if (profilesData) profilesData.forEach(p => profilesMap[p.id] = p);
+    
+    const { data: jobsData, error: jobsError } = await supabase.from("jobs").select("company_id, status, firm_name, city, organization_type, author_id, posted_date");
     
     if (jobsError) return console.error(jobsError);
 
@@ -58,6 +63,8 @@ export default function CompaniesPage() {
                  is_hidden: false,
                  totalJobs: 0,
                  activeJobs: 0,
+                 created_by: job.author_id,
+                 created_at: job.posted_date,
                  isFallback: true
               };
            }
@@ -71,11 +78,12 @@ export default function CompaniesPage() {
       ...company,
       totalJobs: jobCounts[company.id]?.total || 0,
       activeJobs: jobCounts[company.id]?.active || 0,
+      profiles: company.created_by ? profilesMap[company.created_by] : null
     }));
     
     // If companiesData is empty (due to RLS), use the fallback aggregated from jobs!
     if (merged.length === 0) {
-       merged = Object.values(fallbackCompanies);
+       merged = Object.values(fallbackCompanies).map(c => ({ ...c, profiles: c.created_by ? profilesMap[c.created_by] : null }));
     }
 
     setCompanies(merged);
@@ -123,6 +131,7 @@ export default function CompaniesPage() {
                   <th className="px-6 py-4 font-semibold">Company</th>
                   <th className="px-6 py-4 font-semibold">Location</th>
                   <th className="px-6 py-4 font-semibold">Created By</th>
+                  <th className="px-6 py-4 font-semibold">Created On</th>
                   <th className="px-6 py-4 font-semibold">Jobs (Total / Active)</th>
                   <th className="px-6 py-4 font-semibold">Visibility</th>
                   <th className="px-6 py-4 font-semibold text-right">Actions</th>
@@ -150,6 +159,9 @@ export default function CompaniesPage() {
                       </td>
                       <td className="px-6 py-4 text-gray-700">
                         {c.profiles?.display_name || c.profiles?.full_name || c.profiles?.username || "Admin"}
+                      </td>
+                      <td className="px-6 py-4 text-gray-700">
+                        {c.created_at ? new Date(c.created_at).toLocaleDateString() : "-"}
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-medium text-gray-900">{c.totalJobs}</span> / <span className="text-green-600 font-medium">{c.activeJobs} active</span>

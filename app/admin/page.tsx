@@ -151,7 +151,7 @@ if (loading) {
 
       {/* SIDEBAR */}
 
-      <aside className="hidden md:flex md:w-72 bg-black text-white min-h-screen p-6 flex-col justify-between">
+      <aside className="flex w-full md:w-72 bg-black text-white md:min-h-screen p-6 flex-col justify-between gap-10 md:gap-0">
 
         <div>
 

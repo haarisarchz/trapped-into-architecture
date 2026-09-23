@@ -71,30 +71,29 @@ export default function AdminActivityPage() {
       let jobsQuery = supabase.from("jobs").select("*");
       
       if (start) {
-        jobsQuery = jobsQuery.gte("posted_date", start + "T00:00:00Z");
+        jobsQuery = jobsQuery.gte("posted_date", start);
       }
       if (end) {
-        const nextDay = new Date(end);
-        nextDay.setDate(nextDay.getDate() + 1);
-        jobsQuery = jobsQuery.lt("posted_date", nextDay.toISOString().split("T")[0] + "T00:00:00Z");
+        jobsQuery = jobsQuery.lte("posted_date", end);
       }
       
       const { data: rawJobsData } = await jobsQuery;
       
       let jobsData = rawJobsData || [];
       if (!isCEO) {
-        jobsData = jobsData.filter((job: any) => !job.author_id || job.author_id === user.id);
+        jobsData = jobsData.filter((job: any) => job.author_id === user.id);
       }
-      if (jobsData) {
-        const jobsMap: Record<string, any[]> = {};
-        jobsData.forEach(job => {
-          if (job.author_id) {
-            if (!jobsMap[job.author_id]) jobsMap[job.author_id] = [];
-            jobsMap[job.author_id].push(job);
-          }
-        });
-        setAdminJobsMap(jobsMap);
-      }
+      
+      const jobsMap: Record<string, any[]> = {};
+      jobsData.forEach((job: any) => {
+        // Fallback for missing author_id (until migration runs)
+        // If CEO sees it, we group unknown jobs under a dummy or exclude them.
+        // The prompt says "split them according to their actual creator", which requires the DB column.
+        const id = job.author_id || "unknown";
+        if (!jobsMap[id]) jobsMap[id] = [];
+        jobsMap[id].push(job);
+      });
+      setAdminJobsMap(jobsMap);
     }
     setLoading(false);
   };

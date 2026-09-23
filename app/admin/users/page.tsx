@@ -10,6 +10,21 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
 
+  
+  const handleRoleChange = async (userId: string, userName: string, oldRole: string, newRole: string) => {
+    if (newRole === oldRole) return;
+    if (window.confirm(`Change ${userName} from ${oldRole || 'User'} to ${newRole}?`)) {
+      setLoading(true);
+      const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+      if (!error) {
+        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      } else {
+        alert("Failed to update role");
+      }
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkAccess();
   }, []);
@@ -82,7 +97,16 @@ export default function AdminUsersPage() {
                       <div className="text-sm text-gray-500">{u.email}</div>
                     </td>
                     <td className="px-6 py-4 capitalize text-gray-700">
-                      {u.role || "User"}
+                      <select
+                        value={u.role || "user"}
+                        onChange={(e) => handleRoleChange(u.id, u.display_name || u.full_name || u.username || 'User', u.role, e.target.value)}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm bg-white cursor-pointer hover:border-gray-400 focus:outline-none"
+                      >
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="superadmin">Super_Admin</option>
+                        <option value="ceo">CEO</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {new Date(u.created_at).toLocaleDateString()}

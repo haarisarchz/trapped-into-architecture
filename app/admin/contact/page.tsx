@@ -6,6 +6,37 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { UploadCloud, X } from "lucide-react";
 
+
+const LockedField = ({ label, value, onChange, type = "text" }: any) => {
+  const [isEditing, setIsEditing] = useState(!value);
+  const handleSave = async (e: any) => {
+     e.preventDefault();
+     setIsEditing(false);
+  };
+  return (
+    <div>
+      <label className="block text-sm font-bold text-gray-700 mb-1 flex items-center justify-between">
+        <span>{label}</span>
+        {value && !isEditing && (
+          <button type="button" onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-black">
+             ✎ Edit
+          </button>
+        )}
+      </label>
+      {isEditing ? (
+        <div className="flex gap-2">
+          <input type={type} value={value} onChange={onChange} className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black" />
+          {value && <button type="button" onClick={handleSave} className="bg-black text-white px-4 rounded-xl">Done</button>}
+        </div>
+      ) : (
+        <div className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 truncate cursor-not-allowed select-none">
+          {value || "Not Set"}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function ContactSettingsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -175,15 +206,9 @@ export default function ContactSettingsPage() {
               <p className="text-sm text-gray-500 mb-6">These details are used when a user directly messages or contacts the organization.</p>
               
               <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Contact Email</label>
-                  <input type="email" value={settings.email} onChange={e => setSettings({...settings, email: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="admin.ti2a@gmail.com" />
-                </div>
+                <LockedField label="Contact Email" type="email" value={settings.email} onChange={e => setSettings({...settings, email: e.target.value})} />
                 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Contact Phone</label>
-                  <input type="text" value={settings.phone} onChange={e => setSettings({...settings, phone: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="+91 8608609661" />
-                </div>
+                <LockedField label="Contact Phone" type="text" value={settings.phone} onChange={e => setSettings({...settings, phone: e.target.value})} />
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Direct WhatsApp Number</label>
@@ -210,30 +235,15 @@ export default function ContactSettingsPage() {
                   <input type="url" value={settings.whatsapp_channel_url} onChange={e => setSettings({...settings, whatsapp_channel_url: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="https://whatsapp.com/channel/..." />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Official Website URL</label>
-                  <input type="url" value={settings.website_url} onChange={e => setSettings({...settings, website_url: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="https://www.trappedintoarchitecture.com" />
-                </div>
+                <LockedField label="Official Website URL" type="url" value={settings.website_url} onChange={e => setSettings({...settings, website_url: e.target.value})} />
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Facebook Page URL</label>
-                  <input type="url" value={settings.facebook} onChange={e => setSettings({...settings, facebook: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="https://facebook.com/..." />
-                </div>
+                <LockedField label="Facebook Page URL" type="url" value={settings.facebook} onChange={e => setSettings({...settings, facebook: e.target.value})} />
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">X / Twitter URL</label>
-                  <input type="url" value={settings.twitter} onChange={e => setSettings({...settings, twitter: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="https://twitter.com/..." />
-                </div>
+                <LockedField label="X / Twitter URL" type="url" value={settings.twitter} onChange={e => setSettings({...settings, twitter: e.target.value})} />
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">Instagram URL</label>
-                  <input type="url" value={settings.instagram} onChange={e => setSettings({...settings, instagram: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="https://instagram.com/..." />
-                </div>
+                <LockedField label="Instagram URL" type="url" value={settings.instagram} onChange={e => setSettings({...settings, instagram: e.target.value})} />
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1">LinkedIn URL</label>
-                  <input type="url" value={settings.linkedin} onChange={e => setSettings({...settings, linkedin: e.target.value})} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black transition" placeholder="https://linkedin.com/company/..." />
-                </div>
+                <LockedField label="LinkedIn URL" type="url" value={settings.linkedin} onChange={e => setSettings({...settings, linkedin: e.target.value})} />
               </div>
             </div>
 

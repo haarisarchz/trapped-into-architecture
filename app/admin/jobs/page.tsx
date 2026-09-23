@@ -65,11 +65,24 @@ const fetchJobs = async () => {
 
     let filteredJobs = data || [];
 
+    // Manually fetch profiles to avoid Supabase relation crashes if foreign key is missing
+    const { data: profilesData } = await supabase.from("profiles").select("id, display_name, full_name, username");
+    const profilesMap: Record<string, any> = {};
+    if (profilesData) {
+      profilesData.forEach(p => profilesMap[p.id] = p);
+    }
+
     // Enforce role locally to prevent schema crash if migration hasn't run
     const roleStr = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
     if (roleStr !== "ceo") {
       filteredJobs = filteredJobs.filter((job: any) => !job.author_id || job.author_id === user?.id);
     }
+    
+    // Attach profiles safely
+    filteredJobs = filteredJobs.map((job: any) => ({
+      ...job,
+      profiles: job.author_id ? profilesMap[job.author_id] : null
+    }));
 
 
   if (statusFilter === "active") {
@@ -317,9 +330,9 @@ const fetchJobs = async () => {
                       {/* POSTED ON */}
 
                       <td className="px-6 py-5">
-                        {job.created_at
+                        {job.posted_date
                           ? new Date(
-                              job.created_at
+                              job.posted_date
                             ).toLocaleDateString()
                           : "-"}
                       </td>
