@@ -186,33 +186,47 @@ export default function AdminUsersPage() {
   }, []);
 
   const checkAccess = async () => {
-    const stored = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!stored) {
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (!stored) {
+        router.push("/admin");
+        return;
+      }
+
+      // Login stores username (not id) in localStorage — look up by username
+      // Also try email as fallback
+      const lookupField = stored.username ? "username" : "email";
+      const lookupValue = stored.username || stored.email;
+
+      if (!lookupValue) {
+        router.push("/admin");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq(lookupField, lookupValue)
+        .single();
+
+      if (!profile) {
+        router.push("/admin");
+        return;
+      }
+
+      const roleNorm = (profile.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      if (roleNorm !== "ceo") {
+        router.push("/admin");
+        return;
+      }
+
+      setLoggedUser(profile);
+      setIsCEO(true);
+      fetchData();
+    } catch (err) {
+      console.error("checkAccess error:", err);
       router.push("/admin");
-      return;
     }
-
-    // Always fetch role from DB — never trust localStorage role alone
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", stored.id)
-      .single();
-
-    if (!profile) {
-      router.push("/admin");
-      return;
-    }
-
-    const roleNorm = (profile.role || "").toLowerCase().replace(/[\s_]+/g, "");
-    if (roleNorm !== "ceo") {
-      router.push("/admin");
-      return;
-    }
-
-    setLoggedUser(profile);
-    setIsCEO(true);
-    fetchData();
   };
 
   const fetchData = async () => {
