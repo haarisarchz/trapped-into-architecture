@@ -113,12 +113,11 @@ export default function AdminActivityPage() {
     return jobs.filter(job => {
       let jobDate = "";
       if (job.status === "published") {
-        jobDate = job.posted_date || "";
+        jobDate = (job.posted_date || "").split("T")[0].split(" ")[0];
       } else if (job.status === "scheduled") {
-        jobDate = job.scheduled_date ? job.scheduled_date.split(" ")[0] : "";
+        jobDate = (job.scheduled_date || "").split("T")[0].split(" ")[0];
       } else if (job.status === "draft") {
-        // Drafts have no date stored in our DB right now, so we just include them
-        return true; 
+        jobDate = (job.created_at || "").split("T")[0].split(" ")[0]; 
       }
       
       if (!jobDate) return true; // If we can't find a date, include it
@@ -140,15 +139,15 @@ export default function AdminActivityPage() {
     
     if (datePreset === "this_month") {
       start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    } else if (datePreset === "last_month") {
+    } else if (datePreset === "previous_month") {
       start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
       end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
     } else if (datePreset === "last_3_months") {
-      start = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()).toISOString().split('T')[0];
+      start = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString().split('T')[0];
     } else if (datePreset === "last_6_months") {
-      start = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()).toISOString().split('T')[0];
+      start = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString().split('T')[0];
     } else if (datePreset === "last_1_year") {
-      start = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+      start = new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString().split('T')[0];
     } else if (datePreset === "lifetime") {
       start = "";
       end = "";
@@ -207,28 +206,28 @@ export default function AdminActivityPage() {
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-wrap gap-6 items-end justify-between">
               
-              <div className="flex flex-wrap gap-4 items-end">
+              <div className="flex flex-wrap gap-4 items-end w-full lg:w-auto">
                 {userRole === "ceo" && (
-                  <div>
+                  <div className="w-full sm:w-auto">
                     <label className="block text-sm text-gray-500 mb-1">Administrator:</label>
                     <select
                       value={selectedAdminId}
                       onChange={(e) => setSelectedAdminId(e.target.value)}
-                      className="border border-gray-300 rounded-lg px-4 py-2 bg-white"
+                      className="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2 bg-white"
                     >
-                      <option value="all">All Administrators ▼</option>
+                      <option value="all">All Administrators —</option>
                       {admins.map(a => (
                         <option key={a.id} value={a.id}>{a.display_name || a.full_name || a.username}</option>
                       ))}
                     </select>
                   </div>
                 )}
-                <div>
+                <div className="w-full sm:w-auto">
                   <label className="block text-sm text-gray-500 mb-1">Period:</label>
                   <select
                     value={datePreset}
                     onChange={(e) => setDatePreset(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-4 py-2 bg-white"
+                    className="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2 bg-white"
                   >
                     <option value="this_month">This Month</option>
                     <option value="previous_month">Previous Month</option>
@@ -241,17 +240,17 @@ export default function AdminActivityPage() {
                 </div>
                 {datePreset === "custom" && (
                   <>
-                    <div>
+                    <div className="w-full sm:w-auto">
                       <label className="block text-sm text-gray-500 mb-1">From:</label>
-                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
+                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2" />
                     </div>
-                    <div>
+                    <div className="w-full sm:w-auto">
                       <label className="block text-sm text-gray-500 mb-1">To:</label>
-                      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
+                      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2" />
                     </div>
                     <button 
                       onClick={handleSubmitDateRange}
-                      className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+                      className="w-full sm:w-auto bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
                     >
                       Apply
                     </button>
