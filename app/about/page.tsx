@@ -16,7 +16,7 @@ export default async function AboutPage() {
     .maybeSingle();
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 text-black">
       <Navbar />
       
       <div className="max-w-4xl mx-auto py-16 px-6">
@@ -64,3 +64,5 @@ export default async function AboutPage() {
     </main>
   );
 }
+
+

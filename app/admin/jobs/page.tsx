@@ -159,7 +159,7 @@ const fetchJobs = async () => {
 
   return (
 
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white text-black">
 
       <Navbar />
 
@@ -492,3 +492,6 @@ export default function AdminJobsPage() {
     </Suspense>
   );
 }
+
+
+

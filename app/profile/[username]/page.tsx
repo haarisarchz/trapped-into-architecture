@@ -238,7 +238,7 @@ localStorage.setItem(
 
   return (
 
-    <main className="min-h-screen bg-gray-100 flex flex-col">
+    <main className="min-h-screen bg-gray-100 text-black flex flex-col">
 
       {/* NAVBAR */}
 
@@ -1035,3 +1035,4 @@ alert("Profile updated successfully");
   );
 
 }
+

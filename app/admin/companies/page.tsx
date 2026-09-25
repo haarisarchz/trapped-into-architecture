@@ -176,7 +176,7 @@ export default function AdminCompaniesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
+    <main className="min-h-screen bg-gray-50 text-black flex flex-col">
       <Navbar />
       <section className="flex-1 w-full px-6 lg:px-12 py-10 max-w-[1400px] mx-auto">
         <div className="flex justify-between items-center mb-8">
@@ -334,4 +334,7 @@ export default function AdminCompaniesPage() {
     </main>
   );
 }
+
+
+
 

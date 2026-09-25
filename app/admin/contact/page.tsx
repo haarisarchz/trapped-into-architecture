@@ -195,7 +195,7 @@ export default function ContactSettingsPage() {
   if (loading) return <div className="p-10 text-center font-bold">Loading...</div>;
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 text-black">
       <Navbar />
       <div className="max-w-5xl mx-auto py-12 px-6">
         <div className="flex justify-between items-center mb-8">
@@ -299,3 +299,6 @@ export default function ContactSettingsPage() {
     </main>
   );
 }
+
+
+

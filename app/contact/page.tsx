@@ -44,7 +44,7 @@ export default function ContactPage() {
   if (loading) return null;
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 text-black">
       <Navbar />
       
       <div className="max-w-6xl mx-auto py-16 px-6">
@@ -224,3 +224,4 @@ export default function ContactPage() {
     </main>
   );
 }
+

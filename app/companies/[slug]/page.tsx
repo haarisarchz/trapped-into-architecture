@@ -133,7 +133,7 @@ export default async function CompanyPage({
 
     if (!company) {
       return (
-        <main className="min-h-screen flex flex-col bg-gray-50">
+        <main className="min-h-screen flex flex-col bg-gray-50 text-black">
           <Navbar />
           <div className="flex-1 flex flex-col items-center justify-center p-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-4">Company Not Found</h1>
@@ -150,7 +150,7 @@ export default async function CompanyPage({
     const location = [company.city, company.state].filter(Boolean).join(", ");
 
     return (
-      <main className="min-h-screen flex flex-col bg-gray-50">
+      <main className="min-h-screen flex flex-col bg-gray-50 text-black">
         <Navbar />
 
         <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 md:py-16">
@@ -270,7 +270,7 @@ export default async function CompanyPage({
   } catch (error) {
     console.error("Fatal error rendering company page:", error);
     return (
-      <main className="min-h-screen flex flex-col bg-gray-50">
+      <main className="min-h-screen flex flex-col bg-gray-50 text-black">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-8">
           <h1 className="text-3xl font-bold text-red-600 mb-4">An error occurred</h1>
@@ -284,3 +284,5 @@ export default async function CompanyPage({
     );
   }
 }
+
+

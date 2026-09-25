@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-100 text-black">
       <Navbar />
       <section className="w-full px-6 lg:px-12 py-10">
         <div className="flex justify-between items-center mb-8">
@@ -74,4 +74,7 @@ export default function AnalyticsPage() {
     </main>
   );
 }
+
+
+
 

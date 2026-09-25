@@ -102,7 +102,7 @@ export default async function JobDetailsPage({
   const popularJobs = [...jobs].sort((a,b) => (b.save_count || 0) - (a.save_count || 0)).slice(0, 5);
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen bg-gray-50 text-black">
       <Navbar />
 
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -388,3 +388,5 @@ export default async function JobDetailsPage({
     </main>
   );
 }
+
+

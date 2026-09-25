@@ -672,7 +672,7 @@ const handleSmartExtraction = async () => {
   return (
     <>
 
-    <main className="min-h-screen bg-white relative overflow-visible">
+    <main className="min-h-screen bg-white text-black relative overflow-visible">
 
         <Navbar />
 
@@ -2035,4 +2035,7 @@ const handleSmartExtraction = async () => {
     </>
   );
 }
+
+
+
 

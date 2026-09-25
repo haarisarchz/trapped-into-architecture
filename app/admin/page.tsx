@@ -147,7 +147,7 @@ if (loading) {
 }
   return (
 
-    <main className="min-h-screen bg-white flex flex-col md:flex-row">
+    <main className="min-h-screen bg-white text-black flex flex-col md:flex-row">
 
       {/* SIDEBAR */}
 
@@ -470,4 +470,7 @@ if (loading) {
   );
 
 }
+
+
+
 

@@ -192,7 +192,7 @@ function CompaniesPageContent() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col overflow-x-hidden">
+    <main className="min-h-screen bg-gray-50 text-black flex flex-col overflow-x-hidden">
       <Navbar />
 
       <section className="w-full px-6 lg:px-12 py-10 max-w-[1440px] mx-auto flex-1">
@@ -477,3 +477,4 @@ export default function CompaniesPage() {
     </Suspense>
   );
 }
+

@@ -4,7 +4,7 @@ import { Clock } from "lucide-react";
 
 export default function PracticeExamsPage() {
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col">
+    <main className="min-h-screen bg-gray-50 text-black flex flex-col">
       <Navbar />
       <div className="flex-1 flex flex-col items-center justify-center py-20 px-6 text-center">
         <Clock className="w-16 h-16 text-gray-300 mb-6" />
@@ -17,3 +17,5 @@ export default function PracticeExamsPage() {
     </main>
   );
 }
+
+
