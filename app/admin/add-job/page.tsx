@@ -573,7 +573,7 @@ const handleSmartExtraction = async () => {
 
         <Navbar />
 
-        <section className="w-full max-w-4xl mx-auto px-6 lg:px-12 py-8">
+        <section className="w-full px-6 lg:px-12 py-8">
 
           {/* PAGE TITLE */}
 
@@ -794,7 +794,7 @@ const handleSmartExtraction = async () => {
                         </button>
                       )}
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                           <label className="block mb-1.5 text-sm font-medium">Position <span className="text-red-500">*</span></label>
                           <input 
@@ -858,8 +858,7 @@ const handleSmartExtraction = async () => {
                         </div>
 
                         {!sameRequirements && (
-                          <div className="md:col-span-2 mt-2 pt-4 border-t border-gray-100">
-                             <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
+                          <div className="md:col-span-4 mt-2 pt-4 border-t border-gray-100">\n                             <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                    <label className="block mb-1.5 text-sm font-medium"> Qualifications </label>
@@ -943,7 +942,7 @@ const handleSmartExtraction = async () => {
                 Job Details
               </h2>
 
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <div className="grid md:grid-cols-3 gap-4 mb-6">
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
                   <select
@@ -1284,7 +1283,7 @@ const handleSmartExtraction = async () => {
 
 {/* Logo + Website */}
 
-<div className="grid md:grid-cols-2 gap-4">
+<div className="grid md:grid-cols-3 gap-4">
 
   <div>
     <label className="block mb-1.5 text-sm font-medium">
@@ -1315,7 +1314,7 @@ const handleSmartExtraction = async () => {
 
 {/* Email + Phone */}
 
-<div className="grid md:grid-cols-2 gap-4 mt-6">
+<div className="grid md:grid-cols-3 gap-4 mt-6">
 
   <div>
     <label className="block mb-1.5 text-sm font-medium">
@@ -1356,7 +1355,7 @@ const handleSmartExtraction = async () => {
 
 {/* WhatsApp (Left) + Empty (Right) */}
 
-<div className="grid md:grid-cols-2 gap-4 mt-6">
+<div className="grid md:grid-cols-3 gap-4 mt-6">
 
   <div>
 
@@ -1407,7 +1406,7 @@ const handleSmartExtraction = async () => {
 
 {/* Founded Year + Employee Size */}
 
-<div className="grid md:grid-cols-2 gap-4 mt-6">
+<div className="grid md:grid-cols-3 gap-4 mt-6">
 
   <div>
 
@@ -1477,7 +1476,7 @@ const handleSmartExtraction = async () => {
   Social Media
 </h3>
 
-<div className="grid md:grid-cols-2 gap-4">
+<div className="grid md:grid-cols-3 gap-4">
 
   <input
     type="url"
