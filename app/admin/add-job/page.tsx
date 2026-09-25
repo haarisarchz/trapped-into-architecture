@@ -795,29 +795,32 @@ const handleSmartExtraction = async () => {
                       )}
                       
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                          <label className="block mb-1.5 text-sm font-medium">Position <span className="text-red-500">*</span></label>
-                          <input 
-                            type="text" 
-                            list="positionsList"
-                            value={pos.position} 
-                            onChange={(e) => updatePosition(index, "position", e.target.value)} 
-                            className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
-                            placeholder="e.g. Junior Architect" 
-                          />
-                          <datalist id="positionsList">
-                            {positionOptions.map((opt) => <option key={opt} value={opt} />)}
-                          </datalist>
-                          </div>
-                          <div>
-                            <label className="block mb-1.5 text-sm font-medium">Job Role</label>
-                            <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Designer, Manager" />
-                          </div>
-                        <div>
-                          <label className="block mb-1.5 text-sm font-medium">Salary</label><Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
+                        <div className="md:col-span-3 flex flex-col gap-4">
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block mb-1.5 text-sm font-medium">Position <span className="text-red-500">*</span></label>
+                                <input type="text" list="positionsList" value={pos.position} onChange={(e) => updatePosition(index, "position", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Junior Architect" />
+                                <datalist id="positionsList">
+                                  {positionOptions.map((opt) => <option key={opt} value={opt} />)}
+                                </datalist>
+                              </div>
+                              <div>
+                                <label className="block mb-1.5 text-sm font-medium">Job Role</label>
+                                <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Designer, Manager" />
+                              </div>
+                              <div>
+                                <label className="block mb-1.5 text-sm font-medium">Salary</label>
+                                <Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
+                              </div>
+                           </div>
+                           
+                           <div>
+                              <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
+                              <textarea value={pos.description} onChange={(e) => updatePosition(index, "description", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y" placeholder="Write detailed job description..." />
+                           </div>
                         </div>
-                        
-                        <div>
+
+                        <div className="md:col-span-1 border-l border-gray-100 pl-4">
                           <label className="block mb-1.5 text-sm font-medium">Required Experience <span className="text-red-500">*</span></label>
                           <div className="flex flex-wrap gap-2">
                             {EXPERIENCE_OPTIONS.map((exp) => {
@@ -834,7 +837,7 @@ const handleSmartExtraction = async () => {
                                       updatePosition(index, "experience", [...currentExps, exp]);
                                     }
                                   }}
-                                  className={`px-4 py-2 border rounded-full text-sm font-semibold transition ${
+                                  className={`px-3 py-1.5 border rounded-full text-xs font-semibold transition ${
                                     isSelected
                                       ? "bg-black text-white border-black"
                                       : "bg-white text-black border-gray-300 hover:bg-gray-100"
@@ -846,19 +849,10 @@ const handleSmartExtraction = async () => {
                             })}
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col h-full">
-                          <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
-                          <textarea 
-                            value={pos.description}
-                            onChange={(e) => updatePosition(index, "description", e.target.value)}
-                            className="w-full flex-1 border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y"
-                            placeholder="Write detailed job description..."
-                          />
-                        </div>
 
                         {!sameRequirements && (
-                          <div className="md:col-span-4 mt-2 pt-4 border-t border-gray-100">\n                             <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
+                          <div className="md:col-span-4 mt-2 pt-4 border-t border-gray-100">
+                             <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                    <label className="block mb-1.5 text-sm font-medium"> Qualifications </label>
@@ -892,12 +886,7 @@ const handleSmartExtraction = async () => {
 
               {sameRequirements && (
 <div className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm mb-4">
-{/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> <div> <label className="block mb-1.5 text-sm font-medium"> Qualifications </label><Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. B.Arch" /></div> </div>
-
-              {/* SKILLS */}
-
-              <div className="mt-4">\n                <label className="block mb-1.5 text-sm font-medium">\n                  Skills Required
-                </label>
+{/* QUALIFICATION & SKILLS */} <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> <div> <label className="block mb-1.5 text-sm font-medium"> Qualifications </label><Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. B.Arch" /></div> <div> <label className="block mb-1.5 text-sm font-medium"> Skills Required </label>
 
                 <Autocomplete value={skillInput} onChange={(val) => {   if (val.endsWith(",")) {     const newSkill = val.slice(0, -1).trim();     if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }     setSkillInput("");   } else {     setSkillInput(val);   } }} onSelect={(val) => {   const newSkill = val.trim();   if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }   setSkillInput(""); }} fetchSuggestions={async (q) => {   const { data } = await supabase.from("jobs").select("skills_required").limit(100);   if (!data) return [];   const all = new Set();   data.forEach(job => {     if (Array.isArray(job.skills_required)) {       job.skills_required.forEach((s) => {         if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);       });     } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {       all.add(job.skills_required);     }   });   return Array.from(all).slice(0, 10) as string[]; }} placeholder="Type skill and press comma or select" className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" />
 
@@ -931,25 +920,21 @@ const handleSmartExtraction = async () => {
 
                 </div>
 
+                </div>
+                </div>
               </div>
-            </div>
-)}</div>
-            {/* JOB DETAILS */}
+            )}
 
+            {/* JOB & APPLICATION DETAILS */}
             <div>
-
               <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
-                Job Details
+                Job & Application Details
               </h2>
 
-              <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
-                  <select
-                    value={employmentType}
-                    onChange={(e) => setEmploymentType(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-                  >
+                  <select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
                     <option value="" disabled>Select Employment Type</option>
                     <option value="Full-time">Full-time</option>
                     <option value="Part-time">Part-time</option>
@@ -959,290 +944,72 @@ const handleSmartExtraction = async () => {
                     <option value="Internship">Internship</option>
                   </select>
                 </div>
+
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">Workplace Type</label>
-                  <select
-                    value={workplaceType}
-                    onChange={(e) => setWorkplaceType(e.target.value)}
-                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-                  >
+                  <select value={workplaceType} onChange={(e) => setWorkplaceType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
                     <option value="On-site">On-site</option>
                     <option value="Hybrid">Hybrid</option>
                     <option value="Remote">Remote</option>
                   </select>
                 </div>
-              </div>
 
-              </div>
-
-            {/* APPLICATION */}
-
-            <div>
-
-              <h2 className="text-xl font-bold mb-4">
-                Application Details
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-              
-                {/* SOURCE LINK */}
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-  {/* DATE TYPE */}
-
-  <div>
-
-    <label className="block mb-1.5 text-sm font-medium">
-      Date Type
-    </label>
-
-    <select
-      value={dateType}
-      onChange={(e) =>
-        setDateType(e.target.value)
-      }
-      className="w-full border rounded-xl px-4 py-2.5"
-    >
-
-      <option value="expiry">
-        Expiry Date
-      </option>
-
-      <option value="apply">
-        Last Date To Apply
-      </option>
-
-    </select>
-
-  </div>
-
-  {/* DATE */}
-
-  <div>
-
-    <label className="block mb-1.5 text-sm font-medium">
-
-      {dateType === "apply"
-        ? "Last Date To Apply"
-        : "Expiry Date"}
-
-    </label>
-
-    <input
-      type="date"
-
-      value={
-        dateType === "apply"
-          ? lastDateToApply
-          : postExpiryDate
-      }
-
-      onChange={(e) => {
-
-        if (dateType === "apply") {
-
-          setLastDateToApply(
-            e.target.value
-          );
-
-        } else {
-
-          setPostExpiryDate(
-            e.target.value
-          );
-
-        }
-
-      }}
-
-      className="w-full border rounded-xl px-4 py-2.5"
-    />
-
-  </div>
-
-</div>
                 <div>
-
-                  <label className="block mb-1.5 text-sm font-medium">
-                    Source Link
-                  </label>
-
-                  <input
-  type="text"
-  placeholder="https://..."
-  value={source}
-  onChange={(e) =>
-    setSource(e.target.value)
-  }
-  className="w-full border rounded-xl px-4 py-2.5"
-/>
-
+                  <label className="block mb-1.5 text-sm font-medium">Date Type</label>
+                  <select value={dateType} onChange={(e) => setDateType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                    <option value="expiry">Expiry Date</option>
+                    <option value="apply">Last Date To Apply</option>
+                  </select>
                 </div>
 
-              </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">{dateType === "apply" ? "Last Date To Apply" : "Expiry Date"}</label>
+                  <input type="date" value={dateType === "apply" ? lastDateToApply : postExpiryDate} onChange={(e) => { if (dateType === "apply") { setLastDateToApply(e.target.value); } else { setPostExpiryDate(e.target.value); } }} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
 
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Source Link</label>
+                  <input type="text" placeholder="https://..." value={source} onChange={(e) => setSource(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Button Type <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <select value={applicationType} onChange={(e) => setApplicationType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                    <option value="apply">Apply Now</option>
+                    <option value="email">Email Now</option>
+                  </select>
+                </div>
+
+                {applicationType === "apply" && (
+                  <div className="md:col-span-2">
+                    <label className="block mb-1.5 text-sm font-medium">Apply Link <span className="text-red-500 text-xl font-bold">*</span></label>
+                    <input type="text" placeholder="https://..." value={apply_link} onChange={(e) => setapply_link(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                )}
+
+                {applicationType === "email" && (
+                  <div className="md:col-span-2">
+                    <label className="block mb-1.5 text-sm font-medium">Application Email <span className="text-red-500 text-xl font-bold">*</span></label>
+                    <input type="email" placeholder="careers@firm.com" value={application_email} onChange={(e) => setapplication_email(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* MEDIA */}
-
             <div>
-
               <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
                 Media
               </h2>
-
-              {/* IMAGE URL */}
-
-<div>
-
-  <label className="block mb-1.5 text-sm font-medium">
-    Upload Job Image{" "}
-    <span className="text-red-500 text-xl font-bold">*</span>
-  </label>
-
-  <input
-    type="file"
-    accept="image/*"
-    onChange={handleImageUpload}
-    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-  />
-
-  {/* UPLOADING */}
-
-  {uploadingImage && (
-
-    <div className="mt-3 flex items-center gap-2 text-blue-600">
-
-      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-
-      <p>Uploading image...</p>
-
-    </div>
-
-  )}
-
-  {/* SUCCESS */}
-
-  {uploadSuccess && (
-
-    <div className="mt-3 flex items-center gap-2 text-green-600">
-
-      <span className="text-xl">✓</span>
-
-      <p>Image uploaded successfully</p>
-
-    </div>
-
-  )}
-
-  {/* IMAGE PREVIEW */}
-
-  {imageUrl && (
-
-    <div className="mt-5">
-
-      <img
-        src={imageUrl}
-        alt="Job Preview"
-        className="w-full max-w-md h-64 object-cover rounded-xl border shadow-sm"
-      />
-
-    </div>
-
-  )}
-
-</div>
-            </div>
-            {/* APPLICATION BUTTON TYPE */}
-
-            <div>
-
-              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
-                Application Method
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                {/* APPLICATION TYPE */}
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-
-                  <label className="block mb-1.5 text-sm font-medium">
-                    Button Type <span className="text-red-500 text-xl font-bold">*</span>
-                  </label>
-
-                  <select
-                    value={applicationType}
-                    onChange={(e) =>
-                      setApplicationType(e.target.value)
-                    }
-                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-                  >
-
-                    <option value="apply">
-                      Apply Now
-                    </option>
-
-                    <option value="email">
-                      Email Now
-                    </option>
-
-                  </select>
-
+                  <label className="block mb-1.5 text-sm font-medium">Upload Job Image <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  {uploadingImage && (<div className="mt-3 flex items-center gap-2 text-blue-600"><div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div><p>Uploading image...</p></div>)}
+                  {uploadSuccess && (<div className="mt-3 flex items-center gap-2 text-green-600"><span className="text-xl">✓</span><p>Image uploaded successfully</p></div>)}
+                  {imageUrl && (<div className="mt-5"><img src={imageUrl} alt="Job Preview" className="w-full h-auto max-h-64 object-cover rounded-xl border shadow-sm" /></div>)}
                 </div>
-
-                {/* APPLY LINK */}
-
-{applicationType === "apply" && (
-
-  <div className="md:col-span-2">
-
-    <label className="block mb-1.5 text-sm font-medium">
-      Apply Link <span className="text-red-500 text-xl font-bold">*</span>
-    </label>
-
-    <input
-      type="text"
-      placeholder="https://..."
-      value={apply_link}
-      onChange={(e) =>
-        setapply_link(e.target.value)
-      }
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    />
-
-  </div>
-
-)}
-
-{/* EMAIL */}
-
-{applicationType === "email" && (
-
-  <div className="md:col-span-2">
-
-    <label className="block mb-1.5 text-sm font-medium">
-      Application Email <span className="text-red-500 text-xl font-bold">*</span>
-    </label>
-
-    <input
-      type="email"
-      placeholder="careers@firm.com"
-      value={application_email}
-      onChange={(e) =>
-        setapplication_email(e.target.value)
-      }
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    />
-
-  </div>
-
-)}
-
               </div>
-
             </div>
 
             {/* ACTION BUTTONS */}
@@ -1275,274 +1042,77 @@ const handleSmartExtraction = async () => {
  <div className="flex-1 border-t border-black-300"></div>
 
             {/* ================= ORGANIZATION INFORMATION ================= */}
-            <div className="mt-6 mb-4">
-  <h2 className="text-3xl font-bold">
-    Company Profile
-  </h2>
-</div>
+              <div className="mt-6 mb-4">
+                <h2 className="text-xl font-bold border-b border-gray-100 pb-2">
+                  Company Profile
+                </h2>
+              </div>
 
-{/* Logo + Website */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">{organizationType} Logo</label>
+                  <input type="file" className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Website</label>
+                  <input type="url" placeholder="https://" value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Email</label>
+                  <input type="email" placeholder="contact@firm.com" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Phone</label>
+                  <input type="text" placeholder="+123..." value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+              </div>
 
-<div className="grid md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div className="md:col-span-2 md:row-span-2">
+                  <label className="block mb-1.5 text-sm font-medium">About {organizationType}</label>
+                  <textarea rows={5} placeholder={`Write about the ${organizationType.toLowerCase()}...`} value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm resize-none h-[124px]" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Principal Architect / Head</label>
+                  <input type="text" placeholder="e.g. Jane Doe" value={principalArchitect} onChange={(e) => setPrincipalArchitect(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Employee Size</label>
+                  <select value={employeeSize} onChange={(e) => setEmployeeSize(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                    <option value="">Select Size</option>
+                    <option value="1-10">1-10</option>
+                    <option value="11-50">11-50</option>
+                    <option value="51-200">51-200</option>
+                    <option value="201-500">201-500</option>
+                    <option value="500+">500+</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Founded Year</label>
+                  <input type="number" placeholder="YYYY" min="1800" max={new Date().getFullYear()} value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+              </div>
 
-  <div>
-    <label className="block mb-1.5 text-sm font-medium">
-      {organizationType} Logo
-    </label>
-
-    <input
-      type="file"
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    />
-  </div>
-
-  <div>
-    <label className="block mb-1.5 text-sm font-medium">
-      Website
-    </label>
-
-    <input
-      type="url"
-      placeholder="https://"
-      value={companyWebsite}
-      onChange={(e) => setCompanyWebsite(e.target.value)}
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    />
-  </div>
-
-</div>
-
-{/* Email + Phone */}
-
-<div className="grid md:grid-cols-3 gap-4 mt-6">
-
-  <div>
-    <label className="block mb-1.5 text-sm font-medium">
-      Email
-    </label>
-
-    <input
-      type="email"
-      placeholder="office@example.com"
-      value={companyEmail}
-      onChange={(e) => setCompanyEmail(e.target.value)}
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    />
-  </div>
-
-  <div>
-    <label className="block mb-1.5 text-sm font-medium">
-      Phone Number
-    </label>
-
-    <input
-      type="text"
-      placeholder="+91 XXXXX XXXXX"
-      value={companyPhone}
-      onChange={(e) => {
-        const value = e.target.value;
-        setCompanyPhone(value);
-
-        if (sameAsPhone) {
-          setCompanyWhatsapp(value);
-        }
-      }}
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    />
-  </div>
-
-</div>
-
-{/* WhatsApp (Left) + Empty (Right) */}
-
-<div className="grid md:grid-cols-3 gap-4 mt-6">
-
-  <div>
-
-    <label className="block mb-1.5 text-sm font-medium">
-      WhatsApp Number
-    </label>
-
-    <div className="flex items-center gap-2 mb-2">
-
-      <input
-        type="checkbox"
-        checked={sameAsPhone}
-        onChange={(e) => {
-          const checked = e.target.checked;
-
-          setSameAsPhone(checked);
-
-          if (checked) {
-            setCompanyWhatsapp(companyPhone);
-          } else {
-            setCompanyWhatsapp("");
-          }
-        }}
-      />
-
-      <span className="text-sm">
-        Same as Phone Number
-      </span>
-
-    </div>
-
-    <input
-      type="text"
-      placeholder="+91 XXXXX XXXXX"
-      value={companyWhatsapp}
-      onChange={(e) => setCompanyWhatsapp(e.target.value)}
-      disabled={sameAsPhone}
-      className={`w-full border rounded-xl px-3 py-2.5 text-sm ${
-        sameAsPhone ? "bg-white cursor-not-allowed" : ""
-      }`}
-    />
-
-  </div>
-
-  <div></div>
-
-</div>
-
-{/* Founded Year + Employee Size */}
-
-<div className="grid md:grid-cols-3 gap-4 mt-6">
-
-  <div>
-
-    <label className="block mb-1.5 text-sm font-medium">
-      Founded Year
-    </label>
-
-    <input
-      type="number"
-      min="1800"
-      max={new Date().getFullYear()}
-      value={foundedYear}
-      onChange={(e) => setFoundedYear(e.target.value)}
-      placeholder="Founded Year"
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    />
-
-  </div>
-
-  <div>
-
-    <label className="block mb-1.5 text-sm font-medium">
-      Employee Size
-    </label>
-
-    <select
-      value={employeeSize}
-      onChange={(e) => setEmployeeSize(e.target.value)}
-      className="w-full border rounded-xl px-3 py-2.5 text-sm"
-    >
-      <option value="">Select Employee Size</option>
-      <option>1–5</option>
-      <option>6–10</option>
-      <option>11–25</option>
-      <option>26–50</option>
-      <option>51–100</option>
-      <option>101–250</option>
-      <option>251–500</option>
-      <option>500+</option>
-    </select>
-
-  </div>
-
-</div>
-
-{/* About */}
-
-<div className="mt-6">
-
-  <label className="block mb-1.5 text-sm font-medium">
-    About {organizationType}
-  </label>
-
-  <textarea
-    rows={5}
-    placeholder={`Write about the ${organizationType.toLowerCase()}...`}
-    value={companyDescription}
-    onChange={(e) => setCompanyDescription(e.target.value)}
-    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-  />
-
-</div>
-
-{/* ================= SOCIAL MEDIA ================= */}
-
-<h3 className="text-2xl font-semibold mt-6 mb-6">
-  Social Media
-</h3>
-
-<div className="grid md:grid-cols-3 gap-4">
-
-  <input
-    type="url"
-    placeholder="Facebook URL"
-    value={companyFacebook}
-    onChange={(e) => setCompanyFacebook(e.target.value)}
-    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-  />
-
-  <input
-    type="url"
-    placeholder="Instagram URL"
-    value={companyInstagram}
-    onChange={(e) => setCompanyInstagram(e.target.value)}
-    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-  />
-
-  <input
-    type="url"
-    placeholder="LinkedIn URL"
-    value={companyLinkedin}
-    onChange={(e) => setCompanyLinkedin(e.target.value)}
-    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-  />
-
-  <input
-    type="url"
-    placeholder="X (Twitter) URL"
-    value={companyTwitter}
-    onChange={(e) => setCompanyTwitter(e.target.value)}
-    className="w-full border rounded-xl px-3 py-2.5 text-sm"
-  />
-
-</div>
-
-          {/* ACTION BUTTONS */}
-
-<div className="flex justify-center gap-3 mt-6 mb-4">
-  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
-  >
-    Save Draft
-  </button>
-
-  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
->
-  Schedule
-</button>
-
-  <button
-    type="button"
-    disabled={uploadingImage || isPublishing}
-    onClick={() => handlePublishJob("published")}
-    className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
-      uploadingImage
-        ? "bg-gray-400 text-white cursor-not-allowed"
-        : "bg-black text-white hover:bg-gray-800"
-    }`}
-  >
-    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
-  </button>
-</div>
-          
- <div className="flex-1 border-t border-black-300"></div>  
-
-          </div>
-          {/* ================= SCHEDULE MODAL ================= */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 mb-6">
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">X (Twitter)</label>
+                  <input type="url" placeholder="URL" value={companyTwitter} onChange={(e) => setCompanyTwitter(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Facebook</label>
+                  <input type="url" placeholder="URL" value={companyFacebook} onChange={(e) => setCompanyFacebook(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Instagram</label>
+                  <input type="url" placeholder="URL" value={companyInstagram} onChange={(e) => setCompanyInstagram(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">LinkedIn</label>
+                  <input type="url" placeholder="URL" value={companyLinkedin} onChange={(e) => setCompanyLinkedin(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+              </div>
+            </div>
+            {/* ================= SCHEDULE MODAL ================= */}
 
 {showSchedule && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -1632,7 +1202,7 @@ const handleSmartExtraction = async () => {
     </div>
   </div>
 )}
-
+</div>
         </section>
 
       <Footer />
