@@ -117,7 +117,7 @@ export default function AdminActivityPage() {
       } else if (job.status === "scheduled") {
         jobDate = (job.scheduled_date || "").split("T")[0].split(" ")[0];
       } else if (job.status === "draft") {
-        jobDate = (job.created_at || "").split("T")[0].split(" ")[0]; 
+        jobDate = (job.posted_date || job.created_at || "").split("T")[0].split(" ")[0]; 
       }
       
       if (!jobDate) return true; // If we can't find a date, include it
@@ -139,15 +139,19 @@ export default function AdminActivityPage() {
     
     if (datePreset === "this_month") {
       start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
     } else if (datePreset === "previous_month") {
       start = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
       end = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
     } else if (datePreset === "last_3_months") {
       start = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString().split('T')[0];
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
     } else if (datePreset === "last_6_months") {
       start = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString().split('T')[0];
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
     } else if (datePreset === "last_1_year") {
-      start = new Date(now.getFullYear() - 1, now.getMonth(), 1).toISOString().split('T')[0];
+      start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1).toISOString().split('T')[0];
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
     } else if (datePreset === "lifetime") {
       start = "";
       end = "";
