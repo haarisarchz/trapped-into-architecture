@@ -109,9 +109,7 @@ export default function Footer() {
             <li><Link href="/" className="hover:text-white transition block p-1 -m-1">Home</Link></li>
             <li><Link href="/jobs" className="hover:text-white transition block p-1 -m-1">Jobs</Link></li>
             <li><Link href="/companies" className="hover:text-white transition block p-1 -m-1">Companies</Link></li>
-            <li><Link href="/practice-exams" className="hover:text-white transition block p-1 -m-1">Practice Exams</Link></li>
-            <li><Link href="/resources" className="hover:text-white transition block p-1 -m-1">Resources</Link></li>
-          </ul>
+            </ul>
         </div>
 
         {/* JOB SEEKERS */}

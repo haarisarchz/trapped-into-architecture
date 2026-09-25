@@ -837,7 +837,7 @@ const handleSmartExtraction = async () => {
                                       updatePosition(index, "experience", [...currentExps, exp]);
                                     }
                                   }}
-                                  className={`px-3 py-1.5 border rounded-full text-xs font-semibold transition ${
+                                  className={`px-4 py-2 border rounded-full text-sm font-semibold mb-1 transition ${
                                     isSelected
                                       ? "bg-black text-white border-black"
                                       : "bg-white text-black border-gray-300 hover:bg-gray-100"
@@ -926,73 +926,77 @@ const handleSmartExtraction = async () => {
             )}
 
             {/* JOB & APPLICATION DETAILS */}
-            <div>
-              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
-                Job & Application Details
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
-                  <select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
-                    <option value="" disabled>Select Employment Type</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Temporary">Temporary</option>
-                    <option value="Freelance">Freelance</option>
-                    <option value="Internship">Internship</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Workplace Type</label>
-                  <select value={workplaceType} onChange={(e) => setWorkplaceType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
-                    <option value="On-site">On-site</option>
-                    <option value="Hybrid">Hybrid</option>
-                    <option value="Remote">Remote</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Date Type</label>
-                  <select value={dateType} onChange={(e) => setDateType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
-                    <option value="expiry">Expiry Date</option>
-                    <option value="apply">Last Date To Apply</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">{dateType === "apply" ? "Last Date To Apply" : "Expiry Date"}</label>
-                  <input type="date" value={dateType === "apply" ? lastDateToApply : postExpiryDate} onChange={(e) => { if (dateType === "apply") { setLastDateToApply(e.target.value); } else { setPostExpiryDate(e.target.value); } }} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Source Link</label>
-                  <input type="text" placeholder="https://..." value={source} onChange={(e) => setSource(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Button Type <span className="text-red-500 text-xl font-bold">*</span></label>
-                  <select value={applicationType} onChange={(e) => setApplicationType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
-                    <option value="apply">Apply Now</option>
-                    <option value="email">Email Now</option>
-                  </select>
-                </div>
-
-                {applicationType === "apply" && (
-                  <div className="md:col-span-2">
-                    <label className="block mb-1.5 text-sm font-medium">Apply Link <span className="text-red-500 text-xl font-bold">*</span></label>
-                    <input type="text" placeholder="https://..." value={apply_link} onChange={(e) => setapply_link(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-6">
+              
+              {/* Left Column: Job Details */}
+              <div className="lg:col-span-4">
+                <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
+                  Job Details
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
+                    <select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="" disabled>Select Employment Type</option>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Temporary">Temporary</option>
+                      <option value="Freelance">Freelance</option>
+                      <option value="Internship">Internship</option>
+                    </select>
                   </div>
-                )}
-
-                {applicationType === "email" && (
-                  <div className="md:col-span-2">
-                    <label className="block mb-1.5 text-sm font-medium">Application Email <span className="text-red-500 text-xl font-bold">*</span></label>
-                    <input type="email" placeholder="careers@firm.com" value={application_email} onChange={(e) => setapplication_email(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Workplace Type</label>
+                    <select value={workplaceType} onChange={(e) => setWorkplaceType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="On-site">On-site</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Remote">Remote</option>
+                    </select>
                   </div>
-                )}
+                </div>
+              </div>
+
+              {/* Right Column: Application Details */}
+              <div className="lg:col-span-8">
+                <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
+                  Application Details
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Date Type</label>
+                    <select value={dateType} onChange={(e) => setDateType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="expiry">Expiry Date</option>
+                      <option value="apply">Last Date To Apply</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">{dateType === "apply" ? "Last Date To Apply" : "Expiry Date"}</label>
+                    <input type="date" value={dateType === "apply" ? lastDateToApply : postExpiryDate} onChange={(e) => { if (dateType === "apply") { setLastDateToApply(e.target.value); } else { setPostExpiryDate(e.target.value); } }} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Source Link</label>
+                    <input type="text" placeholder="https://..." value={source} onChange={(e) => setSource(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Button Type <span className="text-red-500 text-xl font-bold">*</span></label>
+                    <select value={applicationType} onChange={(e) => setApplicationType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="apply">Apply Now</option>
+                      <option value="email">Email Now</option>
+                    </select>
+                  </div>
+                  {applicationType === "apply" ? (
+                    <div className="md:col-span-2">
+                      <label className="block mb-1.5 text-sm font-medium">Apply Link <span className="text-red-500 text-xl font-bold">*</span></label>
+                      <input type="text" placeholder="https://..." value={apply_link} onChange={(e) => setapply_link(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                  ) : (
+                    <div className="md:col-span-2">
+                      <label className="block mb-1.5 text-sm font-medium">Application Email <span className="text-red-500 text-xl font-bold">*</span></label>
+                      <input type="email" placeholder="careers@firm.com" value={application_email} onChange={(e) => setapplication_email(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1048,29 +1052,11 @@ const handleSmartExtraction = async () => {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Logo & Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">{organizationType} Logo</label>
                   <input type="file" className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Website</label>
-                  <input type="url" placeholder="https://" value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Email</label>
-                  <input type="email" placeholder="contact@firm.com" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Phone</label>
-                  <input type="text" placeholder="+123..." value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div className="md:col-span-2 md:row-span-2">
-                  <label className="block mb-1.5 text-sm font-medium">About {organizationType}</label>
-                  <textarea rows={5} placeholder={`Write about the ${organizationType.toLowerCase()}...`} value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm resize-none h-[124px]" />
                 </div>
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">Principal Architect / Head</label>
@@ -1093,25 +1079,57 @@ const handleSmartExtraction = async () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 mb-6">
+              {/* About & Contacts */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                {/* Left: About Firm */}
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium">X (Twitter)</label>
-                  <input type="url" placeholder="URL" value={companyTwitter} onChange={(e) => setCompanyTwitter(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">About {organizationType}</h3>
+                  <textarea rows={6} placeholder={`Write about the ${organizationType.toLowerCase()}...`} value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm resize-none h-[230px]" />
                 </div>
+
+                {/* Right: Contacts */}
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium">Facebook</label>
-                  <input type="url" placeholder="URL" value={companyFacebook} onChange={(e) => setCompanyFacebook(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">Instagram</label>
-                  <input type="url" placeholder="URL" value={companyInstagram} onChange={(e) => setCompanyInstagram(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                </div>
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium">LinkedIn</label>
-                  <input type="url" placeholder="URL" value={companyLinkedin} onChange={(e) => setCompanyLinkedin(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">Contact Details</h3>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium">Website</label>
+                      <input type="url" placeholder="https://" value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium">Email</label>
+                      <input type="email" placeholder="contact@firm.com" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium">Phone</label>
+                      <input type="text" placeholder="+123..." value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Social Media */}
+              <div className="mb-6">
+                <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">Social Media</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">X (Twitter)</label>
+                    <input type="url" placeholder="URL" value={companyTwitter} onChange={(e) => setCompanyTwitter(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Facebook</label>
+                    <input type="url" placeholder="URL" value={companyFacebook} onChange={(e) => setCompanyFacebook(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Instagram</label>
+                    <input type="url" placeholder="URL" value={companyInstagram} onChange={(e) => setCompanyInstagram(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">LinkedIn</label>
+                    <input type="url" placeholder="URL" value={companyLinkedin} onChange={(e) => setCompanyLinkedin(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                </div>
+              </div>
+
             {/* ================= SCHEDULE MODAL ================= */}
 
 {showSchedule && (
