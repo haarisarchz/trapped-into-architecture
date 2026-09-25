@@ -573,7 +573,7 @@ const handleSmartExtraction = async () => {
 
         <Navbar />
 
-        <section className="w-full px-6 lg:px-12 py-10">
+        <section className="w-full max-w-4xl mx-auto px-6 lg:px-12 py-8">
 
           {/* PAGE TITLE */}
 
@@ -581,7 +581,7 @@ const handleSmartExtraction = async () => {
 
   <div>
 
-    <h1 className="text-4xl font-bold">
+    <h1 className="text-3xl font-bold">
       Add New Job
     </h1>
 
@@ -607,7 +607,7 @@ const handleSmartExtraction = async () => {
 
             <div>
 
-              <h2 className="text-xl font-bold mb-6">
+              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
                 Basic Details
               </h2>
 
@@ -617,14 +617,14 @@ const handleSmartExtraction = async () => {
 
 <div>
 
-  <label className="block mb-2 font-medium">
+  <label className="block mb-1.5 text-sm font-medium">
     Organization Type
   </label>
 
   <select
     value={organizationType}
     onChange={(e) => setOrganizationType(e.target.value)}
-    className="w-full border rounded-2xl px-4 py-3"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
   >
 
     {organizationTypes.map((type) => (
@@ -640,7 +640,7 @@ const handleSmartExtraction = async () => {
 
 <div>
 
-  <label className="block mb-2 font-medium">
+  <label className="block mb-1.5 text-sm font-medium">
     {organizationType} Name <span className="text-red-500 text-xl font-bold">*</span>
   </label>
 
@@ -690,7 +690,7 @@ const handleSmartExtraction = async () => {
       </div>
     )}
     placeholder="Enter name"
-    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
   />
 
 </div>
@@ -702,7 +702,7 @@ const handleSmartExtraction = async () => {
 
             <div>
 
-              <h2 className="text-xl font-bold mb-6">
+              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
                 Location
               </h2>
 
@@ -711,7 +711,7 @@ const handleSmartExtraction = async () => {
                 {/* NEIGHBORHOOD */}
 
                 <div>
-                  <label className="block mb-2 font-medium"> Neighborhood </label>
+                  <label className="block mb-1.5 text-sm font-medium"> Neighborhood </label>
                   <Autocomplete
                     value={area}
                     onChange={(val) => setArea(val)}
@@ -724,14 +724,14 @@ const handleSmartExtraction = async () => {
                       return Array.from(new Set(combined.map(d => d.neighborhood).filter(Boolean)));
                     }}
                     placeholder="Adyar"
-                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
                   />
                 </div>
 
                 {/* CITY */}
 
                 <div>
-                  <label className="block mb-2 font-medium"> City <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <label className="block mb-1.5 text-sm font-medium"> City <span className="text-red-500 text-xl font-bold">*</span></label>
                   <Autocomplete
                     value={city}
                     onChange={(val) => setCity(val)}
@@ -744,14 +744,14 @@ const handleSmartExtraction = async () => {
                       return Array.from(new Set(combined.map(d => d.city).filter(Boolean)));
                     }}
                     placeholder="Chennai"
-                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
                   />
                 </div>
 
                 {/* STATE */}
 
                 <div>
-                  <label className="block mb-2 font-medium"> State <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <label className="block mb-1.5 text-sm font-medium"> State <span className="text-red-500 text-xl font-bold">*</span></label>
                   <Autocomplete
                     value={state}
                     onChange={(val) => setState(val)}
@@ -764,7 +764,7 @@ const handleSmartExtraction = async () => {
                       return Array.from(new Set(combined.map(d => d.state).filter(Boolean)));
                     }}
                     placeholder="Tamil Nadu"
-                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
                   />
                 </div>
 
@@ -775,20 +775,20 @@ const handleSmartExtraction = async () => {
             <div>
 
               {/* POSITIONS & DESCRIPTIONS */}
-              <div className="mt-6 mb-6">
-                <div className="flex justify-between items-end mb-6">
+              <div className="mt-4 mb-4">
+                <div className="flex justify-between items-end mb-4">
                   <h2 className="text-xl font-bold">Position Details</h2>
                   <button type="button" onClick={addPosition} className="text-blue-600 font-bold hover:underline">+ Add Position</button>
                 </div>
                 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {positions.map((pos, index) => (
-                    <div key={index} className="border border-gray-200 p-6 rounded-2xl bg-white shadow-sm relative text-black">
+                    <div key={index} className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm relative text-black">
                       {positions.length > 1 && (
                         <button 
                           type="button" 
                           onClick={() => removePosition(index)} 
-                          className="absolute top-6 right-6 text-red-500 text-sm font-bold hover:underline"
+                          className="absolute top-4 right-4 text-red-500 text-sm font-bold hover:underline"
                         >
                           Remove
                         </button>
@@ -796,13 +796,13 @@ const handleSmartExtraction = async () => {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block mb-2 font-medium">Position <span className="text-red-500">*</span></label>
+                          <label className="block mb-1.5 text-sm font-medium">Position <span className="text-red-500">*</span></label>
                           <input 
                             type="text" 
                             list="positionsList"
                             value={pos.position} 
                             onChange={(e) => updatePosition(index, "position", e.target.value)} 
-                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
+                            className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
                             placeholder="e.g. Junior Architect" 
                           />
                           <datalist id="positionsList">
@@ -810,15 +810,15 @@ const handleSmartExtraction = async () => {
                           </datalist>
                           </div>
                           <div>
-                            <label className="block mb-2 font-medium">Job Role</label>
-                            <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. Designer, Manager" />
+                            <label className="block mb-1.5 text-sm font-medium">Job Role</label>
+                            <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Designer, Manager" />
                           </div>
                         <div>
-                          <label className="block mb-2 font-medium">Salary</label><Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
+                          <label className="block mb-1.5 text-sm font-medium">Salary</label><Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
                         </div>
                         
                         <div>
-                          <label className="block mb-2 font-medium">Required Experience <span className="text-red-500">*</span></label>
+                          <label className="block mb-1.5 text-sm font-medium">Required Experience <span className="text-red-500">*</span></label>
                           <div className="flex flex-wrap gap-2">
                             {EXPERIENCE_OPTIONS.map((exp) => {
                               const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
@@ -848,11 +848,11 @@ const handleSmartExtraction = async () => {
                         </div>
                         
                         <div className="flex flex-col h-full">
-                          <label className="block mb-2 font-medium">Job Description <span className="text-red-500">*</span></label>
+                          <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
                           <textarea 
                             value={pos.description}
                             onChange={(e) => updatePosition(index, "description", e.target.value)}
-                            className="w-full flex-1 border rounded-2xl px-4 py-3 bg-white text-black min-h-[110px] resize-y"
+                            className="w-full flex-1 border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y"
                             placeholder="Write detailed job description..."
                           />
                         </div>
@@ -862,15 +862,15 @@ const handleSmartExtraction = async () => {
                              <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                   <label className="block mb-2 font-medium"> Qualifications </label>
-                                   <Autocomplete value={pos.qualifications || ""} onChange={(val) => updatePosition(index, "qualifications", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. B.Arch" />
+                                   <label className="block mb-1.5 text-sm font-medium"> Qualifications </label>
+                                   <Autocomplete value={pos.qualifications || ""} onChange={(val) => updatePosition(index, "qualifications", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. B.Arch" />
                                 </div>
                                 <div>
-                                   <label className="block mb-2 font-medium"> Skills Required </label>
+                                   <label className="block mb-1.5 text-sm font-medium"> Skills Required </label>
                                    <input type="text" value={(pos.skills || []).join(", ")} onChange={(e) => {
                                        const vals = e.target.value.split(",").map(v=>v.trim()).filter(Boolean);
                                        updatePosition(index, "skills", vals);
-                                   }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. AutoCAD, Revit (comma separated)" />
+                                   }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. AutoCAD, Revit (comma separated)" />
                                 </div>
                              </div>
                           </div>
@@ -892,18 +892,15 @@ const handleSmartExtraction = async () => {
               </div>
 
               {sameRequirements && (
-<div className="border border-gray-200 p-5 rounded-2xl bg-white shadow-sm mb-6">
-{/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> <div> <label className="block mb-2 font-medium"> Qualifications </label><Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. B.Arch" /></div> </div>
+<div className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm mb-4">
+{/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> <div> <label className="block mb-1.5 text-sm font-medium"> Qualifications </label><Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. B.Arch" /></div> </div>
 
               {/* SKILLS */}
 
-              <div className="mt-6">
-
-                <label className="block mb-2 font-medium">
-                  Skills Required
+              <div className="mt-4">\n                <label className="block mb-1.5 text-sm font-medium">\n                  Skills Required
                 </label>
 
-                <Autocomplete value={skillInput} onChange={(val) => {   if (val.endsWith(",")) {     const newSkill = val.slice(0, -1).trim();     if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }     setSkillInput("");   } else {     setSkillInput(val);   } }} onSelect={(val) => {   const newSkill = val.trim();   if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }   setSkillInput(""); }} fetchSuggestions={async (q) => {   const { data } = await supabase.from("jobs").select("skills_required").limit(100);   if (!data) return [];   const all = new Set();   data.forEach(job => {     if (Array.isArray(job.skills_required)) {       job.skills_required.forEach((s) => {         if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);       });     } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {       all.add(job.skills_required);     }   });   return Array.from(all).slice(0, 10) as string[]; }} placeholder="Type skill and press comma or select" className="w-full border rounded-2xl px-4 py-3 bg-white text-black" />
+                <Autocomplete value={skillInput} onChange={(val) => {   if (val.endsWith(",")) {     const newSkill = val.slice(0, -1).trim();     if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }     setSkillInput("");   } else {     setSkillInput(val);   } }} onSelect={(val) => {   const newSkill = val.trim();   if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }   setSkillInput(""); }} fetchSuggestions={async (q) => {   const { data } = await supabase.from("jobs").select("skills_required").limit(100);   if (!data) return [];   const all = new Set();   data.forEach(job => {     if (Array.isArray(job.skills_required)) {       job.skills_required.forEach((s) => {         if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);       });     } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {       all.add(job.skills_required);     }   });   return Array.from(all).slice(0, 10) as string[]; }} placeholder="Type skill and press comma or select" className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" />
 
                 <div className="flex flex-wrap gap-2 mt-3">
 
@@ -911,7 +908,7 @@ const handleSmartExtraction = async () => {
 
                     <div
                       key={skill}
-                      className="bg-black text-white px-4 py-2 rounded-full flex items-center gap-2"
+                      className="bg-black text-white px-3 py-1 text-sm rounded-full flex items-center gap-2"
                     >
 
                       <span>{skill}</span>
@@ -942,17 +939,17 @@ const handleSmartExtraction = async () => {
 
             <div>
 
-              <h2 className="text-xl font-bold mb-6">
+              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
                 Job Details
               </h2>
 
               <div className="grid md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block mb-2 font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <label className="block mb-1.5 text-sm font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
                   <select
                     value={employmentType}
                     onChange={(e) => setEmploymentType(e.target.value)}
-                    className="w-full border rounded-2xl px-4 py-3"
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
                   >
                     <option value="" disabled>Select Employment Type</option>
                     <option value="Full-time">Full-time</option>
@@ -964,11 +961,11 @@ const handleSmartExtraction = async () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block mb-2 font-medium">Workplace Type</label>
+                  <label className="block mb-1.5 text-sm font-medium">Workplace Type</label>
                   <select
                     value={workplaceType}
                     onChange={(e) => setWorkplaceType(e.target.value)}
-                    className="w-full border rounded-2xl px-4 py-3"
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
                   >
                     <option value="On-site">On-site</option>
                     <option value="Hybrid">Hybrid</option>
@@ -998,7 +995,7 @@ const handleSmartExtraction = async () => {
 
   <div>
 
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Date Type
     </label>
 
@@ -1007,7 +1004,7 @@ const handleSmartExtraction = async () => {
       onChange={(e) =>
         setDateType(e.target.value)
       }
-      className="w-full border rounded-2xl px-4 py-2.5"
+      className="w-full border rounded-xl px-4 py-2.5"
     >
 
       <option value="expiry">
@@ -1026,7 +1023,7 @@ const handleSmartExtraction = async () => {
 
   <div>
 
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
 
       {dateType === "apply"
         ? "Last Date To Apply"
@@ -1061,7 +1058,7 @@ const handleSmartExtraction = async () => {
 
       }}
 
-      className="w-full border rounded-2xl px-4 py-2.5"
+      className="w-full border rounded-xl px-4 py-2.5"
     />
 
   </div>
@@ -1069,7 +1066,7 @@ const handleSmartExtraction = async () => {
 </div>
                 <div>
 
-                  <label className="block mb-2 font-medium">
+                  <label className="block mb-1.5 text-sm font-medium">
                     Source Link
                   </label>
 
@@ -1080,7 +1077,7 @@ const handleSmartExtraction = async () => {
   onChange={(e) =>
     setSource(e.target.value)
   }
-  className="w-full border rounded-2xl px-4 py-2.5"
+  className="w-full border rounded-xl px-4 py-2.5"
 />
 
                 </div>
@@ -1093,7 +1090,7 @@ const handleSmartExtraction = async () => {
 
             <div>
 
-              <h2 className="text-xl font-bold mb-6">
+              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
                 Media
               </h2>
 
@@ -1101,7 +1098,7 @@ const handleSmartExtraction = async () => {
 
 <div>
 
-  <label className="block mb-2 font-medium">
+  <label className="block mb-1.5 text-sm font-medium">
     Upload Job Image{" "}
     <span className="text-red-500 text-xl font-bold">*</span>
   </label>
@@ -1110,7 +1107,7 @@ const handleSmartExtraction = async () => {
     type="file"
     accept="image/*"
     onChange={handleImageUpload}
-    className="w-full border rounded-2xl px-4 py-3"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
   />
 
   {/* UPLOADING */}
@@ -1150,7 +1147,7 @@ const handleSmartExtraction = async () => {
       <img
         src={imageUrl}
         alt="Job Preview"
-        className="w-full max-w-md h-64 object-cover rounded-2xl border shadow-sm"
+        className="w-full max-w-md h-64 object-cover rounded-xl border shadow-sm"
       />
 
     </div>
@@ -1163,7 +1160,7 @@ const handleSmartExtraction = async () => {
 
             <div>
 
-              <h2 className="text-xl font-bold mb-6">
+              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
                 Application Method
               </h2>
 
@@ -1173,7 +1170,7 @@ const handleSmartExtraction = async () => {
 
                 <div>
 
-                  <label className="block mb-2 font-medium">
+                  <label className="block mb-1.5 text-sm font-medium">
                     Button Type <span className="text-red-500 text-xl font-bold">*</span>
                   </label>
 
@@ -1182,7 +1179,7 @@ const handleSmartExtraction = async () => {
                     onChange={(e) =>
                       setApplicationType(e.target.value)
                     }
-                    className="w-full border rounded-2xl px-4 py-3"
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
                   >
 
                     <option value="apply">
@@ -1203,7 +1200,7 @@ const handleSmartExtraction = async () => {
 
   <div className="md:col-span-2">
 
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Apply Link <span className="text-red-500 text-xl font-bold">*</span>
     </label>
 
@@ -1214,7 +1211,7 @@ const handleSmartExtraction = async () => {
       onChange={(e) =>
         setapply_link(e.target.value)
       }
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     />
 
   </div>
@@ -1227,7 +1224,7 @@ const handleSmartExtraction = async () => {
 
   <div className="md:col-span-2">
 
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Application Email <span className="text-red-500 text-xl font-bold">*</span>
     </label>
 
@@ -1238,7 +1235,7 @@ const handleSmartExtraction = async () => {
       onChange={(e) =>
         setapplication_email(e.target.value)
       }
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     />
 
   </div>
@@ -1251,13 +1248,13 @@ const handleSmartExtraction = async () => {
 
             {/* ACTION BUTTONS */}
 
-<div className="flex justify-center gap-4 mt-8 mb-6">
-  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+<div className="flex justify-center gap-3 mt-6 mb-4">
+  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
   >
     Save Draft
   </button>
 
-  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
@@ -1266,7 +1263,7 @@ const handleSmartExtraction = async () => {
     type="button"
     disabled={uploadingImage || isPublishing}
     onClick={() => handlePublishJob("published")}
-    className={`px-8 py-4 rounded-2xl text-lg font-semibold transition ${
+    className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
       uploadingImage
         ? "bg-gray-400 text-white cursor-not-allowed"
         : "bg-black text-white hover:bg-gray-800"
@@ -1279,7 +1276,7 @@ const handleSmartExtraction = async () => {
  <div className="flex-1 border-t border-black-300"></div>
 
             {/* ================= ORGANIZATION INFORMATION ================= */}
-            <div className="mt-8 mb-6">
+            <div className="mt-6 mb-4">
   <h2 className="text-3xl font-bold">
     Company Profile
   </h2>
@@ -1290,18 +1287,18 @@ const handleSmartExtraction = async () => {
 <div className="grid md:grid-cols-2 gap-4">
 
   <div>
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       {organizationType} Logo
     </label>
 
     <input
       type="file"
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     />
   </div>
 
   <div>
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Website
     </label>
 
@@ -1310,7 +1307,7 @@ const handleSmartExtraction = async () => {
       placeholder="https://"
       value={companyWebsite}
       onChange={(e) => setCompanyWebsite(e.target.value)}
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     />
   </div>
 
@@ -1321,7 +1318,7 @@ const handleSmartExtraction = async () => {
 <div className="grid md:grid-cols-2 gap-4 mt-6">
 
   <div>
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Email
     </label>
 
@@ -1330,12 +1327,12 @@ const handleSmartExtraction = async () => {
       placeholder="office@example.com"
       value={companyEmail}
       onChange={(e) => setCompanyEmail(e.target.value)}
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     />
   </div>
 
   <div>
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Phone Number
     </label>
 
@@ -1351,7 +1348,7 @@ const handleSmartExtraction = async () => {
           setCompanyWhatsapp(value);
         }
       }}
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     />
   </div>
 
@@ -1363,7 +1360,7 @@ const handleSmartExtraction = async () => {
 
   <div>
 
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       WhatsApp Number
     </label>
 
@@ -1397,7 +1394,7 @@ const handleSmartExtraction = async () => {
       value={companyWhatsapp}
       onChange={(e) => setCompanyWhatsapp(e.target.value)}
       disabled={sameAsPhone}
-      className={`w-full border rounded-2xl px-4 py-3 ${
+      className={`w-full border rounded-xl px-3 py-2.5 text-sm ${
         sameAsPhone ? "bg-white cursor-not-allowed" : ""
       }`}
     />
@@ -1414,7 +1411,7 @@ const handleSmartExtraction = async () => {
 
   <div>
 
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Founded Year
     </label>
 
@@ -1425,21 +1422,21 @@ const handleSmartExtraction = async () => {
       value={foundedYear}
       onChange={(e) => setFoundedYear(e.target.value)}
       placeholder="Founded Year"
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     />
 
   </div>
 
   <div>
 
-    <label className="block mb-2 font-medium">
+    <label className="block mb-1.5 text-sm font-medium">
       Employee Size
     </label>
 
     <select
       value={employeeSize}
       onChange={(e) => setEmployeeSize(e.target.value)}
-      className="w-full border rounded-2xl px-4 py-3"
+      className="w-full border rounded-xl px-3 py-2.5 text-sm"
     >
       <option value="">Select Employee Size</option>
       <option>1–5</option>
@@ -1460,7 +1457,7 @@ const handleSmartExtraction = async () => {
 
 <div className="mt-6">
 
-  <label className="block mb-2 font-medium">
+  <label className="block mb-1.5 text-sm font-medium">
     About {organizationType}
   </label>
 
@@ -1469,7 +1466,7 @@ const handleSmartExtraction = async () => {
     placeholder={`Write about the ${organizationType.toLowerCase()}...`}
     value={companyDescription}
     onChange={(e) => setCompanyDescription(e.target.value)}
-    className="w-full border rounded-2xl px-4 py-3"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
   />
 
 </div>
@@ -1487,7 +1484,7 @@ const handleSmartExtraction = async () => {
     placeholder="Facebook URL"
     value={companyFacebook}
     onChange={(e) => setCompanyFacebook(e.target.value)}
-    className="w-full border rounded-2xl px-4 py-3"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
   />
 
   <input
@@ -1495,7 +1492,7 @@ const handleSmartExtraction = async () => {
     placeholder="Instagram URL"
     value={companyInstagram}
     onChange={(e) => setCompanyInstagram(e.target.value)}
-    className="w-full border rounded-2xl px-4 py-3"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
   />
 
   <input
@@ -1503,7 +1500,7 @@ const handleSmartExtraction = async () => {
     placeholder="LinkedIn URL"
     value={companyLinkedin}
     onChange={(e) => setCompanyLinkedin(e.target.value)}
-    className="w-full border rounded-2xl px-4 py-3"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
   />
 
   <input
@@ -1511,20 +1508,20 @@ const handleSmartExtraction = async () => {
     placeholder="X (Twitter) URL"
     value={companyTwitter}
     onChange={(e) => setCompanyTwitter(e.target.value)}
-    className="w-full border rounded-2xl px-4 py-3"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
   />
 
 </div>
 
           {/* ACTION BUTTONS */}
 
-<div className="flex justify-center gap-4 mt-8 mb-6">
-  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+<div className="flex justify-center gap-3 mt-6 mb-4">
+  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
   >
     Save Draft
   </button>
 
-  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
@@ -1533,7 +1530,7 @@ const handleSmartExtraction = async () => {
     type="button"
     disabled={uploadingImage || isPublishing}
     onClick={() => handlePublishJob("published")}
-    className={`px-8 py-4 rounded-2xl text-lg font-semibold transition ${
+    className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
       uploadingImage
         ? "bg-gray-400 text-white cursor-not-allowed"
         : "bg-black text-white hover:bg-gray-800"
@@ -1550,16 +1547,16 @@ const handleSmartExtraction = async () => {
 
 {showSchedule && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-2xl p-5 w-full max-w-md">
+    <div className="bg-white rounded-xl p-5 w-full max-w-md">
 
-      <h2 className="text-xl font-bold mb-6">
+      <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
         Schedule Job
       </h2>
 
       <div className="space-y-5">
 
         <div>
-          <label className="block mb-2 font-medium">
+          <label className="block mb-1.5 text-sm font-medium">
             Date
           </label>
 
@@ -1567,12 +1564,12 @@ const handleSmartExtraction = async () => {
             type="date"
             value={scheduleDate}
             onChange={(e) => setScheduleDate(e.target.value)}
-            className="w-full border rounded-xl px-4 py-3"
+            className="w-full border rounded-xl px-3 py-2.5 text-sm"
           />
         </div>
 
         <div>
-          <label className="block mb-2 font-medium">
+          <label className="block mb-1.5 text-sm font-medium">
             Time
           </label>
 
@@ -1580,7 +1577,7 @@ const handleSmartExtraction = async () => {
             type="time"
             value={scheduleTime}
             onChange={(e) => setScheduleTime(e.target.value)}
-            className="w-full border rounded-xl px-4 py-3"
+            className="w-full border rounded-xl px-3 py-2.5 text-sm"
           />
         </div>
 
@@ -1677,7 +1674,7 @@ const handleSmartExtraction = async () => {
                       setShowSmartUpload(false);
                       setLoadingAI(false);
                     }}
-                    className="w-full bg-green-600 text-white py-4 rounded-2xl font-bold hover:bg-green-700 shadow-lg active:scale-95 transition-all"
+                    className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg active:scale-95 transition-all"
                   >
                     Confirm & Auto-Fill
                   </button>
@@ -1835,7 +1832,7 @@ const handleSmartExtraction = async () => {
       setLoadingAI(false);
     }
   }}
-  className={`mt-6 w-full py-5 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all ${
+  className={`mt-6 w-full py-5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
     loadingAI === "loading"
       ? "bg-white text-gray-700 md:text-gray-400"
       : "bg-black text-white hover:bg-gray-800 shadow-xl"
@@ -1862,7 +1859,7 @@ const handleSmartExtraction = async () => {
           <div className="flex flex-col gap-3 mb-5 items-end animate-in fade-in slide-in-from-bottom-5 duration-300">
             <button
               onClick={() => { setUploadMode('image'); setShowSmartUpload(true); setShowUploadOptions(false); }}
-              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
+              className="bg-white text-black shadow-2xl rounded-xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
               <span className="bg-blue-50 p-2 rounded-xl text-lg">📷</span> 
               <div className="flex flex-col">
@@ -1872,7 +1869,7 @@ const handleSmartExtraction = async () => {
             </button>
             <button
               onClick={() => { setUploadMode('text'); setShowSmartUpload(true); setShowUploadOptions(false); }}
-              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
+              className="bg-white text-black shadow-2xl rounded-xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
               <span className="bg-green-50 p-2 rounded-xl text-lg">📄</span>
               <div className="flex flex-col">
@@ -1882,7 +1879,7 @@ const handleSmartExtraction = async () => {
             </button>
             <button
               onClick={() => { setUploadMode('url'); setShowSmartUpload(true); setShowUploadOptions(false); }}
-              className="bg-white text-black shadow-2xl rounded-2xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
+              className="bg-white text-black shadow-2xl rounded-xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
               <span className="bg-purple-50 p-2 rounded-xl text-lg">🌐</span>
               <div className="flex flex-col">
