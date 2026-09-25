@@ -169,35 +169,17 @@ const [area, setArea] = useState("");
   const [state, setState] =
     useState("");
 
-  const [position, setPosition] =
-    useState("");
-
-  const [salary, setSalary] =
-    useState("");
-
-  const [postedDate, setPostedDate] =
-    useState("");
-
-  const [lastDateToApply, setLastDateToApply] =
-    useState("");
-
-  const [postExpiryDate, setPostExpiryDate] =
-    useState("");
-
-  const [jobDescription, setJobDescription] =
-    useState("");
-
-  const [apply_link, setapply_link] =
-    useState("");
-
-  const [application_email, setapplication_email] =
-    useState("");
-
-  const [source, setSource] =
-    useState("");
-  const [image, setImage] = useState("");
+// Deprecated single-position state variables removed.
+  const [lastDateToApply, setLastDateToApply] = useState('');
+  const [postExpiryDate, setPostExpiryDate] = useState('');
+  const [apply_link, setapply_link] = useState('');
+  const [application_email, setapplication_email] = useState('');
+  const [source, setSource] = useState('');
+  const [image, setImage] = useState('');
   const [imageUrl, setImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [positions, setPositions] = useState([{position: "", experience: "", salary: "", description: "", completed: false}]);
+
   const [dateType, setDateType] =
   useState("expiry");
   const [showCompanyDetails, setShowCompanyDetails] = useState(false);
@@ -254,7 +236,7 @@ const [area, setArea] = useState("");
   setCity(data.city || "");
   setState(data.state || "");
 
-  setPosition(data.position || "");
+  setPositions([{ ...positions[0], position: data.position || '' }]);
 
   /* EXPERIENCE */
 
@@ -268,7 +250,7 @@ const [area, setArea] = useState("");
 
   /* SALARY */
 
-  setSalary(data.salary || "");
+  setPositions([{ ...positions[0], salary: data.salary || '' }]);
 
   /* DATES */
 
@@ -353,7 +335,7 @@ const [uploadSuccess, setUploadSuccess] =
 
     // Generate SEO friendly file name
   let safeFirm = firmName ? firmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
-  let safePosition = position ? position.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+  let safePosition = positions[0]?.position ? positions[0]?.position.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
   let seoName = '';
   if (safeFirm && safePosition) {
     seoName = `${safeFirm}-hiring-${safePosition}`;
@@ -470,7 +452,7 @@ if (
   status === "draft" &&
   (
     !firmName ||
-    !position
+    !positions[0]?.position
   )
 ) {
   alert("Please enter at least the Company Name and Job Position to save a draft.");
@@ -483,10 +465,10 @@ if (
   status !== "draft" &&
   (
     !firmName ||
-    !position ||
+    !positions[0]?.position ||
     !city ||
     !state ||
-    !jobDescription
+    !positions[0]?.description
   )
 ) {
   alert("Please fill all required fields.");
@@ -565,7 +547,8 @@ const finalExpiryDate =
   const { data, error } = await supabase
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
-  const jobPayload = {
+  // Payload for admin_jobs – stores common fields and the positions array
+  const adminPayload = {
     firm_name: firmName,
     company_id: currentCompanyId,
     employment_type: employmentType,
@@ -573,21 +556,19 @@ const finalExpiryDate =
     area: area,
     city: city,
     state: state,
-    position: position,
-    experience: selectedExperience,
-    salary: salary,
+    positions: positions,
     qualifications: qualifications,
     skills_required: skills,
     posted_date: status === "published" ? formattedToday : null,
     scheduled_date: status === "scheduled" ? `${scheduleDate} ${scheduleTime}` : null,
     last_date_to_apply: lastDateToApply || null,
     post_expiry_date: finalExpiryDate,
-    job_description: jobDescription,
     apply_link: apply_link,
     application_email: application_email,
     source: source,
     image: imageUrl,
     status: status,
+    author_id: currentUser?.id || null,
   };
 
   let jobData: any, jobError: any;
@@ -603,24 +584,50 @@ const finalExpiryDate =
         return;
       }
     }
-    const res = await supabase.from("jobs").update(jobPayload).eq("id", jobId).select().single();
+    // TODO: Multi-position updates if jobId exists
+    const res = await supabase.from("admin_jobs").update(adminPayload).eq("id", jobId).select().single();
     jobData = res.data;
     jobError = res.error;
   } else {
-    if (currentUser) {
-      (jobPayload as any).author_id = currentUser.id;
-    }
-    const res = await supabase.from("jobs").insert([jobPayload]).select().single().select().single();
+    const res = await supabase.from("admin_jobs").insert([adminPayload]).select().single();
     jobData = res.data;
     jobError = res.error;
+    
+    if (jobData && jobData.id && status === "published") {
+      const publicJobs = positions.map(pos => ({
+        admin_post_id: jobData.id,
+        firm_name: firmName,
+        company_id: currentCompanyId,
+        employment_type: employmentType,
+        workplace_type: workplaceType,
+        area: area,
+        city: city,
+        state: state,
+        position: pos.position,
+        experience: pos.experience,
+        salary: pos.salary,
+        job_description: pos.description,
+        qualifications: qualifications,
+        skills_required: skills,
+        posted_date: formattedToday,
+        last_date_to_apply: lastDateToApply || null,
+        post_expiry_date: finalExpiryDate,
+        apply_link: apply_link,
+        application_email: application_email,
+        source: source,
+        image: imageUrl,
+        status: status,
+        author_id: currentUser?.id || null
+      }));
+      await supabase.from("jobs").insert(publicJobs);
+    }
     
     if (jobData && jobData.id) {
       setJobId(jobData.id);
       window.history.replaceState(null, "", `/admin/add-job?id=${jobData.id}`);
     }
-  }
-
 /* ERROR */
+  }
 
 if (jobError) {
   console.log("SUPABASE ERROR:", jobError);
@@ -777,7 +784,7 @@ const handleSmartExtraction = async () => {
   type="text"
   list="positions"
   placeholder="Junior Architect"
-  value={position}
+  value={positions[0]?.position || ''}
   onChange={(e) =>
     setPosition(e.target.value)
   }
@@ -789,7 +796,7 @@ const handleSmartExtraction = async () => {
 
                       <option
                         key={position}
-                        value={position}
+                        value={positions[0]?.position || ''}
                       />
 
                     ))}
@@ -977,122 +984,7 @@ const handleSmartExtraction = async () => {
 
 </div>
 
-              {/* QUALIFICATION + SALARY */}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                {/* QUALIFICATIONS */}
-
-                <div>
-
-                  <label className="block mb-2 font-medium">
-                    Qualifications
-                  </label>
-
-                  <input
-                    type="text"
-                    value={qualificationInput}
-                    onChange={(e) => {
-
-                      const value = e.target.value;
-
-                      if (value.endsWith(",")) {
-
-                        const newQualification =
-                          value.replace(",", "").trim();
-
-                        if (
-                          newQualification &&
-                          !qualifications.includes(
-                            newQualification
-                          )
-                        ) {
-
-                          setQualifications([
-                            ...qualifications,
-                            newQualification,
-                          ]);
-
-                        }
-
-                        setQualificationInput("");
-
-                      } else {
-
-                        setQualificationInput(value);
-
-                      }
-
-                    }}
-                    placeholder="Type qualification and press comma"
-                    className="w-full border rounded-2xl px-4 py-2.5"
-                  />
-
-                  <div className="flex flex-wrap gap-2 mt-3">
-
-                    {qualifications.map((qualification) => (
-
-                      <div
-                        key={qualification}
-                        className="bg-gray-200 px-4 py-2 rounded-full flex items-center gap-2"
-                      >
-
-                        <span>{qualification}</span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setQualifications(
-                              qualifications.filter(
-                                (q) => q !== qualification
-                              )
-                            )
-                          }
-                        >
-                          ✕
-                        </button>
-
-                      </div>
-
-                    ))}
-
-                  </div>
-
-                </div>
-
-                {/* SALARY */}
-
-                <div>
-
-                  <label className="block mb-2 font-medium">
-                    Salary
-                  </label>
-
-                  <select
-  value={salary}
-  onChange={(e) =>
-    setSalary(e.target.value)
-  }
-  className="w-full border rounded-2xl px-4 py-2.5"
->
-
-                    <option>
-                      Select Salary Range
-                    </option>
-
-                    {SALARY_OPTIONS.map((option) => (
-
-                      <option key={option}>
-                        {option}
-                      </option>
-
-                    ))}
-
-                  </select>
-
-                </div>
-
-              </div>
+              {/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> <div> <label className="block mb-2 font-medium"> Qualifications </label> <input type="text" placeholder="B.Arch" value={qualifications} onChange={(e) => setQualifications(e.target.value)} className="w-full border rounded-2xl px-4 py-3" /> </div> </div>
 
               {/* SKILLS */}
 
@@ -1211,27 +1103,7 @@ const handleSmartExtraction = async () => {
                 </div>
               </div>
 
-              {/* DESCRIPTION */}
-
-              <div>
-
-                <label className="block mb-2 font-medium">
-                  Job Description <span className="text-red-500 text-xl font-bold">*</span>
-                </label>
-
-                <textarea
-  rows={8}
-  placeholder="Write detailed job description..."
-  value={jobDescription}
-  onChange={(e) =>
-    setJobDescription(e.target.value)
-  }
-  className="w-full border rounded-2xl px-4 py-3"
-/>
-
               </div>
-
-            </div>
 
             {/* APPLICATION */}
 
@@ -1924,12 +1796,12 @@ const handleSmartExtraction = async () => {
                 
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold">Firm</label>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-800 font-extrabold">Firm</label>
                     <p className="font-semibold border-b border-gray-100 pb-1">{firmName || "---"}</p>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold">Position</label>
-                    <p className="font-semibold border-b border-gray-100 pb-1">{position || "---"}</p>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-800 font-extrabold">Position</label>
+                    <p className="font-semibold border-b border-gray-100 pb-1">{positions[0]?.position || '---'}</p>
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-extrabold">Location</label>
@@ -1960,7 +1832,7 @@ const handleSmartExtraction = async () => {
 
               <div className="p-8 flex-1 flex flex-col">
                 <h2 className="text-2xl font-black mt-4 tracking-tight">Smart Job</h2>
-                <p className="text-gray-400 text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
+                <p className="text-gray-800 text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
 
                 <div className="flex-1 flex flex-col justify-center overflow-hidden">
                   {uploadMode === 'image' && (
@@ -2069,7 +1941,7 @@ const handleSmartExtraction = async () => {
       setCity(ai.city || "");
       setState(ai.state || "");
 
-      setPosition(ai.position || ai.job_title || "");
+      setPositions([{ ...positions[0], position: ai.position || ai.job_title || '' }]);
 
       // Handle experience carefully (frontend expects array or string?)
       if (Array.isArray(ai.experience)) setSelectedExperience(ai.experience);

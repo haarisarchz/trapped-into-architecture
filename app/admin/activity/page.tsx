@@ -231,6 +231,7 @@ export default function AdminActivityPage() {
                     className="border border-gray-300 rounded-lg px-4 py-2 bg-white"
                   >
                     <option value="this_month">This Month</option>
+                    <option value="previous_month">Previous Month</option>
                     <option value="last_3_months">Last 3 Months</option>
                     <option value="last_6_months">Last 6 Months</option>
                     <option value="last_1_year">Last 1 Year</option>

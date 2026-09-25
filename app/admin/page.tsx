@@ -163,7 +163,7 @@ if (loading) {
               Crafted Architecture
             </h1>
 
-            <p className="text-gray-400 mt-1">
+            <p className="text-gray-800 mt-1">
               Admin Panel
             </p>
 
@@ -251,7 +251,7 @@ if (loading) {
         {/* WEBSITE BUTTON */}
 
         <Link
-          href="/"
+          href="https://www.trappedintoarchitecture.com/" target="_blank" rel="noopener noreferrer"
           className="border border-gray-700 rounded-2xl px-5 py-4 hover:bg-gray-800 transition text-center block w-full"
         >
           View Website
