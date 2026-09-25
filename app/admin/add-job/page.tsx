@@ -177,6 +177,7 @@ const [area, setArea] = useState("");
   const [image, setImage] = useState('');
   const [imageUrl, setImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [positions, setPositions] = useState([{position: "", experience: [], salary: "", description: "", completed: false}]);
 const updatePosition = (index, field, value) => {
   const newPositions = [...positions];
@@ -228,92 +229,61 @@ const removePosition = (index) => {
   if (!jobId) return;
 
   const fetchJob = async () => {
-
     const { data, error } = await supabase
-      .from("jobs")
+      .from("admin_jobs")
       .select("*")
       .eq("id", jobId)
       .single();
 
     if (error) {
-
       console.log(error);
       return;
-
     }
 
     if (data) {
+      setFirmName(data.firm_name || "");
+      if (data.employment_type) setEmploymentType(data.employment_type);
+      if (data.workplace_type) setWorkplaceType(data.workplace_type);
+      setOrganizationType(data.organization_type || "Firm");
+      setArea(data.area || "");
+      setCity(data.city || "");
+      setState(data.state || "");
 
-  setFirmName(data.firm_name || "");
-  setOrganizationType(data.organization_type || "Firm");
+      if (data.positions && Array.isArray(data.positions) && data.positions.length > 0) {
+        setPositions(data.positions);
+      } else if (data.position) {
+        setPositions([{ 
+          position: data.position || "",
+          salary: data.salary || "",
+          description: data.job_description || "",
+          experience: Array.isArray(data.experience) ? data.experience : (data.experience ? [data.experience] : []),
+          completed: false
+        }]);
+      }
 
-  setArea(data.area || "");
-  setCity(data.city || "");
-  setState(data.state || "");
+      setQualifications(data.qualifications || "");
+      setSkills(data.skills_required || "");
+      setPostedDate(data.posted_date || "");
+      setLastDateToApply(data.last_date_to_apply || "");
+      setPostExpiryDate(data.post_expiry_date || "");
+      setImageUrl(data.image || "");
+      
+      if (data.apply_link) {
+        setApplicationType("apply");
+        setapply_link(data.apply_link);
+      } else if (data.application_email) {
+        setApplicationType("email");
+        setapplication_email(data.application_email);
+      }
 
-  setPositions([{ 
-  position: data.position || "",
-  salary: data.salary || "",
-  description: data.job_description || "",
-  experience: Array.isArray(data.experience) ? data.experience : (data.experience ? [data.experience] : []),
-  completed: false
-}]);
-
-
-  /* EXPERIENCE */
-
-  
-
-  /* SALARY */
-
-  
-
-  /* DATES */
-
-  setPostedDate(data.posted_date || "");
-  setLastDateToApply(data.last_date_to_apply || "");
-  setPostExpiryDate(data.post_expiry_date || "");
-
-  /* DESCRIPTION */
-
-  
-
-  /* APPLICATION */
-
-  setapply_link(data.apply_link || "");
-  setapplication_email(data.application_email || "");
-
-  /* SOURCE */
-
-  setSource(data.source || "");
-
-  /* IMAGE */
-
-  setImage(data.image || "");
-  setImageUrl(data.image || "");
-
-  /* QUALIFICATIONS */
-
-  setQualifications(
-    Array.isArray(data.qualifications)
-      ? data.qualifications
-      : []
-  );
-
-  /* SKILLS */
-
-  setSkills(
-    Array.isArray(data.skills_required)
-      ? data.skills_required
-      : []
-  );
-
-}
-
+      if (data.status === "scheduled" && data.schedule_time) {
+         setScheduleTime(data.schedule_time);
+         setScheduleDate(data.posted_date);
+      }
+    }
   };
 
   fetchJob();
-
 }, [jobId]);
 
 const [uploadSuccess, setUploadSuccess] =
@@ -412,203 +382,124 @@ const handleSchedule = async () => {
 const handlePublishJob = async (
   status: "draft" | "scheduled" | "published" = "published"
 ) => {
+  setIsPublishing(true);
 
-  // =====================================================
-  // STEP 1 - COMPANY CHECK
-  // =====================================================
-  if (status !== "draft" && firmName) {
-    const { data: existingCompany } = await supabase
-      .from("companies")
-      .select("id")
-      .ilike("firm_name", firmName.trim())
-      .maybeSingle();
+  try {
+    let currentCompanyId = null;
 
-    if (!existingCompany) {
-      const companySlug = firmName
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w-]+/g, "");
+    if (status !== "draft" && firmName) {
+      const { data: existingCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .ilike("firm_name", firmName.trim())
+        .maybeSingle();
+
+      if (!existingCompany) {
+        const companySlug = firmName
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/[^\w-]+/g, "");
+          
+        const { data: newComp } = await supabase.from("companies").insert([
+          {
+            firm_name: firmName,
+            slug: companySlug,
+            city: city,
+            state: state,
+            organization_type: organizationType,
+            created_by: currentUser?.id || null
+          },
+        ]).select().single();
         
-      const { data: newComp, error: newCompErr } = await supabase.from("companies").insert([
-        {
-          firm_name: firmName,
-          slug: companySlug,
-          city: city,
-          state: state,
-          organization_type: organizationType,
-          created_by: currentUser?.id || null
-        },
-      ]).select().single();
-      
-      if (newComp) {
-        currentCompanyId = newComp.id;
+        if (newComp) {
+          currentCompanyId = newComp.id;
+        }
+      } else {
+        currentCompanyId = existingCompany.id;
       }
     }
-  }
-  // =====================================================
 
-  if (status !== "draft") {
-
-  if (uploadingImage) {
-    alert("Please wait until image upload finishes");
-    return;
-  }
-
-  if (!imageUrl) {
-    alert("Please upload job image");
-    return;
-  }
-
-}
-
-  //* MINIMUM VALIDATION FOR DRAFT */
-
-if (
-  status === "draft" &&
-  (
-    !firmName ||
-    !positions[0]?.position
-  )
-) {
-  alert("Please enter at least the Company Name and Job Position to save a draft.");
-  return;
-}
-
-/* FULL VALIDATION FOR PUBLISH & SCHEDULE */
-
-if (
-  status !== "draft" &&
-  (
-    !firmName ||
-    !positions[0]?.position ||
-    !city ||
-    !state ||
-    !positions[0]?.description
-  )
-) {
-  alert("Please fill all required fields.");
-  return;
-}
-
-  /* INSERT JOB */
-
-
-  /* TODAY */
-
-const today = new Date();
-
-const formattedToday =
-  today.toISOString().split("T")[0];
-
-/* DEFAULT EXPIRY */
-
-const expiry = new Date();
-
-expiry.setDate(expiry.getDate() + 14);
-
-const formattedExpiry =
-  expiry.toISOString().split("T")[0];
-
-/* FINAL EXPIRY */
-
-const finalExpiryDate =
-  lastDateToApply || formattedExpiry;
-
-  // =====================================================
-  // STEP 1 - COMPANY UPSERT
-  // =====================================================
-  let currentCompanyId = null;
-  if (firmName) {
-    const { data: existingCompany, error: findError } = await supabase
-      .from('companies')
-      .select('id')
-      .eq('firm_name', firmName)
-      .single();
-
-    if (existingCompany?.id) {
-      currentCompanyId = existingCompany.id;
-    } else {
-      const { data: newCompany, error: insertError } = await supabase
-        .from('companies')
-        .insert([{ 
-          firm_name: firmName,
-          organization_type: organizationType,
-          neighborhood: area,
-          city: city,
-          state: state,
-          logo_url: companyLogo,
-          description: companyDescription,
-          website: companyWebsite,
-          email: companyEmail,
-          phone: companyPhone,
-          whatsapp: companyWhatsapp,
-          facebook: companyFacebook,
-          instagram: companyInstagram,
-          linkedin: companyLinkedin,
-          twitter: companyTwitter,
-          principal_architect: principalArchitect,
-          employee_size: employeeSize,
-          founded_year: foundedYear ? parseInt(foundedYear, 10) : null
-        }])
-        .select('id')
-        .single();
-        
-      if (newCompany?.id) {
-        currentCompanyId = newCompany.id;
+    if (status !== "draft") {
+      if (uploadingImage) {
+        alert("Please wait until image upload finishes");
+        setIsPublishing(false);
+        return;
       }
-    }
-  }
-
-  const { data, error } = await supabase
-  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-
-  // Payload for admin_jobs – stores common fields and the positions array
-  const adminPayload = {
-    firm_name: firmName,
-    company_id: currentCompanyId,
-    employment_type: employmentType,
-    workplace_type: workplaceType,
-    area: area,
-    city: city,
-    state: state,
-    positions: positions,
-    qualifications: qualifications,
-    skills_required: skills,
-    posted_date: status === "published" ? formattedToday : null,
-    scheduled_date: status === "scheduled" ? `${scheduleDate} ${scheduleTime}` : null,
-    last_date_to_apply: lastDateToApply || null,
-    post_expiry_date: finalExpiryDate,
-    apply_link: apply_link,
-    application_email: application_email,
-    source: source,
-    image: imageUrl,
-    status: status,
-    author_id: currentUser?.id || null,
-  };
-
-  let jobData: any, jobError: any;
-  if (jobId) {
-    // Client-side permission check before update (ideally enforced by RLS)
-    if (jobId && currentUser) {
-      const { data: existingJob, error: authorError } = await supabase.from('jobs').select('id').eq('id', jobId).single();
-      // Temporarily removed author_id from select to prevent schema crash
-      const role = currentUser.role?.toLowerCase()?.replace(/[\s_]+/g, '');
-      if (existingJob && existingJob.author_id && existingJob.author_id !== currentUser.id && role !== 'ceo' && role !== 'superadmin') {
-        alert('You do not have permission to edit a job you did not create.');
-        setSaving(false);
+      if (!imageUrl) {
+        alert("Please upload job image");
+        setIsPublishing(false);
         return;
       }
     }
-    // TODO: Multi-position updates if jobId exists
-    const res = await supabase.from("admin_jobs").update(adminPayload).eq("id", jobId).select().single();
-    jobData = res.data;
-    jobError = res.error;
-  } else {
-    const res = await supabase.from("admin_jobs").insert([adminPayload]).select().single();
-    jobData = res.data;
-    jobError = res.error;
-    
+
+    if (status === "draft" && (!firmName || !positions[0]?.position)) {
+      alert("Please enter at least the Company Name and Job Position to save a draft.");
+      setIsPublishing(false);
+      return;
+    }
+
+    let missingFields = false;
+    if (status !== "draft") {
+      if (!firmName || !city || !state) missingFields = true;
+      positions.forEach(p => {
+        if (!p.position || !p.description) missingFields = true;
+      });
+    }
+
+    if (missingFields) {
+      alert("Please fill all required fields, including position titles and descriptions.");
+      setIsPublishing(false);
+      return;
+    }
+
+    const today = new Date();
+    const formattedToday = today.toISOString().split("T")[0];
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 14);
+    const formattedExpiry = expiry.toISOString().split("T")[0];
+
+    const finalExpiryDate = postExpiryDate || formattedExpiry;
+    const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+
+    const adminPayload = {
+      firm_name: firmName,
+      company_id: currentCompanyId,
+      employment_type: employmentType,
+      workplace_type: workplaceType,
+      area: area,
+      city: city,
+      state: state,
+      positions: positions,
+      qualifications: qualifications,
+      skills_required: skills,
+      posted_date: status === "published" ? formattedToday : null,
+      last_date_to_apply: lastDateToApply || null,
+      post_expiry_date: finalExpiryDate,
+      apply_link: apply_link,
+      application_email: application_email,
+      source: source,
+      image: imageUrl,
+      status: status,
+      author_id: activeUser?.id || null,
+      schedule_time: status === "scheduled" ? scheduleTime : null
+    };
+
+    let jobData = null;
+
+    if (jobId) {
+      if (status === "published") {
+        await supabase.from("jobs").delete().eq("admin_post_id", jobId);
+      }
+      const { data, error } = await supabase.from("admin_jobs").update(adminPayload).eq("id", jobId).select().single();
+      if (error) throw error;
+      jobData = data;
+    } else {
+      const { data, error } = await supabase.from("admin_jobs").insert([adminPayload]).select().single();
+      if (error) throw error;
+      jobData = data;
+    }
+
     if (jobData && jobData.id && status === "published") {
       const publicJobs = positions.map(pos => ({
         admin_post_id: jobData.id,
@@ -633,52 +524,48 @@ const finalExpiryDate =
         source: source,
         image: imageUrl,
         status: status,
-        author_id: currentUser?.id || null
+        author_id: activeUser?.id || null
       }));
-      await supabase.from("jobs").insert(publicJobs);
+
+      const { error: jobsErr } = await supabase.from("jobs").insert(publicJobs);
+      if (jobsErr) {
+        if (!jobId) {
+          await supabase.from("admin_jobs").delete().eq("id", jobData.id);
+        }
+        throw jobsErr;
+      }
     }
-    
+
     if (jobData && jobData.id) {
       setJobId(jobData.id);
       window.history.replaceState(null, "", `/admin/add-job?id=${jobData.id}`);
-    }
-/* ERROR */
-  }
 
-if (jobError) {
-  console.log("SUPABASE ERROR:", jobError);
-
-  alert(JSON.stringify(jobError));
-
-  return;
-}
-
-
-      //* TRIGGER SOCIAL PUBLISHING */
-      if (status === "published" && autoPublishSocial && data && data.id) {
-        // Do not await to avoid blocking UI unnecessarily
+      if (status === "published" && autoPublishSocial) {
         fetch("/api/publish/social", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ job_id: data.id })
+          body: JSON.stringify({ job_id: jobData.id })
         }).catch(err => console.error("Social publish request failed", err));
       }
-    
 
-//* SUCCESS */
+      if (status === "draft") {
+        alert("Draft saved successfully.");
+      } else if (status === "scheduled") {
+        alert("Job scheduled successfully.");
+      } else {
+        alert("Job published successfully.");
+      }
 
-if (status === "draft") {
-  alert("Draft saved successfully.");
-} else if (status === "scheduled") {
-  alert("Job scheduled successfully.");
-} else {
-  alert("Job published successfully.");
-}
-
-if (status !== "draft") {
-  router.push("/admin");
-}
-
+      if (status !== "draft") {
+        router.push("/admin/activity");
+      }
+    }
+  } catch (err) {
+    console.error("SUPABASE ERROR:", err);
+    alert(JSON.stringify(err.message || err));
+  }
+  
+  setIsPublishing(false);
 };
 
 const handleSmartExtraction = async () => {
@@ -790,98 +677,7 @@ const handleSmartExtraction = async () => {
 
 
 
-                          {/* POSITIONS & DESCRIPTIONS */}
-              <div className="mt-10 mb-10">
-                <div className="flex justify-between items-end mb-6">
-                  <h2 className="text-2xl font-bold">Roles & Requirements</h2>
-                  <button type="button" onClick={addPosition} className="text-blue-600 font-bold hover:underline">+ Add Position</button>
-                </div>
-                
-                <div className="space-y-6">
-                  {positions.map((pos, index) => (
-                    <div key={index} className="border border-gray-200 p-6 rounded-2xl bg-white shadow-sm relative text-black">
-                      {positions.length > 1 && (
-                        <button 
-                          type="button" 
-                          onClick={() => removePosition(index)} 
-                          className="absolute top-6 right-6 text-red-500 text-sm font-bold hover:underline"
-                        >
-                          Remove
-                        </button>
-                      )}
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <div>
-                          <label className="block mb-2 font-medium">Position Title <span className="text-red-500">*</span></label>
-                          <input 
-                            type="text" 
-                            list="positionsList"
-                            value={pos.position} 
-                            onChange={(e) => updatePosition(index, "position", e.target.value)} 
-                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
-                            placeholder="e.g. Junior Architect" 
-                          />
-                          <datalist id="positionsList">
-                            {positionOptions.map((opt) => <option key={opt} value={opt} />)}
-                          </datalist>
-                        </div>
-                        <div>
-                          <label className="block mb-2 font-medium">Salary / Compensation</label>
-                          <input 
-                            type="text" 
-                            value={pos.salary} 
-                            onChange={(e) => updatePosition(index, "salary", e.target.value)} 
-                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
-                            placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" 
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="mb-6">
-                        <label className="block mb-2 font-medium">Required Experience <span className="text-red-500">*</span></label>
-                        <div className="flex flex-wrap gap-2">
-                          {EXPERIENCE_OPTIONS.map((exp) => {
-                            const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
-                            const isSelected = currentExps.includes(exp);
-                            return (
-                              <button
-                                key={exp}
-                                type="button"
-                                onClick={() => {
-                                  if (isSelected) {
-                                    updatePosition(index, "experience", currentExps.filter(e => e !== exp));
-                                  } else {
-                                    updatePosition(index, "experience", [...currentExps, exp]);
-                                  }
-                                }}
-                                className={`px-4 py-2 border rounded-full text-sm font-semibold transition ${
-                                  isSelected
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                                }`}
-                              >
-                                {exp}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block mb-2 font-medium">Job Description <span className="text-red-500">*</span></label>
-                        <textarea 
-                          rows={6}
-                          value={pos.description}
-                          onChange={(e) => updatePosition(index, "description", e.target.value)}
-                          className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
-                          placeholder="Write detailed job description..."
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* LOCATION */}
+                          {/* LOCATION */}
 
             <div>
 
@@ -986,6 +782,101 @@ const handleSmartExtraction = async () => {
               <h2 className="text-2xl font-bold mb-4">
                 Requirements
               </h2>
+
+              
+
+              {/* POSITIONS & DESCRIPTIONS */}
+              <div className="mt-10 mb-10">
+                <div className="flex justify-between items-end mb-6">
+                  <h2 className="text-2xl font-bold">Roles & Requirements</h2>
+                  <button type="button" onClick={addPosition} className="text-blue-600 font-bold hover:underline">+ Add Position</button>
+                </div>
+                
+                <div className="space-y-6">
+                  {positions.map((pos, index) => (
+                    <div key={index} className="border border-gray-200 p-6 rounded-2xl bg-white shadow-sm relative text-black">
+                      {positions.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => removePosition(index)} 
+                          className="absolute top-6 right-6 text-red-500 text-sm font-bold hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <label className="block mb-2 font-medium">Position Title <span className="text-red-500">*</span></label>
+                          <input 
+                            type="text" 
+                            list="positionsList"
+                            value={pos.position} 
+                            onChange={(e) => updatePosition(index, "position", e.target.value)} 
+                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
+                            placeholder="e.g. Junior Architect" 
+                          />
+                          <datalist id="positionsList">
+                            {positionOptions.map((opt) => <option key={opt} value={opt} />)}
+                          </datalist>
+                        </div>
+                        <div>
+                          <label className="block mb-2 font-medium">Salary / Compensation</label>
+                          <input 
+                            type="text" 
+                            value={pos.salary} 
+                            onChange={(e) => updatePosition(index, "salary", e.target.value)} 
+                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
+                            placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" 
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <label className="block mb-2 font-medium">Required Experience <span className="text-red-500">*</span></label>
+                        <div className="flex flex-wrap gap-2">
+                          {EXPERIENCE_OPTIONS.map((exp) => {
+                            const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
+                            const isSelected = currentExps.includes(exp);
+                            return (
+                              <button
+                                key={exp}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    updatePosition(index, "experience", currentExps.filter(e => e !== exp));
+                                  } else {
+                                    updatePosition(index, "experience", [...currentExps, exp]);
+                                  }
+                                }}
+                                className={`px-4 py-2 border rounded-full text-sm font-semibold transition ${
+                                  isSelected
+                                    ? "bg-black text-white border-black"
+                                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                                }`}
+                              >
+                                {exp}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block mb-2 font-medium">Job Description <span className="text-red-500">*</span></label>
+                        <textarea 
+                          rows={6}
+                          value={pos.description}
+                          onChange={(e) => updatePosition(index, "description", e.target.value)}
+                          className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                          placeholder="Write detailed job description..."
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
 
               {/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> <div> <label className="block mb-2 font-medium"> Qualifications </label> <input type="text" placeholder="B.Arch" value={qualifications} onChange={(e) => setQualifications(e.target.value)} className="w-full border rounded-2xl px-4 py-3" /> </div> </div>
 
@@ -1381,25 +1272,19 @@ const handleSmartExtraction = async () => {
             {/* ACTION BUTTONS */}
 
 <div className="flex justify-center gap-4 mt-8 mb-6">
-  <button
-  type="button"
-  onClick={handleSaveDraft}
-    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
   >
     Save Draft
   </button>
 
-  <button
-  type="button"
-  onClick={() => setShowSchedule(true)}
-  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
 
   <button
     type="button"
-    disabled={uploadingImage}
+    disabled={uploadingImage || isPublishing}
     onClick={() => handlePublishJob("published")}
     className={`px-8 py-4 rounded-2xl text-lg font-semibold transition ${
       uploadingImage
@@ -1407,7 +1292,7 @@ const handleSmartExtraction = async () => {
         : "bg-black text-white hover:bg-gray-800"
     }`}
   >
-    {uploadingImage ? "Uploading Image..." : "Publish Job"}
+    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : "Publish Job"}
   </button>
 </div>
           
@@ -1654,25 +1539,19 @@ const handleSmartExtraction = async () => {
           {/* ACTION BUTTONS */}
 
 <div className="flex justify-center gap-4 mt-8 mb-6">
-  <button
-  type="button"
-  onClick={handleSaveDraft}
-    className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
   >
     Save Draft
   </button>
 
-  <button
-  type="button"
-  onClick={() => setShowSchedule(true)}
-  className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-8 py-4 rounded-2xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
 
   <button
     type="button"
-    disabled={uploadingImage}
+    disabled={uploadingImage || isPublishing}
     onClick={() => handlePublishJob("published")}
     className={`px-8 py-4 rounded-2xl text-lg font-semibold transition ${
       uploadingImage
@@ -1680,7 +1559,7 @@ const handleSmartExtraction = async () => {
         : "bg-black text-white hover:bg-gray-800"
     }`}
   >
-    {uploadingImage ? "Uploading Image..." : "Publish Job"}
+    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : "Publish Job"}
   </button>
 </div>
           
@@ -2045,6 +1924,9 @@ const handleSmartExtraction = async () => {
     </>
   );
 }
+
+
+
 
 
 

@@ -1,0 +1,206 @@
+const fs = require('fs');
+let c = fs.readFileSync('app/admin/add-job/page.tsx', 'utf-8');
+
+const startStr = 'const handlePublishJob = async (';
+const endStr = 'router.push("/admin");\n}\n\n};';
+
+const startIndex = c.indexOf(startStr);
+const endIndex = c.indexOf(endStr);
+
+if (startIndex > -1 && endIndex > startIndex) {
+  const newFunc = \const handlePublishJob = async (
+  status: "draft" | "scheduled" | "published" = "published"
+) => {
+  setIsPublishing(true);
+
+  try {
+    let currentCompanyId = null;
+
+    if (status !== "draft" && firmName) {
+      const { data: existingCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .ilike("firm_name", firmName.trim())
+        .maybeSingle();
+
+      if (!existingCompany) {
+        const companySlug = firmName
+          .toLowerCase()
+          .trim()
+          .replace(/\\s+/g, "-")
+          .replace(/[^\\w-]+/g, "");
+          
+        const { data: newComp } = await supabase.from("companies").insert([
+          {
+            firm_name: firmName,
+            slug: companySlug,
+            city: city,
+            state: state,
+            organization_type: organizationType,
+            created_by: currentUser?.id || null
+          },
+        ]).select().single();
+        
+        if (newComp) {
+          currentCompanyId = newComp.id;
+        }
+      } else {
+        currentCompanyId = existingCompany.id;
+      }
+    }
+
+    if (status !== "draft") {
+      if (uploadingImage) {
+        alert("Please wait until image upload finishes");
+        setIsPublishing(false);
+        return;
+      }
+      if (!imageUrl) {
+        alert("Please upload job image");
+        setIsPublishing(false);
+        return;
+      }
+    }
+
+    if (status === "draft" && (!firmName || !positions[0]?.position)) {
+      alert("Please enter at least the Company Name and Job Position to save a draft.");
+      setIsPublishing(false);
+      return;
+    }
+
+    let missingFields = false;
+    if (status !== "draft") {
+      if (!firmName || !city || !state) missingFields = true;
+      positions.forEach(p => {
+        if (!p.position || !p.description) missingFields = true;
+      });
+    }
+
+    if (missingFields) {
+      alert("Please fill all required fields, including position titles and descriptions.");
+      setIsPublishing(false);
+      return;
+    }
+
+    const today = new Date();
+    const formattedToday = today.toISOString().split("T")[0];
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 14);
+    const formattedExpiry = expiry.toISOString().split("T")[0];
+
+    const finalExpiryDate = postExpiryDate || formattedExpiry;
+    const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+
+    const adminPayload = {
+      firm_name: firmName,
+      company_id: currentCompanyId,
+      employment_type: employmentType,
+      workplace_type: workplaceType,
+      area: area,
+      city: city,
+      state: state,
+      positions: positions,
+      qualifications: qualifications,
+      skills_required: skills,
+      posted_date: status === "published" ? formattedToday : null,
+      last_date_to_apply: lastDateToApply || null,
+      post_expiry_date: finalExpiryDate,
+      apply_link: apply_link,
+      application_email: application_email,
+      source: source,
+      image: imageUrl,
+      status: status,
+      author_id: activeUser?.id || null,
+      schedule_time: status === "scheduled" ? scheduleTime : null
+    };
+
+    let jobData = null;
+
+    if (jobId) {
+      if (status === "published") {
+        await supabase.from("jobs").delete().eq("admin_post_id", jobId);
+      }
+      const { data, error } = await supabase.from("admin_jobs").update(adminPayload).eq("id", jobId).select().single();
+      if (error) throw error;
+      jobData = data;
+    } else {
+      const { data, error } = await supabase.from("admin_jobs").insert([adminPayload]).select().single();
+      if (error) throw error;
+      jobData = data;
+    }
+
+    if (jobData && jobData.id && status === "published") {
+      const publicJobs = positions.map(pos => ({
+        admin_post_id: jobData.id,
+        firm_name: firmName,
+        company_id: currentCompanyId,
+        employment_type: employmentType,
+        workplace_type: workplaceType,
+        area: area,
+        city: city,
+        state: state,
+        position: pos.position,
+        experience: pos.experience,
+        salary: pos.salary,
+        job_description: pos.description,
+        qualifications: qualifications,
+        skills_required: skills,
+        posted_date: formattedToday,
+        last_date_to_apply: lastDateToApply || null,
+        post_expiry_date: finalExpiryDate,
+        apply_link: apply_link,
+        application_email: application_email,
+        source: source,
+        image: imageUrl,
+        status: status,
+        author_id: activeUser?.id || null
+      }));
+
+      const { error: jobsErr } = await supabase.from("jobs").insert(publicJobs);
+      if (jobsErr) {
+        if (!jobId) {
+          await supabase.from("admin_jobs").delete().eq("id", jobData.id);
+        }
+        throw jobsErr;
+      }
+    }
+
+    if (jobData && jobData.id) {
+      setJobId(jobData.id);
+      window.history.replaceState(null, "", \/admin/add-job?id=\\);
+
+      if (status === "published" && autoPublishSocial) {
+        fetch("/api/publish/social", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: jobData.id })
+        }).catch(err => console.error("Social publish request failed", err));
+      }
+
+      if (status === "draft") {
+        alert("Draft saved successfully.");
+      } else if (status === "scheduled") {
+        alert("Job scheduled successfully.");
+      } else {
+        alert("Job published successfully.");
+      }
+
+      if (status !== "draft") {
+        router.push("/admin/activity");
+      }
+    }
+  } catch (err) {
+    console.error("SUPABASE ERROR:", err);
+    alert(JSON.stringify(err.message || err));
+  }
+  
+  setIsPublishing(false);
+};
+\;
+
+  c = c.substring(0, startIndex) + newFunc + c.substring(endIndex + endStr.length);
+  fs.writeFileSync('app/admin/add-job/page.tsx', c);
+  console.log('Success');
+} else {
+  console.log('Not found');
+}

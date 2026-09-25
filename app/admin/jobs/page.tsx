@@ -64,7 +64,7 @@ const fetchJobs = async () => {
     setLoggedProfile(callerProfile);
 
     let query = supabase
-      .from("jobs")
+      .from("admin_jobs")
       .select("*");
 
     if (statusFilter && !["active", "expired"].includes(statusFilter)) {
@@ -141,7 +141,7 @@ const fetchJobs = async () => {
     if (!confirmDelete) return;
 
     const { error } = await supabase
-      .from("jobs")
+      .from("admin_jobs")
       .delete()
       .eq("id", id);
 
@@ -325,7 +325,7 @@ const fetchJobs = async () => {
                       {/* POSITION */}
 
                       <td className="px-6 py-5 font-semibold">
-                        {job.position}
+                        {job.positions && Array.isArray(job.positions) ? job.positions.map((p: any) => p.position).join(", ") : job.position || "---"}
                       </td>
 
                       {/* FIRM */}
@@ -492,6 +492,8 @@ export default function AdminJobsPage() {
     </Suspense>
   );
 }
+
+
 
 
 
