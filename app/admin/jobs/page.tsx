@@ -76,11 +76,7 @@ const fetchJobs = async () => {
       profilesData.forEach(p => profilesMap[p.id] = p);
     }
     const roleStr = (callerProfile?.role || stored?.role || "").toLowerCase().replace(/[\s_]+/g, "");
-    if (roleStr !== "ceo") {
-      filteredJobs = filteredJobs.filter((job) =>
-        !job.author_id || job.author_id === callerProfile?.id
-      );
-    }
+// All jobs visible to everyone now based on user request
     filteredJobs = filteredJobs.map((job) => ({
       ...job,
       profiles: job.author_id ? profilesMap[job.author_id] : null
@@ -309,19 +305,15 @@ const fetchJobs = async () => {
 
                       <td className="px-6 py-5">
                         {(() => {
-                          if (!job.profiles) return '—';
-                          const myRole = (loggedProfile?.role || '').toLowerCase().replace(/[\s_]+/g, '');
-                          if (myRole === 'ceo') {
-                            return job.profiles.display_name || job.profiles.full_name || job.profiles.username || 'Admin';
-                          }
-                          if (loggedProfile?.id === job.author_id) {
-                            return job.profiles.display_name || job.profiles.full_name || job.profiles.username || 'Admin';
-                          }
-                          const pRole = (job.profiles.role || '').toLowerCase().replace(/[\s_]+/g, '');
-                          if (pRole === 'ceo') return 'CEO';
-                          if (pRole === 'superadmin') return 'Super Admin';
-                          return 'Admin';
-                        })()}
+  if (!job.profiles) return "—";
+  if (loggedProfile?.id === job.author_id) {
+    return job.profiles.display_name || job.profiles.full_name || job.profiles.username || "Admin";
+  }
+  const pRole = (job.profiles.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  if (pRole === "ceo") return "CEO";
+  if (pRole === "superadmin") return "Super Admin";
+  return "Admin";
+})()}
                       </td>
 
                       {/* POSTED ON */}
@@ -390,37 +382,19 @@ const fetchJobs = async () => {
   View
 </button>
 
-{/* EDIT */}
-
-<button
-  onClick={(e) => {
-
-    e.stopPropagation();
-
-    window.open(
-      `/admin/add-job?id=${job.id}`,
-      "_blank"
-    );
-
-  }}
-  className="px-4 py-2 rounded-xl border hover:bg-white transition"
->
-  Edit
-</button>
-                          {/* DELETE */}
-
-                          <button
-                            onClick={(e) => {
-
-                              e.stopPropagation();
-
-                              deleteJob(job.id);
-
-                            }}
-                            className="px-4 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 transition"
-                          >
-                            Delete
-                          </button>
+{(() => {
+  const myRole = (loggedProfile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const canEdit = myRole === "ceo" || loggedProfile?.id === job.author_id;
+  if (!canEdit) return null;
+  return (
+    <>
+      {/* EDIT */}
+      <button onClick={(e) => { e.stopPropagation(); window.open(`/admin/add-job?id=${job.id}`, "_blank"); }} className="px-4 py-2 rounded-xl border hover:bg-white transition">Edit</button>
+      {/* DELETE */}
+      <button onClick={(e) => { e.stopPropagation(); deleteJob(job.id); }} className="px-4 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 transition">Delete</button>
+    </>
+  );
+})()}
 
                         </div>
 

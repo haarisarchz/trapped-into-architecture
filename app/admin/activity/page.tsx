@@ -187,10 +187,10 @@ export default function AdminActivityPage() {
   };
 
   const displayAdmins = useMemo(() => {
-    if (userRole !== "ceo") return admins;
-    if (selectedAdminId === "all") return admins;
-    return admins.filter(a => a.id === selectedAdminId);
-  }, [admins, selectedAdminId, userRole]);
+  if (userRole !== "ceo") return admins.filter(a => a.id === currentUser?.id);
+  if (selectedAdminId === "all") return admins;
+  return admins.filter(a => a.id === selectedAdminId);
+}, [admins, selectedAdminId, userRole, currentUser]);
 
   return (
     <main className="min-h-screen bg-gray-50 text-black flex flex-col">
