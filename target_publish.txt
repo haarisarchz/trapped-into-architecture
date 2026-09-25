@@ -1,0 +1,40 @@
+
+const handlePublishJob = async (
+  status: "draft" | "scheduled" | "published" = "published"
+) => {
+  setIsPublishing(true);
+
+  try {
+    let currentCompanyId = null;
+
+    if (status !== "draft" && firmName) {
+      const { data: existingCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .ilike("firm_name", firmName.trim())
+        .maybeSingle();
+
+      if (!existingCompany) {
+        const companySlug = firmName
+          .toLowerCase()
+          .trim()
+          .replace(/\s+/g, "-")
+          .replace(/[^\w-]+/g, "");
+          
+        const { data: newComp } = await supabase.from("companies").insert([
+          {
+            firm_name: firmName,
+            slug: companySlug,
+            city: city,
+            state: state,
+            organization_type: organizationType,
+            created_by: currentUser?.id || null
+          },
+        ]).select().single();
+        
+        if (newComp) {
+          currentCompanyId = newComp.id;
+        }
+      } else {
+        currentCompanyId = existingCompany.id;
+      }

@@ -9,6 +9,7 @@ import {
   EXPERIENCE_OPTIONS,
   SALARY_OPTIONS,
 } from "@/app/constants/jobFilters"
+import Autocomplete from "@/components/Autocomplete";
 
 export default function AddJobPage() {
 const [jobId, setJobId] = useState<string | null>(null);
@@ -18,6 +19,9 @@ useEffect(() => {
   setJobId(params.get("id"));
 }, []);
   const router = useRouter();
+
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [isCompanyProfileDirty, setIsCompanyProfileDirty] = useState(false);
 
   const [existingFirms, setExistingFirms] = useState<any[]>([]);
 const [existingCities, setExistingCities] = useState<string[]>([]);
@@ -202,27 +206,12 @@ const removePosition = (index) => {
   
  
   useEffect(() => {
-  const loadCompanies = async () => {
-    const { data } = await supabase
-      .from("companies")
-      .select("*")
-      .order("name");
+    if (selectedCompanyId) {
+      setIsCompanyProfileDirty(true);
+    }
+  }, [companyLogo, companyDescription, companyWebsite, companyEmail, companyPhone, companyFacebook, companyInstagram, companyLinkedin, companyTwitter, companyWhatsapp, principalArchitect, employeeSize, foundedYear, organizationType, area, city, state]);
 
-    if (!data) return;
-
-    setExistingFirms(data);
-
-    setExistingCities([
-      ...new Set(data.map((c) => c.city).filter(Boolean)),
-    ]);
-
-    setExistingStates([
-      ...new Set(data.map((c) => c.state).filter(Boolean)),
-    ]);
-  };
-
-  loadCompanies();
-}, []);
+  // Removed obsolete loadCompanies since we now use dynamic Autocomplete.
 
   useEffect(() => {
 
@@ -385,38 +374,53 @@ const handlePublishJob = async (
   setIsPublishing(true);
 
   try {
-    let currentCompanyId = null;
+    let currentCompanyId = selectedCompanyId;
 
     if (status !== "draft" && firmName) {
-      const { data: existingCompany } = await supabase
-        .from("companies")
-        .select("id")
-        .ilike("firm_name", firmName.trim())
-        .maybeSingle();
+      const companyPayload = {
+        firm_name: firmName,
+        city: city,
+        state: state,
+        neighborhood: area,
+        organization_type: organizationType,
+        logo_url: companyLogo,
+        description: companyDescription,
+        website: companyWebsite,
+        email: companyEmail,
+        phone: companyPhone,
+        facebook: companyFacebook,
+        instagram: companyInstagram,
+        linkedin: companyLinkedin,
+        principal_architect: principalArchitect,
+        employee_size: employeeSize,
+        founded_year: foundedYear ? parseInt(foundedYear) : null
+      };
 
-      if (!existingCompany) {
-        const companySlug = firmName
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, "-")
-          .replace(/[^\w-]+/g, "");
-          
-        const { data: newComp } = await supabase.from("companies").insert([
-          {
-            firm_name: firmName,
-            slug: companySlug,
-            city: city,
-            state: state,
-            organization_type: organizationType,
-            created_by: currentUser?.id || null
-          },
-        ]).select().single();
-        
-        if (newComp) {
-          currentCompanyId = newComp.id;
+      if (currentCompanyId) {
+        if (isCompanyProfileDirty) {
+          await supabase.from("companies").update(companyPayload).eq("id", currentCompanyId);
+          setIsCompanyProfileDirty(false);
         }
       } else {
-        currentCompanyId = existingCompany.id;
+        const { data: existingCompany } = await supabase
+          .from("companies")
+          .select("id")
+          .ilike("firm_name", firmName.trim())
+          .maybeSingle();
+
+        if (!existingCompany) {
+          const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+          const { data: newComp } = await supabase.from("companies").insert([
+            { ...companyPayload, slug: companySlug, created_by: activeUser?.id || null }
+          ]).select().single();
+          if (newComp) currentCompanyId = newComp.id;
+        } else {
+          currentCompanyId = existingCompany.id;
+          if (isCompanyProfileDirty) {
+            await supabase.from("companies").update(companyPayload).eq("id", currentCompanyId);
+            setIsCompanyProfileDirty(false);
+          }
+        }
       }
     }
 
@@ -650,27 +654,51 @@ const handleSmartExtraction = async () => {
     {organizationType} Name <span className="text-red-500 text-xl font-bold">*</span>
   </label>
 
-  <input
-    type="text"
-    placeholder="Enter name"
+  <Autocomplete
     value={firmName}
-    onChange={async (e) => {
-  const value = e.target.value;
-
-  setFirmName(value);
-
-  await loadCompanyDetails(value);
-}}
-    list="firm-suggestions"
-    autoComplete="off"
-    className="w-full border rounded-2xl px-4 py-3"
+    onChange={(val) => {
+      setFirmName(val);
+      if (selectedCompanyId) {
+          setSelectedCompanyId(null);
+          setIsCompanyProfileDirty(false);
+      }
+    }}
+    onSelect={async (val, record) => {
+      setFirmName(val);
+      setSelectedCompanyId(record.id);
+      setOrganizationType(record.organization_type || "Firm");
+      setArea(record.neighborhood || "");
+      setCity(record.city || "");
+      setState(record.state || "");
+      setCompanyLogo(record.logo_url || "");
+      setCompanyDescription(record.description || "");
+      setCompanyWebsite(record.website || "");
+      setCompanyEmail(record.email || "");
+      setCompanyPhone(record.phone || "");
+      setCompanyFacebook(record.facebook || "");
+      setCompanyInstagram(record.instagram || "");
+      setCompanyLinkedin(record.linkedin || "");
+      setPrincipalArchitect(record.principal_architect || "");
+      setEmployeeSize(record.employee_size || "");
+      setFoundedYear(record.founded_year?.toString() || "");
+      
+      // Delay reset so useEffects don't re-dirty it immediately
+      setTimeout(() => setIsCompanyProfileDirty(false), 100);
+    }}
+    fetchSuggestions={async (q) => {
+      const { data } = await supabase.from('companies').select('*').ilike('firm_name', `%${q}%`).limit(10);
+      return data || [];
+    }}
+    extractValue={(item) => item.firm_name}
+    renderItem={(item) => (
+      <div>
+        <div className="font-bold">{item.firm_name}</div>
+        <div className="text-xs text-gray-500">{item.city ? `${item.city}, ${item.state}` : item.organization_type}</div>
+      </div>
+    )}
+    placeholder="Enter name"
+    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
   />
-
-  <datalist id="firm-suggestions">
-    {existingFirms.map((firm) => (
-      <option key={firm} value={firm} />
-    ))}
-  </datalist>
 
 </div>
 </div>
@@ -690,85 +718,53 @@ const handleSmartExtraction = async () => {
                 {/* NEIGHBORHOOD */}
 
                 <div>
-
-                  <label className="block mb-2 font-medium">
-                    Neighborhood
-                  </label>
-
-                  <input
-                    type="text"
+                  <label className="block mb-2 font-medium"> Neighborhood </label>
+                  <Autocomplete
+                    value={area}
+                    onChange={(val) => setArea(val)}
+                    fetchSuggestions={async (q) => {
+                      let query = supabase.from('companies').select('neighborhood').ilike('neighborhood', `%${q}%`);
+                      if (city) query = query.eq('city', city);
+                      const { data } = await query.limit(20);
+                      return Array.from(new Set(data?.map(d => d.neighborhood).filter(Boolean))) || [];
+                    }}
                     placeholder="Adyar"
-                    className="w-full border rounded-2xl px-4 py-3"
+                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
                   />
-
                 </div>
 
                 {/* CITY */}
 
                 <div>
-
-                  <label className="block mb-2 font-medium">
-                    City <span className="text-red-500 text-xl font-bold">*</span>
-                  </label>
-
-                  <input
-  type="text"
-  list="cities"
-  placeholder="Chennai"
-  value={city}
-  onChange={(e) =>
-    setCity(e.target.value)
-  }
-  className="w-full border rounded-2xl px-4 py-3"
-/>
-
-                  <datalist id="cities">
-
-                    {existingCities.map((city) => (
-
-                      <option
-                        key={city}
-                        value={city}
-                      />
-
-                    ))}
-
-                  </datalist>
-
+                  <label className="block mb-2 font-medium"> City <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <Autocomplete
+                    value={city}
+                    onChange={(val) => setCity(val)}
+                    fetchSuggestions={async (q) => {
+                      let query = supabase.from('companies').select('city').ilike('city', `%${q}%`);
+                      if (state) query = query.eq('state', state);
+                      const { data } = await query.limit(20);
+                      return Array.from(new Set(data?.map(d => d.city).filter(Boolean))) || [];
+                    }}
+                    placeholder="Chennai"
+                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                  />
                 </div>
 
                 {/* STATE */}
 
                 <div>
-
-                  <label className="block mb-2 font-medium">
-                    State <span className="text-red-500 text-xl font-bold">*</span>
-                  </label>
-
-                  <input
-  type="text"
-  list="states"
-  placeholder="Tamil Nadu"
-  value={state}
-  onChange={(e) =>
-    setState(e.target.value)
-  }
-  className="w-full border rounded-2xl px-4 py-3"
-/>
-
-                  <datalist id="states">
-
-                    {existingStates.map((state) => (
-
-                      <option
-                        key={state}
-                        value={state}
-                      />
-
-                    ))}
-
-                  </datalist>
-
+                  <label className="block mb-2 font-medium"> State <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <Autocomplete
+                    value={state}
+                    onChange={(val) => setState(val)}
+                    fetchSuggestions={async (q) => {
+                      const { data } = await supabase.from('companies').select('state').ilike('state', `%${q}%`).limit(20);
+                      return Array.from(new Set(data?.map(d => d.state).filter(Boolean))) || [];
+                    }}
+                    placeholder="Tamil Nadu"
+                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                  />
                 </div>
 
               </div>
@@ -813,14 +809,7 @@ const handleSmartExtraction = async () => {
                           </datalist>
                         </div>
                         <div>
-                          <label className="block mb-2 font-medium">Salary</label>
-                          <input 
-                            type="text" 
-                            value={pos.salary} 
-                            onChange={(e) => updatePosition(index, "salary", e.target.value)} 
-                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
-                            placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" 
-                          />
+                          <label className="block mb-2 font-medium">Salary</label><Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
                         </div>
                         
                         <div>
@@ -874,7 +863,7 @@ const handleSmartExtraction = async () => {
                 Requirements
               </h2>
 
-              {/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> <div> <label className="block mb-2 font-medium"> Qualifications </label> <input type="text" placeholder="B.Arch" value={qualifications} onChange={(e) => setQualifications(e.target.value)} className="w-full border rounded-2xl px-4 py-3" /> </div> </div>
+              {/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> <div> <label className="block mb-2 font-medium"> Qualifications </label><Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. B.Arch" /></div> </div>
 
               {/* SKILLS */}
 
@@ -884,42 +873,7 @@ const handleSmartExtraction = async () => {
                   Skills Required
                 </label>
 
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => {
-
-                    const value = e.target.value;
-
-                    if (value.endsWith(",")) {
-
-                      const newSkill =
-                        value.replace(",", "").trim();
-
-                      if (
-                        newSkill &&
-                        !skills.includes(newSkill)
-                      ) {
-
-                        setSkills([
-                          ...skills,
-                          newSkill,
-                        ]);
-
-                      }
-
-                      setSkillInput("");
-
-                    } else {
-
-                      setSkillInput(value);
-
-                    }
-
-                  }}
-                  placeholder="Type skill and press comma"
-                  className="w-full border rounded-2xl px-4 py-3"
-                />
+                <Autocomplete value={skillInput} onChange={(val) => {   if (val.endsWith(",")) {     const newSkill = val.slice(0, -1).trim();     if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }     setSkillInput("");   } else {     setSkillInput(val);   } }} onSelect={(val) => {   const newSkill = val.trim();   if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }   setSkillInput(""); }} fetchSuggestions={async (q) => {   const { data } = await supabase.from("jobs").select("skills_required").limit(100);   if (!data) return [];   const all = new Set();   data.forEach(job => {     if (Array.isArray(job.skills_required)) {       job.skills_required.forEach((s) => {         if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);       });     } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {       all.add(job.skills_required);     }   });   return Array.from(all).slice(0, 10) as string[]; }} placeholder="Type skill and press comma or select" className="w-full border rounded-2xl px-4 py-3 bg-white text-black" />
 
                 <div className="flex flex-wrap gap-2 mt-3">
 
@@ -1288,7 +1242,7 @@ const handleSmartExtraction = async () => {
         : "bg-black text-white hover:bg-gray-800"
     }`}
   >
-    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : "Publish Job"}
+    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
   </button>
 </div>
           
@@ -1555,7 +1509,7 @@ const handleSmartExtraction = async () => {
         : "bg-black text-white hover:bg-gray-800"
     }`}
   >
-    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : "Publish Job"}
+    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
   </button>
 </div>
           

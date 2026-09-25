@@ -1,0 +1,40 @@
+  const [image, setImage] = useState('');
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [positions, setPositions] = useState([{position: "", experience: [], salary: "", description: "", completed: false}]);
+const updatePosition = (index, field, value) => {
+  const newPositions = [...positions];
+  newPositions[index][field] = value;
+  setPositions(newPositions);
+};
+const addPosition = () => {
+  setPositions([...positions, {position: "", experience: [], salary: "", description: "", completed: false}]);
+};
+const removePosition = (index) => {
+  if (positions.length > 1) {
+    const newPositions = [...positions];
+    newPositions.splice(index, 1);
+    setPositions(newPositions);
+  }
+};
+
+
+  const [dateType, setDateType] =
+  useState("expiry");
+  const [showCompanyDetails, setShowCompanyDetails] = useState(false);
+  
+ 
+  useEffect(() => {
+  const loadCompanies = async () => {
+    const { data } = await supabase
+      .from("companies")
+      .select("*")
+      .order("name");
+
+    if (!data) return;
+
+    setExistingFirms(data);
+
+    setExistingCities([
+      ...new Set(data.map((c) => c.city).filter(Boolean)),
