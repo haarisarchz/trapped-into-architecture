@@ -805,9 +805,9 @@ const handleSmartExtraction = async () => {
                         </button>
                       )}
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block mb-2 font-medium">Position Title <span className="text-red-500">*</span></label>
+                          <label className="block mb-2 font-medium">Position <span className="text-red-500">*</span></label>
                           <input 
                             type="text" 
                             list="positionsList"
@@ -821,7 +821,7 @@ const handleSmartExtraction = async () => {
                           </datalist>
                         </div>
                         <div>
-                          <label className="block mb-2 font-medium">Salary / Compensation</label>
+                          <label className="block mb-2 font-medium">Salary</label>
                           <input 
                             type="text" 
                             value={pos.salary} 
@@ -830,47 +830,46 @@ const handleSmartExtraction = async () => {
                             placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" 
                           />
                         </div>
-                      </div>
-                      
-                      <div className="mb-6">
-                        <label className="block mb-2 font-medium">Required Experience <span className="text-red-500">*</span></label>
-                        <div className="flex flex-wrap gap-2">
-                          {EXPERIENCE_OPTIONS.map((exp) => {
-                            const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
-                            const isSelected = currentExps.includes(exp);
-                            return (
-                              <button
-                                key={exp}
-                                type="button"
-                                onClick={() => {
-                                  if (isSelected) {
-                                    updatePosition(index, "experience", currentExps.filter(e => e !== exp));
-                                  } else {
-                                    updatePosition(index, "experience", [...currentExps, exp]);
-                                  }
-                                }}
-                                className={`px-4 py-2 border rounded-full text-sm font-semibold transition ${
-                                  isSelected
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                                }`}
-                              >
-                                {exp}
-                              </button>
-                            );
-                          })}
+                        
+                        <div>
+                          <label className="block mb-2 font-medium">Required Experience <span className="text-red-500">*</span></label>
+                          <div className="flex flex-wrap gap-2">
+                            {EXPERIENCE_OPTIONS.map((exp) => {
+                              const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
+                              const isSelected = currentExps.includes(exp);
+                              return (
+                                <button
+                                  key={exp}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      updatePosition(index, "experience", currentExps.filter(e => e !== exp));
+                                    } else {
+                                      updatePosition(index, "experience", [...currentExps, exp]);
+                                    }
+                                  }}
+                                  className={`px-4 py-2 border rounded-full text-sm font-semibold transition ${
+                                    isSelected
+                                      ? "bg-black text-white border-black"
+                                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  {exp}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block mb-2 font-medium">Job Description <span className="text-red-500">*</span></label>
-                        <textarea 
-                          rows={6}
-                          value={pos.description}
-                          onChange={(e) => updatePosition(index, "description", e.target.value)}
-                          className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
-                          placeholder="Write detailed job description..."
-                        />
+                        
+                        <div className="flex flex-col h-full">
+                          <label className="block mb-2 font-medium">Job Description <span className="text-red-500">*</span></label>
+                          <textarea 
+                            value={pos.description}
+                            onChange={(e) => updatePosition(index, "description", e.target.value)}
+                            className="w-full flex-1 border rounded-2xl px-4 py-3 bg-white text-black min-h-[110px] resize-y"
+                            placeholder="Write detailed job description..."
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
