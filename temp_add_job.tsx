@@ -854,11 +854,7 @@ const handleSmartExtraction = async () => {
                                     updatePosition(index, "experience", [...currentExps, exp]);
                                   }
                                 }}
-                                className={`px-4 py-2 border rounded-full text-sm font-semibold transition ${
-                                  isSelected
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                                }`}
+                                className={px-4 py-2 border rounded-full text-sm font-semibold transition }
                               >
                                 {exp}
                               </button>

@@ -1,0 +1,106 @@
+import re
+
+with open('temp_add_job.tsx', 'r', encoding='utf-8') as f:
+    c = f.read()
+
+# Remove POSITION block
+c = re.sub(r'\s*\{\/\* POSITION \*\/\}\s*<div>\s*<label className="block mb-2 font-medium">\s*Position <span className="text-red-500 text-xl font-bold">\*<\/span>\s*<\/label>[\s\S]*?<\/datalist>\s*<\/div>\s*<\/div>', '\n</div>\n', c)
+
+# Remove old EXPERIENCE block
+c = re.sub(r'\s*\{\/\* EXPERIENCE \*\/\}\s*<div className="mb-6">[\s\S]*?<\/div>\s*<\/div>', '', c)
+
+positions_jsx = '''
+              {/* POSITIONS & DESCRIPTIONS */}
+              <div className="mt-10 mb-10">
+                <div className="flex justify-between items-end mb-6">
+                  <h2 className="text-2xl font-bold">Roles & Requirements</h2>
+                  <button type="button" onClick={addPosition} className="text-blue-600 font-bold hover:underline">+ Add Position</button>
+                </div>
+                
+                <div className="space-y-6">
+                  {positions.map((pos, index) => (
+                    <div key={index} className="border border-gray-200 p-6 rounded-2xl bg-white shadow-sm relative text-black">
+                      {positions.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => removePosition(index)} 
+                          className="absolute top-6 right-6 text-red-500 text-sm font-bold hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                          <label className="block mb-2 font-medium">Position Title <span className="text-red-500">*</span></label>
+                          <input 
+                            type="text" 
+                            list="positionsList"
+                            value={pos.position} 
+                            onChange={(e) => updatePosition(index, "position", e.target.value)} 
+                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
+                            placeholder="e.g. Junior Architect" 
+                          />
+                          <datalist id="positionsList">
+                            {positionOptions.map((opt) => <option key={opt} value={opt} />)}
+                          </datalist>
+                        </div>
+                        <div>
+                          <label className="block mb-2 font-medium">Salary / Compensation</label>
+                          <input 
+                            type="text" 
+                            value={pos.salary} 
+                            onChange={(e) => updatePosition(index, "salary", e.target.value)} 
+                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
+                            placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" 
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <label className="block mb-2 font-medium">Required Experience <span className="text-red-500">*</span></label>
+                        <div className="flex flex-wrap gap-2">
+                          {EXPERIENCE_OPTIONS.map((exp) => {
+                            const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
+                            const isSelected = currentExps.includes(exp);
+                            return (
+                              <button
+                                key={exp}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    updatePosition(index, "experience", currentExps.filter(e => e !== exp));
+                                  } else {
+                                    updatePosition(index, "experience", [...currentExps, exp]);
+                                  }
+                                }}
+                                className={px-4 py-2 border rounded-full text-sm font-semibold transition }
+                              >
+                                {exp}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block mb-2 font-medium">Job Description <span className="text-red-500">*</span></label>
+                        <textarea 
+                          rows={6}
+                          value={pos.description}
+                          onChange={(e) => updatePosition(index, "description", e.target.value)}
+                          className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                          placeholder="Write detailed job description..."
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+'''
+
+c = c.replace('{/* LOCATION */}', positions_jsx + '              {/* LOCATION */}')
+
+with open('temp_add_job.tsx', 'w', encoding='utf-8') as f:
+    f.write(c)
