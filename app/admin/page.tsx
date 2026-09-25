@@ -69,15 +69,9 @@ const checkAccess = async () => {
 
   const fetchDashboardData = async () => {
 
-    const [adminRes, legacyRes] = await Promise.all([
-  supabase.from("admin_jobs").select("*").order("posted_date", { ascending: false }),
-  supabase.from("jobs").select("*").is("admin_post_id", null).order("posted_date", { ascending: false })
-]);
-const error = adminRes.error || legacyRes.error;
-let data = null;
+    const { data, error } = await supabase.from("jobs").select("*").order("posted_date", { ascending: false });
 if (!error) {
-  data = [...(adminRes.data || []), ...(legacyRes.data || [])];
-  data.sort((a, b) => new Date(b.created_at || b.posted_date || 0).getTime() - new Date(a.created_at || a.posted_date || 0).getTime());
+  
 }
 
     if (error) {

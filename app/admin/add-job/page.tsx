@@ -491,53 +491,42 @@ const handlePublishJob = async (
 
     let jobData = null;
 
+    const publicJobs = positions.map(pos => ({
+      firm_name: firmName,
+      company_id: currentCompanyId,
+      employment_type: employmentType,
+      workplace_type: workplaceType,
+      area: area,
+      city: city,
+      state: state,
+      position: pos.position,
+      experience: pos.experience,
+      salary: pos.salary,
+      job_description: pos.description,
+      qualifications: qualifications,
+      skills_required: skills,
+      posted_date: status === "published" ? formattedToday : null,
+      last_date_to_apply: lastDateToApply || null,
+      post_expiry_date: finalExpiryDate,
+      apply_link: apply_link,
+      application_email: application_email,
+      source: source,
+      image: imageUrl,
+      status: status,
+      author_id: activeUser?.id || null,
+      schedule_time: status === "scheduled" ? scheduleTime : null
+    }));
+
     if (jobId) {
-      if (status === "published") {
-        await supabase.from("jobs").delete().eq("admin_post_id", jobId);
-      }
-      const { data, error } = await supabase.from("admin_jobs").update(adminPayload).eq("id", jobId).select().single();
+      // For updates, we can only easily update the first position with the simple form
+      // A fully grouped architecture requires admin_jobs which does not exist in DB yet
+      const { data, error } = await supabase.from("jobs").update(publicJobs[0]).eq("id", jobId).select().single();
       if (error) throw error;
       jobData = data;
     } else {
-      const { data, error } = await supabase.from("admin_jobs").insert([adminPayload]).select().single();
+      const { data, error } = await supabase.from("jobs").insert(publicJobs).select();
       if (error) throw error;
-      jobData = data;
-    }
-
-    if (jobData && jobData.id && status === "published") {
-      const publicJobs = positions.map(pos => ({
-        admin_post_id: jobData.id,
-        firm_name: firmName,
-        company_id: currentCompanyId,
-        employment_type: employmentType,
-        workplace_type: workplaceType,
-        area: area,
-        city: city,
-        state: state,
-        position: pos.position,
-        experience: pos.experience,
-        salary: pos.salary,
-        job_description: pos.description,
-        qualifications: qualifications,
-        skills_required: skills,
-        posted_date: formattedToday,
-        last_date_to_apply: lastDateToApply || null,
-        post_expiry_date: finalExpiryDate,
-        apply_link: apply_link,
-        application_email: application_email,
-        source: source,
-        image: imageUrl,
-        status: status,
-        author_id: activeUser?.id || null
-      }));
-
-      const { error: jobsErr } = await supabase.from("jobs").insert(publicJobs);
-      if (jobsErr) {
-        if (!jobId) {
-          await supabase.from("admin_jobs").delete().eq("id", jobData.id);
-        }
-        throw jobsErr;
-      }
+      jobData = data && data.length > 0 ? data[0] : null;
     }
 
     if (jobData && jobData.id) {

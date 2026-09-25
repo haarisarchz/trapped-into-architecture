@@ -63,20 +63,13 @@ const fetchJobs = async () => {
     }
     setLoggedProfile(callerProfile);
 
-    let queryAdmin = supabase.from("admin_jobs").select("*");
-    let queryLegacy = supabase.from("jobs").select("*").is("admin_post_id", null);
+    let query = supabase.from("jobs").select("*");
     if (statusFilter && !["active", "expired"].includes(statusFilter)) {
-      queryAdmin = queryAdmin.eq("status", statusFilter);
-      queryLegacy = queryLegacy.eq("status", statusFilter);
+      query = query.eq("status", statusFilter);
     }
-    const [adminRes, legacyRes] = await Promise.all([
-      queryAdmin.order("id", { ascending: false }),
-      queryLegacy.order("id", { ascending: false })
-    ]);
-    if (adminRes.error) console.log(adminRes.error);
-    if (legacyRes.error) console.log(legacyRes.error);
-    let filteredJobs = [...(adminRes.data || []), ...(legacyRes.data || [])];
-    filteredJobs.sort((a, b) => new Date(b.created_at || b.posted_date || 0).getTime() - new Date(a.created_at || a.posted_date || 0).getTime());
+    const { data, error } = await query.order("id", { ascending: false });
+    if (error) console.log(error);
+    let filteredJobs = data || [];
     const { data: profilesData } = await supabase.from("profiles").select("id, display_name, full_name, username, role");
     const profilesMap = {};
     if (profilesData) {
@@ -115,10 +108,7 @@ const fetchJobs = async () => {
 
     if (!confirmDelete) return;
 
-    const { error } = await supabase
-      .from("admin_jobs")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("jobs").delete().eq("id", id);
 
     if (error) {
 
