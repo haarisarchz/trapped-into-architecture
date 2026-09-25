@@ -215,7 +215,7 @@ export default function AdminCompaniesPage() {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-700 md:text-gray-400">
                       Loading companies...
                     </td>
                   </tr>
@@ -232,13 +232,13 @@ export default function AdminCompaniesPage() {
                               className="w-10 h-10 object-contain rounded-md border bg-white"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded-md border flex items-center justify-center text-gray-400 text-xs font-bold">
+                            <div className="w-10 h-10 bg-gray-100 rounded-md border flex items-center justify-center text-gray-700 md:text-gray-400 text-xs font-bold">
                               {(c.firm_name || "?")[0].toUpperCase()}
                             </div>
                           )}
                           <div>
                             <div className="font-bold text-gray-900">{c.firm_name}</div>
-                            <div className="text-sm text-gray-400">
+                            <div className="text-sm text-gray-700 md:text-gray-400">
                               {c.organization_type || "Architecture Firm"}
                               {!c.isFromCompaniesTable && (
                                 <span className="ml-2 text-xs bg-amber-50 text-amber-600 border border-amber-200 px-1.5 rounded">
@@ -298,7 +298,7 @@ export default function AdminCompaniesPage() {
                                 "Company editing will be available in the company edit page."
                               )
                             }
-                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            className="p-2 text-gray-800 md:text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                             title="Edit Company"
                           >
                             <Edit2 size={18} />
@@ -307,8 +307,8 @@ export default function AdminCompaniesPage() {
                             onClick={() => handleHideToggle(c)}
                             className={`p-2 rounded-lg transition ${
                               c.is_hidden
-                                ? "text-gray-500 hover:text-green-600 hover:bg-green-50"
-                                : "text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                ? "text-gray-800 md:text-gray-500 hover:text-green-600 hover:bg-green-50"
+                                : "text-gray-800 md:text-gray-500 hover:text-red-600 hover:bg-red-50"
                             }`}
                             title={c.is_hidden ? "Unhide Company" : "Hide Company"}
                           >
@@ -320,7 +320,7 @@ export default function AdminCompaniesPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-700 md:text-gray-400">
                       No companies found.
                     </td>
                   </tr>
@@ -334,3 +334,4 @@ export default function AdminCompaniesPage() {
     </main>
   );
 }
+

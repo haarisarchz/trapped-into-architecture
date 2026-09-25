@@ -39,7 +39,7 @@ function ConfirmRoleModal({
           <span className="font-semibold">{displayRole(oldRole)}</span> to{" "}
           <span className="font-semibold">{displayRole(newRole)}</span>.
         </p>
-        <p className="text-gray-500 text-sm mb-8">
+        <p className="text-gray-800 md:text-gray-500 text-sm mb-8">
           This will change the permissions available to this account.
         </p>
         <div className="flex gap-3 justify-end">
@@ -146,7 +146,7 @@ function LockedRoleField({
           <button
             onClick={handleCancel}
             disabled={saving}
-            className="text-gray-400 hover:text-black text-xs"
+            className="text-gray-700 md:text-gray-400 hover:text-black text-xs"
           >
             Cancel
           </button>
@@ -163,7 +163,7 @@ function LockedRoleField({
             </button>
           )}
           {isSelf && (
-            <span className="text-xs text-gray-400">(You)</span>
+            <span className="text-xs text-gray-700 md:text-gray-400">(You)</span>
           )}
         </div>
       )}
@@ -306,7 +306,7 @@ export default function AdminUsersPage() {
               View and manage registered users and administrators.
             </p>
             <div className="flex items-center gap-3">
-              <label className="text-sm text-gray-500 font-medium">Sort by:</label>
+              <label className="text-sm text-gray-800 md:text-gray-500 font-medium">Sort by:</label>
               <select
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
@@ -334,7 +334,7 @@ export default function AdminUsersPage() {
         )}
 
         {loading ? (
-          <div className="text-center py-20 text-gray-500">Loading users...</div>
+          <div className="text-center py-20 text-gray-800 md:text-gray-500">Loading users...</div>
         ) : (
           <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-x-auto">
             <table className="w-full text-left min-w-[700px]">
@@ -349,12 +349,12 @@ export default function AdminUsersPage() {
               <tbody className="divide-y divide-gray-100">
                 {sortedUsers.map((u, i) => (
                   <tr key={u.id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 text-gray-400 font-medium">{i + 1}</td>
+                    <td className="px-6 py-4 text-gray-700 md:text-gray-400 font-medium">{i + 1}</td>
                     <td className="px-6 py-4">
                       <div className="font-bold text-gray-900">
                         {u.display_name || u.full_name || u.username || "—"}
                       </div>
-                      <div className="text-sm text-gray-400">{u.email || ""}</div>
+                      <div className="text-sm text-gray-700 md:text-gray-400">{u.email || ""}</div>
                     </td>
                     <td className="px-6 py-4">
                       <LockedRoleField
@@ -364,7 +364,7 @@ export default function AdminUsersPage() {
                         onSave={handleSaveRole}
                       />
                     </td>
-                    <td className="px-6 py-4 text-gray-500 text-sm">
+                    <td className="px-6 py-4 text-gray-800 md:text-gray-500 text-sm">
                       {u.created_at
                         ? new Date(u.created_at).toLocaleDateString("en-IN", {
                             day: "2-digit",
@@ -384,3 +384,4 @@ export default function AdminUsersPage() {
     </main>
   );
 }
+

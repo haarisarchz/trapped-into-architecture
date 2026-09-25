@@ -388,7 +388,7 @@ router.push("/admin");
             <div key={platform} className="flex items-center justify-between p-4 border rounded-xl bg-gray-50">
               <div className="flex flex-col">
                 <span className="font-bold capitalize">{platform}</span>
-                <span className={`text-sm ${status === 'published' ? 'text-green-600' : isFailed ? 'text-red-500' : 'text-gray-500'}`}>
+                <span className={`text-sm ${status === 'published' ? 'text-green-600' : isFailed ? 'text-red-500' : 'text-gray-800 md:text-gray-500'}`}>
                   {status.replace('_', ' ').toUpperCase()}
                   {log?.error_message && <span className="block text-xs mt-1 max-w-xs truncate" title={log.error_message}>{log.error_message}</span>}
                 </span>

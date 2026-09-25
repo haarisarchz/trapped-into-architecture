@@ -273,7 +273,7 @@ if (loading) {
               Dashboard
             </h1>
 
-            <p className="text-gray-500 mt-2">
+            <p className="text-gray-800 md:text-gray-500 mt-2">
               Welcome back
             </p>
 
@@ -395,7 +395,7 @@ if (loading) {
 
   {/* TABLE HEADER */}
 
-  <div className="hidden md:grid grid-cols-4 gap-4 border-b pb-4 mb-4 text-gray-500 font-medium">
+  <div className="hidden md:grid grid-cols-4 gap-4 border-b pb-4 mb-4 text-gray-800 md:text-gray-500 font-medium">
 
     <div>Position</div>
 
@@ -448,7 +448,7 @@ if (loading) {
 
           {/* DATE */}
 
-          <div className="text-gray-500 text-sm">
+          <div className="text-gray-800 md:text-gray-500 text-sm">
 
             {job.posted_date}
 
@@ -470,3 +470,4 @@ if (loading) {
   );
 
 }
+

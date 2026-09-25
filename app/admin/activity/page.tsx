@@ -168,11 +168,15 @@ export default function AdminActivityPage() {
     }
   };
 
+  const [editingRateAdminId, setEditingRateAdminId] = useState<string | null>(null);
+  const [editingRateValue, setEditingRateValue] = useState("");
+
   const handleUpdateIndividualRate = async (adminId: string, newRate: number) => {
     // Graceful fail if column doesn't exist yet
     try {
       await supabase.from("profiles").update({ rupees_per_post: newRate }).eq("id", adminId);
       setAdmins(admins.map(a => a.id === adminId ? { ...a, rupees_per_post: newRate } : a));
+      setEditingRateAdminId(null);
     } catch(e) {}
   };
   const updateRupeesPerPost = async (val: number) => {
@@ -213,7 +217,7 @@ export default function AdminActivityPage() {
               <div className="flex flex-wrap gap-4 items-end w-full lg:w-auto">
                 {userRole === "ceo" && (
                   <div className="w-full sm:w-auto">
-                    <label className="block text-sm text-gray-500 mb-1">Administrator:</label>
+                    <label className="block text-sm text-gray-800 md:text-gray-500 mb-1">Administrator:</label>
                     <select
                       value={selectedAdminId}
                       onChange={(e) => setSelectedAdminId(e.target.value)}
@@ -227,7 +231,7 @@ export default function AdminActivityPage() {
                   </div>
                 )}
                 <div className="w-full sm:w-auto">
-                  <label className="block text-sm text-gray-500 mb-1">Period:</label>
+                  <label className="block text-sm text-gray-800 md:text-gray-500 mb-1">Period:</label>
                   <select
                     value={datePreset}
                     onChange={(e) => setDatePreset(e.target.value)}
@@ -245,11 +249,11 @@ export default function AdminActivityPage() {
                 {datePreset === "custom" && (
                   <>
                     <div className="w-full sm:w-auto">
-                      <label className="block text-sm text-gray-500 mb-1">From:</label>
+                      <label className="block text-sm text-gray-800 md:text-gray-500 mb-1">From:</label>
                       <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2" />
                     </div>
                     <div className="w-full sm:w-auto">
-                      <label className="block text-sm text-gray-500 mb-1">To:</label>
+                      <label className="block text-sm text-gray-800 md:text-gray-500 mb-1">To:</label>
                       <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2" />
                     </div>
                     <button 
@@ -272,9 +276,24 @@ export default function AdminActivityPage() {
                 const filteredAdminJobs = filterByDate(allAdminJobs);
                 
                 // Strictly use the filtered date range jobs for counts
-                const publishedCount = filteredAdminJobs.filter(j => j.status === 'published').length;
-                const draftsCount = filteredAdminJobs.filter(j => j.status === 'draft').length;
-                const scheduledCount = filteredAdminJobs.filter(j => j.status === 'scheduled').length;
+                const uniqueJobs = [];
+                const seenPostIds = new Set();
+                for (const j of filteredAdminJobs) {
+                  const key = j.admin_post_id || j.id;
+                  if (!seenPostIds.has(key)) {
+                    seenPostIds.add(key);
+                    uniqueJobs.push({ ...j });
+                  } else {
+                    const existing = uniqueJobs.find(u => (u.admin_post_id || u.id) === key);
+                    if (existing && existing.position && !existing.position.includes(j.position)) {
+                       existing.position += `, ${j.position}`;
+                    }
+                  }
+                }
+                
+                const publishedCount = uniqueJobs.filter(j => j.status === 'published').length;
+                const draftsCount = uniqueJobs.filter(j => j.status === 'draft').length;
+                const scheduledCount = uniqueJobs.filter(j => j.status === 'scheduled').length;
                 
                 const earnings = publishedCount * (admin.rupees_per_post || rupeesPerPost || 10);
                 
@@ -282,42 +301,82 @@ export default function AdminActivityPage() {
 
                 return (
                   <div key={i} className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                    <div className="p-6 border-b border-gray-100">
-                      <h3 className="text-xl font-bold text-gray-900">
-                        {(() => {
-                          let displayName = admin.display_name || admin.full_name || admin.username;
-                          if (userRole !== "ceo" && admin.id !== currentUser.id) {
-                            const pRole = (admin.role || "").toLowerCase().replace(/[\s_]+/g, "");
-                            if (pRole === "ceo") return "CEO";
-                            if (pRole === "superadmin") return "Super Admin";
-                            return "Admin";
-                          }
-                          return displayName;
-                        })()}
-                      </h3>
-                      { (userRole === "ceo" || admin.id === currentUser.id) && (
-                        <div className="text-sm text-gray-500 mb-1">{admin.email}</div>
+                    <div className="p-6 border-b border-gray-100 flex justify-between items-start">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">
+                          {(() => {
+                            let displayName = admin.display_name || admin.full_name || admin.username;
+                            if (userRole !== "ceo" && admin.id !== currentUser.id) {
+                              const pRole = (admin.role || "").toLowerCase().replace(/[\s_]+/g, "");
+                              if (pRole === "ceo") return "CEO";
+                              if (pRole === "superadmin") return "Super Admin";
+                              return "Admin";
+                            }
+                            return displayName;
+                          })()}
+                        </h3>
+                        { (userRole === "ceo" || admin.id === currentUser.id) && (
+                          <div className="text-sm text-gray-800 md:text-gray-500 mb-1">{admin.email}</div>
+                        )}
+                        <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-full capitalize font-medium mt-1">
+                          {admin.role}
+                        </span>
+                      </div>
+                      
+                      {userRole === "ceo" && (
+                        <div className="text-right flex flex-col items-end">
+                          <div className="text-xs text-gray-800 md:text-gray-500 mb-1 font-semibold uppercase tracking-wider">Amount Paid Per Post</div>
+                          {editingRateAdminId === admin.id ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-900 font-bold">₹</span>
+                              <input 
+                                type="number" 
+                                value={editingRateValue} 
+                                onChange={e => setEditingRateValue(e.target.value)} 
+                                className="w-16 px-2 py-1 text-sm border border-gray-300 rounded text-black"
+                              />
+                              <button 
+                                onClick={() => handleUpdateIndividualRate(admin.id, parseInt(editingRateValue) || 0)}
+                                className="text-xs bg-black text-white px-2 py-1 rounded hover:bg-gray-800"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <div className="text-lg font-bold text-gray-900">
+                                ₹ {admin.rupees_per_post ?? rupeesPerPost ?? 10}
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  setEditingRateAdminId(admin.id);
+                                  setEditingRateValue((admin.rupees_per_post ?? rupeesPerPost ?? 10).toString());
+                                }}
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       )}
-                      <span className="inline-block bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-full capitalize font-medium">
-                        {admin.role}
-                      </span>
                     </div>
                     
                     <div className="p-6 grid grid-cols-2 gap-4 bg-gray-50/50">
                       <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-center">
-                        <div className="text-sm text-gray-500 mb-1">Jobs Posted</div>
+                        <div className="text-sm text-gray-800 md:text-gray-500 mb-1">Jobs Posted</div>
                         <div className="text-2xl font-bold text-gray-900">{publishedCount}</div>
                       </div>
                       <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-center">
-                        <div className="text-sm text-gray-500 mb-1">Amount Earned</div>
+                        <div className="text-sm text-gray-800 md:text-gray-500 mb-1">Amount Earned</div>
                         <div className="text-2xl font-bold text-green-600">₹{earnings}</div>
                       </div>
                       <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-center">
-                        <div className="text-sm text-gray-500 mb-1">Drafts Saved</div>
+                        <div className="text-sm text-gray-800 md:text-gray-500 mb-1">Drafts Saved</div>
                         <div className="text-xl font-semibold text-gray-700">{draftsCount}</div>
                       </div>
                       <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm text-center">
-                        <div className="text-sm text-gray-500 mb-1">Jobs Scheduled</div>
+                        <div className="text-sm text-gray-800 md:text-gray-500 mb-1">Jobs Scheduled</div>
                         <div className="text-xl font-semibold text-gray-700">{scheduledCount}</div>
                       </div>
                     </div>
@@ -332,13 +391,13 @@ export default function AdminActivityPage() {
                     {isExpanded && (
                       <div className="p-6 bg-white border-t border-gray-100 max-h-[300px] overflow-y-auto">
                         <h4 className="font-semibold text-gray-900 mb-4">Activity History</h4>
-                        {filteredAdminJobs.length > 0 ? (
+                        {uniqueJobs.length > 0 ? (
                           <div className="space-y-3">
-                            {filteredAdminJobs.sort((a,b) => new Date(b.posted_date || b.created_at).getTime() - new Date(a.posted_date || a.created_at).getTime()).map((job, j) => (
+                            {uniqueJobs.sort((a,b) => new Date(b.posted_date || b.created_at).getTime() - new Date(a.posted_date || a.created_at).getTime()).map((job, j) => (
                               <div key={j} className="flex justify-between items-center text-sm p-3 rounded-lg border border-gray-100 bg-gray-50">
                                 <div>
                                   <div className="font-medium text-gray-800 max-w-[150px] truncate">{job.position}</div>
-                                  <div className="text-xs text-gray-500 mt-1">
+                                  <div className="text-xs text-gray-800 md:text-gray-500 mt-1">
                                     {(() => {
                                       let displayName = admin.display_name || admin.full_name || admin.username;
                                       if (userRole !== "ceo" && admin.id !== currentUser.id) {
@@ -357,7 +416,7 @@ export default function AdminActivityPage() {
                                   <div className={`text-xs px-2 py-1 rounded-full capitalize inline-block mb-1 ${job.status === 'published' ? 'bg-green-100 text-green-800' : job.status === 'draft' ? 'bg-gray-200 text-gray-800' : 'bg-blue-100 text-blue-800'}`}>
                                     {job.status === 'published' ? 'Published' : job.status === 'draft' ? 'Saved Draft' : 'Scheduled'}
                                   </div>
-                                  <div className="text-gray-400 text-xs">
+                                  <div className="text-gray-700 md:text-gray-400 text-xs">
                                     {job.posted_date || job.created_at ? new Date(job.posted_date || job.created_at).toLocaleDateString('en-GB', {
                                       day: '2-digit', month: 'short', year: 'numeric'
                                     }) : ''}
@@ -367,7 +426,7 @@ export default function AdminActivityPage() {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center text-gray-500 text-sm py-4">No activity in this period.</div>
+                          <div className="text-center text-gray-800 md:text-gray-500 text-sm py-4">No activity in this period.</div>
                         )}
                       </div>
                     )}
@@ -382,3 +441,4 @@ export default function AdminActivityPage() {
     </main>
   );
 }
+
