@@ -250,12 +250,12 @@ if (loading) {
 
         {/* WEBSITE BUTTON */}
 
-        <Link
+        <a
           href="https://www.trappedintoarchitecture.com/" target="_blank" rel="noopener noreferrer"
           className="border border-gray-700 rounded-2xl px-5 py-4 hover:bg-gray-800 transition text-center block w-full"
         >
           View Website
-        </Link>
+        </a>
 
       </aside>
 
