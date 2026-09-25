@@ -63,74 +63,49 @@ const fetchJobs = async () => {
     }
     setLoggedProfile(callerProfile);
 
-    let query = supabase
-      .from("admin_jobs")
-      .select("*");
-
+    let queryAdmin = supabase.from("admin_jobs").select("*");
+    let queryLegacy = supabase.from("jobs").select("*").is("admin_post_id", null);
     if (statusFilter && !["active", "expired"].includes(statusFilter)) {
-      query = query.eq("status", statusFilter);
+      queryAdmin = queryAdmin.eq("status", statusFilter);
+      queryLegacy = queryLegacy.eq("status", statusFilter);
     }
-
-    const { data, error } = await query.order("id", {
-      ascending: false,
-    });
-
-    if (error) {
-      console.log(error);
-      return;
-    }
-
-    let filteredJobs = data || [];
-
-    // Fetch profiles with role field (needed for privacy display)
+    const [adminRes, legacyRes] = await Promise.all([
+      queryAdmin.order("id", { ascending: false }),
+      queryLegacy.order("id", { ascending: false })
+    ]);
+    if (adminRes.error) console.log(adminRes.error);
+    if (legacyRes.error) console.log(legacyRes.error);
+    let filteredJobs = [...(adminRes.data || []), ...(legacyRes.data || [])];
+    filteredJobs.sort((a, b) => new Date(b.created_at || b.posted_date || 0).getTime() - new Date(a.created_at || a.posted_date || 0).getTime());
     const { data: profilesData } = await supabase.from("profiles").select("id, display_name, full_name, username, role");
-    const profilesMap: Record<string, any> = {};
+    const profilesMap = {};
     if (profilesData) {
       profilesData.forEach(p => profilesMap[p.id] = p);
     }
-
-    // Role-based filtering: non-CEO only sees own jobs + legacy jobs with no author_id
     const roleStr = (callerProfile?.role || stored?.role || "").toLowerCase().replace(/[\s_]+/g, "");
     if (roleStr !== "ceo") {
-      filteredJobs = filteredJobs.filter((job: any) =>
+      filteredJobs = filteredJobs.filter((job) =>
         !job.author_id || job.author_id === callerProfile?.id
       );
     }
-    
-    // Attach profiles for Posted By display
-    filteredJobs = filteredJobs.map((job: any) => ({
+    filteredJobs = filteredJobs.map((job) => ({
       ...job,
       profiles: job.author_id ? profilesMap[job.author_id] : null
     }));
-
-
-  if (statusFilter === "active") {
-
-    const today = new Date();
-
-    filteredJobs = filteredJobs.filter(
-      (job) =>
-        !job.post_expiry_date ||
-        new Date(job.post_expiry_date) >= today
-    );
-
-  }
-
-  if (statusFilter === "expired") {
-
-    const today = new Date();
-
-    filteredJobs = filteredJobs.filter(
-      (job) =>
-        job.post_expiry_date &&
-        new Date(job.post_expiry_date) < today
-    );
-
-  }
-
-  setJobs(filteredJobs);
-
-};
+    if (statusFilter === "active") {
+      const today = new Date();
+      filteredJobs = filteredJobs.filter(
+        (job) => !job.post_expiry_date || new Date(job.post_expiry_date) >= today
+      );
+    }
+    if (statusFilter === "expired") {
+      const today = new Date();
+      filteredJobs = filteredJobs.filter(
+        (job) => job.post_expiry_date && new Date(job.post_expiry_date) < today
+      );
+    }
+    setJobs(filteredJobs);
+  };
   /* DELETE JOB */
 
   const deleteJob = async (id: number) => {

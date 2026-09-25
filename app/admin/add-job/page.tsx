@@ -686,8 +686,11 @@ const handleSmartExtraction = async () => {
       setTimeout(() => setIsCompanyProfileDirty(false), 100);
     }}
     fetchSuggestions={async (q) => {
-      const { data } = await supabase.from('companies').select('*').ilike('firm_name', `%${q}%`).limit(10);
-      return data || [];
+      const { data: cData } = await supabase.from("companies").select("*").ilike("firm_name", "%" + q + "%").limit(10);
+      const { data: jData } = await supabase.from("jobs").select("firm_name, city, state, organization_type, neighborhood, description, website, email, phone, logo_url").ilike("firm_name", "%" + q + "%").limit(10);
+      const combined = [...(cData || []), ...(jData || [])];
+      const unique = Array.from(new Map(combined.map(item => [item.firm_name, item])).values());
+      return unique;
     }}
     extractValue={(item) => item.firm_name}
     renderItem={(item) => (
@@ -723,10 +726,12 @@ const handleSmartExtraction = async () => {
                     value={area}
                     onChange={(val) => setArea(val)}
                     fetchSuggestions={async (q) => {
-                      let query = supabase.from('companies').select('neighborhood').ilike('neighborhood', `%${q}%`);
-                      if (city) query = query.eq('city', city);
-                      const { data } = await query.limit(20);
-                      return Array.from(new Set(data?.map(d => d.neighborhood).filter(Boolean))) || [];
+                      let qC = supabase.from('companies').select('neighborhood').ilike('neighborhood', '%' + q + '%');
+                      let qJ = supabase.from('jobs').select('neighborhood').ilike('neighborhood', '%' + q + '%');
+                      if (city) { qC = qC.eq('city', city); qJ = qJ.eq('city', city); }
+                      const [{data: d1}, {data: d2}] = await Promise.all([qC.limit(10), qJ.limit(10)]);
+                      const combined = [...(d1 || []), ...(d2 || [])];
+                      return Array.from(new Set(combined.map(d => d.neighborhood).filter(Boolean)));
                     }}
                     placeholder="Adyar"
                     className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
@@ -741,10 +746,12 @@ const handleSmartExtraction = async () => {
                     value={city}
                     onChange={(val) => setCity(val)}
                     fetchSuggestions={async (q) => {
-                      let query = supabase.from('companies').select('city').ilike('city', `%${q}%`);
-                      if (state) query = query.eq('state', state);
-                      const { data } = await query.limit(20);
-                      return Array.from(new Set(data?.map(d => d.city).filter(Boolean))) || [];
+                      let qC = supabase.from('companies').select('city').ilike('city', '%' + q + '%');
+                      let qJ = supabase.from('jobs').select('city').ilike('city', '%' + q + '%');
+                      if (state) { qC = qC.eq('state', state); qJ = qJ.eq('state', state); }
+                      const [{data: d1}, {data: d2}] = await Promise.all([qC.limit(10), qJ.limit(10)]);
+                      const combined = [...(d1 || []), ...(d2 || [])];
+                      return Array.from(new Set(combined.map(d => d.city).filter(Boolean)));
                     }}
                     placeholder="Chennai"
                     className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
@@ -759,8 +766,12 @@ const handleSmartExtraction = async () => {
                     value={state}
                     onChange={(val) => setState(val)}
                     fetchSuggestions={async (q) => {
-                      const { data } = await supabase.from('companies').select('state').ilike('state', `%${q}%`).limit(20);
-                      return Array.from(new Set(data?.map(d => d.state).filter(Boolean))) || [];
+                      const [{data: d1}, {data: d2}] = await Promise.all([
+                        supabase.from('companies').select('state').ilike('state', '%' + q + '%').limit(10),
+                        supabase.from('jobs').select('state').ilike('state', '%' + q + '%').limit(10)
+                      ]);
+                      const combined = [...(d1 || []), ...(d2 || [])];
+                      return Array.from(new Set(combined.map(d => d.state).filter(Boolean)));
                     }}
                     placeholder="Tamil Nadu"
                     className="w-full border rounded-2xl px-4 py-3 bg-white text-black"

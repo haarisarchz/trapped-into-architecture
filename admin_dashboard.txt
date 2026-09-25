@@ -1,0 +1,130 @@
+
+      {/* SIDEBAR */}
+
+      <aside className="flex w-full md:w-72 bg-black text-white md:min-h-screen p-6 flex-col justify-between gap-10 md:gap-0">
+
+        <div>
+
+          {/* WEBSITE NAME */}
+
+          <div className="mb-12">
+
+            <h1 className="text-3xl font-bold">
+              Crafted Architecture
+            </h1>
+
+            <p className="text-gray-800 mt-1">
+              Admin Panel
+            </p>
+
+          </div>
+
+          {/* MENU */}
+
+          <div className="space-y-3">
+            <button
+              onClick={() => router.push("/admin/activity")}
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition text-blue-400 font-medium"
+            >
+              Admin Activity
+            </button>
+
+            <button
+              onClick={() =>
+                router.push("/admin")
+              }
+              className="w-full text-left px-5 py-4 rounded-2xl bg-black hover:bg-gray-900 transition"
+            >
+              Dashboard
+            </button>
+
+            <button
+              onClick={() =>
+                router.push("/admin/jobs")
+              }
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+            >
+              Manage Jobs
+            </button>
+
+            <button
+              onClick={() =>
+                router.push("/admin/add-job")
+              }
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+            >
+              Add New Job
+            </button>
+
+            <button
+              onClick={() => router.push("/admin/analytics")}
+              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+            >
+              Analytics
+            </button>
+<button
+  onClick={() =>
+    router.push("/admin/companies")
+  }
+  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+>
+  Companies
+</button>
+{userRole === "ceo" && (
+<button
+  onClick={() => router.push("/admin/users")}
+  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+>
+  Users
+</button>
+)}
+{userRole === "ceo" && (
+<button
+  onClick={() => router.push("/admin/contact")}
+  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+>
+  Contact
+</button>
+)}
+
+            <button
+  onClick={() => window.open("/jobs", "_blank")}
+  className="w-full mt-10 bg-white text-black py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+>
+  Visit Jobs Page
+</button>
+
+          </div>
+
+        </div>
+
+        {/* WEBSITE BUTTON */}
+
+        <a
+          href="https://www.trappedintoarchitecture.com/" target="_blank" rel="noopener noreferrer"
+          className="border border-gray-700 rounded-2xl px-5 py-4 hover:bg-gray-800 transition text-center block w-full"
+        >
+          View Website
+        </a>
+
+      </aside>
+
+      {/* MAIN */}
+
+      <section className="flex-1 p-4 md:p-10">
+
+        {/* HEADER */}
+
+        <div className="flex items-center justify-between mb-10">
+
+          <div>
+
+            <h1 className="text-4xl font-bold">
+              Dashboard
+            </h1>
+
+            <p className="text-gray-800 md:text-gray-500 mt-2">
+              Welcome back
+            </p>
+
+          </div>

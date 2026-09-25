@@ -1,0 +1,80 @@
+                          {/* LOCATION */}
+
+            <div>
+
+              <h2 className="text-2xl font-bold mb-6">
+                Location
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                {/* NEIGHBORHOOD */}
+
+                <div>
+                  <label className="block mb-2 font-medium"> Neighborhood </label>
+                  <Autocomplete
+                    value={area}
+                    onChange={(val) => setArea(val)}
+                    fetchSuggestions={async (q) => {
+                      let query = supabase.from('companies').select('neighborhood').ilike('neighborhood', `%${q}%`);
+                      if (city) query = query.eq('city', city);
+                      const { data } = await query.limit(20);
+                      return Array.from(new Set(data?.map(d => d.neighborhood).filter(Boolean))) || [];
+                    }}
+                    placeholder="Adyar"
+                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                  />
+                </div>
+
+                {/* CITY */}
+
+                <div>
+                  <label className="block mb-2 font-medium"> City <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <Autocomplete
+                    value={city}
+                    onChange={(val) => setCity(val)}
+                    fetchSuggestions={async (q) => {
+                      let query = supabase.from('companies').select('city').ilike('city', `%${q}%`);
+                      if (state) query = query.eq('state', state);
+                      const { data } = await query.limit(20);
+                      return Array.from(new Set(data?.map(d => d.city).filter(Boolean))) || [];
+                    }}
+                    placeholder="Chennai"
+                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                  />
+                </div>
+
+                {/* STATE */}
+
+                <div>
+                  <label className="block mb-2 font-medium"> State <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <Autocomplete
+                    value={state}
+                    onChange={(val) => setState(val)}
+                    fetchSuggestions={async (q) => {
+                      const { data } = await supabase.from('companies').select('state').ilike('state', `%${q}%`).limit(20);
+                      return Array.from(new Set(data?.map(d => d.state).filter(Boolean))) || [];
+                    }}
+                    placeholder="Tamil Nadu"
+                    className="w-full border rounded-2xl px-4 py-3 bg-white text-black"
+                  />
+                </div>
+
+              </div>
+
+            </div>
+
+            <div>
+
+              {/* POSITIONS & DESCRIPTIONS */}
+              <div className="mt-10 mb-10">
+                <div className="flex justify-between items-end mb-6">
+                  <h2 className="text-2xl font-bold">Roles & Requirements</h2>
+                  <button type="button" onClick={addPosition} className="text-blue-600 font-bold hover:underline">+ Add Position</button>
+                </div>
+                
+                <div className="space-y-6">
+                  {positions.map((pos, index) => (
+                    <div key={index} className="border border-gray-200 p-6 rounded-2xl bg-white shadow-sm relative text-black">
+                      {positions.length > 1 && (
+                        <button 

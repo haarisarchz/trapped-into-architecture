@@ -69,13 +69,16 @@ const checkAccess = async () => {
 
   const fetchDashboardData = async () => {
 
-    const { data, error } =
-      await supabase
-        .from("jobs")
-        .select("*")
-        .order("posted_date", {
-          ascending: false,
-        });
+    const [adminRes, legacyRes] = await Promise.all([
+  supabase.from("admin_jobs").select("*").order("posted_date", { ascending: false }),
+  supabase.from("jobs").select("*").is("admin_post_id", null).order("posted_date", { ascending: false })
+]);
+const error = adminRes.error || legacyRes.error;
+let data = null;
+if (!error) {
+  data = [...(adminRes.data || []), ...(legacyRes.data || [])];
+  data.sort((a, b) => new Date(b.created_at || b.posted_date || 0).getTime() - new Date(a.created_at || a.posted_date || 0).getTime());
+}
 
     if (error) {
 
@@ -151,7 +154,7 @@ if (loading) {
 
       {/* SIDEBAR */}
 
-      <aside className="flex w-full md:w-72 bg-black text-white md:min-h-screen p-6 flex-col justify-between gap-10 md:gap-0">
+      <aside className="flex w-full md:w-72 bg-black text-white md:sticky md:top-0 md:h-screen p-6 flex-col justify-between gap-6 overflow-y-auto">
 
         <div>
 
@@ -163,7 +166,7 @@ if (loading) {
               Crafted Architecture
             </h1>
 
-            <p className="text-gray-800 mt-1">
+            <p className="text-gray-400 mt-1">
               Admin Panel
             </p>
 
@@ -171,10 +174,10 @@ if (loading) {
 
           {/* MENU */}
 
-          <div className="space-y-3">
+          <div className="space-y-1">
             <button
               onClick={() => router.push("/admin/activity")}
-              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition text-blue-400 font-medium"
+              className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition text-blue-400 font-medium"
             >
               Admin Activity
             </button>
@@ -183,7 +186,7 @@ if (loading) {
               onClick={() =>
                 router.push("/admin")
               }
-              className="w-full text-left px-5 py-4 rounded-2xl bg-black hover:bg-gray-900 transition"
+              className="w-full text-left px-4 py-2.5 rounded-2xl bg-black hover:bg-gray-900 transition"
             >
               Dashboard
             </button>
@@ -192,7 +195,7 @@ if (loading) {
               onClick={() =>
                 router.push("/admin/jobs")
               }
-              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+              className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
             >
               Manage Jobs
             </button>
@@ -201,14 +204,14 @@ if (loading) {
               onClick={() =>
                 router.push("/admin/add-job")
               }
-              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+              className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
             >
               Add New Job
             </button>
 
             <button
               onClick={() => router.push("/admin/analytics")}
-              className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+              className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
             >
               Analytics
             </button>
@@ -216,14 +219,14 @@ if (loading) {
   onClick={() =>
     router.push("/admin/companies")
   }
-  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+  className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
 >
   Companies
 </button>
 {userRole === "ceo" && (
 <button
   onClick={() => router.push("/admin/users")}
-  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+  className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
 >
   Users
 </button>
@@ -231,7 +234,7 @@ if (loading) {
 {userRole === "ceo" && (
 <button
   onClick={() => router.push("/admin/contact")}
-  className="w-full text-left px-5 py-4 rounded-2xl hover:bg-gray-800 transition"
+  className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
 >
   Contact
 </button>
@@ -252,7 +255,7 @@ if (loading) {
 
         <a
           href="https://www.trappedintoarchitecture.com/" target="_blank" rel="noopener noreferrer"
-          className="border border-gray-700 rounded-2xl px-5 py-4 hover:bg-gray-800 transition text-center block w-full"
+          className="border border-gray-700 rounded-2xl px-4 py-2.5 hover:bg-gray-800 transition text-center block w-full"
         >
           View Website
         </a>
@@ -409,7 +412,7 @@ if (loading) {
 
   {/* JOB LIST */}
 
-  <div className="space-y-3">
+  <div className="space-y-1">
 
     {jobs
       .slice(0, 5)
@@ -417,7 +420,7 @@ if (loading) {
 
         <div
           key={job.id}
-          className="grid grid-cols-1 md:grid-cols-4 gap-4 border rounded-2xl px-5 py-4 items-center hover:bg-white transition"
+          className="grid grid-cols-1 md:grid-cols-4 gap-4 border rounded-2xl px-4 py-2.5 items-center hover:bg-white transition"
         >
 
           {/* POSITION */}
