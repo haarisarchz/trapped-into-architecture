@@ -775,15 +775,7 @@ const handleSmartExtraction = async () => {
 
             </div>
 
-            {/* REQUIREMENTS */}
-
             <div>
-
-              <h2 className="text-2xl font-bold mb-4">
-                Requirements
-              </h2>
-
-              
 
               {/* POSITIONS & DESCRIPTIONS */}
               <div className="mt-10 mb-10">
@@ -876,6 +868,11 @@ const handleSmartExtraction = async () => {
                 </div>
               </div>
               
+
+              {/* REQUIREMENTS */}
+              <h2 className="text-2xl font-bold mt-10 mb-6">
+                Requirements
+              </h2>
 
               {/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> <div> <label className="block mb-2 font-medium"> Qualifications </label> <input type="text" placeholder="B.Arch" value={qualifications} onChange={(e) => setQualifications(e.target.value)} className="w-full border rounded-2xl px-4 py-3" /> </div> </div>
 
