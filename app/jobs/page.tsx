@@ -1052,37 +1052,36 @@ setSelectedSalary([]);
   })
 
   .sort((a, b) => {
+      const getSal = (s) => {
+        if (!s || s.toLowerCase().includes("not disclosed") || s.toLowerCase().includes("negotiable") || s.toLowerCase().includes("as per")) return null;
+        const cl = s.replace(/,/g, "");
+        const m = cl.match(/\d+/);
+        return m ? Number(m[0]) : null;
+      };
 
-    if (sortBy === "salaryLow") {
+      const dateA = new Date(a.posted_date || 0).getTime();
+      const dateB = new Date(b.posted_date || 0).getTime();
 
-      return (
-        Number(a.salary.replace(/\D/g, "")) -
-        Number(b.salary.replace(/\D/g, ""))
-      );
+      if (sortBy === "salaryLow" || sortBy === "salaryHigh") {
+        const salA = getSal(a.salary);
+        const salB = getSal(b.salary);
+        if (salA !== null && salB !== null) {
+          return sortBy === "salaryLow" ? salA - salB : salB - salA;
+        }
+        if (salA !== null) return -1;
+        if (salB !== null) return 1;
+        return dateB - dateA;
+      }
 
-    }
+      if (sortBy === "expiry") {
+        const expA = a.post_expiry_date ? new Date(a.post_expiry_date).getTime() : Infinity;
+        const expB = b.post_expiry_date ? new Date(b.post_expiry_date).getTime() : Infinity;
+        if (expA !== expB) return expA - expB;
+        return dateB - dateA;
+      }
 
-    if (sortBy === "salaryHigh") {
-
-      return (
-        Number(b.salary.replace(/\D/g, "")) -
-        Number(a.salary.replace(/\D/g, ""))
-      );
-
-    }
-
-    if (sortBy === "expiry") {
-
-      return (
-        new Date(a.postExpiryDate).getTime() -
-        new Date(b.postExpiryDate).getTime()
-      );
-
-    }
-
-    return 0;
-
-  })
+      return dateB - dateA;
+    })
 
   .map((job, index) => (
 
