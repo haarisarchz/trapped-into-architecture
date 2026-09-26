@@ -29,12 +29,12 @@ export default function InteractiveHome({
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
       {/* 1. INTRODUCTION */}
-      <section className="bg-white py-16 md:py-24 px-6 lg:px-12 text-center border-b border-gray-100">
+      <section className="bg-white py-10 md:py-10 px-6 lg:px-12 text-center border-b border-gray-100">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
             Find Your Next Architecture Role
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
             Trapped Into Architecture is India's premier job board connecting talented architects with top firms. Discover remote jobs, internships, and full-time opportunities.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -49,7 +49,7 @@ export default function InteractiveHome({
       </section>
 
       {/* 2. PLATFORM STATISTICS */}
-      <section className="py-12 px-6 lg:px-12 bg-black text-white">
+      <section className="py-8 px-6 lg:px-12 bg-black text-white">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
           <div className="pt-6 md:pt-0">
             <div className="text-4xl md:text-5xl font-bold mb-2">{stats?.jobs || 0}</div>
@@ -71,8 +71,8 @@ export default function InteractiveHome({
       </section>
 
       {/* 3. JOBS SECTION */}
-      <section className="py-16 px-6 lg:px-12 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
+      <section className="py-10 px-6 lg:px-12 max-w-7xl mx-auto w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 md:mb-0">Latest Opportunities</h2>
           
           <div className="flex bg-gray-100 p-1 rounded-full w-fit">
@@ -138,9 +138,9 @@ export default function InteractiveHome({
       </section>
 
       {/* 4. COMPANIES SECTION */}
-      <section className="py-16 px-6 lg:px-12 bg-white w-full border-t border-gray-100">
+      <section className="py-10 px-6 lg:px-12 bg-white w-full border-t border-gray-100">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-6 md:mb-0">Explore Companies</h2>
             
             <div className="flex bg-gray-100 p-1 rounded-full w-fit">
@@ -185,9 +185,9 @@ export default function InteractiveHome({
       </section>
 
       {/* 5. ARCHITECTURE SERVICES */}
-      <section className="py-16 px-6 lg:px-12 bg-gray-900 text-white w-full">
+      <section className="py-10 px-6 lg:px-12 bg-gray-900 text-white w-full">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center">Architecture Services</h2>
+          <h2 className="text-3xl font-bold mb-5 text-center">Architecture Services</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link href="/contact?service=software-tutor" className="bg-gray-800 hover:bg-gray-700 p-6 rounded-2xl transition border border-gray-700 hover:border-gray-600 flex flex-col justify-center text-center">
               <h3 className="font-semibold text-lg mb-2">Hire a Software Tutor</h3>
@@ -206,19 +206,19 @@ export default function InteractiveHome({
       </section>
 
       {/* 5.5 PORTFOLIO BUILDER */}
-      <section className="py-16 px-6 lg:px-12 bg-blue-900 text-white w-full">
+      <section className="py-10 px-6 lg:px-12 bg-gray-50 text-black w-full border-t border-gray-100">
         <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
-          <h2 className="text-3xl font-bold mb-4">Portfolio Builder</h2>
-          <p className="text-blue-200 mb-8 text-lg">Build your architecture portfolio in seconds.</p>
-          <a href="https://thecosmofolio.com/" target="_blank" rel="noopener noreferrer" className="bg-white text-blue-900 font-bold py-4 px-10 rounded-full hover:bg-gray-100 transition shadow-lg inline-block">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-3 text-gray-900 tracking-tight">Portfolio Builder</h2>
+          <p className="text-gray-600 mb-6 text-lg max-w-2xl text-center">Build your architecture portfolio in seconds.</p>
+          <a href="https://thecosmofolio.com/" target="_blank" rel="noopener noreferrer" className="bg-black text-white font-bold py-3.5 px-8 rounded-full hover:bg-gray-800 transition shadow inline-block border border-black">
             Build Your Portfolio
           </a>
         </div>
       </section>
 
       {/* 6. CONNECT WITH US */}
-      <section className="py-16 px-6 lg:px-12 bg-white text-center w-full border-t border-gray-100">
-        <h2 className="text-2xl font-bold text-gray-900 mb-8">Connect With Us</h2>
+      <section className="py-10 px-6 lg:px-12 bg-white text-center w-full border-t border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-900 mb-5">Connect With Us</h2>
         <div className="flex flex-wrap justify-center gap-6">
           {siteSettings?.whatsapp_channel_url ? (
             <a href={siteSettings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-green-600 font-medium">
