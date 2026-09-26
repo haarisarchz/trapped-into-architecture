@@ -64,16 +64,16 @@ export default function Footer() {
         
         {/* BRAND */}
         <div>
-          <div className="flex items-start gap-4 mb-4">
-              {settings?.logo_url && (
-                <img src={settings.logo_url} alt="Site Logo" className="h-16 w-16 md:h-20 md:w-20 object-contain shrink-0" />
-              )}
-              <div>
-                <h2 className="text-xl md:text-2xl font-bold mb-2">Trapped Into Architecture</h2>
-                <p className="text-gray-400 leading-6 text-sm md:text-base">
-                  Careers, knowledge, opportunities and growth for architecture students and professionals.
-                </p>
+          <div className="mb-5">
+              <div className="flex items-center gap-4 mb-3">
+                {settings?.logo_url && (
+                  <img src={settings.logo_url} alt="Site Logo" className="h-12 w-auto md:h-16 object-contain shrink-0" />
+                )}
+                <h2 className="text-xl md:text-2xl font-bold">Trapped Into Architecture</h2>
               </div>
+              <p className="text-gray-400 leading-6 text-sm md:text-base">
+                Careers, knowledge, opportunities and growth for architecture students and professionals.
+              </p>
             </div>
           
           <div className="mt-6 flex flex-wrap items-center gap-4 text-gray-400">
