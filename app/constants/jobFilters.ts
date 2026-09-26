@@ -6,6 +6,7 @@ export const EXPERIENCE_OPTIONS = [
   "4-6 Years",
   "6-10 Years",
   "10+ Years",
+  "Not disclosed"
 ];
 
 export const SALARY_OPTIONS = [

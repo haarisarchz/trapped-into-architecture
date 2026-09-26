@@ -1424,13 +1424,23 @@ const handleSmartExtraction = async () => {
         }]);
       }
 
-      if (ai.description) setCompanyDescription(ai.description);
-
       setLastDateToApply(ai.deadline || ai.application_deadline || "");
 
-      setapplication_email(ai.applicationEmail || ai.application_email || ai.email || "");
-      setapply_link(ai.apply_link || ai.website || ai.website_url || "");
-      if(ai.phone || ai.contact_phone) setCompanyPhone(ai.phone || ai.contact_phone);
+      if (ai.applicationEmail || ai.email) setapplication_email(ai.applicationEmail || ai.email || "");
+      if (ai.apply_link) setapply_link(ai.apply_link);
+      
+      if (ai.phone) setCompanyPhone(ai.phone);
+      if (ai.whatsapp) setCompanyWhatsapp(ai.whatsapp);
+      if (ai.website) setCompanyWebsite(ai.website);
+      if (ai.email) setCompanyEmail(ai.email);
+      if (ai.facebook) setCompanyFacebook(ai.facebook);
+      if (ai.instagram) setCompanyInstagram(ai.instagram);
+      if (ai.linkedin) setCompanyLinkedin(ai.linkedin);
+      if (ai.twitter) setCompanyTwitter(ai.twitter);
+      if (ai.principalArchitect) setPrincipalArchitect(ai.principalArchitect);
+      if (ai.employeeSize) setEmployeeSize(ai.employeeSize);
+      if (ai.foundedYear) setFoundedYear(ai.foundedYear);
+      if (ai.organization_type) setOrganizationType(ai.organization_type);
 
       setLoadingAI("done");
 

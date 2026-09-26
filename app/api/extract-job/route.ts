@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 Return ONLY valid JSON. No markdown backticks, no explanations. Do not fabricate or invent missing information. Use empty string "" if unavailable.
 
 IMPORTANT INSTRUCTION FOR JOB DESCRIPTION (apply this to the 'description' field of each position):
-Read the attached job-post image and write a short, clear, professional job-description summary for the specific position mentioned. Use ONLY the information explicitly provided in the image. Do not add roles, responsibilities, skills, qualifications, experience requirements, duties, benefits, or any other details that are not mentioned. Keep it concise and natural, without trying to fill a word count. Include only the essential details such as the company/studio name, position, location, joining information, and application/contact details if provided. Make it readable, approachable, and suitable for posting on a job/recruitment website. Do not use bullet points unless necessary. Write it as one short paragraph.
+Do not use your own words. Do not write a summary. Extract ONLY the exact details and phrases from the image regarding the job description, and combine them into a single paragraph. Do not add any conversational text. Use ONLY the information explicitly provided in the image.
 
 Normalize specific fields:
 - Employment Type MUST be exactly one of: "Full-time", "Part-time", "Contract", "Temporary", "Freelance", "Internship". (Normalize "Full time", "fulltime" to "Full-time").
@@ -33,12 +33,24 @@ Normalize specific fields:
 Schema:
 {
   "company": "string (company name)",
+  "organization_type": "string (e.g., Architecture Studio, Interior Design Firm, Construction Company)",
   "city": "string",
   "state": "string",
-  "description": "string (detailed general description about the company or all roles)",
+  "description": "string (general description if any)",
   "employmentType": "string (normalized)",
   "workplaceType": "string (normalized)",
   "applicationEmail": "string (email if present)",
+  "email": "string (general company email if present)",
+  "phone": "string (phone number if present)",
+  "whatsapp": "string (whatsapp number if present)",
+  "website": "string (website link if present)",
+  "facebook": "string (facebook link or handle if present)",
+  "instagram": "string (instagram link or handle if present)",
+  "linkedin": "string (linkedin link or handle if present)",
+  "twitter": "string (twitter link or handle if present)",
+  "principalArchitect": "string (name of principal architect/founder if present)",
+  "employeeSize": "string (e.g., 1-10, 11-50 if present)",
+  "foundedYear": "string (e.g., 2010 if present)",
   "deadline": "string (YYYY-MM-DD if present)",
   "apply_link": "string (application link if present)",
   "positions": [
@@ -47,7 +59,7 @@ Schema:
       "experience": "string (e.g., 1-2 years)",
       "role": "string (e.g., Designer, Manager)",
       "salary": "string",
-      "description": "string (details specific to this position)"
+      "description": "string (extracted exact phrases regarding this position combined into one paragraph)"
     }
   ]
 }`;
