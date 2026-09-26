@@ -212,12 +212,12 @@ export default async function JobDetailsPage({
                   
 
                   {/* ADDITIONAL DETAILS BUNDLED INTO HERO CARD */}
-                  <div className="mt-10 space-y-8 border-t border-gray-100 pt-8">
+                  <div className="mt-6 space-y-5 border-t border-gray-100 pt-6">
                     
                     {/* QUALIFICATIONS */}
                     {hasQualifications && (
                       <div>
-                        <h2 className="text-xl font-bold mb-3 text-gray-900">Qualifications</h2>
+                        <h2 className="text-lg font-bold mb-2 text-gray-900">Qualifications</h2>
                         <p className="text-gray-700 leading-relaxed">
                           {Array.isArray(job.qualifications) ? job.qualifications.join(", ") : job.qualifications}
                         </p>
@@ -227,7 +227,7 @@ export default async function JobDetailsPage({
                     {/* SKILLS */}
                     {hasSkills && (
                       <div>
-                        <h2 className="text-xl font-bold mb-3 text-gray-900">Skills Required</h2>
+                        <h2 className="text-lg font-bold mb-2 text-gray-900">Skills Required</h2>
                         <div className="flex flex-wrap gap-2">
                           {job.skills_required.filter(Boolean).map((skill: string) => (
                             <span key={skill.trim()} className="bg-gray-100 text-gray-800 border border-gray-200 px-4 py-2 rounded-full text-sm font-medium">
@@ -241,8 +241,8 @@ export default async function JobDetailsPage({
                     {/* DESCRIPTION */}
                     {hasDescription && (
                       <div>
-                        <h2 className="text-lg font-bold mb-3 text-gray-900">Job Description</h2>
-                        <div className="text-gray-700 leading-8 whitespace-pre-line">
+                        <h2 className="text-lg font-bold mb-2 text-gray-900">Job Description</h2>
+                        <div className="text-gray-700 leading-relaxed whitespace-pre-line">
                           {job.job_description}
                         </div>
                       </div>
@@ -279,7 +279,7 @@ export default async function JobDetailsPage({
                     </div>
 
                     {/* APPLY / EMAIL NOW (Moved to bottom center) */}
-                    <div className="pt-10 mt-10 border-t border-gray-100 flex justify-center w-full">
+                    <div className="pt-6 mt-6 border-t border-gray-100 flex justify-center w-full">
                       {isExpired ? (
                         <button disabled className="bg-gray-200 text-gray-500 px-8 py-3.5 rounded-xl text-lg font-bold cursor-not-allowed w-full sm:w-auto text-center">
                           Post Expired
