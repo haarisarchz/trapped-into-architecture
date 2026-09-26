@@ -65,6 +65,14 @@ const typeFilter = searchParams.get("type");
           valA = a.firm_name || "";
           valB = b.firm_name || "";
           break;
+        case "id":
+          valA = a.id || 0;
+          valB = b.id || 0;
+          break;
+        case "state":
+          valA = a.state || "";
+          valB = b.state || "";
+          break;
         case "city":
           valA = a.city || "";
           valB = b.city || "";
@@ -279,6 +287,9 @@ return (
     <th className="text-left px-6 py-5 cursor-pointer hover:bg-gray-50" onClick={() => handleSort('city')}>
       City {sortField === 'city' && (sortOrder === 'asc' ? '↑' : '↓')}
     </th>
+    <th className="text-left px-6 py-5 cursor-pointer hover:bg-gray-50" onClick={() => handleSort('state')}>
+      State {sortField === 'state' && (sortOrder === 'asc' ? '↑' : '↓')}
+    </th>
     <th className="text-left px-6 py-5 cursor-pointer hover:bg-gray-50" onClick={() => handleSort('posted_by')}>
       Posted By {sortField === 'posted_by' && (sortOrder === 'asc' ? '↑' : '↓')}
     </th>
@@ -329,6 +340,10 @@ return (
                       <td className="px-6 py-5">
                         {job.city}
                       </td>
+
+                        <td className="px-6 py-5">
+                          {job.state}
+                        </td>
 
                       {/* POSTED BY */}
 
