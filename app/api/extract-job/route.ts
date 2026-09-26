@@ -29,17 +29,24 @@ Normalize specific fields:
 
 Schema:
 {
-  "position": "string (job title)",
   "company": "string (company name)",
-  "experience": "string (e.g., 1-2 years)",
   "city": "string",
   "state": "string",
-  "description": "string (detailed description)",
+  "description": "string (detailed general description about the company or all roles)",
   "employmentType": "string (normalized)",
   "workplaceType": "string (normalized)",
   "applicationEmail": "string (email if present)",
   "deadline": "string (YYYY-MM-DD if present)",
-  "apply_link": "string (application link if present)"
+  "apply_link": "string (application link if present)",
+  "positions": [
+    {
+      "position": "string (job title)",
+      "experience": "string (e.g., 1-2 years)",
+      "role": "string (e.g., Designer, Manager)",
+      "salary": "string",
+      "description": "string (details specific to this position)"
+    }
+  ]
 }`;
 
     let result;

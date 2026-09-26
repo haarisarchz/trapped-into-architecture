@@ -1247,8 +1247,14 @@ const handleSmartExtraction = async () => {
                     <p className="font-semibold border-b border-gray-100 pb-1">{firmName || "---"}</p>
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-gray-800 font-extrabold">Position</label>
-                    <p className="font-semibold border-b border-gray-100 pb-1">{positions[0]?.position || '---'}</p>
+                    <label className="text-[10px] uppercase tracking-widest text-gray-800 font-extrabold">Positions ({positions.length})</label>
+                    <div className="border-b border-gray-100 pb-2 flex flex-col gap-1 mt-1">
+                      {positions.map((p, i) => (
+                        <p key={i} className="font-semibold text-sm">
+                          {p.position || '---'} {p.experience && p.experience.length > 0 ? `(${p.experience.join(', ')})` : ''}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-700 md:text-gray-400 font-extrabold">Location</label>
@@ -1397,14 +1403,31 @@ const handleSmartExtraction = async () => {
       if (ai.employmentType || ai.employment_type) setEmploymentType(normEmp(ai.employmentType || ai.employment_type));
       if (ai.workplaceType || ai.workplace_type) setWorkplaceType(normWork(ai.workplaceType || ai.workplace_type));
 
-      setPositions([{
-  position: ai.position || ai.job_title || "",
-  experience: Array.isArray(ai.experience) ? ai.experience : (ai.experience ? [ai.experience] : []),
-  salary: ai.salary || "",
-  description: ai.description || ai.job_description || "",
-  completed: false
-}]);
+      if (ai.positions && Array.isArray(ai.positions) && ai.positions.length > 0) {
+        setPositions(ai.positions.map(p => ({
+          position: p.position || p.job_title || "",
+          role: p.role || "",
+          experience: Array.isArray(p.experience) ? p.experience : (p.experience ? [p.experience] : []),
+          salary: p.salary || "",
+          description: p.description || p.job_description || "",
+          qualifications: p.qualifications || "",
+          skills: p.skills || [],
+          completed: false
+        })));
+      } else {
+        setPositions([{
+          position: ai.position || ai.job_title || "",
+          role: ai.role || "",
+          experience: Array.isArray(ai.experience) ? ai.experience : (ai.experience ? [ai.experience] : []),
+          salary: ai.salary || "",
+          description: ai.description || ai.job_description || "",
+          qualifications: ai.qualifications || "",
+          skills: ai.skills || [],
+          completed: false
+        }]);
+      }
 
+      if (ai.description) setCompanyDescription(ai.description);
 
       setLastDateToApply(ai.deadline || ai.application_deadline || "");
 
