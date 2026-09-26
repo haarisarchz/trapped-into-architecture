@@ -1368,9 +1368,26 @@ const handleSmartExtraction = async () => {
 
                 <button
   disabled={loadingAI === "loading"}
-  onClick={async () => {
+    onClick={async () => {
     try {
       setLoadingAI("loading");
+
+      if (uploadMode === "image" && smartImage) {
+        try {
+          const extMatch = smartImage.name.match(/\.[0-9a-z]+$/i);
+          const ext = extMatch ? extMatch[0].toLowerCase() : '';
+          const fileName = `smart-upload-${Date.now()}${ext}`;
+          const { data, error } = await supabase.storage.from("job-images").upload(fileName, smartImage);
+          if (!error) {
+             const { data: { publicUrl } } = supabase.storage.from("job-images").getPublicUrl(fileName);
+             setImageUrl(publicUrl);
+          } else {
+             console.error("Smart image upload failed", error);
+          }
+        } catch (e) {
+          console.error("Storage error:", e);
+        }
+      }
 
       let formData = new FormData();
       formData.append("mode", uploadMode);
