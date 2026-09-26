@@ -104,7 +104,8 @@ export default function ShareButtons({
   const encodedUrl = encodeURIComponent(url);
   
   const shareLinks = [
-    { name: "WhatsApp", href: `https://wa.me/?text=${shareText}` },
+    { name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` },
+      { name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` },
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
     { name: "Instagram", href: `https://www.instagram.com/` }, // IG doesn't support prefilled URL shares, link to app
