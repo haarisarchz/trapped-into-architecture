@@ -23,8 +23,15 @@ export async function POST(req: Request) {
     let prompt = `Extract the following architecture job details into strict JSON format. 
 Return ONLY valid JSON. No markdown backticks, no explanations. Do not fabricate or invent missing information. Use empty string "" if unavailable.
 
-IMPORTANT INSTRUCTION FOR JOB DESCRIPTION (apply this to the 'description' field of each position):
-Do not use your own words. Do not write a summary. Extract ONLY the exact details and phrases from the image regarding the job description, and combine them into a single paragraph. Do not add any conversational text. Use ONLY the information explicitly provided in the image.
+IMPORTANT INSTRUCTION FOR TEXT FORMATTING:
+- All job positions and firm names MUST be in Title Case / Sentence case (e.g. "Junior Architect", "Tamil Architects", "Civil Engineer"). Do NOT use ALL CAPS. Capitalize the first letter of each word, and keep the rest lowercase.
+
+IMPORTANT INSTRUCTION FOR POSITIONS ARRAY:
+- You must deeply analyze the job post and extract EACH position into the 'positions' array.
+- 'role': Extract the specific job role/duties (e.g., "Site supervision, coordination, quantity estimation, and BOQ" or "Architectural planning and working drawings").
+- 'qualifications': Extract educational degrees separately (e.g., "B.Arch", "B.Tech and Diploma in Engineering"). Do NOT put these in the description.
+- 'skills': Extract software skills separately into an array (e.g., ["AutoCAD", "SketchUp", "Revit", "Lumion", "Enscape"]). Do NOT put software names in the description.
+- 'description': After extracting role, qualifications, and skills, write a clean, natural paragraph summarizing the remaining context of the position. Combine the position details into a concise paragraph. Do not just blindly copy raw text if it includes software or degrees.
 
 Normalize specific fields:
 - Employment Type MUST be exactly one of: "Full-time", "Part-time", "Contract", "Temporary", "Freelance", "Internship". (Normalize "Full time", "fulltime" to "Full-time").
@@ -32,34 +39,36 @@ Normalize specific fields:
 
 Schema:
 {
-  "company": "string (company name)",
-  "organization_type": "string (e.g., Architecture Studio, Interior Design Firm, Construction Company)",
+  "company": "string (Title Case firm name)",
+  "organization_type": "string",
   "city": "string",
   "state": "string",
-  "description": "string (general description if any)",
-  "employmentType": "string (normalized)",
-  "workplaceType": "string (normalized)",
-  "applicationEmail": "string (email if present)",
-  "email": "string (general company email if present)",
-  "phone": "string (phone number if present)",
-  "whatsapp": "string (whatsapp number if present)",
-  "website": "string (website link if present)",
-  "facebook": "string (facebook link or handle if present)",
-  "instagram": "string (instagram link or handle if present)",
-  "linkedin": "string (linkedin link or handle if present)",
-  "twitter": "string (twitter link or handle if present)",
-  "principalArchitect": "string (name of principal architect/founder if present)",
-  "employeeSize": "string (e.g., 1-10, 11-50 if present)",
-  "foundedYear": "string (e.g., 2010 if present)",
-  "deadline": "string (YYYY-MM-DD if present)",
-  "apply_link": "string (application link if present)",
+  "description": "string (general company description if any)",
+  "employmentType": "string",
+  "workplaceType": "string",
+  "applicationEmail": "string",
+  "email": "string",
+  "phone": "string",
+  "whatsapp": "string",
+  "website": "string",
+  "facebook": "string",
+  "instagram": "string",
+  "linkedin": "string",
+  "twitter": "string",
+  "principalArchitect": "string",
+  "employeeSize": "string",
+  "foundedYear": "string",
+  "deadline": "string",
+  "apply_link": "string",
   "positions": [
     {
-      "position": "string (job title)",
-      "experience": "string (e.g., 1-2 years)",
-      "role": "string (e.g., Designer, Manager)",
+      "position": "string (Title Case job title)",
+      "experience": "string",
+      "role": "string",
       "salary": "string",
-      "description": "string (extracted exact phrases regarding this position combined into one paragraph)"
+      "qualifications": "string",
+      "skills": ["string"],
+      "description": "string (Clean paragraph format)"
     }
   ]
 }`;
