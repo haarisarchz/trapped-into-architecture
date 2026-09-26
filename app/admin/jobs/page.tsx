@@ -363,8 +363,9 @@ return (
                       <td className="px-6 py-5">
                         {(() => {
   if (!job.profiles) return "—";
-  if (loggedProfile?.id === job.author_id) {
-    return job.profiles.display_name || job.profiles.full_name || job.profiles.username || "Admin";
+  const isViewerCEO = (loggedProfile?.role || "").toLowerCase().replace(/[\s_]+/g, "") === "ceo";
+    if (isViewerCEO || loggedProfile?.id === job.author_id) {
+      return job.profiles.display_name || job.profiles.full_name || job.profiles.username || "Admin";
   }
   const pRole = (job.profiles.role || "").toLowerCase().replace(/[\s_]+/g, "");
   if (pRole === "ceo") return "CEO";
