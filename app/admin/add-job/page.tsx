@@ -1466,8 +1466,14 @@ const handleSmartExtraction = async () => {
         }
         if (hasDistinctRequirements) setSameRequirements(false);
 
-        setPositions(ai.positions.map(p => ({
-          position: p.position || p.job_title || "",
+        setPositions(ai.positions.map((p, index) => {
+          // IMPORTANT: Preserve existing job ID if replacing an already saved position!
+          // We use a functional state update to guarantee we access the latest positions safely,
+          // but since this is an async closure, we map from the current positions array in scope.
+          const existingId = positions[index] ? positions[index].id : undefined;
+          return {
+            ...(existingId ? { id: existingId } : {}),
+            position: p.position || p.job_title || "",
           role: p.role || "",
           experience: Array.isArray(p.experience) ? p.experience : (p.experience ? [p.experience] : []),
           salary: p.salary || "",
@@ -1475,7 +1481,8 @@ const handleSmartExtraction = async () => {
           qualifications: p.qualifications || "",
           skills: p.skills || [],
           completed: false
-        })));
+        };
+      }));
       } else {
         setPositions([{
           position: ai.position || ai.job_title || "",
