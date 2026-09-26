@@ -531,7 +531,9 @@ const handlePublishJob = async (
       experience: pos.experience,
       salary: pos.salary,
       job_description: pos.role ? `**Job Role:** ${pos.role}\n\n${pos.description}` : pos.description,
-      qualifications: sameRequirements ? qualifications : (pos.qualifications || qualifications),
+      qualifications: sameRequirements 
+          ? (Array.isArray(qualifications) ? qualifications : (qualifications ? [qualifications] : []))
+          : (Array.isArray(pos.qualifications) ? pos.qualifications : (pos.qualifications ? [pos.qualifications] : (qualifications ? (Array.isArray(qualifications) ? qualifications : [qualifications]) : []))),
       skills_required: sameRequirements ? skills : (pos.skills || skills),
       posted_date: status === "published" ? formattedToday : (status === "scheduled" ? scheduleDate : null),
       last_date_to_apply: lastDateToApply || null,
