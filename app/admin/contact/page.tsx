@@ -162,7 +162,7 @@ export default function ContactSettingsPage() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file");
+      alert("Please upload an image file (PNG, JPG, SVG, etc.)");
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
@@ -172,22 +172,20 @@ export default function ContactSettingsPage() {
 
     setUploadingLogo(true);
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `logo_${Date.now()}.${fileExt}`;
-      const filePath = `site_assets/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("company_logos") // use existing bucket
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from("company_logos").getPublicUrl(filePath);
-      
-      setSettings(prev => ({ ...prev, logo_url: data.publicUrl }));
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        // Also automatically save it to database to mirror previous behavior
+        const { error } = await supabase.from('site_settings').update({ logo_url: base64String }).eq('id', 'global');
+        if (error) {
+          alert("Failed to save logo automatically: " + error.message);
+        }
+        setSettings(prev => ({ ...prev, logo_url: base64String }));
+        setUploadingLogo(false);
+      };
+      reader.readAsDataURL(file);
     } catch (error: any) {
       alert("Error uploading logo: " + error.message);
-    } finally {
       setUploadingLogo(false);
     }
   };
@@ -269,7 +267,7 @@ export default function ContactSettingsPage() {
                   {uploadingLogo ? "Uploading..." : "Upload New Logo"}
                   <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} />
                 </label>
-                <p className="text-xs text-gray-500">Max size 2MB. Recommended format: PNG or SVG with transparent background.</p>
+                <p className="text-xs text-gray-500">Max size 2MB. Recommended formats: PNG, JPG, JPEG, or SVG.</p>
                 <div className="w-full">
                   <label className="block text-xs font-bold text-gray-600 mb-1">Or enter Logo URL directly:</label>
                   <input type="url" value={settings.logo_url} onChange={e => setSettings({...settings, logo_url: e.target.value})} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-black" />
