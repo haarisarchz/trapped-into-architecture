@@ -291,9 +291,9 @@ export default function AdminActivityPage() {
                   }
                 }
                 
-                const publishedCount = uniqueJobs.filter(j => j.status === 'published').length;
-                const draftsCount = uniqueJobs.filter(j => j.status === 'draft').length;
-                const scheduledCount = uniqueJobs.filter(j => j.status === 'scheduled').length;
+                const publishedCount = filteredAdminJobs.filter(j => j.status === 'published').length;
+                const draftsCount = filteredAdminJobs.filter(j => j.status === 'draft').length;
+                const scheduledCount = filteredAdminJobs.filter(j => j.status === 'scheduled').length;
                 
                 const earnings = publishedCount * (admin.rupees_per_post || rupeesPerPost || 10);
                 

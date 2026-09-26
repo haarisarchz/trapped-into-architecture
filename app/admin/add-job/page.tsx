@@ -396,6 +396,15 @@ const handlePublishJob = async (
 
   try {
       const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+      let authorId = activeUser?.id || null;
+      if (!authorId && activeUser) {
+         const lookupVal = activeUser.username || activeUser.email;
+         const lookupField = activeUser.username ? "username" : "email";
+         if (lookupVal) {
+            const { data: cp } = await supabase.from("profiles").select("id").eq(lookupField, lookupVal).maybeSingle();
+            if (cp) authorId = cp.id;
+         }
+      }
       let currentCompanyId = selectedCompanyId;
 
     if (status !== "draft" && firmName) {
@@ -505,7 +514,7 @@ const handlePublishJob = async (
       source: source,
       image: imageUrl,
       status: status,
-      author_id: activeUser?.id || null
+      author_id: authorId
     };
 
     let jobData = null;
@@ -535,7 +544,7 @@ const handlePublishJob = async (
       source: source,
       image: imageUrl,
       status: status,
-      author_id: activeUser?.id || null
+      author_id: authorId
     }));
 
     if (jobId) {
@@ -577,7 +586,7 @@ const handlePublishJob = async (
       }
 
       if (status !== "draft") {
-        router.push("/admin/activity");
+        router.push("/admin/jobs");
       }
     }
   } catch (err) {
