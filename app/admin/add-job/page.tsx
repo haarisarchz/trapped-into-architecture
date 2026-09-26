@@ -558,12 +558,22 @@ const handlePublishJob = async (
       // Upsert the entire batch (inserts new ones without IDs, updates existing ones with IDs)
       const { data, error } = await supabase.from("jobs").upsert(publicJobs).select();
       if (error) throw error;
-      jobData = data && data.length > 0 ? data[0] : null;
-    } else {
-      const { data, error } = await supabase.from("jobs").insert(publicJobs).select();
-      if (error) throw error;
-      jobData = data && data.length > 0 ? data[0] : null;
-    }
+        jobData = data && data.length > 0 ? data[0] : null;
+        if (data) {
+           const updatedPositions = positions.map((p, i) => ({ ...p, id: data[i]?.id || p.id }));
+           setPositions(updatedPositions);
+           setInitialJobIds(data.map(d => d.id));
+        }
+      } else {
+        const { data, error } = await supabase.from("jobs").insert(publicJobs).select();
+        if (error) throw error;
+        jobData = data && data.length > 0 ? data[0] : null;
+        if (data) {
+           const updatedPositions = positions.map((p, i) => ({ ...p, id: data[i]?.id || p.id }));
+           setPositions(updatedPositions);
+           setInitialJobIds(data.map(d => d.id));
+        }
+      }
 
     if (jobData && jobData.id) {
       setJobId(jobData.id);
