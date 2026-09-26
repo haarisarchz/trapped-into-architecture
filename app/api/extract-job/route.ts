@@ -50,64 +50,77 @@ Schema:
 }`;
 
     let result;
-
-    if (mode === "text") {
-      const text = formData.get("text") as string;
-      if (!text) throw new Error("No text provided");
-      
-      const fullPrompt = prompt + "\n\nText to extract:\n" + text;
-      result = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
-        contents: fullPrompt
-      });
-      
-    } else if (mode === "url") {
-      const url = formData.get("url") as string;
-      if (!url) throw new Error("No URL provided");
-      
+    let maxRetries = 2;
+    let attempt = 0;
+    
+    while (attempt <= maxRetries) {
       try {
-        const page = await fetch(url);
-        const html = await page.text();
-        // Simple HTML strip to reduce tokens, preserving basic text
-        const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
-                             .replace(/<style[\s\S]*?<\/style>/gmi, '')
-                             .replace(/<[^>]+>/g, ' ');
-        const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000); // Limit size
-        result = await ai.models.generateContent({
-          model: "gemini-3.6-flash",
-          contents: fullPrompt
-        });
-      } catch (fetchError) {
-        throw new Error("Could not fetch the URL. Please verify it is correct and publicly accessible.");
+        if (mode === "text") {
+          const text = formData.get("text") as string;
+          if (!text) throw new Error("No text provided");
+          
+          const fullPrompt = prompt + "\n\nText to extract:\n" + text;
+          result = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: fullPrompt
+          });
+          
+        } else if (mode === "url") {
+          const url = formData.get("url") as string;
+          if (!url) throw new Error("No URL provided");
+          
+          const page = await fetch(url);
+          const html = await page.text();
+          const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
+                               .replace(/<style[\s\S]*?<\/style>/gmi, '')
+                               .replace(/<[^>]+>/g, ' ');
+          const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
+          result = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: fullPrompt
+          });
+          
+        } else if (mode === "image") {
+          const imageFile = formData.get("image") as File;
+          if (!imageFile) throw new Error("Please upload a JPG, PNG, or supported image format.");
+          
+          const arrayBuffer = await imageFile.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          result = await ai.models.generateContent({
+            model: "gemini-3.6-flash",
+            contents: [
+              prompt,
+              {
+                inlineData: {
+                  data: buffer.toString("base64"),
+                  mimeType: imageFile.type,
+                }
+              }
+            ]
+          });
+        } else {
+          throw new Error("Invalid mode");
+        }
+        
+        // If it succeeds, break out of the retry loop
+        break;
+        
+      } catch (err: any) {
+        attempt++;
+        const is503 = err.status === 503 || (err.message && err.message.includes('503')) || (err.message && err.message.includes('UNAVAILABLE'));
+        if (is503 && attempt <= maxRetries) {
+          console.log(`Gemini API 503 Error. Retrying attempt ${attempt}...`);
+          await new Promise(resolve => setTimeout(resolve, 1500)); // wait 1.5s
+        } else {
+          throw err; // throw standard error if it's not a 503 or we ran out of retries
+        }
       }
-      
-    } else if (mode === "image") {
-      const imageFile = formData.get("image") as File;
-      if (!imageFile) throw new Error("Please upload a JPG, PNG, or supported image format.");
-      
-      const arrayBuffer = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      
-      result = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
-        contents: [
-          prompt,
-          {
-            inlineData: {
-              data: buffer.toString("base64"),
-              mimeType: imageFile.type,
-            }
-          }
-        ]
-      });
-    } else {
-      throw new Error("Invalid mode");
     }
 
     const responseText = result.text;
     if (!responseText) throw new Error("AI extraction temporarily failed. Please try again.");
 
-    // Clean up markdown if any
     let cleanedText = responseText.trim();
     if (cleanedText.startsWith("```json")) cleanedText = cleanedText.substring(7);
     else if (cleanedText.startsWith("```")) cleanedText = cleanedText.substring(3);
@@ -125,7 +138,6 @@ Schema:
     
     let userMessage = "Failed to extract job details";
     
-    // Check if the error message is a JSON string from Google API
     try {
       if (error.message && error.message.includes('{')) {
         const parsed = JSON.parse(error.message);
@@ -145,8 +157,9 @@ Schema:
       userMessage = error.message || "Failed to extract job details";
     }
 
+    // Temporarily return the exact error message to debug the issue
     return NextResponse.json(
-      { error: userMessage },
+      { error: "Debug Error: " + (error.message || userMessage) },
       { status: 500 }
     );
   }
