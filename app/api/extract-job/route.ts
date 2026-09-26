@@ -23,6 +23,9 @@ export async function POST(req: Request) {
     let prompt = `Extract the following architecture job details into strict JSON format. 
 Return ONLY valid JSON. No markdown backticks, no explanations. Do not fabricate or invent missing information. Use empty string "" if unavailable.
 
+IMPORTANT INSTRUCTION FOR JOB DESCRIPTION (apply this to the 'description' field of each position):
+Read the attached job-post image and write a short, clear, professional job-description summary for the specific position mentioned. Use ONLY the information explicitly provided in the image. Do not add roles, responsibilities, skills, qualifications, experience requirements, duties, benefits, or any other details that are not mentioned. Keep it concise and natural, without trying to fill a word count. Include only the essential details such as the company/studio name, position, location, joining information, and application/contact details if provided. Make it readable, approachable, and suitable for posting on a job/recruitment website. Do not use bullet points unless necessary. Write it as one short paragraph.
+
 Normalize specific fields:
 - Employment Type MUST be exactly one of: "Full-time", "Part-time", "Contract", "Temporary", "Freelance", "Internship". (Normalize "Full time", "fulltime" to "Full-time").
 - Workplace Type MUST be exactly one of: "On-site", "Hybrid", "Remote / Work from Home". (Normalize "WFH", "Remote" to "Remote / Work from Home").

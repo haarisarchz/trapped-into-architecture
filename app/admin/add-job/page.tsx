@@ -804,7 +804,7 @@ const handleSmartExtraction = async () => {
                               </div>
                               <div>
                                 <label className="block mb-1.5 text-sm font-medium">Job Role</label>
-                                <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Designer, Manager" />
+                                <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Site visits, managing coordination drawings" />
                               </div>
                               <div>
                                 <label className="block mb-1.5 text-sm font-medium">Salary</label>
