@@ -771,6 +771,7 @@ const handleSmartExtraction = async () => {
               </div>
 
             </div>
+            </div>
 
             <div>
 
@@ -924,6 +925,7 @@ const handleSmartExtraction = async () => {
                 </div>
               </div>
             )}
+            </div>
 
             {/* JOB & APPLICATION DETAILS */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-6">
@@ -1220,8 +1222,7 @@ const handleSmartExtraction = async () => {
     </div>
   </div>
 )}
-</div>
-        </section>
+</section>
 
       <Footer />
       </main>
