@@ -108,10 +108,24 @@ export default async function Home() {
     .from("profiles")
     .select("*", { count: "exact", head: true });
 
-  const { count: jobsCount } = await supabase
+  const { data: jobsData } = await supabase
     .from("jobs")
-    .select("*", { count: "exact", head: true })
+    .select("employment_type, position")
     .eq("status", "published");
+
+  let jobsCount = 0;
+  let internshipsCount = 0;
+
+  if (jobsData) {
+    jobsData.forEach(job => {
+      const isIntern = job.employment_type === 'Internship' || (job.position && job.position.toLowerCase().includes('intern'));
+      if (isIntern) {
+        internshipsCount++;
+      } else {
+        jobsCount++;
+      }
+    });
+  }
 
   const { count: companiesCount } = await supabase
     .from("companies")
@@ -120,6 +134,7 @@ export default async function Home() {
   const stats = {
     users: usersCount || 0,
     jobs: jobsCount || 0,
+    internships: internshipsCount || 0,
     companies: Object.keys(groupedCompanies).length || 0,
   };
 

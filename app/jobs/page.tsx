@@ -81,7 +81,7 @@ const uniqueCities = [
 
     } else {
 
-      const filteredData = data.filter((job: any) => job.employment_type !== 'Internship');
+      const filteredData = data.filter((job: any) => job.employment_type !== 'Internship' && !(job.position && job.position.toLowerCase().includes('intern')));
 
       setJobs(
         filteredData.map((job) => ({

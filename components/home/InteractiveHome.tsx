@@ -50,10 +50,14 @@ export default function InteractiveHome({
 
       {/* 2. PLATFORM STATISTICS */}
       <section className="py-12 px-6 lg:px-12 bg-black text-white">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
           <div className="pt-6 md:pt-0">
             <div className="text-4xl md:text-5xl font-bold mb-2">{stats?.jobs || 0}</div>
             <div className="text-gray-400 font-medium">Jobs Available</div>
+          </div>
+          <div className="pt-6 md:pt-0">
+            <div className="text-4xl md:text-5xl font-bold mb-2">{stats?.internships || 0}</div>
+            <div className="text-gray-400 font-medium">Internships</div>
           </div>
           <div className="pt-6 md:pt-0">
             <div className="text-4xl md:text-5xl font-bold mb-2">{stats?.companies || 0}</div>
