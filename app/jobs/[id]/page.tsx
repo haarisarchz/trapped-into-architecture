@@ -322,7 +322,6 @@ export default async function JobDetailsPage({
               </div>
             </div>
 
-          </div>
 
           
             {/* JOB DESCRIPTION CARD (Full Width Bottom Box) */}
@@ -335,6 +334,7 @@ export default async function JobDetailsPage({
               </div>
             )}
             
+            </div>
             {/* SIDEBAR */}
           <aside className="space-y-6 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full pr-1">
 
