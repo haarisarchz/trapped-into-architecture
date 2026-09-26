@@ -135,7 +135,7 @@ export default function Footer() {
             </li>
             {settings?.whatsapp && (
               <li>
-                <a href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition block p-1 -m-1">
+                <a href={`https://web.whatsapp.com/send?phone=${settings.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition block p-1 -m-1">
                   Message on WhatsApp
                 </a>
               </li>
