@@ -120,7 +120,7 @@ export default async function Home() {
   const stats = {
     users: usersCount || 0,
     jobs: jobsCount || 0,
-    companies: companiesCount || 0,
+    companies: Object.keys(groupedCompanies).length || 0,
   };
 
   const jsonLd = {

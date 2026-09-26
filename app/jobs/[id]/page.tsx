@@ -104,7 +104,7 @@ export default async function JobDetailsPage({
     const hasDescription = cleanDescription.trim();
     const hasRole = jobRole.trim();
 
-  const hasSalary = job.salary && job.salary.trim();
+  const hasSalary = job.salary && job.salary.trim() && job.salary.trim().toLowerCase() !== "not disclosed";
   const hasExperience = job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
   const hasSource = job.source && job.source.trim();
 
@@ -224,12 +224,12 @@ export default async function JobDetailsPage({
                   
 
                   {/* ADDITIONAL DETAILS BUNDLED INTO HERO CARD */}
-                  <div className="mt-6 space-y-5 border-t border-gray-100 pt-6">
+                  <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
                     
                     {/* QUALIFICATIONS */}
                     {hasQualifications && (
                       <div>
-                        <h2 className="text-lg font-bold mb-2 text-gray-900">Qualifications</h2>
+                        <h2 className="text-base font-bold mb-1 text-gray-900">Qualifications</h2>
                         <p className="text-gray-700 leading-relaxed">
                           {Array.isArray(job.qualifications) ? job.qualifications.join(", ") : job.qualifications}
                         </p>
@@ -239,7 +239,7 @@ export default async function JobDetailsPage({
                     {/* SKILLS */}
                     {hasSkills && (
                       <div>
-                        <h2 className="text-lg font-bold mb-2 text-gray-900">Skills Required</h2>
+                        <h2 className="text-base font-bold mb-1 text-gray-900">Skills Required</h2>
                         <div className="flex flex-wrap gap-2">
                           {job.skills_required.filter(Boolean).map((skill: string) => (
                             <span key={skill.trim()} className="bg-gray-100 text-gray-800 border border-gray-200 px-4 py-2 rounded-full text-sm font-medium">
@@ -254,7 +254,7 @@ export default async function JobDetailsPage({
                       {/* JOB ROLE */}
                       {hasRole && (
                         <div>
-                          <h2 className="text-lg font-bold mb-2 text-gray-900">Job Role</h2>
+                          <h2 className="text-base font-bold mb-1 text-gray-900">Job Role</h2>
                           <div className="text-gray-700 leading-relaxed whitespace-pre-line">
                             {jobRole}
                           </div>
@@ -263,7 +263,7 @@ export default async function JobDetailsPage({
 
                     {/* DATES */}
                     <div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
                         {job.posted_date && (
                           <div>
                             <p className="text-sm text-gray-500">Posted Date</p>
@@ -292,7 +292,7 @@ export default async function JobDetailsPage({
                     </div>
 
                     {/* APPLY / EMAIL NOW (Moved to bottom center) */}
-                    <div className="pt-6 mt-6 border-t border-gray-100 flex justify-center w-full">
+                    <div className="pt-4 mt-4 border-t border-gray-100 flex justify-center w-full">
                       {isExpired ? (
                         <button disabled className="bg-gray-200 text-gray-500 px-8 py-3.5 rounded-xl text-lg font-bold cursor-not-allowed w-full sm:w-auto text-center">
                           Post Expired
@@ -300,12 +300,12 @@ export default async function JobDetailsPage({
                       ) : (
                         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                           {job.apply_link && (
-                            <a href={job.apply_link} target="_blank" rel="noopener noreferrer" className="bg-black text-white px-10 py-3.5 rounded-xl text-lg font-bold hover:bg-gray-800 transition w-full sm:w-auto text-center shadow-md">
+                            <a href={job.apply_link} target="_blank" rel="noopener noreferrer" className="bg-black text-white px-8 py-3 rounded-xl text-base font-bold hover:bg-gray-800 transition w-full sm:w-auto text-center shadow-md">
                               Apply Now ↗
                             </a>
                           )}
                           {job.application_email && (
-                            <a href={`mailto:${job.application_email}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-10 py-3.5 rounded-xl text-lg font-bold border-2 border-black hover:bg-gray-50 transition w-full sm:w-auto text-center shadow-sm">
+                            <a href={`mailto:${job.application_email}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-8 py-3 rounded-xl text-base font-bold border-2 border-black hover:bg-gray-50 transition w-full sm:w-auto text-center shadow-sm">
                               Email Now
                             </a>
                           )}
