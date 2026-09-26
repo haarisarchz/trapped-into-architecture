@@ -62,6 +62,20 @@ function AdminShareButton({ job, siteSettings }: { job: any, siteSettings: any }
               Facebook
             </a>
             <a 
+              href="https://www.instagram.com/"
+              target="_blank" rel="noopener noreferrer"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(text);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              title="Instagram doesn't support direct link sharing. Text copied to clipboard."
+            >
+              Instagram (Copies Text)
+            </a>
+            <a 
               href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(job.position + " at " + job.firm_name)}`}
               target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}

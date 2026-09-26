@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
-import { WhatsAppBrandIcon, FacebookBrandIcon, LinkedInBrandIcon, TelegramBrandIcon, XBrandIcon } from "@/components/icons/BrandIcons";
+import { WhatsAppBrandIcon, FacebookBrandIcon, LinkedInBrandIcon, TelegramBrandIcon, XBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
 
 export default function Footer() {
@@ -91,9 +91,14 @@ export default function Footer() {
                 <LinkedInBrandIcon size={28} />
               </a>
             )}
-            {settings?.instagram && (
-              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition hover:scale-110 transform" title="Telegram">
+            {settings?.website_url && (
+              <a href={settings.website_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition hover:scale-110 transform" title="Telegram">
                 <TelegramBrandIcon size={28} />
+              </a>
+            )}
+            {settings?.instagram && (
+              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition hover:scale-110 transform" title="Instagram">
+                <InstagramBrandIcon size={28} />
               </a>
             )}
           </div>
