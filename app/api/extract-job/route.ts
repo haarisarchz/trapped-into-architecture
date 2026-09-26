@@ -31,7 +31,9 @@ IMPORTANT INSTRUCTION FOR POSITIONS ARRAY:
 - 'role': Extract the specific job role/duties (e.g., "Site supervision, coordination, quantity estimation, and BOQ" or "Architectural planning and working drawings").
 - 'qualifications': Extract educational degrees separately (e.g., "B.Arch", "B.Tech and Diploma in Engineering"). Do NOT put these in the description.
 - 'skills': Extract software skills separately into an array (e.g., ["AutoCAD", "SketchUp", "Revit", "Lumion", "Enscape"]). Do NOT put software names in the description.
-- 'description': After extracting role, qualifications, and skills, write a clean, natural paragraph summarizing the remaining context of the position. Combine the position details into a concise paragraph. Do not just blindly copy raw text if it includes software or degrees.
+- 'description': Write a concise, natural, and precise narrative paragraph using ONLY the extracted details for this specific position. You must strictly follow this template format (adapt grammar naturally): 
+    "[Firm Name] is hiring [Position] who is expected to have skills in [skills], and hold qualifications in [qualifications]. The primary role involves [role duties]. The position is located in [City], [State]. Interested candidates can apply via [Application method/Email/Phone]." 
+    Do NOT mention any details that are not present in the image (e.g. do not guess the city if it is not in the image, just omit that part). Ensure the paragraph is cohesive and professional.
 
 Normalize specific fields:
 - Employment Type MUST be exactly one of: "Full-time", "Part-time", "Contract", "Temporary", "Freelance", "Internship". (Normalize "Full time", "fulltime" to "Full-time").

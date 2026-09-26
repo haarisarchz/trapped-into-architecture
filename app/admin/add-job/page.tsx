@@ -257,14 +257,7 @@ const removePosition = (index) => {
       // Populate multiple positions from valid siblings
       setPositions(validSiblings.map(s => {
          let rRole = "";
-         let rDesc = s.job_description || "";
-         if (rDesc.startsWith("**Job Role:**")) {
-           const lines = rDesc.split("\n\n");
-           if (lines.length > 1) {
-             rRole = lines[0].replace("**Job Role:**", "").trim();
-             rDesc = lines.slice(1).join("\n\n");
-           }
-         }
+           let rDesc = s.job_description || "";
          return {
            id: s.id,
            position: s.position || "",
@@ -529,7 +522,7 @@ const handlePublishJob = async (
       position: pos.position,
       experience: pos.experience,
       salary: pos.salary,
-      job_description: pos.role ? `**Job Role:** ${pos.role}\n\n${pos.description}` : pos.description,
+      job_description: pos.description,
       qualifications: sameRequirements 
           ? (Array.isArray(qualifications) ? qualifications : (qualifications ? [qualifications] : []))
           : (Array.isArray(pos.qualifications) ? pos.qualifications : (pos.qualifications ? [pos.qualifications] : (qualifications ? (Array.isArray(qualifications) ? qualifications : [qualifications]) : []))),
