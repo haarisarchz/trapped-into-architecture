@@ -13,6 +13,7 @@ import Autocomplete from "@/components/Autocomplete";
 
 export default function AddJobPage() {
 const [jobId, setJobId] = useState<string | null>(null);
+const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
 
 useEffect(() => {
   const params = new URLSearchParams(window.location.search);
@@ -219,8 +220,8 @@ const removePosition = (index) => {
   if (!jobId) return;
 
   const fetchJob = async () => {
-    const { data, error } = await supabase
-      .from("admin_jobs")
+    const { data: job, error } = await supabase
+      .from("jobs")
       .select("*")
       .eq("id", jobId)
       .single();
@@ -230,44 +231,71 @@ const removePosition = (index) => {
       return;
     }
 
-    if (data) {
-      setFirmName(data.firm_name || "");
-      if (data.employment_type) setEmploymentType(data.employment_type);
-      if (data.workplace_type) setWorkplaceType(data.workplace_type);
-      setOrganizationType(data.organization_type || "Firm");
-      setArea(data.area || "");
-      setCity(data.city || "");
-      setState(data.state || "");
-
-      if (data.positions && Array.isArray(data.positions) && data.positions.length > 0) {
-        setPositions(data.positions);
-      } else if (data.position) {
-        setPositions([{ 
-          position: data.position || "",
-          salary: data.salary || "",
-          description: data.job_description || "",
-          experience: Array.isArray(data.experience) ? data.experience : (data.experience ? [data.experience] : []),
-          completed: false
-        }]);
-      }
-
-      setQualifications(data.qualifications || "");
-      setSkills(data.skills_required || "");
-      setPostedDate(data.posted_date || "");
-      setLastDateToApply(data.last_date_to_apply || "");
-      setPostExpiryDate(data.post_expiry_date || "");
-      setImageUrl(data.image || "");
+    if (job) {
+      // Find all siblings in the batch
+      let query = supabase.from("jobs").select("*")
+        .eq("firm_name", job.firm_name)
+        .eq("status", job.status);
       
-      if (data.apply_link) {
+      if (job.posted_date) query = query.eq("posted_date", job.posted_date);
+      else query = query.is("posted_date", null);
+
+      if (job.image) query = query.eq("image", job.image);
+      
+      const { data: siblings } = await query;
+      const validSiblings = siblings && siblings.length > 0 ? siblings : [job];
+      setInitialJobIds(validSiblings.map(s => s.id));
+
+      setFirmName(job.firm_name || "");
+      if (job.employment_type) setEmploymentType(job.employment_type);
+      if (job.workplace_type) setWorkplaceType(job.workplace_type);
+      setOrganizationType(job.organization_type || "Firm");
+      setArea(job.area || "");
+      setCity(job.city || "");
+      setState(job.state || "");
+
+      // Populate multiple positions from valid siblings
+      setPositions(validSiblings.map(s => {
+         let rRole = "";
+         let rDesc = s.job_description || "";
+         if (rDesc.startsWith("**Job Role:**")) {
+           const lines = rDesc.split("\n\n");
+           if (lines.length > 1) {
+             rRole = lines[0].replace("**Job Role:**", "").trim();
+             rDesc = lines.slice(1).join("\n\n");
+           }
+         }
+         return {
+           id: s.id,
+           position: s.position || "",
+           role: rRole,
+           salary: s.salary || "",
+           description: rDesc,
+           experience: Array.isArray(s.experience) ? s.experience : (s.experience ? [s.experience] : []),
+           qualifications: s.qualifications || "",
+           skills: s.skills_required || [],
+           completed: false
+         };
+      }));
+
+      // For standard fields we can just use the first job's values (they are identical)
+      setQualifications(job.qualifications || "");
+      setSkills(job.skills_required || "");
+      setPostedDate(job.posted_date || "");
+      setLastDateToApply(job.last_date_to_apply || "");
+      setPostExpiryDate(job.post_expiry_date || "");
+      setImageUrl(job.image || "");
+      
+      if (job.apply_link) {
         setApplicationType("apply");
-        setapply_link(data.apply_link);
-      } else if (data.application_email) {
+        setapply_link(job.apply_link);
+      } else if (job.application_email) {
         setApplicationType("email");
-        setapplication_email(data.application_email);
+        setapplication_email(job.application_email);
       }
 
-      if (data.status === "scheduled") {
-         setScheduleDate(data.posted_date);
+      if (job.status === "scheduled") {
+         setScheduleDate(job.posted_date);
       }
     }
   };
@@ -491,6 +519,7 @@ const handlePublishJob = async (
     let jobData = null;
 
     const publicJobs = positions.map(pos => ({
+      ...(pos.id ? { id: pos.id } : {}),
       firm_name: firmName,
       company_id: currentCompanyId,
       employment_type: employmentType,
@@ -516,11 +545,17 @@ const handlePublishJob = async (
     }));
 
     if (jobId) {
-      // For updates, we can only easily update the first position with the simple form
-      // A fully grouped architecture requires admin_jobs which does not exist in DB yet
-      const { data, error } = await supabase.from("jobs").update(publicJobs[0]).eq("id", jobId).select().single();
+      // First, delete any siblings that were removed from the UI
+      const currentIds = publicJobs.map(p => p.id).filter(Boolean);
+      const toDelete = initialJobIds.filter(id => !currentIds.includes(id));
+      if (toDelete.length > 0) {
+        await supabase.from("jobs").delete().in("id", toDelete);
+      }
+      
+      // Upsert the entire batch (inserts new ones without IDs, updates existing ones with IDs)
+      const { data, error } = await supabase.from("jobs").upsert(publicJobs).select();
       if (error) throw error;
-      jobData = data;
+      jobData = data && data.length > 0 ? data[0] : null;
     } else {
       const { data, error } = await supabase.from("jobs").insert(publicJobs).select();
       if (error) throw error;
