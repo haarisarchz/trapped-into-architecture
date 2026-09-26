@@ -402,7 +402,8 @@ const handlePublishJob = async (
   setIsPublishing(true);
 
   try {
-    let currentCompanyId = selectedCompanyId;
+      const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+      let currentCompanyId = selectedCompanyId;
 
     if (status !== "draft" && firmName) {
       const companyPayload = {
@@ -492,8 +493,6 @@ const handlePublishJob = async (
     const formattedExpiry = expiry.toISOString().split("T")[0];
 
     const finalExpiryDate = postExpiryDate || formattedExpiry;
-    const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-
     const adminPayload = {
       firm_name: firmName,
       company_id: currentCompanyId,
