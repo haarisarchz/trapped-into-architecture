@@ -141,31 +141,15 @@ const fetchJobs = async () => {
       );
     }
 
-    // Group by batch
-    const grouped = [];
-    const map = new Map();
-    for (const job of filteredJobs) {
-      const key = `${job.author_id}_${job.firm_name}_${job.posted_date}_${job.status}_${job.image}`;
-      if (!map.has(key)) {
-        map.set(key, { ...job, grouped_positions: [job] });
-        grouped.push(map.get(key));
-      } else {
-        map.get(key).grouped_positions.push(job);
-        const count = map.get(key).grouped_positions.length;
-        map.get(key).position = `Multiple Positions (${count})`;
-      }
-    }
-
-    setJobs(grouped);
+    setJobs(filteredJobs);
   };
-  /* DELETE JOB */
 
+  /* DELETE JOB */
   const deleteJob = async (job: any) => {
-    const confirmDelete = confirm("Delete this job batch?");
+    const confirmDelete = confirm("Delete this job?");
     if (!confirmDelete) return;
 
-    const idsToDelete = job.grouped_positions ? job.grouped_positions.map((p: any) => p.id) : [job.id];
-    const { error } = await supabase.from("jobs").delete().in("id", idsToDelete);
+    const { error } = await supabase.from("jobs").delete().eq("id", job.id);
     if (error) {
       console.log(error);
     } else {
