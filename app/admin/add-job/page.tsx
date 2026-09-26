@@ -266,8 +266,7 @@ const removePosition = (index) => {
         setapplication_email(data.application_email);
       }
 
-      if (data.status === "scheduled" && data.schedule_time) {
-         setScheduleTime(data.schedule_time);
+      if (data.status === "scheduled") {
          setScheduleDate(data.posted_date);
       }
     }
@@ -478,7 +477,7 @@ const handlePublishJob = async (
       positions: positions,
       qualifications: qualifications,
       skills_required: skills,
-      posted_date: status === "published" ? formattedToday : null,
+      posted_date: status === "published" ? formattedToday : (status === "scheduled" ? scheduleDate : null),
       last_date_to_apply: lastDateToApply || null,
       post_expiry_date: finalExpiryDate,
       apply_link: apply_link,
@@ -486,8 +485,7 @@ const handlePublishJob = async (
       source: source,
       image: imageUrl,
       status: status,
-      author_id: activeUser?.id || null,
-      schedule_time: status === "scheduled" ? scheduleTime : null
+      author_id: activeUser?.id || null
     };
 
     let jobData = null;
@@ -506,7 +504,7 @@ const handlePublishJob = async (
       job_description: pos.role ? `**Job Role:** ${pos.role}\n\n${pos.description}` : pos.description,
       qualifications: sameRequirements ? qualifications : (pos.qualifications || qualifications),
       skills_required: sameRequirements ? skills : (pos.skills || skills),
-      posted_date: status === "published" ? formattedToday : null,
+      posted_date: status === "published" ? formattedToday : (status === "scheduled" ? scheduleDate : null),
       last_date_to_apply: lastDateToApply || null,
       post_expiry_date: finalExpiryDate,
       apply_link: apply_link,
@@ -514,8 +512,7 @@ const handlePublishJob = async (
       source: source,
       image: imageUrl,
       status: status,
-      author_id: activeUser?.id || null,
-      schedule_time: status === "scheduled" ? scheduleTime : null
+      author_id: activeUser?.id || null
     }));
 
     if (jobId) {
