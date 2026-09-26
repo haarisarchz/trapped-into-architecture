@@ -72,9 +72,18 @@ const [editedUser, setEditedUser] =
 
     setUser(formattedUser);
     setEditedUser(formattedUser);
-
     setBio(profile.bio || "");
 
+    // Fetch saved jobs from DB
+    const { data: savedEntries } = await supabase
+      .from("saved_jobs")
+      .select("job_id")
+      .eq("user_id", profile.id);
+      
+    if (savedEntries && savedEntries.length > 0) {
+      const ids = savedEntries.map(e => e.job_id);
+      fetchSavedJobs(ids);
+    }
   };
 
   loadProfile();

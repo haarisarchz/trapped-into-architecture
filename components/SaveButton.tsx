@@ -28,11 +28,17 @@ export default function SaveButton({
       if (!userStr) return;
       try {
         const user = JSON.parse(userStr);
-        if (user && user.id) {
+        
+        let userId = user?.id;
+        if (!userId && (user?.username || user?.email)) {
+           const { data: pData } = await supabase.from('profiles').select('id').eq(user.username ? 'username' : 'email', user.username || user.email).maybeSingle();
+           if (pData) userId = pData.id;
+        }
+        if (userId) {
           const { data } = await supabase
             .from("saved_jobs")
             .select("id")
-            .eq("user_id", user.id)
+            .eq("user_id", userId)
             .eq("job_id", jobId)
             .maybeSingle();
           setIsSaved(!!data);
@@ -62,10 +68,18 @@ export default function SaveButton({
       return;
     }
 
-    if (!user || !user.id) {
+    
+    let userId = user?.id;
+    if (!userId && (user?.username || user?.email)) {
+       const { data: pData } = await supabase.from('profiles').select('id').eq(user.username ? 'username' : 'email', user.username || user.email).maybeSingle();
+       if (pData) userId = pData.id;
+    }
+    
+    if (!userId) {
       alert("Please login first to save jobs");
       return;
     }
+
 
     if (loading) return;
     setLoading(true);
@@ -77,7 +91,7 @@ export default function SaveButton({
         setSaveCount(prev => Math.max(0, prev - 1));
 
         // Delete from saved_jobs
-        await supabase.from("saved_jobs").delete().eq("user_id", user.id).eq("job_id", jobId);
+        await supabase.from("saved_jobs").delete().eq("user_id", userId).eq("job_id", jobId);
         
         // Decrement atomically
         await supabase.rpc("decrement_save_count", { job_id: jobId });
@@ -87,7 +101,7 @@ export default function SaveButton({
         setSaveCount(prev => prev + 1);
 
         // Insert into saved_jobs
-        await supabase.from("saved_jobs").insert({ user_id: user.id, job_id: jobId });
+        await supabase.from("saved_jobs").insert({ user_id: userId, job_id: jobId });
         
         // Increment atomically
         await supabase.rpc("increment_save_count", { job_id: jobId });

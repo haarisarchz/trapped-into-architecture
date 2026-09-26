@@ -111,6 +111,8 @@ const uniqueCities = [
           application_email: job.application_email,
           source: job.source,
           image: job.image,
+          save_count: job.save_count || 0,
+          share_count: job.share_count || 0,
         }))
       );
 
@@ -1107,6 +1109,8 @@ setSelectedSalary([]);
       application_email={job.application_email}
       source={job.source}
       image={job.image}
+      save_count={job.save_count}
+      share_count={job.share_count}
     />
 
   )); return filtered.length > 0 ? filtered : <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500"><p className="text-xl font-semibold">No jobs available at the moment.</p><p className="mt-2 text-sm">Try adjusting your filters or search query.</p></div>; })()}
