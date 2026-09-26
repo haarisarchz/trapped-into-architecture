@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { WhatsAppBrandIcon, FacebookBrandIcon, LinkedInBrandIcon, TelegramBrandIcon, XBrandIcon } from "@/components/icons/BrandIcons";
+
 
 export default function Footer() {
   const router = useRouter();
@@ -73,30 +75,25 @@ export default function Footer() {
             Careers, knowledge, opportunities and growth for architecture students and professionals.
           </p>
           
-          <div className="mt-6 flex items-center gap-4 text-gray-400">
+          <div className="mt-6 flex flex-wrap items-center gap-4 text-gray-400">
             {settings?.whatsapp_channel_url && (
-              <a href={settings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="hover:text-green-500 transition" title="WhatsApp Channel">
-                <MessageCircle size={20} />
+              <a href={settings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition hover:scale-110 transform" title="WhatsApp Channel">
+                <WhatsAppBrandIcon size={28} />
               </a>
             )}
             {settings?.facebook && (
-              <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition" title="Facebook">
-                <span className="font-bold">FB</span>
-              </a>
-            )}
-            {settings?.instagram && (
-              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-pink-500 transition" title="Instagram">
-                <span className="font-bold">IG</span>
-              </a>
-            )}
-            {settings?.twitter && (
-              <a href={settings.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-white transition" title="X / Twitter">
-                <span className="font-bold">X</span>
+              <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition hover:scale-110 transform" title="Facebook">
+                <FacebookBrandIcon size={28} />
               </a>
             )}
             {settings?.linkedin && (
-              <a href={settings.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition" title="LinkedIn">
-                <span className="font-bold">IN</span>
+              <a href={settings.linkedin} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition hover:scale-110 transform" title="LinkedIn">
+                <LinkedInBrandIcon size={28} />
+              </a>
+            )}
+            {settings?.instagram && (
+              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition hover:scale-110 transform" title="Telegram">
+                <TelegramBrandIcon size={28} />
               </a>
             )}
           </div>

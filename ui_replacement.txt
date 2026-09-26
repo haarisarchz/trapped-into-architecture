@@ -1,0 +1,159 @@
+{/* POSITIONS & DESCRIPTIONS */}
+              <div className="mt-8 mb-8">
+                <div className="flex justify-between items-end mb-4">
+                  <h2 className="text-xl font-bold">Position Details</h2>
+                  <button type="button" onClick={addPosition} className="text-blue-600 font-bold hover:underline text-sm">+ Add Position</button>
+                </div>
+                
+                <div className="space-y-4">
+                  {positions.map((pos, index) => (
+                    <div key={index} className="border border-gray-200 p-5 rounded-xl bg-white shadow-sm relative text-black">
+                      {positions.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => removePosition(index)} 
+                          className="absolute top-5 right-5 text-red-500 text-xs font-bold hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block mb-1 text-sm font-medium">Position <span className="text-red-500">*</span></label>
+                          <input 
+                            type="text" 
+                            list="positionsList"
+                            value={pos.position} 
+                            onChange={(e) => updatePosition(index, "position", e.target.value)} 
+                            className="w-full border rounded-xl px-3 py-2 bg-white text-black text-sm" 
+                            placeholder="e.g. Junior Architect" 
+                          />
+                          <datalist id="positionsList">
+                            {positionOptions.map((opt) => <option key={opt} value={opt} />)}
+                          </datalist>
+                        </div>
+                        <div>
+                          <label className="block mb-1 text-sm font-medium">Job Role</label>
+                          <input type="text" value={pos.role} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2 bg-white text-black text-sm" placeholder="e.g. Designer, Manager" />
+                        </div>
+                        
+                        <div>
+                          <label className="block mb-1 text-sm font-medium">Salary</label>
+                          <Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2 bg-white text-black text-sm" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
+                        </div>
+                        
+                        <div>
+                          <label className="block mb-1 text-sm font-medium">Required Experience <span className="text-red-500">*</span></label>
+                          <div className="flex flex-wrap gap-2">
+                            {EXPERIENCE_OPTIONS.map((exp) => {
+                              const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
+                              const isSelected = currentExps.includes(exp);
+                              return (
+                                <button
+                                  key={exp}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      updatePosition(index, "experience", currentExps.filter(e => e !== exp));
+                                    } else {
+                                      updatePosition(index, "experience", [...currentExps, exp]);
+                                    }
+                                  }}
+                                  className={`px-3 py-1.5 border rounded-full text-xs font-semibold transition ${
+                                    isSelected
+                                      ? "bg-black text-white border-black"
+                                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  {exp}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                          <label className="block mb-1 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
+                          <textarea 
+                            value={pos.description}
+                            onChange={(e) => updatePosition(index, "description", e.target.value)}
+                            className="w-full border rounded-xl px-3 py-2 bg-white text-black min-h-[90px] resize-y text-sm"
+                            placeholder="Write detailed job description..."
+                          />
+                        </div>
+
+                        {!sameRequirements && (
+                          <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-100">
+                             <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                   <label className="block mb-1 text-sm font-medium"> Qualifications </label>
+                                   <Autocomplete value={pos.qualifications || ""} onChange={(val) => updatePosition(index, "qualifications", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2 bg-white text-black text-sm" placeholder="e.g. B.Arch" />
+                                </div>
+                                <div>
+                                   <label className="block mb-1 text-sm font-medium"> Skills Required </label>
+                                   <input type="text" value={(pos.skills || []).join(", ")} onChange={(e) => {
+                                       const vals = e.target.value.split(",").map(v=>v.trim()).filter(Boolean);
+                                       updatePosition(index, "skills", vals);
+                                   }} className="w-full border rounded-xl px-3 py-2 bg-white text-black text-sm" placeholder="e.g. AutoCAD, Revit (comma separated)" />
+                                </div>
+                             </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* REQUIREMENTS */}
+              <div className="flex items-center justify-between mt-8 mb-4">
+                <h2 className="text-xl font-bold">
+                  Requirements
+                </h2>
+                <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                  <input type="checkbox" checked={sameRequirements} onChange={(e) => setSameRequirements(e.target.checked)} className="w-4 h-4 accent-black" />
+                  Same requirements for all positions
+                </label>
+              </div>
+
+              {sameRequirements && (
+                <div className="border border-gray-200 p-5 rounded-xl bg-white shadow-sm mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div> 
+                      <label className="block mb-1 text-sm font-medium"> Qualifications </label>
+                      <Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2 bg-white text-black text-sm" placeholder="e.g. B.Arch" />
+                    </div> 
+
+                    <div>
+                      <label className="block mb-1 text-sm font-medium">
+                        Skills Required
+                      </label>
+                      <Autocomplete value={skillInput} onChange={(val) => {   if (val.endsWith(",")) {     const newSkill = val.slice(0, -1).trim();     if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }     setSkillInput("");   } else {     setSkillInput(val);   } }} onSelect={(val) => {   const newSkill = val.trim();   if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }   setSkillInput(""); }} fetchSuggestions={async (q) => {   const { data } = await supabase.from("jobs").select("skills_required").limit(100);   if (!data) return [];   const all = new Set();   data.forEach(job => {     if (Array.isArray(job.skills_required)) {       job.skills_required.forEach((s) => {         if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);       });     } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {       all.add(job.skills_required);     }   });   return Array.from(all).slice(0, 10) as string[]; }} placeholder="Type skill and press comma or select" className="w-full border rounded-xl px-3 py-2 bg-white text-black text-sm" />
+                      
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {skills.map((skill) => (
+                          <div
+                            key={skill}
+                            className="bg-black text-white px-3 py-1 rounded-full text-xs flex items-center gap-2"
+                          >
+                            <span>{skill}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSkills(skills.filter((s) => s !== skill))
+                              }
+                              className="text-white hover:text-red-400 font-bold"
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* VISIBILITY */}

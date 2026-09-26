@@ -1,0 +1,100 @@
+                  {positions.map((pos, index) => (
+                    <div key={index} className="border border-gray-200 p-6 rounded-2xl bg-white shadow-sm relative text-black">
+                      {positions.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => removePosition(index)} 
+                          className="absolute top-6 right-6 text-red-500 text-sm font-bold hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block mb-2 font-medium">Position <span className="text-red-500">*</span></label>
+                          <input 
+                            type="text" 
+                            list="positionsList"
+                            value={pos.position} 
+                            onChange={(e) => updatePosition(index, "position", e.target.value)} 
+                            className="w-full border rounded-2xl px-4 py-3 bg-white text-black" 
+                            placeholder="e.g. Junior Architect" 
+                          />
+                          <datalist id="positionsList">
+                            {positionOptions.map((opt) => <option key={opt} value={opt} />)}
+                          </datalist>
+                        </div>
+                        <div>
+                          <label className="block mb-2 font-medium">Salary</label><Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
+                        </div>
+                        
+                        <div>
+                          <label className="block mb-2 font-medium">Required Experience <span className="text-red-500">*</span></label>
+                          <div className="flex flex-wrap gap-2">
+                            {EXPERIENCE_OPTIONS.map((exp) => {
+                              const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
+                              const isSelected = currentExps.includes(exp);
+                              return (
+                                <button
+                                  key={exp}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      updatePosition(index, "experience", currentExps.filter(e => e !== exp));
+                                    } else {
+                                      updatePosition(index, "experience", [...currentExps, exp]);
+                                    }
+                                  }}
+                                  className={`px-4 py-2 border rounded-full text-sm font-semibold transition ${
+                                    isSelected
+                                      ? "bg-black text-white border-black"
+                                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  {exp}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col h-full">
+                          <label className="block mb-2 font-medium">Job Description <span className="text-red-500">*</span></label>
+                          <textarea 
+                            value={pos.description}
+                            onChange={(e) => updatePosition(index, "description", e.target.value)}
+                            className="w-full flex-1 border rounded-2xl px-4 py-3 bg-white text-black min-h-[110px] resize-y"
+                            placeholder="Write detailed job description..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+
+              {/* REQUIREMENTS */}
+              <h2 className="text-2xl font-bold mt-10 mb-6">
+                Requirements
+              </h2>
+
+              {/* QUALIFICATION */} <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> <div> <label className="block mb-2 font-medium"> Qualifications </label><Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-2xl px-4 py-3 bg-white text-black" placeholder="e.g. B.Arch" /></div> </div>
+
+              {/* SKILLS */}
+
+              <div className="mt-6">
+
+                <label className="block mb-2 font-medium">
+                  Skills Required
+                </label>
+
+                <Autocomplete value={skillInput} onChange={(val) => {   if (val.endsWith(",")) {     const newSkill = val.slice(0, -1).trim();     if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }     setSkillInput("");   } else {     setSkillInput(val);   } }} onSelect={(val) => {   const newSkill = val.trim();   if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }   setSkillInput(""); }} fetchSuggestions={async (q) => {   const { data } = await supabase.from("jobs").select("skills_required").limit(100);   if (!data) return [];   const all = new Set();   data.forEach(job => {     if (Array.isArray(job.skills_required)) {       job.skills_required.forEach((s) => {         if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);       });     } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {       all.add(job.skills_required);     }   });   return Array.from(all).slice(0, 10) as string[]; }} placeholder="Type skill and press comma or select" className="w-full border rounded-2xl px-4 py-3 bg-white text-black" />
+
+                <div className="flex flex-wrap gap-2 mt-3">
+
+                  {skills.map((skill) => (
+
+                    <div
+                      key={skill}
