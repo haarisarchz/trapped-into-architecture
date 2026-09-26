@@ -91,15 +91,27 @@ export default async function JobDetailsPage({
 
   const hasSkills = job.skills_required && Array.isArray(job.skills_required) && job.skills_required.filter(Boolean).length > 0;
   const hasQualifications = job.qualifications && ((Array.isArray(job.qualifications) && job.qualifications.filter(Boolean).length > 0) || (typeof job.qualifications === "string" && job.qualifications.trim()));
-  const hasDescription = job.job_description && job.job_description.trim();
+  
+    let jobRole = "";
+    let cleanDescription = job.job_description || "";
+    if (cleanDescription.startsWith("**Job Role:**")) {
+      const parts = cleanDescription.split("\n\n");
+      if (parts.length > 1) {
+        jobRole = parts[0].replace("**Job Role:**", "").trim();
+        cleanDescription = parts.slice(1).join("\n\n");
+      }
+    }
+    const hasDescription = cleanDescription.trim();
+    const hasRole = jobRole.trim();
+
   const hasSalary = job.salary && job.salary.trim();
   const hasExperience = job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
   const hasSource = job.source && job.source.trim();
 
-  const cityJobs = jobs.filter((j: any) => j.city === job.city).slice(0, 5);
-  const positionJobs = jobs.filter((j: any) => j.position === job.position).slice(0, 5);
-  const recentJobs = [...jobs].sort((a,b) => new Date(b.created_at || b.posted_date).getTime() - new Date(a.created_at || a.posted_date).getTime()).slice(0, 5);
-  const popularJobs = [...jobs].sort((a,b) => (b.save_count || 0) - (a.save_count || 0)).slice(0, 5);
+  const cityJobs = jobs.filter((j: any) => j.city === job.city).slice(0, 3);
+  const positionJobs = jobs.filter((j: any) => j.position === job.position).slice(0, 3);
+  const recentJobs = [...jobs].sort((a,b) => new Date(b.created_at || b.posted_date).getTime() - new Date(a.created_at || a.posted_date).getTime()).slice(0, 3);
+  const popularJobs = [...jobs].sort((a,b) => (b.save_count || 0) - (a.save_count || 0)).slice(0, 3);
 
   return (
     <main className="min-h-screen bg-gray-50 text-black">
@@ -238,15 +250,16 @@ export default async function JobDetailsPage({
                       </div>
                     )}
 
-                    {/* DESCRIPTION */}
-                    {hasDescription && (
-                      <div>
-                        <h2 className="text-lg font-bold mb-2 text-gray-900">Job Description</h2>
-                        <div className="text-gray-700 leading-relaxed whitespace-pre-line">
-                          {job.job_description}
+                    
+                      {/* JOB ROLE */}
+                      {hasRole && (
+                        <div>
+                          <h2 className="text-lg font-bold mb-2 text-gray-900">Job Role</h2>
+                          <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                            {jobRole}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* DATES */}
                     <div>
@@ -311,8 +324,19 @@ export default async function JobDetailsPage({
 
           </div>
 
-          {/* SIDEBAR */}
-          <aside className="space-y-6">
+          
+            {/* JOB DESCRIPTION CARD (Full Width Bottom Box) */}
+            {hasDescription && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
+                <h2 className="text-2xl font-bold mb-4 text-gray-900">Job Description</h2>
+                <div className="text-gray-700 leading-relaxed whitespace-pre-line text-lg">
+                  {cleanDescription}
+                </div>
+              </div>
+            )}
+            
+            {/* SIDEBAR */}
+          <aside className="space-y-6 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full pr-1">
 
   {/* SAME POSITION JOBS */}
   {positionJobs.length > 0 && (
