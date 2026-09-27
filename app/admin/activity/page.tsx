@@ -408,11 +408,11 @@ export default function AdminActivityPage() {
                           <div className="space-y-3">
                             {jobsList.sort((a,b) => new Date(b.posted_date || b.created_at).getTime() - new Date(a.posted_date || a.created_at).getTime()).map((job, j) => (
                               <div key={j} className="flex justify-between items-center text-sm p-3 rounded-lg border border-gray-100 bg-gray-50">
-                                <div>
-                                  <div className="font-medium text-gray-800 max-w-[150px] truncate">{job.position}</div>
-                                  
-                                </div>
-                                <div className="text-right flex items-center gap-4">
+                                <div className="flex-1 min-w-0 pr-4">
+                                    <div className="font-medium text-gray-800 truncate">{job.position}</div>
+                                    <div className="text-xs text-gray-500 truncate mt-0.5">{job.firm_name}</div>
+                                  </div>
+                                  <div className="text-right flex items-center gap-4 flex-shrink-0">
                                     <div className="flex flex-col items-end">
                                       <div className={`text-xs px-2 py-1 rounded-full capitalize inline-block mb-1 ${job.status === 'published' ? 'bg-green-100 text-green-800' : job.status === 'draft' ? 'bg-gray-200 text-gray-800' : 'bg-blue-100 text-blue-800'}`}>
                                         {job.status === 'published' ? 'Published' : job.status === 'draft' ? 'Saved Draft' : 'Scheduled'}
