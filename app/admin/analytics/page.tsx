@@ -54,15 +54,17 @@ export default function AnalyticsPage() {
             <p className="text-gray-500 mt-1">Real-time traffic and user insights</p>
           </div>
           <select 
-            value={days} 
-            onChange={(e) => setDays(e.target.value)}
-            className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-black focus:border-black block p-2.5 shadow-sm font-medium"
-          >
-            <option value="7">Last 7 Days</option>
-            <option value="30">Last 30 Days</option>
-            <option value="90">Last 90 Days</option>
-            <option value="365">Last 365 Days</option>
-          </select>
+              value={days} 
+              onChange={(e) => setDays(e.target.value)}
+              className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-black focus:border-black block p-2.5 shadow-sm font-medium"
+            >
+              <option value="1h">Last 1 Hour</option>
+              <option value="1">Last 24 Hours</option>
+              <option value="7">Last 7 Days</option>
+              <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
+              <option value="365">Last 365 Days</option>
+            </select>
         </div>
 
         {loading ? (
@@ -164,10 +166,46 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-            </div>
+           
+              {/* DEVICES */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-bold mb-4">Devices</h3>
+                <div className="space-y-4">
+                  {!data.devices || data.devices.length === 0 ? <p className="text-gray-400 text-sm">No data available.</p> : null}
+                  {data.devices && data.devices.map((item: any, i: number) => (
+                    <div key={i} className="text-sm">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium capitalize">{item.deviceCategory}</span>
+                        <span className="font-semibold text-gray-700">{item.users}</span>
+                      </div>
+                      <ProgressBar value={item.users} max={Math.max(...data.devices.map((p: any) => p.users))} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CITIES */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-bold mb-4">Top Cities</h3>
+                <div className="space-y-4">
+                  {!data.cities || data.cities.length === 0 ? <p className="text-gray-400 text-sm">No data available.</p> : null}
+                  {data.cities && data.cities.map((item: any, i: number) => (
+                    <div key={i} className="text-sm">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="font-medium">{item.city}</span>
+                        <span className="font-semibold text-gray-700">{item.users}</span>
+                      </div>
+                      <ProgressBar value={item.users} max={Math.max(...data.cities.map((p: any) => p.users))} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+ </div>
           </div>
         ) : null}
-      </section>
+      
+          
+</section>
       <Footer />
     </main>
   );

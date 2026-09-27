@@ -7,7 +7,14 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const days = searchParams.get('days') || '30';
-    const startDate = `${days}daysAgo`;
+    
+    let startDate = `${days}daysAgo`;
+    if (days === '1h') {
+      startDate = 'today'; // Fallback for standard report. Note: GA4 standard reports have latency.
+    } else if (days === '1') {
+      startDate = '1daysAgo';
+    }
+
 
     const propertyId = process.env.GA_PROPERTY_ID || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
     const credentialsEnv = process.env.GA_SERVICE_ACCOUNT;
@@ -80,8 +87,30 @@ export async function GET(request: Request) {
     });
 
     // Execute all in parallel
-    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes] = await Promise.all([
-      overviewReq, countryReq, browserReq, pagesReq, sourcesReq
+    
+    // 6. By City
+    const cityReq = analyticsDataClient.runReport({
+      property,
+      dateRanges,
+      dimensions: [{ name: "city" }],
+      metrics: [{ name: "activeUsers" }],
+      orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+      limit: 10,
+    });
+
+    // 7. By Device
+    const deviceReq = analyticsDataClient.runReport({
+      property,
+      dateRanges,
+      dimensions: [{ name: "deviceCategory" }],
+      metrics: [{ name: "activeUsers" }],
+      orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+      limit: 10,
+    });
+
+    // Execute all in parallel
+    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes] = await Promise.all([
+      overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq
     ]);
 
     // Parse Data
@@ -103,7 +132,9 @@ export async function GET(request: Request) {
       countries: parseRows(countryRes, ["country"], ["users"]),
       browsers: parseRows(browserRes, ["browser"], ["users"]),
       pages: parseRows(pagesRes, ["title", "path"], ["views"]),
-      sources: parseRows(sourcesRes, ["source"], ["sessions"])
+      sources: parseRows(sourcesRes, ["source"], ["sessions"]),
+      cities: parseRows(cityRes, ["city"], ["users"]),
+      devices: parseRows(deviceRes, ["deviceCategory"], ["users"])
     });
 
   } catch (error: any) {
