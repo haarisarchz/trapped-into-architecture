@@ -115,6 +115,51 @@ export default async function JobDetailsPage({
 
   return (
     <main className="min-h-screen bg-gray-50 text-black">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org/",
+              "@type": "JobPosting",
+              "title": job.position,
+              "description": job.description || `Job opportunity for ${job.position} at ${job.firm_name}.`,
+              "identifier": {
+                "@type": "PropertyValue",
+                "name": job.firm_name,
+                "value": job.id
+              },
+              "datePosted": job.created_at,
+              "validThrough": job.post_expiry_date || new Date(new Date(job.created_at).getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+              "employmentType": job.employment_type === "Full Time" ? "FULL_TIME" : job.employment_type === "Part Time" ? "PART_TIME" : job.employment_type === "Internship" ? "INTERN" : job.employment_type === "Freelance" ? "CONTRACTOR" : "OTHER",
+              "hiringOrganization": {
+                "@type": "Organization",
+                "name": job.firm_name,
+                "sameAs": job.website || "https://trappedintoarchitecture.com",
+                "logo": job.logo_url || "https://trappedintoarchitecture.com/default-logo.png"
+              },
+              "jobLocation": {
+                "@type": "Place",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": job.city,
+                  "addressRegion": job.state,
+                  "addressCountry": "IN"
+                }
+              },
+              ...(job.salary && job.salary.toLowerCase() !== "not disclosed" && job.salary.toLowerCase() !== "negotiable" ? {
+                "baseSalary": {
+                  "@type": "MonetaryAmount",
+                  "currency": "INR",
+                  "value": {
+                    "@type": "QuantitativeValue",
+                    "value": job.salary,
+                    "unitText": "MONTH"
+                  }
+                }
+              } : {})
+            })
+          }}
+        />
       <Navbar />
 
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">

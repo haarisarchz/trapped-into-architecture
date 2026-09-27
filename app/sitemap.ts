@@ -1,3 +1,4 @@
+import { generateJobUrl } from "@/utils/jobUrl";
 import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
 
