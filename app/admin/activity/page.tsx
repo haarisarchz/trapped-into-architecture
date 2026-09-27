@@ -276,47 +276,35 @@ export default function AdminActivityPage() {
                 const filteredAdminJobs = filterByDate(allAdminJobs);
                 
                 // Strictly use the filtered date range jobs for counts
-                const uniqueJobs = [];
-                const seenPostIds = new Set();
-                for (const j of filteredAdminJobs) {
-                  // Group by admin_post_id if available, otherwise by firm_name and created_at timestamp (within 10 seconds)
-                    const timeWindow = Math.floor(new Date(j.created_at).getTime() / 10000);
-                    const key = j.admin_post_id || (j.firm_name + "_" + timeWindow);
-                  if (!seenPostIds.has(key)) {
-                    seenPostIds.add(key);
-                    uniqueJobs.push({ ...j });
-                  } else {
-                    const existing = uniqueJobs.find(u => (u.admin_post_id || u.id) === key);
-                    if (existing && existing.position && !existing.position.includes(j.position)) {
-                       existing.position += `, ${j.position}`;
-                    }
-                  }
-                }
-                
                 const draftsCount = filteredAdminJobs.filter(j => j.status === 'draft').length;
                   const scheduledCount = filteredAdminJobs.filter(j => j.status === 'scheduled').length;
                   const publishedCount = filteredAdminJobs.filter(j => j.status === 'published').length;
                   
                   const price = admin.rupees_per_post ?? rupeesPerPost ?? 10;
                   let earnings = 0;
-                  
-                  // Calculate earnings based on single vs multiple logic
-                  uniqueJobs.forEach(uJob => {
+
+                  const jobsList = filteredAdminJobs.map(job => {
                     const groupJobs = filteredAdminJobs.filter(fj => {
                       const fjTime = Math.floor(new Date(fj.created_at).getTime() / 10000);
                       const fjKey = fj.admin_post_id || (fj.firm_name + "_" + fjTime);
-                      const uJobTime = Math.floor(new Date(uJob.created_at).getTime() / 10000);
-                      const uJobKey = uJob.admin_post_id || (uJob.firm_name + "_" + uJobTime);
+                      const uJobTime = Math.floor(new Date(job.created_at).getTime() / 10000);
+                      const uJobKey = job.admin_post_id || (job.firm_name + "_" + uJobTime);
                       return fjKey === uJobKey;
                     });
+                    
                     const pubCount = groupJobs.filter(j => j.status === 'published').length;
-                    uJob.creditedAmount = 0;
-                    if (pubCount === 1) {
-                      uJob.creditedAmount = price;
-                    } else if (pubCount > 1) {
-                      uJob.creditedAmount = pubCount * (price * 0.5);
+                    let creditedAmount = 0;
+                    
+                    if (job.status === 'published') {
+                      if (pubCount === 1) {
+                        creditedAmount = price;
+                      } else if (pubCount > 1) {
+                        creditedAmount = price * 0.5;
+                      }
+                      earnings += creditedAmount;
                     }
-                    earnings += uJob.creditedAmount;
+                    
+                    return { ...job, creditedAmount };
                   });
                 
                 const isExpanded = expandedAdmin === admin.id;
@@ -416,26 +404,13 @@ export default function AdminActivityPage() {
                             <h4 className="font-semibold text-gray-900">Activity History</h4>
                             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider w-16 text-right pr-1">Credit</div>
                           </div>
-                        {uniqueJobs.length > 0 ? (
+                        {jobsList.length > 0 ? (
                           <div className="space-y-3">
-                            {uniqueJobs.sort((a,b) => new Date(b.posted_date || b.created_at).getTime() - new Date(a.posted_date || a.created_at).getTime()).map((job, j) => (
+                            {jobsList.sort((a,b) => new Date(b.posted_date || b.created_at).getTime() - new Date(a.posted_date || a.created_at).getTime()).map((job, j) => (
                               <div key={j} className="flex justify-between items-center text-sm p-3 rounded-lg border border-gray-100 bg-gray-50">
                                 <div>
                                   <div className="font-medium text-gray-800 max-w-[150px] truncate">{job.position}</div>
-                                  <div className="text-xs text-gray-800 md:text-gray-500 mt-1">
-                                    {(() => {
-                                      let displayName = admin.display_name || admin.full_name || admin.username;
-                                      if (userRole !== "ceo" && admin.id !== currentUser.id) {
-                                        const pRole = (admin.role || "").toLowerCase().replace(/[\s_]+/g, "");
-                                        if (pRole === "ceo") displayName = "CEO";
-                                        else if (pRole === "superadmin") displayName = "Super Admin";
-                                        else displayName = "Admin";
-                                      }
-                                      if (job.status === 'published') return `Posted By: ${displayName}`;
-                                      if (job.status === 'draft') return `Draft Saved — ${displayName}`;
-                                      return `Scheduled By: ${displayName}`;
-                                    })()}
-                                  </div>
+                                  
                                 </div>
                                 <div className="text-right flex items-center gap-4">
                                     <div className="flex flex-col items-end">
