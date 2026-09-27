@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { Phone, Mail, MessageCircle, MapPin, Globe, } from "lucide-react";
+import { WhatsAppBrandIcon, FacebookBrandIcon, LinkedInBrandIcon, TelegramBrandIcon, XBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
 export default function ContactPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -120,22 +121,22 @@ export default function ContactPage() {
               )}
               {settings?.facebook && (
                 <a href={settings.facebook} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600 transition" title="Facebook">
-                  <span className="font-bold">FB</span>
+                  <FacebookBrandIcon size={24} />
                 </a>
               )}
               {settings?.twitter && (
                 <a href={settings.twitter} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-black transition" title="X / Twitter">
-                  <span className="font-bold">X</span>
+                  <XBrandIcon size={24} />
                 </a>
               )}
               {settings?.instagram && (
                 <a href={settings.instagram} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-pink-600 transition" title="Instagram">
-                  <span className="font-bold">IG</span>
+                  <InstagramBrandIcon size={24} />
                 </a>
               )}
               {settings?.linkedin && (
                 <a href={settings.linkedin} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-500 transition" title="LinkedIn">
-                  <span className="font-bold">IN</span>
+                  <LinkedInBrandIcon size={24} />
                 </a>
               )}
             </div>
@@ -144,63 +145,80 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                <input 
-                  required
-                  type="text" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
-                  placeholder="John Doe"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+                  <input 
+                    required
+                    type="text" 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address <span className="text-red-500">*</span></label>
+                  <input 
+                    required
+                    type="email" 
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
+                    placeholder="john@example.com"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                <input 
-                  required
-                  type="email" 
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
-                  placeholder="john@example.com"
-                />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject <span className="text-red-500">*</span></label>
+                  <input 
+                    required
+                    type="text" 
+                    value={formData.subject || ""}
+                    onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
+                    placeholder="How can we help you?"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone (Optional)</label>
+                  <input 
+                    type="text" 
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone (Optional)</label>
-                <input 
-                  type="text" 
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
-                  placeholder="+91 98765 43210"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message <span className="text-red-500">*</span></label>
                 <textarea 
                   required
-                  rows={4}
+                  rows={5}
                   value={formData.message}
                   onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none" 
-                  placeholder="How can we help you?"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-black outline-none resize-none" 
+                  placeholder="Write your message here..."
                 />
               </div>
-
-              {status === "success" && (
-                <div className="bg-green-50 text-green-700 p-4 rounded-xl text-sm font-medium">
-                  Thanks! Your message has been sent successfully.
-                </div>
-              )}
 
               <button 
                 type="submit" 
-                disabled={status === "submitting"}
-                className="w-full bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition disabled:opacity-50"
+                disabled={status === 'submitting'}
+                className="w-full bg-black text-white rounded-xl py-3.5 font-bold hover:bg-gray-800 transition disabled:opacity-50"
               >
-                {status === "submitting" ? "Sending..." : "Send Message"}
+                {status === 'submitting' ? 'Sending...' : 'Send Message'}
               </button>
+              
+              {status === 'success' && (
+                <div className="p-4 bg-green-50 text-green-700 rounded-xl text-center font-medium">
+                  Message sent successfully!
+                </div>
+              )}
             </form>
           </div>
 
