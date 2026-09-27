@@ -358,7 +358,7 @@ useEffect(() => {
 
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[999] p-4">
 
-          <div className="bg-white w-full max-w-md rounded-3xl p-8 relative shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white text-black w-full max-w-md rounded-3xl p-8 relative shadow-2xl max-h-[90vh] overflow-y-auto">
 
             {/* CLOSE BUTTON */}
 
@@ -739,7 +739,23 @@ window.location.reload();
 
 </div>
 
-{/* CONTACT METHOD */}
+
+  {/* DISPLAY NAME */}
+  <div>
+    <label className="block mb-2 font-medium">
+      Display Name
+      <span className="text-red-500"> *</span>
+    </label>
+    <input
+      id="register-display-name"
+      type="text"
+      placeholder="e.g. John Doe"
+      className="w-full border rounded-xl px-4 py-3 text-black"
+      required
+    />
+  </div>
+  
+  {/* CONTACT METHOD */}
 
 <div className="space-y-5">
 
@@ -1153,7 +1169,13 @@ window.location.reload();
           ) as HTMLInputElement
         )?.value.trim();
 
-        const username = (
+        
+          const displayName = (
+            document.getElementById(
+              "register-display-name"
+            ) as HTMLInputElement
+          )?.value.trim();
+  const username = (
           document.getElementById(
             "register-username"
           ) as HTMLInputElement
@@ -1192,7 +1214,12 @@ window.location.reload();
 
         /* USERNAME RULES */
 
-        const usernameRegex = /^[a-zA-Z0-9._]{5,12}$/;
+        
+          if (!displayName) {
+            alert("Enter display name");
+            return;
+          }
+  const usernameRegex = /^[a-zA-Z0-9._]{5,12}$/;
 
         if (!usernameRegex.test(username)) {
           alert(
@@ -1255,7 +1282,8 @@ window.location.reload();
                 id: authData.user.id,
                 username,
                 full_name: fullName,
-                email,
+                  display_name: displayName,
+                  email,
                 phone,
                 role: "user",
                 bio: "",
