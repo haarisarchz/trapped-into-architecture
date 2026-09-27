@@ -141,8 +141,11 @@ export default function JobCard({
      BALANCED VIEW
   ========================================= */
   if (viewMode === "balanced") {
-      const showExperience = experience && experience.toLowerCase() !== "not disclosed" && experience.toLowerCase() !== "not specified";
-      const showSalary = salary && salary.toLowerCase() !== "not disclosed" && salary.toLowerCase() !== "negotiable" && salary.trim() !== "";
+      const expStr = experience ? String(experience).toLowerCase().trim() : "";
+      const showExperience = expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
+      
+      const salStr = salary ? String(salary).toLowerCase().trim() : "";
+      const showSalary = salStr && salStr !== "not disclosed" && salStr !== "negotiable" && salStr !== "null" && salStr !== "-";
       
       return (
         <div 
@@ -202,17 +205,24 @@ export default function JobCard({
     return (
       <div 
         onClick={() => router.push(generateJobUrl({ id, firm_name, position }))}
-        className="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 px-3 md:px-4 py-3 flex items-start md:items-center gap-3 cursor-pointer group"
+        className="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 px-3 md:px-4 py-3 flex items-center gap-3 cursor-pointer group"
       >
-        <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 mt-1 md:mt-0">
-          {image ? (
-            <img src={image} alt={position} className="w-full h-full object-cover" />
+        <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-gray-100">
+            {image ? (
+              <img src={image} alt={position} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500 text-center">No Image</div>
+            )}
+          </div>
+          {isExpired ? (
+            <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider w-full text-center leading-none">Expired</span>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-500 text-center">No Image</div>
+            <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider w-full text-center leading-none">Active</span>
           )}
         </div>
   
-        <div className="flex-1 min-w-0 pr-2">
+        <div className="flex-1 min-w-0 pr-1">
           <p className="text-sm md:text-base text-gray-800 leading-snug">
             <span className="font-bold">{firm_name}</span>{" "}is hiring{" "}
             <span className="font-semibold">{position}</span>{" "}at{" "}
@@ -220,26 +230,18 @@ export default function JobCard({
           </p>
         </div>
   
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          {isExpired ? (
-            <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap mb-1 md:mb-0">Expired</span>
-          ) : (
-            <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap mb-1 md:mb-0">Active</span>
-          )}
-          
-          <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2">
-            <SaveButton jobId={id} initialSaves={save_count} />
-            <ShareButtons 
-              url={jobUrlString} 
-              jobId={id} 
-              companyName={firm_name} 
-              position={position} 
-              organizationType={organization_type}
-              city={city}
-              state={state}
-              initialShares={share_count} 
-            />
-          </div>
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0">
+          <SaveButton jobId={id} initialSaves={save_count} />
+          <ShareButtons 
+            url={jobUrlString} 
+            jobId={id} 
+            companyName={firm_name} 
+            position={position} 
+            organizationType={organization_type}
+            city={city}
+            state={state}
+            initialShares={share_count} 
+          />
         </div>
       </div>
     );
