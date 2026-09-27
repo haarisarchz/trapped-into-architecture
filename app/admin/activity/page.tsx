@@ -279,7 +279,9 @@ export default function AdminActivityPage() {
                 const uniqueJobs = [];
                 const seenPostIds = new Set();
                 for (const j of filteredAdminJobs) {
-                  const key = j.admin_post_id || j.id;
+                  // Group by admin_post_id if available, otherwise by firm_name and created_at timestamp (within 10 seconds)
+                    const timeWindow = Math.floor(new Date(j.created_at).getTime() / 10000);
+                    const key = j.admin_post_id || (j.firm_name + "_" + timeWindow);
                   if (!seenPostIds.has(key)) {
                     seenPostIds.add(key);
                     uniqueJobs.push({ ...j });
@@ -300,7 +302,13 @@ export default function AdminActivityPage() {
                   
                   // Calculate earnings based on single vs multiple logic
                   uniqueJobs.forEach(uJob => {
-                    const groupJobs = filteredAdminJobs.filter(fj => (fj.admin_post_id || fj.id) === (uJob.admin_post_id || uJob.id));
+                    const groupJobs = filteredAdminJobs.filter(fj => {
+                      const fjTime = Math.floor(new Date(fj.created_at).getTime() / 10000);
+                      const fjKey = fj.admin_post_id || (fj.firm_name + "_" + fjTime);
+                      const uJobTime = Math.floor(new Date(uJob.created_at).getTime() / 10000);
+                      const uJobKey = uJob.admin_post_id || (uJob.firm_name + "_" + uJobTime);
+                      return fjKey === uJobKey;
+                    });
                     const pubCount = groupJobs.filter(j => j.status === 'published').length;
                     uJob.creditedAmount = 0;
                     if (pubCount === 1) {
