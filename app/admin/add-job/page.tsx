@@ -1314,7 +1314,19 @@ const handleSmartExtraction = async () => {
                 </div>
               </div>
 
-            {/* ================= SCHEDULE MODAL ================= */}
+            
+                <div className="flex justify-end mt-4 mb-8 border-b border-gray-100 pb-8">
+                  <button 
+                    type="button"
+                    onClick={handleSaveCompany} 
+                    disabled={!firmName || isSavingCompany}
+                    className="bg-black text-white text-sm px-6 py-2.5 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition shadow-md font-semibold"
+                  >
+                    {isSavingCompany ? "Saving..." : "Save Company Profile"}
+                  </button>
+                </div>
+
+              {/* ================= SCHEDULE MODAL ================= */}
 
 {showSchedule && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
