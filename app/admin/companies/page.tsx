@@ -293,11 +293,7 @@ export default function AdminCompaniesPage() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
                           <button
-                            onClick={() =>
-                              alert(
-                                "Company editing will be available in the company edit page."
-                              )
-                            }
+                            onClick={() => router.push(`/admin/companies/edit/${c.id}`)}
                             className="p-2 text-gray-800 md:text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                             title="Edit Company"
                           >
