@@ -110,13 +110,31 @@ export default async function JobDetailsPage({
   
     let jobRole = "";
     let cleanDescription = job.job_description || "";
-    if (cleanDescription.startsWith("**Job Role:**")) {
-      const parts = cleanDescription.split("\n\n");
-      if (parts.length > 1) {
-        jobRole = parts[0].replace("**Job Role:**", "").trim();
-        cleanDescription = parts.slice(1).join("\n\n");
+      let jobVacancies = "";
+      
+      // Parse Job Role
+      if (cleanDescription.startsWith("**Job Role:**")) {
+        const parts = cleanDescription.split("\n\n");
+        if (parts.length > 1) {
+          jobRole = parts[0].replace("**Job Role:**", "").trim();
+          cleanDescription = parts.slice(1).join("\n\n");
+        } else {
+          jobRole = cleanDescription.replace("**Job Role:**", "").trim();
+          cleanDescription = "";
+        }
       }
-    }
+      
+      // Parse Number of Positions (could be at start now if no Job Role)
+      if (cleanDescription.startsWith("**Number of Positions:**")) {
+        const parts = cleanDescription.split("\n\n");
+        if (parts.length > 1) {
+          jobVacancies = parts[0].replace("**Number of Positions:**", "").trim();
+          cleanDescription = parts.slice(1).join("\n\n");
+        } else {
+          jobVacancies = cleanDescription.replace("**Number of Positions:**", "").trim();
+          cleanDescription = "";
+        }
+      }
     const hasDescription = cleanDescription.trim();
     const hasRole = jobRole.trim();
 
@@ -343,9 +361,20 @@ export default async function JobDetailsPage({
                           <h2 className="text-base font-bold mb-1 text-gray-900">Job Role</h2>
                           <div className="text-gray-700 leading-relaxed whitespace-pre-line">
                             {jobRole}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                        {jobVacancies && (
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                              <span className="text-xl">👥</span>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Number of Positions</p>
+                              <p className="font-semibold text-black">{jobVacancies}</p>
+                            </div>
+                          </div>
+                        )}
 
                     
                     {/* CONTACT DETAILS (Moved here per user request) */}

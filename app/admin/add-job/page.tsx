@@ -619,7 +619,7 @@ const handlePublishJob = async (
       position: pos.position,
       experience: pos.experience,
       salary: pos.salary,
-      job_description: pos.role ? `**Job Role:** ${pos.role}\n\n${pos.description}` : pos.description,
+      job_description: [pos.role ? `**Job Role:** ${pos.role}` : "", pos.vacancies ? `**Number of Positions:** ${pos.vacancies}` : "", pos.description].filter(Boolean).join("\n\n"),
       qualifications: sameRequirements 
           ? (Array.isArray(qualifications) ? qualifications : (qualifications ? [qualifications] : []))
           : (Array.isArray(pos.qualifications) ? pos.qualifications : (pos.qualifications ? [pos.qualifications] : (qualifications ? (Array.isArray(qualifications) ? qualifications : [qualifications]) : []))),
@@ -1029,9 +1029,15 @@ const handleSmartExtraction = async () => {
                               </div>
                            </div>
                            
-                           <div>
-                              <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
-                              <textarea value={pos.description} onChange={(e) => updatePosition(index, "description", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y" placeholder="Write detailed job description..." />
+                           
+                             <div className="md:hidden">
+                                <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
+                                <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />
+                             </div>
+                             
+                             <div>
+                                <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
+                                <textarea value={pos.description} onChange={(e) => updatePosition(index, "description", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y" placeholder="Write detailed job description..." />
                            </div>
                         </div>
 
@@ -1062,10 +1068,15 @@ const handleSmartExtraction = async () => {
                                 </button>
                               );
                             })}
+                            </div>
+                            
+                            <div className="mt-4 pt-4 border-t border-gray-100 hidden md:block">
+                               <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
+                               <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />
+                            </div>
                           </div>
-                        </div>
 
-                        {!sameRequirements && (
+                          {!sameRequirements && (
                           <div className="md:col-span-4 mt-2 pt-4 border-t border-gray-100">
                              <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
