@@ -169,6 +169,7 @@ const loadCompanyDetails = async (companyName: string) => {
 
 const [area, setArea] = useState("");
 
+  const [country, setCountry] = useState("India");
   const [city, setCity] =
     useState("");
 
@@ -782,6 +783,7 @@ const handleSmartExtraction = async () => {
       setArea(record.neighborhood || "");
       setCity(record.city || "");
       setState(record.state || "");
+        setCountry(record.country || "India");
       setCompanyLogo(record.logo_url || "");
       setCompanyDescription(record.description || "");
       setCompanyWebsite(record.website || "");
@@ -855,42 +857,120 @@ const handleSmartExtraction = async () => {
                 {/* CITY */}
 
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium"> City <span className="text-red-500 text-xl font-bold">*</span></label>
-                  <Autocomplete
-                    value={city}
-                    onChange={(val) => setCity(val)}
-                    fetchSuggestions={async (q) => {
-                      let qC = supabase.from('companies').select('city').ilike('city', '%' + q + '%');
-                      let qJ = supabase.from('jobs').select('city').ilike('city', '%' + q + '%');
-                      if (state) { qC = qC.eq('state', state); qJ = qJ.eq('state', state); }
-                      const [{data: d1}, {data: d2}] = await Promise.all([qC.limit(10), qJ.limit(10)]);
-                      const combined = [...(d1 || []), ...(d2 || [])];
-                      return Array.from(new Set(combined.map(d => d.city).filter(Boolean)));
-                    }}
-                    placeholder="Chennai"
-                    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
-                  />
-                </div>
-
-                {/* STATE */}
-
-                <div>
-                  <label className="block mb-1.5 text-sm font-medium"> State <span className="text-red-500 text-xl font-bold">*</span></label>
-                  <Autocomplete
-                    value={state}
-                    onChange={(val) => setState(val)}
-                    fetchSuggestions={async (q) => {
-                      const [{data: d1}, {data: d2}] = await Promise.all([
-                        supabase.from('companies').select('state').ilike('state', '%' + q + '%').limit(10),
-                        supabase.from('jobs').select('state').ilike('state', '%' + q + '%').limit(10)
-                      ]);
-                      const combined = [...(d1 || []), ...(d2 || [])];
-                      return Array.from(new Set(combined.map(d => d.state).filter(Boolean)));
-                    }}
-                    placeholder="Tamil Nadu"
-                    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
-                  />
-                </div>
+                    <label className="block mb-1.5 text-sm font-medium"> City </label>
+                    <input 
+                      type="text" 
+                      list="citiesList"
+                      placeholder="e.g. Mumbai" 
+                      value={city} 
+                      onChange={(e) => setCity(e.target.value)} 
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
+                    />
+                    <datalist id="citiesList">
+                      <option value="Mumbai" />
+                      <option value="Delhi" />
+                      <option value="Bengaluru" />
+                      <option value="Hyderabad" />
+                      <option value="Ahmedabad" />
+                      <option value="Chennai" />
+                      <option value="Kolkata" />
+                      <option value="Surat" />
+                      <option value="Pune" />
+                      <option value="Jaipur" />
+                      <option value="Lucknow" />
+                      <option value="Kanpur" />
+                      <option value="Nagpur" />
+                      <option value="Indore" />
+                      <option value="Thane" />
+                      <option value="Bhopal" />
+                      <option value="Visakhapatnam" />
+                      <option value="Patna" />
+                      <option value="Vadodara" />
+                      <option value="Ghaziabad" />
+                      <option value="Ludhiana" />
+                      <option value="Agra" />
+                      <option value="Nashik" />
+                      <option value="Faridabad" />
+                      <option value="Meerut" />
+                      <option value="Rajkot" />
+                      <option value="Varanasi" />
+                      <option value="Srinagar" />
+                      <option value="Aurangabad" />
+                      <option value="Dhanbad" />
+                      <option value="Amritsar" />
+                      <option value="Allahabad" />
+                      <option value="Ranchi" />
+                      <option value="Gwalior" />
+                      <option value="Jabalpur" />
+                      <option value="Coimbatore" />
+                      <option value="Vijayawada" />
+                      <option value="Jodhpur" />
+                      <option value="Madurai" />
+                      <option value="Raipur" />
+                      <option value="Chandigarh" />
+                      <option value="Guwahati" />
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium"> State </label>
+                    <input 
+                      type="text" 
+                      list="statesList"
+                      placeholder="e.g. Maharashtra" 
+                      value={state} 
+                      onChange={(e) => setState(e.target.value)} 
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
+                    />
+                    <datalist id="statesList">
+                      <option value="Andhra Pradesh" />
+                      <option value="Arunachal Pradesh" />
+                      <option value="Assam" />
+                      <option value="Bihar" />
+                      <option value="Chhattisgarh" />
+                      <option value="Goa" />
+                      <option value="Gujarat" />
+                      <option value="Haryana" />
+                      <option value="Himachal Pradesh" />
+                      <option value="Jharkhand" />
+                      <option value="Karnataka" />
+                      <option value="Kerala" />
+                      <option value="Madhya Pradesh" />
+                      <option value="Maharashtra" />
+                      <option value="Manipur" />
+                      <option value="Meghalaya" />
+                      <option value="Mizoram" />
+                      <option value="Nagaland" />
+                      <option value="Odisha" />
+                      <option value="Punjab" />
+                      <option value="Rajasthan" />
+                      <option value="Sikkim" />
+                      <option value="Tamil Nadu" />
+                      <option value="Telangana" />
+                      <option value="Tripura" />
+                      <option value="Uttar Pradesh" />
+                      <option value="Uttarakhand" />
+                      <option value="West Bengal" />
+                      <option value="Andaman and Nicobar Islands" />
+                      <option value="Chandigarh" />
+                      <option value="Dadra and Nagar Haveli and Daman and Diu" />
+                      <option value="Delhi" />
+                      <option value="Jammu and Kashmir" />
+                      <option value="Ladakh" />
+                      <option value="Lakshadweep" />
+                      <option value="Puducherry" />
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium"> Country <span className="text-red-500 font-bold">*</span></label>
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="e.g. India" 
+                      value={country} 
+                      onChange={(e) => setCountry(e.target.value)} 
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
+                    />
+                  </div>
 
               </div>
 
