@@ -164,7 +164,8 @@ export default function JobCard({
   ========================================= */
   if (viewMode === "balanced") {
       const expStr = experience ? String(formattedExperience).toLowerCase().trim() : "";
-      const showExperience = employment_type !== "Internship" && expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
+      const isIntern = employment_type === "Internship" || (position && position.toLowerCase().includes("intern"));
+        const showExperience = !isIntern && expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
       
       const salStr = salary ? String(salary).toLowerCase().trim() : "";
       const showSalary = salStr && salStr !== "not disclosed" && salStr !== "negotiable" && salStr !== "null" && salStr !== "-";

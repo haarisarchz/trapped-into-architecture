@@ -139,7 +139,8 @@ export default async function JobDetailsPage({
     const hasRole = jobRole.trim();
 
   const hasSalary = job.salary && job.salary.trim() && job.salary.trim().toLowerCase() !== "not disclosed";
-  const hasExperience = job.employment_type !== "Internship" && job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
+  const isIntern = job.employment_type === "Internship" || (job.position && job.position.toLowerCase().includes("intern"));
+  const hasExperience = !isIntern && job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
   const hasSource = job.source && job.source.trim();
     
     // Auto-extract contact details for older jobs

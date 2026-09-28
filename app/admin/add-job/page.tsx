@@ -647,7 +647,7 @@ const handlePublishJob = async (
       city: city,
       state: state,
       position: pos.position,
-      experience: pos.experience,
+      experience: (employmentType === "Internship" || (pos.position && pos.position.toLowerCase().includes("intern"))) ? [] : pos.experience,
       salary: pos.salary,
       job_description: [pos.role ? `**Job Role:** ${pos.role}` : "", pos.vacancies ? `**Number of Positions:** ${pos.vacancies}` : "", pos.description].filter(Boolean).join("\n\n"),
       qualifications: sameRequirements 
@@ -1072,7 +1072,7 @@ const handleSmartExtraction = async () => {
                         </div>
 
                         <div className="md:col-span-1 border-l border-gray-100 pl-4">
-                            {employmentType === "Internship" ? (
+                            {(employmentType === "Internship" || (pos.position && pos.position.toLowerCase().includes("intern"))) ? (
                               <div className="h-full flex flex-col justify-center text-center text-gray-500 py-4">
                                 <span className="text-xl mb-2">🎓</span>
                                 <p className="text-sm font-medium">Experience not required for internships</p>

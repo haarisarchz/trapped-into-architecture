@@ -102,7 +102,7 @@ export default function ShareButtons({
         let expText = "";
         if (job.experience) {
           const exp = Array.isArray(job.experience) ? job.experience.join(", ") : String(job.experience);
-          if (exp && job.employment_type !== "Internship") expText = ` (${exp})`;
+          if (exp && job.employment_type !== "Internship" && !(job.position && job.position.toLowerCase().includes("intern"))) expText = ` (${exp})`;
         }
         text += `${idx + 1}. ${job.position}${expText}\n`;
       });
@@ -111,7 +111,7 @@ export default function ShareButtons({
       let singleExpText = "";
       if (experience) {
         const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
-        if (exp && employmentType !== "Internship") singleExpText = ` (${exp})`;
+        if (exp && employmentType !== "Internship" && !(position && position.toLowerCase().includes("intern"))) singleExpText = ` (${exp})`;
       }
       text += `Positions: ${position}${singleExpText}\n\n`;
     }
