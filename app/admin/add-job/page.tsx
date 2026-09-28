@@ -501,7 +501,7 @@ const handlePublishJob = async (
           whatsapp: companyWhatsapp,
           twitter: companyTwitter,
           principal_architect: principalArchitect,
-          employee_size: employeeSize,
+          employee_size: employeeSize || null,
           founded_year: foundedYear ? parseInt(foundedYear) : null
         };
 

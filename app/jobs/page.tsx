@@ -1062,7 +1062,9 @@ setSelectedSalary([]);
       };
 
       const dateA = new Date(a.posted_date || 0).getTime();
+      const createdA = new Date(a.created_at || a.updated_at || a.posted_date || 0).getTime();
       const dateB = new Date(b.posted_date || 0).getTime();
+      const createdB = new Date(b.created_at || b.updated_at || b.posted_date || 0).getTime();
 
       if (sortBy === "salaryLow" || sortBy === "salaryHigh") {
         const salA = getSal(a.salary);
@@ -1072,17 +1074,17 @@ setSelectedSalary([]);
         }
         if (salA !== null) return -1;
         if (salB !== null) return 1;
-        return dateB - dateA;
+        return dateB !== dateA ? dateB - dateA : createdB - createdA;
       }
 
       if (sortBy === "expiry") {
         const expA = a.post_expiry_date ? new Date(a.post_expiry_date).getTime() : Infinity;
         const expB = b.post_expiry_date ? new Date(b.post_expiry_date).getTime() : Infinity;
         if (expA !== expB) return expA - expB;
-        return dateB - dateA;
+        return dateB !== dateA ? dateB - dateA : createdB - createdA;
       }
 
-      return dateB - dateA;
+      return dateB !== dateA ? dateB - dateA : createdB - createdA;
     })
 
   .map((job, index) => (
