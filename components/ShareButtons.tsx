@@ -27,7 +27,28 @@ export default function ShareButtons({
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [shareCount, setShareCount] = useState(initialShares);
+  const [activeJobs, setActiveJobs] = useState<any[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch all active positions for the same company
+  useEffect(() => {
+    async function fetchCompanyJobs() {
+      if (!companyName) return;
+      try {
+        const { data } = await supabase
+          .from("jobs")
+          .select("position, experience")
+          .eq("firm_name", companyName)
+          .eq("status", "published");
+        if (data) {
+          setActiveJobs(data);
+        }
+      } catch (err) {
+        console.error("Error fetching company jobs", err);
+      }
+    }
+    fetchCompanyJobs();
+  }, [companyName]);
 
   // Sync share count if initialShares changes from parent/polling
   useEffect(() => {
@@ -53,7 +74,7 @@ export default function ShareButtons({
     }
   };
 
-  const getShareText = () => {
+    const getShareText = () => {
     let orgTypeLabel = organizationType 
       ? organizationType.charAt(0).toUpperCase() + organizationType.slice(1) 
       : "Firm";
@@ -65,10 +86,24 @@ export default function ShareButtons({
     if (city) locParts.push(city);
     if (state) locParts.push(state);
     if (locParts.length > 0) {
-      text += `Location: ${locParts.join(", ")}\n`;
+      text += `Location: ${locParts.join(", ")}\n\n`;
     }
     
-    text += `Position: ${position}\n\n`;
+    if (activeJobs && activeJobs.length > 1) {
+      text += `Positions:\n`;
+      activeJobs.forEach((job, idx) => {
+        let expText = "";
+        if (job.experience) {
+          const exp = Array.isArray(job.experience) ? job.experience.join(", ") : String(job.experience);
+          if (exp) expText = ` - ${exp}`;
+        }
+        text += `${idx + 1}. ${job.position}${expText}\n`;
+      });
+      text += `\n`;
+    } else {
+      text += `Position: ${position}\n\n`;
+    }
+    
     text += `For more details, visit:\n${url}`;
     return text;
   };
