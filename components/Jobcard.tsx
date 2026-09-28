@@ -85,6 +85,8 @@ export default function JobCard({
   const isExpired =
     post_expiry_date && new Date(post_expiry_date) < new Date();
 
+  const locationString = [area, city, state].filter(Boolean).join(", ");
+
   
 
   const getCompanySlug = (name: string) => {
@@ -151,8 +153,7 @@ export default function JobCard({
           </p>
 
           <p className="text-sm text-gray-500 mt-1">
-            <span>{city}</span>,{" "}
-            <span>{state}</span>
+            <span>{locationString}</span>
           </p>
         </div>
       </div>
@@ -211,8 +212,7 @@ export default function JobCard({
                 {firm_name}
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                <span>{city}</span>,{" "}
-                <span>{state}</span>
+                <span>{locationString}</span>
               </p>
             </div>
   
@@ -252,7 +252,7 @@ export default function JobCard({
           <p className="text-sm md:text-base text-gray-800 leading-snug">
             <span className="font-bold">{firm_name}</span>{" "}is hiring{" "}
             <span className="font-semibold">{position}</span>{" "}at{" "}
-            <span className="text-gray-600">{city}, {state}</span>
+            <span className="text-gray-600">{locationString}</span>
           </p>
         </div>
   

@@ -289,6 +289,11 @@ export default async function JobDetailsPage({
                   </Link>
 
                   <p className="text-gray-500 mt-1">
+                    {job.area && (
+                      <>
+                        <span className="text-gray-800">{job.area}</span>,{" "}
+                      </>
+                    )}
                     <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="hover:underline hover:text-gray-800 transition">
                       {job.city}
                     </Link>
