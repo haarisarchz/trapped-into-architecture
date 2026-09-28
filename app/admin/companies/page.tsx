@@ -181,6 +181,37 @@ export default function AdminCompaniesPage() {
     }
   };
 
+
+  const getSortedCompanies = (list: any[]) => {
+    return [...list].sort((a, b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      if (sortField === "created_by") {
+         valA = resolveCreatedBy(a);
+         valB = resolveCreatedBy(b);
+      } else if (sortField === "created_at") {
+         valA = a.created_at ? new Date(a.created_at).getTime() : 0;
+         valB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      } else if (sortField === "location") {
+         valA = [a.city, a.state].filter(Boolean).join(", ") || "";
+         valB = [b.city, b.state].filter(Boolean).join(", ") || "";
+      } else if (sortField === "jobs") {
+         valA = a.totalJobs || 0;
+         valB = b.totalJobs || 0;
+      }
+
+      if (typeof valA === "string") valA = valA.toLowerCase();
+      if (typeof valB === "string") valB = valB.toLowerCase();
+
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedCompanies = getSortedCompanies(companies);
+
   return (
     <main className="min-h-screen bg-gray-50 text-black flex flex-col">
       <Navbar />
