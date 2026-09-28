@@ -1042,8 +1042,15 @@ const handleSmartExtraction = async () => {
                         </div>
 
                         <div className="md:col-span-1 border-l border-gray-100 pl-4">
-                          <label className="block mb-1.5 text-sm font-medium">Required Experience <span className="text-red-500">*</span></label>
-                          <div className="flex flex-wrap gap-2">
+                            {employmentType === "Internship" ? (
+                              <div className="h-full flex flex-col justify-center text-center text-gray-500 py-4">
+                                <span className="text-xl mb-2">🎓</span>
+                                <p className="text-sm font-medium">Experience not required for internships</p>
+                              </div>
+                            ) : (
+                              <>
+                                <label className="block mb-1.5 text-sm font-medium">Required Experience <span className="text-red-500">*</span></label>
+                                <div className="flex flex-wrap gap-2">
                             {EXPERIENCE_OPTIONS.map((exp) => {
                               const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
                               const isSelected = currentExps.includes(exp);
@@ -1070,6 +1077,8 @@ const handleSmartExtraction = async () => {
                             })}
                             </div>
                             
+                            </>
+                            )}
                             <div className="mt-4 pt-4 border-t border-gray-100 hidden md:block">
                                <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
                                <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />

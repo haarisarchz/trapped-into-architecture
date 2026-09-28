@@ -134,6 +134,7 @@ export default function JobCard({
   state={state}
               area={area}
               experience={experience}
+              employmentType={employment_type}
   initialShares={share_count} 
 />
             </div>
@@ -161,7 +162,7 @@ export default function JobCard({
   ========================================= */
   if (viewMode === "balanced") {
       const expStr = experience ? String(formattedExperience).toLowerCase().trim() : "";
-      const showExperience = expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
+      const showExperience = employment_type !== "Internship" && expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
       
       const salStr = salary ? String(salary).toLowerCase().trim() : "";
       const showSalary = salStr && salStr !== "not disclosed" && salStr !== "negotiable" && salStr !== "null" && salStr !== "-";
@@ -194,6 +195,7 @@ export default function JobCard({
                     state={state}
               area={area}
               experience={experience}
+              employmentType={employment_type}
                     initialShares={share_count} 
                   />
                 </div>
@@ -263,6 +265,7 @@ export default function JobCard({
             state={state}
               area={area}
               experience={experience}
+              employmentType={employment_type}
             initialShares={share_count} 
           />
         </div>

@@ -13,6 +13,7 @@ export default function ShareButtons({
   city,
   state,
   experience,
+  employmentType,
   initialShares = 0,
   variant = "icon"
 }: { 
@@ -25,6 +26,7 @@ export default function ShareButtons({
   city?: string,
   state?: string,
   experience?: any,
+  employmentType?: string,
   initialShares?: number,
   variant?: "icon" | "button" | "statistic"
 }) {
@@ -100,7 +102,7 @@ export default function ShareButtons({
         let expText = "";
         if (job.experience) {
           const exp = Array.isArray(job.experience) ? job.experience.join(", ") : String(job.experience);
-          if (exp) expText = ` (${exp})`;
+          if (exp && job.employment_type !== "Internship") expText = ` (${exp})`;
         }
         text += `${idx + 1}. ${job.position}${expText}\n`;
       });
@@ -109,7 +111,7 @@ export default function ShareButtons({
       let singleExpText = "";
       if (experience) {
         const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
-        if (exp) singleExpText = ` (${exp})`;
+        if (exp && employmentType !== "Internship") singleExpText = ` (${exp})`;
       }
       text += `Positions: ${position}${singleExpText}\n\n`;
     }
