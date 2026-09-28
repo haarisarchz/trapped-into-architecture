@@ -31,6 +31,7 @@ type JobCardProps = {
   viewMode: string;
   save_count?: number;
   share_count?: number;
+  employment_type?: string;
 };
 
 export default function JobCard({
@@ -56,6 +57,7 @@ export default function JobCard({
   viewMode,
   save_count = 0,
   share_count = 0,
+  employment_type,
 }: JobCardProps) {
   const router = useRouter();
   

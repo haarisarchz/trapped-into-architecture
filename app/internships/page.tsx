@@ -90,7 +90,8 @@ const uniqueCities = [
           city: job.city,
           state: job.state,
           position: job.position,
-          experience: Array.isArray(job.experience)
+            employment_type: job.employment_type,
+            experience: Array.isArray(job.experience)
             ? job.experience
             : [],
           salary: job.salary,
@@ -1090,7 +1091,8 @@ setSelectedSalary([]);
       city={job.city}
       state={job.state}
       position={job.position}
-      experience={job.experience}
+        employment_type={job.employment_type}
+        experience={job.experience}
       salary={job.salary}
       qualifications={job.qualifications}
       skills_required={job.skillsRequired}
