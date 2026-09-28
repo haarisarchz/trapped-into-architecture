@@ -59,6 +59,23 @@ export default function JobCard({
 }: JobCardProps) {
   const router = useRouter();
   
+  const formatExperience = (exp: any) => {
+      if (!exp) return "";
+      let str = Array.isArray(exp) ? exp.join(", ") : String(exp);
+      const parts = str.split(",").map(p => p.trim()).filter(Boolean);
+      const unique: string[] = [];
+      const lowerSeen = new Set();
+      for (const p of parts) {
+         if (!lowerSeen.has(p.toLowerCase())) {
+            lowerSeen.add(p.toLowerCase());
+            unique.push(p);
+         }
+      }
+      return unique.join(", ");
+  };
+  const formattedExperience = formatExperience(experience);
+
+  
   
 
   
@@ -141,7 +158,7 @@ export default function JobCard({
      BALANCED VIEW
   ========================================= */
   if (viewMode === "balanced") {
-      const expStr = experience ? String(experience).toLowerCase().trim() : "";
+      const expStr = experience ? String(formattedExperience).toLowerCase().trim() : "";
       const showExperience = expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
       
       const salStr = salary ? String(salary).toLowerCase().trim() : "";
@@ -191,7 +208,7 @@ export default function JobCard({
             </div>
   
             <div className="mt-4 space-y-1 md:space-y-2">
-              {showExperience && <p className="text-sm text-gray-700">Experience: {experience}</p>}
+              {showExperience && <p className="text-sm text-gray-700">Experience: {formattedExperience}</p>}
               {showSalary && <p className="text-sm font-semibold">Salary: {salary}</p>}
             </div>
           </div>

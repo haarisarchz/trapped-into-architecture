@@ -56,6 +56,22 @@ export async function generateMetadata({
   }
 }
 
+
+  const formatExperience = (exp: any) => {
+      if (!exp) return "";
+      let str = Array.isArray(exp) ? exp.join(", ") : String(exp);
+      const parts = str.split(",").map(p => p.trim()).filter(Boolean);
+      const unique = [];
+      const lowerSeen = new Set();
+      for (const p of parts) {
+         if (!lowerSeen.has(p.toLowerCase())) {
+            lowerSeen.add(p.toLowerCase());
+            unique.push(p);
+         }
+      }
+      return unique.join(", ");
+  };
+
 export default async function CompanyPage({
   params,
 }: {
@@ -232,7 +248,7 @@ export default async function CompanyPage({
                       </h3>
                       <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
                         <Briefcase size={16} />
-                        {job.experience ? job.experience : "Experience not specified"}
+                        {job.experience ? formatExperience(job.experience) : "Experience not specified"}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-4">
