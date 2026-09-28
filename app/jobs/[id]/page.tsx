@@ -261,11 +261,11 @@ export default async function JobDetailsPage({
                   <div className="p-6 bg-gray-100 border-t border-gray-200 flex flex-col items-center justify-center gap-4 mt-auto">
                     <div className="flex items-center gap-3">
                       <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="button" />
-                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} initialShares={job.share_count || 0} variant="button" />
+                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} initialShares={job.share_count || 0} variant="button" />
                     </div>
                     <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
                       <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="statistic" />
-                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} initialShares={job.share_count || 0} variant="statistic" />
+                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} initialShares={job.share_count || 0} variant="statistic" />
                     </div>
                   </div>
                 </div>

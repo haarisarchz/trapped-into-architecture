@@ -132,6 +132,8 @@ export default function JobCard({
   organizationType={organization_type}
   city={city}
   state={state}
+              area={area}
+              experience={experience}
   initialShares={share_count} 
 />
             </div>
@@ -190,6 +192,8 @@ export default function JobCard({
                     organizationType={organization_type}
                     city={city}
                     state={state}
+              area={area}
+              experience={experience}
                     initialShares={share_count} 
                   />
                 </div>
@@ -257,6 +261,8 @@ export default function JobCard({
             organizationType={organization_type}
             city={city}
             state={state}
+              area={area}
+              experience={experience}
             initialShares={share_count} 
           />
         </div>

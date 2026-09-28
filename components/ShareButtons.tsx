@@ -9,8 +9,10 @@ export default function ShareButtons({
   companyName, 
   position, 
   organizationType,
+  area,
   city,
   state,
+  experience,
   initialShares = 0,
   variant = "icon"
 }: { 
@@ -19,8 +21,10 @@ export default function ShareButtons({
   companyName: string,
   position: string,
   organizationType?: string,
+  area?: string,
   city?: string,
   state?: string,
+  experience?: any,
   initialShares?: number,
   variant?: "icon" | "button" | "statistic"
 }) {
@@ -81,8 +85,9 @@ export default function ShareButtons({
     
     let text = `${orgTypeLabel} Name: ${companyName}\n`;
     
-    // Format Location: City, State
+    // Format Location: Neighborhood, City, State
     const locParts = [];
+    if (area) locParts.push(area);
     if (city) locParts.push(city);
     if (state) locParts.push(state);
     if (locParts.length > 0) {
@@ -95,16 +100,21 @@ export default function ShareButtons({
         let expText = "";
         if (job.experience) {
           const exp = Array.isArray(job.experience) ? job.experience.join(", ") : String(job.experience);
-          if (exp) expText = ` - ${exp}`;
+          if (exp) expText = ` (${exp})`;
         }
         text += `${idx + 1}. ${job.position}${expText}\n`;
       });
       text += `\n`;
     } else {
-      text += `Position: ${position}\n\n`;
+      let singleExpText = "";
+      if (experience) {
+        const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
+        if (exp) singleExpText = ` (${exp})`;
+      }
+      text += `Positions: ${position}${singleExpText}\n\n`;
     }
     
-    text += `For more details, visit:\n${url}`;
+    text += `For Details Visit:\n${url}`;
     return text;
   };
 
@@ -143,7 +153,6 @@ export default function ShareButtons({
       { name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` },
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-    { name: "Instagram", href: `https://www.instagram.com/` }, // IG doesn't support prefilled URL shares, link to app
     { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(position + ' at ' + companyName + '\n')}` },
     { name: "Email", href: `mailto:?subject=${encodeURIComponent(`${position} — ${companyName}`)}&body=${shareText}` },
   ];
