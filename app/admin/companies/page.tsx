@@ -126,7 +126,7 @@ export default function AdminCompaniesPage() {
       result.sort((a: any, b: any) => {
         if (b.activeJobs !== a.activeJobs) return b.activeJobs - a.activeJobs;
       
-  const getSortedCompanies = (list: any[]) => {
+  function getSortedCompanies(list: any[]) {
     return [...list].sort((a, b) => {
       let valA = a[sortField];
       let valB = b[sortField];
@@ -169,7 +169,7 @@ export default function AdminCompaniesPage() {
   };
 
   // Helper: decide what to show in "Created By" column
-  const resolveCreatedBy = (company: any): string => {
+  function resolveCreatedBy(company: any): string {
     const profile = company.creatorProfile;
     if (!profile) return "—";
 
@@ -346,7 +346,7 @@ export default function AdminCompaniesPage() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
                           <button
-                            onClick={() => router.push(`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name)}`)}
+                            onClick={() => router.push(`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name || "")}&city=${encodeURIComponent(c.city || "")}&state=${encodeURIComponent(c.state || "")}`)}
                             className="p-2 text-gray-800 md:text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                             title="Edit Company"
                           >

@@ -50,6 +50,8 @@ function EditCompanyContent() {
     
     if (companyId === "new" || companyId === "null") {
       setFirmName(searchParams.get("name") || "");
+      setCity(searchParams.get("city") || "");
+      setState(searchParams.get("state") || "");
       setLoading(false);
     } else if (companyId) {
       fetchCompany();
