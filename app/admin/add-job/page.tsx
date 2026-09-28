@@ -410,16 +410,18 @@ const handleSchedule = async () => {
     }
     setIsSavingCompany(true);
     try {
-      const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-      
-              let authorId = null;
-        if (activeUser) {
-           const lookupVal = activeUser.username || activeUser.email;
-           const lookupField = activeUser.username ? "username" : "email";
-           if (lookupVal) {
-             const { data: cp } = await supabase.from("profiles").select("id").eq(lookupField, lookupVal).maybeSingle();
-             if (cp) authorId = cp.id;
-           }
+              let authorId = (await supabase.auth.getUser()).data.user?.id;
+        if (!authorId) {
+          const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+          authorId = activeUser?.id || null;
+          if (!authorId && activeUser) {
+             const lookupVal = activeUser.username || activeUser.email;
+             const lookupField = activeUser.username ? "username" : "email";
+             if (lookupVal) {
+               const { data: cp } = await supabase.from("profiles").select("id").eq(lookupField, lookupVal).maybeSingle();
+               if (cp) authorId = cp.id;
+             }
+          }
         }
         
         const companyPayload = {
@@ -481,16 +483,19 @@ const handlePublishJob = async (
   setIsPublishing(true);
 
   try {
-      const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-      let authorId = activeUser?.id || null;
-      if (!authorId && activeUser) {
-         const lookupVal = activeUser.username || activeUser.email;
-         const lookupField = activeUser.username ? "username" : "email";
-         if (lookupVal) {
-            const { data: cp } = await supabase.from("profiles").select("id").eq(lookupField, lookupVal).maybeSingle();
-            if (cp) authorId = cp.id;
-         }
-      }
+              let authorId = (await supabase.auth.getUser()).data.user?.id;
+        if (!authorId) {
+          const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+          authorId = activeUser?.id || null;
+          if (!authorId && activeUser) {
+             const lookupVal = activeUser.username || activeUser.email;
+             const lookupField = activeUser.username ? "username" : "email";
+             if (lookupVal) {
+               const { data: cp } = await supabase.from("profiles").select("id").eq(lookupField, lookupVal).maybeSingle();
+               if (cp) authorId = cp.id;
+             }
+          }
+        }
       let currentCompanyId = selectedCompanyId;
 
     if (status !== "draft" && firmName) {
