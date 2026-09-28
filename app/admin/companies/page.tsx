@@ -51,7 +51,7 @@ export default function AdminCompaniesPage() {
       // ── Step 2: Fetch jobs (source of truth when companies table is empty) ─
       const { data: jobsData, error: jobsErr } = await supabase
         .from("jobs")
-        .select("id, firm_name, company_id, city, state, organization_type, status, posted_date, author_id");
+        .select("id, firm_name, company_id, city, state, organization_type, status, posted_date, created_at, author_id");
 
       if (jobsErr) {
         console.warn("jobs table error:", jobsErr.message);
@@ -103,10 +103,10 @@ export default function AdminCompaniesPage() {
               state: job.state || "",
               organization_type: job.organization_type || "Architecture Firm",
               is_hidden: false,
-              created_by: null,
-              created_at: job.posted_date, // best available date
+              created_by: job.author_id,
+              created_at: job.created_at || job.posted_date,
               logo_url: null,
-              creatorProfile: null,
+              creatorProfile: job.author_id ? profilesMap[job.author_id] : null,
               totalJobs: 0,
               activeJobs: 0,
               isFromCompaniesTable: false,
