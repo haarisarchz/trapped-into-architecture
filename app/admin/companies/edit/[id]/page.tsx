@@ -104,6 +104,13 @@ function EditCompanyContent() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingImage(true);
+    
+    // Immediate local preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setCompanyLogo(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
 
     const safeFirm = firmName ? firmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'company';
     const extMatch = file.name.match(/\.[0-9a-z]+$/i);
