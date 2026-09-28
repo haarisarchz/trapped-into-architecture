@@ -123,6 +123,27 @@ export default async function JobDetailsPage({
   const hasSalary = job.salary && job.salary.trim() && job.salary.trim().toLowerCase() !== "not disclosed";
   const hasExperience = job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
   const hasSource = job.source && job.source.trim();
+    
+    // Auto-extract contact details for older jobs
+    const phoneRegex = /(?:\+?91|0)?\s*([6-9]\d{9})/g;
+    const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+    
+    let extractedPhones = [];
+    let match;
+    while ((match = phoneRegex.exec(cleanDescription)) !== null) {
+      extractedPhones.push(match[1]);
+    }
+    const fallbackPhone = extractedPhones.length > 0 ? extractedPhones[0] : null;
+    
+    let extractedEmails = [];
+    while ((match = emailRegex.exec(cleanDescription)) !== null) {
+      extractedEmails.push(match[1]);
+    }
+    const fallbackEmail = extractedEmails.length > 0 ? extractedEmails[0] : null;
+    
+    const displayEmail = job.application_email || company?.email || fallbackEmail;
+    const displayPhone = company?.phone || fallbackPhone;
+    
 
   const cityJobs = jobs.filter((j: any) => j.city === job.city).slice(0, 3);
   const positionJobs = jobs.filter((j: any) => j.position === job.position).slice(0, 3);
@@ -365,12 +386,12 @@ export default async function JobDetailsPage({
                               Apply Now ↗
                             </a>
                           )}
-                          {job.application_email && (
-                            <a href={`mailto:${job.application_email}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-8 py-3 rounded-xl text-base font-bold border-2 border-black hover:bg-gray-50 transition w-full sm:w-auto text-center shadow-sm">
-                              Email Now
-                            </a>
-                          )}
-                          {!job.apply_link && !job.application_email && (
+                          {displayEmail && (
+                              <a href={`mailto:${displayEmail}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-8 py-3 rounded-xl text-base font-bold border-2 border-black hover:bg-gray-50 transition w-full sm:w-auto text-center shadow-sm">
+                                Email Now
+                              </a>
+                            )}
+                          {!job.apply_link && !displayEmail && (
                             <span className="text-gray-500 text-sm italic">No application method provided</span>
                           )}
                         </div>
@@ -396,31 +417,23 @@ export default async function JobDetailsPage({
               )}
 
               {/* CONTACT DETAILS */}
-              {(job.application_email || (company && (company.email || company.phone || company.website))) && (
+              {(displayEmail || displayPhone || company?.website) && (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8 mt-6">
                   <h2 className="text-2xl font-bold mb-4 text-gray-900">Contact Details</h2>
                   <div className="space-y-4 text-lg text-gray-700">
-                    {job.application_email && (
+                    {displayEmail && (
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-black">Email:</span>
-                        <a href={`mailto:${job.application_email}`} className="text-blue-600 hover:underline break-all">
-                          {job.application_email}
+                        <a href={`mailto:${displayEmail}`} className="text-blue-600 hover:underline break-all">
+                          {displayEmail}
                         </a>
                       </div>
                     )}
-                    {!job.application_email && company?.email && (
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-black">Email:</span>
-                        <a href={`mailto:${company.email}`} className="text-blue-600 hover:underline break-all">
-                          {company.email}
-                        </a>
-                      </div>
-                    )}
-                    {company?.phone && (
+                    {displayPhone && (
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-black">Phone:</span>
-                        <a href={`tel:${company.phone}`} className="text-blue-600 hover:underline">
-                          {company.phone}
+                        <a href={`tel:${displayPhone}`} className="text-blue-600 hover:underline">
+                          {displayPhone}
                         </a>
                       </div>
                     )}
