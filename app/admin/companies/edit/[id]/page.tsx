@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function EditCompanyPage() {
+function EditCompanyContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const params = useParams();
   const companyId = params.id as string;
@@ -46,7 +48,10 @@ export default function EditCompanyPage() {
       return;
     }
     
-    if (companyId) {
+    if (companyId === "new" || companyId === "null") {
+      setFirmName(searchParams.get("name") || "");
+      setLoading(false);
+    } else if (companyId) {
       fetchCompany();
     }
   }, [companyId]);
@@ -147,7 +152,25 @@ export default function EditCompanyPage() {
         founded_year: foundedYear ? parseInt(foundedYear) : null
       };
 
-      const { error } = await supabase.from("companies").update(companyPayload).eq("id", companyId);
+      let error;
+      
+      if (companyId === "new" || companyId === "null") {
+        let authorId = (await supabase.auth.getUser()).data.user?.id;
+        if (!authorId) {
+          const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+          authorId = user ? user.id : null;
+        }
+        
+        const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+        const { error: insertError } = await supabase.from("companies").insert([
+          { ...companyPayload, slug: companySlug, created_by: authorId }
+        ]);
+        error = insertError;
+      } else {
+        const { error: updateError } = await supabase.from("companies").update(companyPayload).eq("id", companyId);
+        error = updateError;
+      }
+      
       if (error) throw error;
       
       alert("Company details updated successfully!");
@@ -320,5 +343,13 @@ export default function EditCompanyPage() {
       
       <Footer />
     </div>
+  );
+}
+
+export default function EditCompanyPage() {
+  return (
+    <Suspense fallback={<div className="p-8">Loading...</div>}>
+      <EditCompanyContent />
+    </Suspense>
   );
 }
