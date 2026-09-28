@@ -134,7 +134,6 @@ function EditCompanyContent() {
         firm_name: firmName,
         city,
         state,
-        country,
         neighborhood: area,
         organization_type: organizationType,
         logo_url: companyLogo,
@@ -177,7 +176,7 @@ function EditCompanyContent() {
       router.push("/admin/companies");
     } catch (err: any) {
       console.error(err.message);
-      alert("Failed to update company details");
+      alert("Failed to update company details: " + (err.message || JSON.stringify(err)));
     } finally {
       setSaving(false);
     }
