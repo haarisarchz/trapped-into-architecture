@@ -145,6 +145,10 @@ export default async function JobDetailsPage({
     const displayPhone = company?.phone || fallbackPhone;
     
 
+  
+    const autoExpiryDate = new Date(new Date(job.posted_date || job.created_at).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const showExpiry = job.post_expiry_date && job.post_expiry_date !== autoExpiryDate;
+
   const cityJobs = jobs.filter((j: any) => j.city === job.city).slice(0, 3);
   const positionJobs = jobs.filter((j: any) => j.position === job.position).slice(0, 3);
   const recentJobs = [...jobs].sort((a,b) => new Date(b.created_at || b.posted_date).getTime() - new Date(a.created_at || a.posted_date).getTime()).slice(0, 3);
@@ -343,6 +347,34 @@ export default async function JobDetailsPage({
                         </div>
                       )}
 
+                    
+                    {/* CONTACT DETAILS (Moved here per user request) */}
+                    {(displayEmail || displayPhone || company?.website) && (
+                      <div className="pt-4 mt-4 border-t border-gray-100">
+                        <p className="text-sm text-gray-500 mb-2 font-medium">Contact Details</p>
+                        <div className="flex flex-col gap-2">
+                          {displayEmail && (
+                            <p className="font-semibold text-black break-all">
+                              <span className="text-gray-500 font-normal mr-1">Email:</span>
+                              <a href={`mailto:${displayEmail}`} className="text-blue-600 hover:underline">{displayEmail}</a>
+                            </p>
+                          )}
+                          {displayPhone && (
+                            <p className="font-semibold text-black">
+                              <span className="text-gray-500 font-normal mr-1">Phone:</span>
+                              <a href={`tel:${displayPhone}`} className="text-blue-600 hover:underline">{displayPhone}</a>
+                            </p>
+                          )}
+                          {company?.website && (
+                            <p className="font-semibold text-black break-all">
+                              <span className="text-gray-500 font-normal mr-1">Website:</span>
+                              <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{company.website}</a>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* DATES */}
                     <div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
@@ -358,12 +390,12 @@ export default async function JobDetailsPage({
                             <p className="font-semibold mt-1">{job.last_date_to_apply}</p>
                           </div>
                         )}
-                        {job.post_expiry_date && (
-                          <div>
-                            <p className="text-sm text-gray-500">Post Expiry Date</p>
-                            <p className="font-semibold mt-1">{job.post_expiry_date}</p>
-                          </div>
-                        )}
+                        {showExpiry && (
+                            <div>
+                              <p className="text-sm text-gray-500">Post Expiry Date</p>
+                              <p className="font-semibold mt-1">{job.post_expiry_date}</p>
+                            </div>
+                          )}
                         {hasSource && (
                           <div>
                             <p className="text-sm text-gray-500">Source</p>
@@ -416,38 +448,7 @@ export default async function JobDetailsPage({
                 </div>
               )}
 
-              {/* CONTACT DETAILS */}
-              {(displayEmail || displayPhone || company?.website) && (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8 mt-6">
-                  <h2 className="text-2xl font-bold mb-4 text-gray-900">Contact Details</h2>
-                  <div className="space-y-4 text-lg text-gray-700">
-                    {displayEmail && (
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-black">Email:</span>
-                        <a href={`mailto:${displayEmail}`} className="text-blue-600 hover:underline break-all">
-                          {displayEmail}
-                        </a>
-                      </div>
-                    )}
-                    {displayPhone && (
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-black">Phone:</span>
-                        <a href={`tel:${displayPhone}`} className="text-blue-600 hover:underline">
-                          {displayPhone}
-                        </a>
-                      </div>
-                    )}
-                    {company?.website && (
-                      <div className="flex items-center gap-3">
-                        <span className="font-semibold text-black">Website:</span>
-                        <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
-                          {company.website}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+
             
             </div>
             {/* SIDEBAR */}
