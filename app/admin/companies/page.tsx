@@ -246,14 +246,24 @@ export default function AdminCompaniesPage() {
             <table className="w-full text-left min-w-[1000px]">
               <thead className="bg-gray-50 border-b border-gray-200 text-sm text-gray-600 uppercase">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Company</th>
-                  <th className="px-6 py-4 font-semibold">Location</th>
-                  <th className="px-6 py-4 font-semibold">Created By</th>
-                  <th className="px-6 py-4 font-semibold">Created On</th>
-                  <th className="px-6 py-4 font-semibold">Jobs (Total / Active)</th>
-                  <th className="px-6 py-4 font-semibold">Visibility</th>
-                  <th className="px-6 py-4 font-semibold text-right">Actions</th>
-                </tr>
+                    <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("firm_name")}>
+                      Company {sortField === "firm_name" && (sortOrder === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("location")}>
+                      Location {sortField === "location" && (sortOrder === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("created_by")}>
+                      Created By {sortField === "created_by" && (sortOrder === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("created_at")}>
+                      Created On {sortField === "created_at" && (sortOrder === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("jobs")}>
+                      Jobs (Total / Active) {sortField === "jobs" && (sortOrder === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="px-6 py-4 font-semibold">Visibility</th>
+                    <th className="px-6 py-4 font-semibold text-right">Actions</th>
+                  </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
@@ -263,7 +273,7 @@ export default function AdminCompaniesPage() {
                     </td>
                   </tr>
                 ) : companies.length > 0 ? (
-                  companies.map((c, i) => (
+                  sortedCompanies.map((c, i) => (
                     <tr key={c.id || c.firm_name || i} className="hover:bg-gray-50 transition">
                       {/* Company */}
                       <td className="px-6 py-4">
