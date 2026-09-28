@@ -13,6 +13,18 @@ export default function AdminCompaniesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [sortField, setSortField] = useState<string>("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "null");
     if (!user) {
@@ -39,7 +51,7 @@ export default function AdminCompaniesPage() {
       // ── Step 2: Fetch jobs (source of truth when companies table is empty) ─
       const { data: jobsData, error: jobsErr } = await supabase
         .from("jobs")
-        .select("id, firm_name, company_id, city, state, organization_type, status, posted_date");
+        .select("id, firm_name, company_id, city, state, organization_type, status, posted_date, author_id");
 
       if (jobsErr) {
         console.warn("jobs table error:", jobsErr.message);
@@ -113,7 +125,38 @@ export default function AdminCompaniesPage() {
       // Sort: published companies first, then by name
       result.sort((a: any, b: any) => {
         if (b.activeJobs !== a.activeJobs) return b.activeJobs - a.activeJobs;
-        return (a.firm_name || "").localeCompare(b.firm_name || "");
+      
+  const getSortedCompanies = (list: any[]) => {
+    return [...list].sort((a, b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      if (sortField === "created_by") {
+         valA = resolveCreatedBy(a);
+         valB = resolveCreatedBy(b);
+      } else if (sortField === "created_at") {
+         valA = a.created_at ? new Date(a.created_at).getTime() : 0;
+         valB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      } else if (sortField === "location") {
+         valA = [a.city, a.state].filter(Boolean).join(", ") || "";
+         valB = [b.city, b.state].filter(Boolean).join(", ") || "";
+      } else if (sortField === "jobs") {
+         valA = a.totalJobs || 0;
+         valB = b.totalJobs || 0;
+      }
+
+      if (typeof valA === "string") valA = valA.toLowerCase();
+      if (typeof valB === "string") valB = valB.toLowerCase();
+
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedCompanies = getSortedCompanies(companies);
+
+  return (a.firm_name || "").localeCompare(b.firm_name || "");
       });
 
       setCompanies(result);
