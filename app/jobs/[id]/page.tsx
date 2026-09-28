@@ -138,7 +138,8 @@ export default async function JobDetailsPage({
     const hasDescription = cleanDescription.trim();
     const hasRole = jobRole.trim();
 
-  const hasSalary = job.salary && job.salary.trim() && job.salary.trim().toLowerCase() !== "not disclosed";
+  const lowerSalary = job.salary ? job.salary.trim().toLowerCase() : "";
+  const hasSalary = lowerSalary && !["not disclosed", "not specified", "negotiable", "-", "null", "as per industry standards"].includes(lowerSalary);
   const isIntern = job.employment_type === "Internship" || (job.position && job.position.toLowerCase().includes("intern"));
   const hasExperience = !isIntern && job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
   const hasSource = job.source && job.source.trim();
@@ -385,8 +386,8 @@ export default async function JobDetailsPage({
                     
                     {/* CONTACT DETAILS (Moved here per user request) */}
                     {(displayEmail || displayPhone || company?.website) && (
-                      <div className="pt-4 mt-4 border-t border-gray-100">
-                        <p className="text-sm text-gray-500 mb-2 font-medium">Contact Details</p>
+                      <div className="pt-3 mt-3 border-t border-gray-100">
+                        <h2 className="text-base font-bold mb-1 text-gray-900">Contact Details</h2>
                         <div className="flex flex-col gap-2">
                           {displayEmail && (
                             <p className="font-semibold text-black break-all">

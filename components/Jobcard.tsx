@@ -169,7 +169,7 @@ export default function JobCard({
         const showExperience = !isIntern && expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
       
       const salStr = salary ? String(salary).toLowerCase().trim() : "";
-      const showSalary = salStr && salStr !== "not disclosed" && salStr !== "negotiable" && salStr !== "null" && salStr !== "-";
+      const showSalary = salStr && !["not disclosed", "not specified", "negotiable", "-", "null", "as per industry standards"].includes(salStr);
       
       return (
         <div 
