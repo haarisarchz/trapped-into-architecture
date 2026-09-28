@@ -412,7 +412,17 @@ const handleSchedule = async () => {
     try {
       const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
       
-      const companyPayload = {
+              let authorId = null;
+        if (activeUser) {
+           const lookupVal = activeUser.username || activeUser.email;
+           const lookupField = activeUser.username ? "username" : "email";
+           if (lookupVal) {
+             const { data: cp } = await supabase.from("profiles").select("id").eq(lookupField, lookupVal).maybeSingle();
+             if (cp) authorId = cp.id;
+           }
+        }
+        
+        const companyPayload = {
         firm_name: firmName.trim(),
         city: city || "",
         state: state || "",
@@ -449,7 +459,7 @@ const handleSchedule = async () => {
         } else {
            const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
            const { data: newComp, error } = await supabase.from("companies").insert([
-             { ...companyPayload, slug: companySlug, created_by: activeUser?.id || null }
+             { ...companyPayload, slug: companySlug, created_by: authorId }
            ]).select().single();
            if (error) throw error;
            if (newComp) setSelectedCompanyId(newComp.id);
@@ -520,7 +530,7 @@ const handlePublishJob = async (
         if (!existingCompany) {
           const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
           const { data: newComp } = await supabase.from("companies").insert([
-            { ...companyPayload, slug: companySlug, created_by: activeUser?.id || null }
+            { ...companyPayload, slug: companySlug, created_by: authorId }
           ]).select().single();
           if (newComp) currentCompanyId = newComp.id;
         } else {
