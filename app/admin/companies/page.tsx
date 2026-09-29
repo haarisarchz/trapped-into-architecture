@@ -292,7 +292,7 @@ export default function AdminCompaniesPage() {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-700 md:text-gray-400">
+                    <td colSpan={9} className="px-6 py-12 text-center text-gray-700 md:text-gray-400">
                       Loading companies...
                     </td>
                   </tr>
@@ -346,6 +346,19 @@ export default function AdminCompaniesPage() {
                           : "—"}
                       </td>
 
+                        {/* Modified By */}
+                        <td className="px-6 py-4 text-gray-700">{resolveModifiedBy(c)}</td>
+                        {/* Modified On */}
+                        <td className="px-6 py-4 text-gray-700">
+                          {c.updated_at
+                            ? new Date(c.updated_at).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "--"}
+                        </td>
+
                       {/* Job counts */}
                       <td className="px-6 py-4">
                         <span className="font-medium text-gray-900">{c.totalJobs}</span>
@@ -393,7 +406,7 @@ export default function AdminCompaniesPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-700 md:text-gray-400">
+                    <td colSpan={9} className="px-6 py-12 text-center text-gray-700 md:text-gray-400">
                       No companies found.
                     </td>
                   </tr>
