@@ -143,13 +143,26 @@ function EditCompanyContent() {
         }
         
         const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+        const origCb = searchParams.get("cb") || authorId;
+        const origCa = searchParams.get("ca") || new Date().toISOString();
         const { error: insertError } = await supabase.from("companies").insert([
-          { ...companyPayload, slug: companySlug, created_by: authorId }
+          { 
+            ...companyPayload, 
+            slug: companySlug, 
+            created_by: origCb,
+            created_at: origCa,
+            updated_by: authorId,
+            updated_at: new Date().toISOString()
+          }
         ]);
         error = insertError;
       } else {
         
           let authorId = (await supabase.auth.getUser()).data.user?.id;
+          if (!authorId) {
+            const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+            authorId = user ? user.id : null;
+          }
           const { error: updateError } = await supabase.from("companies").update({
              ...companyPayload,
              updated_by: authorId || null,
