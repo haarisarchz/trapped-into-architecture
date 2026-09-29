@@ -325,7 +325,7 @@ function EditCompanyContent() {
           <div className="flex justify-end pt-6 border-t border-gray-100">
             <button 
               onClick={handleSave} 
-              disabled={saving || uploadingImage}
+              disabled={saving}
               className="bg-black text-white px-8 py-3 rounded-xl hover:bg-gray-800 disabled:opacity-50 font-bold transition"
             >
               {saving ? "Saving Changes..." : "Save Company"}
