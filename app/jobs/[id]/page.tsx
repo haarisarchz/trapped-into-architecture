@@ -163,6 +163,7 @@ export default async function JobDetailsPage({
     
     const displayEmail = job.application_email || company?.email || fallbackEmail;
     const displayPhone = company?.phone || fallbackPhone;
+      const phoneArray = displayPhone ? String(displayPhone).split(',').map((p: string) => p.trim()).filter(Boolean) : [];
     
 
   
