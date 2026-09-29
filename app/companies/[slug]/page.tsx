@@ -134,17 +134,21 @@ export default async function CompanyPage({
     if (!company && companyJobs.length > 0) {
       const representativeJob = companyJobs[0];
       company = {
-        firm_name: representativeJob.firm_name || "Unknown Firm",
-        organization_type: representativeJob.organization_type || "Firm",
-        city: representativeJob.city || "",
-        state: representativeJob.state || "",
-        logo_url: representativeJob.company_logo || representativeJob.image || "",
-        company_description: "",
-        website_link: "",
-        contact_email: representativeJob.application_email || "",
-        linkedin: "",
-        instagram: "",
-      };
+          firm_name: representativeJob.firm_name || "Unknown Firm",
+          organization_type: representativeJob.organization_type || "Firm",
+          city: representativeJob.city || "",
+          state: representativeJob.state || "",
+          address: representativeJob.address || "",
+          neighborhood: representativeJob.neighborhood || "",
+          logo_url: representativeJob.logo_url || representativeJob.company_logo || representativeJob.image || "",
+          company_description: representativeJob.description || "",
+          website_link: representativeJob.website || "",
+          contact_email: representativeJob.email || representativeJob.application_email || "",
+          phone: representativeJob.phone || "",
+          linkedin: representativeJob.linkedin || "",
+          instagram: representativeJob.instagram || "",
+          facebook: representativeJob.facebook || "",
+        };
     }
 
     if (!company) {
