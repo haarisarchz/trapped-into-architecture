@@ -134,6 +134,14 @@ export default function AdminCompaniesPage() {
     }
   };
 
+  
+  // Helper: decide what to show in "Modified By" column
+  function resolveModifiedBy(company: any): string {
+    const profile = company.modifierProfile;
+    if (!profile) return "--";
+    return profile.display_name || profile.full_name || profile.username || "--";
+  }
+
   // Helper: decide what to show in "Created By" column
   function resolveCreatedBy(company: any): string {
     const profile = company.creatorProfile;
@@ -196,6 +204,12 @@ export default function AdminCompaniesPage() {
       } else if (sortField === "created_at") {
          valA = a.created_at ? new Date(a.created_at).getTime() : 0;
          valB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      } else if (sortField === "updated_by") {
+         valA = resolveModifiedBy(a);
+         valB = resolveModifiedBy(b);
+      } else if (sortField === "updated_at") {
+         valA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+         valB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
       } else if (sortField === "location") {
          valA = [a.city, a.state].filter(Boolean).join(", ") || "";
          valB = [b.city, b.state].filter(Boolean).join(", ") || "";
@@ -261,6 +275,12 @@ export default function AdminCompaniesPage() {
                     </th>
                     <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("created_at")}>
                       Created On {sortField === "created_at" && (sortOrder === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("updated_by")}>
+                      Modified By {sortField === "updated_by" && (sortOrder === "asc" ? "↑" : "↓")}
+                    </th>
+                    <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("updated_at")}>
+                      Modified On {sortField === "updated_at" && (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
                     <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-gray-100" onClick={() => handleSort("jobs")}>
                       Jobs (Total / Active) {sortField === "jobs" && (sortOrder === "asc" ? "↑" : "↓")}
