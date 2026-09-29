@@ -282,9 +282,13 @@ const fetchJobs = async () => {
     fetchJobs();
   };
 
-return (
 
-    <main className="min-h-screen bg-white text-black">
+  const sortedJobs = getSortedJobs(jobs);
+  const totalPages = Math.ceil(sortedJobs.length / itemsPerPage);
+  const currentJobs = sortedJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+return (
+      <main className="min-h-screen bg-white text-black">
 
       <Navbar />
 
