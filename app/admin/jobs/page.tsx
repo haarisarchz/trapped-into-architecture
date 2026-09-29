@@ -140,6 +140,8 @@ const typeFilter = searchParams.get("type");
   
   const [sortField, setSortField] = useState<string>("posted_date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => { setCurrentUser(JSON.parse(localStorage.getItem("currentUser") || "null")); }, []);
 
@@ -424,7 +426,7 @@ return (
 
               <tbody>
 
-                {getSortedJobs(jobs).map((job) => {
+                {currentJobs.map((job) => {
 
                   const today = new Date();
 
@@ -573,9 +575,50 @@ return (
 
           </div>
 
-        </div>
+        
+          </div>
+          
+          {/* Pagination Controls */}
+          {jobs.length > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <span>Rows per page:</span>
+                <select 
+                  value={itemsPerPage} 
+                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                  className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
+                >
+                  <option value={10}>10</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                
+                <span className="text-sm font-medium px-4">
+                  Page {currentPage} of {totalPages || 1}
+                </span>
+                
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
 
-      </section>
 
       <Footer />
 

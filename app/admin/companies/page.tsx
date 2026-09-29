@@ -15,6 +15,8 @@ export default function AdminCompaniesPage() {
 
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -216,6 +218,9 @@ export default function AdminCompaniesPage() {
   };
 
   const sortedCompanies = getSortedCompanies(companies);
+  
+  const totalPages = Math.ceil(sortedCompanies.length / itemsPerPage);
+  const currentCompanies = sortedCompanies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <main className="min-h-screen bg-gray-50 text-black flex flex-col">
@@ -272,7 +277,7 @@ export default function AdminCompaniesPage() {
                     </td>
                   </tr>
                 ) : companies.length > 0 ? (
-                  sortedCompanies.map((c, i) => (
+                  currentCompanies.map((c, i) => (
                     <tr key={c.id || c.firm_name || i} className="hover:bg-gray-50 transition">
                       {/* Company */}
                       <td className="px-6 py-4">
@@ -376,8 +381,50 @@ export default function AdminCompaniesPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      </section>
+        
+          </div>
+          
+          {/* Pagination Controls */}
+          {companies.length > 0 && (
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <span>Rows per page:</span>
+                <select 
+                  value={itemsPerPage} 
+                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                  className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
+                >
+                  <option value={10}>10</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                
+                <span className="text-sm font-medium px-4">
+                  Page {currentPage} of {totalPages || 1}
+                </span>
+                
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
       <Footer />
     </main>
   );
