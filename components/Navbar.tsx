@@ -853,7 +853,7 @@ window.location.reload();
 
   {/* EMAIL */}
 
-  <div id="email-box">
+  <div>
 
     <label className="block mb-2 font-medium">
       Email
@@ -910,10 +910,7 @@ window.location.reload();
 
  {/* PHONE */}
 
-<div
-  id="phone-box"
-  style={{ display: "none" }}
->
+<div>
 
   <label className="block mb-2 font-medium">
     Phone Number
