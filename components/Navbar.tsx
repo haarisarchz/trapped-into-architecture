@@ -32,7 +32,7 @@ const [showUserMenu, setShowUserMenu] =
   const [settings, setSettings] = useState<any>(null);
 
   const [authTab, setAuthTab] =
-    useState<"login" | "register">("login");
+    useState<"login" | "register" | "success">("login");
 useEffect(() => {
     supabase.from("site_settings").select("logo_url").eq("id", "global").maybeSingle().then(({data}) => {
       if(data) setSettings(data);
@@ -406,7 +406,7 @@ useEffect(() => {
 
             </div>
 
-{/* LOGIN */}
+  {/* LOGIN */}
 
 {authTab === "login" && (
 
@@ -579,6 +579,23 @@ window.location.reload();
 
 )}
 
+
+{/* SUCCESS */}
+
+{authTab === "success" && (
+  <div className="text-center space-y-6 py-8">
+    <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto text-4xl mb-4">✓</div>
+    <h2 className="text-3xl font-bold">Registration Successful</h2>
+    <p className="text-gray-600 text-lg">Your account has been created successfully. Login to continue.</p>
+    <button 
+      onClick={() => setAuthTab("login")} 
+      className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition mt-6"
+    >
+      Login
+    </button>
+  </div>
+)}
+
 {/* REGISTER */}
 
 {authTab === "register" && (
@@ -740,6 +757,27 @@ window.location.reload();
 
 </div>
 
+
+  
+  {/* PROFESSION */}
+  <div>
+    <label className="block mb-2 font-medium">
+      Profession
+      <span className="text-red-500"> *</span>
+    </label>
+    <select
+      id="register-profession"
+      className="w-full border rounded-xl px-4 py-3"
+      required
+    >
+      <option value="">Select Profession</option>
+      <option value="Practising Architect">Practising Architect</option>
+      <option value="Academician">Academician</option>
+      <option value="Undergraduate Student">Undergraduate Student</option>
+      <option value="Postgraduate Student">Postgraduate Student</option>
+      <option value="Research Scholar">Research Scholar</option>
+    </select>
+  </div>
 
   {/* DISPLAY NAME */}
   <div>
@@ -1200,7 +1238,13 @@ window.location.reload();
           ) as HTMLInputElement
         )?.value.trim();
 
-        const contactMethod = (
+        const profession = (
+            document.getElementById(
+              "register-profession"
+            ) as HTMLSelectElement
+          )?.value;
+          
+          const contactMethod = (
           document.getElementById(
             "contact-method"
           ) as HTMLSelectElement
@@ -1216,7 +1260,11 @@ window.location.reload();
         /* USERNAME RULES */
 
         
-          if (!displayName) {
+          if (!profession) {
+              alert("Select profession");
+              return;
+            }
+            if (!displayName) {
             alert("Enter display name");
             return;
           }
@@ -1302,9 +1350,9 @@ window.location.reload();
 
           console.log("PROFILE CREATED SUCCESSFULLY");
 
-          alert("Account created successfully! Please log in.");
+          
           await supabase.auth.signOut();
-          setAuthTab("login");
+          setAuthTab("success");
         }
       }}
       className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
