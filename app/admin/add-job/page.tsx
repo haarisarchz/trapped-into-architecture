@@ -106,7 +106,8 @@ const [workplaceType, setWorkplaceType] = useState("On-site");
   const [firmName, setFirmName] = useState("");
 
 const [companyLogo, setCompanyLogo] = useState("");
-const [companyDescription, setCompanyDescription] = useState("");
+const [companyAddress, setCompanyAddress] = useState("");
+  const [companyDescription, setCompanyDescription] = useState("");
 const [companyWebsite, setCompanyWebsite] = useState("");
 const [companyEmail, setCompanyEmail] = useState("");
 const [companyPhone, setCompanyPhone] = useState("");
@@ -154,7 +155,8 @@ const loadCompanyDetails = async (companyName: string) => {
   setState(data.state || "");
 
   setCompanyLogo(data.logo_url || "");
-  setCompanyDescription(data.description || "");
+  setCompanyAddress(data.address || "");
+    setCompanyDescription(data.description || "");
   setCompanyWebsite(data.website || "");
   setCompanyEmail(data.email || "");
   setCompanyPhone(data.phone || "");
@@ -215,7 +217,7 @@ const removePosition = (index) => {
     if (selectedCompanyId) {
       setIsCompanyProfileDirty(true);
     }
-  }, [companyLogo, companyDescription, companyWebsite, companyEmail, companyPhone, companyFacebook, companyInstagram, companyLinkedin, companyTwitter, companyWhatsapp, principalArchitect, employeeSize, foundedYear, organizationType, area, city, state]);
+  }, [companyAddress, companyLogo, companyDescription, companyWebsite, companyEmail, companyPhone, companyFacebook, companyInstagram, companyLinkedin, companyTwitter, companyWhatsapp, principalArchitect, employeeSize, foundedYear, organizationType, area, city, state]);
 
   // Removed obsolete loadCompanies since we now use dynamic Autocomplete.
 
@@ -258,6 +260,7 @@ const removePosition = (index) => {
           if (comp) {
              setSelectedCompanyId(comp.id);
              setCompanyLogo(comp.logo_url || "");
+             setCompanyAddress(comp.address || "");
              setCompanyDescription(comp.description || "");
              setCompanyWebsite(comp.website || "");
              setCompanyEmail(comp.email || "");
@@ -454,6 +457,7 @@ const handleSchedule = async () => {
         firm_name: firmName.trim(),
         city: city || "",
         state: state || "",
+        address: companyAddress || "",
         neighborhood: area || "",
         organization_type: organizationType || "Firm",
         logo_url: companyLogo || "",
@@ -529,7 +533,8 @@ const handlePublishJob = async (
           firm_name: firmName,
           city: city,
           state: state,
-          neighborhood: area,
+          address: companyAddress,
+            neighborhood: area,
           organization_type: organizationType,
           logo_url: companyLogo,
           description: companyDescription,
@@ -826,7 +831,8 @@ const handleSmartExtraction = async () => {
       setState(record.state || "");
         setCountry(record.country || "India");
       setCompanyLogo(record.logo_url || "");
-      setCompanyDescription(record.description || "");
+      setCompanyAddress(record.address || "");
+        setCompanyDescription(record.description || "");
       setCompanyWebsite(record.website || "");
       setCompanyEmail(record.email || "");
       setCompanyPhone(record.phone || "");

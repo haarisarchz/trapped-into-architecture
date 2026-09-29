@@ -25,6 +25,7 @@ function EditCompanyContent() {
   const [state, setState] = useState("");
   const [area, setArea] = useState("");
   const [country, setCountry] = useState("India");
+  const [companyAddress, setCompanyAddress] = useState("");
 
   const [companyLogo, setCompanyLogo] = useState("");
   const [principalArchitect, setPrincipalArchitect] = useState("");
@@ -74,7 +75,8 @@ function EditCompanyContent() {
         setOrganizationType(data.organization_type || "Firm");
         setCity(data.city || "");
         setState(data.state || "");
-        setArea(data.neighborhood || "");
+        setCompanyAddress(data.address || "");
+          setArea(data.neighborhood || "");
         setCountry(data.country || "India");
 
         setCompanyLogo(data.logo_url || "");
@@ -113,7 +115,8 @@ function EditCompanyContent() {
         firm_name: firmName,
         city,
         state,
-        neighborhood: area,
+        address: companyAddress,
+          neighborhood: area,
         organization_type: organizationType,
         logo_url: companyLogo,
         description: companyDescription,

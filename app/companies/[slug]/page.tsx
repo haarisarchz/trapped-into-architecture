@@ -163,7 +163,7 @@ export default async function CompanyPage({
       );
     }
 
-    const location = [company.city, company.state].filter(Boolean).join(", ");
+    const location = [company.address, company.neighborhood, company.city, company.state].filter(Boolean).join(", ");
 
     return (
       <main className="min-h-screen flex flex-col bg-gray-50 text-black">
