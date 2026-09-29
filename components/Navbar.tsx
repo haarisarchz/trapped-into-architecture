@@ -847,10 +847,7 @@ window.location.reload();
 <div>
 
   <label className="block mb-2 font-medium">
-    Phone Number
-    <span className="text-red-500">
-      {" "}*
-    </span>
+    Phone Number <span className="text-sm font-normal text-gray-500">(Optional)</span>
   </label>
 
   {/* INSTRUCTION */}
