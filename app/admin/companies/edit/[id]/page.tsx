@@ -175,7 +175,13 @@ function EditCompanyContent() {
         ]);
         error = insertError;
       } else {
-        const { error: updateError } = await supabase.from("companies").update(companyPayload).eq("id", companyId);
+        
+          let authorId = (await supabase.auth.getUser()).data.user?.id;
+          const { error: updateError } = await supabase.from("companies").update({
+             ...companyPayload,
+             updated_by: authorId || null,
+             updated_at: new Date().toISOString()
+          }).eq("id", companyId);
         error = updateError;
       }
       

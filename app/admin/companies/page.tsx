@@ -82,6 +82,7 @@ export default function AdminCompaniesPage() {
             totalJobs: 0,
             activeJobs: 0,
             creatorProfile: comp.created_by ? profilesMap[comp.created_by] : null,
+              modifierProfile: comp.updated_by ? profilesMap[comp.updated_by] : null,
             isFromCompaniesTable: true,
           };
         });
@@ -344,7 +345,7 @@ export default function AdminCompaniesPage() {
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
                           <button
-                            onClick={() => router.push(`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name || "")}&city=${encodeURIComponent(c.city || "")}&state=${encodeURIComponent(c.state || "")}`)}
+                            onClick={() => router.push(`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name || "")}&city=${encodeURIComponent(c.city || "")}&state=${encodeURIComponent(c.state || "")}&cb=${c.created_by || ""}&ca=${c.created_at || ""}`)}
                             className="p-2 text-gray-800 md:text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
                             title="Edit Company"
                           >
