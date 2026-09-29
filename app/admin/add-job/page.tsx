@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import ImageUploader from "@/components/ImageUploader";
 import { useState } from "react";
 import { useEffect } from "react";
 import {
@@ -1321,11 +1322,8 @@ const handleSmartExtraction = async () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium">Upload Job Image <span className="text-red-500 text-xl font-bold">*</span></label>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                  {uploadingImage && (<div className="mt-3 flex items-center gap-2 text-blue-600"><div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div><p>Uploading image...</p></div>)}
-                  {uploadSuccess && (<div className="mt-3 flex items-center gap-2 text-green-600"><span className="text-xl">✓</span><p>Image uploaded successfully</p></div>)}
-                  {imageUrl && (<div className="mt-5"><img src={imageUrl} alt="Job Preview" className="w-full h-auto max-h-64 object-cover rounded-xl border shadow-sm" /></div>)}
+                  <label className="block mb-3 text-sm font-medium">Upload Job Image <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <ImageUploader value={imageUrl} onChange={(url) => setImageUrl(url)} label="Upload Job Image" />
                 </div>
               </div>
             </div>
@@ -1345,7 +1343,7 @@ const handleSmartExtraction = async () => {
 
   <button
     type="button"
-    disabled={uploadingImage || isPublishing}
+    disabled={isPublishing}
     onClick={() => handlePublishJob("published")}
     className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
       uploadingImage
@@ -1353,7 +1351,7 @@ const handleSmartExtraction = async () => {
         : "bg-black text-white hover:bg-gray-800"
     }`}
   >
-    {isPublishing ? "Publishing..." : uploadingImage ? "Uploading Image..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
+    {isPublishing ? "Publishing..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
   </button>
 </div>
           
@@ -1379,9 +1377,8 @@ const handleSmartExtraction = async () => {
               {/* Logo & Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium">{organizationType} Logo</label>
-                  <input type="file" className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-                    {companyLogo && (<div className="mt-2"><img src={companyLogo} alt="Company Logo" className="w-20 h-20 object-contain rounded border shadow-sm bg-white" /></div>)}
+                  <label className="block mb-3 text-sm font-medium">{organizationType} Logo</label>
+                    <ImageUploader value={companyLogo} onChange={(url) => setCompanyLogo(url)} label="Upload Logo" />
                 </div>
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">Principal Architect / Head</label>

@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { supabase } from "@/lib/supabase";
+import ImageUploader from "@/components/ImageUploader";
 
 function EditCompanyContent() {
   const searchParams = useSearchParams();
@@ -15,7 +16,7 @@ function EditCompanyContent() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  
 
   // Form State
   const [firmName, setFirmName] = useState("");
@@ -98,37 +99,6 @@ function EditCompanyContent() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingImage(true);
-    
-    // Immediate local preview
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setCompanyLogo(event.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    const safeFirm = firmName ? firmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : 'company';
-    const extMatch = file.name.match(/\.[0-9a-z]+$/i);
-    const ext = extMatch ? extMatch[0].toLowerCase() : '';
-    const fileName = `${safeFirm}-logo-${Date.now()}${ext}`;
-
-    const { data, error } = await supabase.storage.from("job-images").upload(fileName, file);
-
-    if (error) {
-      console.error("UPLOAD ERROR:", error);
-      alert(JSON.stringify(error));
-      setUploadingImage(false);
-      return;
-    }
-
-    const { data: { publicUrl } } = supabase.storage.from("job-images").getPublicUrl(fileName);
-    setCompanyLogo(publicUrl);
-    setUploadingImage(false);
   };
 
   const handleSave = async () => {
@@ -264,14 +234,8 @@ function EditCompanyContent() {
           {/* Logo & Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <div>
-              <label className="block mb-1.5 text-sm font-medium">{organizationType} Logo</label>
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
-              {uploadingImage && <p className="text-xs text-blue-500 mt-2">Uploading...</p>}
-              {companyLogo && (
-                <div className="mt-2">
-                  <img src={companyLogo} alt="Company Logo" className="w-20 h-20 object-contain rounded border shadow-sm bg-white" />
-                </div>
-              )}
+              <label className="block mb-3 text-sm font-medium">{organizationType} Logo</label>
+                <ImageUploader value={companyLogo} onChange={(url) => setCompanyLogo(url)} label="Upload Logo" />
             </div>
             <div>
               <label className="block mb-1.5 text-sm font-medium">Principal Architect / Head</label>
