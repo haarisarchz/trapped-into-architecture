@@ -398,18 +398,16 @@ localStorage.setItem(
     </button>
 
     <button
-      onClick={() =>
-        setActiveTab("applied")
-      }
-      className={`px-6 py-3 rounded-2xl font-semibold transition
-      ${
-        activeTab === "applied"
-          ? "bg-black text-white"
-          : "bg-gray-200 text-black"
-      }`}
-    >
-      Applied Jobs
-    </button>
+      onClick={() => setActiveTab("companies")}
+        className={`px-6 py-3 rounded-2xl font-semibold transition
+        ${
+          activeTab === "companies"
+            ? "bg-black text-white"
+            : "bg-gray-200 text-black"
+        }`}
+      >
+        Favourite Companies
+      </button>
 
   </div>
 
@@ -1001,17 +999,15 @@ alert("Profile updated successfully");
 
 )}
 
-  {/* APPLIED JOBS */}
-
-  {activeTab === "applied" && (
-
-    <div className="border rounded-3xl p-8 bg-gray-50 text-gray-500">
-
-      No applications yet
-
-    </div>
-
-  )}
+  {/* FAVOURITE COMPANIES */}
+    {activeTab === "companies" && (
+      <div className="border rounded-3xl p-8 bg-gray-50">
+        <h2 className="text-2xl font-bold mb-6">Favourite Companies</h2>
+        <div className="text-gray-500">
+          No favourite companies yet
+        </div>
+      </div>
+    )}
 
 </div>
             {/* LOGOUT */}
