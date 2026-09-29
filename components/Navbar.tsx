@@ -1302,11 +1302,9 @@ window.location.reload();
 
           console.log("PROFILE CREATED SUCCESSFULLY");
 
-          alert("Account created successfully!");
-
-          setShowAuthPopup(false);
-
-          router.push(`/profile/${username}`);
+          alert("Account created successfully! Please log in.");
+          await supabase.auth.signOut();
+          setAuthTab("login");
         }
       }}
       className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
