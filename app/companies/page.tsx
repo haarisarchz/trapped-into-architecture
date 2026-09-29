@@ -64,7 +64,7 @@ function CompaniesPageContent() {
       // 2. Fetch real companies
       const { data: companiesData, error: compError } = await supabase
         .from("companies")
-        .select("id, firm_name, slug, city, state, organization_type, logo_url");
+        .select("id, firm_name, slug, city, state, organization_type, logo_url, created_at, founded_year");
         
       if (compError) throw new Error(compError.message);
 
@@ -92,7 +92,9 @@ function CompaniesPageContent() {
         state: comp.state || "",
         organizationType: comp.organization_type || "Architecture Firm",
         logo: comp.logo_url || "",
-        totalJobs: 0,
+          totalJobs: 0,
+          created_at: comp.created_at || null,
+          founded_year: comp.founded_year || null,
       };
       if (comp.id) {
         idToName[comp.id] = comp.firm_name;
@@ -118,7 +120,9 @@ function CompaniesPageContent() {
           state: job.state || "",
           organizationType: job.organization_type || "Firm",
           logo: "",
-          totalJobs: 0,
+            totalJobs: 0,
+            created_at: job.posted_date || null,
+            founded_year: null,
         };
       }
       
@@ -203,27 +207,6 @@ function CompaniesPageContent() {
           <p className="text-lg text-gray-600">Explore architecture firms and discover open opportunities.</p>
         </div>
 
-        {/* Mobile Search & Filter Toggle */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8 lg:hidden">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input 
-              type="text" 
-              placeholder="Search companies or locations..."
-              className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-black"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <button 
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-full font-semibold"
-          >
-            <SlidersHorizontal size={20} />
-            Filters {(selectedCategories.length + selectedStates.length + selectedCities.length) > 0 && `(${(selectedCategories.length + selectedStates.length + selectedCities.length)})`}
-          </button>
-        </div>
-
         <div className="flex flex-col lg:flex-row gap-8">
           
           {/* Filters Sidebar */}
@@ -236,18 +219,6 @@ function CompaniesPageContent() {
                     Clear all
                   </button>
                 )}
-              </div>
-
-              {/* Desktop Search (hidden on mobile) */}
-              <div className="hidden lg:block mb-8 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search..."
-                  className="w-full pl-11 pr-4 py-2.5 rounded-2xl border border-gray-200 text-sm focus:outline-none focus:border-black"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
               </div>
 
               {/* Category Filter */}
@@ -340,46 +311,86 @@ function CompaniesPageContent() {
           {/* Main Content Area */}
           <div className="flex-1 flex flex-col">
             
-            {/* View Controls & Sort */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-              <div className="text-gray-500 font-medium text-sm">
-                Showing <span className="text-black font-bold">{filteredCompanies.length}</span> {filteredCompanies.length === 1 ? 'company' : 'companies'}
+            {/* MOBILE CONTROLS */}
+            <div className="lg:hidden mb-4 space-y-3">
+              {/* ROW 1 */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Search companies..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-40 border border-gray-300 rounded-lg px-2 py-2 text-sm"
+                >
+                  <option value="name_asc">Name (A-Z)</option>
+                  <option value="name_desc">Name (Z-A)</option>
+                  <option value="date_added">Added Date</option>
+                  <option value="jobs">Most Jobs</option>
+                  <option value="year_founded">Year Founded</option>
+                </select>
               </div>
-
-              <div className="flex items-center gap-4 self-end sm:self-auto">
+              {/* ROW 2 */}
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500 font-medium">Sort by:</span>
-                  <select 
-                    className="bg-transparent border-none text-sm font-bold text-black focus:outline-none cursor-pointer"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                  >
-                    <option value="name">Company Name (A-Z)</option>
-                    <option value="jobs">Most Open Jobs</option>
-                  </select>
+                  <span className="text-sm font-medium">View</span>
+                  <div className="flex border rounded-xl overflow-hidden">
+                    <button onClick={() => setViewMode("visual")} className={`px-3 py-2 ${viewMode === "visual" ? "bg-black text-white" : "bg-white"}`}><LayoutGrid size={16} /></button>
+                    <button onClick={() => setViewMode("detailed")} className={`px-3 py-2 ${viewMode === "detailed" ? "bg-black text-white" : "bg-white"}`}><Rows3 size={16} /></button>
+                    <button onClick={() => setViewMode("compact")} className={`px-3 py-2 ${viewMode === "compact" ? "bg-black text-white" : "bg-white"}`}><List size={16} /></button>
+                  </div>
                 </div>
+                <button onClick={() => setShowFilters(!showFilters)} className="border rounded-xl px-4 py-2 flex items-center gap-2 bg-white text-sm font-medium">
+                  Filter
+                </button>
+              </div>
+            </div>
 
-                <div className="flex items-center bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-                  <button 
-                    onClick={() => setViewMode("visual")} 
-                    className={`p-2 rounded-lg transition ${viewMode === "visual" ? "bg-gray-100 text-black shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                  >
-                    <LayoutGrid size={18} />
-                  </button>
-                  <button 
-                    onClick={() => setViewMode("detailed")} 
-                    className={`p-2 rounded-lg transition ${viewMode === "detailed" ? "bg-gray-100 text-black shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                  >
-                    <Rows3 size={18} />
-                  </button>
-                  <button 
-                    onClick={() => setViewMode("compact")} 
-                    className={`p-2 rounded-lg transition ${viewMode === "compact" ? "bg-gray-100 text-black shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-                  >
-                    <List size={18} />
-                  </button>
+            {/* VIEW + SORT BAR (DESKTOP) */}
+            <div className="hidden lg:flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+              {/* VIEW BY */}
+              <div className="flex items-center gap-4">
+                <p className="font-medium whitespace-nowrap">View By :</p>
+                <div className="flex border rounded-xl overflow-hidden">
+                  <button onClick={() => setViewMode("visual")} className={`px-4 py-3 ${viewMode === "visual" ? "bg-black text-white" : "bg-white text-black"}`}><LayoutGrid size={18} /></button>
+                  <button onClick={() => setViewMode("detailed")} className={`px-4 py-3 ${viewMode === "detailed" ? "bg-black text-white" : "bg-white text-black"}`}><Rows3 size={18} /></button>
+                  <button onClick={() => setViewMode("compact")} className={`px-4 py-3 transition ${viewMode === "compact" ? "bg-black text-white" : "bg-white text-black hover:bg-gray-100"}`}><List size={18} /></button>
                 </div>
               </div>
+
+              {/* SEARCH */}
+              <input
+                type="text"
+                placeholder="Search companies..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-2"
+              />
+
+              {/* SORT BY */}
+              <div className="flex items-center gap-4">
+                <p className="font-medium whitespace-nowrap">Sort By :</p>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-2"
+                >
+                  <option value="name_asc">Name A to Z (Ascending)</option>
+                  <option value="name_desc">Name Z to A (Descending)</option>
+                  <option value="date_added">Added Date</option>
+                  <option value="jobs">Number of jobs posted</option>
+                  <option value="year_founded">Year Founded</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Showing count indicator */}
+            <div className="text-gray-500 font-medium text-sm mb-4">
+              Showing <span className="text-black font-bold">{filteredCompanies.length}</span> {filteredCompanies.length === 1 ? 'company' : 'companies'}
             </div>
 
             {/* Results */}
