@@ -892,40 +892,23 @@ window.location.reload();
 
         if (!emailMessage) return;
 
-        const existingEmails = [
-          "admin@gmail.com",
-          "test@gmail.com"
-        ];
-
-        const validEmail =
-          /^[^s@]+@[^s@]+.[^s@]+$/;
-
+        const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!validEmail.test(value)) {
-
-          emailMessage.innerHTML =
-            "Enter valid email address";
-
-          emailMessage.className =
-            "text-sm mt-2 text-red-500";
-
-        } else if (
-          existingEmails.includes(value)
-        ) {
-
-          emailMessage.innerHTML =
-            "Email already registered";
-
-          emailMessage.className =
-            "text-sm mt-2 text-red-500";
-
+          emailMessage.innerHTML = "Enter valid email address";
+          emailMessage.className = "text-sm mt-2 text-red-500";
         } else {
-
-          emailMessage.innerHTML =
-            "Email available ✓";
-
-          emailMessage.className =
-            "text-sm mt-2 text-green-600";
-
+          emailMessage.innerHTML = "Checking availability...";
+          emailMessage.className = "text-sm mt-2 text-gray-500";
+          
+          supabase.from('profiles').select('email').ilike('email', value).maybeSingle().then(({ data }) => {
+            if (data) {
+              emailMessage.innerHTML = "Email already registered";
+              emailMessage.className = "text-sm mt-2 text-red-500";
+            } else {
+              emailMessage.innerHTML = "Email available ✓";
+              emailMessage.className = "text-sm mt-2 text-green-600";
+            }
+          });
         }
 
       }}
@@ -999,52 +982,24 @@ window.location.reload();
 
         if (!phoneMessage) return;
 
-        /* DEMO EXISTING NUMBERS */
-
-        const existingPhones = [
-          "+919876543210",
-          "+919999999999"
-        ];
-
-        const validPhone =
-          /^[0-9]{10}$/;
-
-        if (!code.startsWith("+")) {
-
-          phoneMessage.innerHTML =
-            "Country code must start with +";
-
-          phoneMessage.className =
-            "text-sm mt-2 text-red-500";
-
-        } else if (
-          !validPhone.test(value)
-        ) {
-
-          phoneMessage.innerHTML =
-            "Enter valid 10 digit phone number";
-
-          phoneMessage.className =
-            "text-sm mt-2 text-red-500";
-
-        } else if (
-          existingPhones.includes(fullPhone)
-        ) {
-
-          phoneMessage.innerHTML =
-            "Phone number already registered";
-
-          phoneMessage.className =
-            "text-sm mt-2 text-red-500";
-
+        
+        const validPhone = /^[0-9]{10}$/;
+        if (!validPhone.test(value)) {
+          phoneMessage.innerHTML = "Enter 10-digit number";
+          phoneMessage.className = "text-sm mt-2 text-red-500";
         } else {
-
-          phoneMessage.innerHTML =
-            "Phone number available ✓";
-
-          phoneMessage.className =
-            "text-sm mt-2 text-green-600";
-
+          phoneMessage.innerHTML = "Checking availability...";
+          phoneMessage.className = "text-sm mt-2 text-gray-500";
+          
+          supabase.from('profiles').select('phone').eq('phone', fullPhone).maybeSingle().then(({ data }) => {
+            if (data) {
+              phoneMessage.innerHTML = "Phone number already registered";
+              phoneMessage.className = "text-sm mt-2 text-red-500";
+            } else {
+              phoneMessage.innerHTML = "Phone available ✓";
+              phoneMessage.className = "text-sm mt-2 text-green-600";
+            }
+          });
         }
 
       }}
