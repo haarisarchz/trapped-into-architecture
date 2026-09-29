@@ -1183,11 +1183,7 @@ window.location.reload();
             ) as HTMLSelectElement
           )?.value;
           
-          const contactMethod = (
-          document.getElementById(
-            "contact-method"
-          ) as HTMLSelectElement
-        )?.value;
+          
 
         /* VALIDATIONS */
 
@@ -1226,20 +1222,17 @@ window.location.reload();
           return;
         }
 
-        /* CONTACT METHOD */
+        /* EMAIL IS COMPULSORY, PHONE IS OPTIONAL */
 
-        if (contactMethod === "email") {
-          if (!email) {
-            alert("Enter email");
-            return;
-          }
+        if (!email) {
+          alert("Enter email address");
+          return;
         }
 
-        if (contactMethod === "phone") {
-          if (!phone) {
-            alert("Enter phone number with country code");
-            return;
-          }
+        let fullPhone = null;
+        if (phone) {
+          const countryCode = (document.getElementById("country-code") as HTMLInputElement)?.value || "";
+          fullPhone = countryCode + phone;
         }
 
         /* CREATE USER IN SUPABASE AUTH */
@@ -1270,9 +1263,10 @@ window.location.reload();
                 id: authData.user.id,
                 username,
                 full_name: fullName,
-                  display_name: displayName,
-                  email,
-                phone,
+                display_name: displayName,
+                email,
+                phone: fullPhone || null,
+                profession,
                 role: "user",
                 bio: "",
               },
