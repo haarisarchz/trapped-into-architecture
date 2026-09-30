@@ -428,7 +428,7 @@ export default async function JobDetailsPage({
                         {job.posted_date && (
                           <div>
                             <p className="text-sm text-gray-500">Posted Date</p>
-                            <p className="font-semibold mt-1">{job.posted_date}</p>
+                            <p className="font-semibold mt-1">{job.posted_date ? new Date(job.posted_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : ""}</p>
                           </div>
                         )}
                         {job.last_date_to_apply && (

@@ -629,7 +629,7 @@ const handlePublishJob = async (
       positions: positions,
       qualifications: qualifications,
       skills_required: skills,
-      posted_date: status === "published" ? formattedToday : (status === "scheduled" ? scheduleDate : null),
+      posted_date: status === "published" ? new Date().toISOString() : (status === "scheduled" ? (scheduleDate && scheduleTime ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString() : scheduleDate) : null),
       last_date_to_apply: lastDateToApply || null,
       post_expiry_date: finalExpiryDate,
       apply_link: apply_link,
@@ -659,7 +659,7 @@ const handlePublishJob = async (
           ? (Array.isArray(qualifications) ? qualifications : (qualifications ? [qualifications] : []))
           : (Array.isArray(pos.qualifications) ? pos.qualifications : (pos.qualifications ? [pos.qualifications] : (qualifications ? (Array.isArray(qualifications) ? qualifications : [qualifications]) : []))),
       skills_required: sameRequirements ? skills : (pos.skills || skills),
-      posted_date: status === "published" ? formattedToday : (status === "scheduled" ? scheduleDate : null),
+      posted_date: status === "published" ? new Date().toISOString() : (status === "scheduled" ? (scheduleDate && scheduleTime ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString() : scheduleDate) : null),
       last_date_to_apply: lastDateToApply || null,
       post_expiry_date: finalExpiryDate,
       apply_link: apply_link,
