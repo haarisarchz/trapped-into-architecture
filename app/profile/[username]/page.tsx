@@ -782,7 +782,7 @@ alert("Profile updated successfully");
       Saved Jobs
     </h2>
 
-    {savedJobs.length === 0 ? (
+    {savedJobsData.length === 0 ? (
 
       <p className="text-gray-500">
         No saved jobs yet
@@ -1007,9 +1007,24 @@ alert("Profile updated successfully");
     {activeTab === "companies" && (
       <div className="border rounded-3xl p-8 bg-gray-50">
         <h2 className="text-2xl font-bold mb-6">Favourite Companies</h2>
-        <div className="text-gray-500">
-          No favourite companies yet
-        </div>
+        
+        {favoriteCompanies.length === 0 ? (
+          <p className="text-gray-500">No favourite companies yet</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {favoriteCompanies.map(comp => (
+              <Link key={comp.slug} href={`/companies/${comp.slug}`} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center">
+                  {comp.logo_url ? <img src={comp.logo_url} alt={comp.firm_name} className="w-full h-full object-cover" /> : <div className="text-gray-400">🏢</div>}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">{comp.firm_name}</h3>
+                  <p className="text-sm text-gray-500">{comp.city || 'Location not specified'}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     )}
 
