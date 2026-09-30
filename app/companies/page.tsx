@@ -67,19 +67,29 @@ function CompaniesPageContent() {
         .from("companies")
         .select("id, firm_name, slug, city, state, organization_type, logo_url, created_at, founded_year, description");
         
-      if (compError) throw new Error(compError.message);
+      // Non-fatal: log warning but don't crash page
+      if (compError && compError.code !== "PGRST116") {
+        console.warn("Companies fetch warning:", compError.message);
+      }
 
       setJobs(jobsData || []);
       setRealCompanies(companiesData || []);
-        
-        const { data: favData } = await supabase.from("favorite_companies").select("company_slug");
-        const counts: any = {};
-        if (favData) {
+
+      // Isolated: if favorite_companies table doesn't exist yet, silently skip
+      try {
+        const { data: favData, error: favError } = await supabase
+          .from("favorite_companies")
+          .select("company_slug");
+        if (!favError && favData) {
+          const counts: any = {};
           favData.forEach((f: any) => {
             counts[f.company_slug] = (counts[f.company_slug] || 0) + 1;
           });
+          setFavoritesCount(counts);
         }
-        setFavoritesCount(counts);
+      } catch {
+        // Table not ready yet — page still works, favorites show 0
+      }
     } catch (err: any) {
       console.error("Error fetching companies data:", err);
       setErrorState(err.message || "Failed to load companies.");
