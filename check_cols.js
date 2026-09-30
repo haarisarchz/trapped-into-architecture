@@ -1,15 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
+require('dotenv').config({ path: '.env.local' });
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-const envFile = fs.readFileSync('.env.local', 'utf8');
-const urlMatch = envFile.match(/NEXT_PUBLIC_SUPABASE_URL=(.*)/);
-const keyMatch = envFile.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY=(.*)/);
-
-if (urlMatch && keyMatch) {
-  const supabase = createClient(urlMatch[1].trim(), keyMatch[1].trim());
-  async function check() {
-    const { data, error } = await supabase.from('jobs').select('*').limit(1);
-    console.log("COLUMNS:", data ? Object.keys(data[0]) : error);
+async function check() {
+  const { data, error } = await supabase.from('companies').select('*').limit(1);
+  if (error) console.error("Error:", error.message);
+  else {
+    console.log("Columns:", Object.keys(data[0] || {}));
   }
-  check();
 }
+check();

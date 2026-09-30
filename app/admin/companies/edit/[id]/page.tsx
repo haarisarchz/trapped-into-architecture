@@ -75,7 +75,7 @@ function EditCompanyContent() {
         // Try to fetch extended details from the most recent job posted by this firm
         const { data, error } = await supabase
           .from("jobs")
-          .select("firm_name, city, state, organization_type, neighborhood, description, website, email, phone, logo_url")
+          .select("firm_name, city, state, organization_type, area, application_email, image")
           .eq("firm_name", nameToFetch)
           .order("posted_date", { ascending: false })
           .limit(1)
@@ -85,12 +85,9 @@ function EditCompanyContent() {
           if (data.organization_type) setOrganizationType(data.organization_type);
           if (data.city) setCity(data.city);
           if (data.state) setState(data.state);
-          if (data.neighborhood) setArea(data.neighborhood);
-          if (data.description) setCompanyDescription(data.description);
-          if (data.website) setCompanyWebsite(data.website);
-          if (data.email) setCompanyEmail(data.email);
-          if (data.phone) setCompanyPhone(data.phone);
-          if (data.logo_url) setCompanyLogo(data.logo_url);
+          if (data.area) setArea(data.area);
+          if (data.application_email) setCompanyEmail(data.application_email);
+          if (data.image) setCompanyLogo(data.image);
         }
       } catch (err: any) {
         console.error("Error fetching ghost company data:", err.message);
@@ -154,8 +151,7 @@ function EditCompanyContent() {
         firm_name: firmName,
         city,
         state,
-        address: companyAddress,
-          neighborhood: area,
+        neighborhood: area,
         organization_type: organizationType,
         logo_url: companyLogo,
         description: companyDescription,

@@ -457,7 +457,6 @@ const handleSchedule = async () => {
         firm_name: firmName.trim(),
         city: city || "",
         state: state || "",
-        address: companyAddress || "",
         neighborhood: area || "",
         organization_type: organizationType || "Firm",
         logo_url: companyLogo || "",
@@ -533,8 +532,7 @@ const handlePublishJob = async (
           firm_name: firmName,
           city: city,
           state: state,
-          address: companyAddress,
-            neighborhood: area,
+          neighborhood: area,
           organization_type: organizationType,
           logo_url: companyLogo,
           description: companyDescription,
@@ -850,7 +848,14 @@ const handleSmartExtraction = async () => {
     }}
     fetchSuggestions={async (q) => {
       const { data: cData } = await supabase.from("companies").select("*").ilike("firm_name", "%" + q + "%").limit(10);
-      const { data: jData } = await supabase.from("jobs").select("firm_name, city, state, organization_type, neighborhood, description, website, email, phone, logo_url").ilike("firm_name", "%" + q + "%").limit(10);
+      const { data: jData } = await supabase.from("jobs").select("firm_name, city, state, organization_type, area, application_email, image").ilike("firm_name", "%" + q + "%").limit(10);
+      if (jData) {
+        jData.forEach(j => {
+          j.neighborhood = j.area;
+          j.email = j.application_email;
+          j.logo_url = j.image;
+        });
+      }
       const combined = [...(cData || []), ...(jData || [])];
       const unique = Array.from(new Map(combined.map(item => [item.firm_name, item])).values());
       return unique;
