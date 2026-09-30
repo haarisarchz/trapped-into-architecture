@@ -64,7 +64,7 @@ function CompaniesPageContent() {
       // 2. Fetch real companies
       const { data: companiesData, error: compError } = await supabase
         .from("companies")
-        .select("id, firm_name, slug, city, state, organization_type, logo_url, created_at, founded_year");
+        .select("id, firm_name, slug, city, state, organization_type, logo_url, created_at, founded_year, description");
         
       if (compError) throw new Error(compError.message);
 
