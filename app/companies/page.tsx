@@ -54,13 +54,15 @@ function CompaniesPageContent() {
       setLoading(true);
       setErrorState(null);
 
-      // 1. Fetch only necessary fields from jobs to avoid huge payload/OOM crashes
+      // 1. Fetch only necessary fields from jobs (non-fatal)
       const { data: jobsData, error: jobsError } = await supabase
         .from("jobs")
         .select("id, firm_name, company_id, city, state, organization_type")
         .eq("status", "published");
 
-      if (jobsError) throw new Error(jobsError.message);
+      if (jobsError) {
+        console.warn("Jobs fetch warning:", jobsError.message);
+      }
 
       // 2. Fetch real companies
       const { data: companiesData, error: compError } = await supabase
