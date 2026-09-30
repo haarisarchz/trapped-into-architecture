@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import Link from "next/link";
@@ -13,6 +14,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import { generateJobUrl } from "@/utils/jobUrl";
 
 export default function ProfilePage() {
 

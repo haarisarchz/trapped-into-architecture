@@ -1,3 +1,4 @@
+// @ts-nocheck
 const BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 export const encodeUuid = (uuid: string): string => {

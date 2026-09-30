@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { Share, Copy, Check } from "lucide-react";

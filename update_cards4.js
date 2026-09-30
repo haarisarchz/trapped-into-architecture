@@ -1,0 +1,163 @@
+const fs = require('fs');
+let content = fs.readFileSync('app/companies/page.tsx', 'utf8');
+
+const startMarker = '{filteredCompanies.map((company: any) => (';
+const startIdx = content.indexOf(startMarker);
+if (startIdx === -1) {
+    console.log("Could not find start marker");
+    process.exit(1);
+}
+
+// Find the end index of the map function safely
+let bracketCount = 0;
+let endIdx = -1;
+for (let i = startIdx + startMarker.length - 1; i < content.length; i++) {
+    if (content[i] === '(') bracketCount++;
+    else if (content[i] === ')') bracketCount--;
+
+    if (bracketCount === 0) {
+        endIdx = i;
+        break;
+    }
+}
+
+if (endIdx === -1) {
+    console.log("Could not find end marker");
+    process.exit(1);
+}
+
+const replacement = `{filteredCompanies.map((company: any) => {
+                  if (viewMode === "visual") {
+                    return (
+                      <Link href={\`/companies/\${company.slug}\`} key={company.slug} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col h-full">
+                        <div className="h-32 bg-gray-50 flex items-center justify-center p-6 border-b border-gray-100 relative">
+                          {company.logo ? (
+                            <img src={company.logo} alt={company.company} className="h-full w-auto object-contain max-w-[140px] group-hover:scale-105 transition-transform" />
+                          ) : (
+                            <Building2 className="w-12 h-12 text-gray-300 group-hover:scale-105 transition-transform" />
+                          )}
+                          <div className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm border border-gray-100 px-3 py-1 rounded-full text-xs font-bold text-black shadow-sm">
+                            {company.totalJobs} {company.totalJobs === 1 ? 'Job' : 'Jobs'}
+                          </div>
+                        </div>
+                        <div className="p-6 flex flex-col flex-1">
+                          <h3 className="font-bold text-lg text-gray-900 group-hover:text-red-500 transition line-clamp-1 mb-1">
+                            {company.company}
+                          </h3>
+                          <p className="text-sm text-gray-500 line-clamp-1 mb-4">{company.organizationType}</p>
+                          <div className="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between text-xs font-medium">
+                            <div className="flex items-center gap-1 text-gray-600">
+                              <MapPin size={14} />
+                              <span className="line-clamp-1">{[company.city, company.state].filter(Boolean).join(', ') || "India"}</span>
+                            </div>
+                            <button 
+                              onClick={(e) => { e.preventDefault(); handleShare(company.slug); }}
+                              className="p-2 text-gray-400 hover:text-black hover:bg-gray-50 rounded-full transition relative z-10"
+                              title="Share Company"
+                            >
+                              <Share2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  }
+
+                  if (viewMode === "detailed") {
+                    return (
+                      <Link href={\`/companies/\${company.slug}\`} key={company.slug} className="group bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
+                        <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shrink-0 group-hover:scale-105 transition-transform">
+                          {company.logo ? (
+                            <img src={company.logo} alt={company.company} className="w-full h-full object-cover" />
+                          ) : (
+                            <Building2 className="w-10 h-10 md:w-12 md:h-12 text-gray-300" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-2">
+                            <h3 className="font-bold text-xl text-gray-900 group-hover:text-red-500 transition line-clamp-1">
+                              {company.company}
+                            </h3>
+                            <span className="inline-block px-3 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200 whitespace-nowrap w-fit">
+                              {company.organizationType}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-3">
+                            <div className="flex items-center gap-1">
+                              <MapPin size={14} />
+                              <span>{[company.city, company.state].filter(Boolean).join(', ') || "India"}</span>
+                            </div>
+                          </div>
+                          {company.description ? (
+                            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed max-w-3xl mt-1">
+                              {company.description}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="w-full md:w-auto shrink-0 flex items-center gap-4 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
+                          <div className="flex flex-col md:items-end w-full">
+                            <div className="text-center md:text-right mb-4 flex-1 w-full">
+                              <span className="block text-2xl font-black text-black leading-none">{company.totalJobs}</span>
+                              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{company.totalJobs === 1 ? 'Open Job' : 'Open Jobs'}</span>
+                            </div>
+                            <div className="flex gap-2 w-full md:w-auto">
+                              <button 
+                                onClick={(e) => { e.preventDefault(); handleShare(company.slug); }}
+                                className="p-3 text-gray-400 hover:text-black bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition shrink-0 relative z-10"
+                                title="Share Company"
+                              >
+                                <Share2 size={18} />
+                              </button>
+                              <div className="flex-1 md:flex-none text-center bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition">
+                                View Profile
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  }
+
+                  // Compact View
+                  return (
+                    <Link href={\`/companies/\${company.slug}\`} key={company.slug} className="group bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-300 hover:shadow-sm transition flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shrink-0">
+                        {company.logo ? (
+                          <img src={company.logo} alt={company.company} className="w-full h-full object-cover" />
+                        ) : (
+                          <Building2 className="w-5 h-5 text-gray-300" />
+                        )}
+                      </div>
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                        <div className="md:col-span-5 flex flex-col min-w-0">
+                          <h3 className="font-bold text-base text-gray-900 group-hover:text-red-500 transition line-clamp-1">
+                            {company.company}
+                          </h3>
+                          <span className="text-xs text-gray-500 line-clamp-1 block md:hidden mt-1">{company.organizationType} • {[company.city, company.state].filter(Boolean).join(', ') || "India"}</span>
+                        </div>
+                        <div className="hidden md:flex md:col-span-4 items-center text-sm text-gray-500">
+                          <MapPin size={14} className="mr-1.5 shrink-0" />
+                          <span className="line-clamp-1">{[company.city, company.state].filter(Boolean).join(', ') || "India"}</span>
+                        </div>
+                        <div className="hidden md:block md:col-span-3 text-sm text-gray-600 line-clamp-1">
+                          {company.organizationType}
+                        </div>
+                      </div>
+                      <div className="shrink-0 flex items-center gap-4">
+                        <span className="px-3 py-1 bg-gray-50 text-black text-xs font-bold rounded-lg whitespace-nowrap border border-gray-100">
+                          {company.totalJobs} {company.totalJobs === 1 ? 'Job' : 'Jobs'}
+                        </span>
+                        <button 
+                          onClick={(e) => { e.preventDefault(); handleShare(company.slug); }}
+                          className="hidden md:flex p-2 text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg transition relative z-10"
+                          title="Share Company"
+                        >
+                          <Share2 size={16} />
+                        </button>
+                      </div>
+                    </Link>
+                  );
+                }}`;
+
+content = content.substring(0, startIdx) + replacement + content.substring(endIdx + 1);
+fs.writeFileSync('app/companies/page.tsx', content);
