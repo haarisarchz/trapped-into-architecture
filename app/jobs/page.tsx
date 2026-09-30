@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import JobCard from "@/components/Jobcard";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import { EXPERIENCE_OPTIONS } from "@/app/constants/jobFilters";
 
 import {
   LayoutGrid,
@@ -272,19 +273,7 @@ setSelectedSalary([]);
 
   <div className="space-y-2 text-sm">
 
-    {[
-      ...new Set(
-        jobs.flatMap((job) =>
-
-          Array.isArray(job.experience)
-            ? job.experience.map((exp: any) => typeof exp === 'string' ? exp.trim() : String(exp || ''))
-            : []
-
-        )
-      ),
-    ]
-      .filter(Boolean)
-      .map((experience: string, index) => (
+    {EXPERIENCE_OPTIONS.map((experience: string, index) => (
 
         <label
           key={`${experience}-${index}`}
@@ -995,13 +984,11 @@ setSelectedSalary([]);
       );
 
     const experienceMatch =
-      selectedExperience.length === 0 ||
-
-      job.experience?.some(
-        (exp: string) =>
-
-          selectedExperience.includes(exp)
-      );
+        selectedExperience.length === 0 ||
+        parseExperienceForMatch(job.experience).some(
+          (exp: string) =>
+            selectedExperience.includes(exp)
+        );
 
     const salaryMatch =
       selectedSalary.length === 0 ||
