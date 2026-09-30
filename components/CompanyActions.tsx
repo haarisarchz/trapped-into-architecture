@@ -17,61 +17,102 @@ export default function CompanyActions({
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteCount, setFavoriteCount] = useState(initialFavorites);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [tableExists, setTableExists] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    setFavoriteCount(initialFavorites);
+  }, [initialFavorites]);
+
+  useEffect(() => {
+    const checkFavorited = async () => {
       const userStr = localStorage.getItem("currentUser");
-      if (userStr) {
+      if (!userStr) return;
+      try {
         const user = JSON.parse(userStr);
-        setCurrentUser(user);
-        setIsFavorite(user.favoriteCompanies?.includes(slug));
+        let userId = user?.id;
+        if (!userId && (user?.username || user?.email)) {
+           const { data: pData } = await supabase.from('profiles').select('id').eq(user.username ? 'username' : 'email', user.username || user.email).maybeSingle();
+           if (pData) userId = pData.id;
+        }
+        if (userId) {
+          const { data, error } = await supabase
+            .from("favorite_companies")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("company_slug", slug)
+            .maybeSingle();
+            
+          if (error) {
+              if (error.code === '42P01') setTableExists(false);
+              return;
+          }
+          setIsFavorite(!!data);
+        }
+      } catch (err) {
+        console.error("Error checking favorited state", err);
       }
-      
-      // Load global counts from localStorage as mock since we can't change DB
-      const counts = JSON.parse(localStorage.getItem("companyFavoritesCounts") || "{}");
-      if (counts[slug]) {
-        setFavoriteCount(counts[slug]);
-      }
-    }
+    };
+    checkFavorited();
   }, [slug]);
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!currentUser) {
+    if (!tableExists) {
+        alert("The favorite companies feature is currently being set up. Please try again later.");
+        return;
+    }
+
+    const userStr = localStorage.getItem("currentUser");
+    if (!userStr) {
       alert("Please login first to favorite companies");
       return;
     }
 
-    const favs = currentUser.favoriteCompanies || [];
-    let newFavs;
-    let newCount = favoriteCount;
-
-    if (favs.includes(slug)) {
-      newFavs = favs.filter((s: string) => s !== slug);
-      newCount = Math.max(0, newCount - 1);
-      setIsFavorite(false);
-    } else {
-      newFavs = [...favs, slug];
-      newCount = newCount + 1;
-      setIsFavorite(true);
+    let user;
+    try {
+      user = JSON.parse(userStr);
+    } catch {
+      alert("Please login first to favorite companies");
+      return;
     }
-    setFavoriteCount(newCount);
 
-    currentUser.favoriteCompanies = newFavs;
-    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    let userId = user?.id;
+    if (!userId && (user?.username || user?.email)) {
+       const { data: pData } = await supabase.from('profiles').select('id').eq(user.username ? 'username' : 'email', user.username || user.email).maybeSingle();
+       if (pData) userId = pData.id;
+    }
+    
+    if (!userId) {
+      alert("Please login first to favorite companies");
+      return;
+    }
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const updatedUsers = users.map((u: any) =>
-      u.username === currentUser.username ? currentUser : u
-    );
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    if (loading) return;
+    setLoading(true);
 
-    const counts = JSON.parse(localStorage.getItem("companyFavoritesCounts") || "{}");
-    counts[slug] = newCount;
-    localStorage.setItem("companyFavoritesCounts", JSON.stringify(counts));
+    try {
+      if (isFavorite) {
+        setIsFavorite(false);
+        setFavoriteCount(prev => Math.max(0, prev - 1));
+        const { error } = await supabase.from("favorite_companies").delete().eq("user_id", userId).eq("company_slug", slug);
+        if (error) throw error;
+      } else {
+        setIsFavorite(true);
+        setFavoriteCount(prev => prev + 1);
+        const { error } = await supabase.from("favorite_companies").insert({ user_id: userId, company_slug: slug });
+        if (error) throw error;
+      }
+    } catch (err: any) {
+      console.error("Error toggling favorite", err);
+      if (err.code === '42P01') setTableExists(false);
+      setIsFavorite(!isFavorite);
+      setFavoriteCount(prev => isFavorite ? prev + 1 : Math.max(0, prev - 1));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const shareCompany = async (e: React.MouseEvent) => {
@@ -101,6 +142,7 @@ export default function CompanyActions({
       <div className="flex items-center gap-4">
         <button
           onClick={toggleFavorite}
+          disabled={loading}
           className="flex flex-col items-center justify-center p-3 rounded-full hover:bg-gray-100 transition group"
           title="Favorite"
         >
@@ -127,6 +169,7 @@ export default function CompanyActions({
     <div className="flex items-center gap-3">
       <button
         onClick={toggleFavorite}
+        disabled={loading}
         className="flex flex-col items-center group"
       >
         <Heart

@@ -23,6 +23,7 @@ function CompaniesPageContent() {
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name");
 
   const [jobs, setJobs] = useState<any[]>([]);
+  const [favoritesCount, setFavoritesCount] = useState<any>({});
   const [realCompanies, setRealCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorState, setErrorState] = useState<string | null>(null);
@@ -70,6 +71,15 @@ function CompaniesPageContent() {
 
       setJobs(jobsData || []);
       setRealCompanies(companiesData || []);
+        
+        const { data: favData } = await supabase.from("favorite_companies").select("company_slug");
+        const counts: any = {};
+        if (favData) {
+          favData.forEach((f: any) => {
+            counts[f.company_slug] = (counts[f.company_slug] || 0) + 1;
+          });
+        }
+        setFavoritesCount(counts);
     } catch (err: any) {
       console.error("Error fetching companies data:", err);
       setErrorState(err.message || "Failed to load companies.");
@@ -95,6 +105,7 @@ function CompaniesPageContent() {
           totalJobs: 0,
           created_at: comp.created_at || null,
           founded_year: comp.founded_year || null,
+          favoriteCount: favoritesCount[comp.slug || generateCompanySlug(comp.firm_name)] || 0,
       };
       if (comp.id) {
         idToName[comp.id] = comp.firm_name;
@@ -123,6 +134,7 @@ function CompaniesPageContent() {
             totalJobs: 0,
             created_at: job.posted_date || null,
             founded_year: null,
+            favoriteCount: favoritesCount[generateCompanySlug(name)] || 0,
         };
       }
       
@@ -449,13 +461,16 @@ function CompaniesPageContent() {
                               <MapPin size={14} />
                               <span className="line-clamp-1">{[company.city, company.state].filter(Boolean).join(', ') || "India"}</span>
                             </div>
-                            <button 
-                              onClick={(e) => { e.preventDefault(); handleShare(company.slug); }}
-                              className="p-2 text-gray-400 hover:text-black hover:bg-gray-50 rounded-full transition relative z-10"
-                              title="Share Company"
-                            >
-                              <Share2 size={16} />
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <FavoriteCompanyButton companySlug={company.slug} initialFavorites={company.favoriteCount || 0} variant="icon" />
+                              <button 
+                                onClick={(e) => { e.preventDefault(); handleShare(company.slug); }}
+                                className="p-2 text-gray-400 hover:text-black hover:bg-gray-50 rounded-full transition relative z-10"
+                                title="Share Company"
+                              >
+                                <Share2 size={16} />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </Link>
@@ -499,15 +514,16 @@ function CompaniesPageContent() {
                               <span className="block text-2xl font-black text-black leading-none">{company.totalJobs}</span>
                               <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{company.totalJobs === 1 ? 'Open Job' : 'Open Jobs'}</span>
                             </div>
-                            <div className="flex gap-2 w-full md:w-auto">
+                            <div className="flex gap-2 items-center w-full md:w-auto">
+                              <FavoriteCompanyButton companySlug={company.slug} initialFavorites={company.favoriteCount || 0} variant="icon" />
                               <button 
                                 onClick={(e) => { e.preventDefault(); handleShare(company.slug); }}
-                                className="p-3 text-gray-400 hover:text-black bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition shrink-0 relative z-10"
+                                className="p-2 text-gray-400 hover:text-black hover:bg-gray-50 rounded-full transition relative z-10 shrink-0"
                                 title="Share Company"
                               >
-                                <Share2 size={18} />
+                                <Share2 size={16} />
                               </button>
-                              <div className="flex-1 md:flex-none text-center bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition">
+                              <div className="flex-1 md:flex-none text-center bg-black text-white px-6 py-2.5 rounded-xl font-bold hover:bg-gray-800 transition">
                                 View Profile
                               </div>
                             </div>
@@ -542,10 +558,11 @@ function CompaniesPageContent() {
                           {company.organizationType}
                         </div>
                       </div>
-                      <div className="shrink-0 flex items-center gap-4">
+                      <div className="shrink-0 flex items-center gap-3">
                         <span className="px-3 py-1 bg-gray-50 text-black text-xs font-bold rounded-lg whitespace-nowrap border border-gray-100">
                           {company.totalJobs} {company.totalJobs === 1 ? 'Job' : 'Jobs'}
                         </span>
+                        <FavoriteCompanyButton companySlug={company.slug} initialFavorites={company.favoriteCount || 0} variant="icon" />
                         <button 
                           onClick={(e) => { e.preventDefault(); handleShare(company.slug); }}
                           className="hidden md:flex p-2 text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg transition relative z-10"
@@ -556,7 +573,7 @@ function CompaniesPageContent() {
                       </div>
                     </Link>
                   );
-                }})}
+                })}
               </div>
             )}
           </div>

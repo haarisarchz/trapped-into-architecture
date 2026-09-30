@@ -195,7 +195,7 @@ export default async function CompanyPage({
                 </div>
                 
                 <div className="md:ml-auto shrink-0 pt-2 md:pt-0">
-                  <CompanyActions slug={slug} companyName={company.firm_name} variant="page" />
+                  <CompanyActions slug={slug} companyName={company.firm_name} initialFavorites={favoriteCount} variant="page" />
                 </div>
               </div>
 
