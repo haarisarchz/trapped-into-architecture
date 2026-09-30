@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { generateCompanySlug } from "@/utils/jobUrl";
+import FavoriteCompanyButton from "@/components/FavoriteCompanyButton";
 
 function CompaniesPageContent() {
   const searchParams = useSearchParams();
