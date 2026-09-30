@@ -66,7 +66,7 @@ export default function FavoriteCompanyButton({
 
     const userStr = localStorage.getItem("currentUser");
     if (!userStr) {
-      alert("Please login first to favorite companies");
+      alert("Please register or log in first to favorite companies.");
       return;
     }
 
@@ -74,7 +74,7 @@ export default function FavoriteCompanyButton({
     try {
       user = JSON.parse(userStr);
     } catch {
-      alert("Please login first to favorite companies");
+      alert("Please register or log in first to favorite companies.");
       return;
     }
 
@@ -85,7 +85,7 @@ export default function FavoriteCompanyButton({
     }
     
     if (!userId) {
-      alert("Please login first to favorite companies");
+      alert("Please register or log in first to favorite companies.");
       return;
     }
 

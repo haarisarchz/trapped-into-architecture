@@ -67,7 +67,7 @@ export default function CompanyActions({
 
     const userStr = localStorage.getItem("currentUser");
     if (!userStr) {
-      alert("Please login first to favorite companies");
+      alert("Please register or log in first to favorite companies.");
       return;
     }
 
@@ -75,7 +75,7 @@ export default function CompanyActions({
     try {
       user = JSON.parse(userStr);
     } catch {
-      alert("Please login first to favorite companies");
+      alert("Please register or log in first to favorite companies.");
       return;
     }
 
@@ -86,7 +86,7 @@ export default function CompanyActions({
     }
     
     if (!userId) {
-      alert("Please login first to favorite companies");
+      alert("Please register or log in first to favorite companies.");
       return;
     }
 

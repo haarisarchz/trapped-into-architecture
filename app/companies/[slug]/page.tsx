@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 // @ts-nocheck
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
@@ -152,13 +153,7 @@ export default async function CompanyPage({
     }
 
     if (!company) {
-      let favoriteCount = 0;
-  try {
-    const { count } = await supabase.from("favorite_companies").select("*", { count: "exact", head: true }).eq("company_slug", slug);
-    if (count) favoriteCount = count;
-  } catch (e) {}
-
-  return (
+      return (
         <main className="min-h-screen flex flex-col bg-gray-50 text-black">
           <Navbar />
           <div className="flex-1 flex flex-col items-center justify-center p-8">
@@ -173,6 +168,12 @@ export default async function CompanyPage({
       );
     }
 
+    let favoriteCount = 0;
+    try {
+      const { count } = await supabase.from("favorite_companies").select("*", { count: "exact", head: true }).eq("company_slug", slug);
+      if (count) favoriteCount = count;
+    } catch (e) {}
+    
     const location = [company.address, company.neighborhood, company.city, company.state].filter(Boolean).join(", ");
 
     return (

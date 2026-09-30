@@ -156,7 +156,7 @@ function CompaniesPageContent() {
     });
 
     return Object.values(grouped);
-  }, [jobs, realCompanies]);
+  }, [jobs, realCompanies, favoritesCount]);
 
   const categories = useMemo(() => [...new Set(companies.map((c: any) => c.organizationType))].filter(Boolean).sort(), [companies]);
   const states = useMemo(() => [...new Set(companies.map((c: any) => c.state))].filter(Boolean).sort(), [companies]);
