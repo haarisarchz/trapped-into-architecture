@@ -1343,12 +1343,12 @@ const handleSmartExtraction = async () => {
             {/* ACTION BUTTONS */}
 
 <div className="flex justify-center gap-3 mt-6 mb-4">
-  <button type="button" disabled={isPublishing} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
   >
     Save Draft
   </button>
 
-  <button type="button" disabled={isPublishing} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={isPublishing || uploadingImage} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
@@ -1921,6 +1921,7 @@ const handleSmartExtraction = async () => {
     </>
   );
 }
+
 
 
 
