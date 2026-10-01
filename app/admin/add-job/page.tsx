@@ -1340,34 +1340,7 @@ const handleSmartExtraction = async () => {
               </div>
             </div>
 
-            {/* ACTION BUTTONS */}
-
-<div className="flex justify-center gap-3 mt-6 mb-4">
-  <button type="button" disabled={isPublishing || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
-  >
-    Save Draft
-  </button>
-
-  <button type="button" disabled={isPublishing || uploadingImage} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
->
-  Schedule
-</button>
-
-  <button
-    type="button"
-    disabled={isPublishing}
-    onClick={() => handlePublishJob("published")}
-    className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
-      uploadingImage
-        ? "bg-gray-400 text-white cursor-not-allowed"
-        : "bg-black text-white hover:bg-gray-800"
-    }`}
-  >
-    {isPublishing ? "Publishing..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
-  </button>
-</div>
-          
- <div className="flex-1 border-t border-black-300"></div>
+            <div className="flex-1 border-t border-black-300"></div>
 
             {/* ================= ORGANIZATION INFORMATION ================= */}
               <div className="mt-6 mb-4">
@@ -1375,14 +1348,7 @@ const handleSmartExtraction = async () => {
                     <h2 className="text-xl font-bold">
                       Company Profile
                     </h2>
-                    <button 
-                      type="button"
-                      onClick={handleSaveCompany} 
-                      disabled={!firmName || isSavingCompany}
-                      className="bg-black text-white text-sm px-4 py-1.5 rounded hover:bg-gray-800 disabled:opacity-50 transition"
-                    >
-                      {isSavingCompany ? "Saving..." : "Save Company Profile"}
-                    </button>
+                    
                   </div>
               </div>
 
@@ -1466,17 +1432,41 @@ const handleSmartExtraction = async () => {
 
             
                 <div className="flex justify-end mt-4 mb-8 border-b border-gray-100 pb-8">
-                  <button 
-                    type="button"
-                    onClick={handleSaveCompany} 
-                    disabled={!firmName || isSavingCompany}
-                    className="bg-black text-white text-sm px-6 py-2.5 rounded-lg hover:bg-gray-800 disabled:opacity-50 transition shadow-md font-semibold"
-                  >
-                    {isSavingCompany ? "Saving..." : "Save Company Profile"}
-                  </button>
+                  
                 </div>
 
-              {/* ================= SCHEDULE MODAL ================= */}
+              
+
+{/* ACTION BUTTONS */}
+
+<div className="flex justify-center gap-3 mt-6 mb-4">
+  <button type="button" disabled={isPublishing || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  >
+    Save Draft
+  </button>
+
+  <button type="button" disabled={isPublishing || uploadingImage} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+>
+  Schedule
+</button>
+
+  <button
+    type="button"
+    disabled={isPublishing}
+    onClick={() => handlePublishJob("published")}
+    className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
+      uploadingImage
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-black text-white hover:bg-gray-800"
+    }`}
+  >
+    {isPublishing ? "Publishing..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
+  </button>
+</div>
+          
+ 
+
+{/* ================= SCHEDULE MODAL ================= */}
 
 {showSchedule && (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
