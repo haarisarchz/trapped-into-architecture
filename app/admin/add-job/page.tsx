@@ -632,8 +632,8 @@ const handlePublishJob = async (
       posted_date: status === "published" ? new Date().toISOString() : (status === "scheduled" ? (scheduleDate && scheduleTime ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString() : scheduleDate) : null),
       last_date_to_apply: lastDateToApply || null,
       post_expiry_date: finalExpiryDate,
-      apply_link: apply_link,
-      application_email: application_email,
+      apply_link: applicationType === "apply" ? apply_link : null,
+      application_email: applicationType === "email" ? application_email : null,
       source: source,
       image: imageUrl,
       status: status,
@@ -662,8 +662,8 @@ const handlePublishJob = async (
       posted_date: status === "published" ? new Date().toISOString() : (status === "scheduled" ? (scheduleDate && scheduleTime ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString() : scheduleDate) : null),
       last_date_to_apply: lastDateToApply || null,
       post_expiry_date: finalExpiryDate,
-      apply_link: apply_link,
-      application_email: application_email,
+      apply_link: applicationType === "apply" ? apply_link : null,
+      application_email: applicationType === "email" ? application_email : null,
       source: source,
       image: imageUrl,
       status: status,
@@ -1921,6 +1921,7 @@ const handleSmartExtraction = async () => {
     </>
   );
 }
+
 
 
 
