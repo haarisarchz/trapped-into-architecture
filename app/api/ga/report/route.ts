@@ -108,9 +108,18 @@ export async function GET(request: Request) {
       limit: 10,
     });
 
+    // 8. Realtime Users (Last 30 minutes)
+    const realtimeReq = analyticsDataClient.runRealtimeReport({
+      property,
+      metrics: [{ name: "activeUsers" }],
+    }).catch(err => {
+      console.warn("Realtime API error:", err.message);
+      return [{ rows: [] }]; // Fallback if realtime fails
+    });
+
     // Execute all in parallel
-    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes] = await Promise.all([
-      overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq
+    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes, realtimeRes] = await Promise.all([
+      overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq, realtimeReq
     ]);
 
     // Parse Data
@@ -125,6 +134,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       overview: {
+        realtimeUsers: realtimeRes[0].rows?.[0]?.metricValues?.[0]?.value || 0,
         activeUsers: overviewRes[0].rows?.[0]?.metricValues?.[0]?.value || 0,
         sessions: overviewRes[0].rows?.[0]?.metricValues?.[1]?.value || 0,
         pageViews: overviewRes[0].rows?.[0]?.metricValues?.[2]?.value || 0,

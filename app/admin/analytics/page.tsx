@@ -80,7 +80,15 @@ export default function AnalyticsPage() {
           <div className="space-y-6">
             
             {/* OVERVIEW METRICS */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                  <h3 className="text-sm font-medium text-gray-500">Realtime (Live)</h3>
+                </div>
+                <p className="text-3xl font-bold text-gray-900">{data.overview.realtimeUsers}</p>
+                <div className="absolute bottom-0 left-0 w-full h-1 bg-green-500"></div>
+              </div>
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h3 className="text-sm font-medium text-gray-500 mb-1">Active Users</h3>
                 <p className="text-3xl font-bold text-gray-900">{data.overview.activeUsers}</p>
