@@ -316,13 +316,16 @@ const removePosition = (index) => {
       setPostExpiryDate(job.post_expiry_date || "");
       setImageUrl(job.image || "");
       
-      if (job.apply_link) {
-        setApplicationType("apply");
-        setapply_link(job.apply_link);
-      } else if (job.application_email) {
-        setApplicationType("email");
-        setapplication_email(job.application_email);
-      }
+      if (job.apply_link && job.apply_link.trim() !== "") {
+          setApplicationType("apply");
+          setapply_link(job.apply_link);
+        } else if (job.application_email && job.application_email.trim() !== "") {
+          setApplicationType("email");
+          setapplication_email(job.application_email);
+        } else {
+          setApplicationType("apply");
+          setapply_link("");
+        }
 
       if (job.status === "scheduled") {
          setScheduleDate(job.posted_date);
@@ -1614,7 +1617,17 @@ const handleSmartExtraction = async () => {
               >✕</button>
 
               <div className="p-5 flex-1 flex flex-col">
-                <h2 className="text-2xl font-black mt-4 tracking-tight">Smart Job</h2>
+                <div className="flex items-center justify-between mt-4">
+                  <div>
+                    <h2 className="text-2xl font-black tracking-tight">Smart Job</h2>
+                  </div>
+                  <button 
+                    onClick={() => setShowAiSettings(true)}
+                    className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                  >
+                    ⚙️ API Config
+                  </button>
+                </div>
                 <p className="text-black text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
 
                 <div className="flex-1 flex flex-col justify-center overflow-hidden">
