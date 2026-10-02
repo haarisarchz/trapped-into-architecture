@@ -6,144 +6,85 @@ export async function POST(req: Request) {
   try {
     // SECURITY: The API key is securely loaded server-side.
     // It checks standard variable names.
-    const apiKey = req.headers.get("x-user-gemini-key") || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const envKeys = envKey.split(",").map(k => k.trim()).filter(Boolean);
     
-    if (!apiKey) {
-      console.error("Gemini configuration is missing. Required environment variable: GEMINI_API_KEY");
+    const userKey = req.headers.get("x-user-gemini-key");
+    const availableKeys = [];
+    if (userKey) availableKeys.push(userKey);
+    availableKeys.push(...envKeys);
+
+    if (availableKeys.length === 0) {
+      console.error("Gemini configuration is missing.");
       return NextResponse.json(
         { error: "AI extraction is not configured correctly. Please contact the administrator." },
         { status: 500 }
       );
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-
-    const formData = await req.formData();
-    const mode = formData.get("mode") as string; // 'text', 'image', or 'url'
-    
-    let prompt = `Extract the following architecture job details into strict JSON format. 
-Return ONLY valid JSON. No markdown backticks, no explanations. Do not fabricate or invent missing information. Use empty string "" if unavailable.
-
-IMPORTANT INSTRUCTION FOR TEXT FORMATTING:
-- All job positions and firm names MUST be in Title Case / Sentence case (e.g. "Junior Architect", "Tamil Architects", "Civil Engineer"). Do NOT use ALL CAPS. Capitalize the first letter of each word, and keep the rest lowercase.
-
-IMPORTANT INSTRUCTION FOR POSITIONS ARRAY:
-- You must deeply analyze the job post and extract EACH position into the 'positions' array.
-- 'role': Extract the specific job role/duties (e.g., "Site supervision, coordination, quantity estimation, and BOQ" or "Architectural planning and working drawings").
-- 'qualifications': Extract educational degrees separately (e.g., "B.Arch", "B.Tech and Diploma in Engineering"). Do NOT put these in the description.
-- 'skills': Extract software skills separately into an array (e.g., ["AutoCAD", "SketchUp", "Revit", "Lumion", "Enscape"]). Do NOT put software names in the description.
-- 'description': Write a concise, natural, and precise narrative paragraph using ONLY the extracted details for this specific position. You must strictly follow this template format (adapt grammar naturally): 
-    "[Firm Name] is hiring [Position] who is expected to have skills in [skills], and hold qualifications in [qualifications]. The primary role involves [role duties]. The position is located in [City], [State]. Interested candidates can apply via [Application method/Email/Phone]." 
-    Do NOT mention any details that are not present in the image (e.g. do not guess the city if it is not in the image, just omit that part). Ensure the paragraph is cohesive and professional.
-
-Normalize specific fields:
-- Employment Type MUST be exactly one of: "Full-time", "Part-time", "Contract", "Temporary", "Freelance", "Internship". (Normalize "Full time", "fulltime" to "Full-time").
-- Workplace Type MUST be exactly one of: "On-site", "Hybrid", "Remote / Work from Home". (Normalize "WFH", "Remote" to "Remote / Work from Home").
-
-Schema:
-{
-  "company": "string (Title Case firm name)",
-  "organization_type": "string",
-  "city": "string",
-  "state": "string",
-  "description": "string (general company description if any)",
-  "employmentType": "string",
-  "workplaceType": "string",
-  "applicationEmail": "string",
-  "email": "string",
-  "phone": "string",
-  "whatsapp": "string",
-  "website": "string",
-  "facebook": "string",
-  "instagram": "string",
-  "linkedin": "string",
-  "twitter": "string",
-  "principalArchitect": "string",
-  "employeeSize": "string",
-  "foundedYear": "string",
-  "deadline": "string",
-  "apply_link": "string",
-  "positions": [
-    {
-      "position": "string (Title Case job title)",
-      "experience": "string",
-      "role": "string",
-      "salary": "string",
-      "qualifications": "string",
-      "skills": ["string"],
-      "description": "string (Clean paragraph format)"
-    }
-  ]
-}`;
-
     let result;
-    let maxRetries = 2;
-    let attempt = 0;
-    
-    while (attempt <= maxRetries) {
-      try {
-        if (mode === "text") {
-          const text = formData.get("text") as string;
-          if (!text) throw new Error("No text provided");
+    let lastError;
+    let success = false;
+
+    for (const apiKey of availableKeys) {
+      if (success) break;
+      const ai = new GoogleGenAI({ apiKey });
+
+      let maxRetries = 1;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          if (mode === "text") {
+            const text = formData.get("text") as string;
+            if (!text) throw new Error("No text provided");
+            const fullPrompt = prompt + "\n\nText to extract:\n" + text;
+            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+          } else if (mode === "url") {
+            const url = formData.get("url") as string;
+            const res = await fetch(url);
+            const html = await res.text();
+            const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
+                                 .replace(/<style[\s\S]*?<\/style>/gmi, '')
+                                 .replace(/<[^>]+>/g, ' ');
+            const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
+            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+          } else if (mode === "image") {
+            const imageFile = formData.get("image") as File;
+            const arrayBuffer = await imageFile.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            result = await ai.models.generateContent({
+              model: "gemini-flash-latest",
+              contents: [
+                prompt,
+                { inlineData: { data: buffer.toString("base64"), mimeType: imageFile.type } }
+              ]
+            });
+          } else {
+            throw new Error("Invalid mode");
+          }
           
-          const fullPrompt = prompt + "\n\nText to extract:\n" + text;
-          result = await ai.models.generateContent({
-            model: "gemini-flash-latest",
-            contents: fullPrompt
-          });
+          success = true;
+          break; // break retry loop
+        } catch (err: any) {
+          lastError = err;
+          const isQuota = err.status === 429 || err.status === 403 || (err.message && (err.message.toLowerCase().includes('quota') || err.message.toLowerCase().includes('429')));
+          const is503 = err.status === 503 || (err.message && (err.message.includes('503') || err.message.includes('UNAVAILABLE')));
           
-        } else if (mode === "url") {
-          const url = formData.get("url") as string;
-          if (!url) throw new Error("No URL provided");
-          
-          const page = await fetch(url);
-          const html = await page.text();
-          const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
-                               .replace(/<style[\s\S]*?<\/style>/gmi, '')
-                               .replace(/<[^>]+>/g, ' ');
-          const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
-          result = await ai.models.generateContent({
-            model: "gemini-flash-latest",
-            contents: fullPrompt
-          });
-          
-        } else if (mode === "image") {
-          const imageFile = formData.get("image") as File;
-          if (!imageFile) throw new Error("Please upload a JPG, PNG, or supported image format.");
-          
-          const arrayBuffer = await imageFile.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          
-          result = await ai.models.generateContent({
-            model: "gemini-flash-latest",
-            contents: [
-              prompt,
-              {
-                inlineData: {
-                  data: buffer.toString("base64"),
-                  mimeType: imageFile.type,
-                }
-              }
-            ]
-          });
-        } else {
-          throw new Error("Invalid mode");
-        }
-        
-        // If it succeeds, break out of the retry loop
-        break;
-        
-      } catch (err: any) {
-        attempt++;
-        const is503 = err.status === 503 || (err.message && err.message.includes('503')) || (err.message && err.message.includes('UNAVAILABLE'));
-        if (is503 && attempt <= maxRetries) {
-          console.log(`Gemini API 503 Error. Retrying attempt ${attempt}...`);
-          await new Promise(resolve => setTimeout(resolve, 1500)); // wait 1.5s
-        } else {
-          throw err; // throw standard error if it's not a 503 or we ran out of retries
+          if (isQuota) {
+            console.log("Quota exceeded for key, switching to next key...");
+            break; // Break inner retry loop, try next key
+          } else if (is503 && attempt < maxRetries) {
+            console.log(`503 High demand, retrying... (${attempt + 1})`);
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          } else if (is503) {
+            break; // exhausted retries, try next key just in case
+          } else {
+            throw err; // normal error, don't try other keys
+          }
         }
       }
     }
+
+    if (!success) throw lastError;
 
     const responseText = result.text;
     if (!responseText) throw new Error("AI extraction temporarily failed. Please try again.");
