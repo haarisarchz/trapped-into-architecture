@@ -315,6 +315,7 @@ const removePosition = (index) => {
         setInitialJobIds(validSiblings.map(s => s.id));
   
         setFirmName(job.firm_name || "");
+        setImageUrl(job.image || "");
           
           if (job.firm_name) {
             const { data: comp } = await supabase.from("companies").select("*").ilike("firm_name", job.firm_name).maybeSingle();
@@ -402,7 +403,7 @@ const removePosition = (index) => {
         setPostedDate(job.posted_date || "");
         setLastDateToApply(job.last_date_to_apply || "");
         setPostExpiryDate(job.post_expiry_date || "");
-        setImageUrl(job.image || "");
+        
         
         if (job.apply_link && job.apply_link.trim() !== "") {
             setApplicationType("apply");
