@@ -24,6 +24,8 @@ const [jobId, setJobId] = useState<string | null>(null);
 const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  
+  // Lock #1: Tab Close & Refresh
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
@@ -35,15 +37,17 @@ const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
+  // Lock #2: Next.js Link Clicks (Sidebar)
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
+      if (!hasUnsavedChanges) return;
       const target = e.target as HTMLElement;
       const anchor = target.closest('a');
-      if (anchor && anchor.href && !anchor.target) {
+      if (anchor && anchor.href && !anchor.target && !anchor.hasAttribute('download')) {
         try {
           const currentUrl = new URL(window.location.href);
           const targetUrl = new URL(anchor.href);
-          if (currentUrl.pathname !== targetUrl.pathname && hasUnsavedChanges) {
+          if (currentUrl.pathname !== targetUrl.pathname) {
             if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) {
               e.preventDefault();
               e.stopPropagation();
@@ -55,6 +59,27 @@ const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
     document.addEventListener('click', handleClick, { capture: true });
     return () => document.removeEventListener('click', handleClick, { capture: true });
   }, [hasUnsavedChanges]);
+
+  // Lock #3: Browser Back/Forward Buttons (SPA Navigation)
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) {
+        // Push a state back on to trap the user
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
+    
+    // We add a dummy state when it becomes dirty so the first 'back' click is intercepted safely
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+    
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [hasUnsavedChanges]);
+
 
 
 
@@ -1803,6 +1828,7 @@ const handleSmartExtraction = async () => {
       if (!response.ok) throw new Error(result.error || "Failed to extract");
 
             const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
+            setHasUnsavedChanges(true);
 
       // Normalization helpers
       const normEmp = (e) => {
