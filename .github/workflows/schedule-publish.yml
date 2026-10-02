@@ -1,0 +1,18 @@
+name: Publish Scheduled Jobs
+
+on:
+  schedule:
+    # Runs every 5 minutes
+    - cron: '*/5 * * * *'
+  # Allows you to trigger it manually from the GitHub Actions tab for testing
+  workflow_dispatch: 
+
+jobs:
+  publish:
+    name: Trigger Vercel API
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call API Endpoint
+        run: |
+          curl -s -w "\nHTTP Status: %{http_code}\n" -X GET "https://www.trappedintoarchitecture.com/api/cron/schedule" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
