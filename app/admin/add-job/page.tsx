@@ -315,6 +315,7 @@ const removePosition = (index) => {
       setLastDateToApply(job.last_date_to_apply || "");
       setPostExpiryDate(job.post_expiry_date || "");
       setImageUrl(job.image || "");
+alert("DEBUG: image URL from DB is: " + job.image + " | apply_link is: " + job.apply_link + " | email is: " + job.application_email);
       
       if (job.apply_link && job.apply_link.trim() !== "") {
           setApplicationType("apply");
