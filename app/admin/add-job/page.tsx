@@ -625,7 +625,7 @@ const handlePublishJob = async (
         }
       let currentCompanyId = selectedCompanyId;
 
-    if (status !== "draft" && firmName) {
+    if (firmName) {
       const companyPayload = {
           firm_name: firmName,
           city: city,
