@@ -405,15 +405,18 @@ const removePosition = (index) => {
         setPostExpiryDate(job.post_expiry_date || "");
         
         
-        if (job.apply_link && job.apply_link.trim() !== "") {
-            setApplicationType("apply");
-            setapply_link(job.apply_link);
-          } else if (job.application_email && job.application_email.trim() !== "") {
+        if (job.application_email && job.application_email.trim() !== "") {
             setApplicationType("email");
             setapplication_email(job.application_email);
+            setapply_link(job.apply_link || "");
+          } else if (job.apply_link && job.apply_link.trim() !== "") {
+            setApplicationType("apply");
+            setapply_link(job.apply_link);
+            setapplication_email("");
           } else {
             setApplicationType("apply");
             setapply_link("");
+            setapplication_email("");
           }
   
         if (job.status === "scheduled" && job.posted_date) {
@@ -1536,8 +1539,14 @@ const handleSmartExtraction = async () => {
 
 {/* ACTION BUTTONS */}
 
-<div className="flex justify-center gap-3 mt-6 mb-4">
-  <button type="button" disabled={isPublishing || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+<div className="flex flex-wrap justify-center gap-3 mt-6 mb-4">
+  <button type="button" onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin"); }} className="px-6 py-3 text-base rounded-xl border-2 border-gray-200 bg-gray-50 text-black font-semibold hover:bg-gray-100 transition">
+    Go to Dashboard
+  </button>
+  <button type="button" onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin/jobs"); }} className="px-6 py-3 text-base rounded-xl border-2 border-gray-200 bg-gray-50 text-black font-semibold hover:bg-gray-100 transition">
+    Manage Jobs
+  </button>
+  <button type="button" disabled={isPublishing || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-50 transition"
   >
     Save Draft
   </button>
