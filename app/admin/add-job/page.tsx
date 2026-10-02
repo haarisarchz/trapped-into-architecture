@@ -14,13 +14,10 @@ import {
 import Autocomplete from "@/components/Autocomplete";
 
 export default function AddJobPage() {
-const [jobId, setJobId] = useState<string | null>(null);
+const [jobId, setJobId] = useState<string | null>(() => { if (typeof window !== "undefined") { return new URLSearchParams(window.location.search).get("id"); } return null; });
 const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
 
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  setJobId(params.get("id"));
-}, []);
+
   const router = useRouter();
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
@@ -305,15 +302,15 @@ const removePosition = (index) => {
            salary: s.salary || "",
            description: rDesc,
            experience: Array.isArray(s.experience) ? s.experience : (s.experience ? [s.experience] : []),
-           qualifications: s.qualifications || "",
-           skills: s.skills_required || [],
+           qualifications: Array.isArray(s.qualifications) ? s.qualifications.join(", ") : (s.qualifications || ""), // Prevent array object Object rendering
+           skills: Array.isArray(s.skills_required) ? s.skills_required : (s.skills_required ? [s.skills_required] : []), // Prevent map crash
            completed: false
          };
       }));
 
       // For standard fields we can just use the first job's values (they are identical)
-      setQualifications(job.qualifications || "");
-      setSkills(job.skills_required || "");
+      setQualifications(Array.isArray(job.qualifications) ? job.qualifications : (job.qualifications ? [job.qualifications] : []));
+      setSkills(Array.isArray(job.skills_required) ? job.skills_required : (job.skills_required ? [job.skills_required] : []));
       setPostedDate(job.posted_date || "");
       setLastDateToApply(job.last_date_to_apply || "");
       setPostExpiryDate(job.post_expiry_date || "");
