@@ -14,7 +14,13 @@ import {
 import Autocomplete from "@/components/Autocomplete";
 
 export default function AddJobPage() {
-const [jobId, setJobId] = useState<string | null>(() => { if (typeof window !== "undefined") { return new URLSearchParams(window.location.search).get("id"); } return null; });
+const [jobId, setJobId] = useState<string | null>(null);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const id = new URLSearchParams(window.location.search).get("id");
+      if (id) setJobId(id);
+    }
+  }, []);
 const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
 
 
