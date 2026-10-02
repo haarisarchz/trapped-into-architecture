@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   try {
     // SECURITY: The API key is securely loaded server-side.
     // It checks standard variable names.
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const apiKey = req.headers.get("x-user-gemini-key") || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     
     if (!apiKey) {
       console.error("Gemini configuration is missing. Required environment variable: GEMINI_API_KEY");
