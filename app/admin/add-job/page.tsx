@@ -1716,7 +1716,17 @@ const handleSmartExtraction = async () => {
         throw new Error("Mode not supported yet.");
       }
 
-      const response = await fetch("/api/extract-job", {
+      const userGeminiKey = localStorage.getItem("admin_gemini_key");
+        if (!userGeminiKey) {
+          alert("Please configure your Gemini API Key in the Settings page before using AI extraction.");
+          setLoadingAI(false);
+          return;
+        }
+
+        const response = await fetch("/api/extract-job", {
+          headers: {
+            "x-user-gemini-key": userGeminiKey
+          },
         method: "POST",
         body: formData,
       });

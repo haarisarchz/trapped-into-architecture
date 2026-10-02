@@ -88,7 +88,7 @@ Schema:
           
           const fullPrompt = prompt + "\n\nText to extract:\n" + text;
           result = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             contents: fullPrompt
           });
           
@@ -103,7 +103,7 @@ Schema:
                                .replace(/<[^>]+>/g, ' ');
           const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
           result = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             contents: fullPrompt
           });
           
@@ -115,7 +115,7 @@ Schema:
           const buffer = Buffer.from(arrayBuffer);
           
           result = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             contents: [
               prompt,
               {
