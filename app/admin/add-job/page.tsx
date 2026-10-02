@@ -22,6 +22,40 @@ const [jobId, setJobId] = useState<string | null>(null);
     }
   }, []);
 const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (anchor && anchor.href && !anchor.target) {
+        try {
+          const currentUrl = new URL(window.location.href);
+          const targetUrl = new URL(anchor.href);
+          if (currentUrl.pathname !== targetUrl.pathname && hasUnsavedChanges) {
+            if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }
+        } catch(err) {}
+      }
+    };
+    document.addEventListener('click', handleClick, { capture: true });
+    return () => document.removeEventListener('click', handleClick, { capture: true });
+  }, [hasUnsavedChanges]);
+
 
 
   const router = useRouter();
@@ -195,7 +229,7 @@ const [area, setArea] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
   const [positions, setPositions] = useState([{position: "", role: "", experience: [], salary: "", description: "", qualifications: "", skills: [], completed: false}]);
 const [sameRequirements, setSameRequirements] = useState(true);
-const updatePosition = (index, field, value) => {
+const updatePosition = (index, field, value) => { setHasUnsavedChanges(true); 
   const newPositions = [...positions];
   newPositions[index][field] = value;
   setPositions(newPositions);
@@ -276,6 +310,7 @@ const removePosition = (index) => {
                setEmployeeSize(comp.employee_size?.toString() || "");
                setFoundedYear(comp.founded_year?.toString() || "");
                setTimeout(() => setIsCompanyProfileDirty(false), 200);
+               setTimeout(() => setHasUnsavedChanges(false), 500);
             }
           }
   
@@ -365,6 +400,7 @@ const removePosition = (index) => {
                setScheduleTime(parts[1].substring(0, 5));
            }
         }
+        setTimeout(() => setHasUnsavedChanges(false), 500);
       }
     };
     
@@ -733,7 +769,7 @@ const handlePublishJob = async (
         }
       }
 
-    if (jobData && jobData.id) {
+    if (jobData && jobData.id) { setHasUnsavedChanges(false); 
       setJobId(jobData.id);
       window.history.replaceState(null, "", `/admin/add-job?id=${jobData.id}`);
 
@@ -776,7 +812,7 @@ const handleSmartExtraction = async () => {
 
         <Navbar />
 
-        <section className="w-full px-6 lg:px-12 py-8">
+        <section className="w-full px-6 lg:px-12 py-8" onChangeCapture={() => setHasUnsavedChanges(true)}>
 
           {/* PAGE TITLE */}
 
