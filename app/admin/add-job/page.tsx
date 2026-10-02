@@ -223,7 +223,7 @@ const removePosition = (index) => {
 
   if (!jobId) return;
 
-  const fetchJob = async () => {
+  const fetchJob = async () => { try {
     const { data: job, error } = await supabase
       .from("jobs")
       .select("*")
