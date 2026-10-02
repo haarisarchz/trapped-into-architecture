@@ -1717,16 +1717,14 @@ const handleSmartExtraction = async () => {
       }
 
       const userGeminiKey = localStorage.getItem("admin_gemini_key");
-        if (!userGeminiKey) {
-          alert("Please configure your Gemini API Key in the Settings page before using AI extraction.");
-          setLoadingAI(false);
-          return;
+        
+        const headers: any = {};
+        if (userGeminiKey) {
+          headers["x-user-gemini-key"] = userGeminiKey;
         }
 
         const response = await fetch("/api/extract-job", {
-          headers: {
-            "x-user-gemini-key": userGeminiKey
-          },
+          headers,
         method: "POST",
         body: formData,
       });
