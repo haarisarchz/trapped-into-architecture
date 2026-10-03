@@ -107,7 +107,7 @@ function CompaniesPageContent() {
 
     // 1. Add all REAL companies
     realCompanies.forEach((comp) => {
-      if (!comp.firm_name) return;
+      if (!comp.firm_name || comp.is_hidden) return;
       grouped[comp.firm_name] = {
         company: comp.firm_name,
         slug: comp.slug || generateCompanySlug(comp.firm_name),
@@ -155,7 +155,7 @@ function CompaniesPageContent() {
       grouped[name].totalJobs += 1;
     });
 
-    return Object.values(grouped);
+    return Object.values(grouped).filter((c: any) => c.totalJobs > 0);
   }, [jobs, realCompanies, favoritesCount]);
 
   const categories = useMemo(() => [...new Set(companies.map((c: any) => c.organizationType))].filter(Boolean).sort(), [companies]);
