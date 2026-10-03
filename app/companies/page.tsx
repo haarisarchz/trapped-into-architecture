@@ -21,7 +21,7 @@ function CompaniesPageContent() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(searchParams.get("organization_type") ? [searchParams.get("organization_type") as string] : []);
   
   const [viewMode, setViewMode] = useState(searchParams.get("view") || "visual");
-  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "date_added");
 
   const [jobs, setJobs] = useState<any[]>([]);
   const [favoritesCount, setFavoritesCount] = useState<any>({});
@@ -43,7 +43,7 @@ function CompaniesPageContent() {
     if (selectedCities.length > 0) params.set("city", selectedCities[0]);
     if (selectedCategories.length > 0) params.set("organization_type", selectedCategories[0]);
     if (viewMode !== "visual") params.set("view", viewMode);
-    if (sortBy !== "name") params.set("sort", sortBy);
+    if (sortBy !== "date_added") params.set("sort", sortBy);
 
     const newUrl = params.toString() ? `/companies?${params.toString()}` : '/companies';
     // Use replace to not bloat history stack while filtering
@@ -68,7 +68,7 @@ function CompaniesPageContent() {
       // 2. Fetch real companies
       const { data: companiesData, error: compError } = await supabase
         .from("companies")
-        .select("id, firm_name, slug, city, state, organization_type, logo_url, created_at, founded_year, description, is_hidden");
+        .select("id, firm_name, slug, city, state, organization_type, logo_url, created_at, founded_year, description");
         
       // Non-fatal: log warning but don't crash page
       if (compError && compError.code !== "PGRST116") {
@@ -107,7 +107,7 @@ function CompaniesPageContent() {
 
     // 1. Add all REAL companies
     realCompanies.forEach((comp) => {
-      if (!comp.firm_name || comp.is_hidden) return;
+      if (!comp.firm_name) return;
       grouped[comp.firm_name] = {
         company: comp.firm_name,
         slug: comp.slug || generateCompanySlug(comp.firm_name),
@@ -187,10 +187,24 @@ function CompaniesPageContent() {
     }
 
     // Sort
-    if (sortBy === "name") {
+    if (sortBy === "name_asc") {
       data.sort((a: any, b: any) => a.company.localeCompare(b.company));
+    } else if (sortBy === "name_desc") {
+      data.sort((a: any, b: any) => b.company.localeCompare(a.company));
     } else if (sortBy === "jobs") {
       data.sort((a: any, b: any) => b.totalJobs - a.totalJobs);
+    } else if (sortBy === "date_added") {
+      data.sort((a: any, b: any) => {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return timeB - timeA;
+      });
+    } else if (sortBy === "year_founded") {
+      data.sort((a: any, b: any) => {
+        const yearA = parseInt(a.founded_year) || 0;
+        const yearB = parseInt(b.founded_year) || 0;
+        return yearB - yearA;
+      });
     }
 
     return data;
