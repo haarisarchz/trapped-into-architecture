@@ -33,7 +33,7 @@ export async function GET(req: Request) {
       // Update status to published
       const { error: updateError } = await supabase
         .from("jobs")
-        .update({ status: "published", updated_at: now })
+        .update({ status: "published" })
         .eq("id", job.id);
 
       if (updateError) {
