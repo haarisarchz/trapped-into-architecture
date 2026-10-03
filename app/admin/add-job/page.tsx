@@ -1922,7 +1922,7 @@ const handleSmartExtraction = async () => {
           role: p.role || "",
           experience: Array.isArray(p.experience) ? p.experience : (p.experience ? [p.experience] : []),
           salary: p.salary || "",
-          description: p.description || p.job_description || "",
+          description: p.description || p.job_description || (index === 0 ? ai.description : "") || "",
           qualifications: p.qualifications || "",
           skills: p.skills || [],
           skill_input: "",

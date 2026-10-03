@@ -23,6 +23,7 @@ Fields to extract:
 - positions (array of objects, each containing):
   - position (string, e.g., "Junior Architect", "Interior Designer")
   - role (string, brief 1-2 line summary of what this specific role entails)
+  - description (string, detailed job description, responsibilities, and requirements for this specific role)
   - vacancies (string, the number of openings, e.g., "2", "3-5", leave empty if not specified)
   - experience (array of strings, e.g., ["1-2 Years", "Fresher"])
   - salary (string, e.g., "₹ 3,00,000 PA", "Based on experience")
