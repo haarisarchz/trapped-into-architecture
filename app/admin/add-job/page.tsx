@@ -1567,7 +1567,7 @@ const handleSmartExtraction = async () => {
 
   <button
     type="button"
-    disabled={isPublishing}
+    disabled={actionLoading !== null}
     onClick={() => handlePublishJob("published")}
     className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
       uploadingImage
