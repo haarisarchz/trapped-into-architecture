@@ -114,10 +114,10 @@ export default function ShareButtons({
         const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
         if (exp && employmentType !== "Internship" && !(position && position.toLowerCase().includes("intern"))) singleExpText = ` (${exp})`;
       }
-      text += `Positions: ${position}${singleExpText}\n\n`;
+      text += `Position: ${position}${singleExpText}\n\n`;
     }
     
-    text += `For Details Visit:\n${url}`;
+    text += `For more details, visit:\n${url}`;
     return text;
   };
 

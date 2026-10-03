@@ -28,18 +28,18 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
   
   return {
-    title: `${job.position} — ${job.firm_name} | Trapped Into Architecture`,
-    description: `${job.position} opportunity at ${job.firm_name} in ${job.city}, ${job.state}.`,
+    title: `${job.firm_name} is hiring ${job.position} in ${job.city}. | Trapped Into Architecture`,
+    description: `${job.firm_name} is hiring ${job.position} in ${job.city}, ${job.state}. Apply now!`,
     openGraph: {
-      title: `${job.position} — ${job.firm_name} | Trapped Into Architecture`,
-      description: `${job.position} opportunity at ${job.firm_name} in ${job.city}, ${job.state}.`,
+      title: `${job.firm_name} is hiring ${job.position} in ${job.city}. | Trapped Into Architecture`,
+      description: `${job.firm_name} is hiring ${job.position} in ${job.city}, ${job.state}. Apply now!`,
       url: `https://trappedintoarchitecture.com${generateJobUrl(job)}`,
       images: job.image ? [job.image] : [],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${job.position} — ${job.firm_name} | Trapped Into Architecture`,
-      description: `${job.position} opportunity at ${job.firm_name} in ${job.city}, ${job.state}.`,
+      title: `${job.firm_name} is hiring ${job.position} in ${job.city}. | Trapped Into Architecture`,
+      description: `${job.firm_name} is hiring ${job.position} in ${job.city}, ${job.state}. Apply now!`,
       images: job.image ? [job.image] : [],
     }
   };
