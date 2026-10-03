@@ -316,6 +316,20 @@ const removePosition = (index) => {
   
         setFirmName(job.firm_name || "");
         setImageUrl(job.image || "");
+
+        if (job.application_email && job.application_email.trim() !== "") {
+            setApplicationType("email");
+            setapplication_email(job.application_email);
+            setapply_link(job.apply_link || "");
+        } else if (job.apply_link && job.apply_link.trim() !== "") {
+            setApplicationType("apply");
+            setapply_link(job.apply_link);
+            setapplication_email("");
+        } else {
+            setApplicationType("apply");
+            setapply_link("");
+            setapplication_email("");
+        }
           
           if (job.firm_name) {
             const { data: comp } = await supabase.from("companies").select("*").ilike("firm_name", job.firm_name).maybeSingle();
@@ -405,19 +419,7 @@ const removePosition = (index) => {
         setPostExpiryDate(job.post_expiry_date || "");
         
         
-        if (job.application_email && job.application_email.trim() !== "") {
-            setApplicationType("email");
-            setapplication_email(job.application_email);
-            setapply_link(job.apply_link || "");
-          } else if (job.apply_link && job.apply_link.trim() !== "") {
-            setApplicationType("apply");
-            setapply_link(job.apply_link);
-            setapplication_email("");
-          } else {
-            setApplicationType("apply");
-            setapply_link("");
-            setapplication_email("");
-          }
+        // email logic hoisted
   
         if (job.status === "scheduled" && job.posted_date) {
            const d = new Date(job.posted_date);
