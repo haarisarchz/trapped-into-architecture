@@ -167,27 +167,33 @@ export async function POST(req: Request) {
 
     const publishTasks = platformsToProcess.map(async (platform) => {
       // Check if this batch has already been published on this platform
-      const { data: existingLog } = await supabase
-        .from("social_publishing_logs")
-        .select("*")
-        .eq("job_id", triggerJob.id)
-        .eq("platform", platform)
-        .maybeSingle();
+      let existingLog = null;
+      try {
+        const { data, error } = await supabase
+          .from("social_publishing_logs")
+          .select("*")
+          .eq("job_id", triggerJob.id)
+          .eq("platform", platform)
+          .maybeSingle();
+        if (error && error.code !== "PGRST205") console.warn(error);
+        if (data) existingLog = data;
+      } catch (err) {}
 
       if (existingLog?.status === "published" && !retry_platform) {
         return { platform, status: "skipped", reason: "Already published for this batch" };
       }
       
-      const { data: logRecord, error: upsertError } = await supabase.from("social_publishing_logs").upsert({
-          id: existingLog?.id || undefined,
-          job_id: triggerJob.id,
-          platform,
-          status: "publishing",
-          attempt_count: (existingLog?.attempt_count || 0) + 1,
-          updated_at: new Date().toISOString(),
-      }, { onConflict: "job_id, platform" }).select().single();
-      
-      if (upsertError) throw upsertError;
+      try {
+        const { error: upsertError } = await supabase.from("social_publishing_logs").upsert({
+            id: existingLog?.id || undefined,
+            job_id: triggerJob.id,
+            platform,
+            status: "publishing",
+            attempt_count: (existingLog?.attempt_count || 0) + 1,
+            updated_at: new Date().toISOString(),
+        }, { onConflict: "job_id, platform" });
+        if (upsertError && upsertError.code !== "PGRST205") console.warn(upsertError);
+      } catch(err) {}
 
       let success = false;
       let errorMsg = "";
@@ -292,7 +298,7 @@ export async function POST(req: Request) {
         status: success ? "published" : "failed",
         error_message: success ? null : errorMsg,
         updated_at: new Date().toISOString(),
-      }).eq("id", logRecord.id);
+      }).eq("job_id", triggerJob.id).eq("platform", platform);
 
       // Important: Mark ALL siblings as published for this platform to prevent duplicate cron triggers
       if (success && batchJobs.length > 1) {
@@ -303,7 +309,7 @@ export async function POST(req: Request) {
           attempt_count: 1,
           updated_at: new Date().toISOString()
         }));
-        await supabase.from("social_publishing_logs").upsert(siblingLogs, { onConflict: "job_id, platform" });
+        try { await supabase.from("social_publishing_logs").upsert(siblingLogs, { onConflict: "job_id, platform" }); } catch(err) {}
       }
 
       return { platform, status: success ? "published" : "failed", error: errorMsg };
