@@ -105,7 +105,7 @@ export default function AdminCompaniesPage() {
               city: job.city || "",
               state: job.state || "",
               organization_type: job.organization_type || "Architecture Firm",
-              is_hidden: false,
+              is_active: false,
               created_by: job.author_id,
               created_at: job.posted_date,
               logo_url: null,
@@ -192,15 +192,15 @@ export default function AdminCompaniesPage() {
       return;
     }
 
-    const action = company.is_hidden ? "Unhide" : "Hide";
-    const msg = company.is_hidden
+    const action = !company.is_active ? "Unhide" : "Hide";
+    const msg = !company.is_active
       ? "Unhide this company? It will become visible in public listings again."
       : "Hide this company? Existing job records will not be deleted.";
 
     if (confirm(msg)) {
       const { error } = await supabase
         .from("companies")
-        .update({ is_hidden: !company.is_hidden })
+        .update({ is_active: !company.is_active })
         .eq("id", company.id);
 
       if (!error) {
@@ -387,7 +387,7 @@ export default function AdminCompaniesPage() {
 
                       {/* Visibility */}
                       <td className="px-6 py-4">
-                        {c.is_hidden ? (
+                        {!c.is_active ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             Hidden
                           </span>
@@ -424,13 +424,13 @@ export default function AdminCompaniesPage() {
                           <button
                             onClick={() => handleHideToggle(c)}
                             className={`p-2 rounded-lg transition ${
-                              c.is_hidden
+                              !c.is_active
                                 ? "text-gray-800 md:text-gray-500 hover:text-green-600 hover:bg-green-50"
                                 : "text-gray-800 md:text-gray-500 hover:text-red-600 hover:bg-red-50"
                             }`}
-                            title={c.is_hidden ? "Unhide Company" : "Hide Company"}
+                            title={!c.is_active ? "Unhide Company" : "Hide Company"}
                           >
-                            {c.is_hidden ? <Eye size={18} /> : <EyeOff size={18} />}
+                            {!c.is_active ? <Eye size={18} /> : <EyeOff size={18} />}
                           </button>
                         </div>
                       </td>

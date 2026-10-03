@@ -251,7 +251,7 @@ const [area, setArea] = useState("");
   const [image, setImage] = useState('');
   const [imageUrl, setImageUrl] = useState("");
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [isPublishing, setIsPublishing] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [positions, setPositions] = useState([{position: "", role: "", experience: [], salary: "", description: "", qualifications: "", skills: [], completed: false}]);
 const [sameRequirements, setSameRequirements] = useState(true);
 const updatePosition = (index, field, value) => { setHasUnsavedChanges(true); 
@@ -593,7 +593,7 @@ const handleSchedule = async () => {
         } else {
            const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
            const { data: newComp, error } = await supabase.from("companies").insert([
-             { ...companyPayload, slug: companySlug, created_by: authorId }
+             { ...companyPayload, slug: companySlug, created_by: authorId, is_active: status === "published" }
            ]).select().single();
            if (error) throw error;
            if (newComp) setSelectedCompanyId(newComp.id);
@@ -612,7 +612,7 @@ const handleSchedule = async () => {
 const handlePublishJob = async (
   status: "draft" | "scheduled" | "published" = "published"
 ) => {
-  setIsPublishing(true);
+  setActionLoading(status);
 
   try {
               let authorId = (await supabase.auth.getUser()).data.user?.id;
@@ -683,19 +683,19 @@ const handlePublishJob = async (
     if (status !== "draft") {
       if (uploadingImage) {
         alert("Please wait until image upload finishes");
-        setIsPublishing(false);
+        setActionLoading(null);
         return;
       }
       if (!imageUrl) {
         alert("Please upload job image");
-        setIsPublishing(false);
+        setActionLoading(null);
         return;
       }
     }
 
     if (status === "draft" && (!firmName || !positions[0]?.position)) {
       alert("Please enter at least the Company Name and Job Position to save a draft.");
-      setIsPublishing(false);
+      setActionLoading(null);
       return;
     }
 
@@ -709,7 +709,7 @@ const handlePublishJob = async (
 
     if (missingFields) {
       alert("Please fill all required fields, including position titles and descriptions.");
-      setIsPublishing(false);
+      setActionLoading(null);
       return;
     }
 
@@ -829,7 +829,7 @@ const handlePublishJob = async (
     alert(JSON.stringify(err.message || err));
   }
   
-  setIsPublishing(false);
+  setActionLoading(null);
 };
 
 const handleSmartExtraction = async () => {
@@ -1548,12 +1548,12 @@ const handleSmartExtraction = async () => {
   <button type="button" onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin/jobs"); }} className="px-6 py-3 text-base rounded-xl border-2 border-gray-200 bg-gray-50 text-black font-semibold hover:bg-gray-100 transition">
     Manage Jobs
   </button>
-  <button type="button" disabled={isPublishing || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-50 transition"
+  <button type="button" disabled={actionLoading !== null || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-50 transition"
   >
     Save Draft
   </button>
 
-  <button type="button" disabled={isPublishing || uploadingImage} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+  <button type="button" disabled={actionLoading !== null || uploadingImage} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
 >
   Schedule
 </button>
@@ -1568,7 +1568,7 @@ const handleSmartExtraction = async () => {
         : "bg-black text-white hover:bg-gray-800"
     }`}
   >
-    {isPublishing ? "Publishing..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
+    {actionLoading === "published" ? "Publishing..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
   </button>
 </div>
           
