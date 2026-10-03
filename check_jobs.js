@@ -1,9 +1,17 @@
-const fs = require('fs');
-let c = fs.readFileSync('app/admin/jobs/page.tsx', 'utf-8');
+const { createClient } = require('@supabase/supabase-js');
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; 
 
-const regex = /let query = supabase\s*\.from\("admin_jobs"\)\s*\.select\("\*"\);/;
-if(c.match(regex)) {
-   console.log('admin_jobs found in jobs/page');
-} else {
-   console.log('not found');
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function checkJobs() {
+    const { data, error } = await supabase
+      .from('jobs')
+      .update({ status: 'published' })
+      .eq('id', 'aa923816-7674-41f5-94f6-745ce872a1ad')
+      .select();
+    
+    if (error) console.error(error);
+    else console.log(data);
 }
+checkJobs();

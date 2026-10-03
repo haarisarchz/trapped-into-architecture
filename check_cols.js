@@ -1,12 +1,16 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config({ path: '.env.local' });
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; 
 
-async function check() {
-  const { data, error } = await supabase.from('companies').select('*').limit(1);
-  if (error) console.error("Error:", error.message);
-  else {
-    console.log("Columns:", Object.keys(data[0] || {}));
-  }
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function checkCols() {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .limit(1);
+    
+    if (error) console.error(error);
+    else console.log(Object.keys(data[0]));
 }
-check();
+checkCols();

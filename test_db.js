@@ -1,19 +1,15 @@
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 
-const env = fs.readFileSync('.env.local', 'utf8').split('\n');
-let url = '', key = '';
-for (const line of env) {
-  if (line.startsWith('NEXT_PUBLIC_SUPABASE_URL=')) url = line.split('=')[1].trim();
-  if (line.startsWith('NEXT_PUBLIC_SUPABASE_ANON_KEY=')) key = line.split('=')[1].trim();
+const envContent = fs.readFileSync('.env.local', 'utf8');
+const urlMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_URL=([^\r\n]+)/);
+const keyMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY=([^\r\n]+)/);
+
+if (urlMatch && keyMatch) {
+  const supabase = createClient(urlMatch[1], keyMatch[1]);
+  async function test() {
+    const { data } = await supabase.from('jobs').select('id, firm_name, status, image').order('created_at', { ascending: false }).limit(5);
+    console.log(data);
+  }
+  test();
 }
-
-const supabase = createClient(url, key);
-
-(async () => {
-  const { data: companies, error: compErr } = await supabase.from('companies').select('*');
-  const { data: jobs, error: jobsErr } = await supabase.from('jobs').select('firm_name, id');
-  console.log("COMPANIES COUNT:", companies?.length);
-  console.log("JOBS COUNT:", jobs?.length);
-  console.log("JOBS ERROR:", jobsErr);
-})();

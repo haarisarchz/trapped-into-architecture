@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { formatDate } from "@/utils/formatDate";
 import { Edit2, EyeOff, Eye, Trash2 } from "lucide-react";
 
 export default function AdminCompaniesPage() {

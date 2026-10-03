@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { formatDate } from "@/utils/formatDate";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function AdminActivityPage() {

@@ -1,14 +1,13 @@
 const fs = require('fs');
 let file = fs.readFileSync('app/api/extract-job/route.ts', 'utf8');
 
-// Replace the key fetching logic
-const oldLogic = 'const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;';
-const newLogic = 'const apiKey = req.headers.get("x-user-gemini-key") || process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;';
+const target = '- role (string, brief 1-2 line summary of what this specific role entails)';
+const replacement = '- role (string, brief 1-2 line summary of what this specific role entails)\\n  - description (string, detailed job description, responsibilities, and requirements for this specific role)';
 
-if(file.includes(oldLogic)) {
-    file = file.replace(oldLogic, newLogic);
+if (file.includes(target)) {
+    file = file.replace(target, replacement);
     fs.writeFileSync('app/api/extract-job/route.ts', file);
-    console.log('Successfully updated api route.');
+    console.log("Updated API route successfully.");
 } else {
-    console.log('Could not find old logic to replace.');
+    console.log("Could not find target in route.ts");
 }

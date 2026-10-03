@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { formatDate } from "@/utils/formatDate";
 import { generateJobUrl } from "@/utils/jobUrl";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -485,11 +486,7 @@ return (
                       {/* POSTED ON */}
 
                       <td className="px-6 py-5">
-                        {job.posted_date
-                          ? new Date(
-                              job.posted_date
-                            ).toLocaleDateString()
-                          : "-"}
+                        {job.posted_date ? formatDate(job.posted_date) : "-"}
                       </td>
 
                       {/* STATUS */}

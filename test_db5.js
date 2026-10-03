@@ -1,21 +1,13 @@
-const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
-
-const envFile = fs.readFileSync('.env.local', 'utf8');
-const env = {};
-envFile.split('\n').forEach(line => {
-  const [key, ...val] = line.split('=');
-  if (key && val) env[key.trim()] = val.join('=').trim().replace(/"/g, '');
-});
-
-const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
-async function test() {
-  const companyPayload = {
-          firm_name: "TestFirm",
-          founded_year: NaN
-        };
-  const { data, error } = await supabase.from('companies').insert([companyPayload]).select();
-  console.log("Insert Error:", error);
+const fs = require('fs');
+const envContent = fs.readFileSync('.env.local', 'utf8');
+const urlMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_URL=([^\r\n]+)/);
+const keyMatch = envContent.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY=([^\r\n]+)/);
+if (urlMatch && keyMatch) {
+  const supabase = createClient(urlMatch[1], keyMatch[1]);
+  async function test() {
+    const { data, error } = await supabase.from('jobs').select('*').eq('status', 'draft').order('id', { ascending: false }).limit(2);
+    console.log("Latest drafts:", JSON.stringify(data, null, 2));
+  }
+  test();
 }
-test();

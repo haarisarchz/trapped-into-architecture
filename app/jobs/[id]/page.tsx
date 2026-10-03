@@ -428,19 +428,19 @@ export default async function JobDetailsPage({
                         {job.posted_date && (
                           <div>
                             <p className="text-sm text-gray-500">Posted Date</p>
-                            <p className="font-semibold mt-1">{job.posted_date ? new Date(job.posted_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : ""}</p>
+                            <p className="font-semibold mt-1">{formatDate(job.posted_date)}</p>
                           </div>
                         )}
                         {job.last_date_to_apply && (
                           <div>
                             <p className="text-sm text-gray-500">Last Date To Apply</p>
-                            <p className="font-semibold mt-1">{job.last_date_to_apply}</p>
+                            <p className="font-semibold mt-1">{formatDate(job.last_date_to_apply)}</p>
                           </div>
                         )}
                         {showExpiry && (
                             <div>
                               <p className="text-sm text-gray-500">Post Expiry Date</p>
-                              <p className="font-semibold mt-1">{job.post_expiry_date}</p>
+                              <p className="font-semibold mt-1">{formatDate(job.post_expiry_date)}</p>
                             </div>
                           )}
                         {hasSource && (

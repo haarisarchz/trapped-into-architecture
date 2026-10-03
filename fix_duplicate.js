@@ -1,15 +1,10 @@
 const fs = require('fs');
+let file = fs.readFileSync('app/api/publish/social/route.ts', 'utf8');
 
-let content = fs.readFileSync('app/admin/jobs/page.tsx', 'utf8');
+file = file.replace(
+  'const firmName = jobs[0].firm_name || "Unknown Firm";\n\n  if (platform === "whatsapp"',
+  'if (platform === "whatsapp"'
+);
 
-const shareComponentRegex = /import \{ Share, Check, Copy \} from "lucide-react";\nimport \{ generateJobUrl \} from "@\/utils\/jobUrl";/s;
-
-const shareComponentReplace = `import { Share, Check, Copy } from "lucide-react";`;
-
-if (content.match(shareComponentRegex)) {
-  content = content.replace(shareComponentRegex, shareComponentReplace);
-  fs.writeFileSync('app/admin/jobs/page.tsx', content);
-  console.log("Removed duplicate generateJobUrl import");
-} else {
-  console.log("Could not find duplicate import");
-}
+fs.writeFileSync('app/api/publish/social/route.ts', file);
+console.log("Fixed duplicate firmName");
