@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Edit2, EyeOff, Eye } from "lucide-react";
+import { Edit2, EyeOff, Eye, Trash2 } from "lucide-react";
 
 export default function AdminCompaniesPage() {
   const router = useRouter();
@@ -163,6 +163,25 @@ export default function AdminCompaniesPage() {
     if (pRoleNorm === "ceo") return "CEO";
     if (pRoleNorm === "superadmin") return "Super Admin";
     return "Admin";
+  };
+
+  const handleDeleteCompany = async (company: any) => {
+    if (company.totalJobs > 0 || company.activeJobs > 0) {
+      alert("Warning: this company has a job published. Delete the job before, or hide the company from public.");
+      return;
+    }
+    if (!company.id || !company.isFromCompaniesTable) {
+      alert("This company is auto-detected from a job and doesn't have a database record. Delete the jobs to remove it.");
+      return;
+    }
+    if (confirm("Are you sure you want to delete this company?")) {
+      const { error } = await supabase.from("companies").delete().eq("id", company.id);
+      if (!error) {
+        fetchCompanies();
+      } else {
+        alert("Error deleting company: " + error.message);
+      }
+    }
   };
 
   const handleHideToggle = async (company: any) => {
@@ -382,6 +401,19 @@ export default function AdminCompaniesPage() {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
+                          {(() => {
+                             const myRoleNorm = (currentUser?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+                             const canDelete = myRoleNorm === "ceo" || (myRoleNorm === "superadmin" && c.created_by === currentUser?.id);
+                             return canDelete ? (
+                               <button
+                                 onClick={() => handleDeleteCompany(c)}
+                                 className="p-2 text-gray-800 md:text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                 title="Delete Company"
+                               >
+                                 <Trash2 size={18} />
+                               </button>
+                             ) : null;
+                          })()}
                           <button
                             onClick={() => router.push(`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name || "")}&city=${encodeURIComponent(c.city || "")}&state=${encodeURIComponent(c.state || "")}&cb=${c.created_by || ""}&ca=${c.created_at || ""}`)}
                             className="p-2 text-gray-800 md:text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
