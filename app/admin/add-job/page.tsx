@@ -277,9 +277,7 @@ const removePosition = (index) => {
   
  
   useEffect(() => {
-    if (selectedCompanyId) {
-      setIsCompanyProfileDirty(true);
-    }
+    setIsCompanyProfileDirty(true);
   }, [companyAddress, companyLogo, companyDescription, companyWebsite, companyEmail, companyPhone, companyFacebook, companyInstagram, companyLinkedin, companyTwitter, companyWhatsapp, principalArchitect, employeeSize, foundedYear, organizationType, area, city, state]);
 
   // Removed obsolete loadCompanies since we now use dynamic Autocomplete.
@@ -331,8 +329,16 @@ const removePosition = (index) => {
             setapplication_email("");
         }
           
-          if (job.firm_name) {
-            const { data: comp } = await supabase.from("companies").select("*").ilike("firm_name", job.firm_name).maybeSingle();
+          if (job.firm_name || job.company_id) {
+            let comp = null;
+            if (job.company_id) {
+              const { data } = await supabase.from("companies").select("*").eq("id", job.company_id).maybeSingle();
+              comp = data;
+            }
+            if (!comp && job.firm_name) {
+              const { data } = await supabase.from("companies").select("*").ilike("firm_name", job.firm_name).maybeSingle();
+              comp = data;
+            }
             if (comp) {
                setSelectedCompanyId(comp.id);
                setCompanyLogo(comp.logo_url || "");
@@ -528,8 +534,9 @@ const handleSaveDraft = async () => {
 };
 
 const handleSchedule = async () => {
-  await handlePublishJob("scheduled");
-};
+    await handlePublishJob("scheduled");
+    setShowSchedule(false);
+  };
 
 
   const [isSavingCompany, setIsSavingCompany] = useState(false);
@@ -1649,15 +1656,16 @@ const handleSmartExtraction = async () => {
           className="px-6 py-3 border rounded-xl"
         >
           Cancel
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setShowSchedule(true)}
-          className="px-6 py-3 bg-black text-white rounded-xl"
-        >
-          Schedule
-        </button>
+          </button>
+  
+          <button
+            type="button"
+            disabled={actionLoading !== null}
+            onClick={handleSchedule}
+            className="px-6 py-3 bg-black text-white rounded-xl"
+          >
+            {actionLoading === "scheduled" ? "Scheduling..." : "Schedule"}
+          </button>
 
       </div>
 
