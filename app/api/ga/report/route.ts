@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     const overviewReq = analyticsDataClient.runReport({
       property,
       dateRanges,
-      metrics: [{ name: "activeUsers" }, { name: "sessions" }, { name: "screenPageViews" }],
+      metrics: [{ name: "activeUsers" }, { name: "sessions" }, { name: "screenPageViews" }, { name: "averageSessionDuration" }],
     });
 
     // 2. By Country
@@ -72,8 +72,19 @@ export async function GET(request: Request) {
       dateRanges,
       dimensions: [{ name: "pageTitle" }, { name: "pagePath" }],
       metrics: [{ name: "screenPageViews" }],
+      dimensionFilter: {
+        notExpression: {
+          filter: {
+            fieldName: "pagePath",
+            stringFilter: {
+              matchType: "BEGINS_WITH",
+              value: "/admin"
+            }
+          }
+        }
+      },
       orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
-      limit: 10,
+      limit: 15,
     });
     
     // 5. Traffic Sources (Session Source/Medium)
@@ -138,6 +149,7 @@ export async function GET(request: Request) {
         activeUsers: overviewRes[0].rows?.[0]?.metricValues?.[0]?.value || 0,
         sessions: overviewRes[0].rows?.[0]?.metricValues?.[1]?.value || 0,
         pageViews: overviewRes[0].rows?.[0]?.metricValues?.[2]?.value || 0,
+        avgSessionDuration: overviewRes[0].rows?.[0]?.metricValues?.[3]?.value || 0,
       },
       countries: parseRows(countryRes, ["country"], ["users"]),
       browsers: parseRows(browserRes, ["browser"], ["users"]),

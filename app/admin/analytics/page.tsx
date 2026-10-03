@@ -3,6 +3,14 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+const formatDuration = (seconds: any) => {
+  const s = Number(seconds);
+  if (!s) return "0s";
+  const m = Math.floor(s / 60);
+  const rem = Math.floor(s % 60);
+  return m > 0 ? `${m}m ${rem}s` : `${rem}s`;
+};
+
 const ProgressBar = ({ value, max }: { value: number, max: number }) => (
   <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
     <div className="bg-black h-1.5 rounded-full" style={{ width: `${Math.min(100, Math.max(0, (value / max) * 100))}%` }}></div>
@@ -80,7 +88,7 @@ export default function AnalyticsPage() {
           <div className="space-y-6">
             
             {/* OVERVIEW METRICS */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6">
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
@@ -101,6 +109,10 @@ export default function AnalyticsPage() {
                 <h3 className="text-sm font-medium text-gray-500 mb-1">Page Views</h3>
                 <p className="text-3xl font-bold text-gray-900">{data.overview.pageViews}</p>
               </div>
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <h3 className="text-sm font-medium text-gray-500 mb-1">Avg Session</h3>
+                <p className="text-3xl font-bold text-gray-900">{formatDuration(data.overview.avgSessionDuration)}</p>
+              </div>
             </div>
 
             {/* DETAILED TABLES */}
@@ -114,7 +126,7 @@ export default function AnalyticsPage() {
                   {data.pages.map((item: any, i: number) => (
                     <div key={i} className="text-sm">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium truncate max-w-[70%]" title={item.path}>{item.path}</span>
+                        <span className="font-medium truncate max-w-[70%]" title={item.title && item.title !== "(not set)" ? item.title : item.path}>{item.title && item.title !== "(not set)" ? item.title.replace(" | Trapped Into Architecture", "") : item.path}</span>
                         <span className="font-semibold text-gray-700">{item.views}</span>
                       </div>
                       <ProgressBar value={item.views} max={Math.max(...data.pages.map((p: any) => p.views))} />
