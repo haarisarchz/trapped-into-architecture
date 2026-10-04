@@ -2,6 +2,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import { formatDate } from "@/utils/formatDate";
 import Link from "next/link";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { generateJobUrl, decodeUuid, generateCompanySlug } from "@/utils/jobUrl";
