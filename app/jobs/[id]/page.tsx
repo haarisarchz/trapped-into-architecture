@@ -181,8 +181,15 @@ export default async function JobDetailsPage({
     const autoExpiryDate = new Date(new Date(job.posted_date || job.created_at).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const showExpiry = job.post_expiry_date && job.post_expiry_date !== autoExpiryDate;
 
+  let cleanPos = job.position;
+  const pLower = cleanPos.toLowerCase();
+  if (pLower.includes("junior architect")) cleanPos = "Junior Architect";
+  else if (pLower.includes("senior architect")) cleanPos = "Senior Architect";
+  else if (pLower.includes("architect")) cleanPos = "Architect";
+  else if (cleanPos.includes("/") || cleanPos.includes("-")) cleanPos = cleanPos.split(/[\/-]/)[0].trim();
+
   const cityJobs = jobs.filter((j: any) => j.city === job.city && j.id !== job.id).slice(0, 3);
-  const positionJobs = jobs.filter((j: any) => j.position === job.position && j.id !== job.id).slice(0, 3);
+  const positionJobs = jobs.filter((j: any) => j.position.toLowerCase().includes(cleanPos.toLowerCase()) && j.id !== job.id).slice(0, 3);
   const recentJobs = [...jobs].filter((j: any) => j.id !== job.id).sort((a,b) => new Date(b.created_at || b.posted_date).getTime() - new Date(a.created_at || a.posted_date).getTime()).slice(0, 3);
   const popularJobs = [...jobs].sort((a,b) => (b.save_count || 0) - (a.save_count || 0)).slice(0, 3);
 
@@ -235,10 +242,10 @@ export default async function JobDetailsPage({
         />
       <Navbar />
 
-      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
 
         {/* BREADCRUMB */}
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+        <nav className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-4">
           <Link href="/" className="hover:text-black transition">Home</Link>
           <span>/</span>
           <Link href="/jobs" className="hover:text-black transition">Jobs</Link>
@@ -502,56 +509,54 @@ export default async function JobDetailsPage({
             {/* SIDEBAR */}
           <aside className="space-y-6 lg:sticky lg:top-8 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full pr-1">
 
-  {/* SAME POSITION JOBS */}
-    {positionJobs.length > 0 && (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">{job.position} Jobs</h2>
-          <Link href={`/jobs?position=${encodeURIComponent(job.position)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
-        </div>
-        <div className="space-y-3">
-          {positionJobs.map((pj: any) => (
-            <Link key={pj.id} href={generateJobUrl(pj)} className="block border rounded-xl p-3 hover:border-gray-300 transition">
-              <h3 className="font-semibold">{pj.position}</h3>
-              <p className="text-gray-500 text-sm mt-0.5">{pj.firm_name} � {pj.city}</p>
-            </Link>
-          ))}
-        </div>
-      </div>
-    )}
-
-  {/* JOBS IN SAME CITY */}
+  {/* 1. JOBS IN SAME CITY */}
     {cityJobs.length > 0 && (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Jobs in {job.city}</h2>
-          <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold">Jobs in {job.city}</h2>
+          <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="text-xs text-blue-600 hover:underline transition">View All</Link>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {cityJobs.map((cj: any) => (
-            <Link key={cj.id} href={generateJobUrl(cj)} className="block border rounded-xl p-3 hover:border-gray-300 transition">
-              <h3 className="font-semibold">{cj.position}</h3>
-              <p className="text-gray-500 text-sm mt-0.5">{cj.firm_name} � {cj.city}</p>
+            <Link key={cj.id} href={generateJobUrl(cj)} className="block border border-gray-100 rounded-lg p-2 hover:border-gray-300 hover:bg-gray-50 transition">
+              <h3 className="font-semibold text-sm">{cj.position}</h3>
+              <p className="text-gray-500 text-xs mt-0.5">{cj.firm_name} � {cj.city}</p>
             </Link>
           ))}
         </div>
       </div>
     )}
 
-  
-
-  {/* RECENT JOBS */}
-    {recentJobs.length > 0 && (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Recent Jobs</h2>
-          <Link href="/jobs" className="text-sm text-gray-500 hover:text-black transition">View All</Link>
+    {/* 2. SAME POSITION JOBS */}
+    {positionJobs.length > 0 && (
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold">{cleanPos} Jobs</h2>
+          <Link href={`/jobs?position=${encodeURIComponent(cleanPos)}`} className="text-xs text-blue-600 hover:underline transition">View All</Link>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
+          {positionJobs.map((pj: any) => (
+            <Link key={pj.id} href={generateJobUrl(pj)} className="block border border-gray-100 rounded-lg p-2 hover:border-gray-300 hover:bg-gray-50 transition">
+              <h3 className="font-semibold text-sm">{pj.position}</h3>
+              <p className="text-gray-500 text-xs mt-0.5">{pj.firm_name} � {pj.city}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* 3. RECENT JOBS */}
+    {recentJobs.length > 0 && (
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-bold">Recent Jobs</h2>
+          <Link href="/jobs" className="text-xs text-blue-600 hover:underline transition">View All</Link>
+        </div>
+        <div className="space-y-2">
           {recentJobs.map((rj: any) => (
-            <Link key={rj.id} href={generateJobUrl(rj)} className="block border rounded-xl p-3 hover:border-gray-300 transition">
-              <h3 className="font-semibold">{rj.position}</h3>
-              <p className="text-gray-500 text-sm mt-0.5">{rj.firm_name} � {rj.city}</p>
+            <Link key={rj.id} href={generateJobUrl(rj)} className="block border border-gray-100 rounded-lg p-2 hover:border-gray-300 hover:bg-gray-50 transition">
+              <h3 className="font-semibold text-sm">{rj.position}</h3>
+              <p className="text-gray-500 text-xs mt-0.5">{rj.firm_name} � {rj.city}</p>
             </Link>
           ))}
         </div>
