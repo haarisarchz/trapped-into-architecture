@@ -151,32 +151,6 @@ useEffect(() => {
 
       <div className="flex items-center">
 
-        {/* BELL ICON */}
-        {currentUser && (
-          <div className="relative flex items-center mr-1 md:mr-2">
-            <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
-              <Bell size={24} />
-              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
-            </button>
-            {showNotif && (
-              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
-                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
-                  ) : (
-                    notifications.map((n: any) => (
-                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
-                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
           {currentUser ? (
           (currentUser.displayName && currentUser.displayName.trim() !== "" && currentUser.profession && currentUser.profession.trim() !== "") ? (
@@ -263,6 +237,32 @@ useEffect(() => {
             </button>
           </div>
         )}
+        {/* BELL ICON */}
+        {currentUser && (
+          <div className="relative flex items-center ml-3 md:ml-4">
+            <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
+              <Bell size={24} />
+              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+            </button>
+            {showNotif && (
+              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
+                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
+                  ) : (
+                    notifications.map((n: any) => (
+                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
+                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
+                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   </div>
@@ -325,32 +325,6 @@ useEffect(() => {
 
           {/* LOGIN REGISTER BUTTON */}
 
-        {/* BELL ICON */}
-        {currentUser && (
-          <div className="relative flex items-center mr-1 md:mr-2">
-            <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
-              <Bell size={24} />
-              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
-            </button>
-            {showNotif && (
-              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
-                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
-                  ) : (
-                    notifications.map((n: any) => (
-                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
-                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
   {currentUser ? (
   <div className="relative">
@@ -421,6 +395,32 @@ useEffect(() => {
     Login / Register
   </button>
 )}
+        {/* BELL ICON */}
+        {currentUser && (
+          <div className="relative flex items-center ml-3 md:ml-4">
+            <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
+              <Bell size={24} />
+              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+            </button>
+            {showNotif && (
+              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
+                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
+                  ) : (
+                    notifications.map((n: any) => (
+                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
+                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
+                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         </div>
 
