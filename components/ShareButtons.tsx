@@ -82,42 +82,28 @@ export default function ShareButtons({
   };
 
     const getShareText = () => {
-    let orgTypeLabel = organizationType 
-      ? organizationType.charAt(0).toUpperCase() + organizationType.slice(1) 
-      : "Firm";
-    
-    let text = `${orgTypeLabel} Name: ${companyName}\n`;
-    
-    // Format Location: Neighborhood, City, State
     const locParts = [];
-    if (area) locParts.push(area);
     if (city) locParts.push(city);
     if (state) locParts.push(state);
-    if (locParts.length > 0) {
-      text += `Location: ${locParts.join(", ")}\n\n`;
-    }
+    const location = locParts.length > 0 ? locParts.join(", ") : "";
     
-    if (activeJobs && activeJobs.length > 1) {
-      text += `Positions:\n`;
-      activeJobs.forEach((job, idx) => {
-        let expText = "";
-        if (job.experience) {
-          const exp = Array.isArray(job.experience) ? job.experience.join(", ") : String(job.experience);
-          if (exp && job.employment_type !== "Internship" && !(job.position && job.position.toLowerCase().includes("intern"))) expText = ` (${exp})`;
-        }
-        text += `${idx + 1}. ${job.position}${expText}\n`;
-      });
-      text += `\n`;
-    } else {
-      let singleExpText = "";
-      if (experience) {
-        const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
-        if (exp && employmentType !== "Internship" && !(position && position.toLowerCase().includes("intern"))) singleExpText = ` (${exp})`;
+    let expText = "";
+    if (experience) {
+      const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
+      if (exp && employmentType !== "Internship" && !(position && position.toLowerCase().includes("intern"))) {
+        expText = ` (${exp})`;
       }
-      text += `Position: ${position}${singleExpText}\n\n`;
     }
     
+    const parts = [
+      companyName ? `*${companyName}*` : null,
+      location || null,
+      `${position}${expText}`
+    ].filter(Boolean);
+    
+    let text = parts.join(", ") + "\n\n";
     text += `For more details, visit:\n${url}`;
+    
     return text;
   };
 

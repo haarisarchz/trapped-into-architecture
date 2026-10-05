@@ -18,13 +18,13 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
     if (jobs.length === 1) {
       const job = jobs[0];
       const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-      const expText = exp && exp.trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
+      const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
       msg += `Position: ${job.position}${expText}\n\n`;
     } else {
       msg += `Positions:\n`;
       jobs.forEach((job, index) => {
         const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-        const expText = exp && exp.trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
+        const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
         msg += `${index + 1}. ${job.position}${expText}\n`;
       });
       msg += `\n`;
@@ -73,13 +73,13 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
   if (jobs.length === 1) {
     const job = jobs[0];
     const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-    const expText = exp && exp.trim() ? ` (${exp})` : '';
+    const expText = exp && String(exp).trim() ? ` (${exp})` : '';
     text += `Position: ${job.position}${expText}\n\n`;
   } else {
     text += `Positions:\n`;
     jobs.forEach((job, index) => {
       const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-      const expText = exp && exp.trim() ? ` (${exp})` : '';
+      const expText = exp && String(exp).trim() ? ` (${exp})` : '';
       text += `${index + 1}. ${job.position}${expText}\n`;
     });
     text += `\n`;
@@ -292,6 +292,7 @@ export async function POST(req: Request) {
         }
       } catch (err: any) {
         errorMsg = err.message;
+        console.error(`Meta API Error for ${platform}:`, err.message);
       }
 
       await supabase.from("social_publishing_logs").update({
