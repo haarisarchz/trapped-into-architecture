@@ -10,8 +10,68 @@ import { Eye, EyeOff, Bell } from "lucide-react";
 export default function Navbar() {
   const router = useRouter();
 
-  const [showProfileMenu, setShowProfileMenu] =
+    const [showProfileMenu, setShowProfileMenu] =
   useState(false);
+
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotif, setShowNotif] = useState(false);
+  const [lastRead, setLastRead] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("notifLastRead");
+    if (stored) setLastRead(new Date(stored));
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.role && currentUser.role.toLowerCase().replace(/[\s_]+/g, "") === "ceo") {
+      const fetchNotifs = async () => {
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        const { data } = await supabase.from('jobs').select('id, firm_name, position, posted_date, status').eq('status', 'published').gte('posted_date', yesterday).order('posted_date', { ascending: false });
+        
+        if (data) {
+          const notifs: any[] = [];
+          data.forEach((job: any) => {
+            notifs.push({
+              id: job.id + '-ig',
+              message: `${job.firm_name} hiring post is successfully posted in Instagram`,
+              time: job.posted_date
+            });
+            notifs.push({
+              id: job.id + '-fb',
+              message: `${job.firm_name} hiring post is successfully posted in Facebook`,
+              time: job.posted_date
+            });
+          });
+          setNotifications(notifs.sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
+        }
+      };
+      fetchNotifs();
+    }
+  }, [currentUser]);
+
+  const handleBellClick = () => {
+    setShowNotif(!showNotif);
+    if (!showNotif) {
+      const now = new Date();
+      setLastRead(now);
+      localStorage.setItem("notifLastRead", now.toISOString());
+    }
+  };
+
+  const hasUnread = notifications.some(n => !lastRead || new Date(n.time) > lastRead);
+
+  const timeAgo = (dateStr: string) => {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs} hour${hrs !== 1 ? 's' : ''} ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days} day${days !== 1 ? 's' : ''} ago`;
+  };
+
 
 const [showUserMenu, setShowUserMenu] =
   useState(false);
@@ -92,8 +152,36 @@ useEffect(() => {
         <span>Menu</span>
       </button>
 
-      <div>
-        {currentUser ? (
+      <div className="flex items-center">
+
+        {/* BELL ICON */}
+        {currentUser && (
+          <div className="relative flex items-center mr-3 md:mr-6">
+            <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
+              <Bell size={24} />
+              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+            </button>
+            {showNotif && (
+              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
+                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
+                  ) : (
+                    notifications.map((n: any) => (
+                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
+                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
+                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+          {currentUser ? (
           (currentUser.displayName && currentUser.displayName.trim() !== "" && currentUser.profession && currentUser.profession.trim() !== "") ? (
             <div className="relative">
               <button 
@@ -240,7 +328,34 @@ useEffect(() => {
 
           {/* LOGIN REGISTER BUTTON */}
 
-{currentUser ? (
+        {/* BELL ICON */}
+        {currentUser && (
+          <div className="relative flex items-center mr-3 md:mr-6">
+            <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
+              <Bell size={24} />
+              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+            </button>
+            {showNotif && (
+              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
+                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
+                  ) : (
+                    notifications.map((n: any) => (
+                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
+                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
+                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+  {currentUser ? (
   <div className="relative">
     <button
       onClick={() => setShowUserMenu(!showUserMenu)}
