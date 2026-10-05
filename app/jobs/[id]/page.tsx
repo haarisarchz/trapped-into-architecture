@@ -106,7 +106,7 @@ export default async function JobDetailsPage({
     );
   }
 
-  let cleanPos = job.position;
+  let cleanPos = job.position || "";
   const pLower = cleanPos.toLowerCase();
   if (pLower.includes("junior architect")) cleanPos = "Junior Architect";
   else if (pLower.includes("senior architect")) cleanPos = "Senior Architect";
@@ -114,15 +114,14 @@ export default async function JobDetailsPage({
   else if (cleanPos.includes("/") || cleanPos.includes("-")) cleanPos = cleanPos.split(/[\/-]/)[0].trim();
 
   // Fetch related jobs securely without arbitrary limits
-  const [
-    { data: cityJobs = [] },
-    { data: positionJobs = [] },
-    { data: recentJobs = [] }
-  ] = await Promise.all([
-    supabase.from("jobs").select("*").eq("status", "published").eq("city", job.city).neq("id", id).order("created_at", { ascending: false }).limit(3),
+  const [cityRes, posRes, recRes] = await Promise.all([
+    supabase.from("jobs").select("*").eq("status", "published").eq("city", job.city || "").neq("id", id).order("created_at", { ascending: false }).limit(3),
     supabase.from("jobs").select("*").eq("status", "published").ilike("position", `%${cleanPos}%`).neq("id", id).order("created_at", { ascending: false }).limit(3),
     supabase.from("jobs").select("*").eq("status", "published").neq("id", id).order("created_at", { ascending: false }).limit(3)
   ]);
+  const cityJobs = cityRes.data || [];
+  const positionJobs = posRes.data || [];
+  const recentJobs = recRes.data || [];
 
   const companySlug = company?.slug || generateCompanySlug(job.firm_name);
   const isExpired = job.post_expiry_date && new Date(job.post_expiry_date) < new Date();
@@ -315,7 +314,7 @@ export default async function JobDetailsPage({
                         <span className="text-gray-800">{job.area}</span>,{" "}
                       </>
                     )}
-                    <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="hover:underline hover:text-gray-800 transition">
+                    <Link href={`/jobs?city=${encodeURIComponent(job.city || "")}`} className="hover:underline hover:text-gray-800 transition">
                       {job.city}
                     </Link>
                     {job.state ? (
@@ -515,7 +514,7 @@ export default async function JobDetailsPage({
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50/50 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-800">Jobs in {job.city}</h2>
-          <Link href={`/jobs?city=${encodeURIComponent(job.city)}`} className="text-xs text-blue-600 hover:underline transition">View All</Link>
+          <Link href={`/jobs?city=${encodeURIComponent(job.city || "")}`} className="text-xs text-blue-600 hover:underline transition">View All</Link>
         </div>
         <div className="flex flex-col">
           {cityJobs.map((cj: any) => (
@@ -533,7 +532,7 @@ export default async function JobDetailsPage({
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50/50 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-800">{cleanPos} Jobs</h2>
-          <Link href={`/jobs?position=${encodeURIComponent(cleanPos)}`} className="text-xs text-blue-600 hover:underline transition">View All</Link>
+          <Link href={`/jobs?position=${encodeURIComponent(cleanPos || "")}`} className="text-xs text-blue-600 hover:underline transition">View All</Link>
         </div>
         <div className="flex flex-col">
           {positionJobs.map((pj: any) => (
