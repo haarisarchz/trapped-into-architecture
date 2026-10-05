@@ -123,12 +123,6 @@ export default async function JobDetailsPage({
     supabase.from("jobs").select("*").eq("status", "published").ilike("position", `%${cleanPos}%`).neq("id", id).order("created_at", { ascending: false }).limit(3),
     supabase.from("jobs").select("*").eq("status", "published").neq("id", id).order("created_at", { ascending: false }).limit(3)
   ]);
-    return (
-      <main className="p-10">
-        <h1 className="text-5xl font-bold">Job Not Found</h1>
-      </main>
-    );
-  }
 
   const companySlug = company?.slug || generateCompanySlug(job.firm_name);
   const isExpired = job.post_expiry_date && new Date(job.post_expiry_date) < new Date();
@@ -579,6 +573,5 @@ export default async function JobDetailsPage({
       <Footer />
     </main>
   );
+
 }
-
-
