@@ -115,9 +115,9 @@ export default async function JobDetailsPage({
 
   // Fetch related jobs securely without arbitrary limits
   const [cityRes, posRes, recRes] = await Promise.all([
-    supabase.from("jobs").select("*").eq("status", "published").eq("city", job.city || "").neq("id", id).order("created_at", { ascending: false }).limit(3),
-    supabase.from("jobs").select("*").eq("status", "published").ilike("position", `%${cleanPos}%`).neq("id", id).order("created_at", { ascending: false }).limit(3),
-    supabase.from("jobs").select("*").eq("status", "published").neq("id", id).order("created_at", { ascending: false }).limit(3)
+    supabase.from("jobs").select("*").eq("status", "published").eq("city", job.city || "").neq("id", id).order("posted_date", { ascending: false }).limit(3),
+    supabase.from("jobs").select("*").eq("status", "published").ilike("position", `%${cleanPos}%`).neq("id", id).order("posted_date", { ascending: false }).limit(3),
+    supabase.from("jobs").select("*").eq("status", "published").neq("id", id).order("posted_date", { ascending: false }).limit(3)
   ]);
   const cityJobs = cityRes.data || [];
   const positionJobs = posRes.data || [];
