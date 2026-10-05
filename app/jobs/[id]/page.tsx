@@ -98,14 +98,31 @@ export default async function JobDetailsPage({
     .eq("firm_name", job?.firm_name || "")
     .maybeSingle();
 
-  const { data: jobs = [] } = await supabase
-    .from("jobs")
-    .select("*")
-    .eq("status", "published")
-    .neq("id", id)
-    .limit(20);
-
   if (!job || error) {
+    return (
+      <main className="p-10">
+        <h1 className="text-5xl font-bold">Job Not Found</h1>
+      </main>
+    );
+  }
+
+  let cleanPos = job.position;
+  const pLower = cleanPos.toLowerCase();
+  if (pLower.includes("junior architect")) cleanPos = "Junior Architect";
+  else if (pLower.includes("senior architect")) cleanPos = "Senior Architect";
+  else if (pLower.includes("architect")) cleanPos = "Architect";
+  else if (cleanPos.includes("/") || cleanPos.includes("-")) cleanPos = cleanPos.split(/[\/-]/)[0].trim();
+
+  // Fetch related jobs securely without arbitrary limits
+  const [
+    { data: cityJobs = [] },
+    { data: positionJobs = [] },
+    { data: recentJobs = [] }
+  ] = await Promise.all([
+    supabase.from("jobs").select("*").eq("status", "published").eq("city", job.city).neq("id", id).order("created_at", { ascending: false }).limit(3),
+    supabase.from("jobs").select("*").eq("status", "published").ilike("position", `%${cleanPos}%`).neq("id", id).order("created_at", { ascending: false }).limit(3),
+    supabase.from("jobs").select("*").eq("status", "published").neq("id", id).order("created_at", { ascending: false }).limit(3)
+  ]);
     return (
       <main className="p-10">
         <h1 className="text-5xl font-bold">Job Not Found</h1>
@@ -181,18 +198,8 @@ export default async function JobDetailsPage({
     const autoExpiryDate = new Date(new Date(job.posted_date || job.created_at).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const showExpiry = job.post_expiry_date && job.post_expiry_date !== autoExpiryDate;
 
-  let cleanPos = job.position;
-  const pLower = cleanPos.toLowerCase();
-  if (pLower.includes("junior architect")) cleanPos = "Junior Architect";
-  else if (pLower.includes("senior architect")) cleanPos = "Senior Architect";
-  else if (pLower.includes("architect")) cleanPos = "Architect";
-  else if (cleanPos.includes("/") || cleanPos.includes("-")) cleanPos = cleanPos.split(/[\/-]/)[0].trim();
 
-  const cityJobs = jobs.filter((j: any) => j.city === job.city && j.id !== job.id).slice(0, 3);
-  const positionJobs = jobs.filter((j: any) => j.position.toLowerCase().includes(cleanPos.toLowerCase()) && j.id !== job.id).slice(0, 3);
-  const recentJobs = [...jobs].filter((j: any) => j.id !== job.id).sort((a,b) => new Date(b.created_at || b.posted_date).getTime() - new Date(a.created_at || a.posted_date).getTime()).slice(0, 3);
-  const popularJobs = [...jobs].sort((a,b) => (b.save_count || 0) - (a.save_count || 0)).slice(0, 3);
-
+  
   return (
     <main className="min-h-screen bg-gray-50 text-black">
         <script
