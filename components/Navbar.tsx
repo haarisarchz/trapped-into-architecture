@@ -35,18 +35,6 @@ const [showUserMenu, setShowUserMenu] =
 
   const [authTab, setAuthTab] =
     useState<"login" | "register" | "success">("login");
-useEffect(() => {
-    supabase.from("site_settings").select("logo_url").eq("id", "global").maybeSingle().then(({data}) => {
-      if(data) setSettings(data);
-    });
-  }, []);
-
-  useEffect(() => {
-  const handleOpenAuth = (e) => {
-    setAuthTab(e.detail);
-    setShowAuthPopup(true);
-  };
-  window.addEventListener('openAuth', handleOpenAuth);
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotif, setShowNotif] = useState(false);
@@ -107,6 +95,18 @@ useEffect(() => {
     return `${days} day${days !== 1 ? 's' : ''} ago`;
   };
 
+useEffect(() => {
+    supabase.from("site_settings").select("logo_url").eq("id", "global").maybeSingle().then(({data}) => {
+      if(data) setSettings(data);
+    });
+  }, []);
+
+  useEffect(() => {
+  const handleOpenAuth = (e) => {
+    setAuthTab(e.detail);
+    setShowAuthPopup(true);
+  };
+  window.addEventListener('openAuth', handleOpenAuth);
   return () => window.removeEventListener('openAuth', handleOpenAuth);
 }, []);
 
