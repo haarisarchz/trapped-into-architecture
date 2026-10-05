@@ -59,11 +59,7 @@ const [showUserMenu, setShowUserMenu] =
               message: `${job.firm_name} hiring post is successfully posted in Instagram`,
               time: job.posted_date
             });
-            notifs.push({
-              id: job.id + '-fb',
-              message: `${job.firm_name} hiring post is successfully posted in Facebook`,
-              time: job.posted_date
-            });
+            
           });
           setNotifications(notifs.sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
         }
@@ -157,7 +153,7 @@ useEffect(() => {
 
         {/* BELL ICON */}
         {currentUser && (
-          <div className="relative flex items-center mr-3 md:mr-6">
+          <div className="relative flex items-center mr-1 md:mr-2">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
               {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
@@ -331,7 +327,7 @@ useEffect(() => {
 
         {/* BELL ICON */}
         {currentUser && (
-          <div className="relative flex items-center mr-3 md:mr-6">
+          <div className="relative flex items-center mr-1 md:mr-2">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
               {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
