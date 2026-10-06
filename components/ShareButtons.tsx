@@ -96,15 +96,13 @@ export default function ShareButtons({
     }
     
     const parts = [
-      companyName ? `*${companyName}*` : null,
+      companyName || null,
       location || null,
       `${position}${expText}`
     ].filter(Boolean);
     
-    let text = parts.join(", ") + "\n\n";
-    text += `For more details, visit:\n${url}`;
-    
-    return text;
+    // Strict formatting: [Firm Name], [Location], [Position] ([Experience]), For more details, visit: [URL]
+    return `${parts.join(", ")}, For more details, visit: ${url}`;
   };
 
   const copyLink = async (e: React.MouseEvent) => {
