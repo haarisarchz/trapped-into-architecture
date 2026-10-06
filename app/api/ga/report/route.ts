@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     const overviewReq = analyticsDataClient.runReport({
       property,
       dateRanges,
-      metrics: [{ name: "activeUsers" }, { name: "sessions" }, { name: "screenPageViews" }, { name: "averageSessionDuration" }],
+      metrics: [{ name: "activeUsers" }, { name: "sessions" }, { name: "screenPageViews" }, { name: "averageSessionDuration" }, { name: "bounceRate" }],
     });
 
     // 2. By Country

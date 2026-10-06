@@ -21,7 +21,7 @@ export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [days, setDays] = useState("30");
+  const [days, setDays] = useState("1");
   const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("all");
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function AnalyticsPage() {
           <div className="space-y-6">
             
             {/* OVERVIEW METRICS */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 lg:gap-6">
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>

@@ -469,7 +469,7 @@ export default async function JobDetailsPage({
                       ) : (
                         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                           {job.apply_link && (
-                            <a href={job.apply_link} target="_blank" rel="noopener noreferrer" className="bg-black text-white px-8 py-3 rounded-xl text-base font-bold hover:bg-gray-800 transition w-full sm:w-auto text-center shadow-md">
+                            <a href={job.apply_link} target="_blank" rel="noopener noreferrer" onClick={() => { if (typeof window !== 'undefined' && (window as any).gtag) { (window as any).gtag('event', 'apply_click', { job_id: job.id, firm_name: job.firm_name }); } }} className="bg-black text-white px-8 py-3 rounded-xl text-base font-bold hover:bg-gray-800 transition w-full sm:w-auto text-center shadow-md">
                               Apply Now ↗
                             </a>
                           )}
