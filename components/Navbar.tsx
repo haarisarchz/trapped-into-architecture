@@ -61,15 +61,21 @@ const [showUserMenu, setShowUserMenu] =
           .order('posted_date', { ascending: false });
           
         if (data) {
-          data.forEach((job: any) => {
-            notifs.push({
-              id: job.id + '-ig',
-              message: `${job.firm_name} hiring post is successfully posted in Instagram`,
-              time: job.posted_date,
-              link: null
+            const groupedJobs: Record<string, any> = {};
+            data.forEach((job: any) => {
+              if (!groupedJobs[job.firm_name]) {
+                groupedJobs[job.firm_name] = job;
+              }
             });
-          });
-        }
+            Object.values(groupedJobs).forEach((job: any) => {
+              notifs.push({
+                id: job.id + '-pub',
+                message: `${job.firm_name} hiring post is successfully published on the website`,
+                time: job.posted_date,
+                link: null
+              });
+            });
+          }
       }
       
       // 2. Admin/Superadmin/CEO missing logo notifs
