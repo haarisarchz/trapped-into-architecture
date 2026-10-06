@@ -41,6 +41,20 @@ const [showUserMenu, setShowUserMenu] =
   const [lastRead, setLastRead] = useState<Date | null>(null);
 
   useEffect(() => {
+    const handleClickOutside = (event: any) => {
+      if (!(event.target).closest('.notif-container')) {
+        setShowNotif(false);
+      }
+    };
+    if (showNotif) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showNotif]);
+
+  useEffect(() => {
     const stored = localStorage.getItem("notifLastRead");
     if (stored) setLastRead(new Date(stored));
   }, []);
@@ -284,7 +298,7 @@ useEffect(() => {
         )}
         {/* BELL ICON */}
         {currentUser && (
-          <div className="relative flex items-center ml-3 md:ml-4">
+          <div className="relative flex items-center ml-3 md:ml-4 notif-container">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
               {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
@@ -451,7 +465,7 @@ useEffect(() => {
 )}
         {/* BELL ICON */}
         {currentUser && (
-          <div className="relative flex items-center ml-3 md:ml-4">
+          <div className="relative flex items-center ml-3 md:ml-4 notif-container">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
               {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
