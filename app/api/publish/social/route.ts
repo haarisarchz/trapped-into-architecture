@@ -26,8 +26,9 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
       positionStr = posArray.join(", ");
     }
     
-    // Strict formatting: [Firm Name], [Location], [Position] ([Experience]), For more details, visit: [URL]
-    return `${firmName}, ${location}, ${positionStr}, For more details, visit: ${jobUrl}`;
+    // Strict formatting on different lines
+    const mainBody = [firmName, location, positionStr].filter(Boolean).join("\n");
+    return `${mainBody}\n\nFor more details, visit:\n${jobUrl}`;
   }
   
   // Try to get the social handle for the specific platform
