@@ -81,17 +81,20 @@ const [showUserMenu, setShowUserMenu] =
         }
         
         if (userId) {
-          const { data: noLogoComps } = await supabase.from("companies")
-            .select("id, firm_name, created_at, logo_url")
-            .eq("created_by", userId);
+          // If CEO or superadmin, fetch all missing logos. If admin, fetch only theirs.
+          let query = supabase.from("companies").select("id, firm_name, created_at, logo_url");
+          if (role !== "ceo" && role !== "superadmin") {
+            query = query.eq("created_by", userId);
+          }
+          const { data: noLogoComps } = await query;
             
           if (noLogoComps) {
             const missingLogos = noLogoComps.filter((c: any) => !c.logo_url || c.logo_url.trim() === "");
             missingLogos.forEach((comp: any) => {
               notifs.push({
                 id: comp.id + '-logo',
-                message: `The recent company that you added (${comp.firm_name}) doesn't have a logo. Add a logo.`,
-                time: comp.created_at || new Date().toISOString(),
+                message: `The company ${comp.firm_name} is missing a logo. Click here to add one.`,
+                time: (function(){ const d = new Date(); d.setHours(0,0,0,0); return d.toISOString(); })(),
                 link: `/admin/companies/edit/${comp.id}`
               });
             });
