@@ -145,11 +145,17 @@ export default function AnalyticsPage() {
                     const maxViews = Math.max(...filteredPages.map((p: any) => Number(p.views) || 0));
                     
                     return filteredPages.map((item: any, i: number) => (
-                      <div key={i} className="text-sm">
+                      <div key={i} className="text-sm group">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="font-medium truncate max-w-[70%]" title={item.title && item.title !== "(not set)" ? item.title : item.path}>
+                          <a 
+                            href={item.path} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="font-medium truncate max-w-[70%] hover:text-blue-600 hover:underline transition cursor-pointer" 
+                            title={item.title && item.title !== "(not set)" ? item.title : item.path}
+                          >
                             {item.title && item.title !== "(not set)" ? item.title.replace(" | Trapped Into Architecture", "") : item.path}
-                          </span>
+                          </a>
                           <span className="font-semibold text-gray-700">{item.views}</span>
                         </div>
                         <ProgressBar value={Number(item.views) || 0} max={maxViews || 1} />
