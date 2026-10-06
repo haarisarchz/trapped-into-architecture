@@ -137,11 +137,13 @@ export default function ShareButtons({
   
   const shareLinks = [
     { name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` },
-      { name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` },
-    { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` },
+    { name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` },
+    { name: "Instagram", href: `https://www.instagram.com/` },
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+    { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(position + ' at ' + companyName + '\n')}` },
-    { name: "Email", href: `mailto:?subject=${encodeURIComponent(`${position} — ${companyName}`)}&body=${shareText}` },
+    { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` },
+    { name: "Email", href: `mailto:?subject=${encodeURIComponent(position + ' - ' + companyName)}&body=${shareText}` },
   ];
 
   if (variant === "statistic") {
