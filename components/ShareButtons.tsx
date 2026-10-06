@@ -85,24 +85,41 @@ export default function ShareButtons({
     const locParts = [];
     if (city) locParts.push(city);
     if (state) locParts.push(state);
-    const location = locParts.length > 0 ? locParts.join(", ") : "";
+    const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
     
-    let expText = "";
-    if (experience) {
-      const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
-      if (exp && employmentType !== "Internship" && !(position && position.toLowerCase().includes("intern"))) {
-        expText = ` (${exp})`;
+    let orgTypeLabel = organizationType 
+      ? organizationType.charAt(0).toUpperCase() + organizationType.slice(1) 
+      : "Firm";
+      
+    let text = `${orgTypeLabel} Name: ${companyName || "Unknown"}\n`;
+    text += `Location: ${location}\n`;
+    
+    // Use activeJobs to list all positions if there are multiple
+    if (activeJobs && activeJobs.length > 1) {
+      text += `Positions:\n`;
+      activeJobs.forEach((job, index) => {
+        let expText = "";
+        if (job.experience) {
+          const exp = Array.isArray(job.experience) ? job.experience.join(", ") : String(job.experience);
+          if (exp && employmentType !== "Internship" && !(job.position && job.position.toLowerCase().includes("intern"))) {
+            expText = ` (${exp})`;
+          }
+        }
+        text += `${index + 1}. ${job.position}${expText}\n`;
+      });
+    } else {
+      let expText = "";
+      if (experience) {
+        const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
+        if (exp && employmentType !== "Internship" && !(position && position.toLowerCase().includes("intern"))) {
+          expText = ` (${exp})`;
+        }
       }
+      text += `Position: ${position}${expText}\n`;
     }
     
-    const parts = [
-      companyName || null,
-      location || null,
-      `${position}${expText}`
-    ].filter(Boolean);
-    
-    // Strict formatting on different lines
-    return `${parts.join("\n")}\n\nFor more details, visit:\n${url}`;
+    text += `\nFor more details, visit:\n${url}`;
+    return text;
   };
 
   const copyLink = async (e: React.MouseEvent) => {

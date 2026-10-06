@@ -8,27 +8,29 @@ const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "x", "linked
 function generatePostText(jobs: any[], platform: string, jobUrl: string, company: any) {
   const firmName = jobs[0].firm_name || "Unknown Firm";
   if (platform === "whatsapp" || platform === "telegram") {
+    let orgTypeLabel = company?.organization_type 
+      ? company.organization_type.charAt(0).toUpperCase() + company.organization_type.slice(1) 
+      : (jobs[0].organization_type || "Firm");
+      
+    let msg = `${orgTypeLabel} Name: ${firmName}\n`;
     const locParts = [jobs[0].area || jobs[0].neighborhood, jobs[0].city, jobs[0].state].filter(Boolean);
-    const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
+    msg += `Location: ${locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified"}\n`;
     
-    let positionStr = "";
     if (jobs.length === 1) {
       const job = jobs[0];
       const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
       const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
-      positionStr = `${job.position}${expText}`;
+      msg += `Position: ${job.position}${expText}\n`;
     } else {
-      const posArray = jobs.map((job) => {
+      msg += `Positions:\n`;
+      jobs.forEach((job, index) => {
         const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
         const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
-        return `${job.position}${expText}`;
+        msg += `${index + 1}. ${job.position}${expText}\n`;
       });
-      positionStr = posArray.join(", ");
     }
-    
-    // Strict formatting on different lines
-    const mainBody = [firmName, location, positionStr].filter(Boolean).join("\n");
-    return `${mainBody}\n\nFor more details, visit:\n${jobUrl}`;
+    msg += `\nFor more details, visit:\n${jobUrl}`;
+    return msg;
   }
   
   // Try to get the social handle for the specific platform
