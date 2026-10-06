@@ -22,7 +22,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [days, setDays] = useState("30");
-  const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("main");
+  const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("all");
 
   useEffect(() => {
     async function fetchData() {
@@ -124,10 +124,10 @@ export default function AnalyticsPage() {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                   <h3 className="text-lg font-bold">Top Pages</h3>
                   <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0 overflow-x-auto no-scrollbar">
-                    <button onClick={() => setPageTab("main")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "main" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Main</button>
-                    <button onClick={() => setPageTab("jobs")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "jobs" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Jobs</button>
-                    <button onClick={() => setPageTab("companies")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "companies" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Companies</button>
                     <button onClick={() => setPageTab("all")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "all" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>All</button>
+                    <button onClick={() => setPageTab("main")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "main" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Pages</button>
+                    <button onClick={() => setPageTab("jobs")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "jobs" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Posts</button>
+                    <button onClick={() => setPageTab("companies")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "companies" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Companies</button>
                   </div>
                 </div>
                 <div className="space-y-4 overflow-y-auto pr-2 flex-1">
