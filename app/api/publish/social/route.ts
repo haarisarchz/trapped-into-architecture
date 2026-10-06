@@ -237,19 +237,50 @@ export async function POST(req: Request) {
             if (!igAccountId || !token) throw new Error("Missing Instagram credentials.");
             if (!triggerJob.image) throw new Error("Instagram requires an image URL.");
             
+            let igCaption = postText;
+            if (companyData && companyData.instagram) {
+              let igHandle = companyData.instagram.trim().split("?")[0].replace(/^@/, '');
+              if (igHandle.includes("/")) {
+                const parts = igHandle.split("/").filter(Boolean);
+                igHandle = parts[parts.length - 1];
+              }
+              if (igHandle) {
+                igCaption += `\n\nDesign Firm: @${igHandle}`;
+              }
+            }
+
             const createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ image_url: triggerJob.image, caption: postText, access_token: token })
+              body: JSON.stringify({ image_url: triggerJob.image, caption: igCaption, access_token: token })
             });
             if (!createContainer.ok) throw new Error(await createContainer.text());
             const { id: containerId } = await createContainer.json();
             
-            const publishMedia = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media_publish`, {
+            // Wait 8 seconds before publishing to prevent Meta's "Media ID is not available" (9007) error for large images
+            await new Promise(r => setTimeout(r, 8000));
+            
+            let publishMedia = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media_publish`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ creation_id: containerId, access_token: token })
             });
+            
+            // If it still fails with 9007, try one more time after 5 seconds
+            if (!publishMedia.ok) {
+              const errText = await publishMedia.text();
+              if (errText.includes("9007")) {
+                await new Promise(r => setTimeout(r, 5000));
+                publishMedia = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media_publish`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ creation_id: containerId, access_token: token })
+                });
+                if (!publishMedia.ok) throw new Error(await publishMedia.text());
+              } else {
+                throw new Error(errText);
+              }
+            }
             if (!publishMedia.ok) throw new Error(await publishMedia.text());
             success = true;
             break;
