@@ -57,50 +57,61 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
       if (success) break;
       const ai = new GoogleGenAI({ apiKey });
 
-      try {
-        if (mode === "text") {
-          const text = formData.get("text") as string;
-          if (!text) throw new Error("No text provided");
-          const fullPrompt = prompt + "\n\nText to extract:\n" + text;
-          result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
-        } else if (mode === "url") {
-          const url = formData.get("url") as string;
-          const res = await fetch(url);
-          const html = await res.text();
-          const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
-                               .replace(/<style[\s\S]*?<\/style>/gmi, '')
-                               .replace(/<[^>]+>/g, ' ');
-          const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
-          result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
-        } else if (mode === "image") {
-          const imageFile = formData.get("image") as File;
-          const arrayBuffer = await imageFile.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          result = await ai.models.generateContent({
-            model: "gemini-flash-latest",
-            contents: [
-              prompt,
-              { inlineData: { data: buffer.toString("base64"), mimeType: imageFile.type } }
-            ]
-          });
-        } else {
-          throw new Error("Invalid mode");
-        }
-        
-        success = true;
-      } catch (err: any) {
-        lastError = err;
-        const isQuota = err.status === 429 || err.status === 403 || (err.message && (err.message.toLowerCase().includes('quota') || err.message.toLowerCase().includes('429')));
-        const is503 = err.status === 503 || (err.message && (err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('busy')));
-        
-        if (isQuota) {
-          console.log("Quota exceeded for key, instantly switching to next key...");
-          continue; // Instantly skip to the next API key
-        } else if (is503) {
-          // If Google is globally overloaded, switching keys will not help and will just hit Vercel's 10s timeout.
-          throw new Error("Google AI servers are currently extremely busy. Please try again in 1 minute.");
-        } else {
-          throw err; // normal error, abort instantly
+      let max503Retries = 3; // Try up to 4 times (0, 1, 2, 3) on the same key if Google is busy
+
+      for (let attempt = 0; attempt <= max503Retries; attempt++) {
+        try {
+          if (mode === "text") {
+            const text = formData.get("text") as string;
+            if (!text) throw new Error("No text provided");
+            const fullPrompt = prompt + "\n\nText to extract:\n" + text;
+            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+          } else if (mode === "url") {
+            const url = formData.get("url") as string;
+            const res = await fetch(url);
+            const html = await res.text();
+            const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
+                                 .replace(/<style[\s\S]*?<\/style>/gmi, '')
+                                 .replace(/<[^>]+>/g, ' ');
+            const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
+            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+          } else if (mode === "image") {
+            const imageFile = formData.get("image") as File;
+            const arrayBuffer = await imageFile.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            result = await ai.models.generateContent({
+              model: "gemini-flash-latest",
+              contents: [
+                prompt,
+                { inlineData: { data: buffer.toString("base64"), mimeType: imageFile.type } }
+              ]
+            });
+          } else {
+            throw new Error("Invalid mode");
+          }
+          
+          success = true;
+          break; // Break the internal 503 retry loop because we succeeded!
+        } catch (err: any) {
+          lastError = err;
+          const isQuota = err.status === 429 || err.status === 403 || (err.message && (err.message.toLowerCase().includes('quota') || err.message.toLowerCase().includes('429')));
+          const is503 = err.status === 503 || (err.message && (err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('busy')));
+          
+          if (isQuota) {
+            console.log("Quota exceeded for key, instantly switching to next key...");
+            break; // Break the internal retry loop and move to the NEXT API key
+          } else if (is503) {
+            if (attempt < max503Retries) {
+              console.log(`Google AI is busy (503). Waiting 2 seconds before retry ${attempt + 1}...`);
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              continue; // Retry the same key
+            } else {
+              // We've waited 6+ seconds and it's still busy. Abort completely.
+              throw new Error("Google AI servers are currently extremely busy. Please try again in 1 minute.");
+            }
+          } else {
+            throw err; // normal error, abort instantly
+          }
         }
       }
     }
