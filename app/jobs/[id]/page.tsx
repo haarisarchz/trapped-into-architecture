@@ -259,11 +259,11 @@ export default async function JobDetailsPage({
           <div className="space-y-6">
 
             {/* HERO CARD */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
               <div className="flex flex-col md:flex-row">
 
                 {/* LEFT COLUMN: IMAGE + SOCIAL ACTIONS */}
-                <div className="md:w-[45%] bg-gray-50 flex flex-col border-b md:border-b-0 md:border-r border-gray-100">
+                <div className="md:w-[45%] bg-gray-50 flex flex-col border-b md:border-b-0 md:border-r border-gray-100 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none">
                   {job.image ? (
                     <div className="flex-1 flex items-start justify-center p-6 sm:p-8">
                       <img

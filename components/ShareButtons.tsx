@@ -153,8 +153,7 @@ export default function ShareButtons({
   const encodedUrl = encodeURIComponent(url);
   
   const shareLinks = [
-    { name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` },
-    { name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` },
+    { name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` },
     { name: "Instagram", href: `https://www.instagram.com/` },
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },

@@ -117,9 +117,9 @@ export default function JobCard({
     return (
       <div 
         onClick={() => router.push(generateJobUrl({ id, firm_name, position }))}
-        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 border border-gray-200 cursor-pointer group"
+        className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition duration-300 border border-gray-200 cursor-pointer group"
       >
-        <div className="overflow-hidden">
+        <div className="overflow-hidden rounded-t-2xl">
           {image ? (
             <img src={image} alt={position} className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition duration-500" />
           ) : (
@@ -183,7 +183,7 @@ export default function JobCard({
       return (
         <div 
           onClick={() => router.push(generateJobUrl({ id, firm_name, position }))}
-          className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition border border-gray-200 flex flex-col md:flex-row h-auto md:h-[240px] cursor-pointer group"
+          className="bg-white rounded-2xl shadow-md hover:shadow-xl transition border border-gray-200 flex flex-col md:flex-row h-auto md:h-[240px] cursor-pointer group"
         >
           <img src={image || "/placeholder-job.jpg"} alt={position} className="w-full md:w-56 h-48 md:h-full object-cover" />
   
