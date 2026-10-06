@@ -132,22 +132,7 @@ export default function ShareButtons({
     setIsOpen(false);
   };
 
-  const nativeShare = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${position} - ${companyName}`,
-          text: getShareText(),
-        });
-        trackShare();
-      } catch (err) {
-        console.error("Native share failed", err);
-      }
-    }
-    setIsOpen(false);
-  };
+  
 
   const shareText = encodeURIComponent(getShareText());
   const encodedUrl = encodeURIComponent(url);
@@ -158,8 +143,7 @@ export default function ShareButtons({
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(position + ' at ' + companyName + '\n')}` },
-    { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` },
-    { name: "Email", href: `mailto:?subject=${encodeURIComponent(position + ' - ' + companyName)}&body=${shareText}` },
+    { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` }
   ];
 
   if (variant === "statistic") {
@@ -205,7 +189,7 @@ export default function ShareButtons({
         <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg z-50 p-2 text-left">
           <button
             onClick={copyLink}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium"
+            className="w-full flex items-center gap-3 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium"
           >
             {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
             {copied ? "Copied!" : "Copy Link"}
@@ -227,23 +211,13 @@ export default function ShareButtons({
                 trackShare();
                 setIsOpen(false);
               }}
-              className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
+              className="flex items-center gap-3 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
             >
               <span className="font-semibold">{link.name}</span>
             </a>
           ))}
           
-          {typeof navigator !== "undefined" && navigator.share && (
-            <>
-              <div className="h-px bg-gray-100 my-1 mx-2" />
-              <button
-                onClick={nativeShare}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium"
-              >
-                Native Share
-              </button>
-            </>
-          )}
+          
         </div>
       )}
     </div>
