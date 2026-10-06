@@ -46,26 +46,63 @@ const [showUserMenu, setShowUserMenu] =
   }, []);
 
   useEffect(() => {
-    if (currentUser?.role && currentUser.role.toLowerCase().replace(/[\s_]+/g, "") === "ceo") {
-      const fetchNotifs = async () => {
+    const fetchNotifs = async () => {
+      if (!currentUser?.role) return;
+      const role = currentUser.role.toLowerCase().replace(/[\s_]+/g, "");
+      const notifs: any[] = [];
+      
+      // 1. CEO Instagram Notifs
+      if (role === "ceo") {
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data } = await supabase.from('jobs').select('id, firm_name, position, posted_date, status').eq('status', 'published').gte('posted_date', yesterday).order('posted_date', { ascending: false });
-        
+        const { data } = await supabase.from('jobs')
+          .select('id, firm_name, position, posted_date, status')
+          .eq('status', 'published')
+          .gte('posted_date', yesterday)
+          .order('posted_date', { ascending: false });
+          
         if (data) {
-          const notifs: any[] = [];
           data.forEach((job: any) => {
             notifs.push({
               id: job.id + '-ig',
               message: `${job.firm_name} hiring post is successfully posted in Instagram`,
-              time: job.posted_date
+              time: job.posted_date,
+              link: null
             });
-            
           });
-          setNotifications(notifs.sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
         }
-      };
-      fetchNotifs();
-    }
+      }
+      
+      // 2. Admin/Superadmin/CEO missing logo notifs
+      if (["superadmin", "admin", "ceo"].includes(role)) {
+        let userId = currentUser.id;
+        if (!userId && currentUser.username) {
+          const { data: pData } = await supabase.from("profiles").select("id").eq("username", currentUser.username).maybeSingle();
+          if (pData) userId = pData.id;
+        }
+        
+        if (userId) {
+          const { data: noLogoComps } = await supabase.from("companies")
+            .select("id, firm_name, created_at, logo_url")
+            .eq("created_by", userId);
+            
+          if (noLogoComps) {
+            const missingLogos = noLogoComps.filter((c: any) => !c.logo_url || c.logo_url.trim() === "");
+            missingLogos.forEach((comp: any) => {
+              notifs.push({
+                id: comp.id + '-logo',
+                message: `The recent company that you added (${comp.firm_name}) doesn't have a logo. Add a logo.`,
+                time: comp.created_at || new Date().toISOString(),
+                link: `/admin/companies/edit/${comp.id}`
+              });
+            });
+          }
+        }
+      }
+      
+      setNotifications(notifs.sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
+    };
+    
+    fetchNotifs();
   }, [currentUser]);
 
   const handleBellClick = () => {
@@ -252,7 +289,16 @@ useEffect(() => {
                     <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
                   ) : (
                     notifications.map((n: any) => (
-                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
+                      <div 
+                        key={n.id} 
+                        className={`p-4 border-b border-gray-50 flex flex-col gap-1 transition text-left ${n.link ? 'cursor-pointer hover:bg-gray-100' : 'hover:bg-gray-50'}`}
+                        onClick={() => {
+                          if (n.link) {
+                            router.push(n.link);
+                            setShowNotif(false);
+                          }
+                        }}
+                      >
                         <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
                         <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
                       </div>
@@ -410,7 +456,16 @@ useEffect(() => {
                     <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
                   ) : (
                     notifications.map((n: any) => (
-                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-gray-50 flex flex-col gap-1 transition text-left">
+                      <div 
+                        key={n.id} 
+                        className={`p-4 border-b border-gray-50 flex flex-col gap-1 transition text-left ${n.link ? 'cursor-pointer hover:bg-gray-100' : 'hover:bg-gray-50'}`}
+                        onClick={() => {
+                          if (n.link) {
+                            router.push(n.link);
+                            setShowNotif(false);
+                          }
+                        }}
+                      >
                         <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
                         <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
                       </div>
