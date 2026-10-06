@@ -134,7 +134,13 @@ export default function AnalyticsPage() {
                   {(() => {
                     const filteredPages = data.pages.filter((p: any) => {
                       const pathClean = (p.path || "").split("?")[0];
-                      if (pageTab === "main") return ["/", "/jobs", "/internships", "/companies", "/contact", "/about", "/admin"].includes(pathClean);
+                      
+                      // Filter out admin, profile, and backend pages from ALL views
+                      if (pathClean.startsWith("/profile") || pathClean.startsWith("/admin") || pathClean.startsWith("/api")) {
+                        return false;
+                      }
+                      
+                      if (pageTab === "main") return ["/", "/jobs", "/internships", "/companies", "/contact", "/about"].includes(pathClean);
                       if (pageTab === "jobs") return pathClean.startsWith("/jobs/") && pathClean !== "/jobs";
                       if (pageTab === "companies") return pathClean.startsWith("/companies/") && pathClean !== "/companies";
                       return true;
@@ -147,15 +153,27 @@ export default function AnalyticsPage() {
                     return filteredPages.map((item: any, i: number) => (
                       <div key={i} className="text-sm group">
                         <div className="flex justify-between items-center mb-1">
-                          <a 
-                            href={item.path} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="font-medium truncate max-w-[70%] hover:text-blue-600 hover:underline transition cursor-pointer" 
-                            title={item.title && item.title !== "(not set)" ? item.title : item.path}
-                          >
-                            {item.title && item.title !== "(not set)" ? item.title.replace(" | Trapped Into Architecture", "") : item.path}
-                          </a>
+                          {(() => {
+                            let displayTitle = item.title && item.title !== "(not set)" ? item.title.replace(" | Trapped Into Architecture", "") : item.path;
+                            const p = (item.path || "").split("?")[0];
+                            if (p === "/") displayTitle = "Home Page";
+                            if (p === "/jobs") displayTitle = "Jobs Page";
+                            if (p === "/companies") displayTitle = "Companies Page";
+                            if (p === "/internships") displayTitle = "Internships Page";
+                            if (p === "/contact") displayTitle = "Contact Page";
+                            
+                            return (
+                              <a 
+                                href={item.path} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="font-medium truncate max-w-[70%] hover:text-blue-600 hover:underline transition cursor-pointer" 
+                                title={displayTitle}
+                              >
+                                {displayTitle}
+                              </a>
+                            );
+                          })()}
                           <span className="font-semibold text-gray-700">{item.views}</span>
                         </div>
                         <ProgressBar value={Number(item.views) || 0} max={maxViews || 1} />
