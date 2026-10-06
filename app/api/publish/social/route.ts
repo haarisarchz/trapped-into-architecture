@@ -237,42 +237,11 @@ export async function POST(req: Request) {
             if (!igAccountId || !token) throw new Error("Missing Instagram credentials.");
             if (!triggerJob.image) throw new Error("Instagram requires an image URL.");
             
-            const payload: any = {
-              image_url: triggerJob.image,
-              caption: postText,
-              access_token: token
-            };
-
-            // Extract instagram username to tag in the image
-            let igHandle = "";
-            if (companyData && companyData.instagram) {
-              igHandle = companyData.instagram.trim().split("?")[0].replace(/^@/, '');
-              if (igHandle.includes("/")) {
-                const parts = igHandle.split("/").filter(Boolean);
-                igHandle = parts[parts.length - 1];
-              }
-            }
-
-            if (igHandle) {
-              payload.user_tags = JSON.stringify([{ username: igHandle, x: 0.5, y: 0.5 }]);
-            }
-
-            let createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
+            const createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+              body: JSON.stringify({ image_url: triggerJob.image, caption: postText, access_token: token })
             });
-
-            // If tagging the user fails (e.g. invalid username or private account), retry without the tag
-            if (!createContainer.ok && igHandle) {
-              delete payload.user_tags;
-              createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-              });
-            }
-
             if (!createContainer.ok) throw new Error(await createContainer.text());
             const { id: containerId } = await createContainer.json();
             
