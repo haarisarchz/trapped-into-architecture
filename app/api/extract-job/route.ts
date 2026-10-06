@@ -57,56 +57,50 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
       if (success) break;
       const ai = new GoogleGenAI({ apiKey });
 
-      let maxRetries = 1;
-      for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        try {
-          if (mode === "text") {
-            const text = formData.get("text") as string;
-            if (!text) throw new Error("No text provided");
-            const fullPrompt = prompt + "\n\nText to extract:\n" + text;
-            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
-          } else if (mode === "url") {
-            const url = formData.get("url") as string;
-            const res = await fetch(url);
-            const html = await res.text();
-            const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
-                                 .replace(/<style[\s\S]*?<\/style>/gmi, '')
-                                 .replace(/<[^>]+>/g, ' ');
-            const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
-            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
-          } else if (mode === "image") {
-            const imageFile = formData.get("image") as File;
-            const arrayBuffer = await imageFile.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            result = await ai.models.generateContent({
-              model: "gemini-flash-latest",
-              contents: [
-                prompt,
-                { inlineData: { data: buffer.toString("base64"), mimeType: imageFile.type } }
-              ]
-            });
-          } else {
-            throw new Error("Invalid mode");
-          }
-          
-          success = true;
-          break; // break retry loop
-        } catch (err: any) {
-          lastError = err;
-          const isQuota = err.status === 429 || err.status === 403 || (err.message && (err.message.toLowerCase().includes('quota') || err.message.toLowerCase().includes('429')));
-          const is503 = err.status === 503 || (err.message && (err.message.includes('503') || err.message.includes('UNAVAILABLE')));
-          
-          if (isQuota) {
-            console.log("Quota exceeded for key, switching to next key...");
-            break; // Break inner retry loop, try next key
-          } else if (is503 && attempt < maxRetries) {
-            console.log(`503 High demand, retrying... (${attempt + 1})`);
-            await new Promise(resolve => setTimeout(resolve, 1500));
-          } else if (is503) {
-            break; // exhausted retries, try next key just in case
-          } else {
-            throw err; // normal error, don't try other keys
-          }
+      try {
+        if (mode === "text") {
+          const text = formData.get("text") as string;
+          if (!text) throw new Error("No text provided");
+          const fullPrompt = prompt + "\n\nText to extract:\n" + text;
+          result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+        } else if (mode === "url") {
+          const url = formData.get("url") as string;
+          const res = await fetch(url);
+          const html = await res.text();
+          const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
+                               .replace(/<style[\s\S]*?<\/style>/gmi, '')
+                               .replace(/<[^>]+>/g, ' ');
+          const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
+          result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+        } else if (mode === "image") {
+          const imageFile = formData.get("image") as File;
+          const arrayBuffer = await imageFile.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          result = await ai.models.generateContent({
+            model: "gemini-flash-latest",
+            contents: [
+              prompt,
+              { inlineData: { data: buffer.toString("base64"), mimeType: imageFile.type } }
+            ]
+          });
+        } else {
+          throw new Error("Invalid mode");
+        }
+        
+        success = true;
+      } catch (err: any) {
+        lastError = err;
+        const isQuota = err.status === 429 || err.status === 403 || (err.message && (err.message.toLowerCase().includes('quota') || err.message.toLowerCase().includes('429')));
+        const is503 = err.status === 503 || (err.message && (err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('busy')));
+        
+        if (isQuota) {
+          console.log("Quota exceeded for key, instantly switching to next key...");
+          continue; // Instantly skip to the next API key
+        } else if (is503) {
+          // If Google is globally overloaded, switching keys will not help and will just hit Vercel's 10s timeout.
+          throw new Error("Google AI servers are currently extremely busy. Please try again in 1 minute.");
+        } else {
+          throw err; // normal error, abort instantly
         }
       }
     }
@@ -131,30 +125,23 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
     } catch (error: any) {
     console.error("Gemini Extraction Error:", error);
     
-    let userMessage = "Failed to extract job details";
+    let userMessage = error.message || "Failed to extract job details";
     
     try {
       if (error.message && error.message.includes('{')) {
         const parsed = JSON.parse(error.message);
         if (parsed.error && parsed.error.status === 'UNAVAILABLE') {
-          userMessage = "AI extraction temporarily failed. Please try again.";
+          userMessage = "Google AI servers are extremely busy. Please try again in 1 minute.";
         } else if (parsed.error && parsed.error.message) {
-          userMessage = "AI extraction temporarily failed. Please try again.";
-        }
-      } else if (error.message) {
-        if (error.message.includes('fetch')) {
-           userMessage = error.message;
-        } else {
-           userMessage = "AI extraction temporarily failed. Please try again.";
+          userMessage = parsed.error.message;
         }
       }
     } catch(e) {
-      userMessage = error.message || "Failed to extract job details";
+      // Ignored
     }
 
-    // Temporarily return the exact error message to debug the issue
     return NextResponse.json(
-      { error: "Debug Error: " + (error.message || userMessage) },
+      { error: userMessage },
       { status: 500 }
     );
   }
