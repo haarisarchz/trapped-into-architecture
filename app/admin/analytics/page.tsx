@@ -22,6 +22,7 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [days, setDays] = useState("30");
+  const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("main");
 
   useEffect(() => {
     async function fetchData() {
@@ -119,19 +120,42 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* TOP PAGES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Top Pages</h3>
-                <div className="space-y-4">
-                  {data.pages.length === 0 && <p className="text-gray-400 text-sm">No data available.</p>}
-                  {data.pages.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium truncate max-w-[70%]" title={item.title && item.title !== "(not set)" ? item.title : item.path}>{item.title && item.title !== "(not set)" ? item.title.replace(" | Trapped Into Architecture", "") : item.path}</span>
-                        <span className="font-semibold text-gray-700">{item.views}</span>
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[500px]">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+                  <h3 className="text-lg font-bold">Top Pages</h3>
+                  <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0 overflow-x-auto no-scrollbar">
+                    <button onClick={() => setPageTab("main")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "main" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Main</button>
+                    <button onClick={() => setPageTab("jobs")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "jobs" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Jobs</button>
+                    <button onClick={() => setPageTab("companies")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "companies" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Companies</button>
+                    <button onClick={() => setPageTab("all")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "all" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>All</button>
+                  </div>
+                </div>
+                <div className="space-y-4 overflow-y-auto pr-2 flex-1">
+                  {(() => {
+                    const filteredPages = data.pages.filter((p: any) => {
+                      const pathClean = (p.path || "").split("?")[0];
+                      if (pageTab === "main") return ["/", "/jobs", "/internships", "/companies", "/contact", "/about", "/admin"].includes(pathClean);
+                      if (pageTab === "jobs") return pathClean.startsWith("/jobs/") && pathClean !== "/jobs";
+                      if (pageTab === "companies") return pathClean.startsWith("/companies/") && pathClean !== "/companies";
+                      return true;
+                    });
+                    
+                    if (filteredPages.length === 0) return <p className="text-gray-400 text-sm">No data available for this category.</p>;
+                    
+                    const maxViews = Math.max(...filteredPages.map((p: any) => Number(p.views) || 0));
+                    
+                    return filteredPages.map((item: any, i: number) => (
+                      <div key={i} className="text-sm">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium truncate max-w-[70%]" title={item.title && item.title !== "(not set)" ? item.title : item.path}>
+                            {item.title && item.title !== "(not set)" ? item.title.replace(" | Trapped Into Architecture", "") : item.path}
+                          </span>
+                          <span className="font-semibold text-gray-700">{item.views}</span>
+                        </div>
+                        <ProgressBar value={Number(item.views) || 0} max={maxViews || 1} />
                       </div>
-                      <ProgressBar value={item.views} max={Math.max(...data.pages.map((p: any) => p.views))} />
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               </div>
 

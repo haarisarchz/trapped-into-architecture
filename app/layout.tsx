@@ -65,6 +65,22 @@ export default function RootLayout({
         {/* Google Analytics Tracking Script */}
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
           <>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  try {
+                    var userStr = localStorage.getItem('currentUser');
+                    if (userStr) {
+                      var user = JSON.parse(userStr);
+                      var role = user.role ? user.role.toLowerCase().replace(/[\s_]+/g, "") : '';
+                      if (role === 'admin' || role === 'superadmin' || role === 'ceo') {
+                        window['ga-disable-${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}'] = true;
+                      }
+                    }
+                  } catch(e) {}
+                `
+              }}
+            />
             <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`} />
             <script
               dangerouslySetInnerHTML={{
