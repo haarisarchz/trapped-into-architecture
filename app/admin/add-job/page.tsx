@@ -197,7 +197,28 @@ const [smartImage, setSmartImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
 const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
-  const [selectedKeyIndex, setSelectedKeyIndex] = useState(0);
+  const [showAiSettings, setShowAiSettings] = useState(false);
+  const [apiKeys, setApiKeys] = useState<string[]>(['', '', '', '', '']);
+  const [keyStatuses, setKeyStatuses] = useState<string[]>(['Ready', 'Ready', 'Ready', 'Ready', 'Ready']);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('ti2a_api_keys');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const padded = [...parsed, '', '', '', '', ''].slice(0, 5);
+          setApiKeys(padded);
+        }
+      } catch(e) {}
+    }
+  }, []);
+
+  const saveApiKeys = (newKeys: string[]) => {
+    setApiKeys(newKeys);
+    setKeyStatuses(['Ready', 'Ready', 'Ready', 'Ready', 'Ready']);
+    localStorage.setItem('ti2a_api_keys', JSON.stringify(newKeys));
+  };
 const [activeTab, setActiveTab] = useState("text");
 
 const [uploadMode, setUploadMode] = useState('text');
