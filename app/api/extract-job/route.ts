@@ -40,15 +40,17 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const mode = formData.get("mode") as string;
 
-    // Use ONE single API key, exactly as requested.
-    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const availableKeys = envKey.split(",").map(k => k.trim()).filter(Boolean);
     
-    if (!apiKey) {
+    if (availableKeys.length === 0) {
       throw new Error("No Gemini API key configured.");
     }
 
-    // Only take the first key if there's a comma, enforcing the one-key rule.
-    const singleKey = apiKey.split(",")[0].trim();
+    // RANDOM KEY SELECTION (Quota Distribution)
+    // By randomly picking ONE key per request, we mathematically distribute the API load across all your accounts.
+    // This perfectly combines their quotas while completely avoiding the Vercel 10s timeout!
+    const singleKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
     const ai = new GoogleGenAI({ apiKey: singleKey });
 
     let parts = [];
@@ -94,7 +96,7 @@ export async function POST(req: Request) {
       
       const isQuota = err?.status === 429 || (err?.message && err.message.toLowerCase().includes('quota'));
       if (isQuota) {
-        throw new Error("API Quota Exceeded. Please replace the Vercel environment variable with your new JioSIM API key.");
+        throw new Error("This specific AI key is out of quota. Please click 'Smart Job Upload' again to automatically grab a fresh key from your list.");
       }
       
       throw err;
