@@ -1728,17 +1728,30 @@ const handleSmartExtraction = async () => {
                       {key ? keyStatuses[index] : 'Empty'}
                     </span>
                   </div>
-                  <input
-                    type="password"
-                    placeholder="AIzaSy..."
-                    value={key}
-                    onChange={(e) => {
-                      const newKeys = [...apiKeys];
-                      newKeys[index] = e.target.value;
-                      saveApiKeys(newKeys);
-                    }}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition font-mono text-sm"
-                  />
+                                    <div className="relative w-full">
+                    <input
+                      type={showKeyPassword[index] ? "text" : "password"}
+                      placeholder="AIzaSy..."
+                      value={key}
+                      onChange={(e) => {
+                        const newKeys = [...apiKeys];
+                        newKeys[index] = e.target.value;
+                        saveApiKeys(newKeys);
+                      }}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition font-mono text-sm pr-12"
+                    />
+                    <button type="button"
+                      onClick={() => {
+                        const newShow = [...showKeyPassword];
+                        newShow[index] = !newShow[index];
+                        setShowKeyPassword(newShow);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
+                      title="Toggle Visibility"
+                    >
+                      {showKeyPassword[index] ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
