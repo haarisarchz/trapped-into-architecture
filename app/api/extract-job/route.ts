@@ -107,8 +107,7 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
           } else if (is503) {
             if (attempt < max503Retries) {
               console.log(`Google AI is busy (503). Waiting 2 seconds before retry ${attempt + 1}...`);
-              await new Promise(resolve => setTimeout(resolve, 2000));
-              continue; // Retry the same key
+              break;
             } else {
               // We've waited 6+ seconds and it's still busy. Abort completely.
               throw new Error("Google AI servers are currently extremely busy. Please try again in 1 minute.");

@@ -1858,8 +1858,9 @@ const handleSmartExtraction = async () => {
         body: formData,
       });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Failed to extract");
+      let result;
+        try { result = await response.json(); } catch(e) { if (!response.ok) throw new Error("Server took too long to respond (Timeout). Try a smaller screenshot."); throw new Error("Invalid server response format."); }
+        if (!response.ok) throw new Error(result.error || "Failed to extract");
 
             const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
             setHasUnsavedChanges(true);
