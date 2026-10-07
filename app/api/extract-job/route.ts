@@ -47,10 +47,17 @@ export async function POST(req: Request) {
       throw new Error("No Gemini API key configured.");
     }
 
-    // RANDOM KEY SELECTION (Quota Distribution)
-    // By randomly picking ONE key per request, we mathematically distribute the API load across all your accounts.
-    // This perfectly combines their quotas while completely avoiding the Vercel 10s timeout!
-    const singleKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+    // MANUAL KEY SELECTION (User Controlled)
+    const requestedIndex = req.headers.get("x-api-key-index");
+    let keyIndex = 0;
+    if (requestedIndex !== null && !isNaN(parseInt(requestedIndex))) {
+       keyIndex = parseInt(requestedIndex);
+       if (keyIndex >= availableKeys.length) {
+          keyIndex = 0;
+       }
+    }
+
+    const singleKey = availableKeys[keyIndex];
     const ai = new GoogleGenAI({ apiKey: singleKey });
 
     let parts = [];
@@ -96,7 +103,7 @@ export async function POST(req: Request) {
       
       const isQuota = err?.status === 429 || (err?.message && err.message.toLowerCase().includes('quota'));
       if (isQuota) {
-        throw new Error("This specific AI key is out of quota. Please click 'Smart Job Upload' again to automatically grab a fresh key from your list.");
+        throw new Error("This specific AI key is out of quota. Please change the 'Server' dropdown to use a fresh key.");
       }
       
       throw err;

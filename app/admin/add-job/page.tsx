@@ -197,6 +197,7 @@ const [smartImage, setSmartImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
 const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
+  const [selectedKeyIndex, setSelectedKeyIndex] = useState(0);
 const [activeTab, setActiveTab] = useState("text");
 
 const [uploadMode, setUploadMode] = useState('text');
@@ -1743,12 +1744,17 @@ const handleSmartExtraction = async () => {
                   <div>
                     <h2 className="text-2xl font-black tracking-tight">Smart Job</h2>
                   </div>
-                  <button 
-                    onClick={() => setShowAiSettings(true)}
-                    className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors"
-                  >
-                    ⚙️ API Config
-                  </button>
+                  <select 
+                      value={selectedKeyIndex} 
+                      onChange={(e) => setSelectedKeyIndex(Number(e.target.value))}
+                      className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 border-none outline-none cursor-pointer hover:bg-gray-200 transition-colors"
+                    >
+                      <option value={0}>Server 1</option>
+                      <option value={1}>Server 2</option>
+                      <option value={2}>Server 3</option>
+                      <option value={3}>Server 4</option>
+                      <option value={4}>Server 5</option>
+                    </select>
                 </div>
                 <p className="text-black text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
 
