@@ -1700,6 +1700,59 @@ const handleSmartExtraction = async () => {
       <Footer />
       </main>
 
+      {/* API Config Modal */}
+      {showAiSettings && (
+        <div className="fixed inset-0 bg-black/60 z-[9999999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl relative">
+            <button type="button"
+              onClick={() => setShowAiSettings(false)}
+              className="absolute top-6 right-6 text-gray-400 hover:text-black transition"
+            >
+              ?
+            </button>
+            <h2 className="text-2xl font-black mb-2">API Servers</h2>
+            <p className="text-gray-500 text-sm mb-6">Paste your free Gemini API keys here. The system will automatically cycle through them if one runs out of quota.</p>
+            
+            <div className="space-y-4">
+              {apiKeys.map((key, index) => (
+                <div key={index} className="flex flex-col gap-1">
+                  <div className="flex justify-between items-end">
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-700">Server {index + 1}</label>
+                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                      keyStatuses[index] === 'Success' ? 'bg-green-100 text-green-700' :
+                      keyStatuses[index] === 'Quota Exceeded' ? 'bg-red-100 text-red-700' :
+                      keyStatuses[index] === 'Server Busy' ? 'bg-orange-100 text-orange-700' :
+                      'bg-gray-100 text-gray-500'
+                    }`}>
+                      {key ? keyStatuses[index] : 'Empty'}
+                    </span>
+                  </div>
+                  <input
+                    type="password"
+                    placeholder="AIzaSy..."
+                    value={key}
+                    onChange={(e) => {
+                      const newKeys = [...apiKeys];
+                      newKeys[index] = e.target.value;
+                      saveApiKeys(newKeys);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition font-mono text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            
+            <button type="button"
+              onClick={() => setShowAiSettings(false)}
+              className="w-full bg-black text-white font-bold py-4 rounded-xl mt-8 hover:bg-gray-800 transition"
+            >
+              Save & Close
+            </button>
+          </div>
+        </div>
+      )}
+
+
       {/* ================= SMART JOB POPUP (9:16 RATIO) ================= */}
       {showSmartUpload && (
         <div className="fixed inset-0 bg-black/70 overflow-y-auto z-[1000000] p-4 backdrop-blur-md">
