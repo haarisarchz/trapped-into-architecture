@@ -1879,15 +1879,53 @@ const handleSmartExtraction = async () => {
           headers["x-user-gemini-key"] = userGeminiKey;
         }
 
-        const response = await fetch("/api/extract-job", {
-          headers,
-        method: "POST",
-        body: formData,
-      });
-
-      let result;
-        try { result = await response.json(); } catch(e) { if (!response.ok) throw new Error("Server took too long to respond (Timeout). Try a smaller screenshot."); throw new Error("Invalid server response format."); }
-        if (!response.ok) throw new Error(result.error || "Failed to extract");
+                const validKeys = apiKeys.filter(k => typeof k === 'string' && k.trim().length > 0);
+        let result = null;
+        let lastError = null;
+        
+        if (validKeys.length > 0) {
+          const newStatuses = [...keyStatuses];
+          for (let i = 0; i < apiKeys.length; i++) {
+            const key = apiKeys[i];
+            if (typeof key !== 'string' || !key.trim()) continue;
+            
+            headers["x-user-gemini-key"] = key.trim();
+            try {
+              const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
+              let data;
+              try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
+              
+              if (!res.ok) {
+                if (data.error && data.error.toLowerCase().includes("quota")) {
+                  newStatuses[i] = "Quota Exceeded";
+                  setKeyStatuses([...newStatuses]);
+                  continue; 
+                }
+                if (data.error && data.error.toLowerCase().includes("busy")) {
+                  newStatuses[i] = "Server Busy";
+                  setKeyStatuses([...newStatuses]);
+                  continue; 
+                }
+                throw new Error(data.error || "Failed to extract");
+              }
+              
+              result = data;
+              newStatuses[i] = "Success";
+              setKeyStatuses([...newStatuses]);
+              break; 
+            } catch(e: any) {
+              lastError = e.message;
+            }
+          }
+        } else {
+          const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
+          let data;
+          try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
+          if (!res.ok) throw new Error(data.error || "Failed to extract");
+          result = data;
+        }
+        
+        if (!result) throw new Error(lastError || "All configured API keys failed or ran out of quota. Please check the API Config.");
 
             const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
             setHasUnsavedChanges(true);
