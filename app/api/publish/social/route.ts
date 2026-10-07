@@ -222,10 +222,22 @@ export async function POST(req: Request) {
             const token = process.env.FACEBOOK_ACCESS_TOKEN;
             if (!pageId || !token) throw new Error("Missing Facebook credentials.");
             
+            let fbMessage = postText;
+            if (companyData && companyData.facebook) {
+              let fbHandle = companyData.facebook.trim().split("?")[0].replace(/^@/, '');
+              if (fbHandle.includes("/")) {
+                const parts = fbHandle.split("/").filter(Boolean);
+                fbHandle = parts[parts.length - 1];
+              }
+              if (fbHandle) {
+                fbMessage += `\n\nDesign Firm: @${fbHandle}`;
+              }
+            }
+            
             const fbRes = await fetch(`https://graph.facebook.com/v19.0/${pageId}/feed`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ message: postText, link: jobUrl, access_token: token })
+              body: JSON.stringify({ message: fbMessage, link: jobUrl, access_token: token })
             });
             if (!fbRes.ok) throw new Error(await fbRes.text());
             success = true;
