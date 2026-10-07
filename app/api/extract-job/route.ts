@@ -68,7 +68,7 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
             const text = formData.get("text") as string;
             if (!text) throw new Error("No text provided");
             const fullPrompt = prompt + "\n\nText to extract:\n" + text;
-            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+            result = await ai.models.generateContent({ model: "gemini-1.5-flash-8b", contents: fullPrompt });
           } else if (mode === "url") {
             const url = formData.get("url") as string;
             const res = await fetch(url);
@@ -77,13 +77,13 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
                                  .replace(/<style[\s\S]*?<\/style>/gmi, '')
                                  .replace(/<[^>]+>/g, ' ');
             const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
-            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
+            result = await ai.models.generateContent({ model: "gemini-1.5-flash-8b", contents: fullPrompt });
           } else if (mode === "image") {
             const imageFile = formData.get("image") as File;
             const arrayBuffer = await imageFile.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
             result = await ai.models.generateContent({
-              model: "gemini-flash-latest",
+              model: "gemini-1.5-flash-8b",
               contents: [
                 prompt,
                 { inlineData: { data: buffer.toString("base64"), mimeType: imageFile.type } }
