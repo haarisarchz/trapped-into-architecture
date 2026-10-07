@@ -593,10 +593,11 @@ setSelectedSalary([]);
       onChange={(e) => setSortBy(e.target.value)}
       className="w-40 border rounded-lg px-2 py-2 text-sm"
     >
-      <option value="latest">Latest</option>
+      <option value="latest">Latest Posted</option>
+       <option value="oldest">Older Posts</option>
       <option value="salaryHigh">High Salary</option>
       <option value="salaryLow">Low Salary</option>
-      <option value="expiry">Expiry</option>
+      
     </select>
 
   </div>
@@ -759,17 +760,111 @@ setSelectedSalary([]);
   </div>
 
 </div>
-{/* ACTIVE FILTERS */}
+{/* ALWAYS VISIBLE COUNT & ACTIVE FILTERS WRAPPER */}
+<div className="flex flex-wrap items-center gap-3 mb-4">
+  <span className="text-sm font-semibold text-gray-600 shrink-0">Showing {jobs.filter((job: any) => {
 
-{(
-  selectedStates.length > 0 ||
-  selectedCities.length > 0 ||
-  selectedPositions.length > 0 ||
-  selectedQualifications.length > 0 ||
-  selectedSkills.length > 0
-) && (
+    const stateMatch =
+      selectedStates.length === 0 ||
+      selectedStates.includes(job.state);
 
-  <div className="flex flex-wrap gap-2 mb-3">
+    const cityMatch =
+      selectedCities.length === 0 ||
+      selectedCities.includes(job.city);
+
+    const positionMatch =
+      selectedPositions.length === 0 ||
+      selectedPositions.includes(job.position);
+
+    const qualificationMatch =
+      selectedQualifications.length === 0 ||
+
+      job.qualifications?.some(
+        (qualification: string) =>
+
+          selectedQualifications.includes(
+            qualification
+          )
+      );
+
+    const skillsMatch =
+      selectedSkills.length === 0 ||
+
+      job.skillsRequired?.some(
+        (skill: string) =>
+
+          selectedSkills.includes(skill)
+      );
+
+    const experienceMatch =
+      selectedExperience.length === 0 ||
+
+      job.experience?.some(
+        (exp: string) =>
+
+          selectedExperience.includes(exp)
+      );
+
+    const salaryMatch =
+      selectedSalary.length === 0 ||
+      selectedSalary.includes(job.salary);
+
+    const searchMatch =
+      searchQuery === "" ||
+
+      job.firmName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.position
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.city
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.skillsRequired?.some(
+        (skill: string) =>
+
+          skill
+            .toLowerCase()
+            .includes(
+              searchQuery.toLowerCase()
+            )
+      );
+
+    const expiryMatch =
+      !excludeExpired ||
+
+      !job.postExpiryDate ||
+
+      new Date(job.postExpiryDate) >=
+        new Date();
+
+    return (
+      stateMatch &&
+      cityMatch &&
+      positionMatch &&
+      qualificationMatch &&
+      skillsMatch &&
+      experienceMatch &&
+      salaryMatch &&
+      searchMatch &&
+      expiryMatch
+    );
+
+  }).length} internships</span>
+
+  {/* ACTIVE FILTERS */}
+  {(
+    selectedStates.length > 0 ||
+    selectedCities.length > 0 ||
+    selectedPositions.length > 0 ||
+    selectedQualifications.length > 0 ||
+    selectedSkills.length > 0
+  ) && (
+    <div className="flex flex-wrap gap-2">
 
     {/* STATES */}
 
@@ -914,6 +1009,8 @@ setSelectedSalary([]);
   </div>
 
 )}
+</div>
+
   {/* JOB LIST */}
 
 <div

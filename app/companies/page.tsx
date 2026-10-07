@@ -420,7 +420,8 @@ function CompaniesPageContent() {
                 >
                   <option value="name_asc">Name (A-Z)</option>
                   <option value="name_desc">Name (Z-A)</option>
-                  <option value="date_added">Added Date</option>
+                  <option value="date_added">Latest Added</option>
+                  <option value="oldest_added">Older Companies</option>
                   <option value="jobs">Most Jobs</option>
                   <option value="year_founded">Year Founded</option>
                 </select>
@@ -472,7 +473,8 @@ function CompaniesPageContent() {
                 >
                   <option value="name_asc">Name A to Z (Ascending)</option>
                   <option value="name_desc">Name Z to A (Descending)</option>
-                  <option value="date_added">Added Date</option>
+                  <option value="date_added">Latest Added</option>
+                  <option value="oldest_added">Older Companies</option>
                   <option value="jobs">Number of jobs posted</option>
                   <option value="year_founded">Year Founded</option>
                 </select>
