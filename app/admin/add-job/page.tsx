@@ -921,7 +921,851 @@ const handleSmartExtraction = async () => {
     Organization Type
   </label>
 
-  <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors">?? API Config</button>
+  <select
+    value={organizationType}
+    onChange={(e) => setOrganizationType(e.target.value)}
+    className="w-full border rounded-xl px-3 py-2.5 text-sm"
+  >
+
+    {organizationTypes.map((type) => (
+      <option key={type} value={type}>
+        {type}
+      </option>
+    ))}
+
+  </select>
+
+</div>
+                {/* ORGANIZATION NAME */}
+
+<div>
+
+  <label className="block mb-1.5 text-sm font-medium">
+    {organizationType} Name <span className="text-red-500 text-xl font-bold">*</span>
+  </label>
+
+  <Autocomplete
+    value={firmName}
+    onChange={(val) => {
+      setFirmName(val);
+      if (selectedCompanyId) {
+          setSelectedCompanyId(null);
+          setIsCompanyProfileDirty(false);
+      }
+    }}
+    onSelect={async (val, record) => {
+      setFirmName(val);
+      setSelectedCompanyId(record.id);
+      setOrganizationType(record.organization_type || "Firm");
+      setArea(record.neighborhood || "");
+      setCity(record.city || "");
+      setState(record.state || "");
+        setCountry(record.country || "India");
+      setCompanyLogo(record.logo_url || "");
+      setCompanyAddress(record.address || "");
+        setCompanyDescription(record.description || "");
+      setCompanyWebsite(record.website || "");
+      setCompanyEmail(record.email || "");
+      setCompanyPhone(record.phone || "");
+      setCompanyFacebook(record.facebook || "");
+      setCompanyInstagram(record.instagram || "");
+      setCompanyLinkedin(record.linkedin || "");
+        setCompanyWhatsapp(record.whatsapp || "");
+        setCompanyTwitter(record.twitter || "");
+      setPrincipalArchitect(record.principal_architect || "");
+      setEmployeeSize(record.employee_size || "");
+      setFoundedYear(record.founded_year?.toString() || "");
+      
+      // Delay reset so useEffects don't re-dirty it immediately
+      setTimeout(() => setIsCompanyProfileDirty(false), 100);
+    }}
+    fetchSuggestions={async (q) => {
+      const { data: cData } = await supabase.from("companies").select("*").ilike("firm_name", "%" + q + "%").limit(10);
+      const { data: jData } = await supabase.from("jobs").select("firm_name, city, state, organization_type, area, application_email, image").ilike("firm_name", "%" + q + "%").limit(10);
+      if (jData) {
+        jData.forEach(j => {
+          j.neighborhood = j.area;
+          j.email = j.application_email;
+          j.logo_url = j.image;
+        });
+      }
+      const combined = [...(cData || []), ...(jData || [])];
+      const unique = Array.from(new Map(combined.map(item => [item.firm_name, item])).values());
+      return unique;
+    }}
+    extractValue={(item) => item.firm_name}
+    renderItem={(item) => (
+      <div>
+        <div className="font-bold">{item.firm_name}</div>
+        <div className="text-xs text-gray-500">{item.city ? `${item.city}, ${item.state}` : item.organization_type}</div>
+      </div>
+    )}
+    placeholder="Enter name"
+    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
+  />
+
+</div>
+</div>
+
+
+
+                          {/* LOCATION */}
+
+            <div>
+
+              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
+                Location
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {/* NEIGHBORHOOD */}
+
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium"> Neighborhood </label>
+                  <Autocomplete
+                    value={area}
+                    onChange={(val) => setArea(val)}
+                    fetchSuggestions={async (q) => {
+                      let qC = supabase.from('companies').select('neighborhood').ilike('neighborhood', '%' + q + '%');
+                      let qJ = supabase.from('jobs').select('neighborhood').ilike('neighborhood', '%' + q + '%');
+                      if (city) { qC = qC.eq('city', city); qJ = qJ.eq('city', city); }
+                      const [{data: d1}, {data: d2}] = await Promise.all([qC.limit(10), qJ.limit(10)]);
+                      const combined = [...(d1 || []), ...(d2 || [])];
+                      return Array.from(new Set(combined.map(d => d.neighborhood).filter(Boolean)));
+                    }}
+                    placeholder="Adyar"
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
+                  />
+                </div>
+
+                {/* CITY */}
+
+                <div>
+                    <label className="block mb-1.5 text-sm font-medium"> City </label>
+                    <input 
+                      type="text" 
+                      list="citiesList"
+                      placeholder="e.g. Mumbai" 
+                      value={city} 
+                      onChange={(e) => setCity(e.target.value)} 
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
+                    />
+                    <datalist id="citiesList">
+                      <option value="Mumbai" />
+                      <option value="Delhi" />
+                      <option value="Bengaluru" />
+                      <option value="Hyderabad" />
+                      <option value="Ahmedabad" />
+                      <option value="Chennai" />
+                      <option value="Kolkata" />
+                      <option value="Surat" />
+                      <option value="Pune" />
+                      <option value="Jaipur" />
+                      <option value="Lucknow" />
+                      <option value="Kanpur" />
+                      <option value="Nagpur" />
+                      <option value="Indore" />
+                      <option value="Thane" />
+                      <option value="Bhopal" />
+                      <option value="Visakhapatnam" />
+                      <option value="Patna" />
+                      <option value="Vadodara" />
+                      <option value="Ghaziabad" />
+                      <option value="Ludhiana" />
+                      <option value="Agra" />
+                      <option value="Nashik" />
+                      <option value="Faridabad" />
+                      <option value="Meerut" />
+                      <option value="Rajkot" />
+                      <option value="Varanasi" />
+                      <option value="Srinagar" />
+                      <option value="Aurangabad" />
+                      <option value="Dhanbad" />
+                      <option value="Amritsar" />
+                      <option value="Allahabad" />
+                      <option value="Ranchi" />
+                      <option value="Gwalior" />
+                      <option value="Jabalpur" />
+                      <option value="Coimbatore" />
+                      <option value="Vijayawada" />
+                      <option value="Jodhpur" />
+                      <option value="Madurai" />
+                      <option value="Raipur" />
+                      <option value="Chandigarh" />
+                      <option value="Guwahati" />
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium"> State </label>
+                    <input 
+                      type="text" 
+                      list="statesList"
+                      placeholder="e.g. Maharashtra" 
+                      value={state} 
+                      onChange={(e) => setState(e.target.value)} 
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
+                    />
+                    <datalist id="statesList">
+                      <option value="Andhra Pradesh" />
+                      <option value="Arunachal Pradesh" />
+                      <option value="Assam" />
+                      <option value="Bihar" />
+                      <option value="Chhattisgarh" />
+                      <option value="Goa" />
+                      <option value="Gujarat" />
+                      <option value="Haryana" />
+                      <option value="Himachal Pradesh" />
+                      <option value="Jharkhand" />
+                      <option value="Karnataka" />
+                      <option value="Kerala" />
+                      <option value="Madhya Pradesh" />
+                      <option value="Maharashtra" />
+                      <option value="Manipur" />
+                      <option value="Meghalaya" />
+                      <option value="Mizoram" />
+                      <option value="Nagaland" />
+                      <option value="Odisha" />
+                      <option value="Punjab" />
+                      <option value="Rajasthan" />
+                      <option value="Sikkim" />
+                      <option value="Tamil Nadu" />
+                      <option value="Telangana" />
+                      <option value="Tripura" />
+                      <option value="Uttar Pradesh" />
+                      <option value="Uttarakhand" />
+                      <option value="West Bengal" />
+                      <option value="Andaman and Nicobar Islands" />
+                      <option value="Chandigarh" />
+                      <option value="Dadra and Nagar Haveli and Daman and Diu" />
+                      <option value="Delhi" />
+                      <option value="Jammu and Kashmir" />
+                      <option value="Ladakh" />
+                      <option value="Lakshadweep" />
+                      <option value="Puducherry" />
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium"> Country <span className="text-red-500 font-bold">*</span></label>
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="e.g. India" 
+                      value={country} 
+                      onChange={(e) => setCountry(e.target.value)} 
+                      className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" 
+                    />
+                  </div>
+
+              </div>
+
+            </div>
+            </div>
+
+            <div>
+
+              {/* POSITIONS & DESCRIPTIONS */}
+              <div className="mt-4 mb-4">
+                <div className="flex justify-between items-end mb-4">
+                  <h2 className="text-xl font-bold">Position Details</h2>
+                  <button type="button" onClick={addPosition} className="text-blue-600 font-bold hover:underline">+ Add Position</button>
+                </div>
+                
+                <div className="space-y-4">
+                  {positions.map((pos, index) => (
+                    <div key={index} className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm relative text-black">
+                      {positions.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => removePosition(index)} 
+                          className="absolute top-4 right-4 text-red-500 text-sm font-bold hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="md:col-span-3 flex flex-col gap-4">
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block mb-1.5 text-sm font-medium">Position <span className="text-red-500">*</span></label>
+                                <input type="text" list="positionsList" value={pos.position} onChange={(e) => updatePosition(index, "position", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Junior Architect" />
+                                <datalist id="positionsList">
+                                  {positionOptions.map((opt) => <option key={opt} value={opt} />)}
+                                </datalist>
+                              </div>
+                              <div>
+                                <label className="block mb-1.5 text-sm font-medium">Job Role</label>
+                                <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Site visits, managing coordination drawings" />
+                              </div>
+                              <div>
+                                <label className="block mb-1.5 text-sm font-medium">Salary</label>
+                                <Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
+                              </div>
+                           </div>
+                           
+                           
+                             <div className="md:hidden">
+                                <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
+                                <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />
+                             </div>
+                             
+                             <div>
+                                <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
+                                <textarea value={pos.description} onChange={(e) => updatePosition(index, "description", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y" placeholder="Write detailed job description..." />
+                           </div>
+                        </div>
+
+                        <div className="md:col-span-1 border-l border-gray-100 pl-4">
+                            {(employmentType === "Internship" || (pos.position && pos.position.toLowerCase().includes("intern"))) ? (
+                              <div className="h-full flex flex-col justify-center text-center text-gray-500 py-4">
+                                <span className="text-xl mb-2">🎓</span>
+                                <p className="text-sm font-medium">Experience not required for internships</p>
+                              </div>
+                            ) : (
+                              <>
+                                <label className="block mb-1.5 text-sm font-medium">Required Experience <span className="text-red-500">*</span></label>
+                                <div className="flex flex-wrap gap-2">
+                            {EXPERIENCE_OPTIONS.map((exp) => {
+                              const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
+                              const isSelected = currentExps.includes(exp);
+                              return (
+                                <button
+                                  key={exp}
+                                  type="button"
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      updatePosition(index, "experience", currentExps.filter(e => e !== exp));
+                                    } else {
+                                      updatePosition(index, "experience", [...currentExps, exp]);
+                                    }
+                                  }}
+                                  className={`px-4 py-2 border rounded-full text-sm font-semibold mb-1 transition ${
+                                    isSelected
+                                      ? "bg-black text-white border-black"
+                                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  {exp}
+                                </button>
+                              );
+                            })}
+                            </div>
+                            
+                            </>
+                            )}
+                            <div className="mt-4 pt-4 border-t border-gray-100 hidden md:block">
+                               <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
+                               <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />
+                            </div>
+                          </div>
+
+                          {!sameRequirements && (
+                          <div className="md:col-span-4 mt-2 pt-4 border-t border-gray-100">
+                             <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                   <label className="block mb-1.5 text-sm font-medium"> Qualifications </label>
+                                   <Autocomplete value={pos.qualifications || ""} onChange={(val) => updatePosition(index, "qualifications", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. B.Arch" />
+                                </div>
+                                <div>
+                                   <label className="block mb-1.5 text-sm font-medium"> Skills Required </label>
+                                   <Autocomplete
+  value={pos.skill_input || ""}
+  onChange={(val) => {
+    if (val.endsWith(",")) {
+      const newSkill = val.slice(0, -1).trim();
+      const currentSkills = pos.skills || [];
+      if (newSkill && !currentSkills.includes(newSkill)) {
+        updatePosition(index, "skills", [...currentSkills, newSkill]);
+      }
+      updatePosition(index, "skill_input", "");
+    } else {
+      updatePosition(index, "skill_input", val);
+    }
+  }}
+  onSelect={(val) => {
+    const newSkill = val.trim();
+    const currentSkills = pos.skills || [];
+    if (newSkill && !currentSkills.includes(newSkill)) {
+      updatePosition(index, "skills", [...currentSkills, newSkill]);
+    }
+    updatePosition(index, "skill_input", "");
+  }}
+  fetchSuggestions={async (q) => {
+    const { data } = await supabase.from("jobs").select("skills_required").limit(100);
+    if (!data) return [];
+    const all = new Set();
+    data.forEach(job => {
+      if (Array.isArray(job.skills_required)) {
+        job.skills_required.forEach((s) => {
+          if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);
+        });
+      } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {
+        all.add(job.skills_required);
+      }
+    });
+    return Array.from(all).slice(0, 10);
+  }}
+  placeholder="Type skill and press comma or select"
+  className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black"
+/>
+<div className="flex flex-wrap gap-2 mt-3">
+  {(pos.skills || []).map((skill: string) => (
+    <div key={skill} className="bg-black text-white px-3 py-1 text-sm rounded-full flex items-center gap-2">
+      <span>{skill}</span>
+      <button type="button" onClick={() => {
+        updatePosition(index, "skills", (pos.skills || []).filter((s: string) => s !== skill));
+      }} className="hover:text-red-400 transition">
+        &times;
+      </button>
+    </div>
+  ))}
+</div>
+                                </div>
+                             </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+
+              {/* REQUIREMENTS */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between mt-6 mb-6 gap-4">
+                <h2 className="text-xl font-bold">Requirements</h2>
+                <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-black bg-white px-4 py-2 rounded-xl border border-gray-200">
+                  <input type="checkbox" checked={sameRequirements} onChange={(e) => setSameRequirements(e.target.checked)} className="w-4 h-4 accent-black" />
+                  Same requirements for all positions
+                </label>
+              </div>
+
+              {sameRequirements && (
+<div className="border border-gray-200 p-4 rounded-xl bg-white shadow-sm mb-4">
+{/* QUALIFICATION & SKILLS */} <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> <div> <label className="block mb-1.5 text-sm font-medium"> Qualifications </label><Autocomplete value={qualifications as string} onChange={(val) => setQualifications(val as any)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("qualifications").ilike("qualifications", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.qualifications).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. B.Arch" /></div> <div> <label className="block mb-1.5 text-sm font-medium"> Skills Required </label>
+
+                <Autocomplete value={skillInput} onChange={(val) => {   if (val.endsWith(",")) {     const newSkill = val.slice(0, -1).trim();     if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }     setSkillInput("");   } else {     setSkillInput(val);   } }} onSelect={(val) => {   const newSkill = val.trim();   if (newSkill && !skills.includes(newSkill)) { setSkills([...skills, newSkill]); }   setSkillInput(""); }} fetchSuggestions={async (q) => {   const { data } = await supabase.from("jobs").select("skills_required").limit(100);   if (!data) return [];   const all = new Set();   data.forEach(job => {     if (Array.isArray(job.skills_required)) {       job.skills_required.forEach((s) => {         if (s.toLowerCase().includes(q.toLowerCase())) all.add(s);       });     } else if (typeof job.skills_required === "string" && job.skills_required.toLowerCase().includes(q.toLowerCase())) {       all.add(job.skills_required);     }   });   return Array.from(all).slice(0, 10) as string[]; }} placeholder="Type skill and press comma or select" className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" />
+
+                <div className="flex flex-wrap gap-2 mt-3">
+
+                  {skills.map((skill) => (
+
+                    <div
+                      key={skill}
+                      className="bg-black text-white px-3 py-1 text-sm rounded-full flex items-center gap-2"
+                    >
+
+                      <span>{skill}</span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSkills(
+                            skills.filter(
+                              (s) => s !== skill
+                            )
+                          )
+                        }
+                      >
+                        ✕
+                      </button>
+
+                    </div>
+
+                  ))}
+
+                </div>
+
+                </div>
+                </div>
+              </div>
+            )}
+            </div>
+
+            {/* JOB & APPLICATION DETAILS */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-6">
+              
+              {/* Left Column: Job Details */}
+              <div className="lg:col-span-4">
+                <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
+                  Job Details
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Employment Type <span className="text-red-500 text-xl font-bold">*</span></label>
+                    <select value={employmentType} onChange={(e) => setEmploymentType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="" disabled>Select Employment Type</option>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Temporary">Temporary</option>
+                      <option value="Freelance">Freelance</option>
+                      <option value="Internship">Internship</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Workplace Type</label>
+                    <select value={workplaceType} onChange={(e) => setWorkplaceType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="On-site">On-site</option>
+                      <option value="Hybrid">Hybrid</option>
+                      <option value="Remote">Remote</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Application Details */}
+              <div className="lg:col-span-8">
+                <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
+                  Application Details
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Date Type</label>
+                    <select value={dateType} onChange={(e) => setDateType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="expiry">Expiry Date</option>
+                      <option value="apply">Last Date To Apply</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">{dateType === "apply" ? "Last Date To Apply" : "Expiry Date"}</label>
+                    <input type="date" value={dateType === "apply" ? lastDateToApply : postExpiryDate} onChange={(e) => { if (dateType === "apply") { setLastDateToApply(e.target.value); } else { setPostExpiryDate(e.target.value); } }} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Source Link</label>
+                    <input type="text" placeholder="https://..." value={source} onChange={(e) => setSource(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Button Type <span className="text-red-500 text-xl font-bold">*</span></label>
+                    <select value={applicationType} onChange={(e) => setApplicationType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                      <option value="apply">Apply Now</option>
+                      <option value="email">Email Now</option>
+                    </select>
+                  </div>
+                  {applicationType === "apply" ? (
+                    <div className="md:col-span-2">
+                      <label className="block mb-1.5 text-sm font-medium">Apply Link <span className="text-red-500 text-xl font-bold">*</span></label>
+                      <input type="text" placeholder="https://..." value={apply_link} onChange={(e) => setapply_link(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                  ) : (
+                    <div className="md:col-span-2">
+                      <label className="block mb-1.5 text-sm font-medium">Application Email <span className="text-red-500 text-xl font-bold">*</span></label>
+                      <input type="email" placeholder="careers@firm.com" value={application_email} onChange={(e) => setapplication_email(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* MEDIA */}
+            <div>
+              <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
+                Media
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block mb-3 text-sm font-medium">Upload Job Image <span className="text-red-500 text-xl font-bold">*</span></label>
+                  <ImageUploader value={imageUrl} onChange={(url) => setImageUrl(url)} label="Upload Job Image" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 border-t border-black-300"></div>
+
+            {/* ================= ORGANIZATION INFORMATION ================= */}
+              <div className="mt-6 mb-4">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                    <h2 className="text-xl font-bold">
+                      Company Profile
+                    </h2>
+                    
+                  </div>
+              </div>
+
+              {/* Logo & Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                  <label className="block mb-3 text-sm font-medium">{organizationType} Logo</label>
+                    <ImageUploader value={companyLogo} onChange={(url) => setCompanyLogo(url)} label="Upload Logo" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Principal Architect / Head</label>
+                  <input type="text" placeholder="e.g. Jane Doe" value={principalArchitect} onChange={(e) => setPrincipalArchitect(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Employee Size</label>
+                  <select value={employeeSize} onChange={(e) => setEmployeeSize(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm">
+                    <option value="">Select Size</option>
+                    <option value="1-10">1-10</option>
+                    <option value="11-50">11-50</option>
+                    <option value="51-200">51-200</option>
+                    <option value="201-500">201-500</option>
+                    <option value="500+">500+</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1.5 text-sm font-medium">Founded Year</label>
+                  <input type="number" placeholder="YYYY" min="1800" max={new Date().getFullYear()} value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                </div>
+              </div>
+
+              {/* About & Contacts */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                {/* Left: About Firm */}
+                <div>
+                  <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">About {organizationType}</h3>
+                  <textarea rows={6} placeholder={`Write about the ${organizationType.toLowerCase()}...`} value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm resize-none h-[230px]" />
+                </div>
+
+                {/* Right: Contacts */}
+                <div>
+                  <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">Contact Details</h3>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium">Website</label>
+                      <input type="url" placeholder="https://" value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium">Email</label>
+                      <input type="email" placeholder="contact@firm.com" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block mb-1.5 text-sm font-medium">Phone</label>
+                      <input type="text" placeholder="+123..." value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Media */}
+              <div className="mb-6">
+                <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">Social Media</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">X (Twitter)</label>
+                    <input type="url" placeholder="URL" value={companyTwitter} onChange={(e) => setCompanyTwitter(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Facebook</label>
+                    <input type="url" placeholder="URL" value={companyFacebook} onChange={(e) => setCompanyFacebook(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">Instagram</label>
+                    <input type="url" placeholder="URL" value={companyInstagram} onChange={(e) => setCompanyInstagram(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                  <div>
+                    <label className="block mb-1.5 text-sm font-medium">LinkedIn</label>
+                    <input type="url" placeholder="URL" value={companyLinkedin} onChange={(e) => setCompanyLinkedin(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  </div>
+                </div>
+              </div>
+
+            
+                <div className="flex justify-end mt-4 mb-8 border-b border-gray-100 pb-8">
+                  
+                </div>
+
+              
+
+{/* ACTION BUTTONS */}
+
+<div className="flex flex-wrap justify-center gap-3 mt-6 mb-4">
+  <button type="button" onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin"); }} className="px-6 py-3 text-base rounded-xl border-2 border-gray-200 bg-gray-50 text-black font-semibold hover:bg-gray-100 transition">
+    Go to Dashboard
+  </button>
+  <button type="button" onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin/jobs"); }} className="px-6 py-3 text-base rounded-xl border-2 border-gray-200 bg-gray-50 text-black font-semibold hover:bg-gray-100 transition">
+    Manage Jobs
+  </button>
+  <button type="button" disabled={actionLoading !== null || uploadingImage} onClick={handleSaveDraft} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-gray-50 transition"
+  >
+    Save Draft
+  </button>
+
+  <button type="button" disabled={actionLoading !== null || uploadingImage} onClick={() => setShowSchedule(true)} className="px-6 py-3 text-base rounded-xl border-2 border-black bg-white text-black font-semibold hover:bg-white transition"
+>
+  Schedule
+</button>
+
+  <button
+    type="button"
+    disabled={actionLoading !== null}
+    onClick={() => handlePublishJob("published")}
+    className={`px-6 py-3 text-base rounded-xl text-lg font-semibold transition ${
+      uploadingImage
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-black text-white hover:bg-gray-800"
+    }`}
+  >
+    {actionLoading === "published" ? "Publishing..." : (selectedCompanyId && isCompanyProfileDirty ? "Update & Save" : "Publish Job")}
+  </button>
+</div>
+          
+ 
+
+{/* ================= SCHEDULE MODAL ================= */}
+
+{showSchedule && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl p-5 w-full max-w-md">
+
+      <h2 className="text-lg font-bold mb-3 border-b border-gray-100 pb-2">
+        Schedule Job
+      </h2>
+
+      <div className="space-y-5">
+
+        <div>
+          <label className="block mb-1.5 text-sm font-medium">
+            Date
+          </label>
+
+          <input
+            type="date"
+            value={scheduleDate}
+            onChange={(e) => setScheduleDate(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2.5 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1.5 text-sm font-medium">
+            Time
+          </label>
+
+          <input
+            type="time"
+            value={scheduleTime}
+            onChange={(e) => setScheduleTime(e.target.value)}
+            className="w-full border rounded-xl px-3 py-2.5 text-sm"
+          />
+        </div>
+
+        {scheduleDate && scheduleTime && (
+  <p className="mt-2 text-sm text-green-600">
+    Scheduled for{" "}
+    {new Date(`${scheduleDate}T${scheduleTime}`).toLocaleString("en-IN", {
+      weekday: "long",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })}
+
+    {(() => {
+      const diff =
+        new Date(`${scheduleDate}T${scheduleTime}`).getTime() -
+        new Date().getTime();
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+
+      return hours > 0 && hours < 24
+        ? ` (in ${hours} hour${hours > 1 ? "s" : ""})`
+        : "";
+    })()}
+  </p>
+)}
+
+      </div>
+
+      <div className="flex justify-end gap-3 mt-8">
+
+        <button
+          type="button"
+          onClick={() => setShowSchedule(false)}
+          className="px-6 py-3 border rounded-xl"
+        >
+          Cancel
+          </button>
+  
+          <button
+            type="button"
+            disabled={actionLoading !== null}
+            onClick={handleSchedule}
+            className="px-6 py-3 bg-black text-white rounded-xl"
+          >
+            {actionLoading === "scheduled" ? "Scheduling..." : "Schedule"}
+          </button>
+
+      </div>
+
+    </div>
+  </div>
+)}
+</section>
+
+      <Footer />
+      </main>
+
+      {/* ================= SMART JOB POPUP (9:16 RATIO) ================= */}
+      {showSmartUpload && (
+        <div className="fixed inset-0 bg-black/70 overflow-y-auto z-[1000000] p-4 backdrop-blur-md">
+          <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-6 transition-all duration-500 w-full max-w-[1050px] mx-auto min-h-[100%] py-10 md:py-8">
+            
+            {/* LEFT PANE: PREVIEW BOX (Visible after extraction) */}
+            {String(loadingAI) === 'done' && (
+              <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
+                <div className="p-6 bg-white border-b">
+                  <h3 className="font-bold text-xl">Smart Preview</h3>
+                    <p className="text-xs text-black md:text-black">Confirm detected details</p>
+                    {aiResult?._apiKeyIndex && (
+                      <div className="mt-2 inline-block px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-md">
+                        Processed via API Key #{aiResult._apiKeyIndex}
+                      </div>
+                    )}
+                  </div>
+                
+                <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-black font-extrabold">Firm</label>
+                    <p className="font-semibold border-b border-gray-100 pb-1">{firmName || "---"}</p>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-black font-extrabold">Positions ({positions.length})</label>
+                    <div className="border-b border-gray-100 pb-2 flex flex-col gap-1 mt-1">
+                      {positions.map((p, i) => (
+                        <p key={i} className="font-semibold text-sm">
+                          {p.position || '---'} {p.experience && p.experience.length > 0 ? `(${p.experience.join(', ')})` : ''}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-widest text-black md:text-black font-extrabold">Location</label>
+                    <p className="font-semibold border-b border-gray-100 pb-1">{city}, {state}</p>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <button type="button"
+                      onClick={() => {
+                        setShowSmartUpload(false);
+                        setLoadingAI(false);
+                      }}
+                      className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg active:scale-95 transition-all"
+                  >
+                    Confirm & Auto-Fill
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* RIGHT PANE: UPLOAD BOX (9:16 Ratio) */}
+            <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col relative overflow-hidden border border-white/20">
+              <button type="button"
+                  onClick={() => { setShowSmartUpload(false); setLoadingAI(false); }}
+                className="absolute right-5 top-5 bg-white text-black md:text-black hover:text-black w-8 h-8 rounded-full flex items-center justify-center z-20"
+              >✕</button>
+
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="flex items-center justify-between mt-4">
+                  <div>
+                    <h2 className="text-2xl font-black tracking-tight">Smart Job</h2>
+                  </div>
+                  <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors">?? API Config</button>
                 </div>
                 <p className="text-black text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
 
