@@ -194,6 +194,7 @@ const [smartText, setSmartText] = useState("");
 const [smartUrl, setSmartUrl] = useState("");
 
 const [smartImage, setSmartImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
 const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
 const [activeTab, setActiveTab] = useState("text");
@@ -1757,13 +1758,18 @@ const handleSmartExtraction = async () => {
                             type="file" 
                             className="hidden" 
                             accept="image/*"
-                            onChange={(e) => setSmartImage(e.target.files?.[0] || null)} 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0] || null;
+                              setSmartImage(file);
+                              if (file) setPreviewUrl(URL.createObjectURL(file));
+                              else setPreviewUrl(null);
+                            }} 
                           />
                         </label>
                       ) : (
                         <div className="relative w-full h-[40vh] min-h-[200px] max-h-[350px] rounded-[2rem] overflow-hidden border bg-gray-100 flex items-center justify-center shadow-inner">
                           <img 
-                            src={URL.createObjectURL(smartImage)} 
+                            src={previewUrl || ""} 
                             alt="Selected" 
                             className="w-full h-full object-contain p-2" 
                           />
@@ -1800,6 +1806,9 @@ const handleSmartExtraction = async () => {
       setLoadingAI("loading");
 
       if (uploadMode === "image" && smartImage) {
+          if (smartImage.size > 4 * 1024 * 1024) {
+            throw new Error("Image is too large (over 4MB). Please compress it before uploading to avoid server timeouts.");
+          }
         try {
           const extMatch = smartImage.name.match(/\.[0-9a-z]+$/i);
           const ext = extMatch ? extMatch[0].toLowerCase() : '';
