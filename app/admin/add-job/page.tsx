@@ -199,6 +199,7 @@ const [smartImage, setSmartImage] = useState<File | null>(null);
 const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
   const [showAiSettings, setShowAiSettings] = useState(false);
   const [apiKeys, setApiKeys] = useState<string[]>(['', '', '', '', '']);
+  const [showKeyPassword, setShowKeyPassword] = useState<boolean[]>([]);
   const [keyStatuses, setKeyStatuses] = useState<string[]>(['Ready', 'Ready', 'Ready', 'Ready', 'Ready']);
 
   useEffect(() => {
@@ -1970,7 +1971,19 @@ const handleSmartExtraction = async () => {
               lastError = e.message;
             }
           }
-        } else {
+        
+            if (!result) {
+               const cleanHeaders = { ...headers };
+               delete cleanHeaders["x-user-gemini-key"];
+               try {
+                   const fbRes = await fetch("/api/extract-job", { headers: cleanHeaders, method: "POST", body: formData });
+                   if (fbRes.ok) {
+                       const data = await fbRes.json();
+                       result = data;
+                   }
+               } catch(e) {}
+            }
+          } else {
           const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
           let data;
           try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
