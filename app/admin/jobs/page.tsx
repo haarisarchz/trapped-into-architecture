@@ -14,17 +14,25 @@ import { Share, Check, Copy } from "lucide-react";
 function AdminShareButton({ job, siteSettings }: { job: any, siteSettings: any }) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedGroup, setCopiedGroup] = useState(false);
   
   const url = "https://www.trappedintoarchitecture.com" + generateJobUrl(job);
   const text = `${job.position} at ${job.firm_name}\n\nApply here: ${url}`;
 
-  const copyAndOpen = (e: any, link: string) => {
+  const fbGroupText = `\u{1F680} Hiring: ${job.position}\n\u{1F3E2} Firm: ${job.firm_name || "Unknown"}\n\u{1F4CD} Location: ${[job.area || job.neighborhood, job.city, job.state].filter(Boolean).join(", ") || "Remote"}\n\u{1F4BC} Type: ${job.employment_type || "Full Time"}\n\n\u{1F517} Apply here: ${url}`;
+
+  const copyAndOpen = (e: any, link: string, customText?: string, isGroup?: boolean) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    window.open(link, "_blank");
+    navigator.clipboard.writeText(customText || text);
+    if (isGroup) {
+      setCopiedGroup(true);
+      setTimeout(() => setCopiedGroup(false), 2000);
+    } else {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+    if (link) window.open(link, "_blank");
   };
 
   const encodedUrl = encodeURIComponent(url);
@@ -40,19 +48,23 @@ function AdminShareButton({ job, siteSettings }: { job: any, siteSettings: any }
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
           <div className="py-1">
             <button 
-              onClick={(e) => copyAndOpen(e, "https://web.whatsapp.com/send?text=" + encodedText)} 
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              onClick={(e) => copyAndOpen(e, "https://www.facebook.com/groups/", fbGroupText, true)} 
+              className="w-full text-left px-4 py-2 text-sm text-blue-700 font-bold bg-blue-50 hover:bg-blue-100 flex justify-between items-center"
             >
-              WhatsApp Web
+              <span>FB Groups (Copy & Open)</span>
+              {copiedGroup && <Check size={14} className="text-blue-700" />}
             </button>
+            <div className="h-px bg-gray-100 my-1"></div>
+            
             <button 
-              onClick={(e) => copyAndOpen(e, "https://api.whatsapp.com/send?text=" + encodedText)} 
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              onClick={(e) => copyAndOpen(e, "https://web.whatsapp.com/send?text=" + encodedText)} 
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex justify-between items-center"
             >
-              WhatsApp App (Channel)
+              <span>WhatsApp Web</span>
+              {copied && !copiedGroup && <Check size={14} className="text-gray-400" />}
             </button>
             <a 
               href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
@@ -60,7 +72,7 @@ function AdminShareButton({ job, siteSettings }: { job: any, siteSettings: any }
               onClick={e => e.stopPropagation()}
               className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
-              Facebook
+              Facebook Feed
             </a>
             <a 
               href="https://www.instagram.com/"
