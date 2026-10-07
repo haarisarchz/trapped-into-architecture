@@ -42,29 +42,39 @@ const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
 const [showFilters, setShowFilters] = useState(false);
 
- const uniqueStates = [
-  ...new Set(
-    jobs.map((job: any) => job.state)
-  ),
-];
+ 
+  const getAggregatedList = (items: any[], key: string, additionalFilter: (item: any) => boolean = () => true) => {
+    const counts: { [key: string]: number } = {};
+    const latestDate: { [key: string]: number } = {};
+    items.filter(additionalFilter).forEach(item => {
+      let val = item[key];
+      if (!val || typeof val !== 'string') return;
+      val = val.trim();
+      if (val === '') return;
+      counts[val] = (counts[val] || 0) + 1;
+      const itemDate = new Date(item.posted_date || item.created_at || item.postedDate || 0).getTime();
+      if (!latestDate[val] || itemDate > latestDate[val]) {
+        latestDate[val] = itemDate;
+      }
+    });
+    return Object.keys(counts).map(val => ({
+      name: val,
+      count: counts[val],
+      latest: latestDate[val]
+    })).sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return b.latest - a.latest;
+    });
+  };
 
-const uniqueCities = [
-  ...new Set(
-    jobs
-      .filter((job: any) => {
+  const [showAllStates, setShowAllStates] = useState(false);
+  const [showAllCities, setShowAllCities] = useState(false);
 
-        if (selectedStates.length === 0) {
-          return true;
-        }
+  const stateStats = getAggregatedList(jobs, 'state');
+  const displayedStates = showAllStates ? stateStats : stateStats.slice(0, 10);
+  const cityStats = getAggregatedList(jobs, 'city', (job: any) => selectedStates.length === 0 || selectedStates.includes(job.state));
+  const displayedCities = showAllCities ? cityStats : cityStats.slice(0, 10);
 
-        return selectedStates.includes(
-          job.state
-        );
-
-      })
-      .map((job: any) => job.city)
-  ),
-];
   useEffect(() => {
 
   const fetchJobs = async () => {
@@ -170,51 +180,31 @@ setSelectedSalary([]);
     <div>
 
       <h3 className="font-semibold mb-3">
-        State
+        State ({stateStats.length})
       </h3>
-
       <div className="space-y-2 text-sm">
-
-        {uniqueStates.map((state) => (
-
-          <label
-            key={state}
-            className="flex items-center gap-2"
-          >
-
-            <input
-              type="checkbox"
-
-              checked={selectedStates.includes(state)}
-
-              onChange={(e) => {
-
-                if (e.target.checked) {
-
-                  setSelectedStates([
-                    ...selectedStates,
-                    state
-                  ]);
-
-                } else {
-
-                  setSelectedStates(
-                    selectedStates.filter(
-                      (s) => s !== state
-                    )
-                  );
-
-                }
-
-              }}
-            />
-
-            {state}
-
+        {displayedStates.map((stateObj) => (
+          <label key={stateObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selectedStates.includes(stateObj.name)}
+                onChange={(e) => {
+                  if (e.target.checked) setSelectedStates([...selectedStates, stateObj.name]);
+                  else setSelectedStates(selectedStates.filter((s) => s !== stateObj.name));
+                }}
+                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+              />
+              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{stateObj.name}</span>
+            </div>
+            <span className="text-gray-400 text-xs font-medium">({stateObj.count})</span>
           </label>
-
         ))}
-
+        {stateStats.length > 10 && (
+          <button type="button" onClick={() => setShowAllStates(!showAllStates)} className="text-blue-600 hover:underline text-xs mt-2 font-medium block">
+            {showAllStates ? "Show Less" : "Show More"}
+          </button>
+        )}
       </div>
 
     </div>
@@ -224,51 +214,41 @@ setSelectedSalary([]);
     <div>
 
       <h3 className="font-semibold mb-3">
-        City
+        City ({cityStats.length})
       </h3>
-
       <div className="space-y-2 text-sm">
-
-        {uniqueCities.map((city) => (
-
-          <label
-            key={city}
-            className="flex items-center gap-2"
-          >
-
-            <input
-              type="checkbox"
-
-              checked={selectedCities.includes(city)}
-
-              onChange={(e) => {
-
-                if (e.target.checked) {
-
-                  setSelectedCities([
-                    ...selectedCities,
-                    city
-                  ]);
-
-                } else {
-
-                  setSelectedCities(
-                    selectedCities.filter(
-                      (c) => c !== city
-                    )
-                  );
-
-                }
-
-              }}
-            />
-
-            {city}
-
+        {displayedCities.map((cityObj) => (
+          <label key={cityObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selectedCities.includes(cityObj.name)}
+                onChange={(e) => {
+                  if (e.target.checked) setSelectedCities([...selectedCities, cityObj.name]);
+                  else setSelectedCities(selectedCities.filter((c) => c !== cityObj.name));
+                }}
+                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+              />
+              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{cityObj.name}</span>
+            </div>
+            <span className="text-gray-400 text-xs font-medium">({cityObj.count})</span>
           </label>
-
         ))}
-
+        {cityStats.length > 10 && (
+          <button 
+            type="button" 
+            onClick={() => {
+              if (selectedStates.length === 0 && !showAllCities) {
+                alert("Please select a state to view more specific cities.");
+                return;
+              }
+              setShowAllCities(!showAllCities);
+            }} 
+            className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+          >
+            {showAllCities ? "Show Less" : (selectedStates.length === 0 ? "Select state to see more" : "Show More")}
+          </button>
+        )}
       </div>
 
     </div>
