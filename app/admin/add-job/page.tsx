@@ -891,7 +891,7 @@ const handleSmartExtraction = async () => {
 
   </div>
 
-  <button
+  <button type="button"
     onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin"); }}
     className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0"
   >
@@ -1805,7 +1805,7 @@ const handleSmartExtraction = async () => {
                             alt="Selected" 
                             className="w-full h-full object-contain p-2" 
                           />
-                          <button 
+                          <button type="button" 
                             onClick={() => setSmartImage(null)}
                             className="absolute top-3 right-3 bg-black/50 backdrop-blur-md text-white w-6 h-6 rounded-full text-xs hover:bg-red-500 transition-colors"
                           >✕</button>
@@ -1831,7 +1831,7 @@ const handleSmartExtraction = async () => {
                   )}
                 </div>
 
-                <button
+                <button type="button"
   disabled={loadingAI === "loading"}
     onClick={async () => {
     try {
