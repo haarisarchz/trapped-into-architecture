@@ -120,10 +120,15 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
     }
 
     if (!success) {
-      if (lastError && lastError.message) {
-        lastError.message = `[Failed across all ${availableKeys.length} API keys] ` + lastError.message;
+      const is503 = lastError?.status === 503 || (lastError?.message && (lastError.message.includes('503') || lastError.message.includes('UNAVAILABLE') || lastError.message.includes('busy')));
+      if (is503) {
+        throw new Error("Google AI servers are currently very busy. Please try again in a few minutes.");
       }
-      throw lastError;
+      const isQuota = lastError?.status === 429 || (lastError?.message && lastError.message.toLowerCase().includes('quota'));
+      if (isQuota) {
+        throw new Error("Daily AI limit reached for all accounts. Please try again tomorrow.");
+      }
+      throw new Error("Could not extract details. Please check the image and try again.");
     }
 
     const responseText = result.text;
