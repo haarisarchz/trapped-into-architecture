@@ -52,8 +52,11 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
     let result;
     let lastError;
     let success = false;
+    let successfulKeyIndex = 1;
+    let currentIndex = 0;
 
     for (const apiKey of availableKeys) {
+      currentIndex++;
       if (success) break;
       const ai = new GoogleGenAI({ apiKey });
 
@@ -91,6 +94,7 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
           }
           
           success = true;
+          successfulKeyIndex = currentIndex;
           break; // Break the internal 503 retry loop because we succeeded!
         } catch (err: any) {
           lastError = err;
@@ -128,6 +132,7 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
 
     try {
       const json = JSON.parse(cleanedText.trim());
+      json._apiKeyIndex = successfulKeyIndex;
       return NextResponse.json(json);
     } catch(e) {
       throw new Error("Information could not be structured correctly. Please try again.");

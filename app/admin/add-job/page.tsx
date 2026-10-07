@@ -1687,9 +1687,14 @@ const handleSmartExtraction = async () => {
             {String(loadingAI) === 'done' && (
               <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="p-6 bg-white border-b">
-                  <h3 className="font-bold text-xl">🔎 Preview</h3>
-                  <p className="text-xs text-black md:text-black">Confirm detected details</p>
-                </div>
+                  <h3 className="font-bold text-xl">Smart Preview</h3>
+                    <p className="text-xs text-black md:text-black">Confirm detected details</p>
+                    {aiResult?._apiKeyIndex && (
+                      <div className="mt-2 inline-block px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-md">
+                        Processed via API Key #{aiResult._apiKeyIndex}
+                      </div>
+                    )}
+                  </div>
                 
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
                   <div>
