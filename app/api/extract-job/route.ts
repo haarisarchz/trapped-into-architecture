@@ -120,7 +120,12 @@ const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_
       }
     }
 
-    if (!success) throw lastError;
+    if (!success) {
+      if (lastError && lastError.message) {
+        lastError.message = `[Failed across all ${availableKeys.length} API keys] ` + lastError.message;
+      }
+      throw lastError;
+    }
 
     const responseText = result.text;
     if (!responseText) throw new Error("AI extraction temporarily failed. Please try again.");
