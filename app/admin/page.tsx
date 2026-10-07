@@ -217,6 +217,12 @@ if (loading) {
 >
   Companies
 </button>
+  <button
+    onClick={() => router.push("/admin/catalog")}
+    className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
+  >
+    Architecture Catalog
+  </button>
 
 
 {userRole === "ceo" && (
