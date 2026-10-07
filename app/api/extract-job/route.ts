@@ -1,173 +1,83 @@
-// @ts-nocheck
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { extractPrompt } from "./prompt";
 
 export async function POST(req: Request) {
   try {
-    // SECURITY: The API key is securely loaded server-side.
-    // It checks standard variable names.
-    
     const formData = await req.formData();
     const mode = formData.get("mode") as string;
-    
-    const prompt = `You are an expert HR assistant analyzing a job posting. 
-Extract the following information and return ONLY a strict JSON object. Do not include markdown formatting like \`\`\`json.
-Fields to extract:
-- company (string, exact name)
-- organization_type (string, usually "Firm", "Company", "Studio")
-- city (string)
-- state (string)
-- description (string, concise summary of the firm or overall role)
-- employmentType (string, e.g., "Full Time", "Part Time", "Contract", "Internship")
-- workplaceType (string, e.g., "Remote", "On-site", "Hybrid")
-- positions (array of objects, each containing):
-  - position (string, e.g., "Junior Architect", "Interior Designer")
-  - role (string, brief 1-2 line summary of what this specific role entails)
-  - description (string, detailed job description, responsibilities, and requirements for this specific role)
-  - vacancies (string, the number of openings, e.g., "2", "3-5", leave empty if not specified)
-  - experience (array of strings, e.g., ["1-2 Years", "Fresher"])
-  - salary (string, e.g., "₹ 3,00,000 PA", "Based on experience")
-  - qualifications (array of strings, e.g., ["B.Arch", "M.Arch"])
-  - skills (array of strings, e.g., ["AutoCAD", "SketchUp", "Revit"])
 
-If the text contains multiple roles (e.g. Hiring Junior Architect and 3D Visualizer), add each to the positions array.
-If any field is missing, return an empty string or empty array as appropriate.`;
-
-const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+    const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
     const envKeys = envKey.split(",").map(k => k.trim()).filter(Boolean);
-    
     const userKey = req.headers.get("x-user-gemini-key");
+    
     const availableKeys = [];
     if (userKey) availableKeys.push(userKey);
     availableKeys.push(...envKeys);
 
     if (availableKeys.length === 0) {
-      console.error("Gemini configuration is missing.");
-      return NextResponse.json(
-        { error: "AI extraction is not configured correctly. Please contact the administrator." },
-        { status: 500 }
-      );
+      throw new Error("No Gemini API key configured.");
     }
 
-    let result;
-    let lastError;
-    let success = false;
-    let successfulKeyIndex = 1;
-    let currentIndex = 0;
+    // THE FIX: Pick exactly ONE random key per request. 
+    // This distributes the quota perfectly, but prevents the dreaded Vercel 10-second timeout 
+    // caused by testing 5 keys sequentially.
+    const apiKey = availableKeys[Math.floor(Math.random() * availableKeys.length)];
+    const ai = new GoogleGenAI({ apiKey });
 
-    for (const apiKey of availableKeys) {
-      currentIndex++;
-      if (success) break;
-      const ai = new GoogleGenAI({ apiKey });
+    let parts = [];
 
-      let max503Retries = 3; // Try up to 4 times (0, 1, 2, 3) on the same key if Google is busy
-
-      for (let attempt = 0; attempt <= max503Retries; attempt++) {
-        try {
-          if (mode === "text") {
-            const text = formData.get("text") as string;
-            if (!text) throw new Error("No text provided");
-            const fullPrompt = prompt + "\n\nText to extract:\n" + text;
-            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
-          } else if (mode === "url") {
-            const url = formData.get("url") as string;
-            const res = await fetch(url);
-            const html = await res.text();
-            const stripped = html.replace(/<script[\s\S]*?<\/script>/gmi, '')
-                                 .replace(/<style[\s\S]*?<\/style>/gmi, '')
-                                 .replace(/<[^>]+>/g, ' ');
-            const fullPrompt = prompt + "\n\nWebsite Content to extract:\n" + stripped.substring(0, 15000);
-            result = await ai.models.generateContent({ model: "gemini-flash-latest", contents: fullPrompt });
-          } else if (mode === "image") {
-            const imageFile = formData.get("image") as File;
-            const arrayBuffer = await imageFile.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            result = await ai.models.generateContent({
-              model: "gemini-flash-latest",
-              contents: [
-                prompt,
-                { inlineData: { data: buffer.toString("base64"), mimeType: imageFile.type } }
-              ]
-            });
-          } else {
-            throw new Error("Invalid mode");
-          }
-          
-          success = true;
-          successfulKeyIndex = currentIndex;
-          break; // Break the internal 503 retry loop because we succeeded!
-        } catch (err: any) {
-          lastError = err;
-          const isQuota = err.status === 429 || err.status === 403 || (err.message && (err.message.toLowerCase().includes('quota') || err.message.toLowerCase().includes('429')));
-          const is503 = err.status === 503 || (err.message && (err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('busy')));
-          
-          if (isQuota) {
-            console.log("Quota exceeded for key, instantly switching to next key...");
-            break; // Break the internal retry loop and move to the NEXT API key
-          } else if (is503) {
-            if (attempt < max503Retries) {
-              console.log(`Google AI is busy (503). Waiting 2 seconds before retry ${attempt + 1}...`);
-              break;
-            } else {
-              // We've waited 6+ seconds and it's still busy. Abort completely.
-              throw new Error("Google AI servers are currently extremely busy. Please try again in 1 minute.");
-            }
-          } else {
-            throw err; // normal error, abort instantly
-          }
+    if (mode === "text") {
+      const text = formData.get("text") as string;
+      if (!text) throw new Error("No text provided");
+      parts.push({ text: extractPrompt + "\n\nHere is the raw text to extract:\n" + text });
+    } else if (mode === "image") {
+      const file = formData.get("image") as File;
+      if (!file) throw new Error("No image provided");
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const base64String = Buffer.from(arrayBuffer).toString('base64');
+      
+      parts.push({ text: extractPrompt });
+      parts.push({
+        inlineData: {
+          mimeType: file.type || "image/jpeg",
+          data: base64String
         }
-      }
+      });
+    } else {
+      throw new Error("Invalid mode");
     }
 
-    if (!success) {
-      const is503 = lastError?.status === 503 || (lastError?.message && (lastError.message.includes('503') || lastError.message.includes('UNAVAILABLE') || lastError.message.includes('busy')));
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    try {
+      const res = await model.generateContent(parts);
+      const output = res.text;
+      const cleanedText = output.replace(/\x60\x60\x60json/g, "").replace(/\x60\x60\x60/g, "").trim();
+      
+      try {
+        const json = JSON.parse(cleanedText);
+        return NextResponse.json(json);
+      } catch(e) {
+        throw new Error("Information could not be structured correctly. Please try again.");
+      }
+    } catch (err: any) {
+      const is503 = err?.status === 503 || (err?.message && (err.message.includes('503') || err.message.includes('UNAVAILABLE') || err.message.includes('busy')));
       if (is503) {
-        throw new Error("Google AI servers are currently very busy. Please try again in a few minutes.");
+        throw new Error("Google AI servers are currently very busy. Please click Extract again.");
       }
-      const isQuota = lastError?.status === 429 || (lastError?.message && lastError.message.toLowerCase().includes('quota'));
+      
+      const isQuota = err?.status === 429 || (err?.message && err.message.toLowerCase().includes('quota'));
       if (isQuota) {
-        throw new Error("Daily AI limit reached for all accounts. Please try again tomorrow.");
+        throw new Error("This specific AI key is out of quota. Please click Extract again to use a fresh key.");
       }
-      throw new Error("Could not extract details. Please check the image and try again.");
+      
+      throw err;
     }
 
-    const responseText = result.text;
-    if (!responseText) throw new Error("AI extraction temporarily failed. Please try again.");
-
-    let cleanedText = responseText.trim();
-    if (cleanedText.startsWith("```json")) cleanedText = cleanedText.substring(7);
-    else if (cleanedText.startsWith("```")) cleanedText = cleanedText.substring(3);
-    if (cleanedText.endsWith("```")) cleanedText = cleanedText.substring(0, cleanedText.length - 3);
-
-    try {
-      const json = JSON.parse(cleanedText.trim());
-      json._apiKeyIndex = successfulKeyIndex;
-      return NextResponse.json(json);
-    } catch(e) {
-      throw new Error("Information could not be structured correctly. Please try again.");
-    }
-
-    } catch (error: any) {
-    console.error("Gemini Extraction Error:", error);
-    
-    let userMessage = error.message || "Failed to extract job details";
-    
-    try {
-      if (error.message && error.message.includes('{')) {
-        const parsed = JSON.parse(error.message);
-        if (parsed.error && parsed.error.status === 'UNAVAILABLE') {
-          userMessage = "Google AI servers are extremely busy. Please try again in 1 minute.";
-        } else if (parsed.error && parsed.error.message) {
-          userMessage = parsed.error.message;
-        }
-      }
-    } catch(e) {
-      // Ignored
-    }
-
-    return NextResponse.json(
-      { error: userMessage },
-      { status: 500 }
-    );
+  } catch (err: any) {
+    console.error("Extraction error:", err);
+    return NextResponse.json({ error: err.message || "Failed to extract" }, { status: 500 });
   }
 }
