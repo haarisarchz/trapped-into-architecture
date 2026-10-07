@@ -1742,6 +1742,16 @@ const handleSmartExtraction = async () => {
               ))}
             </div>
             
+            <button type="button" 
+              onClick={() => {
+                const newKeys = [...apiKeys, ''];
+                saveApiKeys(newKeys);
+              }}
+              className="mt-4 text-blue-600 font-bold hover:underline text-sm"
+            >
+              + Add Server
+            </button>
+            
             <button type="button"
               onClick={() => setShowAiSettings(false)}
               className="w-full bg-black text-white font-bold py-4 rounded-xl mt-8 hover:bg-gray-800 transition"
@@ -1818,7 +1828,7 @@ const handleSmartExtraction = async () => {
                   <div>
                     <h2 className="text-2xl font-black tracking-tight">Smart Job</h2>
                   </div>
-                  <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors">?? API Config</button>
+                  <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors">API Config</button>
                 </div>
                 <p className="text-black text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
 

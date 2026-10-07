@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      const res = await ai.models.generateContent({ model: "gemini-1.5-flash", contents: parts });
+      const res = await ai.models.generateContent({ model: "gemini-flash-latest", contents: parts });
       const output = res.text || "";
       const cleanedText = output.replace(/\x60\x60\x60json/g, "").replace(/\x60\x60\x60/g, "").trim();
       
