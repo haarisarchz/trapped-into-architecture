@@ -1740,12 +1740,12 @@ const handleSmartExtraction = async () => {
                 </div>
 
                 <div className="p-6">
-                  <button
-                    onClick={() => {
-                      setShowSmartUpload(false);
-                      setLoadingAI(false);
-                    }}
-                    className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg active:scale-95 transition-all"
+                  <button type="button"
+                      onClick={() => {
+                        setShowSmartUpload(false);
+                        setLoadingAI(false);
+                      }}
+                      className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg active:scale-95 transition-all"
                   >
                     Confirm & Auto-Fill
                   </button>
@@ -1755,8 +1755,8 @@ const handleSmartExtraction = async () => {
 
             {/* RIGHT PANE: UPLOAD BOX (9:16 Ratio) */}
             <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col relative overflow-hidden border border-white/20">
-              <button
-                onClick={() => { setShowSmartUpload(false); setLoadingAI(false); }}
+              <button type="button"
+                  onClick={() => { setShowSmartUpload(false); setLoadingAI(false); }}
                 className="absolute right-5 top-5 bg-white text-black md:text-black hover:text-black w-8 h-8 rounded-full flex items-center justify-center z-20"
               >✕</button>
 
@@ -2082,7 +2082,7 @@ const handleSmartExtraction = async () => {
       >
         {showUploadOptions && (
           <div className="flex flex-col gap-3 mb-5 items-end animate-in fade-in slide-in-from-bottom-5 duration-300">
-            <button
+            <button type="button"
               onClick={() => { setUploadMode('image'); setShowSmartUpload(true); setShowUploadOptions(false); }}
               className="bg-white text-black shadow-2xl rounded-xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
@@ -2092,7 +2092,7 @@ const handleSmartExtraction = async () => {
                 <span className="text-[10px] text-black md:text-black uppercase font-bold">Extract from Pic</span>
               </div>
             </button>
-            <button
+            <button type="button"
               onClick={() => { setUploadMode('text'); setShowSmartUpload(true); setShowUploadOptions(false); }}
               className="bg-white text-black shadow-2xl rounded-xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
@@ -2102,7 +2102,7 @@ const handleSmartExtraction = async () => {
                 <span className="text-[10px] text-black md:text-black uppercase font-bold">Paste & Summarize</span>
               </div>
             </button>
-            <button
+            <button type="button"
               onClick={() => { setUploadMode('url'); setShowSmartUpload(true); setShowUploadOptions(false); }}
               className="bg-white text-black shadow-2xl rounded-xl px-6 py-4 w-64 text-left font-bold flex items-center gap-4 border border-gray-100 hover:bg-white transition-all"
             >
@@ -2115,7 +2115,7 @@ const handleSmartExtraction = async () => {
           </div>
         )}
 
-        <button
+        <button type="button"
           onClick={() => setShowUploadOptions(!showUploadOptions)}
           className={`bg-black text-white rounded-full px-8 py-5 shadow-2xl flex items-center justify-center gap-3 transition-all active:scale-90 ${showUploadOptions ? 'bg-red-500 scale-90' : 'hover:scale-105'}`}
         >
