@@ -751,9 +751,7 @@ setSelectedSalary([]);
   Salary Low to High
 </option>
 
-<option value="expiry">
-  Expiry Date
-</option>
+
 
     </select>
 

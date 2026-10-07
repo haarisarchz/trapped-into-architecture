@@ -748,9 +748,7 @@ setSelectedSalary([]);
   Salary Low to High
 </option>
 
-<option value="expiry">
-  Expiry Date
-</option>
+
 
     </select>
 
@@ -1141,12 +1139,7 @@ setSelectedSalary([]);
         return dateB !== dateA ? dateB - dateA : createdB - createdA;
       }
 
-      if (sortBy === "expiry") {
-        const expA = a.post_expiry_date ? new Date(a.post_expiry_date).getTime() : Infinity;
-        const expB = b.post_expiry_date ? new Date(b.post_expiry_date).getTime() : Infinity;
-        if (expA !== expB) return expA - expB;
-        return dateB !== dateA ? dateB - dateA : createdB - createdA;
-      }
+      
 
       return dateB !== dateA ? dateB - dateA : createdB - createdA;
     })
