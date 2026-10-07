@@ -239,12 +239,7 @@ function EditCompanyContent() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Edit Company: {firmName}</h1>
           
-            <button
-              onClick={() => router.push("/admin/settings")}
-              className="w-full text-left px-4 py-2.5 rounded-2xl hover:bg-gray-800 transition"
-            >
-              Settings
-            </button>
+            
         </div>
 
         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100">
