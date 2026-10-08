@@ -4,9 +4,25 @@ import 'rc-slider/assets/index.css';
 
 export function AdminExperienceSlider({ experience, onChangeExp, isInternship }: { experience: string[], onChangeExp: (arr: string[]) => void, isInternship: boolean }) {
   const [expRange, setExpRange] = useState<number[]>([0, 5]);
+  const [isNoExp, setIsNoExp] = useState<boolean>(false);
+  const [hasInitIntern, setHasInitIntern] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!experience || experience.length === 0) return;
+    if (isInternship && !hasInitIntern) {
+      setIsNoExp(true);
+      onChangeExp([]);
+      setHasInitIntern(true);
+    }
+  }, [isInternship, hasInitIntern, onChangeExp]);
+
+  useEffect(() => {
+    if (!experience || experience.length === 0 || experience.includes("No experience required") || experience.includes("No experience mentioned")) {
+      if (!isInternship || hasInitIntern) {
+        setIsNoExp(true);
+      }
+      return;
+    }
+    setIsNoExp(false);
     const expStr = experience[0].toLowerCase();
     if (expStr === "fresher") {
       setExpRange([0, 0]);
@@ -18,13 +34,17 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
     } else if (nums && nums.length === 1) {
       setExpRange([0, parseInt(nums[0])]);
     }
-  }, [experience]);
+  }, [experience, isInternship, hasInitIntern]);
 
-  const pushExp = (range: number[]) => {
-    if (range[0] === 0 && range[1] === 0) {
-      onChangeExp(["Fresher"]);
+  const pushExp = (range: number[], noExp: boolean) => {
+    if (noExp) {
+      onChangeExp([]);
     } else {
-      onChangeExp([`${range[0] === 0 ? "Fresher" : range[0]} - ${range[1]} Year${range[1] > 1 ? 's' : ''}`]);
+      if (range[0] === 0 && range[1] === 0) {
+        onChangeExp(["Fresher"]);
+      } else {
+        onChangeExp([`${range[0] === 0 ? "Fresher" : range[0]} - ${range[1]} Year${range[1] > 1 ? 's' : ''}`]);
+      }
     }
   };
 
@@ -32,48 +52,66 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
     <div className="w-full">
         <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-black">Required Experience <span className="text-red-500">*</span></label>
         
-        <div className="px-3 mb-6">
-            <Slider 
-                range 
-                min={0} 
-                max={15} 
-                value={expRange} 
-                onChange={(val) => {
-                  setExpRange(val as number[]);
-                  pushExp(val as number[]);
-                }} 
-                trackStyle={[{ backgroundColor: '#3b82f6' }]}
-                handleStyle={[{ borderColor: '#9ca3af', backgroundColor: 'white' }, { borderColor: '#9ca3af', backgroundColor: 'white' }]}
-            />
+        <div className="flex gap-4 mb-6">
+            <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
+                <input 
+                    type="checkbox" 
+                    checked={isNoExp}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setIsNoExp(checked);
+                      pushExp(expRange, checked);
+                    }}
+                    className="w-4 h-4 rounded text-blue-600" 
+                />
+                No experience mentioned
+            </label>
         </div>
-        
-        <div className="flex items-center gap-4">
-            <select 
-                className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
-                value={expRange[0]}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  setExpRange([v, Math.max(v, expRange[1])]);
-                  pushExp([v, Math.max(v, expRange[1])]);
-                }}
-            >
-                <option value={0}>Fresher</option>
-                {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
-            </select>
-            <span className="text-sm font-semibold text-black">to</span>
-            <select 
-                className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
-                value={expRange[1]}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  setExpRange([Math.min(expRange[0], v), v]);
-                  pushExp([Math.min(expRange[0], v), v]);
-                }}
-            >
-                <option value={0}>Fresher</option>
-                {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
-                <option value={15}>15+ Years</option>
-            </select>
+
+        <div className={`transition-opacity duration-300 ${isNoExp ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100'}`}>
+            <div className="px-3 mb-6">
+                <Slider 
+                    range 
+                    min={0} 
+                    max={15} 
+                    value={expRange} 
+                    onChange={(val) => {
+                      setExpRange(val as number[]);
+                      pushExp(val as number[], isNoExp);
+                    }} 
+                    trackStyle={[{ backgroundColor: '#3b82f6' }]}
+                    handleStyle={[{ borderColor: '#9ca3af', backgroundColor: 'white' }, { borderColor: '#9ca3af', backgroundColor: 'white' }]}
+                />
+            </div>
+            
+            <div className="flex items-center gap-4">
+                <select 
+                    className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    value={expRange[0]}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      setExpRange([v, Math.max(v, expRange[1])]);
+                      pushExp([v, Math.max(v, expRange[1])], isNoExp);
+                    }}
+                >
+                    <option value={0}>Fresher</option>
+                    {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
+                </select>
+                <span className="text-sm font-semibold text-black">to</span>
+                <select 
+                    className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    value={expRange[1]}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      setExpRange([Math.min(expRange[0], v), v]);
+                      pushExp([Math.min(expRange[0], v), v], isNoExp);
+                    }}
+                >
+                    <option value={0}>Fresher</option>
+                    {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
+                    <option value={15}>15+ Years</option>
+                </select>
+            </div>
         </div>
     </div>
   );
