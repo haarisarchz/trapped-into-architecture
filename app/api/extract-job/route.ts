@@ -23,18 +23,21 @@ Fields to extract:
 - instagram (string)
 - linkedin (string)
 - twitter (string)
-- position (string)
-- vacancies (string or number)
-- experience (array of strings, e.g., ["0-2 years", "5+ years"])
 - employment_type (string, e.g., "Full-time", "Part-time", "Contract", "Internship")
-- min_salary (number)
-- max_salary (number)
-- software (array of strings, e.g., ["AutoCAD", "Revit", "SketchUp", "Rhino"])
-- skills (array of strings, non-software skills like "Project Management", "Client Interaction")
 - tags (array of strings, relevant keywords)
 - application_deadline (string, YYYY-MM-DD or readable format)
-- qualifications (array of strings)
-- description (string, a brief summary of the role)`;
+
+CRITICAL: A single job poster might advertise MULTIPLE distinct roles (e.g. "Architecture Intern" AND "Interior Designer"). 
+You MUST extract them as an array of objects under the "positions" key. Do NOT merge them into one.
+- positions (array of objects, one for each distinct role):
+    - position (string, exact job title)
+    - vacancies (string or number, default to 1 if unspecified)
+    - experience (array of strings, e.g., ["0-2 years", "5+ years"])
+    - salary (string, exact salary range like "15k - 25k Per Month" or "4 - 6 LPA" or number if single value)
+    - software (array of strings, e.g., ["AutoCAD", "Revit", "SketchUp", "Rhino"])
+    - skills (array of strings, non-software skills like "Project Management", "Client Interaction")
+    - qualifications (array of strings, e.g. ["B.Arch", "M.Arch"])
+    - description (string, a brief summary of the specific role responsibilities)`;
 
 export async function POST(req: Request) {
   try {
