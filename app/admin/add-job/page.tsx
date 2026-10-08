@@ -909,7 +909,7 @@ const handleSmartExtraction = async () => {
       Add New Job
     </h1>
 
-    <p className="text-gray-600 mt-2">
+    <p className="text-black mt-2">
       Publish and manage job opportunities.
     </p>
 
@@ -1021,7 +1021,7 @@ const handleSmartExtraction = async () => {
     renderItem={(item) => (
       <div>
         <div className="font-bold">{item.firm_name}</div>
-        <div className="text-xs text-gray-500">{item.city ? `${item.city}, ${item.state}` : item.organization_type}</div>
+        <div className="text-xs text-black">{item.city ? `${item.city}, ${item.state}` : item.organization_type}</div>
       </div>
     )}
     placeholder="Enter name"
@@ -1503,13 +1503,13 @@ const handleSmartExtraction = async () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
                 {/* Left: About Firm */}
                 <div>
-                  <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">About {organizationType}</h3>
+                  <h3 className="font-bold mb-3 text-sm text-black uppercase tracking-wider">About {organizationType}</h3>
                   <textarea rows={6} placeholder={`Write about the ${organizationType.toLowerCase()}...`} value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm resize-none h-[230px]" />
                 </div>
 
                 {/* Right: Contacts */}
                 <div>
-                  <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">Contact Details</h3>
+                  <h3 className="font-bold mb-3 text-sm text-black uppercase tracking-wider">Contact Details</h3>
                   <div className="flex flex-col gap-4">
                     <div>
                       <label className="block mb-1.5 text-sm font-medium">Website</label>
@@ -1529,7 +1529,7 @@ const handleSmartExtraction = async () => {
 
               {/* Social Media */}
               <div className="mb-6">
-                <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">Social Media</h3>
+                <h3 className="font-bold mb-3 text-sm text-black uppercase tracking-wider">Social Media</h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
                     <label className="block mb-1.5 text-sm font-medium">X (Twitter)</label>
@@ -1694,7 +1694,7 @@ const handleSmartExtraction = async () => {
           <div className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl relative">
             <button type="button"
               onClick={() => setShowAiSettings(false)}
-              className="absolute top-6 right-6 text-gray-400 hover:text-black transition"
+              className="absolute top-6 right-6 text-black hover:text-black transition"
             >
               ?
             </button>
@@ -1768,10 +1768,10 @@ const handleSmartExtraction = async () => {
                   <div>
                     <h2 className="text-2xl font-black tracking-tight">Smart Job</h2>
                   </div>
-                  <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors">API Config</button>
+                  <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-black hover:bg-gray-200 transition-colors">API Config</button>
                 </div>
                   <div className="flex items-center gap-2 mb-6 w-full bg-gray-50 border p-2 rounded-xl">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 whitespace-nowrap px-2">Active Server:</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-black whitespace-nowrap px-2">Active Server:</label>
                     <select 
                       className="bg-white text-xs border rounded-lg px-2 py-1.5 flex-1 font-semibold outline-none focus:border-black"
                       value={selectedServer}

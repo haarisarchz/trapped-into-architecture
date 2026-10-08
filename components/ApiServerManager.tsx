@@ -126,16 +126,16 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
   return (
     <div className="fixed inset-0 bg-black/60 z-[9999999] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <button type="button" onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-black transition">
+        <button type="button" onClick={onClose} className="absolute top-6 right-6 text-black hover:text-black transition">
           ?
         </button>
         <h2 className="text-2xl font-black mb-2">API Servers</h2>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-black text-sm mb-6">
           {isCEO ? "CEO Dashboard: Assign Shared Servers to Admins." : "Manage your API keys. Personal Servers are completely private."}
         </p>
         
         {loading ? (
-          <div className="py-10 text-center text-gray-500 font-medium">Loading servers...</div>
+          <div className="py-10 text-center text-black font-medium">Loading servers...</div>
         ) : (
           <div className="space-y-8 mb-6">
             
@@ -147,23 +147,23 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                   + Add Extra
                 </button>
               </h3>
-              {personalKeys.length === 0 && <p className="text-sm text-gray-400 italic">No personal servers added yet.</p>}
+              {personalKeys.length === 0 && <p className="text-sm text-black italic">No personal servers added yet.</p>}
               <div className="space-y-4">
                 {personalKeys.map((k, index) => (
                   <div key={k.id} className="flex items-center gap-2 w-full">
-                    <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Server {index + 1}</span>
+                    <span className="text-[10px] font-bold uppercase text-black w-20">Server {index + 1}</span>
                     <input
                       type={showPassword[k.id] ? "text" : "password"}
                       placeholder="AIzaSy..."
                       value={k.key_value || ""}
                       onChange={(e) => updateLocalKey(k.id, "key_value", e.target.value)}
                       disabled={lockedKeys[k.id]}
-                      className={`flex-1 border rounded-xl px-4 py-3 font-mono text-sm focus:border-black outline-none transition-colors ${lockedKeys[k.id] ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gray-50"}`}
+                      className={`flex-1 border rounded-xl px-4 py-3 font-mono text-sm focus:border-black outline-none transition-colors ${lockedKeys[k.id] ? "bg-gray-200 text-black cursor-not-allowed" : "bg-gray-50"}`}
                     />
-                    <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-3 bg-gray-50 rounded-xl border transition-colors shrink-0">
+                    <button onClick={() => toggleShow(k.id)} className="text-black hover:text-black p-3 bg-gray-50 rounded-xl border transition-colors shrink-0">
                       {showPassword[k.id] ? "Hide" : "Show"}
                     </button>
-                    <button onClick={() => handleRowButtonClick(k)} className={`p-3 rounded-xl border transition-colors shrink-0 font-bold text-xs uppercase tracking-widest ${lockedKeys[k.id] ? "text-gray-500 bg-gray-100 border-gray-200" : "text-green-600 hover:text-green-800 bg-green-50 border-green-100"}`}>
+                    <button onClick={() => handleRowButtonClick(k)} className={`p-3 rounded-xl border transition-colors shrink-0 font-bold text-xs uppercase tracking-widest ${lockedKeys[k.id] ? "text-black bg-gray-100 border-gray-200" : "text-green-600 hover:text-green-800 bg-green-50 border-green-100"}`}>
                       {lockedKeys[k.id] ? "Saved" : "Save"}
                     </button>
                     <button onClick={() => deleteKey(k.id)} className="text-red-400 hover:text-red-600 p-3 bg-red-50 rounded-xl border border-red-100 transition-colors shrink-0">
@@ -185,7 +185,7 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                 )}
               </h3>
               
-              {sharedKeys.length === 0 && <p className="text-sm text-gray-400 italic">No shared servers available.</p>}
+              {sharedKeys.length === 0 && <p className="text-sm text-black italic">No shared servers available.</p>}
               
               <div className="space-y-4">
                 {sharedKeys.map((k, index) => (
@@ -194,28 +194,28 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                       // CEO VIEW
                       <>
                         <div className="flex gap-2 items-center">
-                          <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Key String</span>
+                          <span className="text-[10px] font-bold uppercase text-black w-20">Key String</span>
                           <input
                             type={showPassword[k.id] ? "text" : "password"}
                             placeholder="AIzaSy..."
                             value={k.key_value || ""}
                             onChange={(e) => updateLocalKey(k.id, "key_value", e.target.value)}
                             disabled={lockedKeys[k.id]}
-                            className={`flex-1 border rounded-lg px-3 py-2 font-mono text-sm outline-none ${lockedKeys[k.id] ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"}`}
+                            className={`flex-1 border rounded-lg px-3 py-2 font-mono text-sm outline-none ${lockedKeys[k.id] ? "bg-gray-100 text-black cursor-not-allowed" : "bg-white"}`}
                           />
-                          <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-2 bg-gray-50 rounded-lg border transition-colors shrink-0 text-xs">
+                          <button onClick={() => toggleShow(k.id)} className="text-black hover:text-black p-2 bg-gray-50 rounded-lg border transition-colors shrink-0 text-xs">
                             {showPassword[k.id] ? "Hide" : "Show"}
                           </button>
-                          <button onClick={() => handleRowButtonClick(k)} className={`text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300 ${lockedKeys[k.id] ? "text-gray-500" : "text-green-600"}`}>{lockedKeys[k.id] ? "Saved" : "Save"}</button>
+                          <button onClick={() => handleRowButtonClick(k)} className={`text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300 ${lockedKeys[k.id] ? "text-black" : "text-green-600"}`}>{lockedKeys[k.id] ? "Saved" : "Save"}</button>
                           <button onClick={() => deleteKey(k.id)} className="text-red-500 text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300">Delete</button>
                         </div>
                         <div className="flex gap-2 items-center">
-                          <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Assigned To</span>
+                          <span className="text-[10px] font-bold uppercase text-black w-20">Assigned To</span>
                           <select 
                             value={k.assigned_to || ""}
                             onChange={(e) => updateLocalKey(k.id, "assigned_to", e.target.value)}
                             disabled={lockedKeys[k.id]}
-                            className={`flex-1 border rounded-lg px-3 py-2 text-sm font-semibold outline-none ${lockedKeys[k.id] ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"}`}
+                            className={`flex-1 border rounded-lg px-3 py-2 text-sm font-semibold outline-none ${lockedKeys[k.id] ? "bg-gray-100 text-black cursor-not-allowed" : "bg-white"}`}
                           >
                             <option value="">-- Select Admin --</option>
                             {allAdmins.map(admin => (
@@ -227,14 +227,14 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                     ) : (
                       // ADMIN VIEW (Locked)
                       <div className="flex items-center gap-2 w-full">
-                        <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Public {index + 1}</span>
+                        <span className="text-[10px] font-bold uppercase text-black w-20">Public {index + 1}</span>
                         <input
                           type="password"
                           readOnly
                           value="***************************************"
-                          className="flex-1 border rounded-xl px-4 py-3 bg-gray-200 text-gray-400 font-mono text-sm outline-none cursor-not-allowed opacity-70"
+                          className="flex-1 border rounded-xl px-4 py-3 bg-gray-200 text-black font-mono text-sm outline-none cursor-not-allowed opacity-70"
                         />
-                        <span className="bg-gray-200 text-gray-500 border rounded-xl px-4 py-3 text-sm font-semibold shrink-0 cursor-not-allowed">
+                        <span className="bg-gray-200 text-black border rounded-xl px-4 py-3 text-sm font-semibold shrink-0 cursor-not-allowed">
                           Locked
                         </span>
                       </div>

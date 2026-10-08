@@ -30,7 +30,7 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
 
   return (
     <div className="w-full">
-        <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-gray-700">Required Experience <span className="text-red-500">*</span></label>
+        <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-black">Required Experience <span className="text-red-500">*</span></label>
         
         <div className="px-3 mb-6">
             <Slider 
@@ -60,7 +60,7 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
                 <option value={0}>Fresher</option>
                 {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
             </select>
-            <span className="text-sm font-semibold text-gray-400">to</span>
+            <span className="text-sm font-semibold text-black">to</span>
             <select 
                 className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
                 value={expRange[1]}
@@ -142,7 +142,7 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
 
   return (
     <div className="w-full">
-        <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-gray-700">Salary Range <span className="text-red-500">*</span></label>
+        <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-black">Salary Range <span className="text-red-500">*</span></label>
         
         <div className="flex gap-4 mb-6">
             <label className="flex items-center gap-2 text-sm cursor-pointer font-medium">
@@ -203,7 +203,7 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
                     <option value={0}>Min</option>
                     {[1,2,3,4,5,10,15,20,30,40].map(v => <option key={v} value={salUnit === "LPA" ? v : v*10000}>{salUnit === "LPA" ? v + " LPA" : (v*10) + "k"}</option>)}
                 </select>
-                <span className="text-sm font-semibold text-gray-400">to</span>
+                <span className="text-sm font-semibold text-black">to</span>
                 <select 
                     className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
                     value={salRange[1]}
