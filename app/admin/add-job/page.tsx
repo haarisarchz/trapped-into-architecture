@@ -1884,7 +1884,7 @@ const handleSmartExtraction = async () => {
                 </div>
 
                 <button type="button"
-  disabled={loadingAI === "loading"}
+                  disabled={!!loadingAI && loadingAI !== "done"}
     onClick={async () => {
     try {
       setLoadingAI("loading");
@@ -2149,17 +2149,9 @@ const handleSmartExtraction = async () => {
       setLoadingAI(false);
     }
   }}
-  className={`mt-6 w-full py-5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-    loadingAI === "loading"
-      ? "bg-white text-black md:text-black"
-      : "bg-black text-white hover:bg-gray-800 shadow-xl"
-  }`}
+  className={`mt-6 w-full py-5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${(loadingAI && loadingAI !== 'done') ? 'bg-gray-100 text-black cursor-not-allowed opacity-80' : 'bg-black text-white hover:bg-gray-800 shadow-xl'}`}
 >
-  {loadingAI === "loading" ? (
-    <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-  ) : (
-    "✨ Extract Details"
-  )}
+  {(loadingAI && loadingAI !== 'done') ? (<><div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>{loadingAI === 'loading' ? 'Extracting...' : loadingAI}</>) : ('? Extract Details')}
 </button>
               </div>
             </div>
