@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from "@supabase/supabase-js";
 
 const prompt = `You are an expert HR assistant analyzing a job posting. 
 Extract the following information and return ONLY a strict JSON object. Do not include markdown formatting like \`\`\`json.
@@ -40,25 +41,41 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const mode = formData.get("mode") as string;
 
-    const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-    const availableKeys = envKey.split(",").map(k => k.trim()).filter(Boolean);
     
-    if (availableKeys.length === 0) {
-      throw new Error("No Gemini API key configured.");
-    }
+    let apiKeyToUse = "";
+    const userHeader = req.headers.get("x-user-gemini-key");
 
-    // MANUAL KEY SELECTION (User Controlled)
-    const requestedIndex = req.headers.get("x-api-key-index");
-    let keyIndex = 0;
-    if (requestedIndex !== null && !isNaN(parseInt(requestedIndex))) {
-       keyIndex = parseInt(requestedIndex);
-       if (keyIndex >= availableKeys.length) {
-          keyIndex = 0;
+    if (userHeader) {
+       if (userHeader.startsWith("AIzaSy")) {
+           // It's a raw personal key
+           apiKeyToUse = userHeader;
+       } else {
+           // It's a UUID from the database (Shared Server assigned by CEO)
+           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+           // We use the service role key if available to bypass RLS, otherwise anon
+           const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+           const supabase = createClient(supabaseUrl, supabaseServiceKey);
+           
+           const { data, error } = await supabase.from('api_keys').select('key_value').eq('id', userHeader.trim()).single();
+           if (error || !data) {
+               console.error("Key lookup failed:", error);
+               throw new Error("Assigned Shared Server key could not be found or is invalid.");
+           }
+           apiKeyToUse = data.key_value;
        }
     }
 
-    const singleKey = availableKeys[keyIndex];
-    const ai = new GoogleGenAI({ apiKey: singleKey });
+    if (!apiKeyToUse) {
+       // Global fallback
+       const envKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
+       apiKeyToUse = envKey.split(",")[0].trim();
+    }
+
+    if (!apiKeyToUse) {
+      throw new Error("No Gemini API key configured.");
+    }
+
+    const ai = new GoogleGenAI({ apiKey: apiKeyToUse });
 
     let parts = [];
 

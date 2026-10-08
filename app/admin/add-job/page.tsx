@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import ImageUploader from "@/components/ImageUploader";
 import { useState } from "react";
 import { useEffect } from "react";
+import ApiServerManager from "@/components/ApiServerManager";
 import {
   EXPERIENCE_OPTIONS,
   SALARY_OPTIONS,
@@ -198,6 +199,7 @@ const [smartImage, setSmartImage] = useState<File | null>(null);
 
 const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
   const [showAiSettings, setShowAiSettings] = useState(false);
+  const [dbKeys, setDbKeys] = useState<any[]>([]);
   const [selectedServer, setSelectedServer] = useState("auto");
   const [apiKeys, setApiKeys] = useState<string[]>(['', '', '', '', '']);
   const [showKeyPassword, setShowKeyPassword] = useState<boolean[]>([]);
@@ -1712,113 +1714,8 @@ const handleSmartExtraction = async () => {
             >
               ?
             </button>
-            <h2 className="text-2xl font-black mb-2">API Servers</h2>
-              <p className="text-gray-500 text-sm mb-6">Manage your API keys. The system uses Personal Servers first, then falls back to Public Servers.</p>
-              
-              <div className="space-y-6 mb-6">
-                
-                {/* PERSONAL SERVERS */}
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 flex justify-between items-center">
-                    Personal Servers
-                    <button onClick={() => { setApiKeys([...apiKeys, ""]); setKeyStatuses([...keyStatuses, ""]); setShowKeyPassword([...showKeyPassword, false]); }} className="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded">
-                      + Add Extra
-                    </button>
-                  </h3>
-                  <div className="space-y-4">
-                    {apiKeys.map((key, index) => (
-                      <div key={index} className="flex flex-col gap-1">
-                        <div className="flex justify-between items-end">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Personal Server {index + 1}</label>
-                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                            keyStatuses[index] === 'Success' ? 'bg-green-100 text-green-700' :
-                            keyStatuses[index] === 'Quota Exceeded' ? 'bg-red-100 text-red-700' :
-                            keyStatuses[index] === 'Server Busy' ? 'bg-orange-100 text-orange-700' :
-                            'bg-gray-100 text-gray-500'
-                          }`}>
-                            {key ? (keyStatuses[index] || 'Ready') : 'Empty'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 w-full">
-                          <input
-                            type={showKeyPassword[index] ? "text" : "password"}
-                            placeholder="AIzaSy..."
-                            value={key}
-                            onChange={(e) => {
-                              const newKeys = [...apiKeys];
-                              newKeys[index] = e.target.value;
-                              setApiKeys(newKeys);
-                            }}
-                            className="w-full border rounded-xl px-4 py-3 bg-gray-50 font-mono text-sm focus:border-black outline-none transition-colors"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newShow = [...showKeyPassword];
-                              newShow[index] = !newShow[index];
-                              setShowKeyPassword(newShow);
-                            }}
-                            className="text-gray-400 hover:text-black p-3 bg-gray-50 rounded-xl border transition-colors shrink-0"
-                          >
-                            {showKeyPassword[index] ? "Hide" : "Show"}
-                          </button>
-                          {apiKeys.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newKeys = [...apiKeys];
-                                newKeys.splice(index, 1);
-                                setApiKeys(newKeys);
-                                const newStatuses = [...keyStatuses];
-                                newStatuses.splice(index, 1);
-                                setKeyStatuses(newStatuses);
-                                const newShow = [...showKeyPassword];
-                                newShow.splice(index, 1);
-                                setShowKeyPassword(newShow);
-                              }}
-                              className="text-red-400 hover:text-red-600 p-3 bg-red-50 rounded-xl border border-red-100 transition-colors shrink-0"
-                            >
-                              X
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <hr className="border-gray-100" />
-
-                {/* PUBLIC SERVERS */}
-                <div>
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 flex justify-between items-center">
-                    Public Servers (CEO Only)
-                  </h3>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex justify-between items-end">
-                      <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Public Server 1</label>
-                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                        Fallback Ready
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 w-full">
-                      <input
-                        type="password"
-                        readOnly
-                        value="***************************************"
-                        className="w-full border rounded-xl px-4 py-3 bg-gray-100 text-gray-400 font-mono text-sm outline-none cursor-not-allowed opacity-70"
-                      />
-                      <span className="bg-gray-100 text-gray-500 border rounded-xl px-4 py-3 text-sm font-semibold shrink-0 cursor-not-allowed">
-                        Locked
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-              <button type="button" onClick={() => setShowAiSettings(false)} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition">Save & Close</button>
-          </div>
-        </div>
+            <ApiServerManager isOpen={showAiSettings} onClose={() => setShowAiSettings(false)} onKeysUpdated={(keys: any) => setDbKeys(keys)} />
+</div></div>
       )}
 
 
@@ -1889,6 +1786,18 @@ const handleSmartExtraction = async () => {
                   </div>
                   <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-gray-600 hover:bg-gray-200 transition-colors">API Config</button>
                 </div>
+                  <div className="flex items-center gap-2 mb-6 w-full bg-gray-50 border p-2 rounded-xl">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500 whitespace-nowrap px-2">Active Server:</label>
+                    <select 
+                      className="bg-white text-xs border rounded-lg px-2 py-1.5 flex-1 font-semibold outline-none focus:border-black"
+                      value={selectedServer}
+                      onChange={(e) => setSelectedServer(e.target.value)}
+                    >
+                      <option value="auto">Auto-Failover (Recommended)</option>
+                      {dbKeys.filter((k: any) => k.type === "personal").map((k: any, i: number) => <option key={k.id} value={k.id}>Personal Server {i + 1}</option>)}
+                      {dbKeys.filter((k: any) => k.type === "shared").map((k: any, i: number) => <option key={k.id} value={k.id}>Shared Server {i + 1}</option>)}
+                    </select>
+                  </div>
                 <p className="text-black text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
 
                 <div className="flex-1 flex flex-col justify-center overflow-hidden">
@@ -2025,42 +1934,44 @@ const handleSmartExtraction = async () => {
              return data;
           };
 
+          
+          
           if (selectedServer === "auto") {
-              const validKeys = apiKeys.filter((k: any) => typeof k === 'string' && k.trim().length > 0);
+              const personalKeys = dbKeys.filter((k: any) => k.type === "personal" && k.key_value.trim());
               let success = false;
-              for (let i = 0; i < apiKeys.length; i++) {
-                 if (typeof apiKeys[i] !== 'string' || !apiKeys[i].trim()) continue;
+              for (let i = 0; i < personalKeys.length; i++) {
                  try {
-                    result = await tryKey(apiKeys[i].trim(), i);
+                    result = await tryKey(personalKeys[i].key_value.trim(), i);
                     success = true;
                     break;
                  } catch (e: any) {
                     lastError = e.message;
                  }
               }
+              
               if (!success) {
-                 try {
-                     result = await tryPublic();
-                 } catch(e: any) {
-                     lastError = e.message;
+                 const sharedKeys = dbKeys.filter((k: any) => k.type === "shared");
+                 for (let i = 0; i < sharedKeys.length; i++) {
+                     try {
+                         result = await tryKey(sharedKeys[i].id, -1);
+                         success = true;
+                         break;
+                     } catch(e: any) {
+                         lastError = e.message;
+                     }
                  }
               }
-          } else if (selectedServer === "public") {
-              try {
-                  result = await tryPublic();
-              } catch(e: any) {
-                  lastError = e.message;
-              }
           } else {
-              const index = parseInt(selectedServer);
-              if (!isNaN(index) && apiKeys[index] && apiKeys[index].trim()) {
+              const selectedObj = dbKeys.find((k: any) => k.id === selectedServer);
+              if (selectedObj) {
                   try {
-                      result = await tryKey(apiKeys[index].trim(), index);
+                      const valToSend = selectedObj.type === "personal" ? selectedObj.key_value : selectedObj.id;
+                      result = await tryKey(valToSend, -1);
                   } catch(e: any) {
                       lastError = e.message;
                   }
               } else {
-                  throw new Error("Selected personal server is empty. Please enter an API key in the API Config.");
+                  throw new Error("Selected server is invalid or not loaded.");
               }
           }
 
