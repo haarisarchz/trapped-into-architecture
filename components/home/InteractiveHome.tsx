@@ -140,21 +140,21 @@ export default function InteractiveHome({
         <div className="w-full max-w-7xl mx-auto border-t-2 border-black my-0"></div>
       </div>
 
-      {/* 4. COMPANIES SECTION (Black Background) */}
-      <section className="py-12 px-6 lg:px-12 bg-black w-full text-white">
+      {/* 4. COMPANIES SECTION */}
+      <section className="py-12 px-6 lg:px-12 bg-white w-full text-black">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-white mb-4 md:mb-0">Explore Companies</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">Explore Companies</h2>
             
-            <div className="flex bg-gray-900 p-1 rounded-full w-fit border border-gray-800">
-              <button onClick={() => setCompanyTab("latest")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "latest" ? "bg-gray-700 shadow text-white" : "text-gray-400 hover:text-white"}`}>Latest</button>
-              <button onClick={() => setCompanyTab("popular")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "popular" ? "bg-gray-700 shadow text-white" : "text-gray-400 hover:text-white"}`}>Popular</button>
-              <button onClick={() => setCompanyTab("most-jobs")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "most-jobs" ? "bg-gray-700 shadow text-white" : "text-gray-400 hover:text-white"}`}>Most Jobs Posted</button>
+            <div className="flex bg-gray-100 p-1 rounded-full w-fit border border-gray-200">
+              <button onClick={() => setCompanyTab("latest")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "latest" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Latest</button>
+              <button onClick={() => setCompanyTab("popular")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "popular" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Popular</button>
+              <button onClick={() => setCompanyTab("most-jobs")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "most-jobs" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Most Jobs Posted</button>
             </div>
           </div>
 
           {displayCompanies.length === 0 ? (
-            <div className="bg-gray-900 p-12 rounded-3xl border border-gray-800 text-center text-gray-400">
+            <div className="bg-gray-50 p-12 rounded-3xl border border-gray-200 text-center text-gray-500">
               No companies listed yet.
             </div>
           ) : (
@@ -163,7 +163,7 @@ export default function InteractiveHome({
                 <Link 
                   href={`/companies/${company.slug}`}
                   key={company.slug}
-                  className="bg-gray-900 hover:bg-gray-800 p-4 rounded-2xl flex flex-col items-center justify-center text-center transition group border border-gray-800 hover:border-gray-700 aspect-square shadow-sm"
+                  className="bg-gray-50 hover:bg-gray-100 p-4 rounded-2xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200 aspect-square shadow-sm"
                 >
                   <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center mb-3 overflow-hidden shadow-sm">
                     {company.logo_url ? (
@@ -172,7 +172,7 @@ export default function InteractiveHome({
                       <Building2 className="text-gray-300 w-6 h-6" />
                     )}
                   </div>
-                  <h3 className="font-semibold text-gray-100 text-sm line-clamp-2">{company.firm_name}</h3>
+                  <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{company.firm_name}</h3>
                   {company.city && <p className="text-xs text-gray-500 mt-1">{company.city}</p>}
                 </Link>
               ))}
@@ -180,13 +180,13 @@ export default function InteractiveHome({
           )}
 
           <div className="mt-8 text-center">
-            <Link href="/companies" className="inline-flex items-center gap-2 text-white font-semibold hover:gap-3 transition-all">
+            <Link href="/companies" className="inline-flex items-center gap-2 text-black font-semibold hover:gap-3 transition-all">
               View All Companies <ArrowRight size={18} />
             </Link>
           </div>
         </div>
       </section>
-
+      
       {/* 5. ARCHITECTURE SERVICES (White Background) */}
       <section className="py-12 px-6 lg:px-12 bg-white text-black w-full border-b border-gray-100">
         <div className="max-w-7xl mx-auto">
@@ -201,7 +201,7 @@ export default function InteractiveHome({
               <p className="text-gray-600 text-sm leading-relaxed">Find top-tier freelance architects for your projects.</p>
             </Link>
             <Link href="/contact?service=portfolio-review" className="bg-gray-50 hover:bg-gray-100 p-8 rounded-2xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
-              <h3 className="font-semibold text-xl mb-3 text-gray-900">Portfolio Review</h3>
+              <h3 className="font-semibold text-xl mb-3 text-gray-900">Get your portfolio critiqued ready</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Get expert feedback to help you land your dream job.</p>
             </Link>
           </div>

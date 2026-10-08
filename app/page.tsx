@@ -54,39 +54,64 @@ export default async function Home() {
   
   // Fetch real companies
   const { data: allRealCompanies } = await supabase.from('companies').select('*');
-  const groupedCompanies = {};
-  const idToName = {};
+  const groupedCompanies: any = {};
+  const idToName: any = {};
 
-  (allRealCompanies || []).forEach(comp => {
+  (allRealCompanies || []).forEach((comp: any) => {
     if (!comp.firm_name) return;
     groupedCompanies[comp.firm_name] = {
       firm_name: comp.firm_name,
       slug: comp.slug || comp.firm_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       city: comp.city || '',
       logo_url: comp.logo_url || '',
-      organization_type: comp.organization_type || 'Architecture Firm'
+      organization_type: comp.organization_type || 'Architecture Firm',
+      created_at: comp.created_at ? new Date(comp.created_at).getTime() : 0,
+      job_count: 0
     };
     if (comp.id) idToName[comp.id] = comp.firm_name;
   });
 
-  const { data: allPublishedJobs } = await supabase.from('jobs').select('firm_name, company_id, city, organization_type').eq('status', 'published');
+  const { data: allPublishedJobs } = await supabase.from('jobs').select('firm_name, company_id, city, organization_type, posted_date').eq('status', 'published');
   
-  (allPublishedJobs || []).forEach(job => {
+  (allPublishedJobs || []).forEach((job: any) => {
     let name = job.firm_name;
     if (job.company_id && idToName[job.company_id]) name = idToName[job.company_id];
     if (!name) return;
+    
+    const jobDate = job.posted_date ? new Date(job.posted_date).getTime() : 0;
+    
     if (!groupedCompanies[name]) {
       groupedCompanies[name] = {
         firm_name: name,
         slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
         city: job.city || '',
         organization_type: job.organization_type || 'Architecture Firm',
-        logo_url: ''
+        logo_url: '',
+        created_at: jobDate,
+        job_count: 1
       };
+    } else {
+      groupedCompanies[name].job_count += 1;
+      if (groupedCompanies[name].created_at === 0 || jobDate > groupedCompanies[name].created_at) {
+         groupedCompanies[name].created_at = jobDate;
+      }
     }
   });
 
-  const recentCompanies = Object.values(groupedCompanies).slice(0, 6);
+  const companiesArray = Object.values(groupedCompanies) as any[];
+  
+  // Latest: Sorted by created_at (descending)
+  const recentCompanies = [...companiesArray].sort((a, b) => b.created_at - a.created_at).slice(0, 10);
+  
+  // Most Jobs Posted: Sorted by job_count (descending), then by created_at (descending)
+  const mostJobsCompanies = [...companiesArray].sort((a, b) => {
+    if (b.job_count !== a.job_count) {
+      return b.job_count - a.job_count;
+    }
+    return b.created_at - a.created_at;
+  }).slice(0, 10);
+
+  const popularCompanies = [...mostJobsCompanies]; // Fallback for popular
 
 
   // Fetch Recent Jobs
