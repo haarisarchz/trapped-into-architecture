@@ -1900,7 +1900,11 @@ const handleSmartExtraction = async () => {
           const newStatuses = [...keyStatuses];
 
           const tryKey = async (key: string, index: number) => {
-             headers["x-user-gemini-key"] = key;
+               const { data: { session } } = await supabase.auth.getSession();
+               if (session?.access_token) {
+                   headers["Authorization"] = `Bearer ${session.access_token}`;
+               }
+               headers["x-user-gemini-key"] = key;
              try {
                 const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
                 let data;

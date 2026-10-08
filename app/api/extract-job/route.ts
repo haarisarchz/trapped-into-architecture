@@ -46,20 +46,30 @@ export async function POST(req: Request) {
     const userHeader = req.headers.get("x-user-gemini-key");
 
     if (userHeader) {
-       if (userHeader.startsWith("AIzaSy")) {
+       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userHeader.trim());
+       if (!isUUID) {
            // It's a raw personal key
-           apiKeyToUse = userHeader;
+           apiKeyToUse = userHeader.trim();
        } else {
-           // It's a UUID from the database (Shared Server assigned by CEO)
+           // It's a UUID from the database (Shared Server)
            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-           // We use the service role key if available to bypass RLS, otherwise anon
-           const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-           const supabase = createClient(supabaseUrl, supabaseServiceKey);
+           const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+           const authHeader = req.headers.get("Authorization") || "";
+           
+           // If we have a service role key, use it. Otherwise, use the user's auth token to pass RLS.
+           let supabase;
+           if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+               supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+           } else {
+               supabase = createClient(supabaseUrl, anonKey, {
+                   global: { headers: { Authorization: authHeader } }
+               });
+           }
            
            const { data, error } = await supabase.from('api_keys').select('key_value').eq('id', userHeader.trim()).single();
            if (error || !data) {
                console.error("Key lookup failed:", error);
-               throw new Error("Assigned Shared Server key could not be found or is invalid.");
+               throw new Error("Assigned Shared Server key could not be found or is blocked by security rules.");
            }
            apiKeyToUse = data.key_value;
        }
