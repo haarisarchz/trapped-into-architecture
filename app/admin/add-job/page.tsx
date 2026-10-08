@@ -1888,7 +1888,7 @@ const handleSmartExtraction = async () => {
              try {
                 const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
                 let data;
-                try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
+                try { data = await res.json(); } catch(e) { throw new Error("Server error (Status " + res.status + "). The API took too long or failed to respond."); }
                 
                 if (!res.ok) {
                   if (data.error && data.error.toLowerCase().includes("quota")) {
@@ -1918,7 +1918,7 @@ const handleSmartExtraction = async () => {
              delete cleanHeaders["x-user-gemini-key"];
              const res = await fetch("/api/extract-job", { headers: cleanHeaders, method: "POST", body: formData });
              let data;
-             try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
+             try { data = await res.json(); } catch(e) { throw new Error("Server error (Status " + res.status + "). The API took too long or failed to respond."); }
              if (!res.ok) throw new Error(data.error || "Failed to extract using Public Server");
              return data;
           };
