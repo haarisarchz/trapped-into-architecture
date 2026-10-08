@@ -18,9 +18,12 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
       setIsCEO(ceoCheck);
       
       if (ceoCheck) {
-         const { data: admins } = await supabase.from("profiles").select("id, username, email, full_name");
-         // Basic filter for people who might be admins, or just show all for CEO to pick
-         setAllAdmins(admins || []);
+         const { data: allUsers } = await supabase.from("profiles").select("id, username, email, full_name, role");
+         const adminsOnly = (allUsers || []).filter(u => {
+            const r = (u.role || "").toLowerCase().replace(/[\s_]+/g, "");
+            return r === "admin" || r === "superadmin" || r === "ceo";
+         });
+         setAllAdmins(adminsOnly);
       }
       
       const { data: keys } = await supabase.from("api_keys").select("*").order("created_at", { ascending: true });
