@@ -1889,6 +1889,8 @@ const handleSmartExtraction = async () => {
     try {
       setLoadingAI("loading");
 
+      const formData = new FormData();
+      formData.append("mode", uploadMode);
       if (uploadMode === "image" && smartImage) {
           setLoadingAI("Compressing Image...");
           const compressedImage = await compressImage(smartImage);
@@ -1913,8 +1915,6 @@ const handleSmartExtraction = async () => {
           setLoadingAI("Extracting Smart Job...");
         }
 
-      const formData = new FormData();
-      formData.append("mode", uploadMode);
       if (uploadMode === "text") {
         if (!smartText) throw new Error("Please paste text to extract.");
         formData.append("text", smartText);

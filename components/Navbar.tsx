@@ -212,14 +212,14 @@ useEffect(() => {
 
 
           {currentUser ? (
-          (currentUser.displayName && currentUser.displayName.trim() !== "" && currentUser.profession && currentUser.profession.trim() !== "") ? (
+          
             <div className="relative">
               <button 
                 onClick={() => setShowUserMenu(!showUserMenu)} 
                 className="font-semibold text-gray-200 hover:text-white transition flex items-center gap-1"
                 aria-label="Open account menu"
               >
-                {currentUser.displayName}
+                {currentUser.displayName || currentUser.username || "Profile"}
                 <span className="text-xs">▼</span>
               </button>
               
@@ -272,14 +272,7 @@ useEffect(() => {
     )}
 
             </div>
-          ) : (
-            <button 
-              onClick={() => {
-                router.push(`/profile/${currentUser.username}`);
-              }} 
-              className="text-red-400 font-bold hover:text-red-300 transition"
-            >Complete Profile</button>
-          )
+          
         ) : (
           <div className="flex gap-4">
             <button 
