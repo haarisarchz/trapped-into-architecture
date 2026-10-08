@@ -15,6 +15,65 @@ import {
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Slider from "rc-slider";
+import "rc-slider/assets/index.css";
+
+
+      const parseExperienceStr = (expArray: string[]): [number, number] => {
+          if (!expArray || expArray.length === 0) return [0, 0];
+          let min = 99; let max = 0;
+          expArray.forEach(exp => {
+              const str = exp.toLowerCase();
+              if (str.includes("fresher")) {
+                 min = Math.min(min, 0); max = Math.max(max, 0);
+              } else {
+                 const nums = str.match(/\d+/g);
+                 if (nums) {
+                     nums.forEach(n => {
+                        const val = parseInt(n);
+                        min = Math.min(min, val);
+                        max = Math.max(max, val);
+                     });
+                 }
+              }
+          });
+          if (min === 99) return [0, 0];
+          return [min, max];
+      };
+
+      const parseSalaryStr = (sal: string, unit: string): [number, number] | null => {
+          if (!sal) return null;
+          const s = sal.toLowerCase();
+          if (s.includes("not disclosed") || s.includes("industry standard") || s.includes("negotiable") || s.includes("as per")) return null;
+          
+          let min = 9999999; let max = 0;
+          const nums = s.match(/\d+(\.\d+)?/g);
+          if (!nums) return null;
+          
+          let multiplier = 1;
+          if (s.includes("lpa") || s.includes("lakhs") || s.includes("lakh")) {
+              multiplier = 100000;
+          } else if (s.includes("k") && !s.includes("lpa")) {
+              multiplier = 1000;
+          }
+
+          nums.forEach(n => {
+              const val = parseFloat(n) * multiplier;
+              min = Math.min(min, val);
+              max = Math.max(max, val);
+          });
+          
+          if (min === 9999999) return null;
+          
+          // Convert everything to the requested unit for comparison
+          if (unit === "LPA") {
+              return [min / 100000, max / 100000];
+          } else {
+              // Assuming if it was LPA, divide by 12 to get monthly
+              const isAnnual = multiplier === 100000;
+              return isAnnual ? [min / 12, max / 12] : [min, max];
+          }
+      };
 
 function JobsPageContent() {
 
@@ -39,9 +98,11 @@ function JobsPageContent() {
  const [excludeExpired, setExcludeExpired] =
   useState(false);
 
-  const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
+  const [expRange, setExpRange] = useState<number[]>([0, 15]);
 
-const [selectedSalary, setSelectedSalary] = useState<string[]>([]);
+const [salaryRange, setSalaryRange] = useState<number[]>([0, 50]);
+  const [salaryUnit, setSalaryUnit] = useState<string>("LPA");
+  const [includeNotDisclosed, setIncludeNotDisclosed] = useState<boolean>(true);
 
 
 const [showFilters, setShowFilters] = useState(false);
@@ -244,269 +305,95 @@ setSelectedSalary([]);
 
     </div>
 
-    {/* EXPERIENCE */}
-
-<div>
-
-  <h3 className="font-semibold mb-3">
-    Experience
-  </h3>
-
-  <div className="space-y-2 text-sm">
-
-    {EXPERIENCE_OPTIONS.map((experience: string, index) => (
-
-        <label
-          key={`${experience}-${index}`}
-          className="flex items-center gap-2"
-        >
-
-          <input
-            type="checkbox"
-
-            checked={selectedExperience.includes(experience)}
-
-            onChange={(e) => {
-
-              if (e.target.checked) {
-
-                setSelectedExperience([
-                  ...selectedExperience,
-                  experience
-                ]);
-
-              } else {
-
-                setSelectedExperience(
-                  selectedExperience.filter(
-                    (exp) => exp !== experience
-                  )
-                );
-
-              }
-
-            }}
-          />
-
-          {experience}
-
-        </label>
-
-      ))}
-
-  </div>
-
-</div>
-
     {/* SALARY */}
-
-<div>
-
-  <h3 className="font-semibold mb-3">
-    Salary Range
-  </h3>
-
-  <div className="space-y-2 text-sm">
-
-    {[
-      ...new Set(
-        jobs.map((job) => job.salary)
-      ),
-    ].map((salary) => (
-
-      <label
-        key={salary}
-        className="flex items-center gap-2"
-      >
-
-        <input
-          type="checkbox"
-
-          checked={selectedSalary.includes(salary)}
-
-          onChange={(e) => {
-
-            if (e.target.checked) {
-
-              setSelectedSalary([
-                ...selectedSalary,
-                salary
-              ]);
-
-            } else {
-
-              setSelectedSalary(
-                selectedSalary.filter(
-                  (sal) => sal !== salary
-                )
-              );
-
-            }
-
-          }}
-        />
-
-        {salary}
-
-      </label>
-
-    ))}
-
-  </div>
-
-</div>
-
-    {/* QUALIFICATION */}
-
-<div>
-
-  <h3 className="font-semibold mb-3">
-    Qualification
-  </h3>
-
-  <div className="space-y-2 text-sm">
-
-    {[
-      ...new Set(
-        jobs.flatMap((job) =>
-
-          Array.isArray(job.qualifications)
-            ? job.qualifications.map((q: any) => typeof q === 'string' ? q.trim() : String(q || ''))
-            : []
-
-        )
-      ),
-    ]
-      .filter(Boolean)
-      .map((qualification, index) => (
-
-        <label
-          key={`${qualification}-${index}`}
-          className="flex items-center gap-2"
-        >
-
-          <input
-            type="checkbox"
-
-            checked={selectedQualifications.includes(qualification)}
-
-            onChange={(e) => {
-
-              if (e.target.checked) {
-
-                setSelectedQualifications([
-                  ...selectedQualifications,
-                  qualification
-                ]);
-
-              } else {
-
-                setSelectedQualifications(
-                  selectedQualifications.filter(
-                    (q) => q !== qualification
-                  )
-                );
-
-              }
-
-            }}
-          />
-
-          {qualification}
-
-        </label>
-
-      ))}
-
-  </div>
-
-</div>
-
-    {/* SKILLS */}
-
-<div>
-
-  <h3 className="font-semibold mb-3">
-    Skills Required
-  </h3>
-
-  <div className="space-y-2 text-sm">
-
-    {[
-      ...new Set(
-        jobs.flatMap((job) =>
-
-          Array.isArray(job.skills_required)
-            ? job.skills_required.map((skill: any) => typeof skill === 'string' ? skill.trim() : String(skill || ''))
-            : []
-
-        )
-      ),
-    ]
-      .filter(Boolean)
-      .map((skill: string, index) => (
-
-        <label
-          key={`${skill}-${index}`}
-          className="flex items-center gap-2"
-        >
-
-          <input
-            type="checkbox"
-
-            checked={selectedSkills.includes(skill)}
-
-            onChange={(e) => {
-
-              if (e.target.checked) {
-
-                setSelectedSkills([
-                  ...selectedSkills,
-                  skill
-                ]);
-
-              } else {
-
-                setSelectedSkills(
-                  selectedSkills.filter(
-                    (s) => s !== skill
-                  )
-                );
-
-              }
-
-            }}
-          />
-
-          {skill}
-
-        </label>
-
-      ))}
-
-  </div>
-
-</div>
-
-<div className="mt-6 flex items-center gap-3">
-
-  <h3 className="font-semibold">
-    Exclude Expired Jobs
-  </h3>
-
-  <input
-    type="checkbox"
-    checked={excludeExpired}
-    onChange={() =>
-      setExcludeExpired(!excludeExpired)
-    }
-  />
-
-</div>
-
+        <div className="mb-8">
+            <h3 className="font-bold text-gray-800 mb-4 text-xs uppercase tracking-wider">Salary</h3>
+            <div className="px-2 mb-6">
+                <Slider 
+                   range 
+                   min={0} 
+                   max={salaryUnit === "LPA" ? 50 : 200000} 
+                   step={salaryUnit === "LPA" ? 1 : 5000}
+                   value={salaryRange} 
+                   onChange={(val) => setSalaryRange(val as number[])} 
+                   trackStyle={[{ backgroundColor: '#3b82f6' }]}
+                   handleStyle={[{ borderColor: '#9ca3af', backgroundColor: 'white' }, { borderColor: '#9ca3af', backgroundColor: 'white' }]}
+                />
+            </div>
+            <div className="flex items-center justify-between gap-2 mb-4">
+                <select 
+                   className="flex-1 bg-white border rounded shadow-sm px-2 py-1 text-sm outline-none focus:border-blue-500"
+                   value={salaryRange[0]}
+                   onChange={(e) => setSalaryRange([parseInt(e.target.value), salaryRange[1]])}
+                >
+                    <option value={0}>Min</option>
+                    {[1,2,3,5,10,15,20,30,40].map(v => <option key={v} value={salaryUnit === "LPA" ? v : v*10000}>{salaryUnit === "LPA" ? v + " LPA" : (v*10) + "k"}</option>)}
+                </select>
+                <span className="text-sm text-gray-400">to</span>
+                <select 
+                   className="flex-1 bg-white border rounded shadow-sm px-2 py-1 text-sm outline-none focus:border-blue-500"
+                   value={salaryRange[1]}
+                   onChange={(e) => setSalaryRange([salaryRange[0], parseInt(e.target.value)])}
+                >
+                    {[1,2,3,5,10,15,20,30,40].map(v => <option key={v} value={salaryUnit === "LPA" ? v : v*10000}>{salaryUnit === "LPA" ? v + " LPA" : (v*10) + "k"}</option>)}
+                    <option value={salaryUnit === "LPA" ? 50 : 200000}>{salaryUnit === "LPA" ? "50 LPA+" : "2L+"}</option>
+                </select>
+            </div>
+            <div className="space-y-4">
+                <select 
+                   className="w-full bg-white border rounded shadow-sm px-2 py-1.5 text-sm outline-none"
+                   value={salaryUnit}
+                   onChange={(e) => {
+                      setSalaryUnit(e.target.value);
+                      if (e.target.value === "LPA") setSalaryRange([0, 50]);
+                      else setSalaryRange([0, 200000]);
+                   }}
+                >
+                    <option value="Per Month">Per Month</option>
+                    <option value="LPA">Per Annum (LPA)</option>
+                </select>
+                
+            </div>
+        </div>
+
+        <hr className="mb-6 border-gray-200" />
+
+        {/* EXPERIENCE */}
+        <div className="mb-8">
+            <h3 className="font-bold text-gray-800 mb-4 text-xs uppercase tracking-wider">Experience</h3>
+            <div className="px-2 mb-6">
+                <Slider 
+                   range 
+                   min={0} 
+                   max={15} 
+                   value={expRange} 
+                   onChange={(val) => setExpRange(val as number[])} 
+                   trackStyle={[{ backgroundColor: '#3b82f6' }]}
+                   handleStyle={[{ borderColor: '#9ca3af', backgroundColor: 'white' }, { borderColor: '#9ca3af', backgroundColor: 'white' }]}
+                />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+                <select 
+                   className="flex-1 bg-white border rounded shadow-sm px-2 py-1 text-sm outline-none focus:border-blue-500"
+                   value={expRange[0]}
+                   onChange={(e) => setExpRange([parseInt(e.target.value), expRange[1]])}
+                >
+                    <option value={0}>Fresher</option>
+                    {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
+                </select>
+                <span className="text-sm text-gray-400">to</span>
+                <select 
+                   className="flex-1 bg-white border rounded shadow-sm px-2 py-1 text-sm outline-none focus:border-blue-500"
+                   value={expRange[1]}
+                   onChange={(e) => setExpRange([expRange[0], parseInt(e.target.value)])}
+                >
+                    {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
+                    <option value={15}>15+ Years</option>
+                </select>
+            </div>
+        </div>
+      </div>
     </div>
-
-  </div>
   );
   
   return (
@@ -791,18 +678,20 @@ setSelectedSalary([]);
           selectedSkills.includes(skill)
       );
 
-    const experienceMatch =
-        selectedExperience.length === 0 ||
-        parseExperienceForMatch(job.experience).some(
-          (exp: string) =>
-            selectedExperience.includes(exp)
-        );
+    const expParsed = parseExperienceStr(Array.isArray(job.experience) ? job.experience : [job.experience || ""]);
+      // Check if ranges overlap
+      const experienceMatch = expParsed[0] <= expRange[1] && expParsed[1] >= expRange[0];
 
-    const salaryMatch =
-      selectedSalary.length === 0 ||
-      selectedSalary.includes(job.salary);
+    const salParsed = parseSalaryStr(job.salary, salaryUnit);
+      let salaryMatch = false;
+      if (salParsed === null) {
+          salaryMatch = includeNotDisclosed;
+      } else {
+          salaryMatch = salParsed[0] <= salaryRange[1] && salParsed[1] >= salaryRange[0];
+      }
 
-    const searchMatch =
+    
+      const searchMatch =
       searchQuery === "" ||
 
       job.firm_name
@@ -1057,16 +946,17 @@ setSelectedSalary([]);
           selectedSkills.includes(skill)
       );
 
-    const experienceMatch =
-        selectedExperience.length === 0 ||
-        parseExperienceForMatch(job.experience).some(
-          (exp: string) =>
-            selectedExperience.includes(exp)
-        );
+    const expParsed = parseExperienceStr(Array.isArray(job.experience) ? job.experience : [job.experience || ""]);
+      // Check if ranges overlap
+      const experienceMatch = expParsed[0] <= expRange[1] && expParsed[1] >= expRange[0];
 
-    const salaryMatch =
-      selectedSalary.length === 0 ||
-      selectedSalary.includes(job.salary);
+    const salParsed = parseSalaryStr(job.salary, salaryUnit);
+      let salaryMatch = false;
+      if (salParsed === null) {
+          salaryMatch = includeNotDisclosed;
+      } else {
+          salaryMatch = salParsed[0] <= salaryRange[1] && salParsed[1] >= salaryRange[0];
+      }
 
     const searchMatch =
       searchQuery === "" ||

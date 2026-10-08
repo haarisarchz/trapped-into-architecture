@@ -13,6 +13,7 @@ import {
   SALARY_OPTIONS,
 } from "@/app/constants/jobFilters"
 import Autocomplete from "@/components/Autocomplete";
+import AdminSliderInputs from "@/components/AdminSliderInputs";
 
 export default function AddJobPage() {
 const [jobId, setJobId] = useState<string | null>(null);
@@ -915,7 +916,7 @@ const handleSmartExtraction = async () => {
                 Basic Details
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {/* ORGANIZATION TYPE */}
 
@@ -1228,35 +1229,14 @@ const handleSmartExtraction = async () => {
                               </div>
                             ) : (
                               <>
-                                <label className="block mb-1.5 text-sm font-medium">Required Experience <span className="text-red-500">*</span></label>
-                                <div className="flex flex-wrap gap-2">
-                            {EXPERIENCE_OPTIONS.map((exp) => {
-                              const currentExps = Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : []);
-                              const isSelected = currentExps.includes(exp);
-                              return (
-                                <button
-                                  key={exp}
-                                  type="button"
-                                  onClick={() => {
-                                    if (isSelected) {
-                                      updatePosition(index, "experience", currentExps.filter(e => e !== exp));
-                                    } else {
-                                      updatePosition(index, "experience", [...currentExps, exp]);
-                                    }
-                                  }}
-                                  className={`px-4 py-2 border rounded-full text-sm font-semibold mb-1 transition ${
-                                    isSelected
-                                      ? "bg-black text-white border-black"
-                                      : "bg-white text-black border-gray-300 hover:bg-gray-100"
-                                  }`}
-                                >
-                                  {exp}
-                                </button>
-                              );
-                            })}
-                            </div>
-                            
-                            </>
+                                <AdminSliderInputs 
+                                   experience={Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : [])} 
+                                   salary={pos.salary || ""} 
+                                   onChangeExp={(val) => updatePosition(index, "experience", val)}
+                                   onChangeSal={(val) => updatePosition(index, "salary", val)}
+                                   isInternship={employmentType === "Internship" || (pos.position && pos.position.toLowerCase().includes("intern"))}
+                                />
+                              </>
                             )}
                             <div className="mt-4 pt-4 border-t border-gray-100 hidden md:block">
                                <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
