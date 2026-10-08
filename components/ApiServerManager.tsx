@@ -42,18 +42,30 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
   }, [isOpen]);
 
   const addKey = async (type: string) => {
-    const { error } = await supabase.from("api_keys").insert([{
+    const { data, error } = await supabase.from("api_keys").insert([{
       key_value: "",
       type: type,
       owner_id: currentUser.id,
       assigned_to: type === "shared" ? currentUser.id : null 
-    }]);
-    if (!error) fetchKeys(); // Refresh to get the new DB ID
+    }]).select();
+    if (!error && data && data.length > 0) {
+       // Append the newly generated row to local state WITHOUT wiping unsaved changes
+       setDbKeys(prev => [...prev, data[0]]);
+    }
   };
 
   const deleteKey = async (id: string) => {
+    // Optimistic UI removal to preserve other unsaved inputs
+    setDbKeys(prev => prev.filter(k => k.id !== id));
     await supabase.from("api_keys").delete().eq("id", id);
-    fetchKeys();
+  };
+  
+  const saveSingleKey = async (k: any) => {
+      await supabase.from("api_keys").update({ 
+        key_value: k.key_value, 
+        assigned_to: k.assigned_to 
+      }).eq("id", k.id);
+      alert("Server configuration saved.");
   };
 
   const handleSaveAndClose = async () => {
@@ -122,6 +134,9 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                     <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-3 bg-gray-50 rounded-xl border transition-colors shrink-0">
                       {showPassword[k.id] ? "Hide" : "Show"}
                     </button>
+                    <button onClick={() => saveSingleKey(k)} className="text-green-600 hover:text-green-800 p-3 bg-green-50 rounded-xl border border-green-100 transition-colors shrink-0 font-bold text-xs uppercase tracking-widest">
+                      Save
+                    </button>
                     <button onClick={() => deleteKey(k.id)} className="text-red-400 hover:text-red-600 p-3 bg-red-50 rounded-xl border border-red-100 transition-colors shrink-0">
                       ?
                     </button>
@@ -161,7 +176,8 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                           <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-2 bg-gray-50 rounded-lg border transition-colors shrink-0 text-xs">
                             {showPassword[k.id] ? "Hide" : "Show"}
                           </button>
-                          <button onClick={() => deleteKey(k.id)} className="text-red-500 text-xs font-bold hover:underline shrink-0 ml-2">Delete</button>
+                          <button onClick={() => saveSingleKey(k)} className="text-green-600 text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300">Save</button>
+                          <button onClick={() => deleteKey(k.id)} className="text-red-500 text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300">Delete</button>
                         </div>
                         <div className="flex gap-2 items-center">
                           <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Assigned To</span>
