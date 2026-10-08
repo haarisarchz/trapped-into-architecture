@@ -95,7 +95,7 @@ export default async function Home() {
     .select("*")
     .eq("status", "published")
     .order("posted_date", { ascending: false })
-    .limit(6);
+    .limit(8);
 
   // Fetch Site Settings
   const { data: siteSettings } = await supabase
@@ -111,8 +111,7 @@ export default async function Home() {
 
   const { data: jobsData } = await supabase
     .from("jobs")
-    .select("employment_type, position")
-    .eq("status", "published");
+    .select("employment_type, position, status");
 
   let jobsCount = 0;
   let internshipsCount = 0;
@@ -156,7 +155,10 @@ export default async function Home() {
 
       <InteractiveHome 
         recentJobs={recentJobs || []} 
+        popularJobs={recentJobs ? [...recentJobs].reverse() : []}
         recentCompanies={recentCompanies || []} 
+        popularCompanies={recentCompanies ? [...recentCompanies].reverse() : []}
+        mostJobsCompanies={recentCompanies || []}
         stats={stats}
         siteSettings={siteSettings} 
       />
