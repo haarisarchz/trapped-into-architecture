@@ -1773,9 +1773,9 @@ const handleSmartExtraction = async () => {
                       value={selectedServer}
                       onChange={(e) => setSelectedServer(e.target.value)}
                     >
-                      <option value="auto">Auto-Failover (Recommended)</option>
-                      {dbKeys.filter((k: any) => k.type === "personal").map((k: any, i: number) => <option key={k.id} value={k.id}>Personal Server {i + 1}</option>)}
-                      {dbKeys.filter((k: any) => k.type === "shared").map((k: any, i: number) => <option key={k.id} value={k.id}>Shared Server {i + 1}</option>)}
+                      {dbKeys.filter((k: any) => k.type === "personal" && k.key_value && k.key_value.trim()).map((k: any, i: number) => <option key={k.id} value={k.id}>Personal Server {i + 1}</option>)}
+                        {dbKeys.filter((k: any) => k.type === "shared").map((k: any, i: number) => <option key={k.id} value={k.id}>Shared Server {i + 1}</option>)}
+                        <option value="auto">Auto-Failover</option>
                     </select>
                   </div>
                 <p className="text-black text-xs mb-6 uppercase tracking-widest font-bold">Extraction Mode</p>
@@ -1892,8 +1892,13 @@ const handleSmartExtraction = async () => {
                 
                 if (!res.ok) {
                   if (data.error && data.error.toLowerCase().includes("quota")) {
-                    if (index !== -1) { newStatuses[index] = "Quota Exceeded"; setKeyStatuses([...newStatuses]); }
-                    throw new Error("Quota Exceeded on Server " + (index+1));
+                    if (index !== -1) { 
+                      newStatuses[index] = "Quota Exceeded"; 
+                      setKeyStatuses([...newStatuses]); 
+                      throw new Error("Quota Exceeded on Personal Server " + (index+1));
+                    } else {
+                      throw new Error(data.error || "Quota Exceeded on Shared/Selected Server");
+                    }
                   }
                   if (data.error && data.error.toLowerCase().includes("busy")) {
                     if (index !== -1) { newStatuses[index] = "Server Busy"; setKeyStatuses([...newStatuses]); }
