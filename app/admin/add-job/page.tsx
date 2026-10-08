@@ -506,8 +506,8 @@ const [uploadSuccess, setUploadSuccess] =
   setUploadSuccess(false);
 
     // Generate SEO friendly file name
-  let safeFirm = firmName ? firmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
-  let safePosition = positions[0]?.position ? positions[0]?.position.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+  const safeFirm = firmName ? firmName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
+  const safePosition = positions[0]?.position ? positions[0]?.position.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : '';
   let seoName = '';
   if (safeFirm && safePosition) {
     seoName = `${safeFirm}-hiring-${safePosition}`;
@@ -1847,7 +1847,7 @@ const handleSmartExtraction = async () => {
           setLoadingAI("Extracting Smart Job...");
         }
 
-      let formData = new FormData();
+      const formData = new FormData();
       formData.append("mode", uploadMode);
       if (uploadMode === "text") {
         if (!smartText) throw new Error("Please paste text to extract.");
@@ -2013,7 +2013,7 @@ const handleSmartExtraction = async () => {
           if (!rawExp) return [];
           const str = Array.isArray(rawExp) ? rawExp.join(" ") : String(rawExp);
           const lower = str.toLowerCase();
-          let matched = new Set();
+          const matched = new Set();
           if (lower.includes("fresher") || lower.includes("0 year") || lower.includes("0-1")) matched.add("Fresher");
           if (lower.includes("0-1") || lower.includes("0 to 1") || lower.includes("0 - 1")) matched.add("0-1 Years");
           if (lower.includes("1-2") || lower.includes("1 to 2") || lower.includes("1 - 2") || lower.match(/1\s*year/)) matched.add("1-2 Years");
