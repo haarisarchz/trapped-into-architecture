@@ -137,7 +137,7 @@ export default function SaveButton({
         }`}
       >
         {isSaved ? <BookmarkCheck size={20} /> : <Bookmark size={20} />} 
-        {isSaved ? "Saved" : "Save"}
+        {isSaved ? "Saved" : "Save"} ({saveCount})
       </button>
     );
   }

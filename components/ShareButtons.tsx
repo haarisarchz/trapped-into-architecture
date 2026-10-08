@@ -181,7 +181,7 @@ export default function ShareButtons({
           aria-label={`Share ${position} job`}
           className="flex items-center justify-center gap-2 w-full md:w-auto bg-white border-2 border-gray-200 text-black px-6 py-3 rounded-xl text-base font-semibold hover:bg-gray-50 transition"
         >
-          <Share size={20} /> Share
+          <Share size={20} /> Share ({shareCount})
         </button>
       )}
 

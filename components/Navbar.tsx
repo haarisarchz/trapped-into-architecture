@@ -192,7 +192,7 @@ useEffect(() => {
   {/* MOBILE HEADER - 2 LINES */}
   <div className="md:hidden flex flex-col w-full">
     <div className="w-full text-center py-4 border-b border-gray-800">
-      <Link href="/" className="text-xl font-bold tracking-widest uppercase flex items-center justify-center gap-3">
+      <Link href="/" className="text-sm sm:text-base md:text-xl font-bold tracking-wide md:tracking-widest uppercase flex items-center justify-center gap-2 whitespace-nowrap">
         {settings?.logo_url && <img src={settings.logo_url} alt="Site Logo" className="h-8 md:h-10 object-contain inline-block" />}
         <span>Trapped Into Architecture</span>
       </Link>

@@ -162,7 +162,8 @@ export default async function JobDetailsPage({
   const lowerSalary = job.salary ? job.salary.trim().toLowerCase() : "";
   const hasSalary = lowerSalary && !["not disclosed", "not specified", "negotiable", "-", "null", "as per industry standards"].includes(lowerSalary);
   const isIntern = job.employment_type === "Internship" || (job.position && job.position.toLowerCase().includes("intern"));
-  const hasExperience = !isIntern && job.experience && ((Array.isArray(job.experience) && job.experience.length > 0) || (typeof job.experience === "string" && job.experience.trim()));
+  const expRaw = job.experience ? (Array.isArray(job.experience) ? job.experience.filter(Boolean).join(', ') : String(job.experience)) : "";
+  const hasExperience = !isIntern && expRaw.trim().length > 0;
   const hasSource = job.source && job.source.trim();
     
     // Auto-extract contact details for older jobs
@@ -245,7 +246,7 @@ export default async function JobDetailsPage({
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
 
         {/* BREADCRUMB */}
-        <nav className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-4">
+        <nav className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-2">
           <Link href="/" className="hover:text-black transition">Home</Link>
           <span>/</span>
           <Link href="/jobs" className="hover:text-black transition">Jobs</Link>
@@ -256,7 +257,7 @@ export default async function JobDetailsPage({
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
 
           {/* MAIN CONTENT */}
-          <div className="space-y-6">
+          <div className="space-y-4">
 
             {/* HERO CARD */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -265,7 +266,7 @@ export default async function JobDetailsPage({
                 {/* LEFT COLUMN: IMAGE + SOCIAL ACTIONS */}
                 <div className="md:w-[45%] bg-gray-50 flex flex-col border-b md:border-b-0 md:border-r border-gray-100 rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none">
                   {job.image ? (
-                    <div className="flex-1 flex items-start justify-center p-6 sm:p-8">
+                    <div className="flex-1 flex items-start justify-center p-0 pt-2 sm:p-8">
                       <img
                         src={job.image}
                         alt={job.position}
@@ -278,17 +279,7 @@ export default async function JobDetailsPage({
                     </div>
                   )}
 
-                  {/* SAVE / SHARE (Moved from main content) */}
-                  <div className="p-6 bg-gray-100 border-t border-gray-200 flex flex-col items-center justify-center gap-4 mt-auto">
-                    <div className="flex items-center gap-3">
-                      <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="button" />
-                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} employmentType={job.employment_type} initialShares={job.share_count || 0} variant="button" />
-                    </div>
-                    <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
-                      <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="statistic" />
-                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} employmentType={job.employment_type} initialShares={job.share_count || 0} variant="statistic" />
-                    </div>
-                  </div>
+                  
                 </div>
 
                 {/* INFO */}
@@ -354,7 +345,7 @@ export default async function JobDetailsPage({
                   
 
                   {/* ADDITIONAL DETAILS BUNDLED INTO HERO CARD */}
-                  <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                  <div className="mt-2 space-y-2 border-t border-gray-100 pt-2">
                     
                     {/* QUALIFICATIONS */}
                     {hasQualifications && (
@@ -405,7 +396,7 @@ export default async function JobDetailsPage({
                     
                     {/* CONTACT DETAILS (Moved here per user request) */}
                     {(displayEmail || displayPhone || company?.website) && (
-                      <div className="pt-3 mt-3 border-t border-gray-100">
+                      <div className="pt-2 mt-2 border-t border-gray-100">
                         <h2 className="text-base font-bold mb-1 text-gray-900">Contact Details</h2>
                         <div className="flex flex-col gap-2">
                           {displayEmail && (
@@ -432,7 +423,7 @@ export default async function JobDetailsPage({
 
                     {/* DATES */}
                     <div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                         {job.posted_date && (
                           <div>
                             <p className="text-sm text-gray-500">Posted Date</p>
@@ -461,7 +452,7 @@ export default async function JobDetailsPage({
                     </div>
 
                     {/* APPLY / EMAIL NOW (Moved to bottom center) */}
-                    <div className="pt-4 mt-4 border-t border-gray-100 flex justify-center w-full">
+                    <div className="pt-3 mt-3 border-t border-gray-100 flex justify-center w-full">
                       {isExpired ? (
                         <button disabled className="bg-gray-200 text-gray-500 px-8 py-3.5 rounded-xl text-lg font-bold cursor-not-allowed w-full sm:w-auto text-center">
                           Post Expired
@@ -483,6 +474,12 @@ export default async function JobDetailsPage({
                           )}
                         </div>
                       )}
+                    </div>
+
+                    {/* SAVE / SHARE (Moved to bottom of info per user request) */}
+                    <div className="pt-4 mt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                      <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="button" />
+                      <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} employmentType={job.employment_type} initialShares={job.share_count || 0} variant="button" />
                     </div>
 
                   </div>
