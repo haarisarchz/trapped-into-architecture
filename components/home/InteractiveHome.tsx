@@ -70,7 +70,9 @@ export default function InteractiveHome({
       </section>
 
       {/* 3. JOBS SECTION */}
-      <section className="py-8 px-6 lg:px-12 max-w-7xl mx-auto w-full">
+      <section className="py-8 px-6 lg:px-12 w-full">
+        <div className="max-w-7xl mx-auto">
+
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">Latest Opportunities</h2>
           
@@ -134,16 +136,15 @@ export default function InteractiveHome({
             View All Jobs <ArrowRight size={18} />
           </Link>
         </div>
+              </div>
       </section>
 
-      <div className="w-full bg-white">
-        <div className="w-full max-w-7xl mx-auto border-t-2 border-black my-0"></div>
-      </div>
+      <div className="w-full border-t-[3px] border-black my-2"></div>
 
       {/* 4. COMPANIES SECTION */}
-      <section className="py-12 px-6 lg:px-12 bg-white w-full text-black">
+      <section className="py-8 px-6 lg:px-12 bg-white w-full text-black">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">Explore Companies</h2>
             
             <div className="flex bg-gray-100 p-1 rounded-full w-fit border border-gray-200">
@@ -163,9 +164,9 @@ export default function InteractiveHome({
                 <Link 
                   href={`/companies/${company.slug}`}
                   key={company.slug}
-                  className="bg-gray-50 hover:bg-gray-100 p-4 rounded-2xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200 aspect-square shadow-sm"
+                  className="bg-gray-50 hover:bg-gray-100 p-3 py-5 rounded-2xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200 shadow-sm aspect-auto"
                 >
-                  <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center mb-3 overflow-hidden shadow-sm">
+                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center mb-2 overflow-hidden shadow-sm">
                     {company.logo_url ? (
                       <img src={company.logo_url} alt={company.firm_name} className="w-full h-full object-cover" />
                     ) : (
@@ -188,32 +189,32 @@ export default function InteractiveHome({
       </section>
       
       {/* 5. ARCHITECTURE SERVICES (White Background) */}
-      <section className="py-12 px-6 lg:px-12 bg-white text-black w-full border-b border-gray-100">
+      <section className="py-8 px-6 lg:px-12 bg-white text-black w-full border-b border-gray-100">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center text-gray-900">Architecture Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link href="/contact?service=software-tutor" className="bg-gray-50 hover:bg-gray-100 p-8 rounded-2xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
-              <h3 className="font-semibold text-xl mb-3 text-gray-900">Hire a Software Tutor</h3>
+          <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">Architecture Services</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Link href="/contact?service=software-tutor" className="bg-gray-50 hover:bg-gray-100 p-5 py-6 rounded-xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900">Hire a Software Tutor</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Master BIM, CAD, and rendering tools with expert tutors.</p>
             </Link>
-            <Link href="/contact?service=freelance-architect" className="bg-gray-50 hover:bg-gray-100 p-8 rounded-2xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
-              <h3 className="font-semibold text-xl mb-3 text-gray-900">Hire an Architect</h3>
+            <Link href="/contact?service=freelance-architect" className="bg-gray-50 hover:bg-gray-100 p-5 py-6 rounded-xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900">Hire an Architect</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Find top-tier freelance architects for your projects.</p>
             </Link>
-            <Link href="/contact?service=portfolio-review" className="bg-gray-50 hover:bg-gray-100 p-8 rounded-2xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
-              <h3 className="font-semibold text-xl mb-3 text-gray-900">Get your portfolio critiqued ready</h3>
+            <Link href="/contact?service=portfolio-review" className="bg-gray-50 hover:bg-gray-100 p-5 py-6 rounded-xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900">Get your portfolio critiqued ready</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Get expert feedback to help you land your dream job.</p>
             </Link>
           </div>
         </div>
       </section>
       
-      {/* 5.5 PORTFOLIO BUILDER (Black Background) */}
-      <section className="py-14 px-6 lg:px-12 bg-black text-white w-full border-t border-gray-900">
+      {/* 5.5 PORTFOLIO BUILDER */}
+      <section className="py-8 px-6 lg:px-12 bg-gray-50 text-black w-full border-t border-gray-200">
         <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-white tracking-tight">Portfolio Builder</h2>
-          <p className="text-gray-400 mb-8 text-lg max-w-2xl text-center">Build your professional architecture portfolio in seconds.</p>
-          <a href="https://thecosmofolio.com/" target="_blank" rel="noopener noreferrer" className="bg-white text-black font-bold py-4 px-10 rounded-full hover:bg-gray-200 transition shadow-lg inline-block border border-transparent">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-3 text-gray-900 tracking-tight">Portfolio Builder</h2>
+          <p className="text-gray-600 mb-5 text-lg max-w-2xl text-center">Build your professional architecture portfolio in seconds.</p>
+          <a href="https://thecosmofolio.com/" target="_blank" rel="noopener noreferrer" className="bg-black text-white font-bold py-3 px-8 rounded-full hover:bg-gray-800 transition shadow-md inline-block border border-transparent">
             Build Your Portfolio
           </a>
         </div>
