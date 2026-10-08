@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 
-export function AdminExperienceSlider({ experience, onChangeExp }: { experience: string, onChangeExp: (exp: string) => void }) {
+export function AdminExperienceSlider({ experience, onChangeExp, isInternship }: { experience: string[], onChangeExp: (arr: string[]) => void, isInternship: boolean }) {
   const [expRange, setExpRange] = useState<number[]>([0, 5]);
 
   useEffect(() => {
-    if (!experience) return;
-    if (experience.toLowerCase() === "fresher") {
+    if (!experience || experience.length === 0) return;
+    const expStr = experience[0].toLowerCase();
+    if (expStr === "fresher") {
       setExpRange([0, 0]);
       return;
     }
-    const nums = experience.match(/\d+/g);
+    const nums = expStr.match(/\d+/g);
     if (nums && nums.length >= 2) {
       setExpRange([parseInt(nums[0]), parseInt(nums[1])]);
     } else if (nums && nums.length === 1) {
@@ -21,9 +22,9 @@ export function AdminExperienceSlider({ experience, onChangeExp }: { experience:
 
   const pushExp = (range: number[]) => {
     if (range[0] === 0 && range[1] === 0) {
-      onChangeExp("Fresher");
+      onChangeExp(["Fresher"]);
     } else {
-      onChangeExp(`${range[0] === 0 ? "Fresher" : range[0]} - ${range[1]} Year${range[1] > 1 ? 's' : ''}`);
+      onChangeExp([`${range[0] === 0 ? "Fresher" : range[0]} - ${range[1]} Year${range[1] > 1 ? 's' : ''}`]);
     }
   };
 
@@ -87,7 +88,6 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
   useEffect(() => {
     const salStr = (salary || "").toLowerCase();
     if (!salStr) {
-       // Init Defaults if nothing passed
        setSalUnit("Per Month");
        setSalRange([0, 50000]);
        return;
@@ -102,7 +102,7 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
       setIsNotDisclosed(false);
       setIsIndustryStandard(false);
       let multiplier = 1;
-      let curUnit = "Per Month"; // Default
+      let curUnit = "Per Month";
       
       if (salStr.includes("lpa") || salStr.includes("lakhs") || salStr.includes("lakh")) {
         multiplier = 100000;
