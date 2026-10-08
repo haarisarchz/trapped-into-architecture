@@ -32,7 +32,11 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
     if (nums && nums.length >= 2) {
       setExpRange([parseInt(nums[0]), parseInt(nums[1])]);
     } else if (nums && nums.length === 1) {
-      setExpRange([0, parseInt(nums[0])]);
+      if (expStr.includes('+')) {
+        setExpRange([parseInt(nums[0]), 20]);
+      } else {
+        setExpRange([0, parseInt(nums[0])]);
+      }
     }
   }, [experience, isInternship, hasInitIntern]);
 
@@ -42,6 +46,8 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
     } else {
       if (range[0] === 0 && range[1] === 0) {
         onChangeExp(["Fresher"]);
+      } else if (range[1] === 20) {
+        onChangeExp([`${range[0] === 0 ? "0" : range[0]}+ Years`]);
       } else {
         onChangeExp([`${range[0] === 0 ? "Fresher" : range[0]} - ${range[1]} Year${range[1] > 1 ? 's' : ''}`]);
       }
@@ -73,7 +79,7 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
                 <Slider 
                     range 
                     min={0} 
-                    max={15} 
+                    max={20} 
                     value={expRange} 
                     onChange={(val) => {
                       setExpRange(val as number[]);
@@ -95,7 +101,7 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
                     }}
                 >
                     <option value={0}>Fresher</option>
-                    {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
+                    {[1,2,3,4,5,7,10,15].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
                 </select>
                 <span className="text-sm font-semibold text-black">to</span>
                 <select 
@@ -110,6 +116,7 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
                     <option value={0}>Fresher</option>
                     {[1,2,3,4,5,7,10].map(v => <option key={v} value={v}>{v} Year{v>1?'s':''}</option>)}
                     <option value={15}>15+ Years</option>
+                    <option value={20}>Max+</option>
                 </select>
             </div>
         </div>
