@@ -7,6 +7,8 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
   const [allAdmins, setAllAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchKeys = async () => {
     setLoading(true);
@@ -44,19 +46,36 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
       key_value: "",
       type: type,
       owner_id: currentUser.id,
-      assigned_to: type === "shared" ? currentUser.id : null // CEO assigns to self by default
+      assigned_to: type === "shared" ? currentUser.id : null 
     }]);
-    if (!error) fetchKeys();
-  };
-
-  const updateKey = async (id: string, updates: any) => {
-    await supabase.from("api_keys").update(updates).eq("id", id);
-    fetchKeys();
+    if (!error) fetchKeys(); // Refresh to get the new DB ID
   };
 
   const deleteKey = async (id: string) => {
     await supabase.from("api_keys").delete().eq("id", id);
     fetchKeys();
+  };
+
+  const handleSaveAndClose = async () => {
+    setIsSaving(true);
+    // Batch update all keys
+    for (const k of dbKeys) {
+      await supabase.from("api_keys").update({ 
+        key_value: k.key_value, 
+        assigned_to: k.assigned_to 
+      }).eq("id", k.id);
+    }
+    setIsSaving(false);
+    onKeysUpdated(dbKeys);
+    onClose();
+  };
+
+  const toggleShow = (id: string) => {
+    setShowPassword(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const updateLocalKey = (id: string, field: string, value: string) => {
+    setDbKeys(prev => prev.map(k => k.id === id ? { ...k, [field]: value } : k));
   };
 
   if (!isOpen) return null;
@@ -80,7 +99,7 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
         ) : (
           <div className="space-y-8 mb-6">
             
-            {/* PERSONAL SERVERS (For everyone) */}
+            {/* PERSONAL SERVERS */}
             <div>
               <h3 className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 flex justify-between items-center pb-2 border-b">
                 Personal Servers (Private)
@@ -94,18 +113,15 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                   <div key={k.id} className="flex items-center gap-2 w-full">
                     <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Server {index + 1}</span>
                     <input
-                      type="password"
+                      type={showPassword[k.id] ? "text" : "password"}
                       placeholder="AIzaSy..."
-                      value={k.key_value}
-                      onChange={(e) => {
-                        const newKeys = [...dbKeys];
-                        const idx = newKeys.findIndex(x => x.id === k.id);
-                        newKeys[idx].key_value = e.target.value;
-                        setDbKeys(newKeys);
-                      }}
-                      onBlur={(e) => updateKey(k.id, { key_value: e.target.value })}
+                      value={k.key_value || ""}
+                      onChange={(e) => updateLocalKey(k.id, "key_value", e.target.value)}
                       className="flex-1 border rounded-xl px-4 py-3 bg-gray-50 font-mono text-sm focus:border-black outline-none transition-colors"
                     />
+                    <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-3 bg-gray-50 rounded-xl border transition-colors shrink-0">
+                      {showPassword[k.id] ? "Hide" : "Show"}
+                    </button>
                     <button onClick={() => deleteKey(k.id)} className="text-red-400 hover:text-red-600 p-3 bg-red-50 rounded-xl border border-red-100 transition-colors shrink-0">
                       ?
                     </button>
@@ -136,25 +152,22 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                         <div className="flex gap-2 items-center">
                           <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Key String</span>
                           <input
-                            type="text"
+                            type={showPassword[k.id] ? "text" : "password"}
                             placeholder="AIzaSy..."
-                            value={k.key_value}
-                            onChange={(e) => {
-                              const newKeys = [...dbKeys];
-                              const idx = newKeys.findIndex(x => x.id === k.id);
-                              newKeys[idx].key_value = e.target.value;
-                              setDbKeys(newKeys);
-                            }}
-                            onBlur={(e) => updateKey(k.id, { key_value: e.target.value })}
+                            value={k.key_value || ""}
+                            onChange={(e) => updateLocalKey(k.id, "key_value", e.target.value)}
                             className="flex-1 border rounded-lg px-3 py-2 bg-white font-mono text-sm outline-none"
                           />
-                          <button onClick={() => deleteKey(k.id)} className="text-red-500 text-xs font-bold hover:underline">Delete</button>
+                          <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-2 bg-gray-50 rounded-lg border transition-colors shrink-0 text-xs">
+                            {showPassword[k.id] ? "Hide" : "Show"}
+                          </button>
+                          <button onClick={() => deleteKey(k.id)} className="text-red-500 text-xs font-bold hover:underline shrink-0 ml-2">Delete</button>
                         </div>
                         <div className="flex gap-2 items-center">
                           <span className="text-[10px] font-bold uppercase text-gray-400 w-20">Assigned To</span>
                           <select 
                             value={k.assigned_to || ""}
-                            onChange={(e) => updateKey(k.id, { assigned_to: e.target.value })}
+                            onChange={(e) => updateLocalKey(k.id, "assigned_to", e.target.value)}
                             className="flex-1 border rounded-lg px-3 py-2 bg-white text-sm font-semibold outline-none"
                           >
                             <option value="">-- Select Admin --</option>
@@ -186,7 +199,9 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
 
           </div>
         )}
-        <button type="button" onClick={onClose} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition">Save & Close</button>
+        <button type="button" onClick={handleSaveAndClose} disabled={isSaving} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition disabled:opacity-50">
+          {isSaving ? "Saving..." : "Save & Close"}
+        </button>
       </div>
     </div>
   );
