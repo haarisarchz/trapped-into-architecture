@@ -27,7 +27,7 @@ export default function InteractiveHome({
   const displayJobs = (jobTab === "popular" ? popularJobs : recentJobs).slice(0, 8);
 
   const [companyTab, setCompanyTab] = useState<"latest" | "popular" | "most-jobs">("latest");
-  const displayCompanies = (companyTab === "popular" ? popularCompanies : companyTab === "most-jobs" ? mostJobsCompanies : recentCompanies).slice(0, 6);
+  const displayCompanies = (companyTab === "popular" ? popularCompanies : companyTab === "most-jobs" ? mostJobsCompanies : recentCompanies).slice(0, 5);
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
@@ -52,7 +52,7 @@ export default function InteractiveHome({
       </section>
 
       {/* 2. PLATFORM STATISTICS */}
-      <section className="py-6 px-6 lg:px-12 bg-black text-white">
+      <section className="py-6 px-6 lg:px-12 bg-blue-600 text-white">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
           <div className="pt-4 md:pt-0">
             <div className="text-4xl md:text-5xl font-bold mb-1">{stats?.jobs || 0}</div>
@@ -133,15 +133,17 @@ export default function InteractiveHome({
           </div>
         )}
         
-        <div className="mt-8 text-center">
+        <div className="mt-4 mb-2 text-center">
           <Link href="/jobs" className="inline-flex items-center gap-2 text-black font-semibold hover:gap-3 transition-all">
             View All Jobs <ArrowRight size={18} />
           </Link>
         </div>
       </section>
 
+      <div className="w-full max-w-7xl mx-auto border-t border-black my-2"></div>
+
       {/* 4. COMPANIES SECTION */}
-      <section className="py-8 px-6 lg:px-12 bg-white w-full border-t border-gray-100">
+      <section className="py-6 px-6 lg:px-12 bg-white w-full">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">Explore Companies</h2>
@@ -158,7 +160,7 @@ export default function InteractiveHome({
               No companies listed yet.
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {displayCompanies.map((company) => (
                 <Link 
                   href={`/companies/${company.slug}`}
@@ -208,26 +210,72 @@ export default function InteractiveHome({
         </div>
       </section>
       
-      {/* 6. NEWSLETTER CTA (Only visible if enabled) */}
-      {siteSettings?.show_newsletter !== false && (
-        <section className="py-12 px-6 lg:px-12 bg-white w-full border-t border-gray-100">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">Stay Updated</h2>
-            <p className="text-gray-600 mb-6">Get the latest architecture jobs and internships delivered directly to your inbox.</p>
-            <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
-                className="flex-1 px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:border-black transition"
-                required
-              />
-              <button type="submit" className="bg-black text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-800 transition">
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </section>
-      )}
+      {/* 5.5 PORTFOLIO BUILDER */}
+      <section className="py-8 px-6 lg:px-12 bg-gray-50 text-black w-full border-t border-gray-100">
+        <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-3 text-gray-900 tracking-tight">Portfolio Builder</h2>
+          <p className="text-gray-600 mb-6 text-lg max-w-2xl text-center">Build your architecture portfolio in seconds.</p>
+          <a href="https://thecosmofolio.com/" target="_blank" rel="noopener noreferrer" className="bg-black text-white font-bold py-3.5 px-8 rounded-full hover:bg-gray-800 transition shadow inline-block border border-black">
+            Build Your Portfolio
+          </a>
+        </div>
+      </section>
+
+      {/* 6. CONNECT WITH US */}
+      <section className="py-10 px-6 lg:px-12 bg-white text-center w-full border-t border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-900 mb-5">Follow Us</h2>
+        <div className="flex flex-wrap justify-center gap-6">
+          {siteSettings?.whatsapp_channel_url ? (
+            <a href={siteSettings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-green-600 font-medium">
+              <MessageCircle size={20} /> WhatsApp
+            </a>
+          ) : (
+            <Link href="/unavailable?service=WhatsApp" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-green-600 font-medium">
+              <MessageCircle size={20} /> WhatsApp
+            </Link>
+          )}
+
+          {siteSettings?.instagram ? (
+            <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-pink-600 font-medium">
+              <InstagramIcon size={20} /> Instagram
+            </a>
+          ) : (
+            <Link href="/unavailable?service=Instagram" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-pink-600 font-medium">
+              <InstagramIcon size={20} /> Instagram
+            </Link>
+          )}
+
+          {siteSettings?.facebook ? (
+            <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-800 font-medium">
+              <FacebookIcon size={20} /> Facebook
+            </a>
+          ) : (
+            <Link href="/unavailable?service=Facebook" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-800 font-medium">
+              <FacebookIcon size={20} /> Facebook
+            </Link>
+          )}
+
+          {siteSettings?.twitter ? (
+            <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-400 font-medium">
+              <TwitterIcon size={20} /> X
+            </a>
+          ) : (
+            <Link href="/unavailable?service=X" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-400 font-medium">
+              <TwitterIcon size={20} /> X
+            </Link>
+          )}
+
+          {siteSettings?.telegram_channel_url ? (
+            <a href={siteSettings.telegram_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-500 font-medium">
+              <Send size={20} /> Telegram
+            </a>
+          ) : (
+            <Link href="/unavailable?service=Telegram" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-500 font-medium">
+              <Send size={20} /> Telegram
+            </Link>
+          )}
+        </div>
+      </section>
     </main>
   );
 }
