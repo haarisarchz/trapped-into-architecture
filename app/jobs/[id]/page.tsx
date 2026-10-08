@@ -320,22 +320,22 @@ export default async function JobDetailsPage({
 
                   {/* TAGS */}
                   <div className="flex flex-wrap gap-2 mt-4">
-                    {job.employment_type && (
+                    {job.employment_type?.trim() && (
                       <span className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200">
                         {job.employment_type}
                       </span>
                     )}
-                    {job.workplace_type && (
+                    {job.workplace_type?.trim() && (
                       <span className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200">
                         {job.workplace_type}
                       </span>
                     )}
-                    {hasExperience && (
+                    {hasExperience && formatExperience(job.experience)?.trim() && (
                       <span className="bg-gray-100 text-gray-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-gray-200">
                         {formatExperience(job.experience)}
                       </span>
                     )}
-                    {hasSalary && (
+                    {hasSalary && job.salary?.trim() && (
                       <span className="bg-green-50 text-green-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-green-200">
                         {job.salary}
                       </span>
@@ -477,7 +477,7 @@ export default async function JobDetailsPage({
                     </div>
 
                     {/* SAVE / SHARE (Moved to bottom of info per user request) */}
-                    <div className="pt-4 mt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                    <div className="pt-4 mt-4 border-t border-gray-100 grid grid-cols-2 gap-3 w-full sm:flex sm:flex-row sm:justify-center">
                       <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="button" />
                       <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} employmentType={job.employment_type} initialShares={job.share_count || 0} variant="button" />
                     </div>
