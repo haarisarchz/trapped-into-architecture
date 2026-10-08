@@ -1,51 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import Slider from "rc-slider";
-import "rc-slider/assets/index.css";
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
-export function AdminExperienceSlider({ experience, onChangeExp, isInternship }: { experience: string[], onChangeExp: (arr: string[]) => void, isInternship: boolean }) {
+export function AdminExperienceSlider({ experience, onChangeExp }: { experience: string, onChangeExp: (exp: string) => void }) {
   const [expRange, setExpRange] = useState<number[]>([0, 5]);
 
   useEffect(() => {
-    if (experience && experience.length > 0) {
-      const expStr = experience.join(" ").toLowerCase();
-      if (expStr.includes("fresher")) {
-        setExpRange([0, 0]);
-      } else {
-        const nums = expStr.match(/\d+/g);
-        if (nums && nums.length >= 2) {
-          setExpRange([parseInt(nums[0]), parseInt(nums[1])]);
-        } else if (nums && nums.length === 1) {
-          if (expStr.includes("+")) setExpRange([parseInt(nums[0]), 15]);
-          else setExpRange([parseInt(nums[0]), parseInt(nums[0])]);
-        }
-      }
-    } else {
-       setExpRange([0, 5]);
+    if (!experience) return;
+    if (experience.toLowerCase() === "fresher") {
+      setExpRange([0, 0]);
+      return;
+    }
+    const nums = experience.match(/\d+/g);
+    if (nums && nums.length >= 2) {
+      setExpRange([parseInt(nums[0]), parseInt(nums[1])]);
+    } else if (nums && nums.length === 1) {
+      setExpRange([0, parseInt(nums[0])]);
     }
   }, [experience]);
 
   const pushExp = (range: number[]) => {
     if (range[0] === 0 && range[1] === 0) {
-      onChangeExp(["Fresher"]);
-    } else if (range[1] === 15) {
-      onChangeExp([`${range[0]}+ Years`]);
+      onChangeExp("Fresher");
     } else {
-      onChangeExp([`${range[0]}-${range[1]} Years`]);
+      onChangeExp(`${range[0] === 0 ? "Fresher" : range[0]} - ${range[1]} Year${range[1] > 1 ? 's' : ''}`);
     }
   };
-
-  if (isInternship) {
-      return (
-          <div className="h-full flex flex-col justify-center text-center text-gray-500 py-4 border rounded-xl bg-gray-50">
-            <span className="text-xl mb-2">??</span>
-            <p className="text-sm font-medium">Experience not required for internships</p>
-          </div>
-      );
-  }
 
   return (
     <div className="w-full">
         <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-gray-700">Required Experience <span className="text-red-500">*</span></label>
+        
         <div className="px-3 mb-6">
             <Slider 
                 range 
@@ -60,7 +45,8 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
                 handleStyle={[{ borderColor: '#9ca3af', backgroundColor: 'white' }, { borderColor: '#9ca3af', backgroundColor: 'white' }]}
             />
         </div>
-        <div className="flex items-center justify-between gap-4">
+        
+        <div className="flex items-center gap-4">
             <select 
                 className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
                 value={expRange[0]}
@@ -93,13 +79,19 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
 }
 
 export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onChangeSal: (s: string) => void }) {
-  const [salRange, setSalRange] = useState<number[]>([0, 50]);
-  const [salUnit, setSalUnit] = useState<string>("LPA");
+  const [salRange, setSalRange] = useState<number[]>([0, 50000]);
+  const [salUnit, setSalUnit] = useState<string>("Per Month");
   const [isNotDisclosed, setIsNotDisclosed] = useState(false);
   const [isIndustryStandard, setIsIndustryStandard] = useState(false);
 
   useEffect(() => {
     const salStr = (salary || "").toLowerCase();
+    if (!salStr) {
+       // Init Defaults if nothing passed
+       setSalUnit("Per Month");
+       setSalRange([0, 50000]);
+       return;
+    }
     if (salStr.includes("not disclosed")) {
       setIsNotDisclosed(true);
       setIsIndustryStandard(false);
@@ -110,11 +102,12 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
       setIsNotDisclosed(false);
       setIsIndustryStandard(false);
       let multiplier = 1;
-      let curUnit = "LPA";
+      let curUnit = "Per Month"; // Default
+      
       if (salStr.includes("lpa") || salStr.includes("lakhs") || salStr.includes("lakh")) {
         multiplier = 100000;
         curUnit = "LPA";
-      } else if (salStr.includes("k") || salStr.includes("month")) {
+      } else if (salStr.includes("k") || salStr.includes("month") || salStr.includes("pm")) {
         multiplier = 1000;
         curUnit = "Per Month";
       }
@@ -220,6 +213,7 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
                       pushSal([Math.min(salRange[0], v), v], salUnit, isNotDisclosed, isIndustryStandard);
                     }}
                 >
+                    <option value={0}>Min</option>
                     {[1,2,3,4,5,10,15,20,30,40].map(v => <option key={v} value={salUnit === "LPA" ? v : v*10000}>{salUnit === "LPA" ? v + " LPA" : (v*10) + "k"}</option>)}
                     <option value={salUnit === "LPA" ? 50 : 200000}>{salUnit === "LPA" ? "50 LPA+" : "2L+"}</option>
                 </select>
