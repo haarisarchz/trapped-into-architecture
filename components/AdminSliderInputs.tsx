@@ -2,28 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 
-export default function AdminSliderInputs({ 
-  experience, 
-  salary, 
-  onChangeExp, 
-  onChangeSal,
-  isInternship 
-}: { 
-  experience: string[], 
-  salary: string, 
-  onChangeExp: (arr: string[]) => void, 
-  onChangeSal: (s: string) => void,
-  isInternship: boolean
-}) {
+export function AdminExperienceSlider({ experience, onChangeExp, isInternship }: { experience: string[], onChangeExp: (arr: string[]) => void, isInternship: boolean }) {
   const [expRange, setExpRange] = useState<number[]>([0, 5]);
-  const [salRange, setSalRange] = useState<number[]>([0, 50]);
-  const [salUnit, setSalUnit] = useState<string>("LPA");
-  const [isNotDisclosed, setIsNotDisclosed] = useState(false);
-  const [isIndustryStandard, setIsIndustryStandard] = useState(false);
 
-  // Sync from props to local state
   useEffect(() => {
-    // 1. Parse Experience
     if (experience && experience.length > 0) {
       const expStr = experience.join(" ").toLowerCase();
       if (expStr.includes("fresher")) {
@@ -38,46 +20,10 @@ export default function AdminSliderInputs({
         }
       }
     } else {
-       // default
        setExpRange([0, 5]);
     }
+  }, [experience]);
 
-    // 2. Parse Salary
-    const salStr = (salary || "").toLowerCase();
-    if (salStr.includes("not disclosed")) {
-      setIsNotDisclosed(true);
-      setIsIndustryStandard(false);
-    } else if (salStr.includes("industry standard") || salStr.includes("negotiable") || salStr.includes("as per")) {
-      setIsIndustryStandard(true);
-      setIsNotDisclosed(false);
-    } else {
-      setIsNotDisclosed(false);
-      setIsIndustryStandard(false);
-      let multiplier = 1;
-      let curUnit = "LPA";
-      if (salStr.includes("lpa") || salStr.includes("lakhs") || salStr.includes("lakh")) {
-        multiplier = 100000;
-        curUnit = "LPA";
-      } else if (salStr.includes("k") || salStr.includes("month")) {
-        multiplier = 1000;
-        curUnit = "Per Month";
-      }
-      
-      const nums = salStr.match(/\d+(\.\d+)?/g);
-      if (nums && nums.length >= 2) {
-        const min = parseFloat(nums[0]) * multiplier;
-        const max = parseFloat(nums[1]) * multiplier;
-        setSalUnit(curUnit);
-        setSalRange(curUnit === "LPA" ? [min/100000, max/100000] : [min, max]);
-      } else if (nums && nums.length === 1) {
-        const val = parseFloat(nums[0]) * multiplier;
-        setSalUnit(curUnit);
-        setSalRange(curUnit === "LPA" ? [val/100000, val/100000] : [val, val]);
-      }
-    }
-  }, [experience, salary]);
-
-  // Sync from local state to props
   const pushExp = (range: number[]) => {
     if (range[0] === 0 && range[1] === 0) {
       onChangeExp(["Fresher"]);
@@ -88,25 +34,17 @@ export default function AdminSliderInputs({
     }
   };
 
-  const pushSal = (range: number[], unit: string, notDisclosed: boolean, industryStd: boolean) => {
-    if (notDisclosed) {
-      onChangeSal("Not Disclosed");
-    } else if (industryStd) {
-      onChangeSal("As per Industry Standards");
-    } else {
-      if (unit === "LPA") {
-        onChangeSal(`${range[0]} LPA - ${range[1]} LPA`);
-      } else {
-        onChangeSal(`${range[0]/1000}k - ${range[1]/1000}k Per Month`);
-      }
-    }
-  };
+  if (isInternship) {
+      return (
+          <div className="h-full flex flex-col justify-center text-center text-gray-500 py-4 border rounded-xl bg-gray-50">
+            <span className="text-xl mb-2">??</span>
+            <p className="text-sm font-medium">Experience not required for internships</p>
+          </div>
+      );
+  }
 
   return (
-    <div className="space-y-8 bg-gray-50 p-6 rounded-xl border mt-4">
-      
-      {!isInternship && (
-      <div>
+    <div className="w-full">
         <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-gray-700">Required Experience <span className="text-red-500">*</span></label>
         <div className="px-3 mb-6">
             <Slider 
@@ -150,10 +88,67 @@ export default function AdminSliderInputs({
                 <option value={15}>15+ Years</option>
             </select>
         </div>
-      </div>
-      )}
+    </div>
+  );
+}
 
-      <div>
+export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onChangeSal: (s: string) => void }) {
+  const [salRange, setSalRange] = useState<number[]>([0, 50]);
+  const [salUnit, setSalUnit] = useState<string>("LPA");
+  const [isNotDisclosed, setIsNotDisclosed] = useState(false);
+  const [isIndustryStandard, setIsIndustryStandard] = useState(false);
+
+  useEffect(() => {
+    const salStr = (salary || "").toLowerCase();
+    if (salStr.includes("not disclosed")) {
+      setIsNotDisclosed(true);
+      setIsIndustryStandard(false);
+    } else if (salStr.includes("industry standard") || salStr.includes("negotiable") || salStr.includes("as per")) {
+      setIsIndustryStandard(true);
+      setIsNotDisclosed(false);
+    } else {
+      setIsNotDisclosed(false);
+      setIsIndustryStandard(false);
+      let multiplier = 1;
+      let curUnit = "LPA";
+      if (salStr.includes("lpa") || salStr.includes("lakhs") || salStr.includes("lakh")) {
+        multiplier = 100000;
+        curUnit = "LPA";
+      } else if (salStr.includes("k") || salStr.includes("month")) {
+        multiplier = 1000;
+        curUnit = "Per Month";
+      }
+      
+      const nums = salStr.match(/\d+(\.\d+)?/g);
+      if (nums && nums.length >= 2) {
+        const min = parseFloat(nums[0]) * multiplier;
+        const max = parseFloat(nums[1]) * multiplier;
+        setSalUnit(curUnit);
+        setSalRange(curUnit === "LPA" ? [min/100000, max/100000] : [min, max]);
+      } else if (nums && nums.length === 1) {
+        const val = parseFloat(nums[0]) * multiplier;
+        setSalUnit(curUnit);
+        setSalRange(curUnit === "LPA" ? [val/100000, val/100000] : [val, val]);
+      }
+    }
+  }, [salary]);
+
+  const pushSal = (range: number[], unit: string, notDisclosed: boolean, industryStd: boolean) => {
+    if (notDisclosed) {
+      onChangeSal("Not Disclosed");
+    } else if (industryStd) {
+      onChangeSal("As per Industry Standards");
+    } else {
+      if (unit === "LPA") {
+        onChangeSal(`${range[0]} LPA - ${range[1]} LPA`);
+      } else {
+        onChangeSal(`${range[0]/1000}k - ${range[1]/1000}k Per Month`);
+      }
+    }
+  };
+
+  return (
+    <div className="w-full">
         <label className="block mb-4 text-sm font-bold uppercase tracking-wider text-gray-700">Salary Range <span className="text-red-500">*</span></label>
         
         <div className="flex gap-4 mb-6">
@@ -202,7 +197,7 @@ export default function AdminSliderInputs({
                 />
             </div>
             
-            <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-4">
                 <select 
                     className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
                     value={salRange[0]}
@@ -228,25 +223,23 @@ export default function AdminSliderInputs({
                     {[1,2,3,4,5,10,15,20,30,40].map(v => <option key={v} value={salUnit === "LPA" ? v : v*10000}>{salUnit === "LPA" ? v + " LPA" : (v*10) + "k"}</option>)}
                     <option value={salUnit === "LPA" ? 50 : 200000}>{salUnit === "LPA" ? "50 LPA+" : "2L+"}</option>
                 </select>
-            </div>
 
-            <select 
-                className="w-full bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
-                value={salUnit}
-                onChange={(e) => {
-                    const u = e.target.value;
-                    setSalUnit(u);
-                    const r = u === "LPA" ? [0, 50] : [0, 200000];
-                    setSalRange(r);
-                    pushSal(r, u, isNotDisclosed, isIndustryStandard);
-                }}
-            >
-                <option value="Per Month">Per Month</option>
-                <option value="LPA">Per Annum (LPA)</option>
-            </select>
+                <select 
+                    className="flex-1 bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    value={salUnit}
+                    onChange={(e) => {
+                        const u = e.target.value;
+                        setSalUnit(u);
+                        const r = u === "LPA" ? [0, 50] : [0, 200000];
+                        setSalRange(r);
+                        pushSal(r, u, isNotDisclosed, isIndustryStandard);
+                    }}
+                >
+                    <option value="Per Month">Per Month</option>
+                    <option value="LPA">Per Annum (LPA)</option>
+                </select>
+            </div>
         </div>
-      </div>
-      
     </div>
   );
 }

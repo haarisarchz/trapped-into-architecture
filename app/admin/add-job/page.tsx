@@ -13,7 +13,7 @@ import {
   SALARY_OPTIONS,
 } from "@/app/constants/jobFilters"
 import Autocomplete from "@/components/Autocomplete";
-import AdminSliderInputs from "@/components/AdminSliderInputs";
+import { AdminExperienceSlider, AdminSalarySlider } from "@/components/AdminSliderInputs";
 
 export default function AddJobPage() {
 const [jobId, setJobId] = useState<string | null>(null);
@@ -1189,63 +1189,48 @@ const handleSmartExtraction = async () => {
                         </button>
                       )}
                       
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="md:col-span-3 flex flex-col gap-4">
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <label className="block mb-1.5 text-sm font-medium">Position <span className="text-red-500">*</span></label>
-                                <input type="text" list="positionsList" value={pos.position} onChange={(e) => updatePosition(index, "position", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Junior Architect" />
-                                <datalist id="positionsList">
-                                  {positionOptions.map((opt) => <option key={opt} value={opt} />)}
-                                </datalist>
-                              </div>
-                              <div>
-                                <label className="block mb-1.5 text-sm font-medium">Job Role</label>
-                                <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Site visits, managing coordination drawings" />
-                              </div>
-                              <div>
-                                <label className="block mb-1.5 text-sm font-medium">Salary</label>
-                                <Autocomplete value={pos.salary} onChange={(val) => updatePosition(index, "salary", val)} fetchSuggestions={async (q) => { const { data } = await supabase.from("jobs").select("salary").ilike("salary", "%" + q + "%").limit(20); return Array.from(new Set(data?.map(d => d.salary).filter(Boolean))) || []; }} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. ₹ 3,00,000 - ₹ 5,00,000" />
-                              </div>
-                           </div>
-                           
-                           
-                             <div className="md:hidden">
-                                <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
-                                <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />
-                             </div>
-                             
-                             <div>
-                                <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
-                                <textarea value={pos.description} onChange={(e) => updatePosition(index, "description", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y" placeholder="Write detailed job description..." />
-                           </div>
-                        </div>
+                      <div className="flex flex-col gap-6 w-full">
+                        
+       {/* ROW 1: Position, Job Role, Vacancies */}
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block mb-1.5 text-sm font-medium">Position <span className="text-red-500">*</span></label>
+            <input type="text" list="positionsList" value={pos.position} onChange={(e) => updatePosition(index, "position", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Junior Architect" />
+            <datalist id="positionsList">
+              {positionOptions.map((opt) => <option key={opt} value={opt} />)}
+            </datalist>
+          </div>
+          <div>
+            <label className="block mb-1.5 text-sm font-medium">Job Role</label>
+            <input type="text" value={pos.role || ""} onChange={(e) => updatePosition(index, "role", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. Site visits, managing coordination drawings" />
+          </div>
+          <div>
+            <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
+            <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />
+          </div>
+       </div>
 
-                        <div className="md:col-span-1 border-l border-gray-100 pl-4">
-                            {(employmentType === "Internship" || (pos.position && pos.position.toLowerCase().includes("intern"))) ? (
-                              <div className="h-full flex flex-col justify-center text-center text-gray-500 py-4">
-                                <span className="text-xl mb-2">🎓</span>
-                                <p className="text-sm font-medium">Experience not required for internships</p>
-                              </div>
-                            ) : (
-                              <>
-                                <AdminSliderInputs 
-                                   experience={Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : [])} 
-                                   salary={pos.salary || ""} 
-                                   onChangeExp={(val) => updatePosition(index, "experience", val)}
-                                   onChangeSal={(val) => updatePosition(index, "salary", val)}
-                                   isInternship={employmentType === "Internship" || (pos.position && pos.position.toLowerCase().includes("intern"))}
-                                />
-                              </>
-                            )}
-                            <div className="mt-4 pt-4 border-t border-gray-100 hidden md:block">
-                               <label className="block mb-1.5 text-sm font-medium">Number of Positions</label>
-                               <input type="text" value={pos.vacancies || ""} onChange={(e) => updatePosition(index, "vacancies", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black" placeholder="e.g. 2" />
-                            </div>
-                          </div>
+       {/* ROW 2: Experience & Salary */}
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <AdminExperienceSlider 
+             experience={Array.isArray(pos.experience) ? pos.experience : (pos.experience ? [pos.experience] : [])} 
+             onChangeExp={(val) => updatePosition(index, "experience", val)}
+             isInternship={employmentType === "Internship" || (pos.position && pos.position.toLowerCase().includes("intern"))}
+          />
+          <AdminSalarySlider 
+             salary={pos.salary || ""} 
+             onChangeSal={(val) => updatePosition(index, "salary", val)}
+          />
+       </div>
 
+       {/* ROW 3: Description */}
+       <div className="mb-4">
+          <label className="block mb-1.5 text-sm font-medium">Job Description <span className="text-red-500">*</span></label>
+          <textarea value={pos.description} onChange={(e) => updatePosition(index, "description", e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white text-black min-h-[110px] resize-y" placeholder="Write detailed job description..." />
+       </div>
+                          
                           {!sameRequirements && (
-                          <div className="md:col-span-4 mt-2 pt-4 border-t border-gray-100">
+                          <div className="w-full mt-2 pt-4 border-t border-gray-100">
                              <h4 className="font-bold text-sm mb-3">Position Requirements</h4>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
