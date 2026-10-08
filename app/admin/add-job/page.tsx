@@ -198,6 +198,7 @@ const [smartImage, setSmartImage] = useState<File | null>(null);
 
 const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
   const [showAiSettings, setShowAiSettings] = useState(false);
+  const [selectedServer, setSelectedServer] = useState("auto");
   const [apiKeys, setApiKeys] = useState<string[]>(['', '', '', '', '']);
   const [showKeyPassword, setShowKeyPassword] = useState<boolean[]>([]);
   const [keyStatuses, setKeyStatuses] = useState<string[]>(['Ready', 'Ready', 'Ready', 'Ready', 'Ready']);
@@ -1712,70 +1713,110 @@ const handleSmartExtraction = async () => {
               ?
             </button>
             <h2 className="text-2xl font-black mb-2">API Servers</h2>
-            <p className="text-gray-500 text-sm mb-6">Paste your free Gemini API keys here. The system will automatically cycle through them if one runs out of quota.</p>
-            
-            <div className="space-y-4">
-              {apiKeys.map((key, index) => (
-                <div key={index} className="flex flex-col gap-1">
-                  <div className="flex justify-between items-end">
-                    <label className="text-xs font-bold uppercase tracking-widest text-gray-700">Server {index + 1}</label>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                      keyStatuses[index] === 'Success' ? 'bg-green-100 text-green-700' :
-                      keyStatuses[index] === 'Quota Exceeded' ? 'bg-red-100 text-red-700' :
-                      keyStatuses[index] === 'Server Busy' ? 'bg-orange-100 text-orange-700' :
-                      'bg-gray-100 text-gray-500'
-                    }`}>
-                      {key ? keyStatuses[index] : 'Empty'}
-                    </span>
-                  </div>
-                                                      <div className="flex items-center gap-2 w-full">
-                    <input
-                      type={showKeyPassword[index] ? "text" : "password"}
-                      placeholder="AIzaSy..."
-                      value={key}
-                      onChange={(e) => {
-                        const newKeys = [...apiKeys];
-                        newKeys[index] = e.target.value;
-                        saveApiKeys(newKeys);
-                      }}
-                      className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-none transition font-mono text-sm"
-                    />
-                    <button type="button"
-                      onClick={() => {
-                        const newShow = [...showKeyPassword];
-                        newShow[index] = !newShow[index];
-                        setShowKeyPassword(newShow);
-                      }}
-                      className="p-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition text-gray-500 flex-shrink-0 flex items-center justify-center"
-                      title={showKeyPassword[index] ? "Hide API Key" : "Show API Key"}
-                    >
-                      {showKeyPassword[index] ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                      )}
+              <p className="text-gray-500 text-sm mb-6">Manage your API keys. The system uses Personal Servers first, then falls back to Public Servers.</p>
+              
+              <div className="space-y-6 mb-6">
+                
+                {/* PERSONAL SERVERS */}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 flex justify-between items-center">
+                    Personal Servers
+                    <button onClick={() => { setApiKeys([...apiKeys, ""]); setKeyStatuses([...keyStatuses, ""]); setShowKeyPassword([...showKeyPassword, false]); }} className="text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded">
+                      + Add Extra
                     </button>
+                  </h3>
+                  <div className="space-y-4">
+                    {apiKeys.map((key, index) => (
+                      <div key={index} className="flex flex-col gap-1">
+                        <div className="flex justify-between items-end">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Personal Server {index + 1}</label>
+                          <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                            keyStatuses[index] === 'Success' ? 'bg-green-100 text-green-700' :
+                            keyStatuses[index] === 'Quota Exceeded' ? 'bg-red-100 text-red-700' :
+                            keyStatuses[index] === 'Server Busy' ? 'bg-orange-100 text-orange-700' :
+                            'bg-gray-100 text-gray-500'
+                          }`}>
+                            {key ? (keyStatuses[index] || 'Ready') : 'Empty'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 w-full">
+                          <input
+                            type={showKeyPassword[index] ? "text" : "password"}
+                            placeholder="AIzaSy..."
+                            value={key}
+                            onChange={(e) => {
+                              const newKeys = [...apiKeys];
+                              newKeys[index] = e.target.value;
+                              setApiKeys(newKeys);
+                            }}
+                            className="w-full border rounded-xl px-4 py-3 bg-gray-50 font-mono text-sm focus:border-black outline-none transition-colors"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newShow = [...showKeyPassword];
+                              newShow[index] = !newShow[index];
+                              setShowKeyPassword(newShow);
+                            }}
+                            className="text-gray-400 hover:text-black p-3 bg-gray-50 rounded-xl border transition-colors shrink-0"
+                          >
+                            {showKeyPassword[index] ? "Hide" : "Show"}
+                          </button>
+                          {apiKeys.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newKeys = [...apiKeys];
+                                newKeys.splice(index, 1);
+                                setApiKeys(newKeys);
+                                const newStatuses = [...keyStatuses];
+                                newStatuses.splice(index, 1);
+                                setKeyStatuses(newStatuses);
+                                const newShow = [...showKeyPassword];
+                                newShow.splice(index, 1);
+                                setShowKeyPassword(newShow);
+                              }}
+                              className="text-red-400 hover:text-red-600 p-3 bg-red-50 rounded-xl border border-red-100 transition-colors shrink-0"
+                            >
+                              X
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-            
-            <button type="button" 
-              onClick={() => {
-                const newKeys = [...apiKeys, ''];
-                saveApiKeys(newKeys);
-              }}
-              className="mt-4 text-blue-600 font-bold hover:underline text-sm"
-            >
-              + Add Server
-            </button>
-            
-            <button type="button"
-              onClick={() => setShowAiSettings(false)}
-              className="w-full bg-black text-white font-bold py-4 rounded-xl mt-8 hover:bg-gray-800 transition"
-            >
-              Save & Close
-            </button>
+
+                <hr className="border-gray-100" />
+
+                {/* PUBLIC SERVERS */}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 flex justify-between items-center">
+                    Public Servers (CEO Only)
+                  </h3>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between items-end">
+                      <label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Public Server 1</label>
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                        Fallback Ready
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 w-full">
+                      <input
+                        type="password"
+                        readOnly
+                        value="***************************************"
+                        className="w-full border rounded-xl px-4 py-3 bg-gray-100 text-gray-400 font-mono text-sm outline-none cursor-not-allowed opacity-70"
+                      />
+                      <span className="bg-gray-100 text-gray-500 border rounded-xl px-4 py-3 text-sm font-semibold shrink-0 cursor-not-allowed">
+                        Locked
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <button type="button" onClick={() => setShowAiSettings(false)} className="w-full bg-black text-white font-bold py-4 rounded-xl hover:bg-gray-800 transition">Save & Close</button>
           </div>
         </div>
       )}
@@ -1943,73 +1984,87 @@ const handleSmartExtraction = async () => {
         throw new Error("Mode not supported yet.");
       }
 
-      const userGeminiKey = localStorage.getItem("admin_gemini_key");
-        
-        const headers: any = {};
-        if (userGeminiKey) {
-          headers["x-user-gemini-key"] = userGeminiKey;
-        }
-
-                const validKeys = apiKeys.filter(k => typeof k === 'string' && k.trim().length > 0);
-        let result = null;
-        let lastError = null;
-        
-        if (validKeys.length > 0) {
+      
+          const headers: any = {};
+          let result = null;
+          let lastError = null;
           const newStatuses = [...keyStatuses];
-          for (let i = 0; i < apiKeys.length; i++) {
-            const key = apiKeys[i];
-            if (typeof key !== 'string' || !key.trim()) continue;
-            
-            headers["x-user-gemini-key"] = key.trim();
-            try {
-              const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
-              let data;
-              try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
-              
-              if (!res.ok) {
-                if (data.error && data.error.toLowerCase().includes("quota")) {
-                  newStatuses[i] = "Quota Exceeded";
-                  setKeyStatuses([...newStatuses]);
-                  continue; 
-                }
-                if (data.error && data.error.toLowerCase().includes("busy")) {
-                  newStatuses[i] = "Server Busy";
-                  setKeyStatuses([...newStatuses]);
-                  continue; 
-                }
-                throw new Error(data.error || "Failed to extract");
-              }
-              
-              result = data;
-              newStatuses[i] = "Success";
-              setKeyStatuses([...newStatuses]);
-              break; 
-            } catch(e: any) {
-              lastError = e.message;
-            }
-          }
-        
-            if (!result) {
-               const cleanHeaders = { ...headers };
-               delete cleanHeaders["x-user-gemini-key"];
-               try {
-                   const fbRes = await fetch("/api/extract-job", { headers: cleanHeaders, method: "POST", body: formData });
-                   if (fbRes.ok) {
-                       const data = await fbRes.json();
-                       result = data;
-                   }
-               } catch(e) {}
-            }
-          } else {
-          const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
-          let data;
-          try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
-          if (!res.ok) throw new Error(data.error || "Failed to extract");
-          result = data;
-        }
-        
-        if (!result) throw new Error(lastError || "All configured API keys failed or ran out of quota. Please check the API Config.");
 
+          const tryKey = async (key: string, index: number) => {
+             headers["x-user-gemini-key"] = key;
+             try {
+                const res = await fetch("/api/extract-job", { headers, method: "POST", body: formData });
+                let data;
+                try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
+                
+                if (!res.ok) {
+                  if (data.error && data.error.toLowerCase().includes("quota")) {
+                    if (index !== -1) { newStatuses[index] = "Quota Exceeded"; setKeyStatuses([...newStatuses]); }
+                    throw new Error("Quota Exceeded on Server " + (index+1));
+                  }
+                  if (data.error && data.error.toLowerCase().includes("busy")) {
+                    if (index !== -1) { newStatuses[index] = "Server Busy"; setKeyStatuses([...newStatuses]); }
+                    throw new Error("Server Busy on Server " + (index+1));
+                  }
+                  throw new Error(data.error || "Failed to extract");
+                }
+                if (index !== -1) { newStatuses[index] = "Success"; setKeyStatuses([...newStatuses]); }
+                return data;
+             } catch(e) {
+                throw e;
+             }
+          };
+
+          const tryPublic = async () => {
+             const cleanHeaders = { ...headers };
+             delete cleanHeaders["x-user-gemini-key"];
+             const res = await fetch("/api/extract-job", { headers: cleanHeaders, method: "POST", body: formData });
+             let data;
+             try { data = await res.json(); } catch(e) { throw new Error("Timeout. Try a smaller screenshot."); }
+             if (!res.ok) throw new Error(data.error || "Failed to extract using Public Server");
+             return data;
+          };
+
+          if (selectedServer === "auto") {
+              const validKeys = apiKeys.filter((k: any) => typeof k === 'string' && k.trim().length > 0);
+              let success = false;
+              for (let i = 0; i < apiKeys.length; i++) {
+                 if (typeof apiKeys[i] !== 'string' || !apiKeys[i].trim()) continue;
+                 try {
+                    result = await tryKey(apiKeys[i].trim(), i);
+                    success = true;
+                    break;
+                 } catch (e: any) {
+                    lastError = e.message;
+                 }
+              }
+              if (!success) {
+                 try {
+                     result = await tryPublic();
+                 } catch(e: any) {
+                     lastError = e.message;
+                 }
+              }
+          } else if (selectedServer === "public") {
+              try {
+                  result = await tryPublic();
+              } catch(e: any) {
+                  lastError = e.message;
+              }
+          } else {
+              const index = parseInt(selectedServer);
+              if (!isNaN(index) && apiKeys[index] && apiKeys[index].trim()) {
+                  try {
+                      result = await tryKey(apiKeys[index].trim(), index);
+                  } catch(e: any) {
+                      lastError = e.message;
+                  }
+              } else {
+                  throw new Error("Selected personal server is empty. Please enter an API key in the API Config.");
+              }
+          }
+
+          if (!result) throw new Error(lastError || "Extraction failed. Please check the API Config or try another server.");
             const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
             setHasUnsavedChanges(true);
 
@@ -2045,8 +2100,7 @@ const handleSmartExtraction = async () => {
       
 
       // Handle experience carefully (frontend expects array or string?)
-      if (Array.isArray(ai.experience)) setSelectedExperience(ai.experience);
-      else if (ai.experience) setSelectedExperience([ai.experience]);
+      
 
       if (ai.employmentType || ai.employment_type) setEmploymentType(normEmp(ai.employmentType || ai.employment_type));
       if (ai.workplaceType || ai.workplace_type) setWorkplaceType(normWork(ai.workplaceType || ai.workplace_type));
