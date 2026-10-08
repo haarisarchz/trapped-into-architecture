@@ -1824,24 +1824,28 @@ const handleSmartExtraction = async () => {
       setLoadingAI("loading");
 
       if (uploadMode === "image" && smartImage) {
-          if (smartImage.size > 4 * 1024 * 1024) {
-            throw new Error("Image is too large (over 4MB). Please compress it before uploading to avoid server timeouts.");
+          setLoadingAI("Compressing Image...");
+          const compressedImage = await compressImage(smartImage);
+          
+          try {
+            const extMatch = compressedImage.name.match(/\.[0-9a-z]+$/i);
+            const ext = extMatch ? extMatch[0].toLowerCase() : '';
+            const fileName = `smart-upload-${Date.now()}${ext}`;
+            const { data, error } = await supabase.storage.from("job-images").upload(fileName, compressedImage);
+            if (!error) {
+               const { data: { publicUrl } } = supabase.storage.from("job-images").getPublicUrl(fileName);
+               setImageUrl(publicUrl);
+            } else {
+               console.error("Smart image upload failed", error);
+            }
+          } catch (e) {
+            console.error("Storage error:", e);
           }
-        try {
-          const extMatch = smartImage.name.match(/\.[0-9a-z]+$/i);
-          const ext = extMatch ? extMatch[0].toLowerCase() : '';
-          const fileName = `smart-upload-${Date.now()}${ext}`;
-          const { data, error } = await supabase.storage.from("job-images").upload(fileName, smartImage);
-          if (!error) {
-             const { data: { publicUrl } } = supabase.storage.from("job-images").getPublicUrl(fileName);
-             setImageUrl(publicUrl);
-          } else {
-             console.error("Smart image upload failed", error);
-          }
-        } catch (e) {
-          console.error("Storage error:", e);
+          
+          // Overwrite the variable so formData uses the compressed one
+          formData.append("image", compressedImage);
+          setLoadingAI("Extracting Smart Job...");
         }
-      }
 
       let formData = new FormData();
       formData.append("mode", uploadMode);
@@ -1849,9 +1853,9 @@ const handleSmartExtraction = async () => {
         if (!smartText) throw new Error("Please paste text to extract.");
         formData.append("text", smartText);
       } else if (uploadMode === "image") {
-        if (!smartImage) throw new Error("Please upload an image to extract.");
-        formData.append("image", smartImage);
-      } else if (uploadMode === "url") {
+          if (!smartImage) throw new Error("Please upload an image to extract.");
+          // formData.append is already handled above with the compressed image
+        } else if (uploadMode === "url") {
         if (!smartUrl) throw new Error("Please paste a URL to extract.");
         formData.append("url", smartUrl);
       } else {
