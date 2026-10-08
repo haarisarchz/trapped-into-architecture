@@ -9,6 +9,7 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [lockedKeys, setLockedKeys] = useState<Record<string, boolean>>({});
 
   const fetchKeys = async () => {
     setLoading(true);
@@ -31,6 +32,12 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
       const { data: keys } = await supabase.from("api_keys").select("*").order("created_at", { ascending: true });
       setDbKeys(keys || []);
       onKeysUpdated(keys || []);
+      
+      const initialLocks: Record<string, boolean> = {};
+      (keys || []).forEach(k => {
+         if (k.key_value) initialLocks[k.id] = true;
+      });
+      setLockedKeys(initialLocks);
     }
     setLoading(false);
   };
@@ -60,26 +67,47 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
     await supabase.from("api_keys").delete().eq("id", id);
   };
   
-  const saveSingleKey = async (k: any) => {
-      await supabase.from("api_keys").update({ 
+  const handleRowButtonClick = async (k: any) => {
+      if (lockedKeys[k.id]) {
+          if (window.confirm("Do you want to edit this server configuration?")) {
+              setLockedKeys(prev => ({ ...prev, [k.id]: false }));
+          }
+          return;
+      }
+      
+      const { error } = await supabase.from("api_keys").update({ 
         key_value: k.key_value, 
-        assigned_to: k.assigned_to 
+        assigned_to: k.assigned_to || null 
       }).eq("id", k.id);
-      alert("Server configuration saved.");
+      
+      if (error) {
+         console.error("Save error:", error);
+         alert("Failed to save: " + error.message);
+      } else {
+         setLockedKeys(prev => ({ ...prev, [k.id]: true }));
+      }
   };
 
   const handleSaveAndClose = async () => {
     setIsSaving(true);
-    // Batch update all keys
+    let hasError = false;
     for (const k of dbKeys) {
-      await supabase.from("api_keys").update({ 
+      const { error } = await supabase.from("api_keys").update({ 
         key_value: k.key_value, 
-        assigned_to: k.assigned_to 
+        assigned_to: k.assigned_to || null 
       }).eq("id", k.id);
+      if (error) {
+         console.error("Batch save error:", error);
+         hasError = true;
+         alert("Failed to save one or more servers: " + error.message);
+         break;
+      }
     }
     setIsSaving(false);
-    onKeysUpdated(dbKeys);
-    onClose();
+    if (!hasError) {
+       onKeysUpdated(dbKeys);
+       onClose();
+    }
   };
 
   const toggleShow = (id: string) => {
@@ -129,13 +157,14 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                       placeholder="AIzaSy..."
                       value={k.key_value || ""}
                       onChange={(e) => updateLocalKey(k.id, "key_value", e.target.value)}
-                      className="flex-1 border rounded-xl px-4 py-3 bg-gray-50 font-mono text-sm focus:border-black outline-none transition-colors"
+                      disabled={lockedKeys[k.id]}
+                      className={`flex-1 border rounded-xl px-4 py-3 font-mono text-sm focus:border-black outline-none transition-colors ${lockedKeys[k.id] ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-gray-50"}`}
                     />
                     <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-3 bg-gray-50 rounded-xl border transition-colors shrink-0">
                       {showPassword[k.id] ? "Hide" : "Show"}
                     </button>
-                    <button onClick={() => saveSingleKey(k)} className="text-green-600 hover:text-green-800 p-3 bg-green-50 rounded-xl border border-green-100 transition-colors shrink-0 font-bold text-xs uppercase tracking-widest">
-                      Save
+                    <button onClick={() => handleRowButtonClick(k)} className={`p-3 rounded-xl border transition-colors shrink-0 font-bold text-xs uppercase tracking-widest ${lockedKeys[k.id] ? "text-gray-500 bg-gray-100 border-gray-200" : "text-green-600 hover:text-green-800 bg-green-50 border-green-100"}`}>
+                      {lockedKeys[k.id] ? "Saved" : "Save"}
                     </button>
                     <button onClick={() => deleteKey(k.id)} className="text-red-400 hover:text-red-600 p-3 bg-red-50 rounded-xl border border-red-100 transition-colors shrink-0">
                       ?
@@ -171,12 +200,13 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                             placeholder="AIzaSy..."
                             value={k.key_value || ""}
                             onChange={(e) => updateLocalKey(k.id, "key_value", e.target.value)}
-                            className="flex-1 border rounded-lg px-3 py-2 bg-white font-mono text-sm outline-none"
+                            disabled={lockedKeys[k.id]}
+                            className={`flex-1 border rounded-lg px-3 py-2 font-mono text-sm outline-none ${lockedKeys[k.id] ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"}`}
                           />
                           <button onClick={() => toggleShow(k.id)} className="text-gray-400 hover:text-black p-2 bg-gray-50 rounded-lg border transition-colors shrink-0 text-xs">
                             {showPassword[k.id] ? "Hide" : "Show"}
                           </button>
-                          <button onClick={() => saveSingleKey(k)} className="text-green-600 text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300">Save</button>
+                          <button onClick={() => handleRowButtonClick(k)} className={`text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300 ${lockedKeys[k.id] ? "text-gray-500" : "text-green-600"}`}>{lockedKeys[k.id] ? "Saved" : "Save"}</button>
                           <button onClick={() => deleteKey(k.id)} className="text-red-500 text-xs font-bold hover:underline shrink-0 ml-2 px-2 border-l border-gray-300">Delete</button>
                         </div>
                         <div className="flex gap-2 items-center">
@@ -184,7 +214,8 @@ export default function ApiServerManager({ isOpen, onClose, onKeysUpdated }: any
                           <select 
                             value={k.assigned_to || ""}
                             onChange={(e) => updateLocalKey(k.id, "assigned_to", e.target.value)}
-                            className="flex-1 border rounded-lg px-3 py-2 bg-white text-sm font-semibold outline-none"
+                            disabled={lockedKeys[k.id]}
+                            className={`flex-1 border rounded-lg px-3 py-2 text-sm font-semibold outline-none ${lockedKeys[k.id] ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white"}`}
                           >
                             <option value="">-- Select Admin --</option>
                             {allAdmins.map(admin => (
