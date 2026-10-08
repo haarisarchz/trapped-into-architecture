@@ -224,6 +224,25 @@ const [loadingAI, setLoadingAI] = useState<string | boolean>(false);
     setKeyStatuses(['Ready', 'Ready', 'Ready', 'Ready', 'Ready']);
     localStorage.setItem('ti2a_api_keys', JSON.stringify(newKeys));
   };
+
+
+  useEffect(() => {
+    const fetchApiServers = async () => {
+      const { data } = await supabase.from("api_keys").select("*").order("created_at", { ascending: true });
+      if (data) {
+        setDbKeys(data);
+        const personal = data.filter((k: any) => k.type === "personal" && k.key_value && k.key_value.trim());
+        if (personal.length > 0) {
+          setSelectedServer(personal[0].id);
+        } else {
+          const shared = data.filter((k: any) => k.type === "shared");
+          if (shared.length > 0) setSelectedServer(shared[0].id);
+        }
+      }
+    };
+    fetchApiServers();
+  }, []);
+
 const [activeTab, setActiveTab] = useState("text");
 
 const [uploadMode, setUploadMode] = useState('text');
