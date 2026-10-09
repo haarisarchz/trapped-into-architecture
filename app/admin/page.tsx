@@ -154,10 +154,10 @@ if (loading) {
 
           {/* WEBSITE NAME */}
 
-          <div className="mb-12">
+          <div className="mb-6">
 
             <h1 className="text-3xl font-bold">
-              Crafted Architecture
+              Trapped Into Architecture
             </h1>
 
             <p className="text-gray-400 mt-1">
@@ -297,19 +297,19 @@ if (loading) {
 
       {/* STATS */}
 
-<div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-10">
+<div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
 
   {/* ACTIVE JOBS */}
 
   <div
     onClick={() => router.push("/admin/jobs?status=published")}
-    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
   >
-    <p className="text-gray-600 font-semibold text-center">
+    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
       Active Jobs
     </p>
 
-    <h2 className="text-5xl font-bold text-center mt-6 text-green-600">
+    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-green-600">
       {activeJobs}
     </h2>
   </div>
@@ -318,13 +318,13 @@ if (loading) {
 
   <div
     onClick={() => router.push("/admin/jobs?status=draft")}
-    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
   >
-    <p className="text-gray-600 font-semibold text-center">
+    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
       Draft Jobs
     </p>
 
-    <h2 className="text-5xl font-bold text-center mt-6 text-yellow-500">
+    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-yellow-500">
       {draftJobs}
     </h2>
   </div>
@@ -333,13 +333,13 @@ if (loading) {
 
   <div
     onClick={() => router.push("/admin/jobs?status=scheduled")}
-    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
   >
-    <p className="text-gray-600 font-semibold text-center">
+    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
       Scheduled Jobs
     </p>
 
-    <h2 className="text-5xl font-bold text-center mt-6 text-blue-600">
+    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-blue-600">
       {scheduledJobs}
     </h2>
   </div>
@@ -348,13 +348,13 @@ if (loading) {
 
   <div
     onClick={() => router.push("/admin/jobs?status=expired")}
-    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
   >
-    <p className="text-gray-600 font-semibold text-center">
+    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
       Expired Jobs
     </p>
 
-    <h2 className="text-5xl font-bold text-center mt-6 text-red-600">
+    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-red-600">
       {expiredJobs}
     </h2>
   </div>
@@ -363,13 +363,13 @@ if (loading) {
 
   <div
     onClick={() => router.push("/admin/jobs")}
-    className="bg-white rounded-3xl p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300"
+    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
   >
-    <p className="text-gray-600 font-semibold text-center">
+    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
       Total Jobs
     </p>
 
-    <h2 className="text-5xl font-bold text-center mt-6">
+    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6">
       {totalJobs}
     </h2>
   </div>
