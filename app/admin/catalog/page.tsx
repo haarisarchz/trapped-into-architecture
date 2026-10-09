@@ -1,4 +1,5 @@
 "use client";
+import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import Navbar from "../../../components/Navbar";
@@ -127,7 +128,10 @@ CREATE TABLE architecture_fields (
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-black">Architecture Catalog</h1>
+            <div className="flex items-center gap-4">
+<AdminQuickMenu />
+<h1 className="text-3xl font-black">Architecture Catalog</h1>
+</div>
             <p className="text-gray-500 mt-1">Manage buildings, architects, and quiz data.</p>
           </div>
           {!setupRequired && (

@@ -1,4 +1,5 @@
 "use client";
+import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -59,7 +60,10 @@ export default function AnalyticsPage() {
         {/* HEADER & CONTROLS */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Analytics</h1>
+            <div className="flex items-center gap-4">
+<AdminQuickMenu />
+<h1 className="text-3xl font-bold tracking-tight text-gray-900">Analytics</h1>
+</div>
             <p className="text-gray-500 mt-1">Real-time traffic and user insights</p>
           </div>
           <select 

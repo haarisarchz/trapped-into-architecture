@@ -1,4 +1,5 @@
 "use client";
+import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -197,7 +198,10 @@ export default function ContactSettingsPage() {
       <Navbar />
       <div className="max-w-5xl mx-auto py-12 px-6">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Admin Contact & Site Information</h1>
+          <div className="flex items-center gap-4">
+<AdminQuickMenu />
+<h1 className="text-3xl font-bold">Admin Contact & Site Information</h1>
+</div>
           <button onClick={() => router.push('/admin')} className="bg-white text-gray-800 px-5 py-3 rounded-xl border border-gray-200 hover:bg-gray-100 transition flex items-center gap-2 shrink-0">
             ← Back to Dashboard
           </button>

@@ -1,4 +1,5 @@
 "use client";
+import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -265,12 +266,7 @@ export default function AdminCompaniesPage() {
             <h1 className="text-4xl font-bold">Companies</h1>
             <p className="text-gray-600 mt-2">Manage registered companies and their visibility.</p>
           </div>
-          <button
-            onClick={() => router.push("/admin")}
-            className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0"
-          >
-            ← Back to Dashboard
-          </button>
+          <AdminQuickMenu />
         </div>
 
         {error && (

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Plus, Minus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function AdminDashboard() {
@@ -10,6 +11,8 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
+  const [isJobMenuOpen, setIsJobMenuOpen] = useState(false);
+  const [isDbMenuOpen, setIsDbMenuOpen] = useState(false);
 
   const [jobs, setJobs] = useState<any[]>([]);
 

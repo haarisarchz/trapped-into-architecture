@@ -962,12 +962,7 @@ const handleSmartExtraction = async () => {
 
   </div>
 
-  <button type="button"
-    onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin"); }}
-    className="bg-black text-white px-5 py-3 rounded-xl hover:bg-gray-800 transition flex items-center gap-2 shrink-0"
-  >
-    ← Back to Dashboard
-  </button>
+  <AdminQuickMenu />
 
 </div>
 
