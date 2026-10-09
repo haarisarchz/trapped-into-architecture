@@ -50,18 +50,25 @@ export default function SocialConfigPage() {
 
           <div className="space-y-4">
             {platforms.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl">
-                <div>
-                  <h3 className="font-bold text-lg">{p.name}</h3>
-                  <p className={`text-sm font-semibold mt-1 ${p.status === 'Configured' ? 'text-green-600' : 'text-red-500'}`}>
-                    Status: {p.status}
-                  </p>
+              <div key={p.id} className="flex flex-col bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div className="flex items-center justify-between p-4">
+                  <div>
+                    <h3 className="font-bold text-lg">{p.name}</h3>
+                    <p className={`text-sm font-semibold mt-1 ${p.status === 'Configured' ? 'text-green-600' : 'text-red-500'}`}>
+                      Status: {p.status}
+                    </p>
+                  </div>
+                  <div>
+                    <button disabled className="bg-gray-200 text-gray-500 px-4 py-2 rounded-lg text-sm cursor-not-allowed">
+                      {p.status === 'Configured' ? 'Active' : 'Configure in .env'}
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <button disabled className="bg-gray-200 text-gray-500 px-4 py-2 rounded-lg text-sm cursor-not-allowed">
-                    {p.status === 'Configured' ? 'Active' : 'Configure in .env'}
-                  </button>
-                </div>
+                {p.id === 'facebook' && (
+                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+                    <TestFacebookButton />
+                  </div>
+                )}
               </div>
             ))}
           </div>

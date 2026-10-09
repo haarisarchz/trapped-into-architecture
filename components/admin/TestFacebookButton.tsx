@@ -19,7 +19,7 @@ export default function TestFacebookButton() {
   };
 
   return (
-    <div className="mt-3">
+    <div>
       <button 
         onClick={testConnection}
         disabled={loading}
