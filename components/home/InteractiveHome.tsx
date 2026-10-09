@@ -27,7 +27,7 @@ export default function InteractiveHome({
   const displayJobs = (jobTab === "popular" ? popularJobs : recentJobs).slice(0, 8);
 
   const [companyTab, setCompanyTab] = useState<"latest" | "popular" | "most-jobs">("latest");
-  const displayCompanies = (companyTab === "popular" ? popularCompanies : companyTab === "most-jobs" ? mostJobsCompanies : recentCompanies).slice(0, 5);
+  const displayCompanies = (companyTab === "popular" ? popularCompanies : companyTab === "most-jobs" ? mostJobsCompanies : recentCompanies).slice(0, 6);
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
@@ -98,11 +98,11 @@ export default function InteractiveHome({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {displayJobs.map((job) => (
+            {displayJobs.map((job, index) => (
               <Link 
                 href={`/jobs/${job.id}`} 
                 key={job.id}
-                className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition group"
+                className={`bg-white p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition group ${index >= 4 ? "hidden md:block" : ""}`}
               >
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden border border-gray-100">
@@ -160,11 +160,11 @@ export default function InteractiveHome({
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {displayCompanies.map((company) => (
+              {displayCompanies.map((company, index) => (
                 <Link 
                   href={`/companies/${company.slug}`}
                   key={company.slug}
-                  className="bg-gray-50 hover:bg-gray-100 p-3 py-5 rounded-2xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200 shadow-sm aspect-auto"
+                  className={`bg-gray-50 hover:bg-gray-100 p-3 py-5 rounded-2xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200 shadow-sm aspect-auto ${index === 5 ? "lg:hidden" : ""}`}
                 >
                   <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center mb-2 overflow-hidden shadow-sm">
                     {company.logo_url ? (
