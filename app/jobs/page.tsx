@@ -95,7 +95,7 @@ function JobsPageContent() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
- const [datePosted, setDatePosted] = useState("all");
+ const [datePosted, setDatePosted] = useState("");
   const [excludeExpired, setExcludeExpired] =
   useState(false);
 
@@ -768,11 +768,12 @@ setSelectedSalary([]);
         new Date();
 
     let dateMatch = true;
-    if (datePosted !== "all") {
-      const postedDate = job.posted_date ? new Date(job.posted_date) : null;
+    if (datePosted !== "" && datePosted !== "all") {
+      const rawDate = job.posted_date || job.created_at || job.postedDate;
+      const postedDate = rawDate ? new Date(rawDate) : null;
       const now = new Date();
       if (!postedDate) {
-        dateMatch = false; // if no posted date, it can't match these filters
+        dateMatch = false;
       } else {
         const diffHours = (now.getTime() - postedDate.getTime()) / (1000 * 60 * 60);
         const diffDays = diffHours / 24;
@@ -794,7 +795,8 @@ setSelectedSalary([]);
       experienceMatch &&
       salaryMatch &&
       searchMatch &&
-      expiryMatch
+      expiryMatch &&
+      dateMatch
     );
 
   }).length} jobs</span>
@@ -1053,11 +1055,12 @@ setSelectedSalary([]);
         new Date();
 
     let dateMatch = true;
-    if (datePosted !== "all") {
-      const postedDate = job.posted_date ? new Date(job.posted_date) : null;
+    if (datePosted !== "" && datePosted !== "all") {
+      const rawDate = job.posted_date || job.created_at || job.postedDate;
+      const postedDate = rawDate ? new Date(rawDate) : null;
       const now = new Date();
       if (!postedDate) {
-        dateMatch = false; // if no posted date, it can't match these filters
+        dateMatch = false;
       } else {
         const diffHours = (now.getTime() - postedDate.getTime()) / (1000 * 60 * 60);
         const diffDays = diffHours / 24;
@@ -1079,7 +1082,8 @@ setSelectedSalary([]);
       experienceMatch &&
       salaryMatch &&
       searchMatch &&
-      expiryMatch
+      expiryMatch &&
+      dateMatch
     );
 
   })

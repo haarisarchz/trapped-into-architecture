@@ -11,7 +11,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 
-import { Share, Check, Copy } from "lucide-react";
+import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight } from "lucide-react";
 
 function AdminShareButton({ job }: { job: any }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -431,116 +431,13 @@ return (
 
                       {/* FIRM */}
 
-                      <td className="px-6 py-5">
-                        {job.firm_name}
-                      </td>
-
-                      {/* CITY */}
-
-                      <td className="px-6 py-5">
-                        {job.city}
-                      </td>
-
-                        <td className="px-6 py-5">
-                          {job.state}
-                        </td>
-
-                      {/* POSTED BY */}
-
-                      <td className="px-6 py-5">
-                        {(() => {
-  if (!job.profiles) return "—";
-  const isViewerCEO = (loggedProfile?.role || "").toLowerCase().replace(/[\s_]+/g, "") === "ceo";
-    if (isViewerCEO || loggedProfile?.id === job.author_id) {
-      return job.profiles.display_name || job.profiles.full_name || job.profiles.username || "Admin";
-  }
-  const pRole = (job.profiles.role || "").toLowerCase().replace(/[\s_]+/g, "");
-  if (pRole === "ceo") return "CEO";
-  if (pRole === "superadmin") return "Super Admin";
-  return "Admin";
-})()}
-                      </td>
-
-                      {/* POSTED ON */}
-
-                      <td className="px-6 py-5">
-                        {job.posted_date ? formatDate(job.posted_date) : "-"}
-                      </td>
-
-                      {/* STATUS */}
-
-                      <td className="px-6 py-5">
-
-                        {job.status === "draft" ? (
-
-  <span className="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm">
-    Draft
-  </span>
-
-) : job.status === "scheduled" ? (
-
-  <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm">
-    Scheduled
-  </span>
-
-) : isExpired ? (
-
-  <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm">
-    Expired
-  </span>
-
-) : (
-
-  <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm">
-    Active
-  </span>
-
-)}
-
-                      </td>
-
-                      {/* ACTIONS */}
-
-                      <td className="px-6 py-5">
-
-                        <div className="flex gap-2 flex-wrap">
-
-                          {/* VIEW */}
-
-<button
-  onClick={(e) => {
-
-    e.stopPropagation();
-
-    window.open(
-      `/jobs/${job.id}`,
-      "_blank"
-    );
-
-  }}
-  className="px-4 py-2 rounded-xl border hover:bg-white transition"
->
-  View
-</button>
-
-{(() => {
-  const myRole = (loggedProfile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
-  const canEdit = myRole === "ceo" || loggedProfile?.id === job.author_id;
-  if (!canEdit) return null;
-  return (
-    <>
-      <AdminShareButton job={job} siteSettings={null} />
-        {/* EDIT */}
-        <button onClick={(e) => { e.stopPropagation(); window.open(`/admin/add-job?id=${job.id}`, "_blank"); }} className="px-4 py-2 rounded-xl border hover:bg-white transition">Edit</button>
-      {/* DELETE */}
-      <button onClick={(e) => { e.stopPropagation(); deleteJob(job); }} className="px-4 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 transition">Delete</button>
-    </>
-  );
-})()}
-
-                        </div>
-
-                      </td>
+                      <td className="px-6 py-5 text-right">
+  {(() => {
+    const myRole = (loggedProfile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    const canEdit = myRole === "ceo" || loggedProfile?.id === job.author_id;
+    return <AdminActionMenu job={job} canEdit={canEdit} deleteJob={deleteJob} loggedProfile={loggedProfile} />;
+  })()}
+</td>
 
                     </tr>
 
