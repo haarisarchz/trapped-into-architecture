@@ -1,5 +1,6 @@
 // @ts-nocheck
 "use client";
+import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
