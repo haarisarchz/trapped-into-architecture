@@ -1816,7 +1816,7 @@ const handleSmartExtraction = async () => {
                   <div className="flex items-center gap-2 mb-6 w-full bg-gray-50 border p-2 rounded-xl">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-black whitespace-nowrap px-2">Active Server:</label>
                     <select 
-                      className="bg-white text-xs border rounded-lg px-2 py-1.5 flex-1 font-semibold outline-none focus:border-black"
+                      className="bg-white text-xs border rounded-lg px-2 py-1.5 flex-1 font-semibold outline-none focus:border-black text-black"
                       value={selectedServer}
                       onChange={(e) => setSelectedServer(e.target.value)}
                     >
@@ -1836,7 +1836,7 @@ const handleSmartExtraction = async () => {
                           <span className="text-[10px] font-bold text-black md:text-black uppercase tracking-widest text-center">Upload your image</span>
                           <input 
                             type="file" 
-                            className="hidden" 
+                            className="hidden text-black bg-white" 
                             accept="image/*"
                             onChange={(e) => {
                               const file = e.target.files?.[0] || null;

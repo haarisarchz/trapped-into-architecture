@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 
@@ -12,32 +13,47 @@ import Footer from "@/components/Footer";
 
 import { Share, Check, Copy } from "lucide-react";
 
-function AdminShareButton({ job, siteSettings }: { job: any, siteSettings: any }) {
+function AdminShareButton({ job }: { job: any }) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [copiedGroup, setCopiedGroup] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/Mobi|Android|iPhone/i.test(navigator.userAgent));
+  }, []);
   
   const url = "https://www.trappedintoarchitecture.com" + generateJobUrl(job);
-  const text = `${job.position} at ${job.firm_name}\n\nApply here: ${url}`;
+  
+  const locParts = [job.area || job.neighborhood, job.city, job.state].filter(Boolean);
+  const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
+  let text = `Firm Name: ${job.firm_name || "Unknown"}\nLocation: ${location}\nPosition: ${job.position}\n\nFor more details, visit:\n${url}`;
 
-  const fbGroupText = `\u{1F680} Hiring: ${job.position}\n\u{1F3E2} Firm: ${job.firm_name || "Unknown"}\n\u{1F4CD} Location: ${[job.area || job.neighborhood, job.city, job.state].filter(Boolean).join(", ") || "Remote"}\n\u{1F4BC} Type: ${job.employment_type || "Full Time"}\n\n\u{1F517} Apply here: ${url}`;
-
-  const copyAndOpen = (e: any, link: string, customText?: string, isGroup?: boolean) => {
+  const copyLink = async (e: any) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(customText || text);
-    if (isGroup) {
-      setCopiedGroup(true);
-      setTimeout(() => setCopiedGroup(false), 2000);
-    } else {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-    if (link) window.open(link, "_blank");
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+    setIsOpen(false);
   };
 
+  const shareText = encodeURIComponent(text);
   const encodedUrl = encodeURIComponent(url);
-  const encodedText = encodeURIComponent(text);
+
+  let shareLinks = [];
+  if (isMobile) {
+    shareLinks.push({ name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` });
+  } else {
+    shareLinks.push({ name: "WhatsApp App", href: `whatsapp://send?text=${shareText}` });
+    shareLinks.push({ name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` });
+  }
+  
+  shareLinks = shareLinks.concat([
+    { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
+    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(job.position + ' at ' + job.firm_name + '\n')}` },
+    { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
+    { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` }
+  ]);
 
   return (
     <div className="relative inline-block text-left" onMouseLeave={() => setIsOpen(false)}>
@@ -49,73 +65,27 @@ function AdminShareButton({ job, siteSettings }: { job: any, siteSettings: any }
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-lg z-[99999] overflow-hidden">
           <div className="py-1">
             <button 
-              onClick={(e) => copyAndOpen(e, "https://www.facebook.com/groups/", fbGroupText, true)} 
-              className="w-full text-left px-4 py-2 text-sm text-blue-700 font-bold bg-blue-50 hover:bg-blue-100 flex justify-between items-center"
-            >
-              <span>FB Groups (Copy & Open)</span>
-              {copiedGroup && <Check size={14} className="text-blue-700" />}
-            </button>
-            <div className="h-px bg-gray-100 my-1"></div>
-            
-            <button 
-              onClick={(e) => copyAndOpen(e, "https://web.whatsapp.com/send?text=" + encodedText)} 
+              onClick={copyLink} 
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex justify-between items-center"
             >
-              <span>WhatsApp Web</span>
-              {copied && !copiedGroup && <Check size={14} className="text-gray-400" />}
+              <span>Copy Link</span>
+              {copied && <Check size={14} className="text-green-500" />}
             </button>
-            <a 
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`}
-              target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Facebook Feed
-            </a>
-            <a 
-              href="https://www.instagram.com/"
-              target="_blank" rel="noopener noreferrer"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(text);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              title="Instagram doesn't support direct link sharing. Text copied to clipboard."
-            >
-              Instagram (Copies Text)
-            </a>
-            <a 
-              href={`https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(job.position + " at " + job.firm_name)}`}
-              target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              X / Twitter
-            </a>
-            <a 
-              href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`}
-              target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              LinkedIn
-            </a>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                navigator.clipboard.writeText(text);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-between"
-            >
-              Copy Text {copied && <Check size={14} className="text-green-500" />}
-            </button>
+            <div className="h-px bg-gray-100 my-1"></div>
+            {shareLinks.map((link) => (
+              <a 
+                key={link.name}
+                href={link.href}
+                target="_blank" rel="noopener noreferrer"
+                onClick={e => { e.stopPropagation(); setIsOpen(false); }}
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                {link.name}
+              </a>
+            ))}
           </div>
         </div>
       )}

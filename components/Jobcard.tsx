@@ -91,8 +91,11 @@ export default function JobCard({
 
   
 
-  const isExpired =
-    post_expiry_date && new Date(post_expiry_date) < new Date();
+  
+  const isExpired = post_expiry_date && new Date(post_expiry_date) < new Date();
+  const postedDate = posted_date ? new Date(posted_date) : null;
+  const isOutdated = !isExpired && postedDate && ((new Date().getTime() - postedDate.getTime()) / (1000 * 60 * 60 * 24) > 30);
+
 
   const locationString = [area, city, state].filter(Boolean).join(", ");
 
