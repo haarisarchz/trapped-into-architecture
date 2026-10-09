@@ -1,6 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import TestFacebookButton from "@/components/admin/TestFacebookButton";
+import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 
 export default function SocialConfigPage() {
   const platforms = [
@@ -37,9 +39,7 @@ export default function SocialConfigPage() {
       <div className="max-w-4xl mx-auto py-12 px-6">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Social Media Configuration</h1>
-          <Link href="/admin" className="bg-black text-white px-5 py-2 rounded-xl text-sm font-medium">
-            Back to Dashboard
-          </Link>
+          <div className="flex gap-2"><AdminQuickMenu /><Link href="/admin" className="bg-black text-white px-5 py-2 rounded-xl text-sm font-medium flex items-center">Dashboard</Link></div>
         </div>
 
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 mb-8">
