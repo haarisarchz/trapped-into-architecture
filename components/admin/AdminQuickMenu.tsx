@@ -75,7 +75,7 @@ export default function AdminQuickMenu() {
   const renderMenu = () => {
     if (!isOpen || typeof document === 'undefined') return null;
 
-    const navItem = (href, label) => {
+    const navItem = (href: string, label: string) => {
         const isActive = pathname === href;
         return (
             <button 

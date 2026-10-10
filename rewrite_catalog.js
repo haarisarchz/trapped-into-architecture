@@ -1,16 +1,7 @@
-"use client";
-import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import React, { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-import Navbar from "../../../components/Navbar";
-import { Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, EyeOff } from "lucide-react";
+const fs = require('fs');
 
-// Initialize Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy";
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-const sqlSnippet = `-- Table for row data
+const sqlSnippet = `
+-- Table for row data
 CREATE TABLE IF NOT EXISTS architecture_catalog (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -39,7 +30,22 @@ INSERT INTO catalog_columns (id, title, type, order_index, is_core) VALUES
 ('architect_photo', 'Architect Photo', 'image', 7, false),
 ('building_photo', 'Building Photo', 'image', 8, false),
 ('prize_winning_year', 'Prize Winning Year', 'text', 9, false)
-ON CONFLICT (id) DO NOTHING;`;
+ON CONFLICT (id) DO NOTHING;
+`;
+
+const pageCode = `"use client";
+import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
+import React, { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+import Navbar from "../../../components/Navbar";
+import { Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, EyeOff } from "lucide-react";
+
+// Initialize Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy";
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const sqlSnippet = \`${sqlSnippet.replace(/`/g, '\\`').trim()}\`;
 
 export default function CatalogPage() {
   const [loading, setLoading] = useState(true);
@@ -183,7 +189,7 @@ export default function CatalogPage() {
         value={val}
         onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-black bg-white"
-        placeholder={`Enter ${col.title}...`}
+        placeholder={\`Enter \${col.title}...\`}
       />
     );
   };
@@ -272,7 +278,7 @@ export default function CatalogPage() {
                     </tr>
                   )}
                   {rows.map((row, index) => (
-                    <tr key={row.id} className={`border-b border-gray-100 transition ${row.is_locked ? "bg-gray-50/50 hover:bg-gray-100/50" : "bg-white"}`}>
+                    <tr key={row.id} className={\`border-b border-gray-100 transition \${row.is_locked ? "bg-gray-50/50 hover:bg-gray-100/50" : "bg-white"}\`}>
                       <td className="px-4 py-3 text-gray-400 text-center border-r border-gray-100">{index + 1}</td>
                       
                       {visibleColumns.map((col) => (
@@ -361,3 +367,7 @@ export default function CatalogPage() {
     </>
   );
 }
+`;
+
+fs.writeFileSync('app/admin/catalog/page.tsx', pageCode);
+console.log("Rewritten catalog page.");
