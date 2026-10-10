@@ -197,7 +197,7 @@ if (loading) {
                     onClick={() => router.push("/admin")}
                     className="w-full text-left px-4 py-2 rounded-xl bg-black hover:bg-gray-900 transition text-sm text-gray-300 hover:text-white"
                   >
-                    Dashboard Home
+                    Job Dashboard
                   </button>
                   <button
                     onClick={() => router.push("/admin/jobs")}
@@ -310,7 +310,7 @@ if (loading) {
           <div>
 
             <h1 className="text-4xl font-bold">
-              Dashboard
+              Job Dashboard
             </h1>
 
             <p className="text-gray-800 md:text-gray-500 mt-2">

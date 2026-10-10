@@ -82,7 +82,7 @@ export default function AdminQuickMenu() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Nav</div>
-        <button onClick={() => navigate("/admin")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">Dashboard</button>
+        <button onClick={() => navigate("/admin")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">Job Dashboard</button>
         <button onClick={() => navigate("/admin/activity")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Activity</button>
         <button onClick={() => navigate("/admin/jobs")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Manage Jobs</button>
         <button onClick={() => navigate("/admin/add-job")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Add New Job</button>
