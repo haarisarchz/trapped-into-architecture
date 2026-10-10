@@ -28,17 +28,17 @@ CREATE TABLE IF NOT EXISTS catalog_columns (
   is_visible BOOLEAN DEFAULT true
 );
 
--- Insert core requested columns
+-- Insert specific requested columns
 INSERT INTO catalog_columns (id, title, type, order_index, is_core) VALUES
 ('building_name', 'Building Name', 'text', 1, true),
-('city', 'City', 'text', 2, false),
-('country', 'Country', 'text', 3, false),
-('architect', 'Architect', 'text', 4, false),
-('architect_other_projects', 'Architect''s Other Projects', 'link', 5, false),
-('opened_year', 'Opened Year', 'number', 6, false),
-('architect_photo', 'Architect Photo', 'image', 7, false),
-('building_photo', 'Building Photo', 'image', 8, false),
-('prize_winning_year', 'Prize Winning Year', 'text', 9, false)
+('architect', 'Architect', 'text', 2, false),
+('opened_year', 'Opened Year', 'number', 3, false),
+('building_photo', 'Building Photo', 'image', 4, false),
+('architect_photo', 'Architect''s Photo', 'image', 5, false),
+('building_location', 'Location of the Building', 'text', 6, false),
+('architect_native', 'Architect''s Native', 'text', 7, false),
+('architect_other_projects', 'Architect''s Other Projects', 'text', 8, false),
+('pritzker_prize_year', 'Pritzker Prize Winning Year', 'number', 9, false)
 ON CONFLICT (id) DO NOTHING;`;
 
 export default function CatalogPage() {
