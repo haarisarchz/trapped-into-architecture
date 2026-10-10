@@ -255,12 +255,7 @@ if (loading) {
               </button>
               {userRole === "ceo" && (
                 <>
-                  <button
-                    onClick={() => router.push("/admin/social-config")}
-                    className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
-                  >
-                    Social Config
-                  </button>
+                  
                   <button
                     onClick={() => router.push("/admin/users")}
                     className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"

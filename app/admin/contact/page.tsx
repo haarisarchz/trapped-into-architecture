@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
@@ -229,7 +230,12 @@ export default function ContactSettingsPage() {
 
             {/* RIGHT COLUMN: SOCIAL / PAGE */}
             <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-              <h2 className="text-xl font-bold mb-6 text-gray-900 border-b pb-2">Social & Public Channels</h2>
+              <div className="flex items-center justify-between border-b pb-2 mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Social & Public Channels</h2>
+                <Link href="/admin/social-config" className="text-xs font-semibold text-blue-500 hover:underline">
+                  Social Configuration
+                </Link>
+              </div>
               <p className="text-sm text-gray-500 mb-6">Links to official pages, channels, and social media profiles.</p>
               
               <div className="space-y-5">

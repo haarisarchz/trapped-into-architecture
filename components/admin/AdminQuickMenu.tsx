@@ -97,7 +97,7 @@ export default function AdminQuickMenu() {
         
         {userRole === "ceo" && (
           <>
-            <button onClick={() => navigate("/admin/social-config")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Social Config</button>
+            
             <button onClick={() => navigate("/admin/users")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Users</button>
             <button onClick={() => navigate("/admin/contact")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Contact</button>
           </>

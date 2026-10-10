@@ -1,15 +1,9 @@
 const fs = require('fs');
 
-let content = fs.readFileSync('app/admin/jobs/page.tsx', 'utf8');
+let content = fs.readFileSync('app/admin/contact/page.tsx', 'utf8');
 
-// Remove all instances of "use client" and imports of createPortal from the very top
-content = content.replace('import { createPortal } from "react-dom";\n"use client";\n', '');
-content = content.replace('"use client";\nimport { createPortal } from "react-dom";\n', '');
-content = content.replace('import { createPortal } from "react-dom";\n', '');
-content = content.replace('"use client";\n', '');
-
-// Put them back cleanly at the very top
-content = '"use client";\nimport { createPortal } from "react-dom";\n' + content;
-
-fs.writeFileSync('app/admin/jobs/page.tsx', content);
-console.log("Fixed use client position");
+if (content.startsWith('import Link from "next/link";\n"use client";')) {
+    content = content.replace('import Link from "next/link";\n"use client";', '"use client";\nimport Link from "next/link";');
+    fs.writeFileSync('app/admin/contact/page.tsx', content);
+    console.log("Fixed use client order");
+}
