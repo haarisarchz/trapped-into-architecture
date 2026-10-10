@@ -450,7 +450,7 @@ export default function AdminCompaniesPage() {
           {companies.length > 0 && (
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
               <div className="flex items-center gap-3 text-sm text-gray-600">
-                <span>Rows per page:</span>
+                <span>Companies per page:</span>
                 <select 
                   value={itemsPerPage} 
                   onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}

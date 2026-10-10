@@ -282,7 +282,7 @@ function CompaniesPageContent() {
           
           {/* Filters Sidebar */}
           <div className={`lg:w-72 shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 sticky top-24">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-900">Filters</h2>
                 {(selectedCategories.length > 0 || selectedStates.length > 0 || selectedCities.length > 0) && (
@@ -663,7 +663,7 @@ function CompaniesPageContent() {
               {filteredCompanies.length > 0 && (
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
                   <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <span>Rows per page:</span>
+                    <span>Companies per page:</span>
                     <select 
                       value={itemsPerPage} 
                       onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}

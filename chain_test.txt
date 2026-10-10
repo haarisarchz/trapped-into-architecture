@@ -1,0 +1,142 @@
+jobs
+  .filter((job: any) => {
+
+    const stateMatch =
+      selectedStates.length === 0 ||
+      selectedStates.includes(job.state);
+
+    const cityMatch =
+      selectedCities.length === 0 ||
+      selectedCities.includes(job.city);
+
+    const positionMatch =
+      selectedPositions.length === 0 ||
+      selectedPositions.includes(job.position);
+
+    const qualificationMatch =
+      selectedQualifications.length === 0 ||
+
+      job.qualifications?.some(
+        (qualification: string) =>
+
+          selectedQualifications.includes(
+            qualification
+          )
+      );
+
+    const skillsMatch =
+      selectedSkills.length === 0 ||
+
+      job.skills_required?.some(
+        (skill: string) =>
+
+          selectedSkills.includes(skill)
+      );
+
+    const expParsed = parseExperienceStr(Array.isArray(job.experience) ? job.experience : [job.experience || ""]);
+      // Check if ranges overlap
+      const experienceMatch = expParsed[0] <= expRange[1] && expParsed[1] >= expRange[0];
+
+    const salParsed = parseSalaryStr(job.salary, salaryUnit);
+      let salaryMatch = false;
+      if (salParsed === null) {
+          salaryMatch = includeNotDisclosed;
+      } else {
+          salaryMatch = salParsed[0] <= salaryRange[1] && salParsed[1] >= salaryRange[0];
+      }
+
+    const searchMatch =
+      searchQuery === "" ||
+
+      job.firm_name
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.position
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.city
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.skills_required?.some(
+        (skill: string) =>
+
+          skill
+            .toLowerCase()
+            .includes(
+              searchQuery.toLowerCase()
+            )
+      );
+
+    const expiryMatch =
+      !excludeExpired ||
+
+      !job.post_expiry_date ||
+
+      new Date(job.post_expiry_date) >=
+        new Date();
+
+    let dateMatch = true;
+    if (datePosted !== "" && datePosted !== "all") {
+      const rawDate = job.posted_date || job.created_at || job.postedDate;
+      const postedDate = rawDate ? new Date(rawDate) : null;
+      const now = new Date();
+      if (!postedDate) {
+        dateMatch = false;
+      } else {
+        const diffHours = (now.getTime() - postedDate.getTime()) / (1000 * 60 * 60);
+        const diffDays = diffHours / 24;
+        
+        if (datePosted === "24h") dateMatch = diffHours <= 24;
+        else if (datePosted === "7d") dateMatch = diffDays <= 7;
+        else if (datePosted === "30d") dateMatch = diffDays <= 30;
+        else if (datePosted === "older") dateMatch = diffDays > 30;
+      }
+    }
+
+
+    return (
+      stateMatch &&
+      cityMatch &&
+      positionMatch &&
+      qualificationMatch &&
+      skillsMatch &&
+      experienceMatch &&
+      salaryMatch &&
+      searchMatch &&
+      expiryMatch &&
+      dateMatch
+    );
+
+  })
+
+  .sort((a, b) => {
+      const getSal = (s) => {
+        if (!s || s.toLowerCase().includes("not disclosed") || s.toLowerCase().includes("negotiable") || s.toLowerCase().includes("as per")) return null;
+        const cl = s.replace(/,/g, "");
+        const m = cl.match(/\d+/);
+        return m ? Number(m[0]) : null;
+      };
+
+      const dateA = new Date(a.posted_date || 0).getTime();
+      const createdA = new Date(a.created_at || a.updated_at || a.posted_date || 0).getTime();
+      const dateB = new Date(b.posted_date || 0).getTime();
+      const createdB = new Date(b.created_at || b.updated_at || b.posted_date || 0).getTime();
+
+      if (sortBy === "salaryLow" || sortBy === "salaryHigh") {
+        const salA = getSal(a.salary);
+        const salB = getSal(b.salary);
+        if (salA !== null && salB !== null) {
+          return sortBy === "salaryLow" ? salA - salB : salB - salA;
+        }
+        if (salA !== null) return -1;
+        if (salB !== null) return 1;
+        return dateB !== dateA ? dateB - dateA : createdB - createdA;
+      }
+
+      
+
+      return dateB !== dateA ? dateB - dateA : createdB - createdA;
+    })
