@@ -26,7 +26,7 @@ function AdminShareButton({ job }: { job: any }) {
   
   const locParts = [job.area || job.neighborhood, job.city, job.state].filter(Boolean);
   const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-  let text = `?? FIRM: ${job.firm_name || "Unknown"}\n?? LOCATION: ${location}\n?? POSITIONS: ${job.position}\n\n?? For more details and to apply, visit:\n${url}`;
+  let text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${job.position}\n\n🔗 For more details and to apply, visit:\n${url}`;
 
   const copyLink = async (e: any) => {
     e.preventDefault();
@@ -632,7 +632,7 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile }: { job: any,
   const url = "https://www.trappedintoarchitecture.com" + generateJobUrl(job);
   const locParts = [job.area || job.neighborhood, job.city, job.state].filter(Boolean);
   const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-  let text = `?? FIRM: ${job.firm_name || "Unknown"}\n?? LOCATION: ${location}\n?? POSITIONS: ${job.position}\n\n?? For more details and to apply, visit:\n${url}`;
+  let text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${job.position}\n\n🔗 For more details and to apply, visit:\n${url}`;
   
   const copyLink = async (e: any) => {
     e.preventDefault(); e.stopPropagation();

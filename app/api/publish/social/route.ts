@@ -10,7 +10,7 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
   const locParts = [jobs[0].area || jobs[0].neighborhood, jobs[0].city, jobs[0].state].filter(Boolean);
   const location = locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified";
 
-  let msg = `?? FIRM: ${firmName}\n?? LOCATION: ${location}\n?? POSITIONS:\n`;
+  let msg = `🏢 FIRM: ${firmName}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
   
   jobs.forEach((job, index) => {
     const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
@@ -20,16 +20,16 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
   });
 
   if (platform === "whatsapp" || platform === "telegram") {
-    msg += `\n?? For more details and to apply, visit:\n${jobUrl}`;
+    msg += `\n🔗 For more details and to apply, visit:\n${jobUrl}`;
     return msg;
   }
 
   if (platform === "instagram") {
-    msg += `\n?? For more details and to apply, visit the link in our bio!\n`;
+    msg += `\n🔗 For more details and to apply, visit the link in our bio!\n`;
   } else {
-    msg += `\n?? For more details and to apply, visit:\n${jobUrl}\n`;
+    msg += `\n🔗 For more details and to apply, visit:\n${jobUrl}\n`;
   }
-  msg += `\n?? Visit www.trappedintoarchitecture.com for more job updates.\n\n`;
+  msg += `\n🌐 Visit www.trappedintoarchitecture.com for more job updates.\n\n`;
 
   const mainJob = jobs[0];
   const city = (mainJob.city || "Architecture").replace(/[^a-zA-Z0-9]/g, '');
