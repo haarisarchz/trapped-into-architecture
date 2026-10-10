@@ -13,7 +13,7 @@ import {
   List,
 } from "lucide-react";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
@@ -95,8 +95,6 @@ function JobsPageContent() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
  const [datePosted, setDatePosted] = useState("");
   const [excludeExpired, setExcludeExpired] =
   useState(false);
@@ -449,7 +447,136 @@ setSelectedSalary([]);
       </div>
     );
     
+    
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job: any) => {
+
+
+    const stateMatch =
+      selectedStates.length === 0 ||
+      selectedStates.includes(job.state);
+
+    const cityMatch =
+      selectedCities.length === 0 ||
+      selectedCities.includes(job.city);
+
+    const positionMatch =
+      selectedPositions.length === 0 ||
+      selectedPositions.includes(job.position);
+
+    const qualificationMatch =
+      selectedQualifications.length === 0 ||
+
+      job.qualifications?.some(
+        (qualification: string) =>
+
+          selectedQualifications.includes(
+            qualification
+          )
+      );
+
+    const skillsMatch =
+      selectedSkills.length === 0 ||
+
+      job.skills_required?.some(
+        (skill: string) =>
+
+          selectedSkills.includes(skill)
+      );
+
+    const expParsed = parseExperienceStr(Array.isArray(job.experience) ? job.experience : [job.experience || ""]);
+      // Check if ranges overlap
+      const experienceMatch = expParsed[0] <= expRange[1] && expParsed[1] >= expRange[0];
+
+    const salParsed = parseSalaryStr(job.salary, salaryUnit);
+      let salaryMatch = false;
+      if (salParsed === null) {
+          salaryMatch = includeNotDisclosed;
+      } else {
+          salaryMatch = salParsed[0] <= salaryRange[1] && salParsed[1] >= salaryRange[0];
+      }
+
+    
+      const searchMatch =
+      searchQuery === "" ||
+
+      job.firm_name
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.position
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.city
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.skills_required?.some(
+        (skill: string) =>
+
+          skill
+            .toLowerCase()
+            .includes(
+              searchQuery.toLowerCase()
+            )
+      );
+
+    const expiryMatch =
+      !excludeExpired ||
+
+      !job.post_expiry_date ||
+
+      new Date(job.post_expiry_date) >=
+        new Date();
+
+    let dateMatch = true;
+    if (datePosted !== "" && datePosted !== "all") {
+      const rawDate = job.posted_date || job.created_at || job.postedDate;
+      const postedDate = rawDate ? new Date(rawDate) : null;
+      const now = new Date();
+      if (!postedDate) {
+        dateMatch = false;
+      } else {
+        const diffHours = (now.getTime() - postedDate.getTime()) / (1000 * 60 * 60);
+        const diffDays = diffHours / 24;
+        
+        if (datePosted === "24h") dateMatch = diffHours <= 24;
+        else if (datePosted === "7d") dateMatch = diffDays <= 7;
+        else if (datePosted === "30d") dateMatch = diffDays <= 30;
+        else if (datePosted === "older") dateMatch = diffDays > 30;
+      }
+    }
+
+
     return (
+      stateMatch &&
+      cityMatch &&
+      positionMatch &&
+      qualificationMatch &&
+      skillsMatch &&
+      experienceMatch &&
+      salaryMatch &&
+      searchMatch &&
+      expiryMatch &&
+      dateMatch
+    );
+
+  
+    });
+  }, [jobs, selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery, excludeExpired, expRange, salaryRange, salaryUnit, datePosted]);
+
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+  const paginatedJobs = filteredJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredJobs.length]);
+
+  return (
     <main className="min-h-screen bg-gray-100 text-black">
 
       <Navbar />
@@ -872,186 +999,85 @@ setSelectedSalary([]);
 >
 
   
- {(() => { const filtered = jobs
-  .filter((job: any) => {
-
-    const stateMatch =
-      selectedStates.length === 0 ||
-      selectedStates.includes(job.state);
-
-    const cityMatch =
-      selectedCities.length === 0 ||
-      selectedCities.includes(job.city);
-
-    const positionMatch =
-      selectedPositions.length === 0 ||
-      selectedPositions.includes(job.position);
-
-    const qualificationMatch =
-      selectedQualifications.length === 0 ||
-
-      job.qualifications?.some(
-        (qualification: string) =>
-
-          selectedQualifications.includes(
-            qualification
-          )
-      );
-
-    const skillsMatch =
-      selectedSkills.length === 0 ||
-
-      job.skills_required?.some(
-        (skill: string) =>
-
-          selectedSkills.includes(skill)
-      );
-
-    const expParsed = parseExperienceStr(Array.isArray(job.experience) ? job.experience : [job.experience || ""]);
-      // Check if ranges overlap
-      const experienceMatch = expParsed[0] <= expRange[1] && expParsed[1] >= expRange[0];
-
-    const salParsed = parseSalaryStr(job.salary, salaryUnit);
-      let salaryMatch = false;
-      if (salParsed === null) {
-          salaryMatch = includeNotDisclosed;
-      } else {
-          salaryMatch = salParsed[0] <= salaryRange[1] && salParsed[1] >= salaryRange[0];
-      }
-
-    const searchMatch =
-      searchQuery === "" ||
-
-      job.firm_name
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.position
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.city
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.skills_required?.some(
-        (skill: string) =>
-
-          skill
-            .toLowerCase()
-            .includes(
-              searchQuery.toLowerCase()
-            )
-      );
-
-    const expiryMatch =
-      !excludeExpired ||
-
-      !job.post_expiry_date ||
-
-      new Date(job.post_expiry_date) >=
-        new Date();
-
-    let dateMatch = true;
-    if (datePosted !== "" && datePosted !== "all") {
-      const rawDate = job.posted_date || job.created_at || job.postedDate;
-      const postedDate = rawDate ? new Date(rawDate) : null;
-      const now = new Date();
-      if (!postedDate) {
-        dateMatch = false;
-      } else {
-        const diffHours = (now.getTime() - postedDate.getTime()) / (1000 * 60 * 60);
-        const diffDays = diffHours / 24;
-        
-        if (datePosted === "24h") dateMatch = diffHours <= 24;
-        else if (datePosted === "7d") dateMatch = diffDays <= 7;
-        else if (datePosted === "30d") dateMatch = diffDays <= 30;
-        else if (datePosted === "older") dateMatch = diffDays > 30;
-      }
-    }
-
-
-    return (
-      stateMatch &&
-      cityMatch &&
-      positionMatch &&
-      qualificationMatch &&
-      skillsMatch &&
-      experienceMatch &&
-      salaryMatch &&
-      searchMatch &&
-      expiryMatch &&
-      dateMatch
-    );
-
-  })
-
-  .sort((a, b) => {
-      const getSal = (s) => {
-        if (!s || s.toLowerCase().includes("not disclosed") || s.toLowerCase().includes("negotiable") || s.toLowerCase().includes("as per")) return null;
-        const cl = s.replace(/,/g, "");
-        const m = cl.match(/\d+/);
-        return m ? Number(m[0]) : null;
-      };
-
-      const dateA = new Date(a.posted_date || 0).getTime();
-      const createdA = new Date(a.created_at || a.updated_at || a.posted_date || 0).getTime();
-      const dateB = new Date(b.posted_date || 0).getTime();
-      const createdB = new Date(b.created_at || b.updated_at || b.posted_date || 0).getTime();
-
-      if (sortBy === "salaryLow" || sortBy === "salaryHigh") {
-        const salA = getSal(a.salary);
-        const salB = getSal(b.salary);
-        if (salA !== null && salB !== null) {
-          return sortBy === "salaryLow" ? salA - salB : salB - salA;
-        }
-        if (salA !== null) return -1;
-        if (salB !== null) return 1;
-        return dateB !== dateA ? dateB - dateA : createdB - createdA;
-      }
-
-      
-
-      return dateB !== dateA ? dateB - dateA : createdB - createdA;
-    })
-
-  .map((job, index) => (
-
+ 
+{paginatedJobs.length > 0 ? (
+  paginatedJobs.map((job: any, index: number) => (
     <JobCard
       key={index}
       id={job.id}
       viewMode={viewMode}
       firm_name={job.firm_name}
+      organization_type={job.organization_type}
       area={job.area}
       city={job.city}
       state={job.state}
       position={job.position}
       experience={job.experience}
-      salary={job.salary}
       qualifications={job.qualifications}
-      skills_required={job.skills_required}
-      posted_date={job.posted_date}
-      last_date_to_apply={job.last_date_to_apply}
+      skills={job.skills}
+      employment_type={job.employment_type}
+      work_mode={job.work_mode}
+      salary_min={job.salary_min}
+      salary_max={job.salary_max}
+      currency={job.currency}
       post_expiry_date={job.post_expiry_date}
-      job_description={job.job_description}
-      application_type={job.application_type}
-      apply_link={job.apply_link}
-      application_email={job.application_email}
-      source={job.source}
+      posted_date={job.posted_date || job.created_at}
+      save_count={job.save_count || 0}
       image={job.image}
-      save_count={job.save_count}
-      share_count={job.share_count}
     />
+  ))
+) : (
+  <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
+    <p className="text-xl font-semibold">No jobs available at the moment.</p>
+    <p className="mt-2 text-sm">Try adjusting your filters or search query.</p>
+  </div>
+)}
 
-  )); return filtered.length > 0 ? filtered : <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500"><p className="text-xl font-semibold">No jobs available at the moment.</p><p className="mt-2 text-sm">Try adjusting your filters or search query.</p></div>; })()}
-   </div> {/* closes job grid */}
-
-</div> {/* closes flex-1 */}
-
-</div> {/* closes flex gap-8 */}
+   
+          {/* Pagination Controls */}
+          {filteredJobs.length > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <span>Rows per page:</span>
+                <select 
+                  value={itemsPerPage} 
+                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                  className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
+                >
+                  <option value={20}>20</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+                >
+                  Previous
+                </button>
+                
+                <span className="text-sm font-medium px-4">
+                  Page {currentPage} of {totalPages || 1}
+                </span>
+                
+                <button 
+                  onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
 
 </section>
-
 {/* MOBILE FILTER DRAWER */}
 
 {showFilters && (
