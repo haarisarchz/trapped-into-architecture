@@ -670,7 +670,7 @@ function CompaniesPageContent() {
                       className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
                     >
                       <option value={20}>20</option>
-                      <option value={25}>25</option>
+                      <option value={24}>24</option>
                       <option value={50}>50</option>
                     </select>
                   </div>

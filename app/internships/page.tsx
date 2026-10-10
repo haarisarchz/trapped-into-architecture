@@ -11,7 +11,7 @@ import {
   List,
 } from "lucide-react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export default function JobsPage() {
 
@@ -134,12 +134,12 @@ const [showFilters, setShowFilters] = useState(false);
 }, []);
 
   
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [itemsPerPage, setItemsPerPage] = React.useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(24);
 
-  const filteredJobs = React.useMemo(() => {
-    return jobs.filter((job: any) => {
-
+  const filteredJobs = useMemo(() => {
+    return jobs
+  .filter((job: any) => {
 
     const stateMatch =
       selectedStates.length === 0 ||
@@ -231,14 +231,46 @@ const [showFilters, setShowFilters] = useState(false);
       expiryMatch
     );
 
-  
-    });
-  }, [jobs, selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery]);
+  })
+
+  .sort((a, b) => {
+
+    if (sortBy === "salaryLow") {
+
+      return (
+        Number(a.salary.replace(/\D/g, "")) -
+        Number(b.salary.replace(/\D/g, ""))
+      );
+
+    }
+
+    if (sortBy === "salaryHigh") {
+
+      return (
+        Number(b.salary.replace(/\D/g, "")) -
+        Number(a.salary.replace(/\D/g, ""))
+      );
+
+    }
+
+    if (sortBy === "expiry") {
+
+      return (
+        new Date(a.postExpiryDate).getTime() -
+        new Date(b.postExpiryDate).getTime()
+      );
+
+    }
+
+    return 0;
+
+  });
+  }, [selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery, viewMode, sortBy, jobs, selectedExperience, selectedSalary, mobileFiltersOpen, showFilters, showAllStates, showAllCities, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const paginatedJobs = filteredJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [filteredJobs.length]);
 
@@ -1051,8 +1083,8 @@ setSelectedSalary([]);
       key={index}
       id={job.id}
       viewMode={viewMode}
-      firm_name={job.firm_name}
-      organization_type={job.organization_type}
+      firm_name={job.firm_name || job.firmName}
+      organization_type={job.organization_type || job.organizationType}
       area={job.area}
       city={job.city}
       state={job.state}
@@ -1060,14 +1092,14 @@ setSelectedSalary([]);
       experience={job.experience}
       qualifications={job.qualifications}
       skills={job.skills}
-      employment_type={job.employment_type}
-      work_mode={job.work_mode}
-      salary_min={job.salary_min}
-      salary_max={job.salary_max}
+      employment_type={job.employment_type || job.employmentType}
+      work_mode={job.work_mode || job.workMode}
+      salary_min={job.salary_min || job.salaryMin}
+      salary_max={job.salary_max || job.salaryMax}
       currency={job.currency}
-      post_expiry_date={job.post_expiry_date}
-      posted_date={job.posted_date || job.created_at}
-      save_count={job.save_count || 0}
+      post_expiry_date={job.post_expiry_date || job.postExpiryDate}
+      posted_date={job.posted_date || job.created_at || job.createdAt}
+      save_count={job.save_count || job.saveCount || 0}
       image={job.image}
     />
   ))
@@ -1079,50 +1111,54 @@ setSelectedSalary([]);
 )}
 
    
-          {/* Pagination Controls */}
-          {filteredJobs.length > 0 && (
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
-              <div className="flex items-center gap-3 text-sm text-gray-600">
-                <span>Rows per page:</span>
-                <select 
-                  value={itemsPerPage} 
-                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                  className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
-                >
-                  <option value={20}>20</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
-                >
-                  Previous
-                </button>
-                
-                <span className="text-sm font-medium px-4">
-                  Page {currentPage} of {totalPages || 1}
-                </span>
-                
-                <button 
-                  onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
+    </div> {/* closes job grid */}
+    {/* Pagination Controls */}
+    {filteredJobs.length > 0 && (
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+        <div className="flex items-center gap-3 text-sm text-gray-600">
+          <span>Rows per page:</span>
+          <select 
+            value={itemsPerPage} 
+            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+            className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
+          >
+            <option value={20}>20</option>
+            <option value={24}>24</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+            disabled={currentPage === 1}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+          >
+            Previous
+          </button>
+          
+          <span className="text-sm font-medium px-4">
+            Page {currentPage} of {totalPages || 1}
+          </span>
+          
+          <button 
+            onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+            disabled={currentPage === totalPages || totalPages === 0}
+            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+          >
+            Next
+          </button>
         </div>
       </div>
-    </div>
+    )}
+  
+
+</div> {/* closes flex-1 */}
+
+</div> {/* closes flex gap-8 */}
 
 </section>
+
 {/* MOBILE FILTER DRAWER */}
 
 {showFilters && (
