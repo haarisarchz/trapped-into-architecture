@@ -234,37 +234,34 @@ const [showFilters, setShowFilters] = useState(false);
   })
 
   .sort((a, b) => {
+      const getSal = (s) => {
+        if (!s || s.toLowerCase().includes("not disclosed") || s.toLowerCase().includes("negotiable") || s.toLowerCase().includes("as per")) return null;
+        const cl = s.replace(/,/g, "");
+        const m = cl.match(/\d+/);
+        return m ? Number(m[0]) : null;
+      };
 
-    if (sortBy === "salaryLow") {
+      const dateA = new Date(a.posted_date || 0).getTime();
+      const createdA = new Date(a.created_at || a.updated_at || a.posted_date || 0).getTime();
+      const dateB = new Date(b.posted_date || 0).getTime();
+      const createdB = new Date(b.created_at || b.updated_at || b.posted_date || 0).getTime();
 
-      return (
-        Number(a.salary.replace(/\D/g, "")) -
-        Number(b.salary.replace(/\D/g, ""))
-      );
+      if (sortBy === "salaryLow" || sortBy === "salaryHigh") {
+        const salA = getSal(a.salary);
+        const salB = getSal(b.salary);
+        if (salA !== null && salB !== null) {
+          return sortBy === "salaryLow" ? salA - salB : salB - salA;
+        }
+        if (salA !== null) return -1;
+        if (salB !== null) return 1;
+      }
+      
+      if (sortBy === "oldest") {
+        return dateA !== dateB ? dateA - dateB : createdA - createdB;
+      }
 
-    }
-
-    if (sortBy === "salaryHigh") {
-
-      return (
-        Number(b.salary.replace(/\D/g, "")) -
-        Number(a.salary.replace(/\D/g, ""))
-      );
-
-    }
-
-    if (sortBy === "expiry") {
-
-      return (
-        new Date(a.postExpiryDate).getTime() -
-        new Date(b.postExpiryDate).getTime()
-      );
-
-    }
-
-    return 0;
-
-  });
+      return dateB !== dateA ? dateB - dateA : createdB - createdA;
+    });
   }, [selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery, viewMode, sortBy, jobs, selectedExperience, selectedSalary, mobileFiltersOpen, showFilters, showAllStates, showAllCities, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
@@ -399,64 +396,6 @@ const [showFilters, setShowFilters] = useState(false);
       </div>
 
     </div>
-
-    {/* SALARY */}
-
-<div>
-
-  <h3 className="font-semibold mb-3">
-    Salary Range
-  </h3>
-
-  <div className="space-y-2 text-sm">
-
-    {[
-      ...new Set(
-        jobs.map((job) => job.salary)
-      ),
-    ].map((salary) => (
-
-      <label
-        key={salary}
-        className="flex items-center gap-2"
-      >
-
-        <input
-          type="checkbox"
-
-          checked={selectedSalary.includes(salary)}
-
-          onChange={(e) => {
-
-            if (e.target.checked) {
-
-              setSelectedSalary([
-                ...selectedSalary,
-                salary
-              ]);
-
-            } else {
-
-              setSelectedSalary(
-                selectedSalary.filter(
-                  (sal) => sal !== salary
-                )
-              );
-
-            }
-
-          }}
-        />
-
-        {salary}
-
-      </label>
-
-    ))}
-
-  </div>
-
-</div>
 
     {/* QUALIFICATION */}
 
@@ -824,6 +763,9 @@ const [showFilters, setShowFilters] = useState(false);
   Latest Posted
 </option>
 
+<option value="oldest">
+  Oldest Posts
+</option>
 <option value="salaryHigh">
   Salary High to Low
 </option>

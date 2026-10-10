@@ -593,14 +593,11 @@ const [showFilters, setShowFilters] = useState(false);
         }
         if (salA !== null) return -1;
         if (salB !== null) return 1;
-        if (sortBy === "oldest") {
-          return dateA !== dateB ? dateA - dateB : createdA - createdB;
-        }
-
-        return dateB !== dateA ? dateB - dateA : createdB - createdA;
       }
-
       
+      if (sortBy === "oldest") {
+        return dateA !== dateB ? dateA - dateB : createdA - createdB;
+      }
 
       return dateB !== dateA ? dateB - dateA : createdB - createdA;
     });
@@ -844,6 +841,9 @@ const [showFilters, setShowFilters] = useState(false);
   Latest Posted
 </option>
 
+<option value="oldest">
+  Oldest Posts
+</option>
 <option value="salaryHigh">
   Salary High to Low
 </option>

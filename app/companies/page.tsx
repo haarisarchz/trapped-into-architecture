@@ -231,6 +231,12 @@ function CompaniesPageContent() {
         const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
         return timeB - timeA;
       });
+    } else if (sortBy === "date_oldest") {
+      data.sort((a, b) => {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return timeA - timeB;
+      });
     } else if (sortBy === "year_founded") {
       data.sort((a: any, b: any) => {
         const yearA = parseInt(a.founded_year) || 0;
@@ -422,7 +428,6 @@ function CompaniesPageContent() {
                   <option value="name_desc">Name (Z-A)</option>
                   <option value="date_added">Latest Added</option>
                     <option value="date_oldest">Oldest Added</option>
-                  <option value="oldest_added">Older Companies</option>
                   <option value="jobs">Most Jobs</option>
                   <option value="year_founded">Year Founded</option>
                 </select>
@@ -475,7 +480,7 @@ function CompaniesPageContent() {
                   <option value="name_asc">Name A to Z (Ascending)</option>
                   <option value="name_desc">Name Z to A (Descending)</option>
                   <option value="date_added">Latest Added</option>
-                  <option value="oldest_added">Older Companies</option>
+                  <option value="date_oldest">Oldest Added</option>
                   <option value="jobs">Number of jobs posted</option>
                   <option value="year_founded">Year Founded</option>
                 </select>
