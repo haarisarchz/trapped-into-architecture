@@ -222,58 +222,60 @@ if (loading) {
             </div>
 
             {/* DATABASE DASHBOARD */}
-            <div>
-              <button
-                onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition"
-              >
-                <span>Database Dashboard</span>
-                {isDbMenuOpen ? <Minus size={16} /> : <Plus size={16} />}
-              </button>
+            {userRole !== "jobadmin" && (
+              <div>
+                <button
+                  onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition"
+                >
+                  <span>Database Dashboard</span>
+                  {isDbMenuOpen ? <Minus size={16} /> : <Plus size={16} />}
+                </button>
 
-              {isDbMenuOpen && (
-                <div className="mt-2 space-y-1 pl-2 border-l border-gray-800 ml-2">
-                  <button
-                    onClick={() => router.push("/admin/analytics")}
-                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-800 transition text-sm text-gray-300 hover:text-white"
-                  >
-                    Analytics
-                  </button>
-                  {userRole !== "jobadmin" && (
+                {isDbMenuOpen && (
+                  <div className="mt-2 space-y-1 pl-2 border-l border-gray-800 ml-2">
                     <button
                       onClick={() => router.push("/admin/catalog")}
                       className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-800 transition text-sm text-gray-300 hover:text-white"
                     >
                       Architecture Catalog
                     </button>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* STANDALONE MENUS */}
-            {userRole === "ceo" && (
-              <div className="space-y-2 pt-2">
-                <button
-                  onClick={() => router.push("/admin/social-config")}
-                  className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
-                >
-                  Social Config
-                </button>
-                <button
-                  onClick={() => router.push("/admin/users")}
-                  className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
-                >
-                  Users
-                </button>
-                <button
-                  onClick={() => router.push("/admin/contact")}
-                  className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
-                >
-                  Contact
-                </button>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* STANDALONE MENUS */}
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={() => router.push("/admin/analytics")}
+                className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
+              >
+                Analytics
+              </button>
+              {userRole === "ceo" && (
+                <>
+                  <button
+                    onClick={() => router.push("/admin/social-config")}
+                    className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
+                  >
+                    Social Config
+                  </button>
+                  <button
+                    onClick={() => router.push("/admin/users")}
+                    className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
+                  >
+                    Users
+                  </button>
+                  <button
+                    onClick={() => router.push("/admin/contact")}
+                    className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
+                  >
+                    Contact
+                  </button>
+                </>
+              )}
+            </div>
 
             <button
   onClick={() => window.open("/jobs", "_blank")}
