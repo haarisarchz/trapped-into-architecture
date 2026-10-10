@@ -518,7 +518,7 @@ function CompaniesPageContent() {
                 viewMode === "detailed" ? "flex flex-col gap-4" : 
                 "flex flex-col gap-2"
               }>
-                {filteredCompanies.map((company: any) => {
+                {paginatedCompanies.map((company: any) => {
                   if (viewMode === "visual") {
                     return (
                       <Link href={`/companies/${company.slug}`} key={company.slug} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col h-full">
@@ -655,12 +655,53 @@ function CompaniesPageContent() {
                     </Link>
                   );
                 })}
-              </div>
-            )}
+              
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {filteredCompanies.length > 0 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <span>Rows per page:</span>
+                    <select 
+                      value={itemsPerPage} 
+                      onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                      className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
+                    >
+                      <option value={20}>20</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+                    >
+                      Previous
+                    </button>
+                    
+                    <span className="text-sm font-medium px-4">
+                      Page {currentPage} of {totalPages || 1}
+                    </span>
+                    
+                    <button 
+                      onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
-        </div>
-      </section>
-      
+        </section>
       <Footer />
     </main>
   );

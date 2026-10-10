@@ -32,6 +32,8 @@ export default function JobsPage() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
  const [excludeExpired, setExcludeExpired] =
   useState(false);
 
@@ -760,99 +762,7 @@ setSelectedSalary([]);
 </div>
 {/* ALWAYS VISIBLE COUNT & ACTIVE FILTERS WRAPPER */}
 <div className="flex flex-wrap items-center gap-3 mb-4">
-  <span className="text-sm font-semibold text-gray-600 shrink-0">Showing {jobs.filter((job: any) => {
-
-    const stateMatch =
-      selectedStates.length === 0 ||
-      selectedStates.includes(job.state);
-
-    const cityMatch =
-      selectedCities.length === 0 ||
-      selectedCities.includes(job.city);
-
-    const positionMatch =
-      selectedPositions.length === 0 ||
-      selectedPositions.includes(job.position);
-
-    const qualificationMatch =
-      selectedQualifications.length === 0 ||
-
-      job.qualifications?.some(
-        (qualification: string) =>
-
-          selectedQualifications.includes(
-            qualification
-          )
-      );
-
-    const skillsMatch =
-      selectedSkills.length === 0 ||
-
-      job.skillsRequired?.some(
-        (skill: string) =>
-
-          selectedSkills.includes(skill)
-      );
-
-    const experienceMatch =
-      selectedExperience.length === 0 ||
-
-      job.experience?.some(
-        (exp: string) =>
-
-          selectedExperience.includes(exp)
-      );
-
-    const salaryMatch =
-      selectedSalary.length === 0 ||
-      selectedSalary.includes(job.salary);
-
-    const searchMatch =
-      searchQuery === "" ||
-
-      job.firmName
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.position
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.city
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.skillsRequired?.some(
-        (skill: string) =>
-
-          skill
-            .toLowerCase()
-            .includes(
-              searchQuery.toLowerCase()
-            )
-      );
-
-    const expiryMatch =
-      !excludeExpired ||
-
-      !job.postExpiryDate ||
-
-      new Date(job.postExpiryDate) >=
-        new Date();
-
-    return (
-      stateMatch &&
-      cityMatch &&
-      positionMatch &&
-      qualificationMatch &&
-      skillsMatch &&
-      experienceMatch &&
-      salaryMatch &&
-      searchMatch &&
-      expiryMatch
-    );
-
-  }).length} internships</span>
+  <span className="text-sm font-semibold text-gray-600 shrink-0">Showing {filteredJobs.length} internships</span>
 
   {/* ACTIVE FILTERS */}
   {(
@@ -1027,172 +937,85 @@ setSelectedSalary([]);
 >
 
   
- {(() => { const filtered = jobs
-  .filter((job: any) => {
-
-    const stateMatch =
-      selectedStates.length === 0 ||
-      selectedStates.includes(job.state);
-
-    const cityMatch =
-      selectedCities.length === 0 ||
-      selectedCities.includes(job.city);
-
-    const positionMatch =
-      selectedPositions.length === 0 ||
-      selectedPositions.includes(job.position);
-
-    const qualificationMatch =
-      selectedQualifications.length === 0 ||
-
-      job.qualifications?.some(
-        (qualification: string) =>
-
-          selectedQualifications.includes(
-            qualification
-          )
-      );
-
-    const skillsMatch =
-      selectedSkills.length === 0 ||
-
-      job.skillsRequired?.some(
-        (skill: string) =>
-
-          selectedSkills.includes(skill)
-      );
-
-    const experienceMatch =
-      selectedExperience.length === 0 ||
-
-      job.experience?.some(
-        (exp: string) =>
-
-          selectedExperience.includes(exp)
-      );
-
-    const salaryMatch =
-      selectedSalary.length === 0 ||
-      selectedSalary.includes(job.salary);
-
-    const searchMatch =
-      searchQuery === "" ||
-
-      job.firmName
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.position
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.city
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.skillsRequired?.some(
-        (skill: string) =>
-
-          skill
-            .toLowerCase()
-            .includes(
-              searchQuery.toLowerCase()
-            )
-      );
-
-    const expiryMatch =
-      !excludeExpired ||
-
-      !job.postExpiryDate ||
-
-      new Date(job.postExpiryDate) >=
-        new Date();
-
-    return (
-      stateMatch &&
-      cityMatch &&
-      positionMatch &&
-      qualificationMatch &&
-      skillsMatch &&
-      experienceMatch &&
-      salaryMatch &&
-      searchMatch &&
-      expiryMatch
-    );
-
-  })
-
-  .sort((a, b) => {
-
-    if (sortBy === "salaryLow") {
-
-      return (
-        Number(a.salary.replace(/\D/g, "")) -
-        Number(b.salary.replace(/\D/g, ""))
-      );
-
-    }
-
-    if (sortBy === "salaryHigh") {
-
-      return (
-        Number(b.salary.replace(/\D/g, "")) -
-        Number(a.salary.replace(/\D/g, ""))
-      );
-
-    }
-
-    if (sortBy === "expiry") {
-
-      return (
-        new Date(a.postExpiryDate).getTime() -
-        new Date(b.postExpiryDate).getTime()
-      );
-
-    }
-
-    return 0;
-
-  })
-
-  .map((job, index) => (
-
+ 
+{paginatedJobs.length > 0 ? (
+  paginatedJobs.map((job: any, index: number) => (
     <JobCard
       key={index}
       id={job.id}
       viewMode={viewMode}
-      firm_name={job.firmName}
+      firm_name={job.firm_name}
+      organization_type={job.organization_type}
       area={job.area}
       city={job.city}
       state={job.state}
       position={job.position}
-        employment_type={job.employment_type}
-        experience={job.experience}
-      salary={job.salary}
+      experience={job.experience}
       qualifications={job.qualifications}
-      skills_required={job.skillsRequired}
-      posted_date={job.postedDate}
-      last_date_to_apply={job.lastDateToApply}
-      post_expiry_date={job.postExpiryDate}
-      job_description={job.jobDescription}
-      application_type={job.applicationType}
-      apply_link={job.apply_link}
-      application_email={job.application_email}
-      source={job.source}
+      skills={job.skills}
+      employment_type={job.employment_type}
+      work_mode={job.work_mode}
+      salary_min={job.salary_min}
+      salary_max={job.salary_max}
+      currency={job.currency}
+      post_expiry_date={job.post_expiry_date}
+      posted_date={job.posted_date || job.created_at}
+      save_count={job.save_count || 0}
       image={job.image}
-      save_count={job.save_count}
-      share_count={job.share_count}
     />
+  ))
+) : (
+  <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
+    <p className="text-xl font-semibold">No internships available at the moment.</p>
+    <p className="mt-2 text-sm">Try adjusting your filters or search query.</p>
+  </div>
+)}
 
-  )); return filtered.length > 0 ? filtered : <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500"><p className="text-xl font-semibold">No jobs available at the moment.</p><p className="mt-2 text-sm">Try adjusting your filters or search query.</p></div>; })()}
-   </div> {/* closes job grid */}
-
-</div> {/* closes flex-1 */}
-
-</div> {/* closes flex gap-8 */}
+   
+          {/* Pagination Controls */}
+          {filteredJobs.length > 0 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <span>Rows per page:</span>
+                <select 
+                  value={itemsPerPage} 
+                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                  className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
+                >
+                  <option value={20}>20</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+                >
+                  Previous
+                </button>
+                
+                <span className="text-sm font-medium px-4">
+                  Page {currentPage} of {totalPages || 1}
+                </span>
+                
+                <button 
+                  onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
 
 </section>
-
 {/* MOBILE FILTER DRAWER */}
 
 {showFilters && (

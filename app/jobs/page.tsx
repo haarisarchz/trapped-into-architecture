@@ -95,6 +95,8 @@ function JobsPageContent() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
  const [datePosted, setDatePosted] = useState("");
   const [excludeExpired, setExcludeExpired] =
   useState(false);
@@ -695,119 +697,7 @@ setSelectedSalary([]);
 </div>
 {/* ALWAYS VISIBLE COUNT & ACTIVE FILTERS WRAPPER */}
 <div className="flex flex-wrap items-center gap-3 mb-4">
-  <span className="text-sm font-semibold text-gray-600 shrink-0">Showing {jobs.filter((job: any) => {
-
-    const stateMatch =
-      selectedStates.length === 0 ||
-      selectedStates.includes(job.state);
-
-    const cityMatch =
-      selectedCities.length === 0 ||
-      selectedCities.includes(job.city);
-
-    const positionMatch =
-      selectedPositions.length === 0 ||
-      selectedPositions.includes(job.position);
-
-    const qualificationMatch =
-      selectedQualifications.length === 0 ||
-
-      job.qualifications?.some(
-        (qualification: string) =>
-
-          selectedQualifications.includes(
-            qualification
-          )
-      );
-
-    const skillsMatch =
-      selectedSkills.length === 0 ||
-
-      job.skills_required?.some(
-        (skill: string) =>
-
-          selectedSkills.includes(skill)
-      );
-
-    const expParsed = parseExperienceStr(Array.isArray(job.experience) ? job.experience : [job.experience || ""]);
-      // Check if ranges overlap
-      const experienceMatch = expParsed[0] <= expRange[1] && expParsed[1] >= expRange[0];
-
-    const salParsed = parseSalaryStr(job.salary, salaryUnit);
-      let salaryMatch = false;
-      if (salParsed === null) {
-          salaryMatch = includeNotDisclosed;
-      } else {
-          salaryMatch = salParsed[0] <= salaryRange[1] && salParsed[1] >= salaryRange[0];
-      }
-
-    
-      const searchMatch =
-      searchQuery === "" ||
-
-      job.firm_name
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.position
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.city
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.skills_required?.some(
-        (skill: string) =>
-
-          skill
-            .toLowerCase()
-            .includes(
-              searchQuery.toLowerCase()
-            )
-      );
-
-    const expiryMatch =
-      !excludeExpired ||
-
-      !job.post_expiry_date ||
-
-      new Date(job.post_expiry_date) >=
-        new Date();
-
-    let dateMatch = true;
-    if (datePosted !== "" && datePosted !== "all") {
-      const rawDate = job.posted_date || job.created_at || job.postedDate;
-      const postedDate = rawDate ? new Date(rawDate) : null;
-      const now = new Date();
-      if (!postedDate) {
-        dateMatch = false;
-      } else {
-        const diffHours = (now.getTime() - postedDate.getTime()) / (1000 * 60 * 60);
-        const diffDays = diffHours / 24;
-        
-        if (datePosted === "24h") dateMatch = diffHours <= 24;
-        else if (datePosted === "7d") dateMatch = diffDays <= 7;
-        else if (datePosted === "30d") dateMatch = diffDays <= 30;
-        else if (datePosted === "older") dateMatch = diffDays > 30;
-      }
-    }
-
-
-    return (
-      stateMatch &&
-      cityMatch &&
-      positionMatch &&
-      qualificationMatch &&
-      skillsMatch &&
-      experienceMatch &&
-      salaryMatch &&
-      searchMatch &&
-      expiryMatch &&
-      dateMatch
-    );
-
-  }).length} jobs</span>
+  <span className="text-sm font-semibold text-gray-600 shrink-0">Showing {filteredJobs.length} jobs</span>
 
   {/* ACTIVE FILTERS */}
   {(
