@@ -282,8 +282,8 @@ function CompaniesPageContent() {
           
           {/* Filters Sidebar */}
           <div className={`lg:w-72 shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 lg:sticky lg:top-24 lg:max-h-[calc(100vh-6rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
+              <div className="flex items-center justify-between mb-6 sticky top-0 bg-white z-10 -mx-6 -mt-6 px-6 py-6 border-b border-gray-100">
                 <h2 className="text-xl font-bold text-gray-900">Filters</h2>
                 {(selectedCategories.length > 0 || selectedStates.length > 0 || selectedCities.length > 0) && (
                   <button onClick={clearFilters} className="text-sm text-gray-500 hover:text-black font-medium">
