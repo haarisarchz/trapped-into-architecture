@@ -32,8 +32,6 @@ export default function JobsPage() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
  const [excludeExpired, setExcludeExpired] =
   useState(false);
 
@@ -134,6 +132,115 @@ const [showFilters, setShowFilters] = useState(false);
   fetchJobs();
 
 }, []);
+
+  
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [itemsPerPage, setItemsPerPage] = React.useState(25);
+
+  const filteredJobs = React.useMemo(() => {
+    return jobs.filter((job: any) => {
+
+
+    const stateMatch =
+      selectedStates.length === 0 ||
+      selectedStates.includes(job.state);
+
+    const cityMatch =
+      selectedCities.length === 0 ||
+      selectedCities.includes(job.city);
+
+    const positionMatch =
+      selectedPositions.length === 0 ||
+      selectedPositions.includes(job.position);
+
+    const qualificationMatch =
+      selectedQualifications.length === 0 ||
+
+      job.qualifications?.some(
+        (qualification: string) =>
+
+          selectedQualifications.includes(
+            qualification
+          )
+      );
+
+    const skillsMatch =
+      selectedSkills.length === 0 ||
+
+      job.skillsRequired?.some(
+        (skill: string) =>
+
+          selectedSkills.includes(skill)
+      );
+
+    const experienceMatch =
+      selectedExperience.length === 0 ||
+
+      job.experience?.some(
+        (exp: string) =>
+
+          selectedExperience.includes(exp)
+      );
+
+    const salaryMatch =
+      selectedSalary.length === 0 ||
+      selectedSalary.includes(job.salary);
+
+    const searchMatch =
+      searchQuery === "" ||
+
+      job.firmName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.position
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.city
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      job.skillsRequired?.some(
+        (skill: string) =>
+
+          skill
+            .toLowerCase()
+            .includes(
+              searchQuery.toLowerCase()
+            )
+      );
+
+    const expiryMatch =
+      !excludeExpired ||
+
+      !job.postExpiryDate ||
+
+      new Date(job.postExpiryDate) >=
+        new Date();
+
+    return (
+      stateMatch &&
+      cityMatch &&
+      positionMatch &&
+      qualificationMatch &&
+      skillsMatch &&
+      experienceMatch &&
+      salaryMatch &&
+      searchMatch &&
+      expiryMatch
+    );
+
+  
+    });
+  }, [jobs, selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery]);
+
+  const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
+  const paginatedJobs = filteredJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredJobs.length]);
 
   return (
     <main className="min-h-screen bg-gray-100 text-black">
