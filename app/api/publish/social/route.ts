@@ -24,7 +24,6 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
     return msg;
   }
 
-  // Social specific CTA
   if (platform === "instagram") {
     msg += `\n?? For more details and to apply, visit the link in our bio!\n`;
   } else {
@@ -32,7 +31,6 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
   }
   msg += `\n?? Visit www.trappedintoarchitecture.com for more job updates.\n\n`;
 
-  // Dynamic hashtags
   const mainJob = jobs[0];
   const city = (mainJob.city || "Architecture").replace(/[^a-zA-Z0-9]/g, '');
   const rawPosition = mainJob.position || "Architecture";
@@ -50,137 +48,8 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
   if (rawPosition.toLowerCase().includes("interior")) tags.push("#InteriorDesignJobs");
   if (rawPosition.toLowerCase().includes("civil")) tags.push("#CivilEngineeringJobs");
   
-  // Remove duplicates and join
   msg += [...new Set(tags)].join(" ");
   return msg;
-}import { generateJobUrl } from "@/utils/jobUrl";
-
-const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "x", "linkedin"];
-
-
-function generatePostText(jobs: any[], platform: string, jobUrl: string, company: any) {
-  const firmName = jobs[0].firm_name || "Unknown Firm";
-  if (platform === "whatsapp" || platform === "telegram") {
-    let orgTypeLabel = company?.organization_type 
-      ? company.organization_type.charAt(0).toUpperCase() + company.organization_type.slice(1) 
-      : (jobs[0].organization_type || "Firm");
-      
-    let msg = `${orgTypeLabel} Name: ${firmName}\n`;
-    const locParts = [jobs[0].area || jobs[0].neighborhood, jobs[0].city, jobs[0].state].filter(Boolean);
-    msg += `Location: ${locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified"}\n`;
-    
-    if (jobs.length === 1) {
-      const job = jobs[0];
-      const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-      const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
-      msg += `Position: ${job.position}${expText}\n`;
-    } else {
-      msg += `Positions:\n`;
-      jobs.forEach((job, index) => {
-        const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-        const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
-        msg += `${index + 1}. ${job.position}${expText}\n`;
-      });
-    }
-    msg += `\nFor more details, visit:\n${jobUrl}`;
-    return msg;
-  }
-  
-  // Try to get the social handle for the specific platform
-  let handle = "";
-  if (company) {
-    if (platform === "instagram" && company.instagram) handle = company.instagram;
-    else if (platform === "facebook" && company.facebook) handle = company.facebook;
-    else if (platform === "linkedin" && company.linkedin) handle = company.linkedin;
-    else if (platform === "x" && company.twitter) handle = company.twitter;
-  }
-
-  // Clean the handle (in case they pasted a full URL or included the @ symbol)
-  let cleanHandle = handle.trim();
-  if (cleanHandle) {
-    // If it's a URL, extract the last part
-    if (cleanHandle.includes("/")) {
-      const parts = cleanHandle.split("/").filter(Boolean);
-      cleanHandle = parts[parts.length - 1];
-    }
-    // Remove query strings if any
-    cleanHandle = cleanHandle.split("?")[0];
-    cleanHandle = cleanHandle.replace(/^@/, '');
-  }
-
-  let text = "";
-  if (cleanHandle) {
-    text += `@${cleanHandle} is hiring!\n`;
-    text += `Firm: ${firmName}\n`; // Keep the firm name clearly visible too
-  } else {
-    text += `${firmName} is hiring!\n`;
-  }
-  
-  // Format location
-  const locationParts = [jobs[0].area || jobs[0].neighborhood, jobs[0].city, jobs[0].state].filter(Boolean);
-  const location = locationParts.length > 0 ? locationParts.join(", ") : "Remote / Not specified";
-
-  text += `📍 ${location}\n\n`;
-
-  // Format positions
-  if (jobs.length === 1) {
-    const job = jobs[0];
-    const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-    const expText = exp && String(exp).trim() ? ` (${exp})` : '';
-    text += `Position: ${job.position}${expText}\n\n`;
-  } else {
-    text += `Positions:\n`;
-    jobs.forEach((job, index) => {
-      const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-      const expText = exp && String(exp).trim() ? ` (${exp})` : '';
-      text += `${index + 1}. ${job.position}${expText}\n`;
-    });
-    text += `\n`;
-  }
-
-  // Formatting the call to action
-  if (platform === "instagram") {
-    text += `For more details and to apply, visit the link in our bio or go to trappedintoarchitecture.com!\n\n`;
-  } else {
-    text += `For more details, visit: ${jobUrl}\n\n`;
-  }
-
-  text += `Visit www.trappedintoarchitecture.com for more job updates.`;
-
-  // Generate dynamic hashtags based on location and position
-  const mainJob = jobs[0];
-  const city = (mainJob.city || "Architecture").replace(/[^a-zA-Z0-9]/g, '');
-  const rawPosition = mainJob.position || "Architecture";
-  const position = rawPosition.replace(/[^a-zA-Z0-9]/g, '');
-  
-  // Determine Base Profession (Architect vs Interior Designer vs Engineer)
-  let baseProf = "Architect";
-  let baseProfPlural = "Architects";
-  
-  const posLower = rawPosition.toLowerCase();
-  if (posLower.includes("interior")) {
-    baseProf = "InteriorDesigner";
-    baseProfPlural = "InteriorDesigners";
-  } else if (posLower.includes("engineer") || posLower.includes("mep") || posLower.includes("civil") || posLower.includes("structural")) {
-    baseProf = "Engineer";
-    baseProfPlural = "Engineers";
-  } else if (posLower.includes("draft") || posLower.includes("bim") || posLower.includes("modeler")) {
-    baseProf = "Draftsperson";
-    baseProfPlural = "Draftspersons";
-  } else if (posLower.includes("plan") || posLower.includes("urban")) {
-    baseProf = "UrbanPlanner";
-    baseProfPlural = "UrbanPlanners";
-  }
-
-  const h1 = `#${city}${baseProf}Jobs`;
-  const h2 = `#${baseProfPlural}In${city}`;
-  const h3 = `#${baseProf}JobsIndia`;
-  const h4 = `#${city}Jobs`;
-  const h5 = `#${position}Jobs`;
-
-  text += `\n\n${h1} ${h2} ${h3} ${h4} ${h5}`;
-  
-  return text;
 }
 
 export async function POST(req: Request) {
