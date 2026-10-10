@@ -232,7 +232,7 @@ function CompaniesPageContent() {
         return timeB - timeA;
       });
     } else if (sortBy === "date_oldest") {
-      data.sort((a, b) => {
+      data.sort((a: any, b: any) => {
         const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
         const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
         return timeA - timeB;

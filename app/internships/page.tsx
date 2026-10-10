@@ -234,7 +234,7 @@ const [showFilters, setShowFilters] = useState(false);
   })
 
   .sort((a, b) => {
-      const getSal = (s) => {
+      const getSal = (s: any) => {
         if (!s || s.toLowerCase().includes("not disclosed") || s.toLowerCase().includes("negotiable") || s.toLowerCase().includes("as per")) return null;
         const cl = s.replace(/,/g, "");
         const m = cl.match(/\d+/);
