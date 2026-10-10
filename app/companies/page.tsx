@@ -248,6 +248,17 @@ function CompaniesPageContent() {
     return data;
   }, [companies, searchQuery, selectedCategories, selectedStates, selectedCities, sortBy]);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(24);
+
+  const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
+  const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredCompanies.length]);
+
+
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedCategories([]);
