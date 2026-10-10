@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function AdminQuickMenu() {
@@ -10,6 +10,7 @@ export default function AdminQuickMenu() {
   const [userRole, setUserRole] = useState("");
   const [menuStyle, setMenuStyle] = useState({});
   const router = useRouter();
+  const pathname = usePathname();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -73,33 +74,44 @@ export default function AdminQuickMenu() {
 
   const renderMenu = () => {
     if (!isOpen || typeof document === 'undefined') return null;
+
+    const navItem = (href, label) => {
+        const isActive = pathname === href;
+        return (
+            <button 
+                onClick={() => navigate(href)} 
+                className={`w-full text-left px-4 py-1.5 text-sm transition ${
+                    isActive 
+                    ? "bg-black text-white font-semibold" 
+                    : "text-gray-700 hover:bg-gray-100 font-medium"
+                }`}
+            >
+                {label}
+            </button>
+        );
+    };
     
     const menuContent = (
       <div 
         ref={menuRef}
-        className="bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-gray-100 py-2"
+        className="bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.15)] border border-gray-100 py-2 overflow-hidden flex flex-col gap-0.5"
         style={menuStyle}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Nav</div>
-        <button onClick={() => navigate("/admin")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium">Job Dashboard</button>
-        <button onClick={() => navigate("/admin/activity")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Activity</button>
-        <button onClick={() => navigate("/admin/jobs")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Manage Jobs</button>
-        <button onClick={() => navigate("/admin/add-job")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Add New Job</button>
-        <button onClick={() => navigate("/admin/companies")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Companies</button>
+        <div className="px-4 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider">Quick Nav</div>
+        {navItem("/admin/activity", "Activity")}
+        {navItem("/admin", "Job Dashboard")}
+        {navItem("/admin/jobs", "Manage Jobs")}
+        {navItem("/admin/add-job", "Add New Job")}
+        {navItem("/admin/companies", "Companies")}
         
-        {userRole !== "jobadmin" && (
-            <button onClick={() => navigate("/admin/catalog")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Database Catalog</button>
-        )}
-        
-        <div className="border-t border-gray-100 my-1"></div>
-        <button onClick={() => navigate("/admin/analytics")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 font-medium text-gray-700">Analytics</button>
+        {userRole !== "jobadmin" && navItem("/admin/catalog", "Database Catalog")}
+        {navItem("/admin/analytics", "Analytics")}
         
         {userRole === "ceo" && (
           <>
-            
-            <button onClick={() => navigate("/admin/users")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Users</button>
-            <button onClick={() => navigate("/admin/contact")} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50">Contact</button>
+            {navItem("/admin/users", "Users")}
+            {navItem("/admin/contact", "Contact")}
           </>
         )}
       </div>
