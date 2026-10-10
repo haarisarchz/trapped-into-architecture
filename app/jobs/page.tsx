@@ -216,8 +216,14 @@ const [showFilters, setShowFilters] = useState(false);
         setSelectedPositions([]);
         setSelectedQualifications([]);
         setSelectedSkills([]);
-        setSelectedExperience([]);
-setSelectedSalary([]);
+        // removed missing setters to prevent crash
+          if (typeof setExpRange === "function") setExpRange([0, 15]);
+          if (typeof setSalaryRange === "function") setSalaryRange([0, 50]);
+          if (typeof setDatePosted === "function") setDatePosted("");
+          if (typeof setExcludeExpired === "function") setExcludeExpired(false);
+          if (typeof setSearchQuery === "function") setSearchQuery("");
+          if (typeof setSelectedExperience === "function") setSelectedExperience([]);
+          if (typeof setSelectedSalary === "function") setSelectedSalary([]);
       }}
       className="text-sm text-orange-500 font-medium"
     >
@@ -587,6 +593,10 @@ setSelectedSalary([]);
         }
         if (salA !== null) return -1;
         if (salB !== null) return 1;
+        if (sortBy === "oldest") {
+          return dateA !== dateB ? dateA - dateB : createdA - createdB;
+        }
+
         return dateB !== dateA ? dateB - dateA : createdB - createdA;
       }
 
@@ -685,7 +695,7 @@ setSelectedSalary([]);
       className="w-40 border rounded-lg px-2 py-2 text-sm"
     >
       <option value="latest">Latest Posted</option>
-       <option value="oldest">Older Posts</option>
+       <option value="oldest">Oldest Posts</option>
       <option value="salaryHigh">High Salary</option>
       <option value="salaryLow">Low Salary</option>
       

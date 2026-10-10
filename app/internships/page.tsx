@@ -304,8 +304,14 @@ const [showFilters, setShowFilters] = useState(false);
         setSelectedPositions([]);
         setSelectedQualifications([]);
         setSelectedSkills([]);
-        setSelectedExperience([]);
-setSelectedSalary([]);
+        // removed missing setters to prevent crash
+          if (typeof setExpRange === "function") setExpRange([0, 15]);
+          if (typeof setSalaryRange === "function") setSalaryRange([0, 50]);
+          if (typeof setDatePosted === "function") setDatePosted("");
+          if (typeof setExcludeExpired === "function") setExcludeExpired(false);
+          if (typeof setSearchQuery === "function") setSearchQuery("");
+          if (typeof setSelectedExperience === "function") setSelectedExperience([]);
+          if (typeof setSelectedSalary === "function") setSelectedSalary([]);
       }}
       className="text-sm text-orange-500 font-medium"
     >
@@ -393,72 +399,6 @@ setSelectedSalary([]);
       </div>
 
     </div>
-
-    {/* EXPERIENCE */}
-
-<div>
-
-  <h3 className="font-semibold mb-3">
-    Experience
-  </h3>
-
-  <div className="space-y-2 text-sm">
-
-    {[
-      ...new Set(
-        jobs.flatMap((job) =>
-
-          Array.isArray(job.experience)
-            ? job.experience.map((exp: any) => typeof exp === 'string' ? exp.trim() : String(exp || ''))
-            : []
-
-        )
-      ),
-    ]
-      .filter(Boolean)
-      .map((experience: string, index) => (
-
-        <label
-          key={`${experience}-${index}`}
-          className="flex items-center gap-2"
-        >
-
-          <input
-            type="checkbox"
-
-            checked={selectedExperience.includes(experience)}
-
-            onChange={(e) => {
-
-              if (e.target.checked) {
-
-                setSelectedExperience([
-                  ...selectedExperience,
-                  experience
-                ]);
-
-              } else {
-
-                setSelectedExperience(
-                  selectedExperience.filter(
-                    (exp) => exp !== experience
-                  )
-                );
-
-              }
-
-            }}
-          />
-
-          {experience}
-
-        </label>
-
-      ))}
-
-  </div>
-
-</div>
 
     {/* SALARY */}
 
@@ -735,7 +675,7 @@ setSelectedSalary([]);
       className="w-40 border rounded-lg px-2 py-2 text-sm"
     >
       <option value="latest">Latest Posted</option>
-       <option value="oldest">Older Posts</option>
+       <option value="oldest">Oldest Posts</option>
       <option value="salaryHigh">High Salary</option>
       <option value="salaryLow">Low Salary</option>
       

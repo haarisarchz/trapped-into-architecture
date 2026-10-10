@@ -421,6 +421,7 @@ function CompaniesPageContent() {
                   <option value="name_asc">Name (A-Z)</option>
                   <option value="name_desc">Name (Z-A)</option>
                   <option value="date_added">Latest Added</option>
+                    <option value="date_oldest">Oldest Added</option>
                   <option value="oldest_added">Older Companies</option>
                   <option value="jobs">Most Jobs</option>
                   <option value="year_founded">Year Founded</option>
