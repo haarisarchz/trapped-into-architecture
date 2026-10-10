@@ -243,9 +243,7 @@ useEffect(() => {
                 setShowUserMenu(false);
               }}
               className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
-            >
-              Admin Dashboard
-            </button>
+            >Admin Panel</button>
 
             <button
               onClick={() => {
@@ -419,9 +417,7 @@ useEffect(() => {
                 setShowUserMenu(false);
               }}
               className="w-full text-left px-5 py-4 hover:bg-gray-100"
-            >
-              Admin Dashboard
-            </button>
+            >Admin Panel</button>
 
             <button
               onClick={() => {
