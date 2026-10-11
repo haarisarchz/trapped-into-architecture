@@ -1,11 +1,12 @@
 // @ts-nocheck
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import JobCard from "@/components/Jobcard";
+import LocationJobsView from "@/components/LocationJobsView";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
-import { MapPin, ArrowRight, Briefcase } from "lucide-react";
+import { redirect } from "next/navigation";
+import { MapPin, ArrowRight, Bell } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -23,8 +24,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { state } = await params;
   const stateName = formatSlug(state);
-  const title = `Architecture Jobs in ${stateName} | Design Practices & Vacancies`;
-  const description = `Discover architecture vacancies, junior & senior architect jobs, and internships across ${stateName}. Apply directly to leading architectural practices.`;
+  const title = `Architect and Interior Designer Jobs in ${stateName} | Verified Openings`;
+  const description = `Discover Architect, Senior Architect, Junior Architect, Interior Designer, and Draftsperson jobs across ${stateName}. Apply directly on Trapped Into Architecture.`;
   const url = `https://trappedintoarchitecture.com/jobs/state/${encodeURIComponent(state.toLowerCase())}`;
 
   return {
@@ -63,13 +64,17 @@ export default async function StateJobsPage({
     .ilike("state", `%${stateName}%`)
     .order("posted_date", { ascending: false });
 
-  const activeJobs = jobs || [];
+  if (!jobs || jobs.length === 0) {
+    redirect("/jobs");
+  }
+
+  const activeJobs = jobs;
 
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": `Architecture Jobs in ${stateName}`,
-    "description": `Current architectural job openings across ${stateName}`,
+    "name": `Architect and Interior Designer Jobs in ${stateName}`,
+    "description": `Current architectural and interior design job openings in ${stateName}`,
     "itemListElement": activeJobs.map((j, index) => ({
       "@type": "ListItem",
       "position": index + 1,
@@ -100,101 +105,72 @@ export default async function StateJobsPage({
           <span className="text-black font-semibold">{stateName}</span>
         </nav>
 
-        {/* HERO BANNER */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-gray-100 shadow-sm mb-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* TOP SECTION: HERO ON LEFT + WHATSAPP BANNER ON RIGHT */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
+          
+          {/* HERO BANNER (LEFT 2 COLUMNS) */}
+          <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm flex flex-col justify-between">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-700 mb-3">
                 <MapPin size={14} className="text-red-500" />
                 <span>State Directory</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-                Architecture Jobs in {stateName}
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">
+                Architect and Interior Designer Jobs in {stateName}
               </h1>
-              <p className="text-gray-600 mt-2 text-base max-w-2xl leading-relaxed">
-                Explore architectural opportunities across {stateName}. Browse verified openings from top architecture studios, interior firms, and design consultancies.
+              <p className="text-gray-600 mt-2 text-sm sm:text-base leading-relaxed">
+                Discover jobs in {stateName}: Senior Architect, Junior Architect, Junior Interior Designer, Senior Interior Designer, Draftsperson, and 3D Visualizer openings.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <Link
-                href={`/jobs?state=${encodeURIComponent(stateName)}`}
-                className="px-5 py-3 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition flex items-center justify-center gap-2 shadow-sm"
-              >
-                <span>Filter {stateName} Jobs</span>
-                <ArrowRight size={16} />
-              </Link>
+            <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                Total Listings: <strong className="text-black font-bold">{activeJobs.length}</strong>
+              </span>
               <Link
                 href="/jobs"
-                className="px-5 py-3 bg-gray-100 text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-200 transition text-center"
+                className="text-xs sm:text-sm font-semibold text-blue-600 hover:underline flex items-center gap-1"
               >
-                All Jobs Directory
+                <span>Browse All Jobs</span>
+                <ArrowRight size={14} />
               </Link>
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-100 flex items-center gap-6 text-sm text-gray-500">
+          {/* WHATSAPP SUBSCRIPTION CTA BANNER (RIGHT COLUMN) */}
+          <div className="bg-gradient-to-br from-emerald-950 to-green-900 rounded-3xl p-6 sm:p-7 text-white shadow-sm flex flex-col justify-between border border-emerald-800">
             <div>
-              <span className="font-bold text-gray-900 text-lg">{activeJobs.length}</span>{" "}
-              {activeJobs.length === 1 ? "Job Opening" : "Job Openings"}
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-200 rounded-full text-xs font-semibold mb-3">
+                <Bell size={13} className="animate-pulse" />
+                <span>WhatsApp Job Alerts</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
+                Get Architect and Interior Designer Jobs on WhatsApp
+              </h2>
+              <p className="text-emerald-100/90 text-xs sm:text-sm mt-2 leading-relaxed">
+                Get personalized notifications in your WhatsApp directly. Choose your experience and salary preferences.
+              </p>
             </div>
-            <span>•</span>
-            <div className="flex items-center gap-1.5">
-              <Briefcase size={16} className="text-gray-400" />
-              <span>Verified Firms</span>
+
+            <div className="mt-6 pt-4 border-t border-emerald-800/80">
+              <Link
+                href={`/contact?subject=${encodeURIComponent(`WhatsApp Job Alerts for ${stateName}`)}`}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-md"
+              >
+                <span>Subscribe for WhatsApp Alerts</span>
+                <ArrowRight size={14} />
+              </Link>
             </div>
           </div>
+
         </div>
 
-        {/* LISTINGS */}
-        {activeJobs.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              No active jobs in {stateName} right now
-            </h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto text-sm">
-              New architectural posts are updated daily. Check out jobs in other states or view all India vacancies.
-            </p>
-            <Link
-              href="/jobs"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition text-sm"
-            >
-              Browse All Jobs
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activeJobs.map((job) => (
-              <JobCard
-                key={job.id}
-                id={job.id}
-                firm_name={job.firm_name}
-                organization_type={job.organization_type}
-                area={job.area || ""}
-                city={job.city || ""}
-                state={job.state || ""}
-                position={job.position || ""}
-                experience={job.experience || ""}
-                salary={job.salary || ""}
-                qualifications={job.qualifications || []}
-                skills_required={job.skills_required || []}
-                posted_date={job.posted_date || ""}
-                last_date_to_apply={job.last_date_to_apply || ""}
-                post_expiry_date={job.post_expiry_date || ""}
-                job_description={job.job_description || ""}
-                application_type={job.application_type || ""}
-                apply_link={job.apply_link}
-                application_email={job.application_email}
-                source={job.source || ""}
-                image={job.image || ""}
-                viewMode="grid"
-                save_count={job.save_count || 0}
-                share_count={job.share_count || 0}
-                employment_type={job.employment_type}
-              />
-            ))}
-          </div>
-        )}
+        {/* FULL FILTER & VIEW SYSTEM */}
+        <LocationJobsView
+          initialJobs={activeJobs}
+          locationName={stateName}
+          locationType="state"
+        />
       </main>
 
       <Footer />

@@ -1,12 +1,12 @@
 // @ts-nocheck
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import JobCard from "@/components/Jobcard";
+import LocationJobsView from "@/components/LocationJobsView";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { MapPin, ArrowRight, Briefcase, Bell, CheckCircle2 } from "lucide-react";
+import { MapPin, ArrowRight, Bell } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -24,8 +24,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { city } = await params;
   const cityName = formatSlug(city);
-  const title = `Architecture & Interior Design Jobs in ${cityName} | Latest Openings`;
-  const description = `Explore the latest architecture jobs, interior designer openings, junior & senior architect vacancies, and internships in ${cityName}. Apply directly on Trapped Into Architecture.`;
+  const title = `Architect and Interior Designer Jobs in ${cityName} | Verified Openings`;
+  const description = `Discover Architect, Senior Architect, Junior Architect, Interior Designer, and Draftsperson jobs in ${cityName}. Apply directly on Trapped Into Architecture.`;
   const url = `https://trappedintoarchitecture.com/jobs/city/${encodeURIComponent(city.toLowerCase())}`;
 
   return {
@@ -57,7 +57,7 @@ export default async function CityJobsPage({
   const { city } = await params;
   const cityName = formatSlug(city);
 
-  // Fetch all jobs in this city (including outdated/expired so candidates have complete design directory history)
+  // Fetch all jobs in this city (including outdated/expired so directory history is complete)
   const { data: jobs } = await supabase
     .from("jobs")
     .select("*")
@@ -65,7 +65,7 @@ export default async function CityJobsPage({
     .ilike("city", `%${cityName}%`)
     .order("posted_date", { ascending: false });
 
-  // If a city has 0 jobs, don't show an empty dead-end page — immediately redirect to the main directory
+  // If a city has 0 jobs, immediately redirect to the main directory
   if (!jobs || jobs.length === 0) {
     redirect("/jobs");
   }
@@ -75,8 +75,8 @@ export default async function CityJobsPage({
   const itemListSchema = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": `Architecture & Interior Design Jobs in ${cityName}`,
-    "description": `Current architectural and design openings in ${cityName}`,
+    "name": `Architect and Interior Designer Jobs in ${cityName}`,
+    "description": `Current architectural and interior design job openings in ${cityName}`,
     "itemListElement": activeJobs.map((j, index) => ({
       "@type": "ListItem",
       "position": index + 1,
@@ -107,122 +107,72 @@ export default async function CityJobsPage({
           <span className="text-black font-semibold">{cityName}</span>
         </nav>
 
-        {/* HERO BANNER */}
-        <div className="bg-white rounded-3xl p-6 sm:p-10 border border-gray-100 shadow-sm mb-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* TOP SECTION: HERO ON LEFT + WHATSAPP BANNER ON RIGHT */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
+          
+          {/* HERO BANNER (LEFT 2 COLUMNS) */}
+          <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm flex flex-col justify-between">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-700 mb-3">
                 <MapPin size={14} className="text-red-500" />
                 <span>City Directory</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-                Architecture & Interior Jobs in {cityName}
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">
+                Architect and Interior Designer Jobs in {cityName}
               </h1>
-              <p className="text-gray-600 mt-2 text-base max-w-2xl leading-relaxed">
-                Discover verified architectural practices, interior studios, and design consultancies in {cityName}. Browse current openings and historical vacancies.
+              <p className="text-gray-600 mt-2 text-sm sm:text-base leading-relaxed">
+                Discover jobs in {cityName}: Senior Architect, Junior Architect, Junior Interior Designer, Senior Interior Designer, Draftsperson, and 3D Visualizer openings.
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <Link
-                href={`/jobs?city=${encodeURIComponent(cityName)}`}
-                className="px-5 py-3 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition flex items-center justify-center gap-2 shadow-sm text-center"
-              >
-                <span>Filter {cityName} Jobs</span>
-                <ArrowRight size={16} />
-              </Link>
+            <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                Total Listings: <strong className="text-black font-bold">{activeJobs.length}</strong>
+              </span>
               <Link
                 href="/jobs"
-                className="px-5 py-3 bg-gray-100 text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-200 transition text-center"
+                className="text-xs sm:text-sm font-semibold text-blue-600 hover:underline flex items-center gap-1"
               >
-                All Jobs Directory
+                <span>Browse All Jobs</span>
+                <ArrowRight size={14} />
               </Link>
             </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-100 flex items-center gap-6 text-sm text-gray-500">
+          {/* WHATSAPP SUBSCRIPTION CTA BANNER (RIGHT COLUMN) */}
+          <div className="bg-gradient-to-br from-emerald-950 to-green-900 rounded-3xl p-6 sm:p-7 text-white shadow-sm flex flex-col justify-between border border-emerald-800">
             <div>
-              <span className="font-bold text-gray-900 text-lg">{activeJobs.length}</span>{" "}
-              {activeJobs.length === 1 ? "Total Listing" : "Total Listings"}
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-200 rounded-full text-xs font-semibold mb-3">
+                <Bell size={13} className="animate-pulse" />
+                <span>WhatsApp Job Alerts</span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
+                Get Architect and Interior Designer Jobs on WhatsApp
+              </h2>
+              <p className="text-emerald-100/90 text-xs sm:text-sm mt-2 leading-relaxed">
+                Get personalized notifications in your WhatsApp directly. Choose your experience and salary preferences.
+              </p>
             </div>
-            <span>•</span>
-            <div className="flex items-center gap-1.5">
-              <Briefcase size={16} className="text-gray-400" />
-              <span>Verified Studios & Practices</span>
+
+            <div className="mt-6 pt-4 border-t border-emerald-800/80">
+              <Link
+                href={`/contact?subject=${encodeURIComponent(`WhatsApp Job Alerts for ${cityName}`)}`}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-md"
+              >
+                <span>Subscribe for WhatsApp Alerts</span>
+                <ArrowRight size={14} />
+              </Link>
             </div>
           </div>
+
         </div>
 
-        {/* WHATSAPP SUBSCRIPTION CTA BANNER */}
-        <div className="bg-gradient-to-r from-emerald-900 to-green-800 rounded-3xl p-6 sm:p-8 text-white shadow-md mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-emerald-200">
-              <Bell size={14} className="animate-pulse" />
-              <span>WhatsApp Job Delivery</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Get {cityName} Architecture & Interior Jobs on WhatsApp
-            </h2>
-            <p className="text-emerald-100 text-sm sm:text-base leading-relaxed">
-              Don't miss openings in {cityName}. Receive verified job alerts and internship updates delivered straight to your WhatsApp as soon as firms post them.
-            </p>
-          </div>
-
-          <div className="w-full md:w-auto shrink-0">
-            <Link
-              href={`/contact?subject=${encodeURIComponent(`WhatsApp Alerts Subscription for ${cityName}`)}`}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold rounded-2xl text-sm transition shadow-lg"
-            >
-              <span>Subscribe for {cityName} Alerts</span>
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-        </div>
-
-        {/* SECTION HEADER */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-              Listings in {cityName}
-            </h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Showing active and recent openings. Click any position to view full details.
-            </p>
-          </div>
-        </div>
-
-        {/* LISTINGS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {activeJobs.map((job) => (
-            <JobCard
-              key={job.id}
-              id={job.id}
-              firm_name={job.firm_name}
-              organization_type={job.organization_type}
-              area={job.area || ""}
-              city={job.city || ""}
-              state={job.state || ""}
-              position={job.position || ""}
-              experience={job.experience || ""}
-              salary={job.salary || ""}
-              qualifications={job.qualifications || []}
-              skills_required={job.skills_required || []}
-              posted_date={job.posted_date || ""}
-              last_date_to_apply={job.last_date_to_apply || ""}
-              post_expiry_date={job.post_expiry_date || ""}
-              job_description={job.job_description || ""}
-              application_type={job.application_type || ""}
-              apply_link={job.apply_link}
-              application_email={job.application_email}
-              source={job.source || ""}
-              image={job.image || ""}
-              viewMode="grid"
-              save_count={job.save_count || 0}
-              share_count={job.share_count || 0}
-              employment_type={job.employment_type}
-            />
-          ))}
-        </div>
+        {/* FULL FILTER & VIEW SYSTEM */}
+        <LocationJobsView
+          initialJobs={activeJobs}
+          locationName={cityName}
+          locationType="city"
+        />
       </main>
 
       <Footer />
