@@ -28,20 +28,27 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return { title: "Job Not Found" };
   }
   
+  const jobUrl = `https://trappedintoarchitecture.com${generateJobUrl(job)}`;
+  const title = `${job.position} in ${job.city || "India"} at ${job.firm_name} | Trapped Into Architecture`;
+  const description = `${job.firm_name} is hiring ${job.position} in ${[job.area, job.city, job.state].filter(Boolean).join(", ")}. Experience: ${job.experience || "Freshers / Experienced"}. Apply directly on Trapped Into Architecture.`;
+
   return {
-    title: `${job.firm_name} is hiring ${job.position} in ${job.city}. | Trapped Into Architecture`,
-    description: `${job.firm_name} is hiring ${job.position} in ${job.city}, ${job.state}. Apply now!`,
+    title,
+    description,
+    alternates: {
+      canonical: jobUrl,
+    },
     openGraph: {
-      title: `${job.firm_name} is hiring ${job.position} in ${job.city}. | Trapped Into Architecture`,
-      description: `${job.firm_name} is hiring ${job.position} in ${job.city}, ${job.state}. Apply now!`,
-      url: `https://trappedintoarchitecture.com${generateJobUrl(job)}`,
-      images: job.image ? [job.image] : [],
+      title,
+      description,
+      url: jobUrl,
+      images: job.image ? [job.image] : ["https://trappedintoarchitecture.com/default-logo.png"],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${job.firm_name} is hiring ${job.position} in ${job.city}. | Trapped Into Architecture`,
-      description: `${job.firm_name} is hiring ${job.position} in ${job.city}, ${job.state}. Apply now!`,
-      images: job.image ? [job.image] : [],
+      title,
+      description,
+      images: job.image ? [job.image] : ["https://trappedintoarchitecture.com/default-logo.png"],
     }
   };
 }
@@ -202,28 +209,30 @@ export default async function JobDetailsPage({
             __html: JSON.stringify({
               "@context": "https://schema.org/",
               "@type": "JobPosting",
-              "title": job.position,
-              "description": job.description || `Job opportunity for ${job.position} at ${job.firm_name}.`,
+              "title": `${job.position} in ${job.city || "India"}`,
+              "description": cleanDescription || job.job_description || `${job.firm_name} is hiring for ${job.position} in ${job.city}, ${job.state}.`,
+              "url": `https://trappedintoarchitecture.com${generateJobUrl(job)}`,
               "identifier": {
                 "@type": "PropertyValue",
                 "name": job.firm_name,
                 "value": job.id
               },
-              "datePosted": job.created_at,
-              "validThrough": job.post_expiry_date || new Date(new Date(job.created_at).getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-              "employmentType": job.employment_type === "Full Time" ? "FULL_TIME" : job.employment_type === "Part Time" ? "PART_TIME" : job.employment_type === "Internship" ? "INTERN" : job.employment_type === "Freelance" ? "CONTRACTOR" : "OTHER",
+              "datePosted": job.posted_date || job.created_at,
+              "validThrough": job.post_expiry_date || new Date(new Date(job.created_at || Date.now()).getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+              "employmentType": job.employment_type === "Full Time" ? "FULL_TIME" : job.employment_type === "Part Time" ? "PART_TIME" : (job.employment_type === "Internship" || isIntern) ? "INTERN" : job.employment_type === "Freelance" ? "CONTRACTOR" : "FULL_TIME",
               "hiringOrganization": {
                 "@type": "Organization",
                 "name": job.firm_name,
-                "sameAs": job.website || "https://trappedintoarchitecture.com",
-                "logo": job.logo_url || "https://trappedintoarchitecture.com/default-logo.png"
+                "sameAs": company?.website_link || job.website || "https://trappedintoarchitecture.com",
+                "logo": company?.logo_url || job.image || "https://trappedintoarchitecture.com/default-logo.png"
               },
               "jobLocation": {
                 "@type": "Place",
                 "address": {
                   "@type": "PostalAddress",
-                  "addressLocality": job.city,
-                  "addressRegion": job.state,
+                  "streetAddress": job.area || "",
+                  "addressLocality": job.city || "India",
+                  "addressRegion": job.state || "",
                   "addressCountry": "IN"
                 }
               },

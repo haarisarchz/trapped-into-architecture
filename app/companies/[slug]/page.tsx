@@ -48,9 +48,30 @@ export async function generateMetadata({
       return { title: "Company Not Found | Trapped Into Architecture" };
     }
 
+    const compLocation = [companyData.city, companyData.state].filter(Boolean).join(", ");
+    const locSnippet = compLocation ? ` in ${compLocation}` : "";
+    const title = `${companyData.firm_name} Architecture Firm${locSnippet} - Jobs & Profile | Trapped Into Architecture`;
+    const description = companyData.company_description?.slice(0, 160) || `Explore architecture jobs, internships, and design portfolio at ${companyData.firm_name}${locSnippet}. Find career opportunities on Trapped Into Architecture.`;
+    const companyUrl = `https://trappedintoarchitecture.com/companies/${slug}`;
+
     return {
-      title: `${companyData.firm_name} | Trapped Into Architecture`,
-      description: companyData.company_description || `View architecture jobs and company profile for ${companyData.firm_name}`,
+      title,
+      description,
+      alternates: {
+        canonical: companyUrl,
+      },
+      openGraph: {
+        title,
+        description,
+        url: companyUrl,
+        images: companyData.logo_url ? [companyData.logo_url] : ["https://trappedintoarchitecture.com/default-logo.png"],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: companyData.logo_url ? [companyData.logo_url] : ["https://trappedintoarchitecture.com/default-logo.png"],
+      }
     };
   } catch (error) {
     console.error("Error in generateMetadata:", error);
@@ -187,8 +208,31 @@ export default async function CompanyPage({
     
     const location = [company.address, company.neighborhood, company.city, company.state].filter(Boolean).join(", ");
 
+    const companyJsonLd = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": company.firm_name,
+      "description": company.company_description || `Architecture firm and design practice: ${company.firm_name}`,
+      "image": company.logo_url || "https://trappedintoarchitecture.com/default-logo.png",
+      "url": `https://trappedintoarchitecture.com/companies/${slug}`,
+      ...(company.contact_email ? { "email": company.contact_email } : {}),
+      ...(company.phone ? { "telephone": company.phone } : {}),
+      ...(company.website_link ? { "sameAs": [company.website_link, company.linkedin, company.instagram].filter(Boolean) } : {}),
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": company.neighborhood || company.address || "",
+        "addressLocality": company.city || "India",
+        "addressRegion": company.state || "",
+        "addressCountry": "IN"
+      }
+    };
+
     return (
       <main className="min-h-screen flex flex-col bg-gray-50 text-black">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(companyJsonLd) }}
+        />
         <Navbar />
 
         <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 md:py-16">
