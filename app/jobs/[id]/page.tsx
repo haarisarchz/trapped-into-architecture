@@ -279,7 +279,7 @@ export default async function JobDetailsPage({
                       <img
                         src={job.image}
                         alt={job.position}
-                        className="w-full object-contain rounded-xl sticky top-8"
+                        className="w-full object-contain rounded-xl"
                       />
                     </div>
                   ) : (
@@ -288,7 +288,11 @@ export default async function JobDetailsPage({
                     </div>
                   )}
 
-                  
+                  {/* DESKTOP ONLY: SAVE & SHARE BELOW IMAGE */}
+                  <div className="hidden md:flex p-6 pt-4 gap-3 w-full justify-center border-t border-gray-100 mt-auto">
+                    <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="button" />
+                    <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} employmentType={job.employment_type} initialShares={job.share_count || 0} variant="button" />
+                  </div>
                 </div>
 
                 {/* INFO */}
@@ -485,8 +489,8 @@ export default async function JobDetailsPage({
                       )}
                     </div>
 
-                    {/* SAVE / SHARE (Moved to bottom of info per user request) */}
-                    <div className="pt-4 mt-4 border-t border-gray-100 grid grid-cols-2 gap-3 w-full sm:flex sm:flex-row sm:justify-center">
+                    {/* SAVE / SHARE (MOBILE ONLY: Appears below Email Now) */}
+                    <div className="md:hidden pt-4 mt-4 border-t border-gray-100 grid grid-cols-2 gap-3 w-full">
                       <SaveButton jobId={job.id} initialSaves={job.save_count || 0} variant="button" />
                       <ShareButtons url={`https://trappedintoarchitecture.com${generateJobUrl(job)}`} jobId={job.id} companyName={job.firm_name} position={job.position} organizationType={job.organization_type} city={job.city} state={job.state} area={job.area} experience={job.experience} employmentType={job.employment_type} initialShares={job.share_count || 0} variant="button" />
                     </div>
