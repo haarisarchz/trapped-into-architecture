@@ -617,9 +617,24 @@ const [showFilters, setShowFilters] = useState(false);
 
       <section className="px-4 py-6 md:p-10">
 
-        <h1 className="text-2xl md:text-5xl font-bold mb-4">
-         Architecture Jobs
-        </h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <h1 className="text-2xl md:text-5xl font-bold">
+              {selectedCities.length === 1 ? `Architecture Jobs in ${selectedCities[0]}` : selectedStates.length === 1 ? `Architecture Jobs in ${selectedStates[0]}` : "Architecture Jobs"}
+            </h1>
+            {selectedCities.length > 0 && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                <span>Filtered by city: <strong className="text-black">{selectedCities.join(", ")}</strong></span>
+                <button
+                  onClick={() => setSelectedCities([])}
+                  className="text-xs text-blue-600 hover:underline font-semibold ml-2"
+                >
+                  Clear location (View all jobs)
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
 

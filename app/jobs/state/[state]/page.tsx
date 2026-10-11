@@ -128,7 +128,7 @@ export default async function StateJobsPage({
                 href="/jobs"
                 className="px-5 py-3 bg-gray-100 text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-200 transition text-center"
               >
-                All Jobs in India
+                All Jobs Directory
               </Link>
             </div>
           </div>
