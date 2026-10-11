@@ -235,7 +235,7 @@ export default function CatalogPage() {
         </div>
 
         {/* CONTENT */}
-        <div className="flex-1 overflow-hidden flex flex-col bg-gray-50/50 p-6">
+        <div className="flex-1 flex flex-col bg-gray-50/50 p-4 md:p-6 overflow-hidden">
           {loading ? (
             <div className="text-center text-gray-500 font-bold animate-pulse mt-20">Loading Database...</div>
           ) : setupRequired ? (
@@ -260,18 +260,18 @@ export default function CatalogPage() {
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-200 flex-1 overflow-auto relative">
-              <table className="w-full text-left border-collapse">
+            <div className="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-200 flex-1 overflow-auto max-h-[calc(100vh-190px)] relative excel-scrollbar">
+              <table className="w-max min-w-full text-left border-collapse table-fixed">
                 <thead className="bg-white sticky top-0 z-30 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
                   <tr>
-                    <th className="px-4 py-3 text-xs font-bold text-gray-400 uppercase w-12 text-center border-r border-b border-gray-200 bg-gray-50 sticky left-0 z-40">#</th>
+                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase w-12 text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 z-40">#</th>
                     
                     {visibleColumns.map((col) => (
-                      <th key={col.id} className="px-4 py-3 text-xs font-bold text-gray-600 border-r border-b border-gray-200 bg-gray-50 relative group min-w-[200px]">
+                      <th key={col.id} className="px-4 py-3 text-xs font-bold text-gray-600 border-r border-b border-gray-200 bg-gray-50 relative group min-w-[210px] w-[210px]">
                         
                         {/* Hover Dropdown Trigger */}
                         <div className="flex items-center justify-between relative z-10">
-                          <span className="uppercase tracking-wider">{col.title}</span>
+                          <span className="uppercase tracking-wider truncate pr-2" title={col.title}>{col.title}</span>
                           <button 
                             onClick={(e) => { e.stopPropagation(); setActiveColMenu(activeColMenu === col.id ? null : col.id); }} 
                             className="text-gray-400 hover:text-black hover:bg-gray-200 rounded p-1 opacity-0 group-hover:opacity-100 transition focus:opacity-100"
@@ -315,7 +315,7 @@ export default function CatalogPage() {
                       </th>
                     ))}
                     
-                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase sticky right-0 bg-gray-50 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.02)] z-40">
+                    <th className="px-4 py-3 text-xs font-bold text-gray-600 uppercase sticky right-0 bg-gray-100 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.04)] z-40 w-28 min-w-[112px]">
                       Actions
                     </th>
                   </tr>
@@ -329,8 +329,8 @@ export default function CatalogPage() {
                     </tr>
                   )}
                   {rows.map((row, index) => (
-                    <tr key={row.id} className={`border-b border-gray-100 transition ${row.is_locked ? "bg-gray-50/50 hover:bg-gray-100/50" : "bg-white"}`}>
-                      <td className="px-4 py-2 text-gray-400 text-center border-r border-gray-100 font-mono text-xs bg-gray-50 sticky left-0 z-20">{index + 1}</td>
+                    <tr key={row.id} className={`border-b border-gray-100 transition ${row.is_locked ? "bg-gray-50/70 hover:bg-gray-100/60" : "bg-white hover:bg-gray-50/40"}`}>
+                      <td className={`px-4 py-2 text-gray-500 text-center border-r border-gray-100 font-mono text-xs sticky left-0 z-20 ${row.is_locked ? "bg-gray-100" : "bg-gray-50"}`}>{index + 1}</td>
                       
                       {visibleColumns.map((col) => (
                         <td key={col.id} className="px-2 py-2 border-r border-gray-100 align-middle">
@@ -338,7 +338,7 @@ export default function CatalogPage() {
                         </td>
                       ))}
                       
-                      <td className="px-4 py-2 sticky right-0 bg-inherit border-l border-gray-100 shadow-[-4px_0_10px_rgba(0,0,0,0.02)] flex items-center justify-center gap-2 z-20">
+                      <td className={`px-4 py-2 sticky right-0 border-l border-gray-100 shadow-[-4px_0_10px_rgba(0,0,0,0.03)] flex items-center justify-center gap-2 z-20 ${row.is_locked ? "bg-gray-100" : "bg-white"}`}>
                         {row.is_locked ? (
                           <>
                             <button onClick={() => saveRow(row, false)} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded transition" title="Unlock Row for Editing">
