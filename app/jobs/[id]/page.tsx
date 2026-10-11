@@ -318,13 +318,15 @@ export default async function JobDetailsPage({
                         <span className="text-gray-800">{job.area}</span>,{" "}
                       </>
                     )}
-                    <Link href={`/jobs?city=${encodeURIComponent(job.city || "")}`} className="hover:underline hover:text-gray-800 transition">
-                      {job.city}
-                    </Link>
+                    {job.city && (
+                      <Link href={`/jobs/city/${encodeURIComponent(job.city.toLowerCase().trim().replace(/\s+/g, "-"))}`} className="hover:underline hover:text-gray-800 transition font-medium text-gray-700">
+                        {job.city}
+                      </Link>
+                    )}
                     {job.state ? (
                       <>
                         ,{" "}
-                        <Link href={`/jobs?state=${encodeURIComponent(job.state)}`} className="hover:underline hover:text-gray-800 transition">
+                        <Link href={`/jobs/state/${encodeURIComponent(job.state.toLowerCase().trim().replace(/\s+/g, "-"))}`} className="hover:underline hover:text-gray-800 transition font-medium text-gray-700">
                           {job.state}
                         </Link>
                       </>
@@ -524,7 +526,7 @@ export default async function JobDetailsPage({
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50/50 border-b border-gray-100">
           <h2 className="text-sm font-bold text-gray-800">Jobs in {job.city}</h2>
-          <Link href={`/jobs?city=${encodeURIComponent(job.city || "")}`} className="text-xs text-blue-600 hover:underline transition">View All</Link>
+          <Link href={`/jobs/city/${encodeURIComponent(job.city?.toLowerCase().trim().replace(/\s+/g, "-") || "")}`} className="text-xs text-blue-600 hover:underline transition font-semibold">View All</Link>
         </div>
         <div className="flex flex-col">
           {cityJobs.map((cj: any) => (
