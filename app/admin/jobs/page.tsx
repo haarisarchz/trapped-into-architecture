@@ -209,7 +209,7 @@ const fetchJobs = async () => {
     setLoggedProfile(callerProfile);
 
     let query = supabase.from("jobs").select("*");
-    if (statusFilter && !["active", "expired"].includes(statusFilter)) {
+    if (statusFilter && !["active", "expired", "outdated"].includes(statusFilter)) {
       query = query.eq("status", statusFilter);
     }
     const { data, error } = await query.order("id", { ascending: false });
@@ -225,16 +225,29 @@ const fetchJobs = async () => {
       ...job,
       profiles: job.author_id ? profilesMap[job.author_id] : null
     }));
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
     if (statusFilter === "active") {
-      const today = new Date();
-      filteredJobs = filteredJobs.filter(
-        (job) => !job.post_expiry_date || new Date(job.post_expiry_date) >= today
-      );
+      filteredJobs = filteredJobs.filter((job) => {
+        if (job.status !== "published") return false;
+        const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < todayStr;
+        const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
+        return !isExplicitlyExpired && !isOld;
+      });
+    }
+    if (statusFilter === "outdated") {
+      filteredJobs = filteredJobs.filter((job) => {
+        if (job.status !== "published") return false;
+        const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < todayStr;
+        const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
+        return isOld && !isExplicitlyExpired;
+      });
     }
     if (statusFilter === "expired") {
-      const today = new Date();
       filteredJobs = filteredJobs.filter(
-        (job) => job.post_expiry_date && new Date(job.post_expiry_date) < today
+        (job) => job.status === "published" && job.post_expiry_date && job.post_expiry_date < todayStr
       );
     }
 
@@ -344,6 +357,19 @@ return (
     }`}
   >
     Scheduled
+  </button>
+
+  <button
+    onClick={() =>
+      router.push("/admin/jobs?status=outdated")
+    }
+    className={`px-5 py-2 rounded-full border transition ${
+      statusFilter === "outdated"
+        ? "bg-black text-white border-black"
+        : "bg-white hover:bg-white"
+    }`}
+  >
+    Outdated
   </button>
 
   <button

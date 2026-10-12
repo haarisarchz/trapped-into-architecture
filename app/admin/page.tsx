@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [activeJobs, setActiveJobs] = useState(0);
 
 const [expiredJobs, setExpiredJobs] = useState(0);
-
+const [outdatedJobs, setOutdatedJobs] = useState(0);
 const [draftJobs, setDraftJobs] = useState(0);
 
 const [scheduledJobs, setScheduledJobs] = useState(0);
@@ -94,42 +94,42 @@ setTotalJobs(data.length);
 const today =
 new Date().toISOString().split("T")[0];
 
-const active =
-data.filter(
-(job) =>
-job.status === "published" &&
-(
-!job.post_expiry_date ||
-job.post_expiry_date >= today
-)
+const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+const active = data.filter(
+  (job) => {
+    if (job.status !== "published") return false;
+    const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < today;
+    const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
+    return !isExplicitlyExpired && !isOld;
+  }
 );
 
-const expired =
-data.filter(
-(job) =>
-job.status === "published" &&
-job.post_expiry_date &&
-job.post_expiry_date < today
+const outdated = data.filter(
+  (job) => {
+    if (job.status !== "published") return false;
+    const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < today;
+    const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
+    return isOld && !isExplicitlyExpired;
+  }
 );
 
-const drafts =
-data.filter(
-(job) =>
-job.status === "draft"
+const expired = data.filter(
+  (job) => job.status === "published" && job.post_expiry_date && job.post_expiry_date < today
 );
 
-const scheduled =
-data.filter(
-(job) =>
-job.status === "scheduled"
+const drafts = data.filter(
+  (job) => job.status === "draft"
+);
+
+const scheduled = data.filter(
+  (job) => job.status === "scheduled"
 );
 
 setActiveJobs(active.length);
-
+setOutdatedJobs(outdated.length);
 setExpiredJobs(expired.length);
-
 setDraftJobs(drafts.length);
-
 setScheduledJobs(scheduled.length);
 
     }
@@ -327,12 +327,12 @@ if (loading) {
 
       {/* STATS */}
 
-<div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+<div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
 
   {/* ACTIVE JOBS */}
 
   <div
-    onClick={() => router.push("/admin/jobs?status=published")}
+    onClick={() => router.push("/admin/jobs?status=active")}
     className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
   >
     <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
@@ -371,6 +371,21 @@ if (loading) {
 
     <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-blue-600">
       {scheduledJobs}
+    </h2>
+  </div>
+
+  {/* OUTDATED JOBS */}
+
+  <div
+    onClick={() => router.push("/admin/jobs?status=outdated")}
+    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
+  >
+    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
+      Outdated Jobs
+    </p>
+
+    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-orange-500">
+      {outdatedJobs}
     </h2>
   </div>
 
