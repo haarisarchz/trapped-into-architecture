@@ -63,8 +63,8 @@ export default function InteractiveHome({
             <div className="text-gray-400 font-medium">Companies Listed</div>
           </div>
           <div className="pt-4 md:pt-0">
-            <div className="text-4xl md:text-5xl font-bold mb-1">{stats?.users || 0}</div>
-            <div className="text-gray-400 font-medium">Registered Users</div>
+            <div className="text-4xl md:text-5xl font-bold mb-1">{stats?.pageVisits ? stats.pageVisits.toLocaleString() : (stats?.users || 0)}</div>
+            <div className="text-gray-400 font-medium">Total Page Visits</div>
           </div>
         </div>
       </section>

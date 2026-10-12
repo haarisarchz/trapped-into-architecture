@@ -13,6 +13,8 @@ export async function GET(request: Request) {
       startDate = 'today'; // Fallback for standard report. Note: GA4 standard reports have latency.
     } else if (days === '1') {
       startDate = '1daysAgo';
+    } else if (days === 'lifetime' || days === 'all') {
+      startDate = '2015-08-14'; // Beginning of GA property lifetime
     }
 
 

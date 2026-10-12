@@ -77,6 +77,7 @@ export default function AnalyticsPage() {
               <option value="30">Last 30 Days</option>
               <option value="90">Last 90 Days</option>
               <option value="365">Last 365 Days</option>
+              <option value="lifetime">Lifetime</option>
             </select>
         </div>
 

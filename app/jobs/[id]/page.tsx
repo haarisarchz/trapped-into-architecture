@@ -183,7 +183,7 @@ export default async function JobDetailsPage({
     
 
   
-    const autoExpiryDate = new Date(new Date(job.posted_date || job.created_at).getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const autoExpiryDate = new Date(new Date(job.posted_date || job.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
     const showExpiry = job.post_expiry_date && job.post_expiry_date !== autoExpiryDate;
 
 

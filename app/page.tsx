@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { Metadata } from "next";
 import InteractiveHome from "@/components/home/InteractiveHome";
+import { getLifetimePageViews } from "@/lib/analytics";
 
 export const metadata: Metadata = {
   title: "Trapped Into Architecture | Find Architecture Jobs Faster",
@@ -156,8 +157,11 @@ export default async function Home() {
     .from("companies")
     .select("*", { count: "exact", head: true });
 
+  const lifetimePageViews = await getLifetimePageViews();
+
   const stats = {
     users: usersCount || 0,
+    pageVisits: lifetimePageViews,
     jobs: jobsCount || 0,
     internships: internshipsCount || 0,
     companies: Object.keys(groupedCompanies).length || 0,
