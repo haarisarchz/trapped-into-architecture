@@ -12,7 +12,8 @@ function displayRole(role: string): string {
   const r = role.toLowerCase().replace(/[\s_]+/g, "");
   if (r === "ceo") return "CEO";
   if (r === "superadmin") return "Super Admin";
-  if (r === "admin") return "Admin";
+  if (r === "jobadmin") return "Job Admin";
+  if (r === "admin") return "Job Admin"; // Fallback if legacy admin exists
   return "User";
 }
 
@@ -133,7 +134,7 @@ function LockedRoleField({
             disabled={saving}
           >
             <option value="User">User</option>
-            <option value="Admin">Admin</option>
+            <option value="Job_Admin">Job Admin</option>
             <option value="Super_Admin">Super Admin</option>
             <option value="CEO">CEO</option>
           </select>

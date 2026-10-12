@@ -1,6 +1,7 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Navbar from "../../../components/Navbar";
 import { Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine } from "lucide-react";
@@ -42,6 +43,7 @@ INSERT INTO catalog_columns (id, title, type, order_index, is_core) VALUES
 ON CONFLICT (id) DO NOTHING;`;
 
 export default function CatalogPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [setupRequired, setSetupRequired] = useState(false);
   
@@ -58,6 +60,25 @@ export default function CatalogPage() {
 
   const checkDatabase = async () => {
     setLoading(true);
+    const stored = JSON.parse(localStorage.getItem("currentUser") || "null");
+    if (!stored) {
+      router.push("/admin");
+      return;
+    }
+    const lookupField = stored.username ? "username" : "email";
+    const lookupValue = stored.username || stored.email;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq(lookupField, lookupValue)
+      .maybeSingle();
+
+    const normalizedRole = (profile?.role || stored.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    if (!normalizedRole || normalizedRole === "jobadmin" || !["superadmin", "admin", "ceo"].includes(normalizedRole)) {
+      router.push("/admin");
+      return;
+    }
+
     const { error } = await supabase.from("architecture_catalog").select("id").limit(1);
     if (error && error.code === "42P01") {
       setSetupRequired(true);

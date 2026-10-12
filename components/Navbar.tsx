@@ -92,8 +92,8 @@ const [showUserMenu, setShowUserMenu] =
           }
       }
       
-      // 2. Admin/Superadmin/CEO missing logo notifs
-      if (["superadmin", "admin", "ceo"].includes(role)) {
+      // 2. Admin/Superadmin/CEO/JobAdmin missing logo notifs
+      if (["superadmin", "admin", "ceo", "jobadmin"].includes(role)) {
         let userId = currentUser.id;
         if (!userId && currentUser.username) {
           const { data: pData } = await supabase.from("profiles").select("id").eq("username", currentUser.username).maybeSingle();
@@ -235,7 +235,7 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
           <>
             <button
               onClick={() => {

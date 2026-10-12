@@ -61,7 +61,7 @@ export default function AdminActivityPage() {
     }
 
     const roleStr = (realProfile.role || "").toLowerCase().replace(/[\s_]+/g, "");
-    if (!["superadmin", "admin", "ceo"].includes(roleStr)) {
+    if (!["superadmin", "admin", "ceo", "jobadmin"].includes(roleStr)) {
       router.push("/");
       return;
     }
@@ -84,7 +84,7 @@ export default function AdminActivityPage() {
     const { data: profilesData } = await profilesQuery.order("created_at", { ascending: false });
     
     if (profilesData) {
-      const allAdmins = profilesData.filter(p => ["admin", "superadmin", "ceo"].includes((p.role || "").toLowerCase().replace(/[\s_]+/g, "")));
+      const allAdmins = profilesData.filter(p => ["admin", "superadmin", "ceo", "jobadmin"].includes((p.role || "").toLowerCase().replace(/[\s_]+/g, "")));
       setAdmins(allAdmins);
 
       // Fetch all jobs, we will filter by date in JS to properly handle different date columns
