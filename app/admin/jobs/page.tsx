@@ -11,15 +11,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 
-import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight, MessageSquareQuote } from "lucide-react";
+import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight } from "lucide-react";
 import { formatWhatsAppPost } from "@/utils/socialFormats";
-import WhatsAppChannelModal from "@/components/WhatsAppChannelModal";
 
 function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
-  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [batchJobs, setBatchJobs] = useState<any[]>(() => {
     if (allJobs && allJobs.length > 0) {
@@ -107,20 +105,13 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
   const shareText = encodeURIComponent(text);
   const encodedUrl = encodeURIComponent(url);
 
-  let shareLinks = [];
-  if (isMobile) {
-    shareLinks.push({ name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` });
-  } else {
-    shareLinks.push({ name: "WhatsApp App", href: `whatsapp://send?text=${shareText}` });
-    shareLinks.push({ name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` });
-  }
-  
-  shareLinks = shareLinks.concat([
+  const shareLinks = [
+    { name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` },
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
     { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent((batchJobs.length > 1 ? batchJobs.map(j => j.position).join(', ') : job.position) + ' at ' + job.firm_name + '\n')}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` }
-  ]);
+  ];
 
   return (
     <div className="relative inline-block text-left" onMouseLeave={() => setIsOpen(false)}>
@@ -145,19 +136,8 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
               onClick={copyText} 
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex justify-between items-center"
             >
-              <span>{copiedText ? "Copied Formatted Post!" : "Copy Formatted Post"}</span>
+              <span>{copiedText ? "Copied with Formatting!" : "Copy with Formatting"}</span>
               {copiedText && <Check size={14} className="text-green-500" />}
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(false);
-                setIsChannelModalOpen(true);
-              }}
-              className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 font-medium"
-            >
-              <MessageSquareQuote size={14} className="text-green-600" />
-              <span>WhatsApp Channel</span>
             </button>
             <div className="h-px bg-gray-100 my-1"></div>
             {shareLinks.map((link) => (
@@ -174,11 +154,6 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
           </div>
         </div>
       )}
-      <WhatsAppChannelModal
-        isOpen={isChannelModalOpen}
-        onClose={() => setIsChannelModalOpen(false)}
-        postText={text}
-      />
     </div>
   );
 }
@@ -743,7 +718,6 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
     }
     return [job];
   });
-  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -824,19 +798,13 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
   const shareText = encodeURIComponent(text);
   const encodedUrl = encodeURIComponent(url);
   
-  let shareLinks = [];
-  if (isMobile) {
-    shareLinks.push({ name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` });
-  } else {
-    shareLinks.push({ name: "WhatsApp App", href: `whatsapp://send?text=${shareText}` });
-    shareLinks.push({ name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` });
-  }
-  shareLinks = shareLinks.concat([
+  const shareLinks = [
+    { name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` },
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
     { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent((batchJobs.length > 1 ? batchJobs.map(j => j.position).join(', ') : job.position) + ' at ' + job.firm_name + '\n')}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}`}
-  ]);
+  ];
 
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
@@ -894,19 +862,8 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
                 >
                   <span className="flex items-center gap-2">
                     {copiedText ? <Check size={14} className="text-green-500" /> : <Copy size={14} />} 
-                    {copiedText ? "Copied Formatted Post!" : "Copy Formatted Post"}
+                    {copiedText ? "Copied with Formatting!" : "Copy with Formatting"}
                   </span>
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsOpen(false);
-                    setShowShare(false);
-                    setIsChannelModalOpen(true);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs md:text-sm hover:bg-green-50 text-green-700 transition flex items-center gap-2 md:pl-4 pl-10 font-medium"
-                >
-                  <MessageSquareQuote size={14} className="text-green-600" /> WhatsApp Channel
                 </button>
                 <div className="h-px bg-gray-100 my-1 mx-2" />
                 {shareLinks.map((link) => (
@@ -934,11 +891,6 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
           )}
         </div>
       )}
-      <WhatsAppChannelModal
-        isOpen={isChannelModalOpen}
-        onClose={() => setIsChannelModalOpen(false)}
-        postText={text}
-      />
     </div>
   );
 }

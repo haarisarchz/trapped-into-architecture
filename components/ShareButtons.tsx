@@ -1,10 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Share, Copy, Check, MessageSquareQuote } from "lucide-react";
+import { Share, Copy, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { formatWhatsAppPost } from "@/utils/socialFormats";
-import WhatsAppChannelModal from "@/components/WhatsAppChannelModal";
 
 export default function ShareButtons({ 
   url, 
@@ -36,7 +35,6 @@ export default function ShareButtons({
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
-  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const [shareCount, setShareCount] = useState(initialShares);
   const [activeJobs, setActiveJobs] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState(false);
@@ -201,20 +199,13 @@ export default function ShareButtons({
   const shareText = encodeURIComponent(getShareText());
   const encodedUrl = encodeURIComponent(url);
   
-  let shareLinks = [];
-  if (isMobile) {
-    shareLinks.push({ name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` });
-  } else {
-    shareLinks.push({ name: "WhatsApp App", href: `whatsapp://send?text=${shareText}` });
-    shareLinks.push({ name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` });
-  }
-  
-  shareLinks = shareLinks.concat([
+  const shareLinks = [
+    { name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` },
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
     { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent((activeJobs.length > 1 ? activeJobs.map(j => j.position).join(', ') : position) + ' at ' + companyName + '\n')}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` }
-  ]);
+  ];
 
   if (variant === "statistic") {
     return (
@@ -255,20 +246,7 @@ export default function ShareButtons({
         >
           <span className="flex items-center gap-3">
             {copiedText ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-            {copiedText ? "Copied Formatted Post!" : "Copy Formatted Post"}
-          </span>
-        </button>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsOpen(false);
-            setIsChannelModalOpen(true);
-          }}
-          className={`w-full flex items-center justify-between px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-green-700 hover:bg-green-50 rounded-lg transition font-medium`}
-        >
-          <span className="flex items-center gap-3">
-            <MessageSquareQuote size={18} className="text-green-600" /> WhatsApp Channel
+            {copiedText ? "Copied with Formatting!" : "Copy with Formatting"}
           </span>
         </button>
         <div className="h-px bg-gray-100 my-1 mx-2" />
@@ -320,11 +298,6 @@ export default function ShareButtons({
         </button>
       )}
       {renderMenu()}
-      <WhatsAppChannelModal 
-        isOpen={isChannelModalOpen} 
-        onClose={() => setIsChannelModalOpen(false)} 
-        postText={getShareText()} 
-      />
     </>
   );
 }
