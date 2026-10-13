@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { generateJobUrl } from "@/utils/jobUrl";
+import { generateSocialHashtags } from "@/utils/socialHashtags";
 
 const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "x", "linkedin"];
 
 
-function generatePostText(jobs: any[], platform: string, jobUrl: string, company: any) {
+async function generatePostText(jobs: any[], platform: string, jobUrl: string, company: any) {
   const firmName = jobs[0].firm_name || "Unknown Firm";
   const locParts = [jobs[0].area || jobs[0].neighborhood, jobs[0].city, jobs[0].state].filter(Boolean);
   const location = locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified";
@@ -31,24 +32,8 @@ function generatePostText(jobs: any[], platform: string, jobUrl: string, company
   }
   msg += `\n🌐 Visit www.trappedintoarchitecture.com for more job updates.\n\n`;
 
-  const mainJob = jobs[0];
-  const city = (mainJob.city || "Architecture").replace(/[^a-zA-Z0-9]/g, '');
-  const rawPosition = mainJob.position || "Architecture";
-  const isIntern = rawPosition.toLowerCase().includes("intern");
-  const positionTag = isIntern ? "ArchitectureIntern" : "Architect";
-  
-  let tags = [];
-  if (city) {
-    tags.push(`#${city}Jobs`);
-    tags.push(`#${city}${positionTag}Jobs`);
-    tags.push(`#${positionTag}sIn${city}`);
-  }
-  tags.push(`#${positionTag}JobsIndia`);
-  
-  if (rawPosition.toLowerCase().includes("interior")) tags.push("#InteriorDesignJobs");
-  if (rawPosition.toLowerCase().includes("civil")) tags.push("#CivilEngineeringJobs");
-  
-  msg += [...new Set(tags)].join(" ");
+  const tags = await generateSocialHashtags(jobs, platform, company);
+  msg += tags.join(" ");
   return msg;
 }
 
@@ -122,7 +107,7 @@ export async function POST(req: Request) {
 
       try {
         // Generate the post text, passing the companyData so it can pull the username handle
-        const postText = generatePostText(batchJobs, platform, jobUrl, companyData);
+        const postText = await generatePostText(batchJobs, platform, jobUrl, companyData);
 
         switch (platform) {
           case "x": {
