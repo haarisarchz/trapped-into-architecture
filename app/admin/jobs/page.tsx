@@ -13,20 +13,67 @@ import Footer from "@/components/Footer";
 
 import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight } from "lucide-react";
 
-function AdminShareButton({ job }: { job: any }) {
+function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [batchJobs, setBatchJobs] = useState<any[]>(() => {
+    if (allJobs && allJobs.length > 0) {
+      const match = allJobs.filter((j: any) =>
+        j.firm_name === job.firm_name &&
+        ((j.posted_date && job.posted_date && j.posted_date === job.posted_date) || (!j.posted_date && !job.posted_date)) &&
+        (j.image === job.image)
+      );
+      if (match.length > 0) return match;
+    }
+    return [job];
+  });
 
   useEffect(() => {
     setIsMobile(/Mobi|Android|iPhone/i.test(navigator.userAgent));
   }, []);
+
+  useEffect(() => {
+    async function fetchSiblings() {
+      if (!job.firm_name) return;
+      try {
+        let query = supabase.from("jobs").select("*").eq("firm_name", job.firm_name);
+        if (job.posted_date) query = query.eq("posted_date", job.posted_date);
+        else query = query.is("posted_date", null);
+        if (job.image) query = query.eq("image", job.image);
+
+        const { data } = await query;
+        if (data && data.length > 0) {
+          setBatchJobs(data);
+        }
+      } catch (e) {
+        console.error("Error fetching siblings", e);
+      }
+    }
+    fetchSiblings();
+  }, [job.id, job.firm_name, job.posted_date, job.image]);
   
   const url = "https://www.trappedintoarchitecture.com" + generateJobUrl(job);
   
   const locParts = [job.area || job.neighborhood, job.city, job.state].filter(Boolean);
   const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-  let text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${job.position}\n\n🔗 For more details and to apply, visit:\n${url}`;
+
+  let text = "";
+  if (batchJobs.length > 1) {
+    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
+    batchJobs.forEach((j, index) => {
+      const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
+      const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
+      text += `${index + 1}. ${j.position}${expText}\n`;
+    });
+  } else {
+    const j = batchJobs[0] || job;
+    const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
+    const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
+    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${j.position}${expText}\n`;
+  }
+  text += `\n🔗 For more details and to apply, visit:\n${url}`;
 
   const copyLink = async (e: any) => {
     e.preventDefault();
@@ -34,6 +81,15 @@ function AdminShareButton({ job }: { job: any }) {
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    setIsOpen(false);
+  };
+
+  const copyText = async (e: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await navigator.clipboard.writeText(text);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2000);
     setIsOpen(false);
   };
 
@@ -50,7 +106,7 @@ function AdminShareButton({ job }: { job: any }) {
   
   shareLinks = shareLinks.concat([
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(job.position + ' at ' + job.firm_name + '\n')}` },
+    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent((batchJobs.length > 1 ? batchJobs.map(j => j.position).join(', ') : job.position) + ' at ' + job.firm_name + '\n')}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` }
   ]);
@@ -73,6 +129,13 @@ function AdminShareButton({ job }: { job: any }) {
             >
               <span>Copy Link</span>
               {copied && <Check size={14} className="text-green-500" />}
+            </button>
+            <button 
+              onClick={copyText} 
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex justify-between items-center"
+            >
+              <span>Copy Message</span>
+              {copiedText && <Check size={14} className="text-green-500" />}
             </button>
             <div className="h-px bg-gray-100 my-1"></div>
             {shareLinks.map((link) => (
@@ -531,7 +594,7 @@ return (
                         {(() => {
                           const myRole = (loggedProfile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
                           const canEdit = myRole === "ceo" || loggedProfile?.id === job.author_id;
-                          return <AdminActionMenu job={job} canEdit={canEdit} deleteJob={deleteJob} loggedProfile={loggedProfile} />;
+                          return <AdminActionMenu job={job} canEdit={canEdit} deleteJob={deleteJob} loggedProfile={loggedProfile} allJobs={jobs} />;
                         })()}
                       </td>
 
@@ -636,11 +699,23 @@ return (
 }
 
 
-function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile }: { job: any, canEdit: boolean, deleteJob: any, loggedProfile: any }) {
+function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] }: { job: any, canEdit: boolean, deleteJob: any, loggedProfile: any, allJobs?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [batchJobs, setBatchJobs] = useState<any[]>(() => {
+    if (allJobs && allJobs.length > 0) {
+      const match = allJobs.filter((j: any) =>
+        j.firm_name === job.firm_name &&
+        ((j.posted_date && job.posted_date && j.posted_date === job.posted_date) || (!j.posted_date && !job.posted_date)) &&
+        (j.image === job.image)
+      );
+      if (match.length > 0) return match;
+    }
+    return [job];
+  });
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -655,16 +730,58 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile }: { job: any,
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    async function fetchSiblings() {
+      if (!job.firm_name) return;
+      try {
+        let query = supabase.from("jobs").select("*").eq("firm_name", job.firm_name);
+        if (job.posted_date) query = query.eq("posted_date", job.posted_date);
+        else query = query.is("posted_date", null);
+        if (job.image) query = query.eq("image", job.image);
+
+        const { data } = await query;
+        if (data && data.length > 0) {
+          setBatchJobs(data);
+        }
+      } catch (e) {
+        console.error("Error fetching siblings", e);
+      }
+    }
+    fetchSiblings();
+  }, [job.id, job.firm_name, job.posted_date, job.image]);
+
   const url = "https://www.trappedintoarchitecture.com" + generateJobUrl(job);
   const locParts = [job.area || job.neighborhood, job.city, job.state].filter(Boolean);
   const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-  let text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${job.position}\n\n🔗 For more details and to apply, visit:\n${url}`;
+
+  let text = "";
+  if (batchJobs.length > 1) {
+    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
+    batchJobs.forEach((j, index) => {
+      const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
+      const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
+      text += `${index + 1}. ${j.position}${expText}\n`;
+    });
+  } else {
+    const j = batchJobs[0] || job;
+    const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
+    const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
+    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${j.position}${expText}\n`;
+  }
+  text += `\n🔗 For more details and to apply, visit:\n${url}`;
   
   const copyLink = async (e: any) => {
     e.preventDefault(); e.stopPropagation();
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const copyText = async (e: any) => {
+    e.preventDefault(); e.stopPropagation();
+    await navigator.clipboard.writeText(text);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 2000);
   };
 
   const shareText = encodeURIComponent(text);
@@ -679,7 +796,7 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile }: { job: any,
   }
   shareLinks = shareLinks.concat([
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(job.position + ' at ' + job.firm_name + '\n')}` },
+    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent((batchJobs.length > 1 ? batchJobs.map(j => j.position).join(', ') : job.position) + ' at ' + job.firm_name + '\n')}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}`}
   ]);
@@ -727,11 +844,23 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile }: { job: any,
               ">
                 <button 
                   onClick={copyLink}
-                  className="w-full text-left px-4 py-2 text-xs md:text-sm hover:bg-gray-100 transition flex items-center gap-2 text-gray-600 md:pl-4 pl-10"
+                  className="w-full text-left px-4 py-2 text-xs md:text-sm hover:bg-gray-100 transition flex items-center justify-between text-gray-600 md:pl-4 pl-10"
                 >
-                  {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />} 
-                  {copied ? "Copied!" : "Copy Link"}
+                  <span className="flex items-center gap-2">
+                    {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} />} 
+                    {copied ? "Copied Link!" : "Copy Link"}
+                  </span>
                 </button>
+                <button 
+                  onClick={copyText}
+                  className="w-full text-left px-4 py-2 text-xs md:text-sm hover:bg-gray-100 transition flex items-center justify-between text-gray-600 md:pl-4 pl-10"
+                >
+                  <span className="flex items-center gap-2">
+                    {copiedText ? <Check size={14} className="text-green-500" /> : <Copy size={14} />} 
+                    {copiedText ? "Copied Message!" : "Copy Message"}
+                  </span>
+                </button>
+                <div className="h-px bg-gray-100 my-1 mx-2" />
                 {shareLinks.map((link) => (
                   <a 
                     key={link.name}

@@ -33,6 +33,7 @@ export default function ShareButtons({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
   const [shareCount, setShareCount] = useState(initialShares);
   const [activeJobs, setActiveJobs] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState(false);
@@ -45,23 +46,55 @@ export default function ShareButtons({
   }, []);
 
   useEffect(() => {
-    async function fetchCompanyJobs() {
+    async function fetchBatchJobs() {
       if (!companyName) return;
       try {
+        if (jobId) {
+          const { data: currentJob } = await supabase
+            .from("jobs")
+            .select("firm_name, posted_date, image")
+            .eq("id", jobId)
+            .maybeSingle();
+
+          if (currentJob) {
+            let query = supabase
+              .from("jobs")
+              .select("id, position, experience, employment_type")
+              .eq("firm_name", currentJob.firm_name || companyName)
+              .eq("status", "published");
+
+            if (currentJob.posted_date) {
+              query = query.eq("posted_date", currentJob.posted_date);
+            } else {
+              query = query.is("posted_date", null);
+            }
+
+            if (currentJob.image) {
+              query = query.eq("image", currentJob.image);
+            }
+
+            const { data: siblings } = await query;
+            if (siblings && siblings.length > 0) {
+              setActiveJobs(siblings);
+              return;
+            }
+          }
+        }
+
         const { data } = await supabase
           .from("jobs")
-          .select("position, experience")
+          .select("id, position, experience, employment_type")
           .eq("firm_name", companyName)
           .eq("status", "published");
         if (data) {
           setActiveJobs(data);
         }
       } catch (err) {
-        console.error("Error fetching company jobs", err);
+        console.error("Error fetching batch jobs", err);
       }
     }
-    fetchCompanyJobs();
-  }, [companyName]);
+    fetchBatchJobs();
+  }, [companyName, jobId]);
 
   useEffect(() => {
     setShareCount(initialShares);
@@ -113,33 +146,27 @@ export default function ShareButtons({
   };
 
   const getShareText = () => {
-    const locParts = [city, state].filter(Boolean);
+    const locParts = [area, city, state].filter(Boolean);
     const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-    let orgTypeLabel = organizationType ? organizationType.charAt(0).toUpperCase() + organizationType.slice(1) : "Firm";
-    let text = `${orgTypeLabel} Name: ${companyName || "Unknown"}\nLocation: ${location}\n`;
+
+    let text = "";
     if (activeJobs && activeJobs.length > 1) {
-      text += `Positions:\n`;
+      text = `🏢 FIRM: ${companyName || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
       activeJobs.forEach((job, index) => {
         let expText = "";
-        if (job.experience) {
-          const exp = Array.isArray(job.experience) ? job.experience.join(", ") : String(job.experience);
-          if (exp && employmentType !== "Internship" && !(job.position && job.position.toLowerCase().includes("intern"))) {
-            expText = ` (${exp})`;
-          }
+        const exp = Array.isArray(job.experience) ? job.experience.join(", ") : job.experience;
+        const jobEmpType = job.employment_type || employmentType;
+        if (exp && String(exp).trim() && jobEmpType !== "Internship" && !job.position?.toLowerCase().includes("intern")) {
+          expText = ` (${exp})`;
         }
         text += `${index + 1}. ${job.position}${expText}\n`;
       });
     } else {
-      let expText = "";
-      if (experience) {
-        const exp = Array.isArray(experience) ? experience.join(", ") : String(experience);
-        if (exp && employmentType !== "Internship" && !(position && position.toLowerCase().includes("intern"))) {
-          expText = ` (${exp})`;
-        }
-      }
-      text += `Position: ${position}${expText}\n`;
+      const exp = Array.isArray(experience) ? experience.join(", ") : experience;
+      const expText = exp && String(exp).trim() && employmentType !== "Internship" && !position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
+      text = `🏢 FIRM: ${companyName || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${position}${expText}\n`;
     }
-    text += `\nFor more details, visit:\n${url}`;
+    text += `\n🔗 For more details and to apply, visit:\n${url}`;
     return text;
   };
 
@@ -149,6 +176,15 @@ export default function ShareButtons({
     await navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => { setCopied(false); setIsOpen(false); }, 1500);
+    trackShare();
+  };
+
+  const copyText = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await navigator.clipboard.writeText(getShareText());
+    setCopiedText(true);
+    setTimeout(() => { setCopiedText(false); setIsOpen(false); }, 1500);
     trackShare();
   };
 
@@ -165,7 +201,7 @@ export default function ShareButtons({
   
   shareLinks = shareLinks.concat([
     { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(position + ' at ' + companyName + '\n')}` },
+    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent((activeJobs.length > 1 ? activeJobs.map(j => j.position).join(', ') : position) + ' at ' + companyName + '\n')}` },
     { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
     { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` }
   ]);
@@ -196,10 +232,21 @@ export default function ShareButtons({
         )}
         <button
           onClick={copyLink}
-          className={`w-full flex items-center gap-3 px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium`}
+          className={`w-full flex items-center justify-between px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium`}
         >
-          {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-          {copied ? "Copied!" : "Copy Link"}
+          <span className="flex items-center gap-3">
+            {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
+            {copied ? "Copied Link!" : "Copy Link"}
+          </span>
+        </button>
+        <button
+          onClick={copyText}
+          className={`w-full flex items-center justify-between px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium`}
+        >
+          <span className="flex items-center gap-3">
+            {copiedText ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
+            {copiedText ? "Copied Message!" : "Copy Message"}
+          </span>
         </button>
         <div className="h-px bg-gray-100 my-1 mx-2" />
         {shareLinks.map((link) => (
