@@ -11,12 +11,15 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 
-import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight } from "lucide-react";
+import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight, MessageSquareQuote } from "lucide-react";
+import { formatWhatsAppPost } from "@/utils/socialFormats";
+import WhatsAppChannelModal from "@/components/WhatsAppChannelModal";
 
 function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [batchJobs, setBatchJobs] = useState<any[]>(() => {
     if (allJobs && allJobs.length > 0) {
@@ -55,42 +58,50 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
   }, [job.id, job.firm_name, job.posted_date, job.image]);
   
   const url = "https://www.trappedintoarchitecture.com" + generateJobUrl(job);
-  
-  const locParts = [job.area || job.neighborhood, job.city, job.state].filter(Boolean);
-  const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-
-  let text = "";
-  if (batchJobs.length > 1) {
-    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
-    batchJobs.forEach((j, index) => {
-      const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
-      const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
-      text += `${index + 1}. ${j.position}${expText}\n`;
-    });
-  } else {
-    const j = batchJobs[0] || job;
-    const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
-    const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
-    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${j.position}${expText}\n`;
-  }
-  text += `\n🔗 For more details and to apply, visit:\n${url}`;
+  const text = formatWhatsAppPost(batchJobs.length > 0 ? batchJobs : [job], url);
 
   const copyLink = async (e: any) => {
     e.preventDefault();
     e.stopPropagation();
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    setIsOpen(false);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement("input");
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      setIsOpen(false);
+    } catch (err) {
+      console.warn("Copy link failed", err);
+    }
   };
 
   const copyText = async (e: any) => {
     e.preventDefault();
     e.stopPropagation();
-    await navigator.clipboard.writeText(text);
-    setCopiedText(true);
-    setTimeout(() => setCopiedText(false), 2000);
-    setIsOpen(false);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedText(true);
+      setTimeout(() => setCopiedText(false), 2000);
+      setIsOpen(false);
+    } catch (err) {
+      console.warn("Copy text failed", err);
+    }
   };
 
   const shareText = encodeURIComponent(text);
@@ -98,7 +109,7 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
 
   let shareLinks = [];
   if (isMobile) {
-    shareLinks.push({ name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` });
+    shareLinks.push({ name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` });
   } else {
     shareLinks.push({ name: "WhatsApp App", href: `whatsapp://send?text=${shareText}` });
     shareLinks.push({ name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` });
@@ -127,15 +138,26 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
               onClick={copyLink} 
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex justify-between items-center"
             >
-              <span>Copy Link</span>
+              <span>{copied ? "Copied Link!" : "Copy Link"}</span>
               {copied && <Check size={14} className="text-green-500" />}
             </button>
             <button 
               onClick={copyText} 
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex justify-between items-center"
             >
-              <span>Copy Message</span>
+              <span>{copiedText ? "Copied Formatted Post!" : "Copy Formatted Post"}</span>
               {copiedText && <Check size={14} className="text-green-500" />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                setIsChannelModalOpen(true);
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 font-medium"
+            >
+              <MessageSquareQuote size={14} className="text-green-600" />
+              <span>WhatsApp Channel</span>
             </button>
             <div className="h-px bg-gray-100 my-1"></div>
             {shareLinks.map((link) => (
@@ -152,6 +174,11 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
           </div>
         </div>
       )}
+      <WhatsAppChannelModal
+        isOpen={isChannelModalOpen}
+        onClose={() => setIsChannelModalOpen(false)}
+        postText={text}
+      />
     </div>
   );
 }
@@ -716,6 +743,7 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
     }
     return [job];
   });
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -751,37 +779,46 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
   }, [job.id, job.firm_name, job.posted_date, job.image]);
 
   const url = "https://www.trappedintoarchitecture.com" + generateJobUrl(job);
-  const locParts = [job.area || job.neighborhood, job.city, job.state].filter(Boolean);
-  const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-
-  let text = "";
-  if (batchJobs.length > 1) {
-    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
-    batchJobs.forEach((j, index) => {
-      const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
-      const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
-      text += `${index + 1}. ${j.position}${expText}\n`;
-    });
-  } else {
-    const j = batchJobs[0] || job;
-    const exp = Array.isArray(j.experience) ? j.experience.join(", ") : j.experience;
-    const expText = exp && String(exp).trim() && j.employment_type !== "Internship" && !j.position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
-    text = `🏢 FIRM: ${job.firm_name || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${j.position}${expText}\n`;
-  }
-  text += `\n🔗 For more details and to apply, visit:\n${url}`;
+  const text = formatWhatsAppPost(batchJobs.length > 0 ? batchJobs : [job], url);
   
   const copyLink = async (e: any) => {
     e.preventDefault(); e.stopPropagation();
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement("input");
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.warn("Copy link failed", err);
+    }
   };
 
   const copyText = async (e: any) => {
     e.preventDefault(); e.stopPropagation();
-    await navigator.clipboard.writeText(text);
-    setCopiedText(true);
-    setTimeout(() => setCopiedText(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedText(true);
+      setTimeout(() => setCopiedText(false), 2000);
+    } catch (err) {
+      console.warn("Copy text failed", err);
+    }
   };
 
   const shareText = encodeURIComponent(text);
@@ -789,7 +826,7 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
   
   let shareLinks = [];
   if (isMobile) {
-    shareLinks.push({ name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` });
+    shareLinks.push({ name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` });
   } else {
     shareLinks.push({ name: "WhatsApp App", href: `whatsapp://send?text=${shareText}` });
     shareLinks.push({ name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` });
@@ -857,8 +894,19 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
                 >
                   <span className="flex items-center gap-2">
                     {copiedText ? <Check size={14} className="text-green-500" /> : <Copy size={14} />} 
-                    {copiedText ? "Copied Message!" : "Copy Message"}
+                    {copiedText ? "Copied Formatted Post!" : "Copy Formatted Post"}
                   </span>
+                </button>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(false);
+                    setShowShare(false);
+                    setIsChannelModalOpen(true);
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs md:text-sm hover:bg-green-50 text-green-700 transition flex items-center gap-2 md:pl-4 pl-10 font-medium"
+                >
+                  <MessageSquareQuote size={14} className="text-green-600" /> WhatsApp Channel
                 </button>
                 <div className="h-px bg-gray-100 my-1 mx-2" />
                 {shareLinks.map((link) => (
@@ -886,6 +934,11 @@ function AdminActionMenu({ job, canEdit, deleteJob, loggedProfile, allJobs = [] 
           )}
         </div>
       )}
+      <WhatsAppChannelModal
+        isOpen={isChannelModalOpen}
+        onClose={() => setIsChannelModalOpen(false)}
+        postText={text}
+      />
     </div>
   );
 }

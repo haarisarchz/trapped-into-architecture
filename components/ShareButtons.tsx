@@ -1,8 +1,10 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Share, Copy, Check } from "lucide-react";
+import { Share, Copy, Check, MessageSquareQuote } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { formatWhatsAppPost } from "@/utils/socialFormats";
+import WhatsAppChannelModal from "@/components/WhatsAppChannelModal";
 
 export default function ShareButtons({ 
   url, 
@@ -34,6 +36,7 @@ export default function ShareButtons({
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
+  const [isChannelModalOpen, setIsChannelModalOpen] = useState(false);
   const [shareCount, setShareCount] = useState(initialShares);
   const [activeJobs, setActiveJobs] = useState<any[]>([]);
   const [isMobile, setIsMobile] = useState(false);
@@ -146,46 +149,53 @@ export default function ShareButtons({
   };
 
   const getShareText = () => {
-    const locParts = [area, city, state].filter(Boolean);
-    const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
-
-    let text = "";
-    if (activeJobs && activeJobs.length > 1) {
-      text = `🏢 FIRM: ${companyName || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
-      activeJobs.forEach((job, index) => {
-        let expText = "";
-        const exp = Array.isArray(job.experience) ? job.experience.join(", ") : job.experience;
-        const jobEmpType = job.employment_type || employmentType;
-        if (exp && String(exp).trim() && jobEmpType !== "Internship" && !job.position?.toLowerCase().includes("intern")) {
-          expText = ` (${exp})`;
-        }
-        text += `${index + 1}. ${job.position}${expText}\n`;
-      });
-    } else {
-      const exp = Array.isArray(experience) ? experience.join(", ") : experience;
-      const expText = exp && String(exp).trim() && employmentType !== "Internship" && !position?.toLowerCase().includes("intern") ? ` (${exp})` : "";
-      text = `🏢 FIRM: ${companyName || "Unknown"}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${position}${expText}\n`;
-    }
-    text += `\n🔗 For more details and to apply, visit:\n${url}`;
-    return text;
+    const jobsToFormat = activeJobs && activeJobs.length > 0
+      ? activeJobs.map(j => ({ ...j, firm_name: companyName, city, state, area }))
+      : [{ firm_name: companyName, position, experience, employment_type: employmentType, city, state, area }];
+    return formatWhatsAppPost(jobsToFormat, url);
   };
 
   const copyLink = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => { setCopied(false); setIsOpen(false); }, 1500);
-    trackShare();
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement("input");
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+      setCopied(true);
+      setTimeout(() => { setCopied(false); setIsOpen(false); }, 1500);
+    } catch (err) {
+      console.warn("Copy link failed", err);
+    }
   };
 
   const copyText = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await navigator.clipboard.writeText(getShareText());
-    setCopiedText(true);
-    setTimeout(() => { setCopiedText(false); setIsOpen(false); }, 1500);
-    trackShare();
+    try {
+      const textToCopy = getShareText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = textToCopy;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedText(true);
+      setTimeout(() => { setCopiedText(false); setIsOpen(false); }, 1500);
+    } catch (err) {
+      console.warn("Copy post failed", err);
+    }
   };
 
   const shareText = encodeURIComponent(getShareText());
@@ -193,7 +203,7 @@ export default function ShareButtons({
   
   let shareLinks = [];
   if (isMobile) {
-    shareLinks.push({ name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` });
+    shareLinks.push({ name: "WhatsApp App", href: `https://api.whatsapp.com/send?text=${shareText}` });
   } else {
     shareLinks.push({ name: "WhatsApp App", href: `whatsapp://send?text=${shareText}` });
     shareLinks.push({ name: "WhatsApp Web", href: `https://web.whatsapp.com/send?text=${shareText}` });
@@ -245,7 +255,20 @@ export default function ShareButtons({
         >
           <span className="flex items-center gap-3">
             {copiedText ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-            {copiedText ? "Copied Message!" : "Copy Message"}
+            {copiedText ? "Copied Formatted Post!" : "Copy Formatted Post"}
+          </span>
+        </button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen(false);
+            setIsChannelModalOpen(true);
+          }}
+          className={`w-full flex items-center justify-between px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-green-700 hover:bg-green-50 rounded-lg transition font-medium`}
+        >
+          <span className="flex items-center gap-3">
+            <MessageSquareQuote size={18} className="text-green-600" /> WhatsApp Channel
           </span>
         </button>
         <div className="h-px bg-gray-100 my-1 mx-2" />
@@ -297,6 +320,11 @@ export default function ShareButtons({
         </button>
       )}
       {renderMenu()}
+      <WhatsAppChannelModal 
+        isOpen={isChannelModalOpen} 
+        onClose={() => setIsChannelModalOpen(false)} 
+        postText={getShareText()} 
+      />
     </>
   );
 }

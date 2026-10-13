@@ -2,11 +2,21 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { generateSocialHashtags } from "@/utils/socialHashtags";
+import { formatWhatsAppPost, formatInstagramCaption } from "@/utils/socialFormats";
 
 const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "x", "linkedin"];
 
 
 async function generatePostText(jobs: any[], platform: string, jobUrl: string, company: any) {
+  if (platform === "whatsapp" || platform === "telegram") {
+    return formatWhatsAppPost(jobs, jobUrl);
+  }
+
+  if (platform === "instagram") {
+    const igTags = await generateSocialHashtags(jobs, "instagram", company);
+    return formatInstagramCaption(jobs, igTags, company?.instagram);
+  }
+
   const firmName = jobs[0].firm_name || "Unknown Firm";
   const locParts = [jobs[0].area || jobs[0].neighborhood, jobs[0].city, jobs[0].state].filter(Boolean);
   const location = locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified";
@@ -20,16 +30,7 @@ async function generatePostText(jobs: any[], platform: string, jobUrl: string, c
     msg += `${prefix}${job.position}${expText}\n`;
   });
 
-  if (platform === "whatsapp" || platform === "telegram") {
-    msg += `\n🔗 For more details and to apply, visit:\n${jobUrl}`;
-    return msg;
-  }
-
-  if (platform === "instagram") {
-    msg += `\n🔗 For more details and to apply, visit the link in our bio!\n`;
-  } else {
-    msg += `\n🔗 For more details and to apply, visit:\n${jobUrl}\n`;
-  }
+  msg += `\n🔗 For more details and to apply, visit:\n${jobUrl}\n`;
   msg += `\n🌐 Visit www.trappedintoarchitecture.com for more job updates.\n\n`;
 
   const tags = await generateSocialHashtags(jobs, platform, company);
@@ -156,17 +157,7 @@ export async function POST(req: Request) {
             if (!igAccountId || !token) throw new Error("Missing Instagram credentials.");
             if (!triggerJob.image) throw new Error("Instagram requires an image URL.");
             
-            let igCaption = postText;
-            if (companyData && companyData.instagram) {
-              let igHandle = companyData.instagram.trim().split("?")[0].replace(/^@/, '');
-              if (igHandle.includes("/")) {
-                const parts = igHandle.split("/").filter(Boolean);
-                igHandle = parts[parts.length - 1];
-              }
-              if (igHandle) {
-                igCaption += `\n\nDesign Firm: @${igHandle}`;
-              }
-            }
+            const igCaption = postText;
 
             const createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
               method: "POST",
