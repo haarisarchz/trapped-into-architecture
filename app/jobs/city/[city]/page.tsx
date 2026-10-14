@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LocationJobsView from "@/components/LocationJobsView";
 import { supabase } from "@/lib/supabase";
+import { generateJobUrl } from "@/utils/jobUrl";
 import Link from "next/link";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -80,9 +81,34 @@ export default async function CityJobsPage({
     "itemListElement": activeJobs.map((j, index) => ({
       "@type": "ListItem",
       "position": index + 1,
-      "url": `https://trappedintoarchitecture.com/jobs/${j.id}`,
+      "url": `https://trappedintoarchitecture.com${generateJobUrl(j)}`,
       "name": `${j.position} at ${j.firm_name}`,
     })),
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://trappedintoarchitecture.com"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Architecture Jobs",
+        "item": "https://trappedintoarchitecture.com/jobs"
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": `${cityName} Jobs`,
+        "item": `https://trappedintoarchitecture.com/jobs/city/${encodeURIComponent(city.toLowerCase())}`
+      }
+    ]
   };
 
   return (
@@ -90,6 +116,10 @@ export default async function CityJobsPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <Navbar />
 

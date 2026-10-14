@@ -8,6 +8,7 @@ import { Bookmark, BookmarkCheck } from "lucide-react";
 import { generateJobUrl, decodeUuid, generateCompanySlug } from "@/utils/jobUrl";
 import ShareButtons from "@/components/ShareButtons";
 import SaveButton from "@/components/SaveButton";
+import { generateJobPostingSchema, generateJobBreadcrumbs } from "@/utils/seoJobPosting";
 
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -188,55 +189,24 @@ export default async function JobDetailsPage({
 
 
   
+    const canonicalUrl = `https://trappedintoarchitecture.com${generateJobUrl(job)}`;
+    const jobPostingSchema = generateJobPostingSchema(job, company, cleanDescription, canonicalUrl);
+    const breadcrumbSchema = generateJobBreadcrumbs(job, canonicalUrl);
+
   return (
     <main className="min-h-screen bg-gray-50 text-black">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org/",
-              "@type": "JobPosting",
-              "title": `${job.position} in ${job.city || "India"}`,
-              "description": cleanDescription || job.job_description || `${job.firm_name} is hiring for ${job.position} in ${job.city}, ${job.state}.`,
-              "url": `https://trappedintoarchitecture.com${generateJobUrl(job)}`,
-              "identifier": {
-                "@type": "PropertyValue",
-                "name": job.firm_name,
-                "value": job.id
-              },
-              "datePosted": job.posted_date || job.created_at,
-              "validThrough": job.post_expiry_date || new Date(new Date(job.created_at || Date.now()).getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-              "employmentType": job.employment_type === "Full Time" ? "FULL_TIME" : job.employment_type === "Part Time" ? "PART_TIME" : (job.employment_type === "Internship" || isIntern) ? "INTERN" : job.employment_type === "Freelance" ? "CONTRACTOR" : "FULL_TIME",
-              "hiringOrganization": {
-                "@type": "Organization",
-                "name": job.firm_name,
-                "sameAs": company?.website_link || job.website || "https://trappedintoarchitecture.com",
-                "logo": company?.logo_url || job.image || "https://trappedintoarchitecture.com/default-logo.png"
-              },
-              "jobLocation": {
-                "@type": "Place",
-                "address": {
-                  "@type": "PostalAddress",
-                  "streetAddress": job.area || "",
-                  "addressLocality": job.city || "India",
-                  "addressRegion": job.state || "",
-                  "addressCountry": "IN"
-                }
-              },
-              ...(job.salary && job.salary.toLowerCase() !== "not disclosed" && job.salary.toLowerCase() !== "negotiable" ? {
-                "baseSalary": {
-                  "@type": "MonetaryAmount",
-                  "currency": "INR",
-                  "value": {
-                    "@type": "QuantitativeValue",
-                    "value": job.salary,
-                    "unitText": "MONTH"
-                  }
-                }
-              } : {})
-            })
-          }}
-        />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jobPostingSchema)
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema)
+        }}
+      />
       <Navbar />
 
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
