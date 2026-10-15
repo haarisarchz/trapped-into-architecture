@@ -132,7 +132,7 @@ export default function PrivacyPolicyPage() {
               <p><strong>Trapped Into Architecture</strong></p>
               <p>Website: <a href="https://trappedintoarchitecture.com" className="text-blue-600 underline">https://trappedintoarchitecture.com</a></p>
               <p>Contact Form: <Link href="/contact" className="text-blue-600 underline">trappedintoarchitecture.com/contact</Link></p>
-              <p>Email: <a href="mailto:trappedintoarchitecture@gmail.com" className="text-blue-600 underline">trappedintoarchitecture@gmail.com</a></p>
+              <p>Email: <a href="mailto:admin.ti2a@gmail.com" className="text-blue-600 underline">admin.ti2a@gmail.com</a></p>
             </div>
           </section>
         </div>

@@ -112,7 +112,8 @@ export default function Footer() {
             <li><Link href="/" className="hover:text-white transition block p-1 -m-1">Home</Link></li>
             <li><Link href="/jobs" className="hover:text-white transition block p-1 -m-1">Jobs</Link></li>
             <li><Link href="/companies" className="hover:text-white transition block p-1 -m-1">Companies</Link></li>
-            </ul>
+            <li><Link href="/privacy-policy" className="hover:text-white transition block p-1 -m-1">Privacy Policy</Link></li>
+          </ul>
         </div>
 
         {/* JOB SEEKERS */}
@@ -155,8 +156,13 @@ export default function Footer() {
       </div>
 
       {/* BOTTOM BAR */}
-      <div className="border-t border-gray-800 py-4 text-center text-gray-500 text-xs md:text-sm">
-        © {new Date().getFullYear()} Trapped Into Architecture. All rights reserved.
+      <div className="border-t border-gray-800 py-4 px-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-gray-500 text-xs md:text-sm">
+        <div>© {new Date().getFullYear()} Trapped Into Architecture. All rights reserved.</div>
+        <div>
+          <Link href="/privacy-policy" className="hover:text-gray-300 transition underline underline-offset-4">
+            Privacy Policy
+          </Link>
+        </div>
       </div>
     </footer>
   );
