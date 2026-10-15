@@ -815,13 +815,7 @@ const handlePublishJob = async (
       return;
     }
 
-    const today = new Date();
-    const formattedToday = today.toISOString().split("T")[0];
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 14);
-    const formattedExpiry = expiry.toISOString().split("T")[0];
-
-    const finalExpiryDate = postExpiryDate || null;
+    const finalExpiryDate = postExpiryDate ? postExpiryDate : null;
     const adminPayload = {
       firm_name: firmName,
       company_id: currentCompanyId,
