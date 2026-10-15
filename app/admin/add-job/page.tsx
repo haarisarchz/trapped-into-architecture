@@ -92,7 +92,7 @@ Experience: [Experience required if stated, or Fresher]
 Qualifications: [Degrees separated by COMMAS only, e.g. B.Arch, M.Arch or B.E, B.Tech, Diploma in Civil Engineering. Never use slashes '/']
 Skills: [Comma-separated software & tools, e.g. AutoCAD, SketchUp, Revit, Lumion, Enscape, V-Ray]
 Salary: [Salary range or stipend if stated]
-Job Description: [A complete professional summary stating which firm is hiring what position where, and what requirements/responsibilities are expected. E.g.: "Tamil Architects is hiring an Architect / Junior Architect in Madurai, Tamil Nadu. Candidates should hold a B.Arch, M.Arch with skills in AutoCAD, SketchUp, Revit, and Lumion for architectural planning and working drawings."]
+Job Description: [A complete professional summary stating which firm is hiring what position where, qualifications, software skills, and functional role. MUST ALSO include the application and contact instructions at the end (e.g. "Send your CV and portfolio to [Application Email]. Contact / WhatsApp: [Phone/WhatsApp]."). E.g.: "Tamil Architects is hiring an Architect / Junior Architect in Madurai, Tamil Nadu. Candidates should hold a B.Arch, M.Arch with skills in AutoCAD, SketchUp, Revit, and Lumion for architectural planning and working drawings. Interested candidates should send their resume/portfolio to careers@tamilarchitects.com. Contact / WhatsApp: +91 9876543210."]
 
 RULES:
 1. Output ONLY in "Heading: Answer" format. Do NOT use JSON, markdown code blocks, or conversational text.
@@ -100,7 +100,7 @@ RULES:
 3. If an essential studio field (Firm Name, City, State, Application Email) is missing in the image, keep the heading and leave the answer blank after the colon (e.g. "City: ").
 4. If a non-essential field is not found in the flyer, omit the heading completely.
 5. In Qualifications, separate different degrees with COMMAS only (e.g. B.Arch, M.Arch). Never combine them with slashes '/'.
-6. Role must specify the functional focus / what to do (e.g. Site Supervision, Architectural Planning, 3D Rendering). Job Description must be a complete narrative summary answering which firm is hiring what position where, and what requirements/responsibilities are expected.`;
+6. Role must specify the functional focus / what to do (e.g. Site Supervision, Architectural Planning, 3D Rendering). Job Description must be a complete narrative summary answering which firm is hiring what position where, qualifications, skills, role duties, AND MUST explicitly include application & contact instructions (e.g., "Send CV to [email]. Contact / WhatsApp: [phone/whatsapp]").`;
 
 function parseJobLocally(rawText: string): any | null {
   if (!rawText || !rawText.trim()) return null;
@@ -327,13 +327,24 @@ function parseJobLocally(rawText: string): any | null {
   // Which firm is hiring what position where, and what requirements/duties
   const globalFirm = kvObj.firm_name || "The studio";
   const globalLoc = [kvObj.city, kvObj.state].filter(Boolean).join(", ");
+  const appEmail = kvObj.application_email || kvObj.email || "";
+  const contactArr = [kvObj.phone, kvObj.whatsapp].filter(Boolean);
+  const appPhone = contactArr.length > 0 ? contactArr.join(" / ") : "";
+  const applyClause = appEmail ? ` Interested candidates can send their resume and portfolio to ${appEmail}.` : "";
+  const contactClause = appPhone ? ` Contact / WhatsApp: ${appPhone}.` : "";
+
   for (const pos of collectedPositions) {
     if (!pos.description) {
       const posTitle = pos.position || "professional";
       const qualPart = pos.qualifications ? ` Candidates should have ${pos.qualifications}.` : "";
       const skillPart = pos.skills && pos.skills.length > 0 ? ` Skills required: ${pos.skills.join(", ")}.` : "";
       const rolePart = pos.role ? ` Core responsibilities: ${pos.role}.` : "";
-      pos.description = `${globalFirm} is hiring a ${posTitle}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}`;
+      pos.description = `${globalFirm} is hiring a ${posTitle}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}${applyClause}${contactClause}`;
+    } else {
+      const needEmail = appEmail && !pos.description.toLowerCase().includes(appEmail.toLowerCase());
+      const needPhone = appPhone && !pos.description.includes(appPhone);
+      if (needEmail) pos.description += applyClause;
+      if (needPhone) pos.description += contactClause;
     }
   }
 
@@ -514,6 +525,12 @@ const [positionOptions, setPositionOptions] = useState<string[]>([
 ]);
 
   const organizationTypes = [
+  "Architecture Firm",
+  "Architecture & Interior Design Studio",
+  "Architecture & Interior Design Firm",
+  "Interior Design Studio",
+  "Landscape Architecture Firm",
+  "Urban Design & Planning Firm",
   "Firm",
   "Construction Company",
   "Institution",
@@ -526,7 +543,7 @@ const [positionOptions, setPositionOptions] = useState<string[]>([
 ];
 
 const [organizationType, setOrganizationType] = useState(
-  organizationTypes[0]
+  "Architecture Firm"
 );
 
 const [employmentType, setEmploymentType] = useState("");
@@ -591,8 +608,8 @@ const [pendingExtractedData, setPendingExtractedData] = useState<any | null>(nul
 useEffect(() => {
   if (typeof window !== "undefined") {
     const savedPrompt = localStorage.getItem("ti2a_smart_job_prompt");
-    // Migrate to the latest prompt template (checks for signature "COMMAS only")
-    if (savedPrompt && savedPrompt.includes("COMMAS only") && savedPrompt.trim()) {
+    // Migrate to the latest prompt template (checks for signature "Contact / WhatsApp")
+    if (savedPrompt && savedPrompt.includes("Contact / WhatsApp") && savedPrompt.trim()) {
       setCustomPrompt(savedPrompt);
     } else {
       setCustomPrompt(AI_PROMPT_TEMPLATE);
@@ -751,6 +768,11 @@ const applyExtractedJobToState = (ai: any) => {
 
   const globalFirm = fName || "The studio";
   const globalLoc = [ai.city, ai.state].filter(Boolean).join(", ");
+  const appEmail = ai.applicationEmail || ai.application_email || ai.email || "";
+  const contactArr = [ai.phone, ai.whatsapp].filter(Boolean);
+  const appPhone = contactArr.length > 0 ? contactArr.join(" / ") : "";
+  const applyClause = appEmail ? ` Interested candidates can send their resume and portfolio to ${appEmail}.` : "";
+  const contactClause = appPhone ? ` Contact / WhatsApp: ${appPhone}.` : "";
 
   if (ai.positions && Array.isArray(ai.positions) && ai.positions.length > 0) {
     let hasDistinctRequirements = false;
@@ -778,9 +800,10 @@ const applyExtractedJobToState = (ai: any) => {
       setQualifications(cleanFirstQual as any);
     }
 
-    const firstSkills = Array.isArray(firstPos.skills) 
-      ? firstPos.skills 
-      : (Array.isArray(firstPos.software) ? firstPos.software : (firstPos.skills ? [firstPos.skills] : []));
+    const firstSkills = Array.from(new Set([
+      ...(Array.isArray(firstPos.skills) ? firstPos.skills : (firstPos.skills ? [firstPos.skills] : [])),
+      ...(Array.isArray(firstPos.software) ? firstPos.software : (firstPos.software ? [firstPos.software] : []))
+    ]));
     if (firstSkills.length > 0) {
       setSkills(firstSkills);
     }
@@ -790,14 +813,22 @@ const applyExtractedJobToState = (ai: any) => {
       const posTitle = p.position || p.job_title || p.title || "";
       const rawQual = Array.isArray(p.qualifications) ? p.qualifications.join(", ") : (p.qualifications || "");
       const cleanQual = rawQual.replace(/\s*\/\s*/g, ", ").trim();
-      const posSkills = Array.isArray(p.skills) ? p.skills : (Array.isArray(p.software) ? p.software : (p.skills ? [p.skills] : []));
+      const posSkills = Array.from(new Set([
+        ...(Array.isArray(p.skills) ? p.skills : (p.skills ? [p.skills] : [])),
+        ...(Array.isArray(p.software) ? p.software : (p.software ? [p.software] : []))
+      ]));
 
       let finalDesc = p.description || p.job_description || (index === 0 ? (ai.description || ai.job_description) : "") || "";
       if (!finalDesc || finalDesc.length < 30) {
         const qualPart = cleanQual ? ` Candidates should hold ${cleanQual}.` : "";
         const skillPart = posSkills.length > 0 ? ` Skills required: ${posSkills.join(", ")}.` : "";
         const rolePart = p.role ? ` Core responsibilities: ${p.role}.` : "";
-        finalDesc = `${globalFirm} is hiring a ${posTitle || "professional"}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}`;
+        finalDesc = `${globalFirm} is hiring a ${posTitle || "professional"}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}${applyClause}${contactClause}`;
+      } else {
+        const needEmail = appEmail && !finalDesc.toLowerCase().includes(appEmail.toLowerCase());
+        const needPhone = appPhone && !finalDesc.includes(appPhone);
+        if (needEmail) finalDesc += applyClause;
+        if (needPhone) finalDesc += contactClause;
       }
 
       return {
@@ -819,7 +850,10 @@ const applyExtractedJobToState = (ai: any) => {
     const posTitle = ai.position || ai.job_title || ai.title || "";
     const rawQual = Array.isArray(ai.qualifications) ? ai.qualifications.join(", ") : (ai.qualifications || "");
     const cleanQual = rawQual.replace(/\s*\/\s*/g, ", ").trim();
-    const posSkills = Array.isArray(ai.skills) ? ai.skills : (Array.isArray(ai.software) ? ai.software : (ai.skills ? [ai.skills] : []));
+    const posSkills = Array.from(new Set([
+      ...(Array.isArray(ai.skills) ? ai.skills : (ai.skills ? [ai.skills] : [])),
+      ...(Array.isArray(ai.software) ? ai.software : (ai.software ? [ai.software] : []))
+    ]));
 
     if (cleanQual) {
       setQualifications(cleanQual as any);
@@ -833,7 +867,12 @@ const applyExtractedJobToState = (ai: any) => {
       const qualPart = cleanQual ? ` Candidates should hold ${cleanQual}.` : "";
       const skillPart = posSkills.length > 0 ? ` Skills required: ${posSkills.join(", ")}.` : "";
       const rolePart = ai.role ? ` Core responsibilities: ${ai.role}.` : "";
-      finalDesc = `${globalFirm} is hiring a ${posTitle || "professional"}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}`;
+      finalDesc = `${globalFirm} is hiring a ${posTitle || "professional"}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}${applyClause}${contactClause}`;
+    } else {
+      const needEmail = appEmail && !finalDesc.toLowerCase().includes(appEmail.toLowerCase());
+      const needPhone = appPhone && !finalDesc.includes(appPhone);
+      if (needEmail) finalDesc += applyClause;
+      if (needPhone) finalDesc += contactClause;
     }
 
     setPositions([{
@@ -855,7 +894,6 @@ const applyExtractedJobToState = (ai: any) => {
     setLastDateToApply(ai.deadline || ai.application_deadline || ai.last_date_to_apply || "");
   }
 
-  const appEmail = ai.applicationEmail || ai.application_email || ai.email || "";
   if (appEmail) setapplication_email(appEmail);
 
   const appLink = ai.apply_link || ai.applyLink || ai.link || "";
@@ -2515,7 +2553,7 @@ const handleSmartExtraction = async () => {
                           <div className="text-gray-500 text-[11px] mt-0.5">Salary: <span className="text-emerald-700 font-semibold">{p.salary}</span></div>
                         )}
                         {p.qualifications && (
-                          <div className="text-gray-500 text-[11px] mt-0.5">Qualifications: <span className="text-gray-800">{p.qualifications}</span></div>
+                          <div className="text-gray-500 text-[11px] mt-0.5">Qualifications: <span className="text-gray-800">{Array.isArray(p.qualifications) ? p.qualifications.join(", ") : p.qualifications}</span></div>
                         )}
                         {p.description && (
                           <div className="text-gray-500 text-[11px] mt-1.5 bg-gray-50 p-2 rounded-lg border border-gray-100">
@@ -2926,6 +2964,46 @@ const handleSmartExtraction = async () => {
 
           if (!result) throw new Error(lastError || "Extraction failed. Please check the API Config or try another server.");
           const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
+
+          // Normalize qualifications and contact info for image & server extraction
+          const globalAppEmail = ai.application_email || ai.applicationEmail || ai.email || "";
+          const globalContactArr = [ai.phone, ai.whatsapp].filter(Boolean);
+          const globalAppPhone = globalContactArr.length > 0 ? globalContactArr.join(" / ") : "";
+          const globalApplyClause = globalAppEmail ? ` Interested candidates can send their resume and portfolio to ${globalAppEmail}.` : "";
+          const globalContactClause = globalAppPhone ? ` Contact / WhatsApp: ${globalAppPhone}.` : "";
+
+          if (ai.positions && Array.isArray(ai.positions)) {
+            ai.positions = ai.positions.map((p: any) => {
+              const qStr = Array.isArray(p.qualifications) ? p.qualifications.join(", ") : (p.qualifications || "");
+              const cleanQ = qStr.replace(/\s*\/\s*/g, ", ").trim();
+              const mergedSkills = Array.from(new Set([
+                ...(Array.isArray(p.skills) ? p.skills : (p.skills ? [p.skills] : [])),
+                ...(Array.isArray(p.software) ? p.software : (p.software ? [p.software] : []))
+              ]));
+              let desc = p.description || "";
+              if (!desc || desc.length < 30) {
+                const firm = ai.firm_name || ai.company || "The studio";
+                const loc = [ai.city, ai.state].filter(Boolean).join(", ");
+                const qPart = cleanQ ? ` Candidates should hold ${cleanQ}.` : "";
+                const sPart = mergedSkills.length > 0 ? ` Skills required: ${mergedSkills.join(", ")}.` : "";
+                const rPart = p.role ? ` Core responsibilities: ${p.role}.` : "";
+                desc = `${firm} is hiring a ${p.position || "professional"}${loc ? ` in ${loc}` : ""}.${qPart}${sPart}${rPart}${globalApplyClause}${globalContactClause}`;
+              } else {
+                if (globalAppEmail && !desc.toLowerCase().includes(globalAppEmail.toLowerCase())) desc += globalApplyClause;
+                if (globalAppPhone && !desc.includes(globalAppPhone)) desc += globalContactClause;
+              }
+              return {
+                ...p,
+                qualifications: cleanQ,
+                skills: mergedSkills,
+                description: desc
+              };
+            });
+          } else if (ai.qualifications) {
+            const qStr = Array.isArray(ai.qualifications) ? ai.qualifications.join(", ") : String(ai.qualifications);
+            ai.qualifications = qStr.replace(/\s*\/\s*/g, ", ").trim();
+          }
+
           setIsLocalExtraction(false);
           setAiResult(result);
           setPendingExtractedData(ai);

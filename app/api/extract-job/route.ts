@@ -37,8 +37,8 @@ You MUST extract them as an array of objects under the "positions" key. Do NOT m
     - salary (string, exact salary range like "15k - 25k Per Month" or "4 - 6 LPA" or number if single value)
     - software (array of strings, e.g., ["AutoCAD", "Revit", "SketchUp", "Rhino"])
     - skills (array of strings, non-software skills like "Project Management", "Client Interaction")
-    - qualifications (array of strings, e.g. ["B.Arch", "M.Arch"]. Each degree must be a separate item. NEVER combine degrees with slashes like "B.Arch / M.Arch")
-    - description (string, a complete professional narrative summary answering which firm is hiring what position where, and what requirements/responsibilities are expected)`;
+    - qualifications (array of strings, e.g. ["B.Arch", "M.Arch"]. Extract all degrees mentioned. If multiple degrees are stated, separate each into its own item in the array, e.g. ["B.Arch", "M.Arch"] or ["B.E", "B.Tech", "Diploma in Civil Engineering"]. NEVER combine degrees with slashes like "B.Arch / M.Arch")
+    - description (string, a complete professional narrative summary answering which firm is hiring what position where, what qualifications and skills are expected, and functional role responsibilities. CRITICAL: You MUST also include the application and contact instructions at the end, e.g., "Interested candidates should send their resume and portfolio to [email]. Contact / WhatsApp: [phone/whatsapp].")`;
 
 export async function POST(req: Request) {
   try {
