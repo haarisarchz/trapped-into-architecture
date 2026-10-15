@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const now = new Date().toISOString();
     const { data: scheduledJobs, error } = await supabase
       .from("jobs")
-      .select("id, posted_date, status")
+      .select("id, posted_date, status, firm_name, image, scheduled_at")
       .eq("status", "scheduled")
       .lte("posted_date", now);
 
@@ -26,42 +26,65 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "No scheduled jobs to publish at this time." });
     }
 
-    const publishedIds = [];
+    // 1. Bulk update status to published for all due jobs
+    const allIds = scheduledJobs.map((j) => j.id);
+    const { error: updateError } = await supabase
+      .from("jobs")
+      .update({ status: "published" })
+      .in("id", allIds);
 
-    // Process each job
+    if (updateError) {
+      console.error("Failed to update status for scheduled jobs:", updateError);
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    // 2. Group jobs into distinct batches (same firm, same image, same posted_date)
+    // Multi-position flyers share the same flyer image, firm, and schedule date.
+    // They must be published to social media as a single grouped post, never once per position!
+    const batchMap = new Map<string, any[]>();
     for (const job of scheduledJobs) {
-      // Update status to published
-      const { error: updateError } = await supabase
-        .from("jobs")
-        .update({ status: "published" })
-        .eq("id", job.id);
+      const normFirm = (job.firm_name || "").trim().toLowerCase();
+      const normImg = (job.image || "").trim();
+      const normDate = (job.posted_date || "").trim();
+      const batchKey = `${normFirm}___${normImg}___${normDate}`;
 
-      if (updateError) {
-        console.error(`Failed to publish job ${job.id}:`, updateError);
+      if (!batchMap.has(batchKey)) {
+        batchMap.set(batchKey, []);
+      }
+      batchMap.get(batchKey)!.push(job);
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
+    const triggeredBatchJobIds: string[] = [];
+
+    // 3. Trigger social publish EXACTLY ONCE per batch
+    for (const [batchKey, batchJobs] of batchMap.entries()) {
+      // Check if any job in this batch was already marked as published
+      const alreadyPublished = batchJobs.some((j) => j.scheduled_at !== null);
+      if (alreadyPublished) {
+        console.log(`Cron: Batch ${batchKey} was already published to social media. Skipping.`);
         continue;
       }
-      
-      publishedIds.push(job.id);
 
-      // Trigger social publishing
-      // We do a fire-and-forget or await depending on requirements.
-      // Doing await fetch to our own endpoint to keep logic centralized.
+      const triggerJobId = batchJobs[0].id;
+      triggeredBatchJobIds.push(triggerJobId);
+
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
         await fetch(`${baseUrl}/api/publish/social`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ job_id: job.id })
+          body: JSON.stringify({ job_id: triggerJobId }),
         });
       } catch (fetchErr) {
-        console.error(`Failed to trigger social publish for ${job.id}:`, fetchErr);
+        console.error(`Failed to trigger social publish for batch ${batchKey} (job ${triggerJobId}):`, fetchErr);
       }
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Successfully published ${publishedIds.length} jobs.`,
-      published_jobs: publishedIds
+      message: `Successfully published ${allIds.length} job(s) across ${batchMap.size} distinct batch(es). Triggered ${triggeredBatchJobIds.length} social post(s).`,
+      published_jobs: allIds,
+      triggered_batch_job_ids: triggeredBatchJobIds
     });
   } catch (err: any) {
     console.error("Cron Error:", err);

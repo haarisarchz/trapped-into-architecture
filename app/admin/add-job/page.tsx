@@ -486,6 +486,7 @@ const [jobId, setJobId] = useState<string | null>(null);
     }
   }, []);
 const [initialJobIds, setInitialJobIds] = useState<string[]>([]);
+const [initialStatus, setInitialStatus] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   
@@ -1073,6 +1074,7 @@ const applyExtractedJobToState = (ai: any) => {
         const { data: siblings } = await query;
         const validSiblings = siblings && siblings.length > 0 ? siblings : [job];
         setInitialJobIds(validSiblings.map(s => s.id));
+        setInitialStatus(job.status || null);
   
         setFirmName(job.firm_name || "");
         setImageUrl(job.image || "");
@@ -1537,6 +1539,8 @@ const handlePublishJob = async (
       author_id: authorId
     }));
 
+    const wasAlreadyPublished = initialStatus === "published";
+
     if (jobId) {
       // First, delete any siblings that were removed from the UI
       const currentIds = publicJobs.map(p => p.id).filter(Boolean);
@@ -1567,9 +1571,14 @@ const handlePublishJob = async (
 
     if (jobData && jobData.id) { setHasUnsavedChanges(false); 
       setJobId(jobData.id);
+      if (status === "published") setInitialStatus("published");
       window.history.replaceState(null, "", `/admin/add-job?id=${jobData.id}`);
 
-      if (status === "published" && autoPublishSocial) {
+      // Only auto-publish to social media if this is a newly created job,
+      // or if it was previously a draft/scheduled job being published for the first time.
+      // Never re-publish to social media when an admin simply edits an already-published job!
+      const shouldAutoPublish = status === "published" && autoPublishSocial && !wasAlreadyPublished;
+      if (shouldAutoPublish) {
         fetch("/api/publish/social", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2265,7 +2274,23 @@ const handleSmartExtraction = async () => {
 
 {/* ACTION BUTTONS */}
 
-<div className="flex flex-wrap justify-center gap-3 mt-6 mb-4">
+<div className="w-full flex justify-center mt-6 mb-2">
+  <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 bg-gray-50 border border-gray-200 px-4 py-2 rounded-xl hover:bg-gray-100 transition select-none">
+    <input 
+      type="checkbox" 
+      checked={autoPublishSocial} 
+      onChange={(e) => setAutoPublishSocial(e.target.checked)}
+      className="w-4 h-4 rounded text-black border-gray-300 focus:ring-black cursor-pointer"
+    />
+    <span className="font-medium">
+      {initialStatus === "published"
+        ? "Auto-publish to Social Media (Disabled for already-published jobs)" 
+        : "Auto-publish to Social Media (Instagram, Facebook)"}
+    </span>
+  </label>
+</div>
+
+<div className="flex flex-wrap justify-center gap-3 mb-4">
   <button type="button" onClick={() => { if (hasUnsavedChanges) { if (!window.confirm("You have unsaved changes. Are you sure you want to leave without saving?")) return; } router.push("/admin"); }} className="px-6 py-3 text-base rounded-xl border-2 border-gray-200 bg-gray-50 text-black font-semibold hover:bg-gray-100 transition">
     Go to Dashboard
   </button>

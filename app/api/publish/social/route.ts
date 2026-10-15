@@ -59,8 +59,24 @@ export async function POST(req: Request) {
 
     const { data: siblings } = await query;
     const batchJobs = siblings && siblings.length > 0 ? siblings : [triggerJob];
+    const batchIds = batchJobs.map(j => j.id);
 
-    // 3. Fetch company data to get the social media usernames/handles
+    // 3. Batch-level deduplication check
+    // Multi-position jobs share the same flyer image and firm. 
+    // If not a manual retry, check if ANY job in this batch was already published to social media.
+    const alreadyPublishedJob = batchJobs.find(j => j.scheduled_at !== null);
+    if (!retry_platform && alreadyPublishedJob) {
+      console.log(`Social Publish: Batch for job ${triggerJob.id} (${triggerJob.firm_name}) already published at ${alreadyPublishedJob.scheduled_at}. Skipping.`);
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        reason: "Batch already published to social media.",
+        published_at: alreadyPublishedJob.scheduled_at,
+        batch_ids: batchIds
+      });
+    }
+
+    // 4. Fetch company data to get the social media usernames/handles
     let companyData = null;
     if (batchJobs[0].company_id) {
       const { data: comp } = await supabase.from("companies").select("*").eq("id", batchJobs[0].company_id).maybeSingle();
@@ -74,30 +90,30 @@ export async function POST(req: Request) {
     const platformsToProcess = retry_platform ? [retry_platform] : PLATFORMS;
 
     const publishTasks = platformsToProcess.map(async (platform) => {
-      // Check if this batch has already been published on this platform
+      // Check if ANY job in this batch has already been published on this platform
       let existingLog = null;
       try {
         const { data, error } = await supabase
           .from("social_publishing_logs")
           .select("*")
-          .eq("job_id", triggerJob.id)
+          .in("job_id", batchIds)
           .eq("platform", platform)
-          .maybeSingle();
+          .eq("status", "published")
+          .limit(1);
         if (error && error.code !== "PGRST205") console.warn(error);
-        if (data) existingLog = data;
+        if (data && data.length > 0) existingLog = data[0];
       } catch (err) {}
 
-      if (existingLog?.status === "published" && !retry_platform) {
+      if (existingLog && !retry_platform) {
         return { platform, status: "skipped", reason: "Already published for this batch" };
       }
       
       try {
         const { error: upsertError } = await supabase.from("social_publishing_logs").upsert({
-            id: existingLog?.id || undefined,
             job_id: triggerJob.id,
             platform,
             status: "publishing",
-            attempt_count: (existingLog?.attempt_count || 0) + 1,
+            attempt_count: 1,
             updated_at: new Date().toISOString(),
         }, { onConflict: "job_id, platform" });
         if (upsertError && upsertError.code !== "PGRST205") console.warn(upsertError);
@@ -236,13 +252,15 @@ export async function POST(req: Request) {
         console.error(`Meta API Error for ${platform}:`, err.message);
       }
 
-      await supabase.from("social_publishing_logs").update({
-        status: success ? "published" : "failed",
-        error_message: success ? null : errorMsg,
-        updated_at: new Date().toISOString(),
-      }).eq("job_id", triggerJob.id).eq("platform", platform);
+      try {
+        await supabase.from("social_publishing_logs").update({
+          status: success ? "published" : "failed",
+          error_message: success ? null : errorMsg,
+          updated_at: new Date().toISOString(),
+        }).eq("job_id", triggerJob.id).eq("platform", platform);
+      } catch (err) {}
 
-      // Important: Mark ALL siblings as published for this platform to prevent duplicate cron triggers
+      // Mark ALL siblings as published for this platform in social_publishing_logs
       if (success && batchJobs.length > 1) {
         const siblingLogs = batchJobs.map(job => ({
           job_id: job.id,
@@ -258,6 +276,18 @@ export async function POST(req: Request) {
     });
 
     const results = await Promise.allSettled(publishTasks);
+
+    // If at least one platform succeeded, update scheduled_at across ALL jobs in this batch
+    // This acts as a permanent, infallible deduplication mark in the jobs table
+    const anySuccess = results.some(r => r.status === "fulfilled" && (r.value as any)?.status === "published");
+    if (anySuccess) {
+      const nowIso = new Date().toISOString();
+      await supabase
+        .from("jobs")
+        .update({ scheduled_at: nowIso })
+        .in("id", batchIds);
+    }
+
     return NextResponse.json({ success: true, results });
   } catch (err: any) {
     console.error("Publish Error:", err);
