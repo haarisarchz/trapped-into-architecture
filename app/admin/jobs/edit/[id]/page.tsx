@@ -379,7 +379,7 @@ router.push("/admin");
     <div className="mb-10 p-6 border border-gray-200 rounded-2xl bg-white shadow-sm">
       <h2 className="text-2xl font-bold mb-4">Social Publishing Status</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {["whatsapp", "telegram", "facebook", "instagram", "x", "linkedin"].map(platform => {
+        {["whatsapp", "telegram", "facebook", "instagram", "instagram_story", "x", "linkedin"].map(platform => {
           const log = socialLogs.find(l => l.platform === platform);
           const status = log ? log.status : "pending";
           const isFailed = status === "failed" || status === "not_configured";
@@ -387,21 +387,21 @@ router.push("/admin");
           return (
             <div key={platform} className="flex items-center justify-between p-4 border rounded-xl bg-gray-50">
               <div className="flex flex-col">
-                <span className="font-bold capitalize">{platform}</span>
+                <span className="font-bold capitalize">{platform.replace(/_/g, ' ')}</span>
                 <span className={`text-sm ${status === 'published' ? 'text-green-600' : isFailed ? 'text-red-500' : 'text-gray-800 md:text-gray-500'}`}>
-                  {status.replace('_', ' ').toUpperCase()}
+                  {status.replace(/_/g, ' ').toUpperCase()}
                   {log?.error_message && <span className="block text-xs mt-1 max-w-xs truncate" title={log.error_message}>{log.error_message}</span>}
                 </span>
               </div>
               <div>
-                {isFailed && (
+                {(isFailed || status === "pending") && (
                   <button 
                     type="button"
                     onClick={() => handleRetrySocial(platform)}
                     disabled={isRetrying === platform}
                     className="px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 disabled:opacity-50"
                   >
-                    {isRetrying === platform ? "Retrying..." : "Retry"}
+                    {isRetrying === platform ? "Publishing..." : status === "pending" ? "Publish" : "Retry"}
                   </button>
                 )}
                 {status === "published" && log?.external_post_url && (

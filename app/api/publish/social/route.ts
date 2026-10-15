@@ -4,10 +4,12 @@ import { generateJobUrl } from "@/utils/jobUrl";
 import { generateSocialHashtags } from "@/utils/socialHashtags";
 import { formatWhatsAppPost, formatInstagramCaption } from "@/utils/socialFormats";
 
-const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "x", "linkedin"];
-
+const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "instagram_story", "x", "linkedin"];
 
 async function generatePostText(jobs: any[], platform: string, jobUrl: string, company: any) {
+  if (platform === "instagram_story") {
+    return "";
+  }
   if (platform === "whatsapp" || platform === "telegram") {
     return formatWhatsAppPost(jobs, jobUrl);
   }
@@ -192,6 +194,52 @@ export async function POST(req: Request) {
               body: JSON.stringify({ creation_id: containerId, access_token: token })
             });
             
+            // If it still fails with 9007, try one more time after 5 seconds
+            if (!publishMedia.ok) {
+              const errText = await publishMedia.text();
+              if (errText.includes("9007")) {
+                await new Promise(r => setTimeout(r, 5000));
+                publishMedia = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media_publish`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ creation_id: containerId, access_token: token })
+                });
+                if (!publishMedia.ok) throw new Error(await publishMedia.text());
+              } else {
+                throw new Error(errText);
+              }
+            }
+            if (!publishMedia.ok) throw new Error(await publishMedia.text());
+            success = true;
+            break;
+          }
+          case "instagram_story": {
+            const igAccountId = process.env.INSTAGRAM_ACCOUNT_ID;
+            const token = process.env.FACEBOOK_ACCESS_TOKEN;
+            if (!igAccountId || !token) throw new Error("Missing Instagram credentials.");
+            if (!triggerJob.image) throw new Error("Instagram Story requires an image URL.");
+
+            const createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                image_url: triggerJob.image,
+                media_type: "STORIES",
+                access_token: token
+              })
+            });
+            if (!createContainer.ok) throw new Error(await createContainer.text());
+            const { id: containerId } = await createContainer.json();
+
+            // Wait 8 seconds before publishing to prevent Meta's "Media ID is not available" (9007) error for large images
+            await new Promise(r => setTimeout(r, 8000));
+
+            let publishMedia = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media_publish`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ creation_id: containerId, access_token: token })
+            });
+
             // If it still fails with 9007, try one more time after 5 seconds
             if (!publishMedia.ok) {
               const errText = await publishMedia.text();

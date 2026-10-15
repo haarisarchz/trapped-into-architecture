@@ -2285,7 +2285,7 @@ const handleSmartExtraction = async () => {
     <span className="font-medium">
       {initialStatus === "published"
         ? "Auto-publish to Social Media (Disabled for already-published jobs)" 
-        : "Auto-publish to Social Media (Instagram, Facebook)"}
+        : "Auto-publish to Social Media (Instagram Feed & Story, Facebook)"}
     </span>
   </label>
 </div>
