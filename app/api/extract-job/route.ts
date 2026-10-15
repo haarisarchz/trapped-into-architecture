@@ -31,13 +31,14 @@ CRITICAL: A single job poster might advertise MULTIPLE distinct roles (e.g. "Arc
 You MUST extract them as an array of objects under the "positions" key. Do NOT merge them into one.
 - positions (array of objects, one for each distinct role):
     - position (string, exact job title)
+    - role (string, functional focus / what to do on the job, e.g., "Site Supervision & Coordination", "Architectural Planning & Working Drawings", "3D Rendering & Visualization", "Quantity Estimation & BOQ")
     - vacancies (string or number, default to 1 if unspecified)
     - experience (array of strings, e.g., ["0-2 years", "5+ years"])
     - salary (string, exact salary range like "15k - 25k Per Month" or "4 - 6 LPA" or number if single value)
     - software (array of strings, e.g., ["AutoCAD", "Revit", "SketchUp", "Rhino"])
     - skills (array of strings, non-software skills like "Project Management", "Client Interaction")
-    - qualifications (array of strings, e.g. ["B.Arch", "M.Arch"])
-    - description (string, a brief summary of the specific role responsibilities)`;
+    - qualifications (array of strings, e.g. ["B.Arch", "M.Arch"]. Each degree must be a separate item. NEVER combine degrees with slashes like "B.Arch / M.Arch")
+    - description (string, a complete professional narrative summary answering which firm is hiring what position where, and what requirements/responsibilities are expected)`;
 
 export async function POST(req: Request) {
   try {

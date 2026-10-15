@@ -86,19 +86,21 @@ Principal Architect: [Lead architect name if given]
 
 SECTION 2: OPEN POSITIONS (List each vacancy with ONLY its position-specific details):
 For every position advertised in the flyer, output:
-Position: [Job Title, e.g. Junior Architect, 3D Visualizer, Architecture Intern, etc.]
+Position: [Exact job title, e.g. Junior Architect, 3D Visualizer, Architecture Intern, Civil Engineer]
+Role: [Functional focus / what to do on the job, e.g. Site Supervision & Coordination, Architectural Planning & Working Drawings, 3D Rendering & Realistic Visualization, Quantity Estimation & BOQ]
 Experience: [Experience required if stated, or Fresher]
-Qualifications: [Degrees / qualifications if stated, e.g. B.Arch, M.Arch, B.E Civil]
-Skills: [Software & skills if stated, comma-separated, e.g. AutoCAD, SketchUp, Revit, Lumion]
-Salary: [Salary if stated]
-Role: [Specialization if stated]
-Job Description: [Duties / responsibilities if stated]
+Qualifications: [Degrees separated by COMMAS only, e.g. B.Arch, M.Arch or B.E, B.Tech, Diploma in Civil Engineering. Never use slashes '/']
+Skills: [Comma-separated software & tools, e.g. AutoCAD, SketchUp, Revit, Lumion, Enscape, V-Ray]
+Salary: [Salary range or stipend if stated]
+Job Description: [A complete professional summary stating which firm is hiring what position where, and what requirements/responsibilities are expected. E.g.: "Tamil Architects is hiring an Architect / Junior Architect in Madurai, Tamil Nadu. Candidates should hold a B.Arch, M.Arch with skills in AutoCAD, SketchUp, Revit, and Lumion for architectural planning and working drawings."]
 
 RULES:
 1. Output ONLY in "Heading: Answer" format. Do NOT use JSON, markdown code blocks, or conversational text.
 2. NEVER repeat Section 1 fields (Firm Name, City, State, Address, Phone, Email) under each position!
 3. If an essential studio field (Firm Name, City, State, Application Email) is missing in the image, keep the heading and leave the answer blank after the colon (e.g. "City: ").
-4. If a non-essential field is not found in the flyer, omit the heading completely.`;
+4. If a non-essential field is not found in the flyer, omit the heading completely.
+5. In Qualifications, separate different degrees with COMMAS only (e.g. B.Arch, M.Arch). Never combine them with slashes '/'.
+6. Role must specify the functional focus / what to do (e.g. Site Supervision, Architectural Planning, 3D Rendering). Job Description must be a complete narrative summary answering which firm is hiring what position where, and what requirements/responsibilities are expected.`;
 
 function parseJobLocally(rawText: string): any | null {
   if (!rawText || !rawText.trim()) return null;
@@ -305,6 +307,9 @@ function parseJobLocally(rawText: string): any | null {
       }
       if (field === "skills") {
         currentPos.skills = val ? val.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
+      } else if (field === "qualifications") {
+        // Normalize degrees separated by slashes into clean comma separation (e.g. B.Arch / M.Arch -> B.Arch, M.Arch)
+        currentPos.qualifications = val ? val.replace(/\s*\/\s*/g, ", ").trim() : "";
       } else {
         currentPos[field] = val;
       }
@@ -316,6 +321,20 @@ function parseJobLocally(rawText: string): any | null {
 
   if (currentPos && (currentPos.position || currentPos.experience || currentPos.salary || (currentPos.skills && currentPos.skills.length > 0))) {
     collectedPositions.push(currentPos);
+  }
+
+  // Ensure every position has a comprehensive description answering:
+  // Which firm is hiring what position where, and what requirements/duties
+  const globalFirm = kvObj.firm_name || "The studio";
+  const globalLoc = [kvObj.city, kvObj.state].filter(Boolean).join(", ");
+  for (const pos of collectedPositions) {
+    if (!pos.description) {
+      const posTitle = pos.position || "professional";
+      const qualPart = pos.qualifications ? ` Candidates should have ${pos.qualifications}.` : "";
+      const skillPart = pos.skills && pos.skills.length > 0 ? ` Skills required: ${pos.skills.join(", ")}.` : "";
+      const rolePart = pos.role ? ` Core responsibilities: ${pos.role}.` : "";
+      pos.description = `${globalFirm} is hiring a ${posTitle}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}`;
+    }
   }
 
   if (collectedPositions.length > 0) {
@@ -354,6 +373,14 @@ const normWork = (w: any) => {
   if (low.includes('hyb')) return 'Hybrid';
   if (low.includes('site') || low.includes('office')) return 'On-site';
   return "";
+};
+
+const formatQualificationsArray = (val: any): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) {
+    return Array.from(new Set(val.flatMap(item => String(item).split(/[,/]/).map(s => s.trim()).filter(Boolean))));
+  }
+  return Array.from(new Set(String(val).split(/[,/]/).map(s => s.trim()).filter(Boolean)));
 };
 
 const parseExperience = (rawExp: any) => {
@@ -564,8 +591,8 @@ const [pendingExtractedData, setPendingExtractedData] = useState<any | null>(nul
 useEffect(() => {
   if (typeof window !== "undefined") {
     const savedPrompt = localStorage.getItem("ti2a_smart_job_prompt");
-    // Migrate to the two-section prompt template (SECTION 1 & SECTION 2)
-    if (savedPrompt && savedPrompt.includes("SECTION 1") && savedPrompt.trim()) {
+    // Migrate to the latest prompt template (checks for signature "COMMAS only")
+    if (savedPrompt && savedPrompt.includes("COMMAS only") && savedPrompt.trim()) {
       setCustomPrompt(savedPrompt);
     } else {
       setCustomPrompt(AI_PROMPT_TEMPLATE);
@@ -722,13 +749,18 @@ const applyExtractedJobToState = (ai: any) => {
     if (work) setWorkplaceType(work);
   }
 
+  const globalFirm = fName || "The studio";
+  const globalLoc = [ai.city, ai.state].filter(Boolean).join(", ");
+
   if (ai.positions && Array.isArray(ai.positions) && ai.positions.length > 0) {
     let hasDistinctRequirements = false;
     if (ai.positions.length > 1) {
-      const firstQual = ai.positions[0].qualifications || "";
-      const firstSkills = JSON.stringify(ai.positions[0].skills || []);
+      const firstQual = (ai.positions[0].qualifications || "").replace(/\s*\/\s*/g, ", ").trim();
+      const firstSkills = JSON.stringify(ai.positions[0].skills || ai.positions[0].software || []);
       for (let i = 1; i < ai.positions.length; i++) {
-        if (ai.positions[i].qualifications !== firstQual || JSON.stringify(ai.positions[i].skills || []) !== firstSkills) {
+        const itemQual = (ai.positions[i].qualifications || "").replace(/\s*\/\s*/g, ", ").trim();
+        const itemSkills = JSON.stringify(ai.positions[i].skills || ai.positions[i].software || []);
+        if (itemQual !== firstQual || itemSkills !== firstSkills) {
           hasDistinctRequirements = true;
           break;
         }
@@ -736,34 +768,84 @@ const applyExtractedJobToState = (ai: any) => {
     }
     if (hasDistinctRequirements) setSameRequirements(false);
 
+    // Sync common requirements state
+    const firstPos = ai.positions[0];
+    const rawFirstQual = Array.isArray(firstPos.qualifications) 
+      ? firstPos.qualifications.join(", ") 
+      : (firstPos.qualifications || "");
+    const cleanFirstQual = rawFirstQual.replace(/\s*\/\s*/g, ", ").trim();
+    if (cleanFirstQual) {
+      setQualifications(cleanFirstQual as any);
+    }
+
+    const firstSkills = Array.isArray(firstPos.skills) 
+      ? firstPos.skills 
+      : (Array.isArray(firstPos.software) ? firstPos.software : (firstPos.skills ? [firstPos.skills] : []));
+    if (firstSkills.length > 0) {
+      setSkills(firstSkills);
+    }
+
     setPositions(ai.positions.map((p: any, index: number) => {
       const existingId = positions[index] ? positions[index].id : undefined;
+      const posTitle = p.position || p.job_title || p.title || "";
+      const rawQual = Array.isArray(p.qualifications) ? p.qualifications.join(", ") : (p.qualifications || "");
+      const cleanQual = rawQual.replace(/\s*\/\s*/g, ", ").trim();
+      const posSkills = Array.isArray(p.skills) ? p.skills : (Array.isArray(p.software) ? p.software : (p.skills ? [p.skills] : []));
+
+      let finalDesc = p.description || p.job_description || (index === 0 ? (ai.description || ai.job_description) : "") || "";
+      if (!finalDesc || finalDesc.length < 30) {
+        const qualPart = cleanQual ? ` Candidates should hold ${cleanQual}.` : "";
+        const skillPart = posSkills.length > 0 ? ` Skills required: ${posSkills.join(", ")}.` : "";
+        const rolePart = p.role ? ` Core responsibilities: ${p.role}.` : "";
+        finalDesc = `${globalFirm} is hiring a ${posTitle || "professional"}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}`;
+      }
+
       return {
         ...(existingId ? { id: existingId } : {}),
-        position: p.position || p.job_title || p.title || "",
+        position: posTitle,
         role: p.role || "",
         experience: Array.isArray(p.experience) && p.experience.length > 0 && typeof p.experience[0] === 'string' && EXPERIENCE_OPTIONS.includes(p.experience[0]) 
           ? p.experience 
           : parseExperience(p.experience),
         salary: p.salary || "",
-        description: p.description || p.job_description || (index === 0 ? (ai.description || ai.job_description) : "") || "",
-        qualifications: p.qualifications || "",
-        skills: Array.isArray(p.skills) ? p.skills : (p.skills ? [p.skills] : []),
+        description: finalDesc,
+        qualifications: cleanQual,
+        skills: posSkills,
         skill_input: "",
         completed: false
       };
     }));
   } else if (ai.position || ai.job_title || ai.title) {
+    const posTitle = ai.position || ai.job_title || ai.title || "";
+    const rawQual = Array.isArray(ai.qualifications) ? ai.qualifications.join(", ") : (ai.qualifications || "");
+    const cleanQual = rawQual.replace(/\s*\/\s*/g, ", ").trim();
+    const posSkills = Array.isArray(ai.skills) ? ai.skills : (Array.isArray(ai.software) ? ai.software : (ai.skills ? [ai.skills] : []));
+
+    if (cleanQual) {
+      setQualifications(cleanQual as any);
+    }
+    if (posSkills.length > 0) {
+      setSkills(posSkills);
+    }
+
+    let finalDesc = ai.description || ai.job_description || "";
+    if (!finalDesc || finalDesc.length < 30) {
+      const qualPart = cleanQual ? ` Candidates should hold ${cleanQual}.` : "";
+      const skillPart = posSkills.length > 0 ? ` Skills required: ${posSkills.join(", ")}.` : "";
+      const rolePart = ai.role ? ` Core responsibilities: ${ai.role}.` : "";
+      finalDesc = `${globalFirm} is hiring a ${posTitle || "professional"}${globalLoc ? ` in ${globalLoc}` : ""}.${qualPart}${skillPart}${rolePart}`;
+    }
+
     setPositions([{
-      position: ai.position || ai.job_title || ai.title || "",
+      position: posTitle,
       role: ai.role || "",
       experience: Array.isArray(ai.experience) && ai.experience.length > 0 && typeof ai.experience[0] === 'string' && EXPERIENCE_OPTIONS.includes(ai.experience[0])
         ? ai.experience
         : parseExperience(ai.experience),
       salary: ai.salary || "",
-      description: ai.description || ai.job_description || "",
-      qualifications: ai.qualifications || "",
-      skills: Array.isArray(ai.skills) ? ai.skills : (ai.skills ? [ai.skills] : []),
+      description: finalDesc,
+      qualifications: cleanQual,
+      skills: posSkills,
       skill_input: "",
       completed: false
     }]);
@@ -1259,7 +1341,7 @@ const handlePublishJob = async (
       city: city,
       state: state,
       positions: positions,
-      qualifications: qualifications,
+      qualifications: formatQualificationsArray(qualifications),
       skills_required: skills,
       posted_date: status === "published" ? new Date().toISOString() : (status === "scheduled" ? (scheduleDate && scheduleTime ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString() : scheduleDate) : null),
       last_date_to_apply: lastDateToApply || null,
@@ -1288,8 +1370,8 @@ const handlePublishJob = async (
       salary: pos.salary,
       job_description: [pos.role ? `**Job Role:** ${pos.role}` : "", pos.vacancies ? `**Number of Positions:** ${pos.vacancies}` : "", pos.description].filter(Boolean).join("\n\n"),
       qualifications: sameRequirements 
-          ? (Array.isArray(qualifications) ? qualifications : (qualifications ? [qualifications] : []))
-          : (Array.isArray(pos.qualifications) ? pos.qualifications : (pos.qualifications ? [pos.qualifications] : (qualifications ? (Array.isArray(qualifications) ? qualifications : [qualifications]) : []))),
+          ? formatQualificationsArray(qualifications)
+          : formatQualificationsArray(pos.qualifications || qualifications),
       skills_required: sameRequirements ? skills : (pos.skills || skills),
       posted_date: status === "published" ? new Date().toISOString() : (status === "scheduled" ? (scheduleDate && scheduleTime ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString() : scheduleDate) : null),
       last_date_to_apply: lastDateToApply || null,
@@ -2434,6 +2516,12 @@ const handleSmartExtraction = async () => {
                         )}
                         {p.qualifications && (
                           <div className="text-gray-500 text-[11px] mt-0.5">Qualifications: <span className="text-gray-800">{p.qualifications}</span></div>
+                        )}
+                        {p.description && (
+                          <div className="text-gray-500 text-[11px] mt-1.5 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                            <span className="font-semibold text-gray-700 block mb-0.5">Summary:</span>
+                            <span className="text-gray-600 italic leading-relaxed">{p.description}</span>
+                          </div>
                         )}
                         {p.skills && Array.isArray(p.skills) && p.skills.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-2">
