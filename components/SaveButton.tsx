@@ -103,6 +103,13 @@ export default function SaveButton({
         // Insert into saved_jobs
         await supabase.from("saved_jobs").insert({ user_id: userId, job_id: jobId });
         
+        // Track GA4 event
+        try {
+          if (typeof window !== "undefined" && (window as any).gtag) {
+            (window as any).gtag("event", "save_click", { job_id: jobId });
+          }
+        } catch (e) {}
+
         // Increment atomically
         await supabase.rpc("increment_save_count", { job_id: jobId });
       }

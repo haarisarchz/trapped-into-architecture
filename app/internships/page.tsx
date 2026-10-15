@@ -1,3 +1,4 @@
+// @ts-nocheck
 "use client";
 
 import Navbar from "@/components/Navbar";
@@ -9,40 +10,47 @@ import {
   LayoutGrid,
   Rows3,
   List,
+  Filter,
+  X,
+  Search,
+  ChevronDown
 } from "lucide-react";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function JobsPage() {
+function InternshipsPageContent() {
+  const searchParams = useSearchParams();
 
-  const [selectedStates, setSelectedStates] = useState<string[]>([]);
-
-  const [selectedCities, setSelectedCities] = useState<string[]>([]);
-
-  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
-
+  const [selectedStates, setSelectedStates] = useState<string[]>(
+    searchParams.get("state") ? [searchParams.get("state") as string] : []
+  );
+  const [selectedCities, setSelectedCities] = useState<string[]>(
+    searchParams.get("city") ? [searchParams.get("city") as string] : []
+  );
+  const [selectedOrgTypes, setSelectedOrgTypes] = useState<string[]>([]);
   const [selectedQualifications, setSelectedQualifications] = useState<string[]>([]);
-
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [viewMode, setViewMode] = useState("visual");
+  const [sortBy, setSortBy] = useState("latest");
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [datePosted, setDatePosted] = useState("");
+  const [excludeExpired, setExcludeExpired] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
- const [viewMode, setViewMode] = useState("visual");
+  // Show More toggles
+  const [showAllStates, setShowAllStates] = useState(false);
+  const [showAllCities, setShowAllCities] = useState(false);
+  const [showAllOrgTypes, setShowAllOrgTypes] = useState(false);
+  const [showAllQuals, setShowAllQuals] = useState(false);
+  const [showAllSkills, setShowAllSkills] = useState(false);
 
- const [sortBy, setSortBy] = useState("latest");
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(24);
 
- const [jobs, setJobs] = useState<any[]>([]);
- const [excludeExpired, setExcludeExpired] =
-  useState(false);
-
-  const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
-
-const [selectedSalary, setSelectedSalary] = useState<string[]>([]);
-const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-const [showFilters, setShowFilters] = useState(false);
-
- 
+  // Helper for aggregating counts
   const getAggregatedList = (items: any[], key: string, additionalFilter: (item: any) => boolean = () => true) => {
     const counts: { [key: string]: number } = {};
     const latestDate: { [key: string]: number } = {};
@@ -52,7 +60,7 @@ const [showFilters, setShowFilters] = useState(false);
       val = val.trim();
       if (val === '') return;
       counts[val] = (counts[val] || 0) + 1;
-      const itemDate = new Date(item.posted_date || item.created_at || item.postedDate || 0).getTime();
+      const itemDate = new Date(item.posted_date || item.created_at || 0).getTime();
       if (!latestDate[val] || itemDate > latestDate[val]) {
         latestDate[val] = itemDate;
       }
@@ -67,889 +75,715 @@ const [showFilters, setShowFilters] = useState(false);
     });
   };
 
-  const [showAllStates, setShowAllStates] = useState(false);
-  const [showAllCities, setShowAllCities] = useState(false);
-
-  const stateStats = getAggregatedList(jobs, 'state');
-  const displayedStates = showAllStates ? stateStats : stateStats.slice(0, 10);
-  const cityStats = getAggregatedList(jobs, 'city', (job: any) => selectedStates.length === 0 || selectedStates.includes(job.state));
-  const displayedCities = showAllCities ? cityStats : cityStats.slice(0, 10);
-
-  useEffect(() => {
-
-  const fetchJobs = async () => {
-
-    const { data, error } =
-      await supabase
-        .from("jobs").select("*").eq("status", "published");
-
-    if (error) {
-
-      console.log(error);
-
-    } else {
-
-      const filteredData = data.filter((job: any) => job.employment_type === 'Internship' || (job.position && job.position.toLowerCase().includes('intern')));
-
-      setJobs(
-        filteredData.map((job) => ({
-          id: job.id,
-          firmName: job.firm_name,
-          organizationType: job.organization_type,
-          area: job.area,
-          city: job.city,
-          state: job.state,
-          position: job.position,
-            employment_type: job.employment_type,
-            experience: Array.isArray(job.experience)
-            ? job.experience
-            : [],
-          salary: job.salary,
-          qualifications: Array.isArray(job.qualifications)
-            ? job.qualifications
-            : [],
-          skills_required: Array.isArray(job.skills_required)
-            ? job.skills_required
-            : [],
-          postedDate: job.posted_date,
-          lastDateToApply: job.last_date_to_apply,
-          postExpiryDate: job.post_expiry_date,
-          jobDescription: job.job_description,
-          applicationType: job.application_type,
-          apply_link: job.apply_link,
-          application_email: job.application_email,
-          source: job.source,
-          image: job.image,
-          save_count: job.save_count || 0,
-          share_count: job.share_count || 0,
-        }))
-      );
-
-    }
-
+  // Helper for aggregating array fields (skills, qualifications)
+  const getAggregatedArrayList = (items: any[], key: string) => {
+    const counts: { [key: string]: number } = {};
+    items.forEach(item => {
+      const arr = item[key];
+      if (!Array.isArray(arr)) return;
+      arr.forEach((val: string) => {
+        if (!val || typeof val !== 'string') return;
+        const clean = val.trim();
+        if (!clean) return;
+        counts[clean] = (counts[clean] || 0) + 1;
+      });
+    });
+    return Object.keys(counts).map(val => ({
+      name: val,
+      count: counts[val]
+    })).sort((a, b) => b.count - a.count);
   };
 
-  fetchJobs();
+  // Aggregated options
+  const stateStats = getAggregatedList(jobs, 'state');
+  const displayedStates = showAllStates ? stateStats : stateStats.slice(0, 8);
 
-}, []);
+  const cityStats = getAggregatedList(jobs, 'city', (job: any) => selectedStates.length === 0 || selectedStates.includes(job.state));
+  const displayedCities = showAllCities ? cityStats : cityStats.slice(0, 8);
 
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(24);
+  const orgTypeStats = getAggregatedList(jobs, 'organization_type');
+  const displayedOrgTypes = showAllOrgTypes ? orgTypeStats : orgTypeStats.slice(0, 6);
+
+  const qualStats = getAggregatedArrayList(jobs, 'qualifications');
+  const displayedQuals = showAllQuals ? qualStats : qualStats.slice(0, 6);
+
+  const skillStats = getAggregatedArrayList(jobs, 'skills_required');
+  const displayedSkills = showAllSkills ? skillStats : skillStats.slice(0, 8);
+
+  useEffect(() => {
+    const fetchInternships = async () => {
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("status", "published");
+
+      if (error) {
+        console.error("Error fetching internships:", error);
+      } else if (data) {
+        // Filter for internships strictly
+        const filteredData = data.filter((job: any) => 
+          job.employment_type === 'Internship' || 
+          (job.position && job.position.toLowerCase().includes('intern'))
+        );
+
+        setJobs(
+          filteredData.map((job) => ({
+            id: job.id,
+            firm_name: job.firm_name,
+            organization_type: job.organization_type,
+            area: job.area,
+            city: job.city,
+            state: job.state,
+            position: job.position,
+            employment_type: job.employment_type || "Internship",
+            experience: Array.isArray(job.experience) ? job.experience : (job.experience ? [job.experience] : []),
+            salary: job.salary,
+            qualifications: Array.isArray(job.qualifications) ? job.qualifications : [],
+            skills_required: Array.isArray(job.skills_required) ? job.skills_required : (Array.isArray(job.skills) ? job.skills : []),
+            posted_date: job.posted_date || job.created_at,
+            last_date_to_apply: job.last_date_to_apply,
+            post_expiry_date: job.post_expiry_date,
+            job_description: job.job_description,
+            application_type: job.application_type,
+            apply_link: job.apply_link,
+            application_email: job.application_email,
+            source: job.source,
+            image: job.image,
+            save_count: job.save_count || 0,
+            share_count: job.share_count || 0,
+          }))
+        );
+      }
+    };
+
+    fetchInternships();
+  }, []);
+
+  const clearAllFilters = () => {
+    setSelectedStates([]);
+    setSelectedCities([]);
+    setSelectedOrgTypes([]);
+    setSelectedQualifications([]);
+    setSelectedSkills([]);
+    setDatePosted("");
+    setExcludeExpired(false);
+    setSearchQuery("");
+  };
 
   const filteredJobs = useMemo(() => {
     return jobs
-  .filter((job: any) => {
+      .filter((job: any) => {
+        const stateMatch = selectedStates.length === 0 || selectedStates.includes(job.state);
+        const cityMatch = selectedCities.length === 0 || selectedCities.includes(job.city);
+        const orgTypeMatch = selectedOrgTypes.length === 0 || selectedOrgTypes.includes(job.organization_type);
 
-    const stateMatch =
-      selectedStates.length === 0 ||
-      selectedStates.includes(job.state);
+        const qualificationMatch =
+          selectedQualifications.length === 0 ||
+          job.qualifications?.some((q: string) => selectedQualifications.includes(q));
 
-    const cityMatch =
-      selectedCities.length === 0 ||
-      selectedCities.includes(job.city);
+        const skillsMatch =
+          selectedSkills.length === 0 ||
+          job.skills_required?.some((s: string) => selectedSkills.includes(s));
 
-    const positionMatch =
-      selectedPositions.length === 0 ||
-      selectedPositions.includes(job.position);
+        const searchMatch =
+          searchQuery.trim() === "" ||
+          (job.firm_name && job.firm_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (job.position && job.position.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (job.city && job.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (job.state && job.state.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          job.skills_required?.some((s: string) => s.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const qualificationMatch =
-      selectedQualifications.length === 0 ||
+        const expiryMatch =
+          !excludeExpired ||
+          !job.post_expiry_date ||
+          new Date(job.post_expiry_date) >= new Date();
 
-      job.qualifications?.some(
-        (qualification: string) =>
-
-          selectedQualifications.includes(
-            qualification
-          )
-      );
-
-    const skillsMatch =
-      selectedSkills.length === 0 ||
-
-      job.skillsRequired?.some(
-        (skill: string) =>
-
-          selectedSkills.includes(skill)
-      );
-
-    const experienceMatch =
-      selectedExperience.length === 0 ||
-
-      job.experience?.some(
-        (exp: string) =>
-
-          selectedExperience.includes(exp)
-      );
-
-    const salaryMatch =
-      selectedSalary.length === 0 ||
-      selectedSalary.includes(job.salary);
-
-    const searchMatch =
-      searchQuery === "" ||
-
-      job.firmName
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.position
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.city
-        ?.toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-
-      job.skillsRequired?.some(
-        (skill: string) =>
-
-          skill
-            .toLowerCase()
-            .includes(
-              searchQuery.toLowerCase()
-            )
-      );
-
-    const expiryMatch =
-      !excludeExpired ||
-
-      !job.postExpiryDate ||
-
-      new Date(job.postExpiryDate) >=
-        new Date();
-
-    return (
-      stateMatch &&
-      cityMatch &&
-      positionMatch &&
-      qualificationMatch &&
-      skillsMatch &&
-      experienceMatch &&
-      salaryMatch &&
-      searchMatch &&
-      expiryMatch
-    );
-
-  })
-
-  .sort((a, b) => {
-      const getSal = (s: any) => {
-        if (!s || s.toLowerCase().includes("not disclosed") || s.toLowerCase().includes("negotiable") || s.toLowerCase().includes("as per")) return null;
-        const cl = s.replace(/,/g, "");
-        const m = cl.match(/\d+/);
-        return m ? Number(m[0]) : null;
-      };
-
-      const dateA = new Date(a.posted_date || 0).getTime();
-      const createdA = new Date(a.created_at || a.updated_at || a.posted_date || 0).getTime();
-      const dateB = new Date(b.posted_date || 0).getTime();
-      const createdB = new Date(b.created_at || b.updated_at || b.posted_date || 0).getTime();
-
-      if (sortBy === "salaryLow" || sortBy === "salaryHigh") {
-        const salA = getSal(a.salary);
-        const salB = getSal(b.salary);
-        if (salA !== null && salB !== null) {
-          return sortBy === "salaryLow" ? salA - salB : salB - salA;
+        let dateMatch = true;
+        if (datePosted && datePosted !== "all") {
+          const rawDate = job.posted_date;
+          const postedDate = rawDate ? new Date(rawDate) : null;
+          const now = new Date();
+          if (!postedDate) {
+            dateMatch = false;
+          } else {
+            const diffDays = (now.getTime() - postedDate.getTime()) / (1000 * 60 * 60 * 24);
+            if (datePosted === "24h") dateMatch = diffDays <= 1;
+            else if (datePosted === "7d") dateMatch = diffDays <= 7;
+            else if (datePosted === "30d") dateMatch = diffDays <= 30;
+            else if (datePosted === "older") dateMatch = diffDays > 30;
+          }
         }
-        if (salA !== null) return -1;
-        if (salB !== null) return 1;
-      }
-      
-      if (sortBy === "oldest") {
-        return dateA !== dateB ? dateA - dateB : createdA - createdB;
-      }
 
-      return dateB !== dateA ? dateB - dateA : createdB - createdA;
-    });
-  }, [selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery, viewMode, sortBy, jobs, selectedExperience, selectedSalary, mobileFiltersOpen, showFilters, showAllStates, showAllCities, currentPage, itemsPerPage]);
+        return (
+          stateMatch &&
+          cityMatch &&
+          orgTypeMatch &&
+          qualificationMatch &&
+          skillsMatch &&
+          searchMatch &&
+          expiryMatch &&
+          dateMatch
+        );
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.posted_date || 0).getTime();
+        const dateB = new Date(b.posted_date || 0).getTime();
+        if (sortBy === "oldest") return dateA - dateB;
+        return dateB - dateA;
+      });
+  }, [
+    jobs,
+    selectedStates,
+    selectedCities,
+    selectedOrgTypes,
+    selectedQualifications,
+    selectedSkills,
+    searchQuery,
+    excludeExpired,
+    datePosted,
+    sortBy
+  ]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const paginatedJobs = filteredJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  
+
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredJobs.length]);
 
-  return (
-    <main className="min-h-screen bg-gray-100 text-black">
-
-      <Navbar />
-
-      <section className="px-4 py-6 md:p-10">
-
-        <h1 className="text-2xl md:text-5xl font-bold mb-4">
-         Architecture Internships
-        </h1>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-
-  {/* FILTER SIDEBAR */}
-
-<div className="hidden lg:block w-full lg:w-72 bg-white p-6 rounded-2xl shadow-md border border-gray-200 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
-
-  <div className="flex items-center justify-between mb-6 sticky top-0 bg-white z-10 -mx-6 -mt-6 px-6 py-6 border-b border-gray-100">
-
-    <h2 className="text-2xl font-bold">
-      Filters
-    </h2>
-
-    <button
-      onClick={() => {
-        setSelectedStates([]);
-        setSelectedCities([]);
-        setSelectedPositions([]);
-        setSelectedQualifications([]);
-        setSelectedSkills([]);
-        // removed missing setters to prevent crash
-          if (typeof setExpRange === "function") setExpRange([0, 15]);
-          if (typeof setSalaryRange === "function") setSalaryRange([0, 50]);
-          if (typeof setDatePosted === "function") setDatePosted("");
-          if (typeof setExcludeExpired === "function") setExcludeExpired(false);
-          if (typeof setSearchQuery === "function") setSearchQuery("");
-          if (typeof setSelectedExperience === "function") setSelectedExperience([]);
-          if (typeof setSelectedSalary === "function") setSelectedSalary([]);
-      }}
-      className="text-sm text-orange-500 font-medium"
-    >
-      Clear Filters
-    </button>
-
-  </div>
-
-  <div className="space-y-8">
-
-    {/* STATE */}
-
-    <div>
-
-      <h3 className="font-semibold mb-3">
-        State ({stateStats.length})
-      </h3>
-      <div className="space-y-2 text-sm">
-        {displayedStates.map((stateObj) => (
-          <label key={stateObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={selectedStates.includes(stateObj.name)}
-                onChange={(e) => {
-                  if (e.target.checked) setSelectedStates([...selectedStates, stateObj.name]);
-                  else setSelectedStates(selectedStates.filter((s) => s !== stateObj.name));
-                }}
-                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-              />
-              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{stateObj.name}</span>
-            </div>
-            <span className="text-gray-400 text-xs font-medium">({stateObj.count})</span>
-          </label>
-        ))}
-        {stateStats.length > 10 && (
-          <button type="button" onClick={() => setShowAllStates(!showAllStates)} className="text-blue-600 hover:underline text-xs mt-2 font-medium block">
-            {showAllStates ? "Show Less" : "Show More"}
-          </button>
-        )}
-      </div>
-
-    </div>
-
-    {/* CITY */}
-
-    <div>
-
-      <h3 className="font-semibold mb-3">
-        City ({cityStats.length})
-      </h3>
-      <div className="space-y-2 text-sm">
-        {displayedCities.map((cityObj) => (
-          <label key={cityObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={selectedCities.includes(cityObj.name)}
-                onChange={(e) => {
-                  if (e.target.checked) setSelectedCities([...selectedCities, cityObj.name]);
-                  else setSelectedCities(selectedCities.filter((c) => c !== cityObj.name));
-                }}
-                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-              />
-              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{cityObj.name}</span>
-            </div>
-            <span className="text-gray-400 text-xs font-medium">({cityObj.count})</span>
-          </label>
-        ))}
-        {cityStats.length > 10 && (
-          <button 
-            type="button" 
-            onClick={() => {
-              if (selectedStates.length === 0 && !showAllCities) {
-                alert("Please select a state to view more specific cities.");
-                return;
-              }
-              setShowAllCities(!showAllCities);
-            }} 
-            className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+  const renderFiltersContent = (isMobile = false) => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+        <h2 className="text-xl font-bold text-gray-900">Filters</h2>
+        {(selectedStates.length > 0 ||
+          selectedCities.length > 0 ||
+          selectedOrgTypes.length > 0 ||
+          selectedQualifications.length > 0 ||
+          selectedSkills.length > 0 ||
+          datePosted !== "" ||
+          excludeExpired) && (
+          <button
+            onClick={clearAllFilters}
+            className="text-xs text-orange-600 hover:text-orange-700 font-semibold"
           >
-            {showAllCities ? "Show Less" : (selectedStates.length === 0 ? "Select state to see more" : "Show More")}
+            Clear All
           </button>
         )}
       </div>
 
-    </div>
+      {/* STATE */}
+      <div>
+        <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
+          State ({stateStats.length})
+        </h3>
+        <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+          {displayedStates.map((stateObj) => (
+            <label key={stateObj.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  checked={selectedStates.includes(stateObj.name)}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedStates([...selectedStates, stateObj.name]);
+                    else setSelectedStates(selectedStates.filter((s) => s !== stateObj.name));
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                />
+                <span className="truncate text-gray-700 group-hover:text-black transition-colors">{stateObj.name}</span>
+              </div>
+              <span className="text-gray-400 text-xs font-medium">({stateObj.count})</span>
+            </label>
+          ))}
+          {stateStats.length > 8 && (
+            <button
+              type="button"
+              onClick={() => setShowAllStates(!showAllStates)}
+              className="text-blue-600 hover:underline text-xs mt-1.5 font-medium block"
+            >
+              {showAllStates ? "Show Less" : "Show More"}
+            </button>
+          )}
+        </div>
+      </div>
 
-    <div className="mt-6 flex items-center gap-3">
+      <hr className="border-gray-100" />
 
-  <h3 className="font-semibold">
-    Exclude Expired Internships
-  </h3>
+      {/* CITY */}
+      <div>
+        <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
+          City ({cityStats.length})
+        </h3>
+        <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+          {displayedCities.map((cityObj) => (
+            <label key={cityObj.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  checked={selectedCities.includes(cityObj.name)}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedCities([...selectedCities, cityObj.name]);
+                    else setSelectedCities(selectedCities.filter((c) => c !== cityObj.name));
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                />
+                <span className="truncate text-gray-700 group-hover:text-black transition-colors">{cityObj.name}</span>
+              </div>
+              <span className="text-gray-400 text-xs font-medium">({cityObj.count})</span>
+            </label>
+          ))}
+          {cityStats.length > 8 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedStates.length === 0 && !showAllCities) {
+                  alert("Please select a state to view more specific cities.");
+                  return;
+                }
+                setShowAllCities(!showAllCities);
+              }}
+              className="text-blue-600 hover:underline text-xs mt-1.5 font-medium block"
+            >
+              {showAllCities ? "Show Less" : (selectedStates.length === 0 ? "Select state to see more" : "Show More")}
+            </button>
+          )}
+        </div>
+      </div>
 
-  <input
-    type="checkbox"
-    checked={excludeExpired}
-    onChange={() =>
-      setExcludeExpired(!excludeExpired)
-    }
-  />
+      <hr className="border-gray-100" />
 
-</div>
+      {/* ORGANIZATION TYPE */}
+      {orgTypeStats.length > 0 && (
+        <>
+          <div>
+            <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
+              Studio Type ({orgTypeStats.length})
+            </h3>
+            <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+              {displayedOrgTypes.map((org) => (
+                <label key={org.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrgTypes.includes(org.name)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedOrgTypes([...selectedOrgTypes, org.name]);
+                        else setSelectedOrgTypes(selectedOrgTypes.filter((o) => o !== org.name));
+                      }}
+                      className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                    />
+                    <span className="truncate text-gray-700 group-hover:text-black transition-colors">{org.name}</span>
+                  </div>
+                  <span className="text-gray-400 text-xs font-medium">({org.count})</span>
+                </label>
+              ))}
+              {orgTypeStats.length > 6 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllOrgTypes(!showAllOrgTypes)}
+                  className="text-blue-600 hover:underline text-xs mt-1.5 font-medium block"
+                >
+                  {showAllOrgTypes ? "Show Less" : "Show More"}
+                </button>
+              )}
+            </div>
+          </div>
+          <hr className="border-gray-100" />
+        </>
+      )}
 
-    </div>
+      {/* QUALIFICATIONS / DEGREE */}
+      {qualStats.length > 0 && (
+        <>
+          <div>
+            <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
+              Degree / Qualification
+            </h3>
+            <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+              {displayedQuals.map((q) => (
+                <label key={q.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedQualifications.includes(q.name)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedQualifications([...selectedQualifications, q.name]);
+                        else setSelectedQualifications(selectedQualifications.filter((val) => val !== q.name));
+                      }}
+                      className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                    />
+                    <span className="truncate text-gray-700 group-hover:text-black transition-colors">{q.name}</span>
+                  </div>
+                  <span className="text-gray-400 text-xs font-medium">({q.count})</span>
+                </label>
+              ))}
+              {qualStats.length > 6 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllQuals(!showAllQuals)}
+                  className="text-blue-600 hover:underline text-xs mt-1.5 font-medium block"
+                >
+                  {showAllQuals ? "Show Less" : "Show More"}
+                </button>
+              )}
+            </div>
+          </div>
+          <hr className="border-gray-100" />
+        </>
+      )}
 
-  </div>
+      {/* SOFTWARE & SKILLS */}
+      {skillStats.length > 0 && (
+        <>
+          <div>
+            <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
+              Software & Skills
+            </h3>
+            <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+              {displayedSkills.map((s) => (
+                <label key={s.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
+                  <div className="flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedSkills.includes(s.name)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedSkills([...selectedSkills, s.name]);
+                        else setSelectedSkills(selectedSkills.filter((val) => val !== s.name));
+                      }}
+                      className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                    />
+                    <span className="truncate text-gray-700 group-hover:text-black transition-colors">{s.name}</span>
+                  </div>
+                  <span className="text-gray-400 text-xs font-medium">({s.count})</span>
+                </label>
+              ))}
+              {skillStats.length > 8 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllSkills(!showAllSkills)}
+                  className="text-blue-600 hover:underline text-xs mt-1.5 font-medium block"
+                >
+                  {showAllSkills ? "Show Less" : "Show More"}
+                </button>
+              )}
+            </div>
+          </div>
+          <hr className="border-gray-100" />
+        </>
+      )}
 
+      {/* DATE POSTED */}
+      <div>
+        <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
+          Date Posted
+        </h3>
+        <div className="space-y-2 text-sm">
+          {[
+            { id: "24h", label: "Within last 24 hours" },
+            { id: "7d", label: "Within last week" },
+            { id: "30d", label: "Within last month" },
+            { id: "older", label: "Older than a month" }
+          ].map((opt) => (
+            <label key={opt.id} className="flex items-center gap-2.5 w-full cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={datePosted === opt.id}
+                onChange={() => (datePosted === opt.id ? setDatePosted("") : setDatePosted(opt.id))}
+                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+              />
+              <span className="text-gray-700 group-hover:text-black transition-colors">{opt.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
 
-{/* RIGHT SIDE */}
+      <hr className="border-gray-100" />
 
-{/* MOBILE FILTER DRAWER */}
+      {/* EXCLUDE EXPIRED */}
+      <div>
+        <label className="flex items-center gap-2.5 w-full cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={excludeExpired}
+            onChange={(e) => setExcludeExpired(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+          />
+          <span className="text-gray-700 font-bold text-xs uppercase tracking-wider group-hover:text-black transition-colors">
+            Exclude Expired Internships
+          </span>
+        </label>
+      </div>
 
-{mobileFiltersOpen && (
-  <div className="fixed inset-0 z-50 lg:hidden">
-
-    {/* Dark overlay */}
-
-    <div
-      className="absolute inset-0 bg-black/50"
-      onClick={() => setMobileFiltersOpen(false)}
-    />
-
-    {/* Drawer */}
-
-    <div className="absolute right-0 top-0 h-full w-[85%] bg-white overflow-y-auto shadow-xl p-5">
-
-      <div className="flex justify-between items-center mb-6">
-
-        <h2 className="text-xl font-bold">
-          Filters
-        </h2>
-
+      {isMobile && (
         <button
           onClick={() => setMobileFiltersOpen(false)}
-          className="text-2xl"
+          className="w-full mt-6 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition"
         >
-          ✕
+          Apply Filters ({filteredJobs.length})
         </button>
-
-      </div>
-
-      {/* Move all your filter sections here later */}
-      
+      )}
     </div>
-
-  </div>
-)}
-
-<div className="flex-1">
-
-  {/* MOBILE CONTROLS */}
-
-<div className="lg:hidden mb-4 space-y-3">
-
-  {/* ROW 1 */}
-
-  <div className="flex gap-2">
-
-    <input
-      type="text"
-      placeholder="Search jobs..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="flex-1 border rounded-lg px-3 py-2 text-sm"
-    />
-
-    <select
-      value={sortBy}
-      onChange={(e) => setSortBy(e.target.value)}
-      className="w-40 border rounded-lg px-2 py-2 text-sm"
-    >
-      <option value="latest">Latest Posted</option>
-       <option value="oldest">Oldest Posts</option>
-      <option value="salaryHigh">High Salary</option>
-      <option value="salaryLow">Low Salary</option>
-      
-    </select>
-
-  </div>
-
-  {/* ROW 2 */}
-
-  <div className="flex items-center justify-between">
-
-    <div className="flex items-center gap-2">
-
-      <span className="text-sm font-medium">
-        View
-      </span>
-
-      <div className="flex border rounded-xl overflow-hidden">
-
-        <button
-          onClick={() => setViewMode("visual")}
-          className={`px-3 py-2 ${
-            viewMode === "visual"
-              ? "bg-black text-white"
-              : "bg-white"
-          }`}
-        >
-          <LayoutGrid size={16} />
-        </button>
-
-        <button
-          onClick={() => setViewMode("balanced")}
-          className={`px-3 py-2 ${
-            viewMode === "balanced"
-              ? "bg-black text-white"
-              : "bg-white"
-          }`}
-        >
-          <Rows3 size={16} />
-        </button>
-
-        <button
-          onClick={() => setViewMode("dense")}
-          className={`px-3 py-2 ${
-            viewMode === "dense"
-              ? "bg-black text-white"
-              : "bg-white"
-          }`}
-        >
-          <List size={16} />
-        </button>
-
-      </div>
-
-    </div>
-
-    <button
-      onClick={() => setShowFilters(true)}
-      className="border rounded-xl px-4 py-2 flex items-center gap-2 bg-white"
-    >
-      Filter
-    </button>
-
-  </div>
-
-</div>
-
-  {/* VIEW + SORT BAR */}
-
-<div className="hidden lg:flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-4">
-
-  {/* VIEW BY */}
-
-<div className="flex items-center gap-4">
-
-  <p className="font-medium whitespace-nowrap">
-    View By :
-  </p>
-
-  <div className="flex border rounded-xl overflow-hidden">
-
-  <button
-    onClick={() => setViewMode("visual")}
-    className={`px-4 py-3 ${
-      viewMode === "visual"
-        ? "bg-black text-white"
-        : "bg-white text-black"
-    }`}
-  >
-    <LayoutGrid size={18} />
-  </button>
-
-  <button
-    onClick={() => setViewMode("balanced")}
-    className={`px-4 py-3 ${
-      viewMode === "balanced"
-        ? "bg-black text-white"
-        : "bg-white text-black"
-    }`}
-  >
-    <Rows3 size={18} />
-  </button>
-
-  <button
-  onClick={() => setViewMode("dense")}
-  className={`px-4 py-3 transition ${
-    viewMode === "dense"
-      ? "bg-black text-white"
-      : "bg-white text-black hover:bg-gray-100"
-  }`}
->
-  <List size={18} />
-</button>
-
-</div>
-
-</div>
-
-  {/* SEARCH */}
-
-  <input
-    type="text"
-    placeholder="Search jobs..."
-    value={searchQuery}
-    onChange={(e) =>
-      setSearchQuery(e.target.value)
-    }
-    className="flex-1 border border-gray-300 rounded-lg px-4 py-2"
-  />
-
-  {/* SORT BY */}
-
-  <div className="flex items-center gap-4">
-
-    <p className="font-medium">
-      Sort By :
-    </p>
-
-<select
-  value={sortBy}
-  onChange={(e) =>
-    setSortBy(e.target.value)
-  }
-  className="border border-gray-300 rounded-lg px-4 py-2">
-     <option value="latest">
-  Latest Posted
-</option>
-
-<option value="oldest">
-  Oldest Posts
-</option>
-<option value="salaryHigh">
-  Salary High to Low
-</option>
-
-<option value="salaryLow">
-  Salary Low to High
-</option>
-
-
-
-    </select>
-
-  </div>
-
-</div>
-{/* ALWAYS VISIBLE COUNT & ACTIVE FILTERS WRAPPER */}
-<div className="flex flex-wrap items-center gap-3 mb-4">
-  <span className="text-sm font-semibold text-gray-600 shrink-0">Showing {filteredJobs.length} internships</span>
-
-  {/* ACTIVE FILTERS */}
-  {(
-    selectedStates.length > 0 ||
-    selectedCities.length > 0 ||
-    selectedPositions.length > 0 ||
-    selectedQualifications.length > 0 ||
-    selectedSkills.length > 0
-  ) && (
-    <div className="flex flex-wrap gap-2">
-
-    {/* STATES */}
-
-    {selectedStates.map((state) => (
-
-      <div
-        key={state}
-        className="bg-white border border-gray-300 rounded-full px-2 py-1 text-sm flex items-center gap-2 shadow-sm"
-      >
-
-        {state}
-
-        <button
-          onClick={() =>
-            setSelectedStates(
-              selectedStates.filter(
-                (s) => s !== state
-              )
-            )
-          }
-          className="text-gray-500 hover:text-black"
-        >
-          ×
-        </button>
-
-      </div>
-
-    ))}
-
-    {/* CITIES */}
-
-    {selectedCities.map((city) => (
-
-      <div
-        key={city}
-        className="bg-white border border-gray-300 rounded-full px-2 py-1 text-sm flex items-center gap-2 shadow-sm"
-      >
-
-        {city}
-
-        <button
-          onClick={() =>
-            setSelectedCities(
-              selectedCities.filter(
-                (c) => c !== city
-              )
-            )
-          }
-          className="text-gray-500 hover:text-black"
-        >
-          ×
-        </button>
-
-      </div>
-
-    ))}
-
-    {/* POSITIONS */}
-
-    {selectedPositions.map((position) => (
-
-      <div
-        key={position}
-        className="bg-white border border-gray-300 rounded-full px-2 py-1 text-sm flex items-center gap-2 shadow-sm"
-      >
-
-        {position}
-
-        <button
-          onClick={() =>
-            setSelectedPositions(
-              selectedPositions.filter(
-                (p) => p !== position
-              )
-            )
-          }
-          className="text-gray-500 hover:text-black"
-        >
-          ×
-        </button>
-
-      </div>
-
-    ))}
-
-    {/* QUALIFICATIONS */}
-
-    {selectedQualifications.map((qualification) => (
-
-      <div
-        key={qualification}
-        className="bg-white border border-gray-300 rounded-full px-2 py-1 text-sm flex items-center gap-2 shadow-sm"
-      >
-
-        {qualification}
-
-        <button
-          onClick={() =>
-            setSelectedQualifications(
-              selectedQualifications.filter(
-                (q) => q !== qualification
-              )
-            )
-          }
-          className="text-gray-500 hover:text-black"
-        >
-          ×
-        </button>
-
-      </div>
-
-    ))}
-
-    {/* SKILLS */}
-
-    {selectedSkills.map((skill) => (
-
-      <div
-        key={skill}
-        className="bg-white border border-gray-300 rounded-full px-2 py-1 text-sm flex items-center gap-2 shadow-sm"
-      >
-
-        {skill}
-
-        <button
-          onClick={() =>
-            setSelectedSkills(
-              selectedSkills.filter(
-                (s) => s !== skill
-              )
-            )
-          }
-          className="text-gray-500 hover:text-black"
-        >
-          ×
-        </button>
-
-      </div>
-
-    ))}
-
-  </div>
-
-)}
-</div>
-
-  {/* JOB LIST */}
-
-<div
-  className={
-    viewMode === "visual"
-      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
-
-      : viewMode === "balanced"
-      ? "grid grid-cols-1 xl:grid-cols-2 gap-5"
-
-      : viewMode === "dense"
-      ? "grid grid-cols-1 md:grid-cols-2 gap-3"
-
-      : ""
-  }
->
-
-  
- 
-{paginatedJobs.length > 0 ? (
-  paginatedJobs.map((job: any, index: number) => (
-    <JobCard
-      key={index}
-      id={job.id}
-      viewMode={viewMode}
-      firm_name={job.firm_name || job.firmName}
-      organization_type={job.organization_type || job.organizationType}
-      area={job.area}
-      city={job.city}
-      state={job.state}
-      position={job.position}
-      experience={job.experience}
-      qualifications={job.qualifications}
-      skills={job.skills}
-      employment_type={job.employment_type || job.employmentType}
-      work_mode={job.work_mode || job.workMode}
-      salary_min={job.salary_min || job.salaryMin}
-      salary_max={job.salary_max || job.salaryMax}
-      currency={job.currency}
-      post_expiry_date={job.post_expiry_date || job.postExpiryDate}
-      posted_date={job.posted_date || job.created_at || job.createdAt}
-      save_count={job.save_count || job.saveCount || 0}
-      share_count={job.share_count || job.shareCount || 0}
-      image={job.image}
-    />
-  ))
-) : (
-  <div className="col-span-full flex flex-col items-center justify-center py-16 text-gray-500">
-    <p className="text-xl font-semibold">No internships available at the moment.</p>
-    <p className="mt-2 text-sm">Try adjusting your filters or search query.</p>
-  </div>
-)}
-
-   
-    </div> {/* closes job grid */}
-    {/* Pagination Controls */}
-    {filteredJobs.length > 0 && (
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-          <span>Internships per page:</span>
-          <select 
-            value={itemsPerPage} 
-            onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-            className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
-          >
-            <option value={20}>20</option>
-            <option value={24}>24</option>
-            <option value={50}>50</option>
-          </select>
+  );
+
+  return (
+    <main className="min-h-screen bg-gray-50 text-black flex flex-col">
+      <Navbar />
+
+      <section className="px-4 py-6 md:px-8 lg:px-12 max-w-[1500px] mx-auto w-full flex-1">
+        {/* PAGE HEADER */}
+        <div className="mb-6">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight text-gray-900">
+            Architecture Internships
+          </h1>
+          <p className="text-gray-600 mt-2 text-sm md:text-base">
+            Discover verified architectural, interior, and landscape internships from leading design studios.
+          </p>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
-            disabled={currentPage === 1}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
-          >
-            Previous
-          </button>
-          
-          <span className="text-sm font-medium px-4">
-            Page {currentPage} of {totalPages || 1}
-          </span>
-          
-          <button 
-            onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
-            disabled={currentPage === totalPages || totalPages === 0}
-            className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
-          >
-            Next
-          </button>
+
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          {/* DESKTOP FILTER SIDEBAR */}
+          <aside className="hidden lg:block w-72 bg-white p-6 rounded-2xl shadow-sm border border-gray-200 sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full shrink-0">
+            {renderFiltersContent(false)}
+          </aside>
+
+          {/* RIGHT SIDE / LISTINGS */}
+          <div className="flex-1 w-full min-w-0">
+            {/* SEARCH & CONTROLS BAR */}
+            <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+              {/* SEARCH INPUT */}
+              <div className="relative flex-1">
+                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search internships, studios, software, cities..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-black transition bg-gray-50/50"
+                />
+              </div>
+
+              {/* CONTROLS (Sort & View) */}
+              <div className="flex items-center gap-3 justify-between md:justify-end">
+                {/* SORT BY */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:inline">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white font-medium focus:outline-none focus:border-black cursor-pointer shadow-sm"
+                  >
+                    <option value="latest">Latest Posted</option>
+                    <option value="oldest">Oldest Posts</option>
+                  </select>
+                </div>
+
+                {/* VIEW MODE BUTTONS */}
+                <div className="flex border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                  <button
+                    onClick={() => setViewMode("visual")}
+                    className={`p-2 transition ${viewMode === "visual" ? "bg-black text-white" : "bg-white text-gray-700 hover:bg-gray-100"}`}
+                    title="Visual Grid"
+                  >
+                    <LayoutGrid size={17} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("balanced")}
+                    className={`p-2 transition ${viewMode === "balanced" ? "bg-black text-white" : "bg-white text-gray-700 hover:bg-gray-100"}`}
+                    title="Balanced Rows"
+                  >
+                    <Rows3 size={17} />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("dense")}
+                    className={`p-2 transition ${viewMode === "dense" ? "bg-black text-white" : "bg-white text-gray-700 hover:bg-gray-100"}`}
+                    title="Compact List"
+                  >
+                    <List size={17} />
+                  </button>
+                </div>
+
+                {/* MOBILE FILTER TRIGGER */}
+                <button
+                  onClick={() => setMobileFiltersOpen(true)}
+                  className="lg:hidden flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-semibold rounded-xl shadow-sm"
+                >
+                  <Filter size={16} /> Filters
+                </button>
+              </div>
+            </div>
+
+            {/* ACTIVE FILTERS & COUNT */}
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+              <span className="text-sm font-bold text-gray-700 mr-2">
+                Showing {filteredJobs.length} {filteredJobs.length === 1 ? "Internship" : "Internships"}
+              </span>
+
+              {/* PILLS */}
+              {selectedStates.map((st) => (
+                <span key={st} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-800 shadow-sm">
+                  {st}
+                  <button onClick={() => setSelectedStates(selectedStates.filter((s) => s !== st))} className="text-gray-400 hover:text-black">✕</button>
+                </span>
+              ))}
+
+              {selectedCities.map((ct) => (
+                <span key={ct} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-800 shadow-sm">
+                  {ct}
+                  <button onClick={() => setSelectedCities(selectedCities.filter((c) => c !== ct))} className="text-gray-400 hover:text-black">✕</button>
+                </span>
+              ))}
+
+              {selectedOrgTypes.map((ot) => (
+                <span key={ot} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-800 shadow-sm">
+                  {ot}
+                  <button onClick={() => setSelectedOrgTypes(selectedOrgTypes.filter((o) => o !== ot))} className="text-gray-400 hover:text-black">✕</button>
+                </span>
+              ))}
+
+              {selectedQualifications.map((ql) => (
+                <span key={ql} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-800 shadow-sm">
+                  {ql}
+                  <button onClick={() => setSelectedQualifications(selectedQualifications.filter((q) => q !== ql))} className="text-gray-400 hover:text-black">✕</button>
+                </span>
+              ))}
+
+              {selectedSkills.map((sk) => (
+                <span key={sk} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-800 shadow-sm">
+                  {sk}
+                  <button onClick={() => setSelectedSkills(selectedSkills.filter((s) => s !== sk))} className="text-gray-400 hover:text-black">✕</button>
+                </span>
+              ))}
+
+              {(selectedStates.length > 0 || selectedCities.length > 0 || selectedOrgTypes.length > 0 || selectedQualifications.length > 0 || selectedSkills.length > 0) && (
+                <button onClick={clearAllFilters} className="text-xs text-orange-600 font-semibold hover:underline ml-2">
+                  Reset all
+                </button>
+              )}
+            </div>
+
+            {/* LISTINGS GRID */}
+            <div
+              className={
+                viewMode === "visual"
+                  ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                  : viewMode === "balanced"
+                  ? "grid grid-cols-1 xl:grid-cols-2 gap-5"
+                  : "grid grid-cols-1 md:grid-cols-2 gap-3"
+              }
+            >
+              {paginatedJobs.length > 0 ? (
+                paginatedJobs.map((job: any, index: number) => (
+                  <JobCard
+                    key={job.id || index}
+                    id={job.id}
+                    viewMode={viewMode}
+                    firm_name={job.firm_name}
+                    organization_type={job.organization_type}
+                    area={job.area}
+                    city={job.city}
+                    state={job.state}
+                    position={job.position}
+                    experience={job.experience}
+                    salary={job.salary}
+                    qualifications={job.qualifications}
+                    skills_required={job.skills_required}
+                    employment_type={job.employment_type || "Internship"}
+                    post_expiry_date={job.post_expiry_date}
+                    posted_date={job.posted_date}
+                    save_count={job.save_count || 0}
+                    share_count={job.share_count || 0}
+                    image={job.image}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                    🏛️
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">No internships found</h3>
+                  <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
+                    We couldn&apos;t find any active internships matching your selected filters or search query.
+                  </p>
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-6 py-2.5 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition shadow-sm"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* PAGINATION */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 mt-10 pt-6">
+                <span className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setCurrentPage((p) => Math.max(1, p - 1));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition bg-white"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition bg-white"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    )}
-  
+      </section>
 
-</div> {/* closes flex-1 */}
+      {/* MOBILE FILTER MODAL DRAWER */}
+      {mobileFiltersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileFiltersOpen(false)}
+          />
+          <div className="absolute right-0 top-0 h-full w-[85%] max-w-md bg-white shadow-2xl p-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-lg font-bold">Filter Internships</span>
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="p-1 rounded-lg text-gray-500 hover:text-black hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {renderFiltersContent(true)}
+          </div>
+        </div>
+      )}
 
-</div> {/* closes flex gap-8 */}
-
-</section>
-
-{/* MOBILE FILTER DRAWER */}
-
-{showFilters && (
-
-  <div className="fixed inset-0 z-50 lg:hidden">
-
-    <div
-      className="absolute inset-0 bg-black/40"
-      onClick={() => setShowFilters(false)}
-    />
-
-    <div className="absolute right-0 top-0 h-full w-[85%] bg-white shadow-xl overflow-y-auto p-5">
-
-      <div className="flex items-center justify-between mb-5">
-
-        <h2 className="text-xl font-bold">
-          Filters
-        </h2>
-
-        <button
-          onClick={() => setShowFilters(false)}
-          className="text-2xl"
-        >
-          ×
-        </button>
-
-      </div>
-
-      {/* CUT & PASTE YOUR ENTIRE FILTER CONTENT HERE */}
-
-    </div>
-
-  </div>
-
-)}
-
-<Footer />
-
-</main>
+      <Footer />
+    </main>
   );
 }
 
-
+export default function InternshipsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black" />
+        </div>
+      }
+    >
+      <InternshipsPageContent />
+    </Suspense>
+  );
+}

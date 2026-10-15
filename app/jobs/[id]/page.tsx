@@ -375,13 +375,33 @@ export default async function JobDetailsPage({
                           {displayEmail && (
                             <p className="font-semibold text-black break-all">
                               <span className="text-gray-500 font-normal mr-1">Email:</span>
-                              <a href={`mailto:${displayEmail}`} className="text-blue-600 hover:underline">{displayEmail}</a>
+                              <a 
+                                href={`mailto:${displayEmail}`} 
+                                onClick={() => { 
+                                  if (typeof window !== 'undefined' && (window as any).gtag) { 
+                                    (window as any).gtag('event', 'email_click', { job_id: job.id, firm_name: job.firm_name, position: job.position }); 
+                                  } 
+                                }}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {displayEmail}
+                              </a>
                             </p>
                           )}
                           {displayPhone && (
                             <p className="font-semibold text-black">
                               <span className="text-gray-500 font-normal mr-1">Phone:</span>
-                              <a href={`tel:${displayPhone}`} className="text-blue-600 hover:underline">{displayPhone}</a>
+                              <a 
+                                href={`tel:${displayPhone}`} 
+                                onClick={() => { 
+                                  if (typeof window !== 'undefined' && (window as any).gtag) { 
+                                    (window as any).gtag('event', 'contact_click', { job_id: job.id, firm_name: job.firm_name, channel: 'phone' }); 
+                                  } 
+                                }}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {displayPhone}
+                              </a>
                             </p>
                           )}
                           {company?.website && (
@@ -438,7 +458,15 @@ export default async function JobDetailsPage({
                             </a>
                           )}
                           {displayEmail && (
-                              <a href={`mailto:${displayEmail}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`} className="bg-white text-black px-8 py-3 rounded-xl text-base font-bold border-2 border-black hover:bg-gray-50 transition w-full sm:w-auto text-center shadow-sm">
+                              <a 
+                                href={`mailto:${displayEmail}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`}
+                                onClick={() => { 
+                                  if (typeof window !== 'undefined' && (window as any).gtag) { 
+                                    (window as any).gtag('event', 'email_click', { job_id: job.id, firm_name: job.firm_name, position: job.position }); 
+                                  } 
+                                }}
+                                className="bg-white text-black px-8 py-3 rounded-xl text-base font-bold border-2 border-black hover:bg-gray-50 transition w-full sm:w-auto text-center shadow-sm"
+                              >
                                 Email Now
                               </a>
                             )}

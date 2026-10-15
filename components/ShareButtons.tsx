@@ -142,6 +142,11 @@ export default function ShareButtons({
   const trackShare = async () => {
     setShareCount(prev => prev + 1);
     try {
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag("event", "share_click", { job_id: jobId, firm_name: companyName, position });
+      }
+    } catch (e) {}
+    try {
       if (jobId) {
         const res = await fetch("/api/jobs/share", {
           method: "POST",
