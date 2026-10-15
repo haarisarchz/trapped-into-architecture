@@ -270,12 +270,36 @@ export default function AdminUsersPage() {
     }
 
     // Update local list state
+    const targetUser = users.find((u) => u.id === userId);
+    const oldRole = targetUser?.role || "User";
+
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
     );
 
-    setSaveMsg("Role updated successfully.");
-    setTimeout(() => setSaveMsg(""), 3500);
+    // Send role change notification email
+    try {
+      const notifyRes = await fetch("/api/admin/notify-role-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          oldRole,
+          newRole,
+        }),
+      });
+      const notifyJson = await notifyRes.json();
+      if (notifyJson?.message) {
+        setSaveMsg(notifyJson.message);
+      } else {
+        setSaveMsg(`Role updated to ${displayRole(newRole)} successfully.`);
+      }
+    } catch (e) {
+      console.warn("Failed to send role notification:", e);
+      setSaveMsg(`Role updated to ${displayRole(newRole)} successfully.`);
+    }
+
+    setTimeout(() => setSaveMsg(""), 5000);
     return true;
   };
 

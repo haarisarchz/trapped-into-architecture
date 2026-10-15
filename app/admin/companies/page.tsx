@@ -164,6 +164,7 @@ export default function AdminCompaniesPage() {
     const pRoleNorm = (profile.role || "").toLowerCase().replace(/[\s_]+/g, "");
     if (pRoleNorm === "ceo") return "CEO";
     if (pRoleNorm === "superadmin") return "Super Admin";
+    if (pRoleNorm === "jobadmin") return "Job Admin";
     return "Admin";
   };
 
@@ -400,7 +401,7 @@ export default function AdminCompaniesPage() {
                         <div className="flex items-center justify-end gap-3">
                           {(() => {
                              const myRoleNorm = (currentUser?.role || "").toLowerCase().replace(/[\s_]+/g, "");
-                             const canDelete = myRoleNorm === "ceo" || (myRoleNorm === "superadmin" && c.created_by === currentUser?.id);
+                             const canDelete = myRoleNorm === "ceo" || ((myRoleNorm === "superadmin" || myRoleNorm === "jobadmin") && c.created_by === currentUser?.id);
                              return canDelete ? (
                                <button
                                  onClick={() => handleDeleteCompany(c)}

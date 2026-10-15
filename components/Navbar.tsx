@@ -409,7 +409,7 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
           <>
             <button
               onClick={() => {

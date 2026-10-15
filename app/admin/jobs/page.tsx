@@ -548,6 +548,7 @@ return (
   const pRole = (job.profiles.role || "").toLowerCase().replace(/[\s_]+/g, "");
   if (pRole === "ceo") return "CEO";
   if (pRole === "superadmin") return "Super Admin";
+  if (pRole === "jobadmin") return "Job Admin";
   return "Admin";
 })()}
                       </td>

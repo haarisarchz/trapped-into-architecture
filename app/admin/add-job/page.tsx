@@ -671,6 +671,36 @@ const [customPrompt, setCustomPrompt] = useState<string>(AI_PROMPT_TEMPLATE);
 const [isPromptLocked, setIsPromptLocked] = useState<boolean>(true);
 const [showPromptModal, setShowPromptModal] = useState<boolean>(false);
 const [promptCopiedInModal, setPromptCopiedInModal] = useState<boolean>(false);
+const [currentUserRole, setCurrentUserRole] = useState<string>("");
+const canEditPrompt = currentUserRole === "ceo" || currentUserRole === "superadmin";
+
+useEffect(() => {
+  const fetchUserRole = async () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (!stored) return;
+      const lookupField = stored.username ? "username" : "email";
+      const lookupVal = stored.username || stored.email;
+      if (!lookupVal) return;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq(lookupField, lookupVal)
+        .maybeSingle();
+      const r = (prof?.role || stored.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      setCurrentUserRole(r);
+    } catch (e) {
+      console.error("Error fetching user role for prompt control:", e);
+    }
+  };
+  fetchUserRole();
+}, []);
+
+useEffect(() => {
+  if (currentUserRole && !canEditPrompt) {
+    setIsPromptLocked(true);
+  }
+}, [currentUserRole, canEditPrompt]);
 const [showExtractedConfirmModal, setShowExtractedConfirmModal] = useState<boolean>(false);
 const [pendingExtractedData, setPendingExtractedData] = useState<any | null>(null);
 
@@ -2392,9 +2422,13 @@ const handleSmartExtraction = async () => {
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full border border-gray-200">
                       🔒 Locked (Protected)
                     </span>
-                  ) : (
+                  ) : canEditPrompt ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-300">
                       ✏️ Unlocked (Editing Mode)
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full border border-gray-200">
+                      🔒 Locked (Protected)
                     </span>
                   )}
                 </div>
@@ -2418,9 +2452,15 @@ const handleSmartExtraction = async () => {
                   Prompt Content
                 </label>
                 {isPromptLocked ? (
-                  <span className="text-[11px] text-gray-400 italic">
-                    Prompt is locked. Click &quot;Unlock / Edit&quot; below to make changes.
-                  </span>
+                  canEditPrompt ? (
+                    <span className="text-[11px] text-gray-400 italic">
+                      Prompt is locked. Click &quot;Unlock / Edit&quot; below to make changes.
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-gray-500 font-medium">
+                      🔒 Protected template (Editing restricted to CEO &amp; Super Admin)
+                    </span>
+                  )
                 ) : (
                   <span className="text-[11px] text-amber-600 font-semibold">
                     ⚠️ Edit mode active. Click &quot;Save &amp; Lock&quot; when done.
@@ -2431,7 +2471,7 @@ const handleSmartExtraction = async () => {
               <textarea
                 rows={13}
                 value={customPrompt}
-                readOnly={isPromptLocked}
+                readOnly={isPromptLocked || !canEditPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
                 placeholder="Write or paste your custom prompt template here..."
                 className={`w-full p-4 rounded-2xl text-xs font-mono outline-none transition-all flex-1 resize-none leading-relaxed ${
@@ -2474,7 +2514,7 @@ const handleSmartExtraction = async () => {
                 </button>
 
                 {/* Reset to Default - Only visible and active when unlocked in edit mode */}
-                {!isPromptLocked && (
+                {!isPromptLocked && canEditPrompt && (
                   <button
                     type="button"
                     onClick={() => {
@@ -2490,38 +2530,44 @@ const handleSmartExtraction = async () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* Lock / Unlock & Save Button */}
-                {isPromptLocked ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const ok = window.confirm("Are you sure you want to unlock and edit the AI prompt template?");
-                      if (ok) {
-                        setIsPromptLocked(false);
-                        if (typeof window !== "undefined") {
-                          localStorage.setItem("ti2a_smart_job_prompt_locked", "false");
+                {/* Lock / Unlock & Save Button - Only for CEO and Super Admin */}
+                {canEditPrompt ? (
+                  isPromptLocked ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ok = window.confirm("Are you sure you want to unlock and edit the AI prompt template?");
+                        if (ok) {
+                          setIsPromptLocked(false);
+                          if (typeof window !== "undefined") {
+                            localStorage.setItem("ti2a_smart_job_prompt_locked", "false");
+                          }
                         }
-                      }
-                    }}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-black border border-gray-300 transition active:scale-95"
-                  >
-                    <span>🔓</span> Unlock / Edit Prompt
-                  </button>
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-black border border-gray-300 transition active:scale-95"
+                    >
+                      <span>🔓</span> Unlock / Edit Prompt
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPromptLocked(true);
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem("ti2a_smart_job_prompt", customPrompt);
+                          localStorage.setItem("ti2a_smart_job_prompt_locked", "true");
+                        }
+                        alert("✓ AI prompt template saved and locked successfully!");
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 shadow"
+                    >
+                      <span>💾</span> Save &amp; Lock Prompt
+                    </button>
+                  )
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPromptLocked(true);
-                      if (typeof window !== "undefined") {
-                        localStorage.setItem("ti2a_smart_job_prompt", customPrompt);
-                        localStorage.setItem("ti2a_smart_job_prompt_locked", "true");
-                      }
-                      alert("✓ AI prompt template saved and locked successfully!");
-                    }}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 shadow"
-                  >
-                    <span>💾</span> Save &amp; Lock Prompt
-                  </button>
+                  <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                    <span>🔒</span> Editing restricted to CEO &amp; Super Admin
+                  </div>
                 )}
 
                 <button
@@ -2871,7 +2917,7 @@ const handleSmartExtraction = async () => {
                             onClick={() => setShowPromptModal(true)}
                             className="text-[11px] font-bold text-gray-600 hover:text-black underline underline-offset-2 transition"
                           >
-                            {isPromptLocked ? "🔒 Prompt Locked" : "✏️ Edit Prompt"}
+                            {canEditPrompt ? (isPromptLocked ? "🔒 Prompt Locked" : "✏️ Edit Prompt") : "🔒 View Prompt"}
                           </button>
                           {smartText && (smartText.trim().startsWith("{") || smartText.includes(":") || /firm\s*name/i.test(smartText) || /position/i.test(smartText)) ? (
                             <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
