@@ -402,6 +402,28 @@ const [smartUrl, setSmartUrl] = useState("");
 const [promptCopied, setPromptCopied] = useState(false);
 const [isLocalExtraction, setIsLocalExtraction] = useState(false);
 
+const [customPrompt, setCustomPrompt] = useState<string>(AI_PROMPT_TEMPLATE);
+const [isPromptLocked, setIsPromptLocked] = useState<boolean>(true);
+const [showPromptModal, setShowPromptModal] = useState<boolean>(false);
+const [promptCopiedInModal, setPromptCopiedInModal] = useState<boolean>(false);
+const [showExtractedConfirmModal, setShowExtractedConfirmModal] = useState<boolean>(false);
+const [pendingExtractedData, setPendingExtractedData] = useState<any | null>(null);
+
+useEffect(() => {
+  if (typeof window !== "undefined") {
+    const savedPrompt = localStorage.getItem("ti2a_smart_job_prompt");
+    if (savedPrompt && savedPrompt.trim()) {
+      setCustomPrompt(savedPrompt);
+    }
+    const savedLock = localStorage.getItem("ti2a_smart_job_prompt_locked");
+    if (savedLock !== null) {
+      setIsPromptLocked(savedLock === "true");
+    } else {
+      setIsPromptLocked(true);
+    }
+  }
+}, []);
+
 const [smartImage, setSmartImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -1989,75 +2011,384 @@ const handleSmartExtraction = async () => {
       )}
 
 
-      {/* ================= SMART JOB POPUP (9:16 RATIO) ================= */}
-      {showSmartUpload && (
-        <div className="fixed inset-0 bg-black/70 overflow-y-auto z-[1000000] p-4 backdrop-blur-md">
-          <div className="flex flex-col md:flex-row items-center md:items-stretch justify-center gap-6 transition-all duration-500 w-full max-w-[1050px] mx-auto min-h-[100%] py-10 md:py-8">
-            
-            {/* LEFT PANE: PREVIEW BOX (Visible after extraction) */}
-            {String(loadingAI) === 'done' && (
-              <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
-                <div className="p-6 bg-white border-b">
-                  <h3 className="font-bold text-xl">Smart Preview</h3>
-                    {isLocalExtraction ? (
-                      <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-md">
-                        <span>⚡</span> Instant 0ms Local Parser (Zero Server Calls)
-                      </div>
-                    ) : aiResult?._apiKeyIndex ? (
-                      <div className="mt-2 inline-block px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-md">
-                        Processed via API Key #{aiResult._apiKeyIndex}
-                      </div>
-                    ) : null}
-                  </div>
-                
-                <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-black font-extrabold">Firm</label>
-                    <p className="font-semibold border-b border-gray-100 pb-1">{firmName || "---"}</p>
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-black font-extrabold">Positions ({positions.length})</label>
-                    <div className="border-b border-gray-100 pb-2 flex flex-col gap-1 mt-1">
-                      {positions.map((p, i) => (
-                        <p key={i} className="font-semibold text-sm">
-                          {p.position || '---'} {p.experience && p.experience.length > 0 ? `(${p.experience.join(', ')})` : ''}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-black md:text-black font-extrabold">Location</label>
-                    <p className="font-semibold border-b border-gray-100 pb-1">{city}, {state}</p>
-                  </div>
+      {/* ================= PROMPT MANAGEMENT MODAL ================= */}
+      {showPromptModal && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[10000000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[28px] max-w-2xl w-full p-6 sm:p-7 shadow-2xl relative flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h3 className="text-xl font-black text-black tracking-tight">AI Extraction Prompt</h3>
+                  {isPromptLocked ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full border border-gray-200">
+                      🔒 Locked (Protected)
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-amber-50 text-amber-800 px-2.5 py-0.5 rounded-full border border-amber-300">
+                      ✏️ Unlocked (Editing Mode)
+                    </span>
+                  )}
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Copy and paste this prompt into ChatGPT or Gemini with your flyer image to extract clean data.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPromptModal(false)}
+                className="text-gray-400 hover:text-black w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition"
+              >
+                ✕
+              </button>
+            </div>
 
-                <div className="p-6">
-                  <button type="button"
-                      onClick={() => {
-                        setShowSmartUpload(false);
-                        setLoadingAI(false);
-                      }}
-                      className="w-full bg-green-600 text-white py-4 rounded-xl font-bold hover:bg-green-700 shadow-lg active:scale-95 transition-all"
+            {/* Prompt Body */}
+            <div className="my-4 flex-1 flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[11px] font-extrabold uppercase tracking-wider text-gray-600">
+                  Prompt Content
+                </label>
+                {isPromptLocked ? (
+                  <span className="text-[11px] text-gray-400 italic">
+                    Prompt is locked. Click &quot;Unlock / Edit&quot; below to make changes.
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-amber-600 font-semibold">
+                    ⚠️ Edit mode active. Click &quot;Save &amp; Lock&quot; when done.
+                  </span>
+                )}
+              </div>
+
+              <textarea
+                rows={13}
+                value={customPrompt}
+                readOnly={isPromptLocked}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="Write or paste your custom prompt template here..."
+                className={`w-full p-4 rounded-2xl text-xs font-mono outline-none transition-all flex-1 resize-none leading-relaxed ${
+                  isPromptLocked
+                    ? "bg-gray-50 text-gray-800 border-2 border-gray-200 cursor-not-allowed select-text"
+                    : "bg-white text-black border-2 border-black shadow-inner ring-1 ring-black"
+                }`}
+              />
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                {/* Copy Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                      navigator.clipboard.writeText(customPrompt);
+                    }
+                    setPromptCopiedInModal(true);
+                    setTimeout(() => setPromptCopiedInModal(false), 3000);
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 ${
+                    promptCopiedInModal
+                      ? "bg-emerald-600 text-white"
+                      : "bg-black text-white hover:bg-gray-800"
+                  }`}
+                  title="Copy prompt to clipboard"
+                >
+                  {promptCopiedInModal ? (
+                    <>
+                      <span>✓</span> Prompt Copied!
+                    </>
+                  ) : (
+                    <>
+                      <span>📋</span> Copy Prompt
+                    </>
+                  )}
+                </button>
+
+                {/* Reset to Default */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("Reset this prompt back to the default architecture template?")) {
+                      setCustomPrompt(AI_PROMPT_TEMPLATE);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("ti2a_smart_job_prompt", AI_PROMPT_TEMPLATE);
+                      }
+                    }
+                  }}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-black hover:bg-gray-100 transition"
+                >
+                  ↺ Reset Default
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Lock / Unlock & Save Button */}
+                {isPromptLocked ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ok = window.confirm("Are you sure you want to unlock and edit the AI prompt template?");
+                      if (ok) {
+                        setIsPromptLocked(false);
+                        if (typeof window !== "undefined") {
+                          localStorage.setItem("ti2a_smart_job_prompt_locked", "false");
+                        }
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-black border border-gray-300 transition active:scale-95"
                   >
-                    Confirm & Auto-Fill
+                    <span>🔓</span> Unlock / Edit Prompt
                   </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPromptLocked(true);
+                      if (typeof window !== "undefined") {
+                        localStorage.setItem("ti2a_smart_job_prompt", customPrompt);
+                        localStorage.setItem("ti2a_smart_job_prompt_locked", "true");
+                      }
+                      alert("✓ AI prompt template saved and locked successfully!");
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition active:scale-95 shadow"
+                  >
+                    <span>💾</span> Save &amp; Lock Prompt
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowPromptModal(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= EXTRACTED DETAILS CONFIRMATION MODAL ================= */}
+      {showExtractedConfirmModal && pendingExtractedData && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[10000000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[28px] max-w-xl w-full p-6 shadow-2xl relative flex flex-col max-h-[88vh] animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-black text-black tracking-tight">Review Extracted Job Details</h3>
+                  {isLocalExtraction ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
+                      ⚡ Instant 0ms Parser
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md">
+                      🤖 Server AI
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Review the extracted details below. Click <strong>Confirm &amp; Auto-Fill</strong> to automatically fill all fields.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowExtractedConfirmModal(false)}
+                className="text-gray-400 hover:text-black w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable details list */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1 text-xs">
+              {/* Studio / Firm Info */}
+              <div className="bg-gray-50 border border-gray-200/70 rounded-2xl p-4">
+                <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-gray-500 mb-2.5">
+                  Studio / Firm
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-gray-400 text-[10px] uppercase font-bold block">Firm Name</span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {pendingExtractedData.firm_name || pendingExtractedData.company || pendingExtractedData.firm || "Not specified"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px] uppercase font-bold block">Location</span>
+                    <span className="text-sm font-semibold text-gray-800">
+                      {[pendingExtractedData.city, pendingExtractedData.state].filter(Boolean).join(", ") || "Not specified"}
+                    </span>
+                  </div>
+                  {pendingExtractedData.employment_type || pendingExtractedData.employmentType ? (
+                    <div>
+                      <span className="text-gray-400 text-[10px] uppercase font-bold block">Employment Type</span>
+                      <span className="font-semibold text-gray-800">
+                        {normEmp(pendingExtractedData.employment_type || pendingExtractedData.employmentType)}
+                      </span>
+                    </div>
+                  ) : null}
+                  {pendingExtractedData.workplace_type || pendingExtractedData.workplaceType ? (
+                    <div>
+                      <span className="text-gray-400 text-[10px] uppercase font-bold block">Workplace Type</span>
+                      <span className="font-semibold text-gray-800">
+                        {normWork(pendingExtractedData.workplace_type || pendingExtractedData.workplaceType)}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
-            )}
 
-            {/* RIGHT PANE: UPLOAD BOX (9:16 Ratio) */}
+              {/* Positions Found */}
+              <div className="bg-gray-50 border border-gray-200/70 rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-2.5">
+                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-gray-500">
+                    Positions ({(pendingExtractedData.positions && Array.isArray(pendingExtractedData.positions)) ? pendingExtractedData.positions.length : 1})
+                  </h4>
+                </div>
+                
+                <div className="space-y-3">
+                  {((pendingExtractedData.positions && Array.isArray(pendingExtractedData.positions) && pendingExtractedData.positions.length > 0)
+                    ? pendingExtractedData.positions
+                    : [pendingExtractedData]
+                  ).map((p: any, idx: number) => {
+                    const title = p.position || p.job_title || p.title || "Position " + (idx + 1);
+                    const exp = Array.isArray(p.experience) ? p.experience.join(", ") : (p.experience || "Not disclosed");
+                    return (
+                      <div key={idx} className="bg-white border rounded-xl p-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm text-gray-900">{title}</span>
+                          <span className="text-[10px] font-bold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                            {exp}
+                          </span>
+                        </div>
+                        {p.role && (
+                          <div className="text-gray-500 text-[11px] mt-1">Role: <span className="text-gray-800 font-medium">{p.role}</span></div>
+                        )}
+                        {p.salary && (
+                          <div className="text-gray-500 text-[11px] mt-0.5">Salary: <span className="text-emerald-700 font-semibold">{p.salary}</span></div>
+                        )}
+                        {p.qualifications && (
+                          <div className="text-gray-500 text-[11px] mt-0.5">Qualifications: <span className="text-gray-800">{p.qualifications}</span></div>
+                        )}
+                        {p.skills && Array.isArray(p.skills) && p.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {p.skills.map((s: string, sIdx: number) => (
+                              <span key={sIdx} className="bg-blue-50 text-blue-700 text-[10px] px-1.5 py-0.5 rounded font-medium">
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Application & Contact */}
+              <div className="bg-gray-50 border border-gray-200/70 rounded-2xl p-4">
+                <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-gray-500 mb-2.5">
+                  Application &amp; Contact Details
+                </h4>
+                <div className="space-y-1.5">
+                  {(pendingExtractedData.application_email || pendingExtractedData.applicationEmail || pendingExtractedData.email) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold w-20">Email:</span>
+                      <span className="font-semibold text-gray-900">
+                        {pendingExtractedData.application_email || pendingExtractedData.applicationEmail || pendingExtractedData.email}
+                      </span>
+                    </div>
+                  )}
+                  {(pendingExtractedData.apply_link || pendingExtractedData.applyLink || pendingExtractedData.link) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold w-20">Apply Link:</span>
+                      <span className="font-semibold text-blue-600 truncate">
+                        {pendingExtractedData.apply_link || pendingExtractedData.applyLink || pendingExtractedData.link}
+                      </span>
+                    </div>
+                  )}
+                  {(pendingExtractedData.phone || pendingExtractedData.whatsapp) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold w-20">Phone:</span>
+                      <span className="font-semibold text-gray-900">
+                        {pendingExtractedData.phone || pendingExtractedData.whatsapp}
+                      </span>
+                    </div>
+                  )}
+                  {(pendingExtractedData.deadline || pendingExtractedData.application_deadline) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold w-20">Deadline:</span>
+                      <span className="font-semibold text-amber-700">
+                        {pendingExtractedData.deadline || pendingExtractedData.application_deadline}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Confirmation Action Buttons */}
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setShowExtractedConfirmModal(false)}
+                className="px-4 py-3 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition"
+              >
+                Back to Edit Text
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  applyExtractedJobToState(pendingExtractedData);
+                  setShowExtractedConfirmModal(false);
+                  setShowSmartUpload(false);
+                  setLoadingAI(false);
+                }}
+                className="flex-1 max-w-[280px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition active:scale-95"
+              >
+                <span>✓</span> Confirm &amp; Auto-Fill All Fields
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= SMART JOB POPUP (9:16 RATIO) ================= */}
+      {showSmartUpload && (
+        <div className="fixed inset-0 bg-black/70 overflow-y-auto z-[1000000] p-4 backdrop-blur-md flex items-center justify-center">
+          <div className="w-full max-w-[500px] py-10 md:py-8 flex justify-center">
+            {/* UPLOAD BOX (9:16 Ratio) */}
             <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col relative overflow-hidden border border-white/20">
               <button type="button"
                   onClick={() => { setShowSmartUpload(false); setLoadingAI(false); }}
-                className="absolute right-5 top-5 bg-white text-black md:text-black hover:text-black w-8 h-8 rounded-full flex items-center justify-center z-20"
+                className="absolute right-5 top-5 bg-gray-100 hover:bg-gray-200 text-black w-8 h-8 rounded-full flex items-center justify-center z-20 font-bold transition"
               >✕</button>
 
               <div className="p-5 flex-1 flex flex-col">
-                <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center justify-between mt-2 mb-4 pr-10">
                   <div>
                     <h2 className="text-2xl font-black tracking-tight">Smart Job</h2>
                   </div>
-                  <button type="button" onClick={() => setShowAiSettings(true)} className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-black hover:bg-gray-200 transition-colors">API Config</button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPromptModal(true)} 
+                      className="text-xs bg-black text-white hover:bg-gray-800 px-3 py-1.5 rounded-lg font-bold transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+                      title="AI Prompt Settings (View, Edit, Lock, Copy)"
+                    >
+                      <span>💡</span> Prompt
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAiSettings(true)} 
+                      className="text-xs bg-gray-100 px-3 py-1.5 rounded-lg font-bold text-black hover:bg-gray-200 transition-colors active:scale-95"
+                    >
+                      API Config
+                    </button>
+                  </div>
                 </div>
                   <div className="flex items-center gap-2 mb-6 w-full bg-gray-50 border p-2 rounded-xl">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-black whitespace-nowrap px-2">Active Server:</label>
@@ -2115,7 +2446,7 @@ const handleSmartExtraction = async () => {
                           type="button"
                           onClick={() => {
                             if (navigator.clipboard && navigator.clipboard.writeText) {
-                              navigator.clipboard.writeText(AI_PROMPT_TEMPLATE);
+                              navigator.clipboard.writeText(customPrompt);
                             }
                             setPromptCopied(true);
                             setTimeout(() => setPromptCopied(false), 3000);
@@ -2129,29 +2460,34 @@ const handleSmartExtraction = async () => {
                         >
                           {promptCopied ? (
                             <>
-                              <span>✓</span> Template Copied!
+                              <span>✓</span> Prompt Copied!
                             </>
                           ) : (
                             <>
-                              <span>📋</span> Copy AI Prompt Template
+                              <span>📋</span> Copy Prompt
                             </>
                           )}
                         </button>
-                        <span className="text-[11px] font-semibold text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowPromptModal(true)}
+                            className="text-[11px] font-bold text-gray-600 hover:text-black underline underline-offset-2 transition"
+                          >
+                            {isPromptLocked ? "🔒 Prompt Locked" : "✏️ Edit Prompt"}
+                          </button>
                           {smartText && (smartText.trim().startsWith("{") || smartText.includes("```json") || smartText.includes('"firm_name"') || smartText.includes("firm_name:")) ? (
-                            <span className="text-emerald-600 font-bold flex items-center gap-1">
+                            <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
                               ⚡ Instant 0ms Local JSON
                             </span>
-                          ) : (
-                            <span>Paste AI JSON or text</span>
-                          )}
-                        </span>
+                          ) : null}
+                        </div>
                       </div>
                       <textarea
                         rows={11}
                         value={smartText}
                         onChange={(e) => setSmartText(e.target.value)}
-                        placeholder={`Paste ChatGPT / Gemini JSON or raw job text here...\n\n💡 Pro Tip: Click 'Copy AI Prompt Template' above, paste into ChatGPT or Gemini with your flyer image, and paste the JSON back here for 100% instant auto-fill!`}
+                        placeholder={`Paste ChatGPT / Gemini JSON or raw job text here...\n\n💡 Pro Tip: Click 'Copy Prompt' (or 'Prompt' at the top) to copy the prompt, paste it into ChatGPT with your flyer image, then paste the extracted text/JSON back here!`}
                         className="w-full border-2 border-gray-100 rounded-2xl p-4 text-xs font-mono outline-none focus:border-black transition-all flex-1 min-h-[260px] resize-none"
                       />
                     </div>
@@ -2204,8 +2540,9 @@ const handleSmartExtraction = async () => {
         if (localData) {
           setIsLocalExtraction(true);
           setAiResult(localData);
-          applyExtractedJobToState(localData);
-          setLoadingAI("done");
+          setPendingExtractedData(localData);
+          setShowExtractedConfirmModal(true);
+          setLoadingAI(false);
           return;
         }
 
@@ -2317,14 +2654,15 @@ const handleSmartExtraction = async () => {
           const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
           setIsLocalExtraction(false);
           setAiResult(result);
-          applyExtractedJobToState(ai);
-          setLoadingAI("done");
+          setPendingExtractedData(ai);
+          setShowExtractedConfirmModal(true);
+          setLoadingAI(false);
 
     } catch (err: any) {
       console.error(err);
       const isBusy = err.message && (err.message.includes("busy") || err.message.includes("503") || err.message.includes("429"));
       if (isBusy && uploadMode === "text") {
-        alert("Google AI servers are currently busy.\n\n💡 Pro Tip: Click 'Copy AI Prompt Template' above, paste it into ChatGPT or Gemini with your flyer image, and paste the JSON back here for instant 0ms extraction!");
+        alert("Google AI servers are currently busy.\n\n💡 Pro Tip: Click 'Prompt' above, copy the prompt into ChatGPT or Gemini with your flyer image, and paste the JSON back here for instant 0ms extraction!");
       } else {
         alert(err.message || "Extraction Failed");
       }
@@ -2333,7 +2671,7 @@ const handleSmartExtraction = async () => {
   }}
   className={`mt-6 w-full py-5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${(loadingAI && loadingAI !== 'done') ? 'bg-gray-100 text-black cursor-not-allowed opacity-80' : 'bg-black text-white hover:bg-gray-800 shadow-xl'}`}
 >
-  {(loadingAI && loadingAI !== 'done') ? (<><div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>{loadingAI === 'loading' ? 'Extracting...' : loadingAI}</>) : ('? Extract Details')}
+  {(loadingAI && loadingAI !== 'done') ? (<><div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>{loadingAI === 'loading' ? 'Extracting...' : loadingAI}</>) : ('✨ Extract Details')}
 </button>
               </div>
             </div>
