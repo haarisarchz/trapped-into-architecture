@@ -4,6 +4,8 @@
  * https://developers.google.com/search/docs/appearance/structured-data/job-posting
  */
 
+import { generateCompanySlug } from "./jobUrl";
+
 export interface GoogleJobLocation {
   "@type": "Place";
   address: {
@@ -281,7 +283,7 @@ export function generateJobPostingSchema(
   const hiringOrg: any = {
     "@type": "Organization",
     "name": job.firm_name || "Architecture Firm",
-    "sameAs": company?.website || company?.website_link || `https://trappedintoarchitecture.com/companies/${company?.slug || "company"}`,
+    "sameAs": company?.website || company?.website_link || `https://trappedintoarchitecture.com/companies/${company?.slug || generateCompanySlug(job.firm_name)}`,
     "logo": company?.logo_url || job.image || "https://trappedintoarchitecture.com/default-logo.png"
   };
 

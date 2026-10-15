@@ -30,24 +30,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.8,
     },
+    {
+      url: `${BASE_URL}/privacy-policy`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/contact`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/about`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
   ];
 
   // Fetch Jobs
   const { data: jobs } = await supabase
     .from('jobs')
-    .select('id, city, state, updated_at, posted_date')
+    .select('id, city, state, posted_date, post_expiry_date')
     .eq('status', 'published');
 
   if (jobs) {
-    const citiesSet = new Set();
-    const statesSet = new Set();
+    const citiesSet = new Set<string>();
+    const statesSet = new Set<string>();
 
     jobs.forEach((job) => {
       sitemapData.push({
         url: `${BASE_URL}${generateJobUrl(job)}`,
-        lastModified: job.updated_at || job.posted_date || new Date(),
+        lastModified: job.posted_date ? new Date(job.posted_date) : new Date(),
         changeFrequency: 'weekly',
-        priority: 0.7,
+        priority: 0.8,
       });
 
       if (job.city && job.city.trim()) {
