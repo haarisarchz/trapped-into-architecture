@@ -850,6 +850,7 @@ const [showFilters, setShowFilters] = useState(false);
       post_expiry_date={job.post_expiry_date || job.postExpiryDate}
       posted_date={job.posted_date || job.created_at || job.createdAt}
       save_count={job.save_count || job.saveCount || 0}
+      share_count={job.share_count || job.shareCount || 0}
       image={job.image}
     />
   ))

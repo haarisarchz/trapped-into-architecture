@@ -142,8 +142,29 @@ export default function ShareButtons({
   const trackShare = async () => {
     setShareCount(prev => prev + 1);
     try {
-      await supabase.rpc('increment_share_count', { job_id: jobId });
-    } catch (err) {}
+      if (jobId) {
+        const res = await fetch("/api/jobs/share", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId })
+        });
+        if (!res.ok) {
+          const { data: job } = await supabase.from("jobs").select("share_count").eq("id", jobId).single();
+          if (job) {
+            await supabase.from("jobs").update({ share_count: (job.share_count || 0) + 1 }).eq("id", jobId);
+          }
+        }
+      }
+    } catch (err) {
+      try {
+        if (jobId) {
+          const { data: job } = await supabase.from("jobs").select("share_count").eq("id", jobId).single();
+          if (job) {
+            await supabase.from("jobs").update({ share_count: (job.share_count || 0) + 1 }).eq("id", jobId);
+          }
+        }
+      } catch (e) {}
+    }
   };
 
   const getShareText = () => {
@@ -168,6 +189,7 @@ export default function ShareButtons({
         document.body.removeChild(input);
       }
       setCopied(true);
+      trackShare();
       setTimeout(() => { setCopied(false); setIsOpen(false); }, 1500);
     } catch (err) {
       console.warn("Copy link failed", err);
@@ -190,6 +212,7 @@ export default function ShareButtons({
         document.body.removeChild(textarea);
       }
       setCopiedText(true);
+      trackShare();
       setTimeout(() => { setCopiedText(false); setIsOpen(false); }, 1500);
     } catch (err) {
       console.warn("Copy post failed", err);
