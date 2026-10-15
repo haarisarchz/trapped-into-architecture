@@ -2277,21 +2277,20 @@ const handleSmartExtraction = async () => {
                   )}
                 </button>
 
-                {/* Reset to Default */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm("Reset this prompt back to the default architecture template?")) {
-                      setCustomPrompt(AI_PROMPT_TEMPLATE);
-                      if (typeof window !== "undefined") {
-                        localStorage.setItem("ti2a_smart_job_prompt", AI_PROMPT_TEMPLATE);
+                {/* Reset to Default - Only visible and active when unlocked in edit mode */}
+                {!isPromptLocked && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Reset this prompt back to the default architecture template?")) {
+                        setCustomPrompt(AI_PROMPT_TEMPLATE);
                       }
-                    }
-                  }}
-                  className="px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-black hover:bg-gray-100 transition"
-                >
-                  ↺ Reset Default
-                </button>
+                    }}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:text-red-600 hover:bg-gray-100 transition"
+                  >
+                    ↺ Reset Default
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
