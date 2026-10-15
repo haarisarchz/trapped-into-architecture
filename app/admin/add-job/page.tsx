@@ -63,38 +63,60 @@ import {
 import Autocomplete from "@/components/Autocomplete";
 import { AdminExperienceSlider, AdminSalarySlider } from "@/components/AdminSliderInputs";
 
-const AI_PROMPT_TEMPLATE = `Please extract the job advertisement details from this flyer/image into the following JSON format. Return ONLY the valid JSON object without markdown code blocks, backticks, or conversational text:
+const AI_PROMPT_TEMPLATE = `Please extract all architectural job vacancy details from this image/flyer into the exact "Heading: Answer" format.
 
-{
-  "firm_name": "Architecture Studio or Company Name",
-  "city": "City name",
-  "state": "State name (e.g. Tamil Nadu, Karnataka, Maharashtra, etc.)",
-  "employment_type": "Full-time / Part-time / Internship / Contract",
-  "workplace_type": "On-site / Hybrid / Remote / Work from Home",
-  "positions": [
-    {
-      "position": "Exact Job Title (e.g. Junior Architect, Interior Designer, Architectural Intern, 3D Visualizer)",
-      "role": "Role summary or specialization",
-      "experience": "0-2 Years / 1-3 Years / Fresher",
-      "salary": "Salary (e.g. ₹25,000 - ₹35,000, 3-5 LPA, or Not disclosed)",
-      "description": "Responsibilities and key duties",
-      "qualifications": "B.Arch / M.Arch / Diploma in Interior Design",
-      "skills": ["AutoCAD", "Revit", "SketchUp", "Photoshop", "Lumion", "V-Ray", "Rhino"]
-    }
-  ],
-  "application_email": "Official application email (e.g. careers@studio.com)",
-  "apply_link": "Website or Google Form application link if provided",
-  "phone": "Phone number if provided",
-  "whatsapp": "WhatsApp number if provided",
-  "website": "Studio website if provided",
-  "deadline": "Last date to apply if specified (YYYY-MM-DD)"
-}`;
+RULES:
+1. Output ONLY lines in "Heading: Answer" format. Do NOT output JSON, code blocks, or markdown backticks.
+2. ESSENTIAL FIELDS (Must ALWAYS be included in the output. If not mentioned in the image, keep the heading and leave the answer blank after the colon):
+Firm Name: 
+City: 
+State: 
+Workplace Type: 
+Employment Type: 
+Position: 
+Experience: 
+Application Email: 
+
+3. NON-ESSENTIAL FIELDS (Include ONLY if explicitly found in the image. If not found, DO NOT include the heading at all):
+Role: 
+Salary: 
+Qualifications: 
+Skills: 
+Job Description: 
+Apply Link: 
+Last Date to Apply: 
+Phone: 
+WhatsApp: 
+Studio Website: 
+Studio Address: 
+Area: 
+Organization Type: 
+Principal Architect: 
+Employee Size: 
+Founded Year: 
+Instagram: 
+LinkedIn: 
+
+4. MULTIPLE POSITIONS:
+If the flyer advertises multiple positions, repeat a block for each position:
+Position: [Job Title]
+Role: [Role if mentioned]
+Experience: [Experience required]
+Salary: [Salary if mentioned]
+Skills: [Skills required]
+Qualifications: [Qualifications required]
+
+5. FIELD VALUE GUIDELINES:
+- Workplace Type: On-site / Hybrid / Remote / Work from Home
+- Employment Type: Full-time / Part-time / Internship / Contract / Freelance
+- Experience: Fresher / 0-1 Years / 1-2 Years / 2-4 Years / 4-6 Years / 6-10 Years / 10+ Years
+- Last Date to Apply: Format as YYYY-MM-DD if date is specified`;
 
 function parseJobLocally(rawText: string): any | null {
   if (!rawText || !rawText.trim()) return null;
   const trimmed = rawText.trim();
 
-  // 1. Try JSON parsing (handles raw JSON, markdown code fence, or conversational text wrapping)
+  // 1. Try JSON parsing (handles raw JSON or markdown code fence if pasted)
   let jsonString = "";
   const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (codeBlockMatch) {
@@ -114,69 +136,208 @@ function parseJobLocally(rawText: string): any | null {
         return parsed;
       }
     } catch (e) {
-      // JSON syntax error, fallback to key-value
+      // JSON syntax error, fallback to Heading: Answer
     }
   }
 
-  // 2. Try structured key-value parsing (e.g. "Firm Name: ...", "Position: ...", etc.)
-  const lines = trimmed.split("\n").map(l => l.trim()).filter(Boolean);
+  // 2. Structured "Heading: Answer" parsing
+  const lines = trimmed.split("\n");
   const kvObj: any = {};
+  const collectedPositions: any[] = [];
+  let currentPos: any = null;
+
   const keyMap: Record<string, string> = {
+    // Studio & Firm
     "firm": "firm_name",
     "firm name": "firm_name",
     "company": "firm_name",
     "company name": "firm_name",
     "studio": "firm_name",
     "studio name": "firm_name",
+    "organization type": "organization_type",
+    "firm type": "organization_type",
+    "company type": "organization_type",
+    "principal architect": "principal_architect",
+    "lead architect": "principal_architect",
+    "founder": "principal_architect",
+    "employee size": "employee_size",
+    "team size": "employee_size",
+    "founded year": "founded_year",
+    "established": "founded_year",
+    "founded": "founded_year",
+    "studio address": "company_address",
+    "office address": "company_address",
+    "address": "company_address",
+    "company description": "company_description",
+    "studio description": "company_description",
+    "about firm": "company_description",
+    "about studio": "company_description",
+
+    // Location
     "city": "city",
     "location": "city",
+    "job location": "city",
     "state": "state",
+    "area": "area",
+    "neighborhood": "area",
+    "locality": "area",
+    "country": "country",
+
+    // Employment
     "employment type": "employment_type",
+    "job type": "employment_type",
     "workplace type": "workplace_type",
+    "workplace": "workplace_type",
+    "work mode": "workplace_type",
+    "work model": "workplace_type",
+
+    // Positions & Roles
     "position": "position",
-    "positions": "position",
+    "position 1": "position",
+    "position 2": "position",
+    "position 3": "position",
+    "position 4": "position",
     "job title": "position",
+    "title": "position",
     "role": "role",
+    "specialization": "role",
     "experience": "experience",
+    "experience required": "experience",
+    "exp": "experience",
     "salary": "salary",
+    "pay": "salary",
+    "stipend": "salary",
+    "ctc": "salary",
+    "remuneration": "salary",
     "qualifications": "qualifications",
+    "qualification": "qualifications",
+    "education": "qualifications",
+    "degree": "qualifications",
     "skills": "skills",
     "skills required": "skills",
-    "description": "description",
+    "software": "skills",
+    "software skills": "skills",
     "job description": "description",
-    "email": "application_email",
+    "description": "description",
+    "responsibilities": "description",
+    "duties": "description",
+
+    // Application & Contacts
     "application email": "application_email",
     "apply email": "application_email",
+    "email to apply": "application_email",
+    "send cv to": "application_email",
+    "send resume to": "application_email",
+    "email": "application_email",
     "apply link": "apply_link",
+    "application link": "apply_link",
+    "form link": "apply_link",
+    "google form": "apply_link",
     "link": "apply_link",
-    "website": "website",
     "phone": "phone",
+    "contact": "phone",
+    "mobile": "phone",
+    "phone number": "phone",
+    "contact number": "phone",
     "whatsapp": "whatsapp",
-    "deadline": "deadline",
+    "whatsapp number": "whatsapp",
+    "studio website": "website",
+    "website": "website",
+    "website link": "website",
+    "studio email": "company_email",
+    "company email": "company_email",
+    "instagram": "instagram",
+    "instagram handle": "instagram",
+    "insta": "instagram",
+    "linkedin": "linkedin",
+    "linkedin url": "linkedin",
+    "facebook": "facebook",
+    "twitter": "twitter",
+    "x": "twitter",
+    "last date to apply": "deadline",
     "last date": "deadline",
-    "last date to apply": "deadline"
+    "deadline": "deadline",
+    "apply before": "deadline"
   };
 
-  for (const line of lines) {
-    const match = line.match(/^([\w\s]+)[:=-]\s*(.*)$/);
-    if (match) {
-      const rawKey = match[1].trim().toLowerCase();
-      const val = match[2].trim();
-      if (keyMap[rawKey]) {
-        kvObj[keyMap[rawKey]] = val;
+  const posFields = ["position", "role", "experience", "salary", "qualifications", "skills", "description"];
+
+  for (let rawLine of lines) {
+    let line = rawLine.trim();
+    if (!line) continue;
+
+    // Strip leading list symbols like - , * , 1. , • , etc.
+    line = line.replace(/^[-*•\d\.\)]+\s*/, "").trim();
+
+    // Match "Heading: Answer", "**Heading**: Answer", or "Heading - Answer"
+    const match = line.match(/^\*{0,2}([\w\s\d]+?)\*{0,2}\s*[:=–—]\s*(.*)$/);
+    if (!match) continue;
+
+    const rawHeading = match[1].trim().toLowerCase();
+    let val = match[2].trim();
+
+    // Clean surrounding quotes or markdown formatting from value
+    val = val.replace(/^["'`*]+|["'`*]+$/g, "").trim();
+
+    // If answer is empty or placeholder like "[Not mentioned]", treat as blank
+    if (/^\[?(not specified|not mentioned|not provided|n\/?a|none|nil|-+)\]?$/i.test(val)) {
+      val = "";
+    }
+
+    const field = keyMap[rawHeading];
+    if (!field) continue;
+
+    if (field === "position") {
+      if (currentPos && (currentPos.position || currentPos.experience || currentPos.salary)) {
+        collectedPositions.push(currentPos);
       }
+      currentPos = {
+        position: val,
+        role: "",
+        experience: "",
+        salary: "",
+        qualifications: "",
+        skills: [],
+        description: ""
+      };
+    } else if (posFields.includes(field)) {
+      if (!currentPos) {
+        currentPos = {
+          position: "",
+          role: "",
+          experience: "",
+          salary: "",
+          qualifications: "",
+          skills: [],
+          description: ""
+        };
+      }
+      if (field === "skills") {
+        currentPos.skills = val ? val.split(",").map((s: string) => s.trim()).filter(Boolean) : [];
+      } else {
+        currentPos[field] = val;
+      }
+    } else {
+      // Global studio or contact details
+      kvObj[field] = val;
     }
   }
 
-  if (kvObj.firm_name || kvObj.position) {
-    if (kvObj.city && kvObj.city.includes(",")) {
-      const parts = kvObj.city.split(",").map((p: string) => p.trim());
-      kvObj.city = parts[0];
-      if (!kvObj.state && parts[1]) kvObj.state = parts[1];
-    }
-    if (kvObj.skills && typeof kvObj.skills === "string") {
-      kvObj.skills = kvObj.skills.split(",").map((s: string) => s.trim()).filter(Boolean);
-    }
+  if (currentPos && (currentPos.position || currentPos.experience || currentPos.salary || (currentPos.skills && currentPos.skills.length > 0))) {
+    collectedPositions.push(currentPos);
+  }
+
+  if (collectedPositions.length > 0) {
+    kvObj.positions = collectedPositions;
+  }
+
+  if (kvObj.city && kvObj.city.includes(",")) {
+    const parts = kvObj.city.split(",").map((p: string) => p.trim());
+    kvObj.city = parts[0];
+    if (!kvObj.state && parts[1]) kvObj.state = parts[1];
+  }
+
+  if (kvObj.firm_name || (kvObj.positions && kvObj.positions.length > 0) || kvObj.city || kvObj.application_email) {
     return kvObj;
   }
 
@@ -412,8 +573,12 @@ const [pendingExtractedData, setPendingExtractedData] = useState<any | null>(nul
 useEffect(() => {
   if (typeof window !== "undefined") {
     const savedPrompt = localStorage.getItem("ti2a_smart_job_prompt");
-    if (savedPrompt && savedPrompt.trim()) {
+    // Migrate old JSON prompt template to the new Heading: Answer template
+    if (savedPrompt && !savedPrompt.includes("JSON format") && !savedPrompt.includes("JSON object") && savedPrompt.includes("Heading: Answer") && savedPrompt.trim()) {
       setCustomPrompt(savedPrompt);
+    } else {
+      setCustomPrompt(AI_PROMPT_TEMPLATE);
+      localStorage.setItem("ti2a_smart_job_prompt", AI_PROMPT_TEMPLATE);
     }
     const savedLock = localStorage.getItem("ti2a_smart_job_prompt_locked");
     if (savedLock !== null) {
@@ -626,14 +791,21 @@ const applyExtractedJobToState = (ai: any) => {
   if (ai.phone) setCompanyPhone(ai.phone);
   if (ai.whatsapp) setCompanyWhatsapp(ai.whatsapp);
   if (ai.website) setCompanyWebsite(ai.website);
-  if (ai.email) setCompanyEmail(ai.email);
+  if (ai.company_address || ai.address) setCompanyAddress(ai.company_address || ai.address);
+  if (ai.company_description) setCompanyDescription(ai.company_description);
+  if (ai.company_email || ai.email) setCompanyEmail(ai.company_email || ai.email);
   if (ai.facebook) setCompanyFacebook(ai.facebook);
   if (ai.instagram) setCompanyInstagram(ai.instagram);
   if (ai.linkedin) setCompanyLinkedin(ai.linkedin);
   if (ai.twitter) setCompanyTwitter(ai.twitter);
-  if (ai.principalArchitect) setPrincipalArchitect(ai.principalArchitect);
-  if (ai.employeeSize) setEmployeeSize(ai.employeeSize);
-  if (ai.foundedYear) setFoundedYear(String(ai.foundedYear));
+  if (ai.principal_architect || ai.principalArchitect) setPrincipalArchitect(ai.principal_architect || ai.principalArchitect);
+  if (ai.employee_size || ai.employeeSize) setEmployeeSize(ai.employee_size || ai.employeeSize);
+  if (ai.founded_year || ai.foundedYear) setFoundedYear(String(ai.founded_year || ai.foundedYear));
+
+  // Auto-expand studio details accordion if any studio-specific details are extracted
+  if (ai.phone || ai.whatsapp || ai.website || ai.company_address || ai.address || ai.principal_architect || ai.principalArchitect || ai.founded_year || ai.foundedYear) {
+    setShowCompanyDetails(true);
+  }
 };
 
 
@@ -2318,6 +2490,30 @@ const handleSmartExtraction = async () => {
                       </span>
                     </div>
                   )}
+                  {(pendingExtractedData.website || pendingExtractedData.studio_website) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold w-20">Website:</span>
+                      <span className="font-semibold text-blue-600 truncate">
+                        {pendingExtractedData.website || pendingExtractedData.studio_website}
+                      </span>
+                    </div>
+                  )}
+                  {(pendingExtractedData.company_address || pendingExtractedData.address) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold w-20">Address:</span>
+                      <span className="font-semibold text-gray-900 truncate">
+                        {pendingExtractedData.company_address || pendingExtractedData.address}
+                      </span>
+                    </div>
+                  )}
+                  {(pendingExtractedData.principal_architect || pendingExtractedData.principalArchitect) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-bold w-20">Principal:</span>
+                      <span className="font-semibold text-gray-900">
+                        {pendingExtractedData.principal_architect || pendingExtractedData.principalArchitect}
+                      </span>
+                    </div>
+                  )}
                   {(pendingExtractedData.deadline || pendingExtractedData.application_deadline) && (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400 font-bold w-20">Deadline:</span>
@@ -2476,9 +2672,9 @@ const handleSmartExtraction = async () => {
                           >
                             {isPromptLocked ? "🔒 Prompt Locked" : "✏️ Edit Prompt"}
                           </button>
-                          {smartText && (smartText.trim().startsWith("{") || smartText.includes("```json") || smartText.includes('"firm_name"') || smartText.includes("firm_name:")) ? (
+                          {smartText && (smartText.trim().startsWith("{") || smartText.includes(":") || /firm\s*name/i.test(smartText) || /position/i.test(smartText)) ? (
                             <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
-                              ⚡ Instant 0ms Local JSON
+                              ⚡ 0ms Instant Parser Active
                             </span>
                           ) : null}
                         </div>
@@ -2487,7 +2683,7 @@ const handleSmartExtraction = async () => {
                         rows={11}
                         value={smartText}
                         onChange={(e) => setSmartText(e.target.value)}
-                        placeholder={`Paste ChatGPT / Gemini JSON or raw job text here...\n\n💡 Pro Tip: Click 'Copy Prompt' (or 'Prompt' at the top) to copy the prompt, paste it into ChatGPT with your flyer image, then paste the extracted text/JSON back here!`}
+                        placeholder={`Paste ChatGPT / Gemini extracted "Heading: Answer" text here...\n\nExample:\nFirm Name: Studio ABC\nCity: Bangalore\nState: Karnataka\nWorkplace Type: On-site\nEmployment Type: Full-time\nPosition: Junior Architect\nExperience: 0-2 Years\nApplication Email: careers@studioabc.com\n\n💡 Pro Tip: Click 'Copy Prompt' above, paste into ChatGPT with your flyer image, then paste the result back here!`}
                         className="w-full border-2 border-gray-100 rounded-2xl p-4 text-xs font-mono outline-none focus:border-black transition-all flex-1 min-h-[260px] resize-none"
                       />
                     </div>
