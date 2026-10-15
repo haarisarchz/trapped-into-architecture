@@ -29,7 +29,6 @@ function InternshipsPageContent() {
     searchParams.get("city") ? [searchParams.get("city") as string] : []
   );
   const [selectedOrgTypes, setSelectedOrgTypes] = useState<string[]>([]);
-  const [selectedQualifications, setSelectedQualifications] = useState<string[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
   const [viewMode, setViewMode] = useState("visual");
@@ -43,7 +42,6 @@ function InternshipsPageContent() {
   const [showAllStates, setShowAllStates] = useState(false);
   const [showAllCities, setShowAllCities] = useState(false);
   const [showAllOrgTypes, setShowAllOrgTypes] = useState(false);
-  const [showAllQuals, setShowAllQuals] = useState(false);
   const [showAllSkills, setShowAllSkills] = useState(false);
 
   // Pagination
@@ -104,9 +102,6 @@ function InternshipsPageContent() {
   const orgTypeStats = getAggregatedList(jobs, 'organization_type');
   const displayedOrgTypes = showAllOrgTypes ? orgTypeStats : orgTypeStats.slice(0, 6);
 
-  const qualStats = getAggregatedArrayList(jobs, 'qualifications');
-  const displayedQuals = showAllQuals ? qualStats : qualStats.slice(0, 6);
-
   const skillStats = getAggregatedArrayList(jobs, 'skills_required');
   const displayedSkills = showAllSkills ? skillStats : skillStats.slice(0, 8);
 
@@ -163,7 +158,6 @@ function InternshipsPageContent() {
     setSelectedStates([]);
     setSelectedCities([]);
     setSelectedOrgTypes([]);
-    setSelectedQualifications([]);
     setSelectedSkills([]);
     setDatePosted("");
     setExcludeExpired(false);
@@ -176,10 +170,6 @@ function InternshipsPageContent() {
         const stateMatch = selectedStates.length === 0 || selectedStates.includes(job.state);
         const cityMatch = selectedCities.length === 0 || selectedCities.includes(job.city);
         const orgTypeMatch = selectedOrgTypes.length === 0 || selectedOrgTypes.includes(job.organization_type);
-
-        const qualificationMatch =
-          selectedQualifications.length === 0 ||
-          job.qualifications?.some((q: string) => selectedQualifications.includes(q));
 
         const skillsMatch =
           selectedSkills.length === 0 ||
@@ -218,7 +208,6 @@ function InternshipsPageContent() {
           stateMatch &&
           cityMatch &&
           orgTypeMatch &&
-          qualificationMatch &&
           skillsMatch &&
           searchMatch &&
           expiryMatch &&
@@ -236,7 +225,6 @@ function InternshipsPageContent() {
     selectedStates,
     selectedCities,
     selectedOrgTypes,
-    selectedQualifications,
     selectedSkills,
     searchQuery,
     excludeExpired,
@@ -258,7 +246,6 @@ function InternshipsPageContent() {
         {(selectedStates.length > 0 ||
           selectedCities.length > 0 ||
           selectedOrgTypes.length > 0 ||
-          selectedQualifications.length > 0 ||
           selectedSkills.length > 0 ||
           datePosted !== "" ||
           excludeExpired) && (
@@ -391,45 +378,7 @@ function InternshipsPageContent() {
         </>
       )}
 
-      {/* QUALIFICATIONS / DEGREE */}
-      {qualStats.length > 0 && (
-        <>
-          <div>
-            <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
-              Degree / Qualification
-            </h3>
-            <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
-              {displayedQuals.map((q) => (
-                <label key={q.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
-                  <div className="flex items-center gap-2.5">
-                    <input
-                      type="checkbox"
-                      checked={selectedQualifications.includes(q.name)}
-                      onChange={(e) => {
-                        if (e.target.checked) setSelectedQualifications([...selectedQualifications, q.name]);
-                        else setSelectedQualifications(selectedQualifications.filter((val) => val !== q.name));
-                      }}
-                      className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-                    />
-                    <span className="truncate text-gray-700 group-hover:text-black transition-colors">{q.name}</span>
-                  </div>
-                  <span className="text-gray-400 text-xs font-medium">({q.count})</span>
-                </label>
-              ))}
-              {qualStats.length > 6 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllQuals(!showAllQuals)}
-                  className="text-blue-600 hover:underline text-xs mt-1.5 font-medium block"
-                >
-                  {showAllQuals ? "Show Less" : "Show More"}
-                </button>
-              )}
-            </div>
-          </div>
-          <hr className="border-gray-100" />
-        </>
-      )}
+
 
       {/* SOFTWARE & SKILLS */}
       {skillStats.length > 0 && (
@@ -639,13 +588,6 @@ function InternshipsPageContent() {
                 </span>
               ))}
 
-              {selectedQualifications.map((ql) => (
-                <span key={ql} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-800 shadow-sm">
-                  {ql}
-                  <button onClick={() => setSelectedQualifications(selectedQualifications.filter((q) => q !== ql))} className="text-gray-400 hover:text-black">✕</button>
-                </span>
-              ))}
-
               {selectedSkills.map((sk) => (
                 <span key={sk} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white border border-gray-200 text-gray-800 shadow-sm">
                   {sk}
@@ -653,7 +595,7 @@ function InternshipsPageContent() {
                 </span>
               ))}
 
-              {(selectedStates.length > 0 || selectedCities.length > 0 || selectedOrgTypes.length > 0 || selectedQualifications.length > 0 || selectedSkills.length > 0) && (
+              {(selectedStates.length > 0 || selectedCities.length > 0 || selectedOrgTypes.length > 0 || selectedSkills.length > 0) && (
                 <button onClick={clearAllFilters} className="text-xs text-orange-600 font-semibold hover:underline ml-2">
                   Reset all
                 </button>
