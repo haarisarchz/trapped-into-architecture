@@ -56,6 +56,14 @@ export function sanitizeInstagramHandle(raw?: string | null): string | null {
  * Shared formatter for WhatsApp job postings (used by public ShareButtons,
  * AdminActionMenu, AdminShareButton, and WhatsApp Channel workflows).
  */
+function formatExperienceText(rawExp: any, isIntern: boolean): string {
+  if (isIntern || !rawExp) return "";
+  const arr = Array.isArray(rawExp) ? rawExp : [rawExp];
+  const clean = Array.from(new Set(arr.map(x => String(x).trim()).filter(Boolean)));
+  if (clean.length === 0) return "";
+  return ` (${clean.join(", ")})`;
+}
+
 export function formatWhatsAppPost(jobs: SocialJobItem[], jobUrl: string): string {
   const mainJob = jobs[0] || {};
   const firmName = mainJob.firm_name || "Unknown Firm";
@@ -67,15 +75,13 @@ export function formatWhatsAppPost(jobs: SocialJobItem[], jobUrl: string): strin
   if (jobs.length > 1) {
     text = `🏢 FIRM: ${firmName}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
     jobs.forEach((job, index) => {
-      const exp = Array.isArray(job.experience) ? job.experience.join(", ") : job.experience;
       const isIntern = job.employment_type === "Internship" || job.position?.toLowerCase().includes("intern");
-      const expText = exp && String(exp).trim() && !isIntern ? ` (${exp})` : "";
+      const expText = formatExperienceText(job.experience, !!isIntern);
       text += `${index + 1}. ${job.position || "Position"}${expText}\n`;
     });
   } else {
-    const exp = Array.isArray(mainJob.experience) ? mainJob.experience.join(", ") : mainJob.experience;
     const isIntern = mainJob.employment_type === "Internship" || mainJob.position?.toLowerCase().includes("intern");
-    const expText = exp && String(exp).trim() && !isIntern ? ` (${exp})` : "";
+    const expText = formatExperienceText(mainJob.experience, !!isIntern);
     text = `🏢 FIRM: ${firmName}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${mainJob.position || "Position"}${expText}\n`;
   }
 
@@ -112,9 +118,8 @@ export function formatInstagramCaption(
 
   // 3. Positions
   jobs.forEach((job, index) => {
-    const exp = Array.isArray(job.experience) ? job.experience.join(", ") : job.experience;
     const isIntern = job.employment_type === "Internship" || job.position?.toLowerCase().includes("intern");
-    const expText = exp && String(exp).trim() && !isIntern ? ` (${exp})` : "";
+    const expText = formatExperienceText(job.experience, !!isIntern);
     const prefix = jobs.length === 1 ? "1. " : `${index + 1}. `;
     caption += `${prefix}${job.position || "Position"}${expText}\n`;
   });

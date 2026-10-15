@@ -46,10 +46,20 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
     } else {
       if (range[0] === 0 && range[1] === 0) {
         onChangeExp(["Fresher"]);
-      } else if (range[1] === 20) {
+      } else if (range[0] === 0 && range[1] === 1) {
+        onChangeExp(["0-1 Years"]);
+      } else if (range[0] === 1 && range[1] === 2) {
+        onChangeExp(["1-2 Years"]);
+      } else if (range[0] === 2 && range[1] === 4) {
+        onChangeExp(["2-4 Years"]);
+      } else if (range[0] === 4 && range[1] === 6) {
+        onChangeExp(["4-6 Years"]);
+      } else if (range[0] === 6 && range[1] === 10) {
+        onChangeExp(["6-10 Years"]);
+      } else if (range[1] === 20 || (range[0] >= 10 && range[1] >= 10)) {
         onChangeExp([`${range[0] === 0 ? "0" : range[0]}+ Years`]);
       } else {
-        onChangeExp([`${range[0] === 0 ? "Fresher" : range[0]} - ${range[1]} Year${range[1] > 1 ? 's' : ''}`]);
+        onChangeExp([`${range[0] === 0 ? "0" : range[0]}-${range[1]} Years`]);
       }
     }
   };

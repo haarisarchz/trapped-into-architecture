@@ -402,19 +402,78 @@ const formatQualificationsArray = (val: any): string[] => {
   return Array.from(new Set(String(val).split(/[,/]/).map(s => s.trim()).filter(Boolean)));
 };
 
-const parseExperience = (rawExp: any) => {
+const parseExperience = (rawExp: any): string[] => {
   if (!rawExp) return [];
-  const str = Array.isArray(rawExp) ? rawExp.join(" ") : String(rawExp);
+  if (Array.isArray(rawExp)) {
+    const valid = rawExp.map(x => String(x).trim()).filter(x => EXPERIENCE_OPTIONS.includes(x));
+    if (valid.length === 1) return valid;
+    rawExp = rawExp[0] || "";
+  }
+
+  const str = String(rawExp).trim();
+  if (!str) return [];
+
+  const exact = EXPERIENCE_OPTIONS.find(opt => opt.toLowerCase() === str.toLowerCase());
+  if (exact) return [exact];
+
   const lower = str.toLowerCase();
   const matched = new Set<string>();
-  if (lower.includes("fresher") || lower.includes("0 year") || lower.includes("0-1")) matched.add("Fresher");
-  if (lower.includes("0-1") || lower.includes("0 to 1") || lower.includes("0 - 1")) matched.add("0-1 Years");
-  if (lower.includes("1-2") || lower.includes("1 to 2") || lower.includes("1 - 2") || lower.match(/1\s*year/)) matched.add("1-2 Years");
-  if (lower.includes("2-4") || lower.includes("2 to 4") || lower.includes("2 - 4") || lower.match(/[23]\s*year/)) matched.add("2-4 Years");
-  if (lower.includes("4-6") || lower.includes("4 to 6") || lower.includes("4 - 6") || lower.match(/[45]\s*year/)) matched.add("4-6 Years");
-  if (lower.includes("6-10") || lower.includes("6 to 10") || lower.includes("6 - 10") || lower.match(/[6789]\s*year/)) matched.add("6-10 Years");
-  if (lower.includes("10+") || lower.includes("10 +") || lower.match(/1[0-9]\s*year/)) matched.add("10+ Years");
-  if (matched.size === 0) matched.add("Not disclosed");
+
+  const isFresher = lower.includes("fresher") || lower.includes("entry level") || lower.includes("no experience");
+  
+  const rangeMatch = lower.match(/(\d+)\s*(?:-|to)\s*(\d+)/);
+  if (rangeMatch) {
+    const min = parseInt(rangeMatch[1], 10);
+    const max = parseInt(rangeMatch[2], 10);
+
+    if (min === 0 && max === 1) {
+      if (isFresher) matched.add("Fresher");
+      matched.add("0-1 Years");
+    } else if (min === 1 && max === 2) {
+      matched.add("1-2 Years");
+    } else if (min === 2 && max === 4) {
+      matched.add("2-4 Years");
+    } else if (min === 2 && max === 3) {
+      matched.add("2-4 Years");
+    } else if (min === 4 && max === 6) {
+      matched.add("4-6 Years");
+    } else if (min === 6 && max === 10) {
+      matched.add("6-10 Years");
+    } else {
+      if (isFresher && min === 0) matched.add("Fresher");
+      if (min <= 0 && max >= 1) matched.add("0-1 Years");
+      if (min <= 1 && max >= 2) matched.add("1-2 Years");
+      if (min <= 3 && max >= 2 && (min >= 2 || max >= 3)) matched.add("2-4 Years");
+      if (min <= 5 && max >= 4 && (min >= 4 || max >= 5)) matched.add("4-6 Years");
+      if (min <= 8 && max >= 6 && (min >= 6 || max >= 8)) matched.add("6-10 Years");
+      if (max >= 10) matched.add("10+ Years");
+    }
+  } else {
+    const singleMatch = lower.match(/(\d+)\s*(?:\+|\s*years?|\s*yrs?)/) || lower.match(/(?:minimum|min|at least)\s*(\d+)/);
+    if (singleMatch) {
+      const num = parseInt(singleMatch[1], 10);
+      if (num === 0) {
+        matched.add("Fresher");
+      } else if (num === 1) {
+        matched.add("1-2 Years");
+      } else if (num >= 2 && num <= 3) {
+        matched.add("2-4 Years");
+      } else if (num >= 4 && num <= 5) {
+        matched.add("4-6 Years");
+      } else if (num >= 6 && num <= 9) {
+        matched.add("6-10 Years");
+      } else if (num >= 10) {
+        matched.add("10+ Years");
+      }
+    } else if (isFresher) {
+      matched.add("Fresher");
+    }
+  }
+
+  if (matched.size === 0) {
+    matched.add("Not disclosed");
+  }
+
   return Array.from(matched);
 };
 

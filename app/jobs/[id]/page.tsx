@@ -31,7 +31,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   
   const jobUrl = `https://trappedintoarchitecture.com${generateJobUrl(job)}`;
   const title = `${job.position} in ${job.city || "India"} at ${job.firm_name} | Trapped Into Architecture`;
-  const description = `${job.firm_name} is hiring ${job.position} in ${[job.area, job.city, job.state].filter(Boolean).join(", ")}. Experience: ${job.experience || "Freshers / Experienced"}. Apply directly on Trapped Into Architecture.`;
+  const expString = Array.isArray(job.experience) ? job.experience.join(", ") : (job.experience || "Freshers / Experienced");
+  const description = `${job.firm_name} is hiring ${job.position} in ${[job.area, job.city, job.state].filter(Boolean).join(", ")}. Experience: ${expString}. Apply directly on Trapped Into Architecture.`;
 
   return {
     title,
