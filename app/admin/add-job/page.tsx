@@ -65,52 +65,40 @@ import { AdminExperienceSlider, AdminSalarySlider } from "@/components/AdminSlid
 
 const AI_PROMPT_TEMPLATE = `Please extract all architectural job vacancy details from this image/flyer into the exact "Heading: Answer" format.
 
+CRITICAL INSTRUCTION:
+There are two sections. Write the Studio & Contact details ONLY ONCE in Section 1. Do NOT repeat Firm Name, City, State, Address, Email, or Phone for each position!
+
+SECTION 1: STUDIO & CONTACT DETAILS (Write this ONCE at the top. Never repeat under positions):
+Firm Name: [Studio / Company name]
+City: [Job city location]
+State: [State in India, e.g. Tamil Nadu, Karnataka, Maharashtra, etc.]
+Workplace Type: [On-site / Hybrid / Remote]
+Employment Type: [Default employment type, e.g. Full-time / Internship]
+Application Email: [Email address to send applications/portfolios to]
+(Include the following ONLY if clearly mentioned in the flyer; otherwise omit heading entirely):
+Studio Address: [Office or street address if given]
+Phone: [Contact phone number if given]
+WhatsApp: [WhatsApp number if given]
+Studio Website: [Website URL if given]
+Last Date to Apply: [Deadline in YYYY-MM-DD if given]
+Organization Type: [Firm / Construction Company / Institution / etc.]
+Principal Architect: [Lead architect name if given]
+
+SECTION 2: OPEN POSITIONS (List each vacancy with ONLY its position-specific details):
+For every position advertised in the flyer, output:
+Position: [Job Title, e.g. Junior Architect, 3D Visualizer, Architecture Intern, etc.]
+Experience: [Experience required if stated, or Fresher]
+Qualifications: [Degrees / qualifications if stated, e.g. B.Arch, M.Arch, B.E Civil]
+Skills: [Software & skills if stated, comma-separated, e.g. AutoCAD, SketchUp, Revit, Lumion]
+Salary: [Salary if stated]
+Role: [Specialization if stated]
+Job Description: [Duties / responsibilities if stated]
+
 RULES:
-1. Output ONLY lines in "Heading: Answer" format. Do NOT output JSON, code blocks, or markdown backticks.
-2. ESSENTIAL FIELDS (Must ALWAYS be included in the output. If not mentioned in the image, keep the heading and leave the answer blank after the colon):
-Firm Name: 
-City: 
-State: 
-Workplace Type: 
-Employment Type: 
-Position: 
-Experience: 
-Application Email: 
-
-3. NON-ESSENTIAL FIELDS (Include ONLY if explicitly found in the image. If not found, DO NOT include the heading at all):
-Role: 
-Salary: 
-Qualifications: 
-Skills: 
-Job Description: 
-Apply Link: 
-Last Date to Apply: 
-Phone: 
-WhatsApp: 
-Studio Website: 
-Studio Address: 
-Area: 
-Organization Type: 
-Principal Architect: 
-Employee Size: 
-Founded Year: 
-Instagram: 
-LinkedIn: 
-
-4. MULTIPLE POSITIONS:
-If the flyer advertises multiple positions, repeat a block for each position:
-Position: [Job Title]
-Role: [Role if mentioned]
-Experience: [Experience required]
-Salary: [Salary if mentioned]
-Skills: [Skills required]
-Qualifications: [Qualifications required]
-
-5. FIELD VALUE GUIDELINES:
-- Workplace Type: On-site / Hybrid / Remote / Work from Home
-- Employment Type: Full-time / Part-time / Internship / Contract / Freelance
-- Experience: Fresher / 0-1 Years / 1-2 Years / 2-4 Years / 4-6 Years / 6-10 Years / 10+ Years
-- Last Date to Apply: Format as YYYY-MM-DD if date is specified`;
+1. Output ONLY in "Heading: Answer" format. Do NOT use JSON, markdown code blocks, or conversational text.
+2. NEVER repeat Section 1 fields (Firm Name, City, State, Address, Phone, Email) under each position!
+3. If an essential studio field (Firm Name, City, State, Application Email) is missing in the image, keep the heading and leave the answer blank after the colon (e.g. "City: ").
+4. If a non-essential field is not found in the flyer, omit the heading completely.`;
 
 function parseJobLocally(rawText: string): any | null {
   if (!rawText || !rawText.trim()) return null;
@@ -266,8 +254,11 @@ function parseJobLocally(rawText: string): any | null {
     let line = rawLine.trim();
     if (!line) continue;
 
-    // Strip leading list symbols like - , * , 1. , • , etc.
-    line = line.replace(/^[-*•\d\.\)]+\s*/, "").trim();
+    // Skip Section header lines like "SECTION 1:", "SECTION 2:", "---", etc.
+    if (/^(?:section\s*\d|---+|===+|\*\*\*+|rules:?)/i.test(line)) continue;
+
+    // Strip leading list symbols like - , * , 1. , • , # , etc.
+    line = line.replace(/^[-*•#\d\.\)\s]+/, "").trim();
 
     // Match "Heading: Answer", "**Heading**: Answer", or "Heading - Answer"
     const match = line.match(/^\*{0,2}([\w\s\d]+?)\*{0,2}\s*[:=–—]\s*(.*)$/);
@@ -573,8 +564,8 @@ const [pendingExtractedData, setPendingExtractedData] = useState<any | null>(nul
 useEffect(() => {
   if (typeof window !== "undefined") {
     const savedPrompt = localStorage.getItem("ti2a_smart_job_prompt");
-    // Migrate old JSON prompt template to the new Heading: Answer template
-    if (savedPrompt && !savedPrompt.includes("JSON format") && !savedPrompt.includes("JSON object") && savedPrompt.includes("Heading: Answer") && savedPrompt.trim()) {
+    // Migrate to the two-section prompt template (SECTION 1 & SECTION 2)
+    if (savedPrompt && savedPrompt.includes("SECTION 1") && savedPrompt.trim()) {
       setCustomPrompt(savedPrompt);
     } else {
       setCustomPrompt(AI_PROMPT_TEMPLATE);
