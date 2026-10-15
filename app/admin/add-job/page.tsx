@@ -81,7 +81,7 @@ Phone: [Contact phone number if given]
 WhatsApp: [WhatsApp number if given]
 Studio Website: [Website URL if given]
 Last Date to Apply: [Deadline in YYYY-MM-DD if given]
-Organization Type: [Firm / Construction Company / Institution / etc.]
+Organization Type: [MUST strictly be one of: Architecture Firm / Interior Design Studio / Architecture & Interior Design / Landscape & Urban Design / Construction & Development / Institution / Academic]
 Principal Architect: [Lead architect name if given]
 
 SECTION 2: OPEN POSITIONS (List each vacancy with ONLY its position-specific details):
@@ -100,7 +100,8 @@ RULES:
 3. If an essential studio field (Firm Name, City, State, Application Email) is missing in the image, keep the heading and leave the answer blank after the colon (e.g. "City: ").
 4. If a non-essential field is not found in the flyer, omit the heading completely.
 5. In Qualifications, separate different degrees with COMMAS only (e.g. B.Arch, M.Arch). Never combine them with slashes '/'.
-6. Role must specify the functional focus / what to do (e.g. Site Supervision, Architectural Planning, 3D Rendering). Job Description must be a complete narrative summary answering which firm is hiring what position where, qualifications, skills, role duties, AND MUST explicitly include application & contact instructions (e.g., "Send CV to [email]. Contact / WhatsApp: [phone/whatsapp]").`;
+6. Role must specify the functional focus / what to do (e.g. Site Supervision, Architectural Planning, 3D Rendering). Job Description must be a complete narrative summary answering which firm is hiring what position where, qualifications, skills, role duties, AND MUST explicitly include application & contact instructions (e.g., "Send CV to [email]. Contact / WhatsApp: [phone/whatsapp]").
+7. Organization Type MUST strictly be one of these 6 standard types: Architecture Firm, Interior Design Studio, Architecture & Interior Design, Landscape & Urban Design, Construction & Development, Institution / Academic.`;
 
 function parseJobLocally(rawText: string): any | null {
   if (!rawText || !rawText.trim()) return null;
@@ -524,22 +525,24 @@ const [positionOptions, setPositionOptions] = useState<string[]>([
   "Other",
 ]);
 
-  const organizationTypes = [
+const normalizeOrganizationType = (raw: any): string => {
+  if (!raw) return "Architecture Firm";
+  const str = String(raw).toLowerCase().trim();
+  if (str.includes("interior") && (str.includes("arch") || str.includes("both") || str.includes("&"))) return "Architecture & Interior Design";
+  if (str.includes("interior")) return "Interior Design Studio";
+  if (str.includes("landscape") || str.includes("urban") || str.includes("planning")) return "Landscape & Urban Design";
+  if (str.includes("construct") || str.includes("develop") || str.includes("builder") || str.includes("contractor") || str.includes("real estate")) return "Construction & Development";
+  if (str.includes("institution") || str.includes("university") || str.includes("college") || str.includes("academic") || str.includes("school")) return "Institution / Academic";
+  return "Architecture Firm";
+};
+
+const organizationTypes = [
   "Architecture Firm",
-  "Architecture & Interior Design Studio",
-  "Architecture & Interior Design Firm",
   "Interior Design Studio",
-  "Landscape Architecture Firm",
-  "Urban Design & Planning Firm",
-  "Firm",
-  "Construction Company",
-  "Institution",
-  "Developer",
-  "Consultancy",
-  "Government",
-  "NGO",
-  "Manufacturer",
-  "Other",
+  "Architecture & Interior Design",
+  "Landscape & Urban Design",
+  "Construction & Development",
+  "Institution / Academic",
 ];
 
 const [organizationType, setOrganizationType] = useState(
@@ -688,7 +691,7 @@ const loadCompanyDetails = async (companyName: string) => {
 
   if (error || !data) return;
 
-  setOrganizationType(data.organization_type || "Architecture Firm");
+  setOrganizationType(normalizeOrganizationType(data.organization_type));
   setArea(data.neighborhood || "");
   setCity(data.city || "");
   setState(data.state || "");
@@ -752,7 +755,7 @@ const applyExtractedJobToState = (ai: any) => {
   const fName = ai.firm_name || ai.company || ai.firm || ai.company_name || "";
   if (fName) setFirmName(fName);
 
-  if (ai.organization_type) setOrganizationType(ai.organization_type);
+  if (ai.organization_type) setOrganizationType(normalizeOrganizationType(ai.organization_type));
   if (ai.city) setCity(ai.city);
   if (ai.state) setState(ai.state);
   if (ai.area) setArea(ai.area);
@@ -1011,7 +1014,7 @@ const applyExtractedJobToState = (ai: any) => {
   
         if (job.employment_type) setEmploymentType(job.employment_type);
         if (job.workplace_type) setWorkplaceType(job.workplace_type);
-        setOrganizationType(job.organization_type || "Firm");
+        setOrganizationType(normalizeOrganizationType(job.organization_type));
         setArea(job.area || "");
         setCity(job.city || "");
         setState(job.state || "");
@@ -1378,6 +1381,7 @@ const handlePublishJob = async (
       area: area,
       city: city,
       state: state,
+      organization_type: organizationType || "Architecture Firm",
       positions: positions,
       qualifications: formatQualificationsArray(qualifications),
       skills_required: skills,
@@ -1398,6 +1402,7 @@ const handlePublishJob = async (
       ...(pos.id ? { id: pos.id } : {}),
       firm_name: firmName,
       company_id: currentCompanyId,
+      organization_type: organizationType || "Architecture Firm",
       employment_type: employmentType,
       workplace_type: workplaceType,
       area: area,
@@ -1571,7 +1576,7 @@ const handleSmartExtraction = async () => {
     onSelect={async (val, record) => {
       setFirmName(val);
       setSelectedCompanyId(record.id);
-      setOrganizationType(record.organization_type || "Firm");
+      setOrganizationType(normalizeOrganizationType(record.organization_type));
       setArea(record.neighborhood || "");
       setCity(record.city || "");
       setState(record.state || "");

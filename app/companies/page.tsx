@@ -10,6 +10,17 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { generateCompanySlug } from "@/utils/jobUrl";
 import FavoriteCompanyButton from "@/components/FavoriteCompanyButton";
 
+const normalizeOrganizationType = (raw: any): string => {
+  if (!raw) return "Architecture Firm";
+  const str = String(raw).toLowerCase().trim();
+  if (str.includes("interior") && (str.includes("arch") || str.includes("both") || str.includes("&"))) return "Architecture & Interior Design";
+  if (str.includes("interior")) return "Interior Design Studio";
+  if (str.includes("landscape") || str.includes("urban") || str.includes("planning")) return "Landscape & Urban Design";
+  if (str.includes("construct") || str.includes("develop") || str.includes("builder") || str.includes("contractor") || str.includes("real estate")) return "Construction & Development";
+  if (str.includes("institution") || str.includes("university") || str.includes("college") || str.includes("academic") || str.includes("school")) return "Institution / Academic";
+  return "Architecture Firm";
+};
+
 function CompaniesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -113,7 +124,7 @@ function CompaniesPageContent() {
         slug: comp.slug || generateCompanySlug(comp.firm_name),
         city: comp.city || "",
         state: comp.state || "",
-        organizationType: comp.organization_type || "Architecture Firm",
+        organizationType: normalizeOrganizationType(comp.organization_type),
         logo: comp.logo_url || "",
           totalJobs: 0,
           created_at: comp.created_at || null,
@@ -142,7 +153,7 @@ function CompaniesPageContent() {
           slug: generateCompanySlug(name),
           city: job.city || "",
           state: job.state || "",
-          organizationType: job.organization_type || "Firm",
+          organizationType: normalizeOrganizationType(job.organization_type),
           logo: "",
             totalJobs: 0,
             created_at: job.posted_date || null,

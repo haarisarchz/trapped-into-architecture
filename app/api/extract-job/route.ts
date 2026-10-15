@@ -6,7 +6,7 @@ const prompt = `You are an expert HR assistant analyzing a job posting.
 Extract the following information and return ONLY a strict JSON object. Do not include markdown formatting like \`\`\`json.
 Fields to extract:
 - company (string, exact name)
-- organization_type (string, e.g., "Architecture Firm", "Interior Design Studio", "Construction Company", "Developer", "Consultancy", etc.)
+- organization_type (string, MUST strictly be one of: "Architecture Firm", "Interior Design Studio", "Architecture & Interior Design", "Landscape & Urban Design", "Construction & Development", "Institution / Academic")
 - firm_name (string, exact name, same as company if applicable)
 - principalArchitect (string, name of the principal architect or founder if mentioned, otherwise leave empty)
 - employeeSize (string, e.g., "1-10", "11-50", "50-200", etc., if mentioned, otherwise leave empty)

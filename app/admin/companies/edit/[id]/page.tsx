@@ -8,6 +8,17 @@ import { Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import ImageUploader from "@/components/ImageUploader";
 
+const normalizeOrganizationType = (raw: any): string => {
+  if (!raw) return "Architecture Firm";
+  const str = String(raw).toLowerCase().trim();
+  if (str.includes("interior") && (str.includes("arch") || str.includes("both") || str.includes("&"))) return "Architecture & Interior Design";
+  if (str.includes("interior")) return "Interior Design Studio";
+  if (str.includes("landscape") || str.includes("urban") || str.includes("planning")) return "Landscape & Urban Design";
+  if (str.includes("construct") || str.includes("develop") || str.includes("builder") || str.includes("contractor") || str.includes("real estate")) return "Construction & Development";
+  if (str.includes("institution") || str.includes("university") || str.includes("college") || str.includes("academic") || str.includes("school")) return "Institution / Academic";
+  return "Architecture Firm";
+};
+
 function EditCompanyContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -20,7 +31,7 @@ function EditCompanyContent() {
 
   // Form State
   const [firmName, setFirmName] = useState("");
-  const [organizationType, setOrganizationType] = useState("Firm");
+  const [organizationType, setOrganizationType] = useState("Architecture Firm");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [area, setArea] = useState("");
@@ -82,7 +93,7 @@ function EditCompanyContent() {
           .maybeSingle();
 
         if (data) {
-          if (data.organization_type) setOrganizationType(data.organization_type);
+          if (data.organization_type) setOrganizationType(normalizeOrganizationType(data.organization_type));
           if (data.city) setCity(data.city);
           if (data.state) setState(data.state);
           if (data.area) setArea(data.area);
@@ -108,7 +119,7 @@ function EditCompanyContent() {
       if (error) throw error;
       if (data) {
         setFirmName(data.firm_name || "");
-        setOrganizationType(data.organization_type || "Firm");
+        setOrganizationType(normalizeOrganizationType(data.organization_type));
         setCity(data.city || "");
         setState(data.state || "");
         setCompanyAddress(data.address || "");
@@ -253,10 +264,12 @@ function EditCompanyContent() {
             <div>
               <label className="block mb-1.5 text-sm font-medium">Organization Type</label>
               <select value={organizationType} onChange={(e) => setOrganizationType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white">
-                <option value="Firm">Firm</option>
-                <option value="Company">Company</option>
-                <option value="Institution">Institution</option>
-                <option value="NGO">NGO</option>
+                <option value="Architecture Firm">Architecture Firm</option>
+                <option value="Interior Design Studio">Interior Design Studio</option>
+                <option value="Architecture & Interior Design">Architecture & Interior Design</option>
+                <option value="Landscape & Urban Design">Landscape & Urban Design</option>
+                <option value="Construction & Development">Construction & Development</option>
+                <option value="Institution / Academic">Institution / Academic</option>
               </select>
             </div>
           </div>
