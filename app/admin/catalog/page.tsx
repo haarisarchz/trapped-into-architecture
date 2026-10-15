@@ -74,7 +74,7 @@ export default function CatalogPage() {
       .maybeSingle();
 
     const normalizedRole = (profile?.role || stored.role || "").toLowerCase().replace(/[\s_]+/g, "");
-    if (!normalizedRole || !["superadmin", "admin", "ceo", "jobadmin"].includes(normalizedRole)) {
+    if (!normalizedRole || !["superadmin", "admin", "ceo"].includes(normalizedRole)) {
       router.push("/admin");
       return;
     }

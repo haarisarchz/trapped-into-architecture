@@ -222,8 +222,7 @@ if (loading) {
             </div>
 
             {/* DATABASE DASHBOARD */}
-            {/* Database Dashboard */}
-            {(true) && (
+            {(userRole && userRole !== "jobadmin") && (
               <div>
                 <button
                   onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
