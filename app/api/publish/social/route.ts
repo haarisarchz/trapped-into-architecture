@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { generateSocialHashtags } from "@/utils/socialHashtags";
-import { formatWhatsAppPost, formatInstagramCaption } from "@/utils/socialFormats";
+import { formatWhatsAppPost, formatInstagramCaption, sanitizeInstagramHandle } from "@/utils/socialFormats";
 
 const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "instagram_story", "x", "linkedin"];
 
@@ -219,15 +219,44 @@ export async function POST(req: Request) {
             if (!igAccountId || !token) throw new Error("Missing Instagram credentials.");
             if (!triggerJob.image) throw new Error("Instagram Story requires an image URL.");
 
-            const createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
+            const storyPayload: any = {
+              image_url: triggerJob.image,
+              media_type: "STORIES",
+              access_token: token
+            };
+
+            // If the hiring company has an Instagram handle, tag them in the story!
+            // This triggers an IG notification/DM to the firm so they can easily reshare to their followers.
+            if (companyData && companyData.instagram) {
+              const cleanHandle = sanitizeInstagramHandle(companyData.instagram);
+              if (cleanHandle) {
+                storyPayload.user_tags = JSON.stringify([
+                  {
+                    username: cleanHandle,
+                    x: 0.5,
+                    y: 0.85
+                  }
+                ]);
+              }
+            }
+
+            let createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                image_url: triggerJob.image,
-                media_type: "STORIES",
-                access_token: token
-              })
+              body: JSON.stringify(storyPayload)
             });
+
+            // If creation failed with user_tags (e.g. handle doesn't exist on Meta), retry once without user_tags
+            if (!createContainer.ok && storyPayload.user_tags) {
+              console.warn("Retrying story creation without user_tags...");
+              delete storyPayload.user_tags;
+              createContainer = await fetch(`https://graph.facebook.com/v19.0/${igAccountId}/media`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(storyPayload)
+              });
+            }
+
             if (!createContainer.ok) throw new Error(await createContainer.text());
             const { id: containerId } = await createContainer.json();
 
