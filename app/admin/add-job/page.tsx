@@ -63,6 +63,163 @@ import {
 import Autocomplete from "@/components/Autocomplete";
 import { AdminExperienceSlider, AdminSalarySlider } from "@/components/AdminSliderInputs";
 
+const AI_PROMPT_TEMPLATE = `Please extract the job advertisement details from this flyer/image into the following JSON format. Return ONLY the valid JSON object without markdown code blocks, backticks, or conversational text:
+
+{
+  "firm_name": "Architecture Studio or Company Name",
+  "city": "City name",
+  "state": "State name (e.g. Tamil Nadu, Karnataka, Maharashtra, etc.)",
+  "employment_type": "Full-time / Part-time / Internship / Contract",
+  "workplace_type": "On-site / Hybrid / Remote / Work from Home",
+  "positions": [
+    {
+      "position": "Exact Job Title (e.g. Junior Architect, Interior Designer, Architectural Intern, 3D Visualizer)",
+      "role": "Role summary or specialization",
+      "experience": "0-2 Years / 1-3 Years / Fresher",
+      "salary": "Salary (e.g. ₹25,000 - ₹35,000, 3-5 LPA, or Not disclosed)",
+      "description": "Responsibilities and key duties",
+      "qualifications": "B.Arch / M.Arch / Diploma in Interior Design",
+      "skills": ["AutoCAD", "Revit", "SketchUp", "Photoshop", "Lumion", "V-Ray", "Rhino"]
+    }
+  ],
+  "application_email": "Official application email (e.g. careers@studio.com)",
+  "apply_link": "Website or Google Form application link if provided",
+  "phone": "Phone number if provided",
+  "whatsapp": "WhatsApp number if provided",
+  "website": "Studio website if provided",
+  "deadline": "Last date to apply if specified (YYYY-MM-DD)"
+}`;
+
+function parseJobLocally(rawText: string): any | null {
+  if (!rawText || !rawText.trim()) return null;
+  const trimmed = rawText.trim();
+
+  // 1. Try JSON parsing (handles raw JSON, markdown code fence, or conversational text wrapping)
+  let jsonString = "";
+  const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    jsonString = codeBlockMatch[1].trim();
+  } else {
+    const firstBrace = trimmed.indexOf("{");
+    const lastBrace = trimmed.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      jsonString = trimmed.substring(firstBrace, lastBrace + 1);
+    }
+  }
+
+  if (jsonString) {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (parsed && typeof parsed === "object") {
+        return parsed;
+      }
+    } catch (e) {
+      // JSON syntax error, fallback to key-value
+    }
+  }
+
+  // 2. Try structured key-value parsing (e.g. "Firm Name: ...", "Position: ...", etc.)
+  const lines = trimmed.split("\n").map(l => l.trim()).filter(Boolean);
+  const kvObj: any = {};
+  const keyMap: Record<string, string> = {
+    "firm": "firm_name",
+    "firm name": "firm_name",
+    "company": "firm_name",
+    "company name": "firm_name",
+    "studio": "firm_name",
+    "studio name": "firm_name",
+    "city": "city",
+    "location": "city",
+    "state": "state",
+    "employment type": "employment_type",
+    "workplace type": "workplace_type",
+    "position": "position",
+    "positions": "position",
+    "job title": "position",
+    "role": "role",
+    "experience": "experience",
+    "salary": "salary",
+    "qualifications": "qualifications",
+    "skills": "skills",
+    "skills required": "skills",
+    "description": "description",
+    "job description": "description",
+    "email": "application_email",
+    "application email": "application_email",
+    "apply email": "application_email",
+    "apply link": "apply_link",
+    "link": "apply_link",
+    "website": "website",
+    "phone": "phone",
+    "whatsapp": "whatsapp",
+    "deadline": "deadline",
+    "last date": "deadline",
+    "last date to apply": "deadline"
+  };
+
+  for (const line of lines) {
+    const match = line.match(/^([\w\s]+)[:=-]\s*(.*)$/);
+    if (match) {
+      const rawKey = match[1].trim().toLowerCase();
+      const val = match[2].trim();
+      if (keyMap[rawKey]) {
+        kvObj[keyMap[rawKey]] = val;
+      }
+    }
+  }
+
+  if (kvObj.firm_name || kvObj.position) {
+    if (kvObj.city && kvObj.city.includes(",")) {
+      const parts = kvObj.city.split(",").map((p: string) => p.trim());
+      kvObj.city = parts[0];
+      if (!kvObj.state && parts[1]) kvObj.state = parts[1];
+    }
+    if (kvObj.skills && typeof kvObj.skills === "string") {
+      kvObj.skills = kvObj.skills.split(",").map((s: string) => s.trim()).filter(Boolean);
+    }
+    return kvObj;
+  }
+
+  return null;
+}
+
+const normEmp = (e: any) => {
+  if (!e) return "";
+  const low = String(e).toLowerCase().replace(/[^a-z]/g, '');
+  if (low.includes('full')) return 'Full-time';
+  if (low.includes('part')) return 'Part-time';
+  if (low.includes('contract')) return 'Contract';
+  if (low.includes('temp')) return 'Temporary';
+  if (low.includes('free')) return 'Freelance';
+  if (low.includes('intern')) return 'Internship';
+  return "";
+};
+
+const normWork = (w: any) => {
+  if (!w) return "";
+  const low = String(w).toLowerCase().replace(/[^a-z]/g, '');
+  if (low.includes('remot') || low.includes('wfh') || low.includes('home')) return 'Remote / Work from Home';
+  if (low.includes('hyb')) return 'Hybrid';
+  if (low.includes('site') || low.includes('office')) return 'On-site';
+  return "";
+};
+
+const parseExperience = (rawExp: any) => {
+  if (!rawExp) return [];
+  const str = Array.isArray(rawExp) ? rawExp.join(" ") : String(rawExp);
+  const lower = str.toLowerCase();
+  const matched = new Set<string>();
+  if (lower.includes("fresher") || lower.includes("0 year") || lower.includes("0-1")) matched.add("Fresher");
+  if (lower.includes("0-1") || lower.includes("0 to 1") || lower.includes("0 - 1")) matched.add("0-1 Years");
+  if (lower.includes("1-2") || lower.includes("1 to 2") || lower.includes("1 - 2") || lower.match(/1\s*year/)) matched.add("1-2 Years");
+  if (lower.includes("2-4") || lower.includes("2 to 4") || lower.includes("2 - 4") || lower.match(/[23]\s*year/)) matched.add("2-4 Years");
+  if (lower.includes("4-6") || lower.includes("4 to 6") || lower.includes("4 - 6") || lower.match(/[45]\s*year/)) matched.add("4-6 Years");
+  if (lower.includes("6-10") || lower.includes("6 to 10") || lower.includes("6 - 10") || lower.match(/[6789]\s*year/)) matched.add("6-10 Years");
+  if (lower.includes("10+") || lower.includes("10 +") || lower.match(/1[0-9]\s*year/)) matched.add("10+ Years");
+  if (matched.size === 0) matched.add("Not disclosed");
+  return Array.from(matched);
+};
+
 export default function AddJobPage() {
 const [jobId, setJobId] = useState<string | null>(null);
   useEffect(() => {
@@ -242,6 +399,8 @@ const [showSmartUpload, setShowSmartUpload] = useState(false);
 const [showUploadOptions, setShowUploadOptions] = useState(false);
 const [smartText, setSmartText] = useState("");
 const [smartUrl, setSmartUrl] = useState("");
+const [promptCopied, setPromptCopied] = useState(false);
+const [isLocalExtraction, setIsLocalExtraction] = useState(false);
 
 const [smartImage, setSmartImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -363,6 +522,96 @@ const removePosition = (index) => {
     newPositions.splice(index, 1);
     setPositions(newPositions);
   }
+};
+
+const applyExtractedJobToState = (ai: any) => {
+  setHasUnsavedChanges(true);
+
+  const fName = ai.firm_name || ai.company || ai.firm || ai.company_name || "";
+  if (fName) setFirmName(fName);
+
+  if (ai.organization_type) setOrganizationType(ai.organization_type);
+  if (ai.city) setCity(ai.city);
+  if (ai.state) setState(ai.state);
+  if (ai.area) setArea(ai.area);
+
+  if (ai.employmentType || ai.employment_type) {
+    const emp = normEmp(ai.employmentType || ai.employment_type);
+    if (emp) setEmploymentType(emp);
+  }
+  if (ai.workplaceType || ai.workplace_type) {
+    const work = normWork(ai.workplaceType || ai.workplace_type);
+    if (work) setWorkplaceType(work);
+  }
+
+  if (ai.positions && Array.isArray(ai.positions) && ai.positions.length > 0) {
+    let hasDistinctRequirements = false;
+    if (ai.positions.length > 1) {
+      const firstQual = ai.positions[0].qualifications || "";
+      const firstSkills = JSON.stringify(ai.positions[0].skills || []);
+      for (let i = 1; i < ai.positions.length; i++) {
+        if (ai.positions[i].qualifications !== firstQual || JSON.stringify(ai.positions[i].skills || []) !== firstSkills) {
+          hasDistinctRequirements = true;
+          break;
+        }
+      }
+    }
+    if (hasDistinctRequirements) setSameRequirements(false);
+
+    setPositions(ai.positions.map((p: any, index: number) => {
+      const existingId = positions[index] ? positions[index].id : undefined;
+      return {
+        ...(existingId ? { id: existingId } : {}),
+        position: p.position || p.job_title || p.title || "",
+        role: p.role || "",
+        experience: Array.isArray(p.experience) && p.experience.length > 0 && typeof p.experience[0] === 'string' && EXPERIENCE_OPTIONS.includes(p.experience[0]) 
+          ? p.experience 
+          : parseExperience(p.experience),
+        salary: p.salary || "",
+        description: p.description || p.job_description || (index === 0 ? (ai.description || ai.job_description) : "") || "",
+        qualifications: p.qualifications || "",
+        skills: Array.isArray(p.skills) ? p.skills : (p.skills ? [p.skills] : []),
+        skill_input: "",
+        completed: false
+      };
+    }));
+  } else if (ai.position || ai.job_title || ai.title) {
+    setPositions([{
+      position: ai.position || ai.job_title || ai.title || "",
+      role: ai.role || "",
+      experience: Array.isArray(ai.experience) && ai.experience.length > 0 && typeof ai.experience[0] === 'string' && EXPERIENCE_OPTIONS.includes(ai.experience[0])
+        ? ai.experience
+        : parseExperience(ai.experience),
+      salary: ai.salary || "",
+      description: ai.description || ai.job_description || "",
+      qualifications: ai.qualifications || "",
+      skills: Array.isArray(ai.skills) ? ai.skills : (ai.skills ? [ai.skills] : []),
+      skill_input: "",
+      completed: false
+    }]);
+  }
+
+  if (ai.deadline || ai.application_deadline || ai.last_date_to_apply) {
+    setLastDateToApply(ai.deadline || ai.application_deadline || ai.last_date_to_apply || "");
+  }
+
+  const appEmail = ai.applicationEmail || ai.application_email || ai.email || "";
+  if (appEmail) setapplication_email(appEmail);
+
+  const appLink = ai.apply_link || ai.applyLink || ai.link || "";
+  if (appLink) setapply_link(appLink);
+  
+  if (ai.phone) setCompanyPhone(ai.phone);
+  if (ai.whatsapp) setCompanyWhatsapp(ai.whatsapp);
+  if (ai.website) setCompanyWebsite(ai.website);
+  if (ai.email) setCompanyEmail(ai.email);
+  if (ai.facebook) setCompanyFacebook(ai.facebook);
+  if (ai.instagram) setCompanyInstagram(ai.instagram);
+  if (ai.linkedin) setCompanyLinkedin(ai.linkedin);
+  if (ai.twitter) setCompanyTwitter(ai.twitter);
+  if (ai.principalArchitect) setPrincipalArchitect(ai.principalArchitect);
+  if (ai.employeeSize) setEmployeeSize(ai.employeeSize);
+  if (ai.foundedYear) setFoundedYear(String(ai.foundedYear));
 };
 
 
@@ -1750,12 +1999,15 @@ const handleSmartExtraction = async () => {
               <div className="bg-white rounded-[32px] w-full max-w-[500px] h-[85vh] max-h-[780px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500">
                 <div className="p-6 bg-white border-b">
                   <h3 className="font-bold text-xl">Smart Preview</h3>
-                    <p className="text-xs text-black md:text-black">Confirm detected details</p>
-                    {aiResult?._apiKeyIndex && (
+                    {isLocalExtraction ? (
+                      <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-md">
+                        <span>⚡</span> Instant 0ms Local Parser (Zero Server Calls)
+                      </div>
+                    ) : aiResult?._apiKeyIndex ? (
                       <div className="mt-2 inline-block px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-md">
                         Processed via API Key #{aiResult._apiKeyIndex}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 text-sm">
@@ -1857,13 +2109,52 @@ const handleSmartExtraction = async () => {
                   )}
 
                   {uploadMode === 'text' && (
-                    <textarea
-                      rows={12}
-                      value={smartText}
-                      onChange={(e) => setSmartText(e.target.value)}
-                      placeholder="Paste job text here..."
-                      className="w-full border-2 border-gray-100 rounded-3xl p-5 text-sm outline-none focus:border-black transition-all h-[320px] resize-none"
-                    />
+                    <div className="flex flex-col gap-2.5 h-full">
+                      <div className="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(AI_PROMPT_TEMPLATE);
+                            }
+                            setPromptCopied(true);
+                            setTimeout(() => setPromptCopied(false), 3000);
+                          }}
+                          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 ${
+                            promptCopied
+                              ? "bg-emerald-600 text-white"
+                              : "bg-black text-white hover:bg-gray-800"
+                          }`}
+                          title="Copy AI prompt template to paste into ChatGPT or Gemini with your flyer image"
+                        >
+                          {promptCopied ? (
+                            <>
+                              <span>✓</span> Template Copied!
+                            </>
+                          ) : (
+                            <>
+                              <span>📋</span> Copy AI Prompt Template
+                            </>
+                          )}
+                        </button>
+                        <span className="text-[11px] font-semibold text-gray-500">
+                          {smartText && (smartText.trim().startsWith("{") || smartText.includes("```json") || smartText.includes('"firm_name"') || smartText.includes("firm_name:")) ? (
+                            <span className="text-emerald-600 font-bold flex items-center gap-1">
+                              ⚡ Instant 0ms Local JSON
+                            </span>
+                          ) : (
+                            <span>Paste AI JSON or text</span>
+                          )}
+                        </span>
+                      </div>
+                      <textarea
+                        rows={11}
+                        value={smartText}
+                        onChange={(e) => setSmartText(e.target.value)}
+                        placeholder={`Paste ChatGPT / Gemini JSON or raw job text here...\n\n💡 Pro Tip: Click 'Copy AI Prompt Template' above, paste into ChatGPT or Gemini with your flyer image, and paste the JSON back here for 100% instant auto-fill!`}
+                        className="w-full border-2 border-gray-100 rounded-2xl p-4 text-xs font-mono outline-none focus:border-black transition-all flex-1 min-h-[260px] resize-none"
+                      />
+                    </div>
                   )}
 
                   {uploadMode === 'url' && (
@@ -1906,7 +2197,20 @@ const handleSmartExtraction = async () => {
         }
 
       if (uploadMode === "text") {
-        if (!smartText) throw new Error("Please paste text to extract.");
+        if (!smartText || !smartText.trim()) throw new Error("Please paste text or AI JSON to extract.");
+        
+        // 1. Instant Local Client-Side Parser (0ms, 0 external API calls)
+        const localData = parseJobLocally(smartText);
+        if (localData) {
+          setIsLocalExtraction(true);
+          setAiResult(localData);
+          applyExtractedJobToState(localData);
+          setLoadingAI("done");
+          return;
+        }
+
+        // 2. Unstructured plain text fallback -> send to server AI
+        setIsLocalExtraction(false);
         formData.append("text", smartText);
       } else if (uploadMode === "image") {
           if (!smartImage) throw new Error("Please upload an image to extract.");
@@ -2010,132 +2314,20 @@ const handleSmartExtraction = async () => {
           }
 
           if (!result) throw new Error(lastError || "Extraction failed. Please check the API Config or try another server.");
-            const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
-            setHasUnsavedChanges(true);
+          const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
+          setIsLocalExtraction(false);
+          setAiResult(result);
+          applyExtractedJobToState(ai);
+          setLoadingAI("done");
 
-      // Normalization helpers
-      const normEmp = (e) => {
-        if(!e) return "";
-        const low = e.toLowerCase().replace(/[^a-z]/g, '');
-        if(low.includes('full')) return 'Full-time';
-        if(low.includes('part')) return 'Part-time';
-        if(low.includes('contract')) return 'Contract';
-        if(low.includes('temp')) return 'Temporary';
-        if(low.includes('free')) return 'Freelance';
-        if(low.includes('intern')) return 'Internship';
-        return "";
-      };
-      
-      const normWork = (w) => {
-        if(!w) return "";
-        const low = w.toLowerCase().replace(/[^a-z]/g, '');
-        if(low.includes('remot') || low.includes('wfh') || low.includes('home')) return 'Remote / Work from Home';
-        if(low.includes('hyb')) return 'Hybrid';
-        if(low.includes('site') || low.includes('office')) return 'On-site';
-        return "";
-      };
-
-      // Preview
-      setFirmName(ai.company || ai.firm_name || "");
-      setOrganizationType(ai.organization_type || "");
-      
-      setCity(ai.city || "");
-      setState(ai.state || "");
-
-      
-
-      // Handle experience carefully (frontend expects array or string?)
-      
-
-      if (ai.employmentType || ai.employment_type) setEmploymentType(normEmp(ai.employmentType || ai.employment_type));
-      if (ai.workplaceType || ai.workplace_type) setWorkplaceType(normWork(ai.workplaceType || ai.workplace_type));
-
-      if (ai.positions && Array.isArray(ai.positions) && ai.positions.length > 0) {
-        let hasDistinctRequirements = false;
-        if (ai.positions.length > 1) {
-          const firstQual = ai.positions[0].qualifications || "";
-          const firstSkills = JSON.stringify(ai.positions[0].skills || []);
-          for (let i = 1; i < ai.positions.length; i++) {
-            if (ai.positions[i].qualifications !== firstQual || JSON.stringify(ai.positions[i].skills || []) !== firstSkills) {
-              hasDistinctRequirements = true;
-              break;
-            }
-          }
-        }
-        if (hasDistinctRequirements) setSameRequirements(false);
-
-        
-        const parseExperience = (rawExp) => {
-          if (!rawExp) return [];
-          const str = Array.isArray(rawExp) ? rawExp.join(" ") : String(rawExp);
-          const lower = str.toLowerCase();
-          const matched = new Set();
-          if (lower.includes("fresher") || lower.includes("0 year") || lower.includes("0-1")) matched.add("Fresher");
-          if (lower.includes("0-1") || lower.includes("0 to 1") || lower.includes("0 - 1")) matched.add("0-1 Years");
-          if (lower.includes("1-2") || lower.includes("1 to 2") || lower.includes("1 - 2") || lower.match(/1\s*year/)) matched.add("1-2 Years");
-          if (lower.includes("2-4") || lower.includes("2 to 4") || lower.includes("2 - 4") || lower.match(/[23]\s*year/)) matched.add("2-4 Years");
-          if (lower.includes("4-6") || lower.includes("4 to 6") || lower.includes("4 - 6") || lower.match(/[45]\s*year/)) matched.add("4-6 Years");
-          if (lower.includes("6-10") || lower.includes("6 to 10") || lower.includes("6 - 10") || lower.match(/[6789]\s*year/)) matched.add("6-10 Years");
-          if (lower.includes("10+") || lower.includes("10 +") || lower.match(/1[0-9]\s*year/)) matched.add("10+ Years");
-          if (matched.size === 0) matched.add("Not disclosed");
-          return Array.from(matched);
-        };
-
-        setPositions(ai.positions.map((p, index) => {
-          // IMPORTANT: Preserve existing job ID if replacing an already saved position!
-          // We use a functional state update to guarantee we access the latest positions safely,
-          // but since this is an async closure, we map from the current positions array in scope.
-          const existingId = positions[index] ? positions[index].id : undefined;
-          return {
-            ...(existingId ? { id: existingId } : {}),
-            position: p.position || p.job_title || "",
-          role: p.role || "",
-          experience: Array.isArray(p.experience) ? p.experience : (p.experience ? [p.experience] : []),
-          salary: p.salary || "",
-          description: p.description || p.job_description || (index === 0 ? ai.description : "") || "",
-          qualifications: p.qualifications || "",
-          skills: p.skills || [],
-          skill_input: "",
-          completed: false
-        };
-      }));
-      } else {
-        setPositions([{
-          position: ai.position || ai.job_title || "",
-          role: ai.role || "",
-          experience: Array.isArray(ai.experience) ? ai.experience : (ai.experience ? [ai.experience] : []),
-          salary: ai.salary || "",
-          description: ai.description || ai.job_description || "",
-          qualifications: ai.qualifications || "",
-          skills: ai.skills || [],
-          skill_input: "",
-          completed: false
-        }]);
-      }
-
-      setLastDateToApply(ai.deadline || ai.application_deadline || "");
-
-      if (ai.applicationEmail || ai.email) setapplication_email(ai.applicationEmail || ai.email || "");
-      if (ai.apply_link) setapply_link(ai.apply_link);
-      
-      if (ai.phone) setCompanyPhone(ai.phone);
-      if (ai.whatsapp) setCompanyWhatsapp(ai.whatsapp);
-      if (ai.website) setCompanyWebsite(ai.website);
-      if (ai.email) setCompanyEmail(ai.email);
-      if (ai.facebook) setCompanyFacebook(ai.facebook);
-      if (ai.instagram) setCompanyInstagram(ai.instagram);
-      if (ai.linkedin) setCompanyLinkedin(ai.linkedin);
-      if (ai.twitter) setCompanyTwitter(ai.twitter);
-      if (ai.principalArchitect) setPrincipalArchitect(ai.principalArchitect);
-      if (ai.employeeSize) setEmployeeSize(ai.employeeSize);
-      if (ai.foundedYear) setFoundedYear(ai.foundedYear);
-      if (ai.organization_type) setOrganizationType(ai.organization_type);
-
-      setLoadingAI("done");
-
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert(err.message || "Extraction Failed");
+      const isBusy = err.message && (err.message.includes("busy") || err.message.includes("503") || err.message.includes("429"));
+      if (isBusy && uploadMode === "text") {
+        alert("Google AI servers are currently busy.\n\n💡 Pro Tip: Click 'Copy AI Prompt Template' above, paste it into ChatGPT or Gemini with your flyer image, and paste the JSON back here for instant 0ms extraction!");
+      } else {
+        alert(err.message || "Extraction Failed");
+      }
       setLoadingAI(false);
     }
   }}
