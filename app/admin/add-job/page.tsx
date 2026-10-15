@@ -359,7 +359,14 @@ function parseJobLocally(rawText: string): any | null {
     if (!kvObj.state && parts[1]) kvObj.state = parts[1];
   }
 
-  if (kvObj.firm_name || (kvObj.positions && kvObj.positions.length > 0) || kvObj.city || kvObj.application_email) {
+  if (kvObj.application_email && !kvObj.company_email) {
+    kvObj.company_email = kvObj.application_email;
+  }
+  if (kvObj.company_email && !kvObj.application_email) {
+    kvObj.application_email = kvObj.company_email;
+  }
+
+  if (kvObj.firm_name || (kvObj.positions && kvObj.positions.length > 0) || kvObj.city || kvObj.application_email || kvObj.company_email) {
     return kvObj;
   }
 
@@ -897,17 +904,31 @@ const applyExtractedJobToState = (ai: any) => {
     setLastDateToApply(ai.deadline || ai.application_deadline || ai.last_date_to_apply || "");
   }
 
-  if (appEmail) setapplication_email(appEmail);
+  if (appEmail) {
+    setapplication_email(appEmail);
+    if (!ai.apply_link && !ai.applyLink) {
+      setApplicationType("email");
+    }
+  }
 
   const appLink = ai.apply_link || ai.applyLink || ai.link || "";
-  if (appLink) setapply_link(appLink);
+  if (appLink) {
+    setapply_link(appLink);
+    setApplicationType("apply");
+  }
   
   if (ai.phone) setCompanyPhone(ai.phone);
   if (ai.whatsapp) setCompanyWhatsapp(ai.whatsapp);
   if (ai.website) setCompanyWebsite(ai.website);
   if (ai.company_address || ai.address) setCompanyAddress(ai.company_address || ai.address);
   if (ai.company_description) setCompanyDescription(ai.company_description);
-  if (ai.company_email || ai.email) setCompanyEmail(ai.company_email || ai.email);
+
+  // Automatically fill email in company section as well
+  const compEmail = ai.company_email || ai.companyEmail || ai.email || appEmail || "";
+  if (compEmail) {
+    setCompanyEmail(compEmail);
+  }
+
   if (ai.facebook) setCompanyFacebook(ai.facebook);
   if (ai.instagram) setCompanyInstagram(ai.instagram);
   if (ai.linkedin) setCompanyLinkedin(ai.linkedin);
@@ -917,7 +938,7 @@ const applyExtractedJobToState = (ai: any) => {
   if (ai.founded_year || ai.foundedYear) setFoundedYear(String(ai.founded_year || ai.foundedYear));
 
   // Auto-expand studio details accordion if any studio-specific details are extracted
-  if (ai.phone || ai.whatsapp || ai.website || ai.company_address || ai.address || ai.principal_architect || ai.principalArchitect || ai.founded_year || ai.foundedYear) {
+  if (ai.phone || ai.whatsapp || ai.website || ai.company_address || ai.address || ai.principal_architect || ai.principalArchitect || ai.founded_year || ai.foundedYear || compEmail) {
     setShowCompanyDetails(true);
   }
 };
@@ -2971,7 +2992,9 @@ const handleSmartExtraction = async () => {
           const ai = typeof result.result === "string" ? JSON.parse(result.result) : (result.result || result);
 
           // Normalize qualifications and contact info for image & server extraction
-          const globalAppEmail = ai.application_email || ai.applicationEmail || ai.email || "";
+          const globalAppEmail = ai.application_email || ai.applicationEmail || ai.email || ai.company_email || "";
+          if (globalAppEmail && !ai.company_email) ai.company_email = globalAppEmail;
+          if (globalAppEmail && !ai.application_email) ai.application_email = globalAppEmail;
           const globalContactArr = [ai.phone, ai.whatsapp].filter(Boolean);
           const globalAppPhone = globalContactArr.length > 0 ? globalContactArr.join(" / ") : "";
           const globalApplyClause = globalAppEmail ? ` Interested candidates can send their resume and portfolio to ${globalAppEmail}.` : "";
