@@ -8,6 +8,7 @@ import CompanyActions from "@/components/CompanyActions";
 import { generateJobUrl, generateCompanySlug } from "@/utils/jobUrl";
 import { Metadata } from "next";
 import { Building2, Globe, Mail, MapPin, Briefcase } from "lucide-react";
+import { formatExperience } from "@/utils/formatJobDetails";
 
 export async function generateMetadata({
   params,
@@ -79,17 +80,6 @@ export async function generateMetadata({
   }
 }
 
-
-    const formatExperience = (rawExp: any) => {
-      if (!rawExp) return "";
-      if (Array.isArray(rawExp)) {
-        const cleaned = rawExp.filter(Boolean).map(e => String(e).trim()).filter(e => e.length > 0 && e.toLowerCase() !== "not disclosed");
-        if (cleaned.length > 0) return cleaned.join(", ");
-        return "";
-      }
-      const str = String(rawExp).trim();
-      return str.toLowerCase() === "not disclosed" ? "" : str;
-  };
 
 export default async function CompanyPage({
   params,

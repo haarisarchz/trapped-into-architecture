@@ -113,6 +113,16 @@ export function parseGoogleSalary(salaryStr?: string): {
   const min = Math.min(...numbers);
   const max = Math.max(...numbers);
 
+  if (min === max) {
+    return {
+      currency: "INR",
+      value: {
+        value: min,
+        unitText
+      }
+    };
+  }
+
   return {
     currency: "INR",
     value: {

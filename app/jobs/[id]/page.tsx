@@ -11,6 +11,7 @@ import SaveButton from "@/components/SaveButton";
 import JobContactLinks from "@/components/JobContactLinks";
 import JobApplyAction from "@/components/JobApplyAction";
 import { generateJobPostingSchema, generateJobBreadcrumbs } from "@/utils/seoJobPosting";
+import { formatSalary, formatExperience } from "@/utils/formatJobDetails";
 
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   
   const jobUrl = `https://trappedintoarchitecture.com${generateJobUrl(job)}`;
   const title = `${job.position} in ${job.city || "India"} at ${job.firm_name} | Trapped Into Architecture`;
-  const expString = Array.isArray(job.experience) ? job.experience.join(", ") : (job.experience || "Freshers / Experienced");
+  const expString = formatExperience(job.experience) || "Freshers / Experienced";
   const description = `${job.firm_name} is hiring ${job.position} in ${[job.area, job.city, job.state].filter(Boolean).join(", ")}. Experience: ${expString}. Apply directly on Trapped Into Architecture.`;
 
   return {
@@ -56,18 +57,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     }
   };
 }
-
-
-    const formatExperience = (rawExp: any) => {
-      if (!rawExp) return "";
-      if (Array.isArray(rawExp)) {
-        const cleaned = rawExp.filter(Boolean).map(e => String(e).trim()).filter(e => e.length > 0 && e.toLowerCase() !== "not disclosed");
-        if (cleaned.length > 0) return cleaned.join(", ");
-        return "";
-      }
-      const str = String(rawExp).trim();
-      return str.toLowerCase() === "not disclosed" ? "" : str;
-  };
 
 export default async function JobDetailsPage({
   params,
@@ -310,9 +299,9 @@ export default async function JobDetailsPage({
                         {formatExperience(job.experience)}
                       </span>
                     )}
-                    {hasSalary && job.salary?.trim() && (
+                    {hasSalary && formatSalary(job.salary)?.trim() && (
                       <span className="bg-green-50 text-green-800 text-sm font-medium px-3 py-1.5 rounded-lg border border-green-200">
-                        {job.salary}
+                        {formatSalary(job.salary)}
                       </span>
                     )}
                   </div>

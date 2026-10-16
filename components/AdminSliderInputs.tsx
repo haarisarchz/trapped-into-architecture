@@ -34,8 +34,10 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
     } else if (nums && nums.length === 1) {
       if (expStr.includes('+')) {
         setExpRange([parseInt(nums[0]), 20]);
-      } else {
+      } else if (expStr.includes('upto') || expStr.includes('up to') || expStr.includes('max') || expStr.includes('<') || expStr.includes('0-')) {
         setExpRange([0, parseInt(nums[0])]);
+      } else {
+        setExpRange([parseInt(nums[0]), parseInt(nums[0])]);
       }
     }
   }, [experience, isInternship, hasInitIntern]);
@@ -46,6 +48,8 @@ export function AdminExperienceSlider({ experience, onChangeExp, isInternship }:
     } else {
       if (range[0] === 0 && range[1] === 0) {
         onChangeExp(["Fresher"]);
+      } else if (range[0] === range[1]) {
+        onChangeExp([`${range[0]} Year${range[0] > 1 ? 's' : ''}`]);
       } else if (range[0] === 0 && range[1] === 1) {
         onChangeExp(["0-1 Years"]);
       } else if (range[0] === 1 && range[1] === 2) {
@@ -188,9 +192,17 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
       onChangeSal("As per Industry Standards");
     } else {
       if (unit === "LPA") {
-        onChangeSal(`${range[0]} LPA - ${range[1]} LPA`);
+        if (range[0] === range[1]) {
+          onChangeSal(`${range[0]} LPA`);
+        } else {
+          onChangeSal(`${range[0]} LPA - ${range[1]} LPA`);
+        }
       } else {
-        onChangeSal(`${range[0]/1000}k - ${range[1]/1000}k Per Month`);
+        if (range[0] === range[1]) {
+          onChangeSal(`${range[0]/1000}k Per Month`);
+        } else {
+          onChangeSal(`${range[0]/1000}k - ${range[1]/1000}k Per Month`);
+        }
       }
     }
   };
@@ -256,7 +268,10 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
                     }}
                 >
                     <option value={0}>Min</option>
-                    {[1,2,3,4,5,10,15,20,30,40].map(v => <option key={v} value={salUnit === "LPA" ? v : v*10000}>{salUnit === "LPA" ? v + " LPA" : (v*10) + "k"}</option>)}
+                    {salUnit === "LPA"
+                      ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 40].map(v => <option key={v} value={v}>{v} LPA</option>)
+                      : [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 60000, 70000, 80000, 90000, 100000, 150000, 200000].map(v => <option key={v} value={v}>{(v/1000)}k</option>)
+                    }
                 </select>
                 <span className="text-sm font-semibold text-black">to</span>
                 <select 
@@ -269,8 +284,10 @@ export function AdminSalarySlider({ salary, onChangeSal }: { salary: string, onC
                     }}
                 >
                     <option value={0}>Min</option>
-                    {[1,2,3,4,5,10,15,20,30,40].map(v => <option key={v} value={salUnit === "LPA" ? v : v*10000}>{salUnit === "LPA" ? v + " LPA" : (v*10) + "k"}</option>)}
-                    <option value={salUnit === "LPA" ? 50 : 200000}>{salUnit === "LPA" ? "50 LPA+" : "2L+"}</option>
+                    {salUnit === "LPA"
+                      ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 40, 50].map(v => <option key={v} value={v}>{v === 50 ? "50 LPA+" : `${v} LPA`}</option>)
+                      : [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 60000, 70000, 80000, 90000, 100000, 150000, 200000].map(v => <option key={v} value={v}>{v === 200000 ? "2L+" : `${(v/1000)}k`}</option>)
+                    }
                 </select>
 
                 <select 

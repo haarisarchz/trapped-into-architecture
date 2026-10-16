@@ -1,6 +1,7 @@
 "use client";
 
 import { generateJobUrl } from "@/utils/jobUrl";
+import { formatSalary, formatExperience } from "@/utils/formatJobDetails";
 import ShareButtons from "@/components/ShareButtons";
 import SaveButton from "@/components/SaveButton";
 import { Bookmark, BookmarkCheck } from "lucide-react";
@@ -60,17 +61,6 @@ export default function JobCard({
   employment_type,
 }: JobCardProps) {
   const router = useRouter();
-  
-    const formatExperience = (rawExp: any) => {
-      if (!rawExp) return "";
-      if (Array.isArray(rawExp)) {
-        const cleaned = rawExp.filter(Boolean).map(e => String(e).trim()).filter(e => e.length > 0 && e.toLowerCase() !== "not disclosed");
-        if (cleaned.length > 0) return cleaned.join(", ");
-        return "";
-      }
-      const str = String(rawExp).trim();
-      return str.toLowerCase() === "not disclosed" ? "" : str;
-  };
   const formattedExperience = formatExperience(experience);
 
   
@@ -217,7 +207,7 @@ export default function JobCard({
   
             <div className="mt-4 space-y-1 md:space-y-2">
               {showExperience && <p className="text-sm text-gray-700">Experience: {formattedExperience}</p>}
-              {showSalary && <p className="text-sm font-semibold">Salary: {salary}</p>}
+              {showSalary && <p className="text-sm font-semibold">Salary: {formatSalary(salary)}</p>}
             </div>
           </div>
         </div>

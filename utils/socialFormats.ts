@@ -2,6 +2,8 @@
  * Unified formatters for social media posts across Trapped Into Architecture.
  */
 
+import { formatExperience } from "@/utils/formatJobDetails";
+
 export interface SocialJobItem {
   id?: string;
   firm_name?: string;
@@ -58,10 +60,9 @@ export function sanitizeInstagramHandle(raw?: string | null): string | null {
  */
 function formatExperienceText(rawExp: any, isIntern: boolean): string {
   if (isIntern || !rawExp) return "";
-  const arr = Array.isArray(rawExp) ? rawExp : [rawExp];
-  const clean = Array.from(new Set(arr.map(x => String(x).trim()).filter(Boolean)));
-  if (clean.length === 0) return "";
-  return ` (${clean.join(", ")})`;
+  const formatted = formatExperience(rawExp);
+  if (!formatted) return "";
+  return ` (${formatted})`;
 }
 
 export function formatWhatsAppPost(jobs: SocialJobItem[], jobUrl: string): string {
