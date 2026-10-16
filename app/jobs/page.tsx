@@ -6,6 +6,7 @@ import JobCard from "@/components/Jobcard";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { EXPERIENCE_OPTIONS } from "@/app/constants/jobFilters";
+import { normalizePosition } from "@/utils/positionNormalize";
 
 import {
   LayoutGrid,
@@ -117,6 +118,9 @@ const [showFilters, setShowFilters] = useState(false);
       if (!val || typeof val !== 'string') return;
       val = val.trim();
       if (val === '') return;
+      if (key === 'position') {
+        val = normalizePosition(val);
+      }
       counts[val] = (counts[val] || 0) + 1;
       const itemDate = new Date(item.posted_date || item.created_at || item.postedDate || 0).getTime();
       if (!latestDate[val] || itemDate > latestDate[val]) {
@@ -205,43 +209,41 @@ const [showFilters, setShowFilters] = useState(false);
 
   
   const renderFilters = (isMobile = false) => (
-    <div className={isMobile ? "w-full" : "hidden lg:block w-full lg:w-72 bg-white p-6 rounded-2xl shadow-md border border-gray-200 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full"}>
+    <div className={isMobile ? "w-full bg-white rounded-2xl border border-gray-200 flex flex-col overflow-hidden" : "hidden lg:flex flex-col w-full lg:w-72 bg-white rounded-2xl shadow-md border border-gray-200 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] overflow-hidden"}>
 
-  <div className="flex items-center justify-between mb-6 sticky top-0 bg-white z-10 -mx-6 -mt-6 px-6 py-6 border-b border-gray-100">
+      {/* FIXED HEADER: Never scrolls, zero content can leak above it */}
+      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-white flex-shrink-0 z-20">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Filters
+        </h2>
 
-    <h2 className="text-2xl font-bold">
-      Filters
-    </h2>
+        <button
+          onClick={() => {
+            setSelectedStates([]);
+            setSelectedCities([]);
+            setSelectedPositions([]);
+            setSelectedQualifications([]);
+            setSelectedSkills([]);
+            setVisibleStatesCount(5);
+            setVisibleCitiesCount(5);
+            setVisiblePositionsCount(5);
+            setCityWarning(false);
+            if (typeof setExpRange === "function") setExpRange([0, 15]);
+            if (typeof setSalaryRange === "function") setSalaryRange([0, 50]);
+            if (typeof setDatePosted === "function") setDatePosted("");
+            if (typeof setExcludeExpired === "function") setExcludeExpired(false);
+            if (typeof setSearchQuery === "function") setSearchQuery("");
+            if (typeof setSelectedExperience === "function") setSelectedExperience([]);
+            if (typeof setSelectedSalary === "function") setSelectedSalary([]);
+          }}
+          className="text-sm text-orange-500 font-medium hover:text-orange-600 transition-colors"
+        >
+          Clear Filters
+        </button>
+      </div>
 
-    <button
-      onClick={() => {
-        setSelectedStates([]);
-        setSelectedCities([]);
-        setSelectedPositions([]);
-        setSelectedQualifications([]);
-        setSelectedSkills([]);
-        setVisibleStatesCount(5);
-        setVisibleCitiesCount(5);
-        setVisiblePositionsCount(5);
-        setCityWarning(false);
-        // removed missing setters to prevent crash
-          if (typeof setExpRange === "function") setExpRange([0, 15]);
-          if (typeof setSalaryRange === "function") setSalaryRange([0, 50]);
-          if (typeof setDatePosted === "function") setDatePosted("");
-          if (typeof setExcludeExpired === "function") setExcludeExpired(false);
-          if (typeof setSearchQuery === "function") setSearchQuery("");
-          if (typeof setSelectedExperience === "function") setSelectedExperience([]);
-          if (typeof setSelectedSalary === "function") setSelectedSalary([]);
-      }}
-      className="text-sm text-orange-500 font-medium"
-    >
-      Clear Filters
-    </button>
-
-  </div>
-
-  
-    <div className="space-y-8">
+      {/* SCROLLABLE FILTER CONTENT */}
+      <div className="p-6 overflow-y-auto flex-1 space-y-8 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
     
       {/* STATE */}
 
@@ -580,8 +582,10 @@ const [showFilters, setShowFilters] = useState(false);
       selectedCities.length === 0 ||
       selectedCities.includes(job.city);
 
+    const normJobPos = normalizePosition(job.position);
     const positionMatch =
       selectedPositions.length === 0 ||
+      selectedPositions.includes(normJobPos) ||
       selectedPositions.includes(job.position);
 
     const qualificationMatch =
@@ -624,6 +628,10 @@ const [showFilters, setShowFilters] = useState(false);
         .includes(searchQuery.toLowerCase()) ||
 
       job.position
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+
+      normJobPos
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
 
@@ -1174,7 +1182,7 @@ const [showFilters, setShowFilters] = useState(false);
       area={job.area}
       city={job.city}
       state={job.state}
-      position={job.position}
+      position={normalizePosition(job.position) || job.position}
       experience={job.experience}
       qualifications={job.qualifications}
       skills={job.skills}
