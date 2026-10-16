@@ -8,6 +8,8 @@ import { Bookmark, BookmarkCheck } from "lucide-react";
 import { generateJobUrl, decodeUuid, generateCompanySlug } from "@/utils/jobUrl";
 import ShareButtons from "@/components/ShareButtons";
 import SaveButton from "@/components/SaveButton";
+import JobContactLinks from "@/components/JobContactLinks";
+import JobApplyAction from "@/components/JobApplyAction";
 import { generateJobPostingSchema, generateJobBreadcrumbs } from "@/utils/seoJobPosting";
 
 import { Metadata } from "next";
@@ -371,46 +373,14 @@ export default async function JobDetailsPage({
                     {(displayEmail || displayPhone || company?.website) && (
                       <div className="pt-2 mt-2 border-t border-gray-100">
                         <h2 className="text-base font-bold mb-1 text-gray-900">Contact Details</h2>
-                        <div className="flex flex-col gap-2">
-                          {displayEmail && (
-                            <p className="font-semibold text-black break-all">
-                              <span className="text-gray-500 font-normal mr-1">Email:</span>
-                              <a 
-                                href={`mailto:${displayEmail}`} 
-                                onClick={() => { 
-                                  if (typeof window !== 'undefined' && (window as any).gtag) { 
-                                    (window as any).gtag('event', 'email_click', { job_id: job.id, firm_name: job.firm_name, position: job.position }); 
-                                  } 
-                                }}
-                                className="text-blue-600 hover:underline"
-                              >
-                                {displayEmail}
-                              </a>
-                            </p>
-                          )}
-                          {displayPhone && (
-                            <p className="font-semibold text-black">
-                              <span className="text-gray-500 font-normal mr-1">Phone:</span>
-                              <a 
-                                href={`tel:${displayPhone}`} 
-                                onClick={() => { 
-                                  if (typeof window !== 'undefined' && (window as any).gtag) { 
-                                    (window as any).gtag('event', 'contact_click', { job_id: job.id, firm_name: job.firm_name, channel: 'phone' }); 
-                                  } 
-                                }}
-                                className="text-blue-600 hover:underline"
-                              >
-                                {displayPhone}
-                              </a>
-                            </p>
-                          )}
-                          {company?.website && (
-                            <p className="font-semibold text-black break-all">
-                              <span className="text-gray-500 font-normal mr-1">Website:</span>
-                              <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{company.website}</a>
-                            </p>
-                          )}
-                        </div>
+                        <JobContactLinks
+                          jobId={job.id}
+                          firmName={job.firm_name}
+                          position={job.position}
+                          displayEmail={displayEmail}
+                          displayPhone={displayPhone}
+                          website={company?.website}
+                        />
                       </div>
                     )}
 
@@ -446,35 +416,14 @@ export default async function JobDetailsPage({
 
                     {/* APPLY / EMAIL NOW (Moved to bottom center) */}
                     <div className="pt-3 mt-3 border-t border-gray-100 flex justify-center w-full">
-                      {isExpired ? (
-                        <button disabled className="bg-gray-200 text-gray-500 px-8 py-3.5 rounded-xl text-lg font-bold cursor-not-allowed w-full sm:w-auto text-center">
-                          Post Expired
-                        </button>
-                      ) : (
-                        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                          {job.apply_link && (
-                            <a href={job.apply_link} target="_blank" rel="noopener noreferrer" onClick={() => { if (typeof window !== 'undefined' && (window as any).gtag) { (window as any).gtag('event', 'apply_click', { job_id: job.id, firm_name: job.firm_name }); } }} className="bg-black text-white px-8 py-3 rounded-xl text-base font-bold hover:bg-gray-800 transition w-full sm:w-auto text-center shadow-md">
-                              Apply Now ↗
-                            </a>
-                          )}
-                          {displayEmail && (
-                              <a 
-                                href={`mailto:${displayEmail}?subject=Application for ${encodeURIComponent(job.position)} at ${encodeURIComponent(job.firm_name)}`}
-                                onClick={() => { 
-                                  if (typeof window !== 'undefined' && (window as any).gtag) { 
-                                    (window as any).gtag('event', 'email_click', { job_id: job.id, firm_name: job.firm_name, position: job.position }); 
-                                  } 
-                                }}
-                                className="bg-white text-black px-8 py-3 rounded-xl text-base font-bold border-2 border-black hover:bg-gray-50 transition w-full sm:w-auto text-center shadow-sm"
-                              >
-                                Email Now
-                              </a>
-                            )}
-                          {!job.apply_link && !displayEmail && (
-                            <span className="text-gray-500 text-sm italic">No application method provided</span>
-                          )}
-                        </div>
-                      )}
+                      <JobApplyAction
+                        jobId={job.id}
+                        firmName={job.firm_name}
+                        position={job.position}
+                        applyLink={job.apply_link}
+                        displayEmail={displayEmail}
+                        isExpired={isExpired}
+                      />
                     </div>
 
                     {/* SAVE / SHARE (MOBILE ONLY: Appears below Email Now) */}
