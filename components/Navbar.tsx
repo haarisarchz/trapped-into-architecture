@@ -109,14 +109,43 @@ const [showUserMenu, setShowUserMenu] =
             
           if (noLogoComps) {
             const missingLogos = noLogoComps.filter((c: any) => !c.logo_url || c.logo_url.trim() === "");
-            missingLogos.forEach((comp: any) => {
+            const now = new Date();
+
+            // First 3 days: notify for each individual company
+            const recentMissing = missingLogos.filter((comp: any) => {
+              const createdDate = new Date(comp.created_at || now);
+              const ageDays = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+              return ageDays <= 3;
+            });
+
+            recentMissing.forEach((comp: any) => {
               notifs.push({
                 id: comp.id + '-logo',
                 message: `The company you added (${comp.firm_name}) is missing a logo. Please add one.`,
-                time: (function(){ const d = new Date(); d.setHours(0,0,0,0); return d.toISOString(); })(),
-                link: `/admin/companies/edit/${comp.id}`
+                time: comp.created_at || now.toISOString(),
+                link: `/admin/companies?filter=missing-logo`
               });
             });
+
+            // Older than 3 days: notify weekly on Sundays as a digest
+            const olderMissing = missingLogos.filter((comp: any) => {
+              const createdDate = new Date(comp.created_at || now);
+              const ageDays = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+              return ageDays > 3;
+            });
+
+            const isSunday = now.getDay() === 0;
+            if (isSunday && olderMissing.length > 0) {
+              const count = olderMissing.length;
+              const names = olderMissing.slice(0, 2).map((c: any) => c.firm_name).join(', ');
+              const extra = count > 2 ? ` and ${count - 2} other${count - 2 > 1 ? 's' : ''}` : '';
+              notifs.push({
+                id: 'sunday-digest-missing-logos-' + now.toISOString().split('T')[0],
+                message: `Weekly Reminder: You have ${count} ${count === 1 ? 'company' : 'companies'} (${names}${extra}) missing logos. Please upload them.`,
+                time: (function(){ const d = new Date(); d.setHours(9, 0, 0, 0); return d.toISOString(); })(),
+                link: `/admin/companies?filter=missing-logo`
+              });
+            }
           }
         }
       }
