@@ -435,14 +435,10 @@ function UserDetailModal({
           {/* Metadata */}
           <div>
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">System & Metadata</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
               <div>
                 <span className="text-xs text-gray-500 block">Joined Date</span>
                 <span className="font-semibold text-gray-900">{formatDate(user.created_at)}</span>
-              </div>
-              <div>
-                <span className="text-xs text-gray-500 block">Rate Per Post</span>
-                <span className="font-semibold text-gray-900">₹{user.rupees_per_post ?? 10}</span>
               </div>
               <div>
                 <span className="text-xs text-gray-500 block">Verification Status</span>
@@ -493,6 +489,10 @@ export default function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [professionFilter, setProfessionFilter] = useState("all");
   const [sortOption, setSortOption] = useState("recent");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   // Detail Modal
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -698,6 +698,17 @@ export default function AdminUsersPage() {
     return result;
   }, [users, searchQuery, roleFilter, professionFilter, sortOption]);
 
+  // Reset to first page when search or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter, professionFilter, sortOption]);
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const currentUsers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(start, start + itemsPerPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
+
   // CSV Export Function
   const handleExportCSV = () => {
     if (filteredUsers.length === 0) {
@@ -719,7 +730,6 @@ export default function AdminUsersPage() {
       "Date of Birth",
       "Bio",
       "Verified",
-      "Rate Per Post (INR)",
       "Joined Date",
     ];
 
@@ -743,7 +753,6 @@ export default function AdminUsersPage() {
       u.dob || "",
       u.bio || "",
       u.verified ? "Yes" : "No",
-      u.rupees_per_post ?? 10,
       u.created_at || "",
     ]);
 
@@ -948,14 +957,29 @@ export default function AdminUsersPage() {
         {/* Results summary chip */}
         <div className="flex items-center justify-between text-xs text-gray-500 font-medium px-1 mb-3">
           <div>
-            Showing <strong className="text-gray-900">{filteredUsers.length}</strong> of{" "}
-            <strong className="text-gray-900">{users.length}</strong> users
+            Showing{" "}
+            <strong className="text-gray-900">
+              {filteredUsers.length === 0
+                ? 0
+                : `${(currentPage - 1) * itemsPerPage + 1}–${Math.min(
+                    currentPage * itemsPerPage,
+                    filteredUsers.length
+                  )}`}
+            </strong>{" "}
+            of <strong className="text-gray-900">{filteredUsers.length}</strong>{" "}
+            {filteredUsers.length === 1 ? "user" : "users"}
+            {filteredUsers.length !== users.length && (
+              <span className="text-gray-400 ml-1">({users.length} total)</span>
+            )}
             {(searchQuery || roleFilter !== "all" || professionFilter !== "all") && (
-              <span className="ml-2 text-blue-600 font-semibold cursor-pointer hover:underline" onClick={() => {
-                setSearchQuery("");
-                setRoleFilter("all");
-                setProfessionFilter("all");
-              }}>
+              <span
+                className="ml-2 text-blue-600 font-semibold cursor-pointer hover:underline"
+                onClick={() => {
+                  setSearchQuery("");
+                  setRoleFilter("all");
+                  setProfessionFilter("all");
+                }}
+              >
                 (Clear filters)
               </span>
             )}
@@ -982,7 +1006,7 @@ export default function AdminUsersPage() {
         ) : (
           <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[1380px]">
+              <table className="w-full text-left border-collapse min-w-[1280px]">
                 <thead>
                   <tr className="bg-gray-50/90 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                     <th className="px-4 py-3.5 text-center w-12">#</th>
@@ -996,24 +1020,24 @@ export default function AdminUsersPage() {
                     <th className="px-4 py-3.5 min-w-[160px]">Education</th>
                     <th className="px-4 py-3.5 min-w-[120px]">DOB</th>
                     <th className="px-4 py-3.5 min-w-[100px] text-center">Verified</th>
-                    <th className="px-4 py-3.5 min-w-[100px]">Rate</th>
                     <th className="px-4 py-3.5 min-w-[130px]">Joined</th>
                     <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[100px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
-                  {filteredUsers.map((u, i) => {
+                  {currentUsers.map((u, i) => {
                     const profBadge = getProfessionBadge(u.profession);
                     const waUrl = getWhatsAppUrl(u.phone);
+                    const globalIndex = (currentPage - 1) * itemsPerPage + i + 1;
 
                     return (
                       <tr
                         key={u.id}
                         className="hover:bg-gray-50/80 transition group"
                       >
-                        {/* Serial number */}
+                        {/* Serial number taking current page into account */}
                         <td className="px-4 py-3.5 text-center text-gray-400 font-medium">
-                          {i + 1}
+                          {globalIndex}
                         </td>
 
                         {/* Full Name */}
@@ -1166,11 +1190,6 @@ export default function AdminUsersPage() {
                           )}
                         </td>
 
-                        {/* Rate */}
-                        <td className="px-4 py-3.5 font-semibold text-gray-700">
-                          ₹{u.rupees_per_post ?? 10}
-                        </td>
-
                         {/* Joined Date */}
                         <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
                           {formatDate(u.created_at)}
@@ -1191,6 +1210,49 @@ export default function AdminUsersPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {filteredUsers.length > 0 && (
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 text-sm text-gray-600">
+              <span>Users per page:</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-white font-medium cursor-pointer focus:ring-2 focus:ring-black"
+              >
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3.5 py-1.5 border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition cursor-pointer disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+
+              <span className="text-sm font-medium px-4">
+                Page {currentPage} of {totalPages || 1}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-3.5 py-1.5 border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition cursor-pointer disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}
