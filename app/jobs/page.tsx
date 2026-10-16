@@ -133,13 +133,17 @@ const [showFilters, setShowFilters] = useState(false);
     });
   };
 
-  const [showAllStates, setShowAllStates] = useState(false);
-  const [showAllCities, setShowAllCities] = useState(false);
+  const [visibleStatesCount, setVisibleStatesCount] = useState(5);
+  const [visibleCitiesCount, setVisibleCitiesCount] = useState(5);
+  const [visiblePositionsCount, setVisiblePositionsCount] = useState(5);
+  const [cityWarning, setCityWarning] = useState(false);
 
   const stateStats = getAggregatedList(jobs, 'state');
-  const displayedStates = showAllStates ? stateStats : stateStats.slice(0, 10);
+  const displayedStates = stateStats.slice(0, visibleStatesCount);
   const cityStats = getAggregatedList(jobs, 'city', (job: any) => selectedStates.length === 0 || selectedStates.includes(job.state));
-  const displayedCities = showAllCities ? cityStats : cityStats.slice(0, 10);
+  const displayedCities = cityStats.slice(0, visibleCitiesCount);
+  const positionStats = getAggregatedList(jobs, 'position');
+  const displayedPositions = positionStats.slice(0, visiblePositionsCount);
 
   useEffect(() => {
 
@@ -216,6 +220,10 @@ const [showFilters, setShowFilters] = useState(false);
         setSelectedPositions([]);
         setSelectedQualifications([]);
         setSelectedSkills([]);
+        setVisibleStatesCount(5);
+        setVisibleCitiesCount(5);
+        setVisiblePositionsCount(5);
+        setCityWarning(false);
         // removed missing setters to prevent crash
           if (typeof setExpRange === "function") setExpRange([0, 15]);
           if (typeof setSalaryRange === "function") setSalaryRange([0, 50]);
@@ -252,6 +260,7 @@ const [showFilters, setShowFilters] = useState(false);
                 onChange={(e) => {
                   if (e.target.checked) setSelectedStates([...selectedStates, stateObj.name]);
                   else setSelectedStates(selectedStates.filter((s) => s !== stateObj.name));
+                  setCityWarning(false);
                 }}
                 className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
               />
@@ -260,10 +269,24 @@ const [showFilters, setShowFilters] = useState(false);
             <span className="text-gray-400 text-xs font-medium">({stateObj.count})</span>
           </label>
         ))}
-        {stateStats.length > 10 && (
-          <button type="button" onClick={() => setShowAllStates(!showAllStates)} className="text-blue-600 hover:underline text-xs mt-2 font-medium block">
-            {showAllStates ? "Show Less" : "Show More"}
-          </button>
+        {stateStats.length > 5 && (
+          visibleStatesCount < stateStats.length ? (
+            <button 
+              type="button" 
+              onClick={() => setVisibleStatesCount((prev) => prev + 10)} 
+              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+            >
+              Show More
+            </button>
+          ) : (
+            <button 
+              type="button" 
+              onClick={() => setVisibleStatesCount(5)} 
+              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+            >
+              Show Less
+            </button>
+          )
         )}
       </div>
 
@@ -294,20 +317,108 @@ const [showFilters, setShowFilters] = useState(false);
             <span className="text-gray-400 text-xs font-medium">({cityObj.count})</span>
           </label>
         ))}
-        {cityStats.length > 10 && (
-          <button 
-            type="button" 
-            onClick={() => {
-              if (selectedStates.length === 0 && !showAllCities) {
-                alert("Please select a state to view more specific cities.");
-                return;
-              }
-              setShowAllCities(!showAllCities);
-            }} 
-            className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
-          >
-            {showAllCities ? "Show Less" : (selectedStates.length === 0 ? "Select state to see more" : "Show More")}
-          </button>
+        {cityStats.length > 5 && (
+          <div>
+            {visibleCitiesCount < cityStats.length ? (
+              <div>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    if (visibleCitiesCount === 5) {
+                      setVisibleCitiesCount(10);
+                      setCityWarning(false);
+                    } else {
+                      if (selectedStates.length === 0) {
+                        setCityWarning(true);
+                      } else {
+                        setVisibleCitiesCount((prev) => prev + 10);
+                        setCityWarning(false);
+                      }
+                    }
+                  }} 
+                  className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+                >
+                  Show More
+                </button>
+                {cityWarning && selectedStates.length === 0 && (
+                  <div className="text-amber-800 bg-amber-50 border border-amber-200 rounded px-2.5 py-1 text-xs font-medium mt-1.5 flex items-center gap-1.5">
+                    <span>⚠️</span> Select state to see more
+                  </div>
+                )}
+                {visibleCitiesCount > 5 && (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setVisibleCitiesCount(5);
+                      setCityWarning(false);
+                    }} 
+                    className="text-gray-500 hover:underline text-xs mt-1.5 font-medium block"
+                  >
+                    Show Less
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button 
+                type="button" 
+                onClick={() => {
+                  setVisibleCitiesCount(5);
+                  setCityWarning(false);
+                }} 
+                className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+              >
+                Show Less
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+    </div>
+
+    {/* POSITION */}
+
+    <div>
+
+      <h3 className="font-semibold mb-3">
+        Position ({positionStats.length})
+      </h3>
+      <div className="space-y-2 text-sm">
+        {displayedPositions.map((posObj) => (
+          <label key={posObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selectedPositions.includes(posObj.name)}
+                onChange={(e) => {
+                  if (e.target.checked) setSelectedPositions([...selectedPositions, posObj.name]);
+                  else setSelectedPositions(selectedPositions.filter((p) => p !== posObj.name));
+                }}
+                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+              />
+              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{posObj.name}</span>
+            </div>
+            <span className="text-gray-400 text-xs font-medium">({posObj.count})</span>
+          </label>
+        ))}
+        {positionStats.length > 5 && (
+          visiblePositionsCount < positionStats.length ? (
+            <button 
+              type="button" 
+              onClick={() => setVisiblePositionsCount((prev) => prev + 10)} 
+              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+            >
+              Show More
+            </button>
+          ) : (
+            <button 
+              type="button" 
+              onClick={() => setVisiblePositionsCount(5)} 
+              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+            >
+              Show Less
+            </button>
+          )
         )}
       </div>
 
@@ -601,7 +712,7 @@ const [showFilters, setShowFilters] = useState(false);
 
       return dateB !== dateA ? dateB - dateA : createdB - createdA;
     });
-  }, [selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery, viewMode, sortBy, jobs, datePosted, expRange, salaryRange, salaryUnit, includeNotDisclosed, showFilters, showAllStates, showAllCities, currentPage, itemsPerPage]);
+  }, [selectedStates, selectedCities, selectedPositions, selectedQualifications, selectedSkills, searchQuery, viewMode, sortBy, jobs, datePosted, expRange, salaryRange, salaryUnit, includeNotDisclosed, showFilters, visibleStatesCount, visibleCitiesCount, visiblePositionsCount, cityWarning, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(filteredJobs.length / itemsPerPage);
   const paginatedJobs = filteredJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
