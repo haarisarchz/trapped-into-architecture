@@ -94,10 +94,10 @@ function InternshipsPageContent() {
 
   // Aggregated options
   const stateStats = getAggregatedList(jobs, 'state');
-  const displayedStates = showAllStates ? stateStats : stateStats.slice(0, 8);
+  const displayedStates = showAllStates ? stateStats : stateStats.slice(0, 10);
 
   const cityStats = getAggregatedList(jobs, 'city', (job: any) => selectedStates.length === 0 || selectedStates.includes(job.state));
-  const displayedCities = showAllCities ? cityStats : cityStats.slice(0, 8);
+  const displayedCities = showAllCities ? cityStats : cityStats.slice(0, 10);
 
   const orgTypeStats = getAggregatedList(jobs, 'organization_type');
   const displayedOrgTypes = showAllOrgTypes ? orgTypeStats : orgTypeStats.slice(0, 6);
@@ -263,9 +263,9 @@ function InternshipsPageContent() {
         <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
           State ({stateStats.length})
         </h3>
-        <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
           {displayedStates.map((stateObj) => (
-            <label key={stateObj.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
+            <label key={stateObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
               <div className="flex items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -281,7 +281,7 @@ function InternshipsPageContent() {
               <span className="text-gray-400 text-xs font-medium">({stateObj.count})</span>
             </label>
           ))}
-          {stateStats.length > 8 && (
+          {stateStats.length > 10 && (
             <button
               type="button"
               onClick={() => setShowAllStates(!showAllStates)}
@@ -300,9 +300,9 @@ function InternshipsPageContent() {
         <h3 className="font-bold text-gray-800 mb-3 text-xs uppercase tracking-wider">
           City ({cityStats.length})
         </h3>
-        <div className="space-y-2 text-sm max-h-48 overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
           {displayedCities.map((cityObj) => (
-            <label key={cityObj.name} className="flex items-center justify-between gap-2 w-full cursor-pointer group">
+            <label key={cityObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
               <div className="flex items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -318,7 +318,7 @@ function InternshipsPageContent() {
               <span className="text-gray-400 text-xs font-medium">({cityObj.count})</span>
             </label>
           ))}
-          {cityStats.length > 8 && (
+          {cityStats.length > 10 && (
             <button
               type="button"
               onClick={() => {

@@ -137,9 +137,9 @@ const [showFilters, setShowFilters] = useState(false);
     });
   };
 
-  const [visibleStatesCount, setVisibleStatesCount] = useState(5);
-  const [visibleCitiesCount, setVisibleCitiesCount] = useState(5);
-  const [visiblePositionsCount, setVisiblePositionsCount] = useState(5);
+  const [visibleStatesCount, setVisibleStatesCount] = useState(10);
+  const [visibleCitiesCount, setVisibleCitiesCount] = useState(10);
+  const [visiblePositionsCount, setVisiblePositionsCount] = useState(10);
   const [cityWarning, setCityWarning] = useState(false);
 
   const stateStats = getAggregatedList(jobs, 'state');
@@ -224,9 +224,9 @@ const [showFilters, setShowFilters] = useState(false);
             setSelectedPositions([]);
             setSelectedQualifications([]);
             setSelectedSkills([]);
-            setVisibleStatesCount(5);
-            setVisibleCitiesCount(5);
-            setVisiblePositionsCount(5);
+            setVisibleStatesCount(10);
+            setVisibleCitiesCount(10);
+            setVisiblePositionsCount(10);
             setCityWarning(false);
             if (typeof setExpRange === "function") setExpRange([0, 15]);
             if (typeof setSalaryRange === "function") setSalaryRange([0, 50]);
@@ -252,7 +252,7 @@ const [showFilters, setShowFilters] = useState(false);
       <h3 className="font-semibold mb-3">
         State ({stateStats.length})
       </h3>
-      <div className="space-y-2 text-sm">
+      <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
         {displayedStates.map((stateObj) => (
           <label key={stateObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
             <div className="flex items-center gap-3">
@@ -271,7 +271,7 @@ const [showFilters, setShowFilters] = useState(false);
             <span className="text-gray-400 text-xs font-medium">({stateObj.count})</span>
           </label>
         ))}
-        {stateStats.length > 5 && (
+        {stateStats.length > 10 && (
           visibleStatesCount < stateStats.length ? (
             <button 
               type="button" 
@@ -283,7 +283,7 @@ const [showFilters, setShowFilters] = useState(false);
           ) : (
             <button 
               type="button" 
-              onClick={() => setVisibleStatesCount(5)} 
+              onClick={() => setVisibleStatesCount(10)} 
               className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
             >
               Show Less
@@ -301,7 +301,7 @@ const [showFilters, setShowFilters] = useState(false);
       <h3 className="font-semibold mb-3">
         City ({cityStats.length})
       </h3>
-      <div className="space-y-2 text-sm">
+      <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
         {displayedCities.map((cityObj) => (
           <label key={cityObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
             <div className="flex items-center gap-3">
@@ -319,23 +319,18 @@ const [showFilters, setShowFilters] = useState(false);
             <span className="text-gray-400 text-xs font-medium">({cityObj.count})</span>
           </label>
         ))}
-        {cityStats.length > 5 && (
+        {cityStats.length > 10 && (
           <div>
             {visibleCitiesCount < cityStats.length ? (
               <div>
                 <button 
                   type="button" 
                   onClick={() => {
-                    if (visibleCitiesCount === 5) {
-                      setVisibleCitiesCount(10);
-                      setCityWarning(false);
+                    if (selectedStates.length === 0) {
+                      setCityWarning(true);
                     } else {
-                      if (selectedStates.length === 0) {
-                        setCityWarning(true);
-                      } else {
-                        setVisibleCitiesCount((prev) => prev + 10);
-                        setCityWarning(false);
-                      }
+                      setVisibleCitiesCount((prev) => prev + 10);
+                      setCityWarning(false);
                     }
                   }} 
                   className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
@@ -347,11 +342,11 @@ const [showFilters, setShowFilters] = useState(false);
                     <span>⚠️</span> Select state to see more
                   </div>
                 )}
-                {visibleCitiesCount > 5 && (
+                {visibleCitiesCount > 10 && (
                   <button 
                     type="button" 
                     onClick={() => {
-                      setVisibleCitiesCount(5);
+                      setVisibleCitiesCount(10);
                       setCityWarning(false);
                     }} 
                     className="text-gray-500 hover:underline text-xs mt-1.5 font-medium block"
@@ -364,7 +359,7 @@ const [showFilters, setShowFilters] = useState(false);
               <button 
                 type="button" 
                 onClick={() => {
-                  setVisibleCitiesCount(5);
+                  setVisibleCitiesCount(10);
                   setCityWarning(false);
                 }} 
                 className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
@@ -385,7 +380,7 @@ const [showFilters, setShowFilters] = useState(false);
       <h3 className="font-semibold mb-3">
         Position ({positionStats.length})
       </h3>
-      <div className="space-y-2 text-sm">
+      <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
         {displayedPositions.map((posObj) => (
           <label key={posObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
             <div className="flex items-center gap-3">
@@ -403,7 +398,7 @@ const [showFilters, setShowFilters] = useState(false);
             <span className="text-gray-400 text-xs font-medium">({posObj.count})</span>
           </label>
         ))}
-        {positionStats.length > 5 && (
+        {positionStats.length > 10 && (
           visiblePositionsCount < positionStats.length ? (
             <button 
               type="button" 
@@ -415,7 +410,7 @@ const [showFilters, setShowFilters] = useState(false);
           ) : (
             <button 
               type="button" 
-              onClick={() => setVisiblePositionsCount(5)} 
+              onClick={() => setVisiblePositionsCount(10)} 
               className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
             >
               Show Less
