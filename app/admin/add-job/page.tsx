@@ -1261,34 +1261,49 @@ const [uploadSuccess, setUploadSuccess] =
   
   const fileName = `${seoName}-${Date.now()}${ext}`;
 
-  const { data, error } = await supabase.storage
-    .from("job-images")
-    .upload(fileName, file);
+  let finalUrl = "";
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "/job-images");
 
-  if (error) {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-    console.log("UPLOAD ERROR:", error);
-
-alert(JSON.stringify(error));
-
-    setUploadingImage(false);
-
-    return;
-
+    if (res.ok) {
+      const ikData = await res.json();
+      if (ikData.url) finalUrl = ikData.url;
+    }
+  } catch (ikErr) {
+    console.warn("ImageKit upload failed, falling back to Supabase storage:", ikErr);
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage
-    .from("job-images")
-    .getPublicUrl(fileName);
+  if (!finalUrl) {
+    const { data, error } = await supabase.storage
+      .from("job-images")
+      .upload(fileName, file);
 
-  setImageUrl(publicUrl);
+    if (error) {
+      console.log("UPLOAD ERROR:", error);
+      alert(JSON.stringify(error));
+      setUploadingImage(false);
+      return;
+    }
 
+    const {
+      data: { publicUrl },
+    } = supabase.storage
+      .from("job-images")
+      .getPublicUrl(fileName);
+
+    finalUrl = publicUrl;
+  }
+
+  setImageUrl(finalUrl);
   setUploadingImage(false);
-
   setUploadSuccess(true);
-
 };
 
 /* PUBLISH FUNCTION */
@@ -1362,12 +1377,22 @@ const handleSchedule = async () => {
            alert("Company details updated successfully!");
            setIsCompanyProfileDirty(false);
         } else {
-           const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
-           const { data: newComp, error } = await supabase.from("companies").insert([
-             { ...companyPayload, slug: companySlug, created_by: authorId, is_active: status === "published" }
+           let companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+           let insertRes = await supabase.from("companies").insert([
+             { ...companyPayload, slug: companySlug, created_by: authorId, is_active: true }
            ]).select().single();
-           if (error) throw error;
-           if (newComp) setSelectedCompanyId(newComp.id);
+
+           // If slug collided with another company, append city or random suffix to make it unique
+           if (insertRes.error && insertRes.error.code === "23505") {
+             const safeSuffix = city ? city.toLowerCase().replace(/\s+/g, "-") : Date.now().toString().slice(-4);
+             companySlug = `${companySlug}-${safeSuffix}`;
+             insertRes = await supabase.from("companies").insert([
+               { ...companyPayload, slug: companySlug, created_by: authorId, is_active: true }
+             ]).select().single();
+           }
+
+           if (insertRes.error) throw insertRes.error;
+           if (insertRes.data) setSelectedCompanyId(insertRes.data.id);
            alert("Company created and saved successfully!");
            setIsCompanyProfileDirty(false);
         }
@@ -1436,11 +1461,25 @@ const handlePublishJob = async (
           .maybeSingle();
 
         if (!existingCompany) {
-          const companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
-          const { data: newComp } = await supabase.from("companies").insert([
-            { ...companyPayload, slug: companySlug, created_by: authorId }
+          let companySlug = firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
+          let insertRes = await supabase.from("companies").insert([
+            { ...companyPayload, slug: companySlug, created_by: authorId, is_active: true }
           ]).select().single();
-          if (newComp) currentCompanyId = newComp.id;
+
+          if (insertRes.error && insertRes.error.code === "23505") {
+            const safeSuffix = city ? city.toLowerCase().replace(/\s+/g, "-") : Date.now().toString().slice(-4);
+            companySlug = `${companySlug}-${safeSuffix}`;
+            insertRes = await supabase.from("companies").insert([
+              { ...companyPayload, slug: companySlug, created_by: authorId, is_active: true }
+            ]).select().single();
+          }
+
+          if (insertRes.data) {
+            currentCompanyId = insertRes.data.id;
+            setSelectedCompanyId(insertRes.data.id);
+          } else if (insertRes.error) {
+            console.error("Failed to auto-create company record:", insertRes.error);
+          }
         } else {
           currentCompanyId = existingCompany.id;
           if (isCompanyProfileDirty) {
@@ -2981,15 +3020,38 @@ const handleSmartExtraction = async () => {
           const compressedImage = await compressImage(smartImage);
           
           try {
-            const extMatch = compressedImage.name.match(/\.[0-9a-z]+$/i);
-            const ext = extMatch ? extMatch[0].toLowerCase() : '';
-            const fileName = `smart-upload-${Date.now()}${ext}`;
-            const { data, error } = await supabase.storage.from("job-images").upload(fileName, compressedImage);
-            if (!error) {
-               const { data: { publicUrl } } = supabase.storage.from("job-images").getPublicUrl(fileName);
-               setImageUrl(publicUrl);
-            } else {
-               console.error("Smart image upload failed", error);
+            let smartUrl = "";
+            try {
+              const ikForm = new FormData();
+              ikForm.append("file", compressedImage);
+              ikForm.append("folder", "/job-images");
+              const ikRes = await fetch("/api/upload", {
+                method: "POST",
+                body: ikForm,
+              });
+              if (ikRes.ok) {
+                const ikData = await ikRes.json();
+                if (ikData.url) smartUrl = ikData.url;
+              }
+            } catch (ikErr) {
+              console.warn("ImageKit smart upload failed:", ikErr);
+            }
+
+            if (!smartUrl) {
+              const extMatch = compressedImage.name.match(/\.[0-9a-z]+$/i);
+              const ext = extMatch ? extMatch[0].toLowerCase() : '';
+              const fileName = `smart-upload-${Date.now()}${ext}`;
+              const { data, error } = await supabase.storage.from("job-images").upload(fileName, compressedImage);
+              if (!error) {
+                 const { data: { publicUrl } } = supabase.storage.from("job-images").getPublicUrl(fileName);
+                 smartUrl = publicUrl;
+              } else {
+                 console.error("Smart image upload failed", error);
+              }
+            }
+
+            if (smartUrl) {
+              setImageUrl(smartUrl);
             }
           } catch (e) {
             console.error("Storage error:", e);

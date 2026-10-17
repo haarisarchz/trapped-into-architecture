@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Navbar from "../../../components/Navbar";
-import { Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine } from "lucide-react";
+import { Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine, UploadCloud, Loader2 } from "lucide-react";
 
 // Initialize Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
@@ -57,6 +57,7 @@ export default function CatalogPage() {
   // Excel UX States
   const [activeColMenu, setActiveColMenu] = useState<string | null>(null);
   const [insertPos, setInsertPos] = useState<{ colId: string, direction: 'left' | 'right' } | null>(null);
+  const [uploadingCells, setUploadingCells] = useState<Record<string, boolean>>({});
 
   const checkDatabase = async () => {
     setLoading(true);
@@ -192,12 +193,48 @@ export default function CatalogPage() {
     await supabase.from("catalog_columns").update({ is_visible: !currentVisible }).eq("id", colId);
   };
 
+  const handleCatalogImageUpload = async (rowId: string, colId: string, file?: File) => {
+    if (!file) return;
+    const cellKey = `${rowId}-${colId}`;
+    setUploadingCells(prev => ({ ...prev, [cellKey]: true }));
+    try {
+      const folder = colId.includes("architect") ? "/architect-photos" : "/building-photos";
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folder);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Upload failed");
+      }
+
+      const data = await res.json();
+      if (data.url) {
+        handleCellChange(rowId, colId, data.url);
+      }
+    } catch (err: any) {
+      alert("Error uploading to ImageKit: " + err.message);
+    } finally {
+      setUploadingCells(prev => ({ ...prev, [cellKey]: false }));
+    }
+  };
+
   const renderCellInput = (row: any, col: any) => {
     const val = row.data[col.id] || "";
     
     if (row.is_locked) {
       if (col.type === "image") {
-        return val ? <img src={val} alt="preview" className="h-10 w-10 object-cover rounded" /> : <span className="text-gray-400 text-xs">No image</span>;
+        return val ? (
+          <a href={val} target="_blank" rel="noreferrer" className="flex items-center gap-2 group">
+            <img src={val} alt="preview" className="h-9 w-9 object-cover rounded border border-gray-200 group-hover:opacity-80 transition shrink-0" />
+            <span className="text-[11px] text-blue-600 underline truncate max-w-[120px] font-mono">View</span>
+          </a>
+        ) : <span className="text-gray-400 text-xs">No image</span>;
       }
       if (col.type === "link") {
         return val ? <a href={val} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><LinkIcon size={12}/> Link</a> : <span className="text-gray-400 text-xs">-</span>;
@@ -206,14 +243,42 @@ export default function CatalogPage() {
     }
 
     if (col.type === "image") {
+      const cellKey = `${row.id}-${col.id}`;
+      const isUploading = !!uploadingCells[cellKey];
       return (
-        <input 
-          type="text" 
-          placeholder="Image URL..."
-          value={val}
-          onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
-          className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:border-black"
-        />
+        <div className="flex items-center gap-1.5">
+          {val ? (
+            <div className="relative shrink-0">
+              <img src={val} alt="preview" className="h-7 w-7 object-cover rounded border border-gray-200" />
+            </div>
+          ) : null}
+          <input 
+            type="text" 
+            placeholder="URL or Upload..."
+            value={val}
+            onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
+            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-black min-w-[80px]"
+          />
+          <label 
+            className={`cursor-pointer p-1.5 rounded transition shrink-0 flex items-center justify-center ${
+              isUploading ? "bg-gray-200 text-gray-400" : "bg-black text-white hover:bg-gray-800"
+            }`} 
+            title="Upload photo to ImageKit"
+          >
+            {isUploading ? (
+              <Loader2 size={13} className="animate-spin" />
+            ) : (
+              <UploadCloud size={13} />
+            )}
+            <input 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              disabled={isUploading}
+              onChange={(e) => handleCatalogImageUpload(row.id, col.id, e.target.files?.[0])}
+            />
+          </label>
+        </div>
       );
     }
     
