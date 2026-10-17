@@ -7,8 +7,9 @@ import Link from "next/link";
 import CompanyActions from "@/components/CompanyActions";
 import { generateJobUrl, generateCompanySlug } from "@/utils/jobUrl";
 import { Metadata } from "next";
-import { Building2, Globe, Mail, MapPin, Briefcase } from "lucide-react";
+import { Building2, Globe, Mail, MapPin, Briefcase, ShieldCheck } from "lucide-react";
 import { formatExperience } from "@/utils/formatJobDetails";
+import ClaimCompanyButton from "@/components/ClaimCompanyButton";
 
 export async function generateMetadata({
   params,
@@ -228,10 +229,25 @@ export default async function CompanyPage({
             <div className="flex-1">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{company.firm_name}</h1>
-                  <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg">
-                    {company.organization_type || "Firm"}
-                  </span>
+                  <div className="flex items-center gap-3 flex-wrap mb-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{company.firm_name}</h1>
+                    {company.verification_badge === "gold_verified" || company.is_claimed ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded-full text-xs font-bold tracking-wide uppercase shadow-xs" title="Gold Verified Studio">
+                        <ShieldCheck size={14} className="text-amber-600 fill-amber-500" />
+                        Gold Verified
+                      </span>
+                    ) : company.verification_badge === "scrutiny_needed" ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-full text-xs font-medium" title="Claim under review">
+                        Under Scrutiny
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg">
+                      {company.organization_type || "Firm"}
+                    </span>
+                    <ClaimCompanyButton company={company} />
+                  </div>
                 </div>
                 
                 <div className="md:ml-auto shrink-0 pt-2 md:pt-0">

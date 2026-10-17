@@ -150,6 +150,80 @@ const [showUserMenu, setShowUserMenu] =
           }
         }
       }
+
+      // 3. Admin Pending Claims Notifs
+      if (["superadmin", "admin", "ceo", "jobadmin"].includes(role)) {
+        try {
+          const { count: pendingClaimsCount } = await supabase
+            .from("company_claims")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "pending");
+
+          if (pendingClaimsCount && pendingClaimsCount > 0) {
+            notifs.push({
+              id: "pending-claims-" + pendingClaimsCount,
+              message: `Company Claims: ${pendingClaimsCount} studio claim request(s) waiting for review.`,
+              time: new Date().toISOString(),
+              link: "/admin/claims",
+            });
+          }
+        } catch (e) {
+          // Table not ready yet
+        }
+      }
+
+      // 4. User Claim Status Updates (for all logged in users)
+      if (currentUser) {
+        try {
+          let uId = currentUser.id;
+          if (!uId && (currentUser.username || currentUser.email)) {
+            const { data: pData } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq(currentUser.username ? "username" : "email", currentUser.username || currentUser.email)
+              .maybeSingle();
+            if (pData) uId = pData.id;
+          }
+
+          if (uId) {
+            const { data: userClaims } = await supabase
+              .from("company_claims")
+              .select("*")
+              .eq("user_id", uId)
+              .order("updated_at", { ascending: false })
+              .limit(5);
+
+            if (userClaims) {
+              userClaims.forEach((c: any) => {
+                if (c.status === "approved") {
+                  notifs.push({
+                    id: "claim-approved-" + c.id,
+                    message: `🎉 Great news! Your claim for "${c.company_name}" has been approved as a Gold Verified Studio.`,
+                    time: c.reviewed_at || c.updated_at || c.created_at,
+                    link: c.company_slug ? `/companies/${c.company_slug}` : null,
+                  });
+                } else if (c.status === "scrutiny_needed") {
+                  notifs.push({
+                    id: "claim-scrutiny-" + c.id,
+                    message: `⚠️ Notice for "${c.company_name}": Additional scrutiny is needed. ${c.admin_notes || "Admin will review further."}`,
+                    time: c.reviewed_at || c.updated_at || c.created_at,
+                    link: c.company_slug ? `/companies/${c.company_slug}` : null,
+                  });
+                } else if (c.status === "rejected") {
+                  notifs.push({
+                    id: "claim-rejected-" + c.id,
+                    message: `Claim update: Your claim for "${c.company_name}" was not approved. Note: ${c.admin_notes || "Could not verify authorization."}`,
+                    time: c.reviewed_at || c.updated_at || c.created_at,
+                    link: null,
+                  });
+                }
+              });
+            }
+          }
+        } catch (e) {
+          // gracefully ignore if table not ready
+        }
+      }
       
       setNotifications(notifs.sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
     };

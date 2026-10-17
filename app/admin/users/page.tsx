@@ -35,6 +35,7 @@ function displayRole(role: string): string {
   if (r === "ceo") return "CEO";
   if (r === "superadmin") return "Super Admin";
   if (r === "jobadmin") return "Job Admin";
+  if (r === "employer") return "Employer";
   if (r === "admin") return "Job Admin"; // Fallback if legacy admin exists
   return "User";
 }
@@ -176,6 +177,7 @@ function LockedRoleField({
   const roleLabel = displayRole(currentRole);
   const isSuper = roleLabel === "CEO" || roleLabel === "Super Admin";
   const isJobAdmin = roleLabel === "Job Admin";
+  const isEmployer = roleLabel === "Employer";
 
   return (
     <>
@@ -198,6 +200,7 @@ function LockedRoleField({
             disabled={saving}
           >
             <option value="User">User</option>
+            <option value="Employer">Employer</option>
             <option value="Job_Admin">Job Admin</option>
             <option value="Super_Admin">Super Admin</option>
             <option value="CEO">CEO</option>
@@ -225,6 +228,8 @@ function LockedRoleField({
                 ? "bg-purple-50 text-purple-700 border-purple-200"
                 : isJobAdmin
                 ? "bg-blue-50 text-blue-700 border-blue-200"
+                : isEmployer
+                ? "bg-amber-50 text-amber-800 border-amber-300"
                 : "bg-gray-100 text-gray-700 border-gray-200"
             }`}
           >
@@ -658,6 +663,7 @@ export default function AdminUsersPage() {
         if (roleFilter === "ceo") return norm === "ceo";
         if (roleFilter === "superadmin") return norm === "superadmin";
         if (roleFilter === "jobadmin") return norm === "jobadmin" || norm === "admin";
+        if (roleFilter === "employer") return norm === "employer";
         if (roleFilter === "user") return norm === "user" || norm === "";
         return true;
       });
@@ -904,6 +910,7 @@ export default function AdminUsersPage() {
               <option value="ceo">CEO</option>
               <option value="superadmin">Super Admin</option>
               <option value="jobadmin">Job Admin</option>
+              <option value="employer">Employer</option>
               <option value="user">User</option>
             </select>
 

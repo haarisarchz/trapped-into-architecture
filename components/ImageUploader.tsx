@@ -19,18 +19,44 @@ export default function ImageUploader({ value, onChange, bucket = "job-images", 
     setUploading(true);
 
     try {
-      let ext = ".png";
-      if (file.name) {
-        const extMatch = file.name.match(/\.[0-9a-z]+$/i);
-        if (extMatch) ext = extMatch[0].toLowerCase();
+      let uploadedUrl = "";
+
+      // 1. Try ImageKit upload first
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", bucket ? `/${bucket}` : "/uploads");
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) uploadedUrl = data.url;
+        }
+      } catch (ikErr) {
+        console.warn("ImageKit upload failed, falling back to Supabase storage:", ikErr);
       }
-      const fileName = `img-${Date.now()}${ext}`;
 
-      const { error } = await supabase.storage.from(bucket).upload(fileName, file);
-      if (error) throw error;
+      // 2. Fallback to Supabase Storage if ImageKit didn't complete
+      if (!uploadedUrl) {
+        let ext = ".png";
+        if (file.name) {
+          const extMatch = file.name.match(/\.[0-9a-z]+$/i);
+          if (extMatch) ext = extMatch[0].toLowerCase();
+        }
+        const fileName = `img-${Date.now()}${ext}`;
 
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
-      onChange(publicUrl);
+        const { error } = await supabase.storage.from(bucket).upload(fileName, file);
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(fileName);
+        uploadedUrl = publicUrl;
+      }
+
+      onChange(uploadedUrl);
     } catch (err: any) {
       alert("Failed to upload image: " + err.message);
     } finally {
