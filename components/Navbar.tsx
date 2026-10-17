@@ -1431,6 +1431,17 @@ window.location.reload();
     >
       Register
     </button>
+    <p className="text-center text-xs text-gray-500 mt-3">
+      By registering, you agree to our{" "}
+      <Link
+        href="/privacy-policy"
+        onClick={() => setShowAuthPopup(false)}
+        className="text-black underline font-medium hover:text-gray-700"
+      >
+        Privacy Policy
+      </Link>
+      .
+    </p>
   </div>
 )}
 
