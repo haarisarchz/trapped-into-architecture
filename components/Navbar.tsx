@@ -35,6 +35,7 @@ const [showUserMenu, setShowUserMenu] =
 
   const [authTab, setAuthTab] =
     useState<"login" | "register" | "success">("login");
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotif, setShowNotif] = useState(false);
@@ -1273,6 +1274,28 @@ window.location.reload();
 
 </div>
 
+    {/* PRIVACY POLICY CHECKBOX */}
+    <label className="flex items-start gap-2.5 cursor-pointer text-xs text-gray-700 mb-4 select-none group">
+      <input
+        type="checkbox"
+        id="agree-privacy-policy"
+        checked={agreedToPolicy}
+        onChange={(e) => setAgreedToPolicy(e.target.checked)}
+        className="w-4 h-4 mt-0.5 rounded border-gray-300 text-black focus:ring-black accent-black cursor-pointer shrink-0"
+      />
+      <span className="leading-snug">
+        I have read and agree to the{" "}
+        <Link
+          href="/privacy-policy"
+          onClick={() => setShowAuthPopup(false)}
+          className="text-black underline font-semibold hover:text-gray-600"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </span>
+    </label>
+
     {/* REGISTER BUTTON */}
 
     <button
@@ -1368,6 +1391,11 @@ window.location.reload();
           return;
         }
 
+        if (!agreedToPolicy) {
+          alert("Please tick the checkbox to agree to the Privacy Policy before registering.");
+          return;
+        }
+
         let fullPhone = null;
         if (phone) {
           const countryCode = (document.getElementById("country-code") as HTMLInputElement)?.value || "";
@@ -1431,17 +1459,6 @@ window.location.reload();
     >
       Register
     </button>
-    <p className="text-center text-xs text-gray-500 mt-3">
-      By registering, you agree to our{" "}
-      <Link
-        href="/privacy-policy"
-        onClick={() => setShowAuthPopup(false)}
-        className="text-black underline font-medium hover:text-gray-700"
-      >
-        Privacy Policy
-      </Link>
-      .
-    </p>
   </div>
 )}
 
