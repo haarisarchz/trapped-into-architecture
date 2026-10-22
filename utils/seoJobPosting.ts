@@ -178,7 +178,7 @@ export function formatHtmlDescription(
   if (mainDesc) {
     // Convert double line breaks into paragraphs
     const paragraphs = mainDesc.split(/\n\n+/);
-    paragraphs.forEach(p => {
+    paragraphs.forEach((p: string) => {
       const trimmed = p.trim();
       if (!trimmed) return;
 
@@ -188,7 +188,7 @@ export function formatHtmlDescription(
         const listItems: string[] = [];
         let headerText = "";
 
-        lines.forEach(line => {
+        lines.forEach((line: string) => {
           const l = line.trim();
           if (l.startsWith("- ") || l.startsWith("* ")) {
             listItems.push(`<li>${escapeHtml(l.substring(2))}</li>`);
@@ -203,7 +203,7 @@ export function formatHtmlDescription(
         // Replace single line breaks with <br/>
         const htmlPara = trimmed
           .split("\n")
-          .map(l => escapeHtml(l.trim()))
+          .map((l: string) => escapeHtml(l.trim()))
           .join("<br/>")
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         parts.push(`<p>${htmlPara}</p>`);
@@ -214,17 +214,17 @@ export function formatHtmlDescription(
   // Qualifications list
   const quals = Array.isArray(job.qualifications)
     ? job.qualifications.filter(Boolean)
-    : (job.qualifications ? String(job.qualifications).split(",").map(q => q.trim()).filter(Boolean) : []);
+    : (job.qualifications ? String(job.qualifications).split(",").map((q: string) => q.trim()).filter(Boolean) : []);
   if (quals.length > 0) {
-    parts.push(`<h3>Qualifications</h3><ul>${quals.map(q => `<li>${escapeHtml(q)}</li>`).join("")}</ul>`);
+    parts.push(`<h3>Qualifications</h3><ul>${quals.map((q: any) => `<li>${escapeHtml(String(q))}</li>`).join("")}</ul>`);
   }
 
   // Skills required list
   const skills = Array.isArray(job.skills_required)
     ? job.skills_required.filter(Boolean)
-    : (job.skills_required ? String(job.skills_required).split(",").map(s => s.trim()).filter(Boolean) : []);
+    : (job.skills_required ? String(job.skills_required).split(",").map((s: string) => s.trim()).filter(Boolean) : []);
   if (skills.length > 0) {
-    parts.push(`<h3>Skills Required</h3><ul>${skills.map(s => `<li>${escapeHtml(s)}</li>`).join("")}</ul>`);
+    parts.push(`<h3>Skills Required</h3><ul>${skills.map((s: any) => `<li>${escapeHtml(String(s))}</li>`).join("")}</ul>`);
   }
 
   // Experience

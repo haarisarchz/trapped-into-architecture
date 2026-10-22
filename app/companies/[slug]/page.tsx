@@ -21,7 +21,7 @@ export async function generateMetadata({
 
     const { data: company } = await supabase
       .from("companies")
-      .select("firm_name, company_description, logo_url")
+      .select("firm_name, company_description, logo_url, city, state")
       .eq("slug", slug)
       .maybeSingle();
 
@@ -40,7 +40,7 @@ export async function generateMetadata({
           return genSlug === slug;
         });
         if (match) {
-          companyData = { firm_name: match.firm_name, company_description: "" };
+          companyData = { firm_name: match.firm_name, company_description: "", city: null, state: null, logo_url: null };
         }
       }
     }
