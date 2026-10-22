@@ -27,6 +27,7 @@ export default function AnalyticsPage() {
   const [listingMode, setListingMode] = useState<"top" | "recent">("top");
   const [filterAdminShares, setFilterAdminShares] = useState(false);
   const [trafficTab, setTrafficTab] = useState<"outside" | "inside">("outside");
+  const [pageMode, setPageMode] = useState<"views" | "landing">("views");
 
   useEffect(() => {
     async function fetchData() {
@@ -399,67 +400,136 @@ export default function AnalyticsPage() {
             {/* DETAILED TABLES */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* TOP PAGES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[500px]">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-                  <h3 className="text-lg font-bold">Top Pages</h3>
-                  <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0 overflow-x-auto no-scrollbar">
-                    <button onClick={() => setPageTab("all")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "all" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>All</button>
-                    <button onClick={() => setPageTab("main")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "main" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Pages</button>
-                    <button onClick={() => setPageTab("jobs")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "jobs" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Posts</button>
-                    <button onClick={() => setPageTab("companies")} className={`px-3 py-1.5 rounded-full transition ${pageTab === "companies" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Companies</button>
+              {/* TOP PAGES & ENTRY DOORS */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                  <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0">
+                    <button 
+                      onClick={() => setPageMode("views")} 
+                      className={`px-3 py-1.5 rounded-full transition flex items-center gap-1.5 ${pageMode === "views" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}
+                    >
+                      <span>📄</span>
+                      <span>Top Pages (Views)</span>
+                    </button>
+                    <button 
+                      onClick={() => setPageMode("landing")} 
+                      className={`px-3 py-1.5 rounded-full transition flex items-center gap-1.5 ${pageMode === "landing" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}
+                    >
+                      <span>🚪</span>
+                      <span>Entry Doors (First Visited)</span>
+                    </button>
                   </div>
+                  {pageMode === "views" && (
+                    <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0 overflow-x-auto no-scrollbar">
+                      <button onClick={() => setPageTab("all")} className={`px-2.5 py-1 rounded-full transition ${pageTab === "all" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>All</button>
+                      <button onClick={() => setPageTab("main")} className={`px-2.5 py-1 rounded-full transition ${pageTab === "main" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Pages</button>
+                      <button onClick={() => setPageTab("jobs")} className={`px-2.5 py-1 rounded-full transition ${pageTab === "jobs" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Posts</button>
+                      <button onClick={() => setPageTab("companies")} className={`px-2.5 py-1 rounded-full transition ${pageTab === "companies" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}>Companies</button>
+                    </div>
+                  )}
                 </div>
+
                 <div className="space-y-4 overflow-y-auto pr-2 flex-1">
-                  {(() => {
-                    const filteredPages = data.pages.filter((p: any) => {
-                      const pathClean = (p.path || "").split("?")[0];
+                  {pageMode === "views" ? (
+                    (() => {
+                      const filteredPages = data.pages.filter((p: any) => {
+                        const pathClean = (p.path || "").split("?")[0];
+                        
+                        // Filter out admin, profile, and backend pages from ALL views
+                        if (pathClean.startsWith("/profile") || pathClean.startsWith("/admin") || pathClean.startsWith("/api")) {
+                          return false;
+                        }
+                        
+                        if (pageTab === "main") return ["/", "/jobs", "/internships", "/companies", "/contact", "/about"].includes(pathClean);
+                        if (pageTab === "jobs") return pathClean.startsWith("/jobs/") && pathClean !== "/jobs";
+                        if (pageTab === "companies") return pathClean.startsWith("/companies/") && pathClean !== "/companies";
+                        return true;
+                      });
                       
-                      // Filter out admin, profile, and backend pages from ALL views
-                      if (pathClean.startsWith("/profile") || pathClean.startsWith("/admin") || pathClean.startsWith("/api")) {
-                        return false;
-                      }
+                      if (filteredPages.length === 0) return <p className="text-gray-400 text-sm py-8 text-center">No data available for this category.</p>;
                       
-                      if (pageTab === "main") return ["/", "/jobs", "/internships", "/companies", "/contact", "/about"].includes(pathClean);
-                      if (pageTab === "jobs") return pathClean.startsWith("/jobs/") && pathClean !== "/jobs";
-                      if (pageTab === "companies") return pathClean.startsWith("/companies/") && pathClean !== "/companies";
-                      return true;
-                    });
-                    
-                    if (filteredPages.length === 0) return <p className="text-gray-400 text-sm">No data available for this category.</p>;
-                    
-                    const maxViews = Math.max(...filteredPages.map((p: any) => Number(p.views) || 0));
-                    
-                    return filteredPages.map((item: any, i: number) => (
-                      <div key={i} className="text-sm group">
-                        <div className="flex justify-between items-center mb-1">
-                          {(() => {
-                            let displayTitle = item.title && item.title !== "(not set)" ? item.title.replace(" | Trapped Into Architecture", "") : item.path;
-                            const p = (item.path || "").split("?")[0];
-                            if (p === "/") displayTitle = "Home Page";
-                            if (p === "/jobs") displayTitle = "Jobs Page";
-                            if (p === "/companies") displayTitle = "Companies Page";
-                            if (p === "/internships") displayTitle = "Internships Page";
-                            if (p === "/contact") displayTitle = "Contact Page";
-                            
-                            return (
-                              <a 
-                                href={item.path} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="font-medium truncate max-w-[70%] hover:text-blue-600 hover:underline transition cursor-pointer" 
+                      const maxViews = Math.max(...filteredPages.map((p: any) => Number(p.views) || 0));
+                      
+                      return filteredPages.map((item: any, i: number) => (
+                        <div key={i} className="text-sm group">
+                          <div className="flex justify-between items-center mb-1">
+                            {(() => {
+                              let displayTitle = item.title && item.title !== "(not set)" ? item.title.replace(/ \| Trapped Into Architecture/gi, "") : item.path;
+                              const p = (item.path || "").split("?")[0];
+                              if (p === "/") displayTitle = "Home Page";
+                              if (p === "/jobs") displayTitle = "Jobs Page";
+                              if (p === "/companies") displayTitle = "Companies Page";
+                              if (p === "/internships") displayTitle = "Internships Page";
+                              if (p === "/contact") displayTitle = "Contact Page";
+                              
+                              return (
+                                <a 
+                                  href={item.path} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="font-medium truncate max-w-[70%] hover:text-blue-600 hover:underline transition cursor-pointer" 
+                                  title={displayTitle}
+                                >
+                                  {displayTitle}
+                                </a>
+                              );
+                            })()}
+                            <span className="font-semibold text-gray-700">{item.views}</span>
+                          </div>
+                          <ProgressBar value={Number(item.views) || 0} max={maxViews || 1} />
+                        </div>
+                      ));
+                    })()
+                  ) : (
+                    (() => {
+                      const list = (data.landingPages || []).filter((p: any) => {
+                        const pathClean = (p.path || "").split("?")[0].toLowerCase();
+                        return !pathClean.includes("admin") && !pathClean.includes("api");
+                      });
+
+                      if (list.length === 0) return <p className="text-gray-400 text-sm py-8 text-center">No entry door data recorded yet.</p>;
+
+                      const maxSessions = Math.max(...list.map((p: any) => Number(p.sessions) || 0));
+
+                      return list.map((item: any, i: number) => {
+                        const pathClean = (item.path || "").split("?")[0].replace(/\/+$/, "") || "/";
+                        let displayTitle = pathClean;
+                        if (pathClean === "/" || pathClean === "") displayTitle = "Home Page (/)";
+                        else if (pathClean === "/jobs") displayTitle = "Jobs Board (/jobs)";
+                        else if (pathClean === "/companies") displayTitle = "Companies Directory (/companies)";
+                        else if (pathClean === "/internships") displayTitle = "Internships Page (/internships)";
+                        else if (pathClean.startsWith("/jobs/city/")) {
+                          const slug = pathClean.replace("/jobs/city/", "");
+                          displayTitle = `Jobs in ${decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase())}`;
+                        } else {
+                          const matched = data.pages?.find((p: any) => (p.path || "").split("?")[0].replace(/\/+$/, "") === pathClean);
+                          if (matched && matched.title && matched.title !== "(not set)") {
+                            displayTitle = matched.title.replace(/ \| Trapped Into Architecture/gi, "").replace(/ - Trapped Into Architecture/gi, "").trim();
+                          }
+                        }
+
+                        const sessions = Number(item.sessions) || 0;
+
+                        return (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <a
+                                href={item.path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium truncate max-w-[70%] hover:text-blue-600 hover:underline transition cursor-pointer"
                                 title={displayTitle}
                               >
                                 {displayTitle}
                               </a>
-                            );
-                          })()}
-                          <span className="font-semibold text-gray-700">{item.views}</span>
-                        </div>
-                        <ProgressBar value={Number(item.views) || 0} max={maxViews || 1} />
-                      </div>
-                    ));
-                  })()}
+                              <span className="font-semibold text-gray-700">{sessions} {sessions === 1 ? 'entry' : 'entries'}</span>
+                            </div>
+                            <ProgressBar value={sessions} max={maxSessions || 1} />
+                          </div>
+                        );
+                      });
+                    })()
+                  )}
                 </div>
               </div>
 
@@ -505,11 +575,64 @@ export default function AnalyticsPage() {
                         return !raw.includes("admin");
                       });
 
-                      if (cleanList.length === 0) {
+                      // 1. Group and sum by resolved clean label so identical sources are never repeated
+                      const aggMap: Record<string, { label: string; count: number; category: string; rawName: string }> = {};
+
+                      cleanList.forEach((item: any) => {
+                        const rawName = (item.label || item.referrer || item.source || "Direct Traffic").trim();
+                        const lower = rawName.toLowerCase();
+                        
+                        // Ignore uninformative or empty entries
+                        if (!rawName || lower === "(not set)" || lower === "(empty)" || lower === "not set") return;
+
+                        let label = item.label || rawName;
+                        let category = item.category || "website";
+
+                        if (lower.includes("whatsapp")) {
+                          category = "whatsapp";
+                          if (lower.includes("web") || lower.includes("desktop")) {
+                            label = "WhatsApp Web (Desktop)";
+                          } else {
+                            label = "WhatsApp (Mobile App)";
+                          }
+                        } else if (lower.includes("facebook") || lower.includes("fb.me")) {
+                          category = "facebook";
+                          if (lower.includes("mobile") || lower.includes("m.facebook") || lower.includes("lm.facebook")) {
+                            label = "Facebook (Mobile App)";
+                          } else {
+                            label = "Facebook (Desktop / Web)";
+                          }
+                        } else if (lower.includes("instagram")) {
+                          label = "Instagram (Bio / Story Link)";
+                          category = "instagram";
+                        } else if (lower.includes("linkedin") || lower === "in" || lower.includes("lnkd.in")) {
+                          label = "LinkedIn";
+                          category = "linkedin";
+                        } else if (lower.includes("google")) {
+                          label = "Google Organic Search";
+                          category = "google";
+                        } else if (lower.includes("twitter") || lower.includes("x.com") || lower.includes("t.co")) {
+                          label = "X / Twitter";
+                          category = "twitter";
+                        } else if (lower === "(direct)" || lower.includes("direct")) {
+                          label = "Direct / Bookmark / Typing URL";
+                          category = "direct";
+                        }
+
+                        const val = Number(item.users || item.sessions || item.count) || 0;
+                        if (!aggMap[label]) {
+                          aggMap[label] = { label, count: 0, category, rawName };
+                        }
+                        aggMap[label].count += val;
+                      });
+
+                      const aggregatedList = Object.values(aggMap).sort((a, b) => b.count - a.count);
+
+                      if (aggregatedList.length === 0) {
                         return <p className="text-gray-400 text-sm py-8 text-center">No external referrer traffic recorded in this period yet.</p>;
                       }
 
-                      const maxVal = Math.max(...cleanList.map((p: any) => Number(p.users || p.sessions) || 0));
+                      const maxVal = Math.max(...aggregatedList.map((p: any) => p.count || 0));
 
                       const getIcon = (cat: string, label: string) => {
                         const l = (label || "").toLowerCase();
@@ -523,29 +646,18 @@ export default function AnalyticsPage() {
                         return "🌐";
                       };
 
-                      return cleanList.map((item: any, i: number) => {
-                        const rawName = item.referrer || item.source || "Direct Traffic";
-                        let label = item.label || rawName;
-                        if (rawName.includes("whatsapp")) label = "WhatsApp Web / Mobile";
-                        else if (rawName.includes("instagram")) label = "Instagram (Bio / Story Link)";
-                        else if (rawName.includes("linkedin")) label = "LinkedIn";
-                        else if (rawName.includes("google")) label = "Google Organic Search";
-                        else if (rawName.includes("facebook")) label = "Facebook";
-                        else if (rawName === "(direct)" || rawName.includes("direct")) label = "Direct / Bookmark / Typing URL";
-
-                        const val = Number(item.users || item.sessions) || 0;
-                        const icon = getIcon(item.category, label);
-
+                      return aggregatedList.map((item: any, i: number) => {
+                        const icon = getIcon(item.category, item.label);
                         return (
                           <div key={i} className="text-sm">
                             <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium truncate max-w-[75%] flex items-center gap-1.5" title={rawName}>
+                              <span className="font-medium truncate max-w-[75%] flex items-center gap-1.5" title={item.rawName}>
                                 <span className="text-base">{icon}</span>
-                                <span>{label}</span>
+                                <span>{item.label}</span>
                               </span>
-                              <span className="font-semibold text-gray-700">{val}</span>
+                              <span className="font-semibold text-gray-700">{item.count}</span>
                             </div>
-                            <ProgressBar value={val} max={maxVal || 1} />
+                            <ProgressBar value={item.count} max={maxVal || 1} />
                           </div>
                         );
                       });
@@ -594,6 +706,46 @@ export default function AnalyticsPage() {
                       });
                     })()
                   )}
+                </div>
+              </div>
+
+              {/* ACQUISITION CHANNELS */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold">Acquisition Channels</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">High-level audience discovery mix</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {(!data.channels || data.channels.length === 0) && <p className="text-gray-400 text-sm">No channel data available.</p>}
+                  {data.channels && (() => {
+                    const maxCh = Math.max(...data.channels.map((c: any) => Number(c.sessions) || 0));
+                    return data.channels.map((item: any, i: number) => {
+                      const ch = (item.channel || "").toLowerCase();
+                      let label = item.channel;
+                      let icon = "🌐";
+                      if (ch.includes("social")) { label = "Organic Social (WhatsApp, FB, Insta, LinkedIn)"; icon = "📱"; }
+                      else if (ch.includes("direct")) { label = "Direct (Typing URL, Bookmarks)"; icon = "🔗"; }
+                      else if (ch.includes("search")) { label = "Organic Search (Google, Bing)"; icon = "🔍"; }
+                      else if (ch.includes("referral")) { label = "Referrals (Partner websites)"; icon = "🌐"; }
+
+                      const val = Number(item.sessions) || 0;
+
+                      return (
+                        <div key={i} className="text-sm">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="font-medium flex items-center gap-1.5 truncate max-w-[75%]">
+                              <span>{icon}</span>
+                              <span>{label}</span>
+                            </span>
+                            <span className="font-semibold text-gray-700">{val} {val === 1 ? 'session' : 'sessions'}</span>
+                          </div>
+                          <ProgressBar value={val} max={maxCh || 1} />
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
 
