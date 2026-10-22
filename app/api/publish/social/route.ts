@@ -361,19 +361,20 @@ export async function POST(req: Request) {
             const locParts = [batchJobs[0].area || batchJobs[0].neighborhood, batchJobs[0].city, batchJobs[0].state].filter(Boolean);
             const location = locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified";
 
-            let baseTeleMsg = `🏛️ <b>HIRING: ${batchJobs.length === 1 ? batchJobs[0].position : 'Multiple Positions'}</b>\n\n`;
-            baseTeleMsg += `🏢 <b>Firm:</b> ${firmName}\n`;
+            let baseTeleMsg = `🏢 <b>Firm:</b> ${firmName}\n`;
             baseTeleMsg += `📍 <b>Location:</b> ${location}\n\n`;
             baseTeleMsg += `💼 <b>Positions:</b>\n`;
 
             batchJobs.forEach((job, index) => {
-              const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
-              const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
+              const expRaw = Array.isArray(job.experience) ? job.experience.join(', ') : (job.experience || '');
+              const expTrimmed = String(expRaw).trim();
+              const isDisclosed = expTrimmed && !/^not\s*disclosed$/i.test(expTrimmed) && !/^na$/i.test(expTrimmed) && !/^none$/i.test(expTrimmed);
+              const expText = isDisclosed && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${expTrimmed})` : '';
               const prefix = batchJobs.length === 1 ? '• ' : `${index + 1}. `;
               baseTeleMsg += `${prefix}<b>${job.position || 'Position'}</b>${expText}\n`;
             });
 
-            if (batchJobs[0].salary && String(batchJobs[0].salary).toLowerCase() !== "not disclosed") {
+            if (batchJobs[0].salary && String(batchJobs[0].salary).trim() && !/^not\s*disclosed$/i.test(String(batchJobs[0].salary).trim())) {
               baseTeleMsg += `\n💰 <b>Compensation:</b> ${batchJobs[0].salary}\n`;
             }
 
@@ -386,9 +387,9 @@ export async function POST(req: Request) {
                 ? `${jobUrl}&utm_source=telegram&utm_medium=${target.tag}` 
                 : `${jobUrl}?utm_source=telegram&utm_medium=${target.tag}`;
 
-              let channelMsg = `${baseTeleMsg}\n🔗 <b>Direct Link:</b> <a href="${teleJobUrl}">Apply on Website</a>\n`;
+              let channelMsg = `${baseTeleMsg}`;
               if (teleTags && teleTags.length > 0) {
-                channelMsg += `\n${teleTags.slice(0, 5).join(" ")}\n`;
+                channelMsg += `\n${teleTags.join(" ")}\n`;
               }
 
               const inlineKeyboard = {
