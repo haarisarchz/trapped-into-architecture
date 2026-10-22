@@ -346,7 +346,7 @@ STRICT RULES:
     }
 
     // Filter AI tags to make sure they obey position relevance
-    const filteredAiTags = matches.filter(tag => {
+    const filteredAiTags = matches.filter((tag: string) => {
       const lower = tag.toLowerCase();
       if (!analysis.hasInterior && lower.includes("interior")) return false;
       if (!analysis.hasInternship && !analysis.hasJuniorFresher && (lower.includes("intern") || lower.includes("fresher"))) return false;

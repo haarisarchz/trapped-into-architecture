@@ -321,6 +321,92 @@ export async function POST(req: Request) {
             success = true;
             break;
           }
+          case "telegram": {
+            const botToken = process.env.TELEGRAM_BOT_TOKEN;
+            const channelId = process.env.TELEGRAM_CHANNEL_ID || process.env.TELEGRAM_CHAT_ID;
+            if (!botToken || !channelId) throw new Error("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHANNEL_ID.");
+
+            // Build Telegram URL with UTM tracking
+            const teleJobUrl = jobUrl.includes("?") 
+              ? `${jobUrl}&utm_source=telegram&utm_medium=channel` 
+              : `${jobUrl}?utm_source=telegram&utm_medium=channel`;
+
+            // Format Telegram HTML Message
+            const firmName = batchJobs[0].firm_name || "Unknown Firm";
+            const locParts = [batchJobs[0].area || batchJobs[0].neighborhood, batchJobs[0].city, batchJobs[0].state].filter(Boolean);
+            const location = locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified";
+
+            let teleMsg = `🏛️ <b>HIRING: ${batchJobs.length === 1 ? batchJobs[0].position : 'Multiple Positions'}</b>\n\n`;
+            teleMsg += `🏢 <b>Firm:</b> ${firmName}\n`;
+            teleMsg += `📍 <b>Location:</b> ${location}\n\n`;
+            teleMsg += `💼 <b>Positions:</b>\n`;
+
+            batchJobs.forEach((job, index) => {
+              const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
+              const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
+              const prefix = batchJobs.length === 1 ? '• ' : `${index + 1}. `;
+              teleMsg += `${prefix}<b>${job.position || 'Position'}</b>${expText}\n`;
+            });
+
+            if (batchJobs[0].salary && String(batchJobs[0].salary).toLowerCase() !== "not disclosed") {
+              teleMsg += `\n💰 <b>Compensation:</b> ${batchJobs[0].salary}\n`;
+            }
+
+            teleMsg += `\n🔗 <b>Direct Link:</b> <a href="${teleJobUrl}">Apply on Website</a>\n`;
+
+            // Add hashtags
+            const teleTags = await generateSocialHashtags(batchJobs, "telegram", companyData);
+            if (teleTags && teleTags.length > 0) {
+              teleMsg += `\n${teleTags.slice(0, 5).join(" ")}\n`;
+            }
+
+            const inlineKeyboard = {
+              inline_keyboard: [
+                [
+                  { text: "🚀 View & Apply Now", url: teleJobUrl }
+                ]
+              ]
+            };
+
+            // If image is present, send photo with caption; otherwise send text message
+            if (triggerJob.image) {
+              // Telegram photo captions are limited to 1024 chars
+              const caption = teleMsg.length > 1020 ? teleMsg.slice(0, 1017) + "..." : teleMsg;
+              const teleRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  chat_id: channelId,
+                  photo: triggerJob.image,
+                  caption: caption,
+                  parse_mode: "HTML",
+                  reply_markup: inlineKeyboard
+                })
+              });
+              if (!teleRes.ok) {
+                const errText = await teleRes.text();
+                throw new Error(`Telegram API Error: ${errText}`);
+              }
+            } else {
+              const teleRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  chat_id: channelId,
+                  text: teleMsg,
+                  parse_mode: "HTML",
+                  reply_markup: inlineKeyboard
+                })
+              });
+              if (!teleRes.ok) {
+                const errText = await teleRes.text();
+                throw new Error(`Telegram API Error: ${errText}`);
+              }
+            }
+
+            success = true;
+            break;
+          }
           default:
             throw new Error("Platform API not implemented yet.");
         }
