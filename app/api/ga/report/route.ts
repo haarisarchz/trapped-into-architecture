@@ -613,20 +613,32 @@ export async function GET(request: Request) {
         let category = "website";
 
         if (lower.includes("whatsapp")) {
-          cleanLabel = "WhatsApp (Web / Mobile App)";
           category = "whatsapp";
+          if (lower.includes("web.whatsapp")) {
+            cleanLabel = "WhatsApp Web (Desktop)";
+          } else {
+            cleanLabel = "WhatsApp (Mobile App)";
+          }
+        } else if (lower.includes("facebook") || lower.includes("fb.me")) {
+          category = "facebook";
+          if (lower.includes("m.facebook") || lower.includes("lm.facebook")) {
+            cleanLabel = "Facebook (Mobile App)";
+          } else {
+            cleanLabel = "Facebook (Desktop / Web)";
+          }
         } else if (lower.includes("instagram")) {
           cleanLabel = "Instagram (Bio / Story Link)";
           category = "instagram";
         } else if (lower.includes("linkedin")) {
-          cleanLabel = "LinkedIn";
           category = "linkedin";
+          if (lower.includes("android-app") || lower.includes("m.linkedin")) {
+            cleanLabel = "LinkedIn (Mobile App)";
+          } else {
+            cleanLabel = "LinkedIn (Desktop / Web)";
+          }
         } else if (lower.includes("google")) {
           cleanLabel = "Google Organic Search";
           category = "google";
-        } else if (lower.includes("facebook") || lower.includes("fb.me")) {
-          cleanLabel = "Facebook";
-          category = "facebook";
         } else if (lower.includes("twitter") || lower.includes("t.co") || lower.includes("x.com")) {
           cleanLabel = "X / Twitter";
           category = "twitter";
@@ -652,30 +664,51 @@ export async function GET(request: Request) {
       }
     });
 
-    const outsideReferrers = Object.values(outsideAggMap).sort((a, b) => b.users - a.users);
-    const insideReferrers = Object.values(insideAggMap).sort((a, b) => b.users - a.users);
-
-    // If outsideReferrers is empty, populate from sourcesRes as fallback (ignoring admin)
-    if (outsideReferrers.length === 0 && sourcesRes[0]?.rows?.length > 0) {
+    // Enrich with session sources (especially catching utm_source=whatsapp or UTM-tagged campaigns)
+    if (sourcesRes[0]?.rows?.length > 0) {
       const rawSources = parseRows(sourcesRes, ["source"], ["sessions"]);
       rawSources.forEach((s: any) => {
         const src = (s.source || "").toLowerCase();
         if (src.includes("admin")) return;
+        const sessions = Number(s.sessions) || 0;
+        if (sessions <= 0) return;
+
         let label = s.source;
         let category = "website";
-        if (src === "(direct)") { label = "Direct / Bookmarks / Typed URL"; category = "direct"; }
-        else if (src.includes("google")) { label = "Google Organic Search"; category = "google"; }
-        else if (src.includes("whatsapp")) { label = "WhatsApp"; category = "whatsapp"; }
-        else if (src.includes("instagram")) { label = "Instagram"; category = "instagram"; }
-        else if (src.includes("linkedin")) { label = "LinkedIn"; category = "linkedin"; }
-        outsideReferrers.push({
-          referrer: s.source,
-          label,
-          users: s.sessions,
-          category,
-        });
+        if (src === "(direct)") {
+          label = "Direct / Bookmarks / Typed URL";
+          category = "direct";
+        } else if (src.includes("google")) {
+          label = "Google Organic Search";
+          category = "google";
+        } else if (src.includes("whatsapp")) {
+          label = "WhatsApp (Shared Link)";
+          category = "whatsapp";
+        } else if (src.includes("facebook")) {
+          label = "Facebook (Shared Link)";
+          category = "facebook";
+        } else if (src.includes("instagram")) {
+          label = "Instagram (Bio / Story Link)";
+          category = "instagram";
+        } else if (src.includes("linkedin")) {
+          label = "LinkedIn";
+          category = "linkedin";
+        }
+
+        const key = label.toLowerCase();
+        if (!outsideAggMap[key]) {
+          outsideAggMap[key] = {
+            referrer: s.source,
+            label,
+            users: sessions,
+            category,
+          };
+        }
       });
     }
+
+    const outsideReferrers = Object.values(outsideAggMap).sort((a, b) => b.users - a.users);
+    const insideReferrers = Object.values(insideAggMap).sort((a, b) => b.users - a.users);
 
     const cleanLandingPages = parseRows(landingPagesRes, ["path"], ["sessions"]).filter(
       (p: any) => !p.path?.toLowerCase().includes("admin")

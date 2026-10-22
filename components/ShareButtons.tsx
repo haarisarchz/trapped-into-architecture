@@ -237,12 +237,19 @@ export default function ShareButtons({
   const shareText = encodeURIComponent(getShareText());
   const encodedUrl = encodeURIComponent(url);
   
+  const addUtm = (targetUrl: string, source: string) => {
+    if (!targetUrl) return "";
+    return targetUrl.includes("?") 
+      ? `${targetUrl}&utm_source=${source}&utm_medium=social` 
+      : `${targetUrl}?utm_source=${source}&utm_medium=social`;
+  };
+
   const shareLinks = [
     { name: "WhatsApp", href: `https://api.whatsapp.com/send?text=${shareText}` },
-    { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}` },
-    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent((activeJobs.length > 1 ? activeJobs.map(j => j.position).join(', ') : position) + ' at ' + companyName + '\n')}` },
-    { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}` },
-    { name: "Telegram", href: `https://t.me/share/url?url=${encodedUrl}&text=${shareText}` }
+    { name: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(addUtm(url, "facebook"))}` },
+    { name: "X", href: `https://twitter.com/intent/tweet?url=${encodeURIComponent(addUtm(url, "twitter"))}&text=${encodeURIComponent((activeJobs.length > 1 ? activeJobs.map(j => j.position).join(', ') : position) + ' at ' + companyName + '\n')}` },
+    { name: "LinkedIn", href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(addUtm(url, "linkedin"))}` },
+    { name: "Telegram", href: `https://t.me/share/url?url=${encodeURIComponent(addUtm(url, "telegram"))}&text=${shareText}` }
   ];
 
   if (variant === "statistic") {

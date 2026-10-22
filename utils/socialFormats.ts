@@ -86,7 +86,15 @@ export function formatWhatsAppPost(jobs: SocialJobItem[], jobUrl: string): strin
     text = `🏢 FIRM: ${firmName}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${mainJob.position || "Position"}${expText}\n`;
   }
 
-  text += `\n🔗 For more details and to apply, visit:\n${jobUrl}`;
+  // Append WhatsApp UTM tracking so GA reliably classifies the traffic as WhatsApp instead of Direct
+  let trackUrl = jobUrl;
+  if (trackUrl && !trackUrl.includes("utm_source=")) {
+    trackUrl = trackUrl.includes("?") 
+      ? `${trackUrl}&utm_source=whatsapp&utm_medium=social` 
+      : `${trackUrl}?utm_source=whatsapp&utm_medium=social`;
+  }
+
+  text += `\n🔗 For more details and to apply, visit:\n${trackUrl}`;
   text += `\n\n🌐 Visit www.trappedintoarchitecture.com for more job updates.`;
 
   return text;
