@@ -161,54 +161,95 @@ export function generateDeterministicHashtags(jobs: any[], platform: string, com
   const cleanState = cleanHashtagWord(analysis.state);
   const cleanCountry = cleanHashtagWord(analysis.country);
 
-  // High-search-volume Telegram discovery strategy
+  // High-search-volume Telegram discovery strategy (up to 18 targeted hashtags)
   if (platform === "telegram") {
     const teleTags: string[] = [];
 
-    // 1. High-search City job tag (e.g. #KochiJobs, #ChennaiJobs)
+    // 1. High-search City & State Job Tags
     if (cleanCity) {
       teleTags.push(`#${cleanCity}Jobs`);
     }
-
-    // 2. High-search State job tag (e.g. #KeralaJobs, #TamilNaduJobs)
     if (cleanState && cleanState.toLowerCase() !== cleanCity.toLowerCase()) {
       teleTags.push(`#${cleanState}Jobs`);
     }
 
-    // 3. High-velocity City tag (e.g. #Kochi, #Chennai, #Bangalore)
+    // 2. City & State Architect Community Tags
+    if (analysis.hasArchitecture) {
+      if (cleanCity) {
+        teleTags.push(`#${cleanCity}Architects`);
+      }
+      if (cleanState && cleanState.toLowerCase() !== cleanCity.toLowerCase()) {
+        teleTags.push(`#${cleanState}Architects`);
+      }
+    }
+
+    // 3. Interior Design specific tags (if interior roles are present)
+    if (analysis.hasInterior) {
+      teleTags.push("#InteriorDesignerJobs");
+      teleTags.push("#InteriorDesignJobs");
+      if (cleanCity) {
+        teleTags.push(`#InteriorDesigner${cleanCity}`);
+        teleTags.push(`#${cleanCity}InteriorDesigners`);
+      }
+      if (cleanState && cleanState.toLowerCase() !== cleanCity.toLowerCase()) {
+        teleTags.push(`#InteriorDesigner${cleanState}`);
+      }
+      teleTags.push("#InteriorDesignIndia");
+    }
+
+    // 4. Core Architecture Industry Tags
+    if (analysis.hasArchitecture) {
+      teleTags.push("#ArchitectureJobs");
+      teleTags.push("#ArchitectJobs");
+      teleTags.push("#ArchitectsOfIndia");
+      teleTags.push("#IndianArchitects");
+    }
+
+    // 5. Role-Specific Position Tags
+    const posCombined = analysis.positions.join(" ").toLowerCase();
+    if (analysis.hasInternship || posCombined.includes("intern")) {
+      teleTags.push("#ArchitectureInternship");
+      teleTags.push("#ArchitectureIntern");
+    }
+    if (analysis.hasJuniorFresher || posCombined.includes("junior") || posCombined.includes("fresher")) {
+      teleTags.push("#JuniorArchitect");
+      teleTags.push("#FreshersJobs");
+    }
+    if (posCombined.includes("senior")) {
+      teleTags.push("#SeniorArchitect");
+    }
+    if (posCombined.includes("bim") || posCombined.includes("revit")) {
+      teleTags.push("#BIMArchitect");
+      teleTags.push("#BIMJobs");
+    }
+    if (posCombined.includes("3d") || posCombined.includes("visualiz")) {
+      teleTags.push("#3DVisualizer");
+      teleTags.push("#ArchitecturalVisualizer");
+    }
+    if (analysis.hasLandscape || posCombined.includes("landscape")) {
+      teleTags.push("#LandscapeArchitect");
+    }
+    if (analysis.hasUrban || posCombined.includes("urban")) {
+      teleTags.push("#UrbanDesigner");
+    }
+
+    // 6. High-Velocity City & State Location Tags
     if (cleanCity) {
       teleTags.push(`#${cleanCity}`);
     }
-
-    // 4. High-velocity State tag (e.g. #Kerala, #TamilNadu)
     if (cleanState && cleanState.toLowerCase() !== cleanCity.toLowerCase()) {
       teleTags.push(`#${cleanState}`);
     }
 
-    // 5. Industry domain tags (high search in creative/technical channels)
-    if (analysis.hasArchitecture) {
-      teleTags.push("#ArchitectureJobs");
-      teleTags.push("#ArchitectJobs");
-    }
-    if (analysis.hasInterior) {
-      teleTags.push("#InteriorDesignJobs");
-    }
-
-    // 6. Experience-level specific tags
-    if (analysis.hasInternship) {
-      teleTags.push("#ArchitectureInternship");
-    } else if (analysis.hasJuniorFresher) {
-      teleTags.push("#FreshersJobs");
-    }
-
-    // 7. Broad viral job discovery tags on Telegram
+    // 7. Broad High-Reach Job Discovery Tags on Telegram
     teleTags.push("#JobAlert");
     teleTags.push("#HiringNow");
+    teleTags.push("#ArchitectureCareers");
     if (analysis.isIndia) {
       teleTags.push("#JobsInIndia");
     }
 
-    return deduplicateAndLimitHashtags(teleTags, 8);
+    return deduplicateAndLimitHashtags(teleTags, 18);
   }
 
   const maxLimit = platform === "facebook" ? 15 : platform === "instagram" ? 5 : platform === "x" ? 4 : 5;
