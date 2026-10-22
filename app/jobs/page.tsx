@@ -724,6 +724,41 @@ const [showFilters, setShowFilters] = useState(false);
     setCurrentPage(1);
   }, [filteredJobs.length]);
 
+  // Track on-site candidate searches with debouncing (1.5s after user finishes typing/filtering)
+  useEffect(() => {
+    const q = searchQuery.trim();
+    const city = selectedCities[0] || null;
+    const state = selectedStates[0] || null;
+    const pos = selectedPositions[0] || null;
+
+    if (!q && !city && !state && !pos) return;
+
+    const timer = setTimeout(() => {
+      try {
+        let uId = null;
+        try {
+          const stored = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("currentUser") || "null") : null;
+          uId = stored?.id || null;
+        } catch (e) {}
+
+        fetch("/api/analytics/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: q || null,
+            city,
+            state,
+            position: pos,
+            resultsCount: filteredJobs.length,
+            userId: uId,
+          }),
+        }).catch(() => {});
+      } catch (err) {}
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedCities, selectedStates, selectedPositions, filteredJobs.length]);
+
   return (
     <main className="min-h-screen bg-gray-100 text-black">
 
