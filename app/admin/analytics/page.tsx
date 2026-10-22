@@ -32,6 +32,7 @@ export default function AnalyticsPage() {
   const [gscLoading, setGscLoading] = useState(false);
   const [gscTab, setGscTab] = useState<"keywords" | "pages">("keywords");
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [activityMetricMode, setActivityMetricMode] = useState<"avg" | "total">("avg");
 
   useEffect(() => {
     async function fetchData() {
@@ -651,50 +652,93 @@ export default function AnalyticsPage() {
               </div>
             ) : null}
 
-            {/* HOURLY & DAY-OF-WEEK CANDIDATE TRAFFIC */}
+            {/* HOURLY & DAY-OF-WEEK CANDIDATE TRAFFIC (COMPACT SIDE-BY-SIDE) */}
             {data.peakTimes && (
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <span>⏱️ Hourly &amp; Day-of-Week Candidate Traffic</span>
+                      <span>⏱️ Candidate Activity Patterns</span>
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Candidate traffic patterns across 24 hours of the day and 7 days of the week
+                      Hourly 24-hour distribution and 7-day weekly visitor volume
                     </p>
+                  </div>
+
+                  {/* Average / Day vs Total Volume Toggle */}
+                  <div className="flex items-center bg-gray-100 p-1 rounded-xl text-xs shrink-0 self-start sm:self-auto">
+                    <button
+                      onClick={() => setActivityMetricMode("avg")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                        activityMetricMode === "avg"
+                          ? "bg-white text-gray-900 shadow-sm font-semibold"
+                          : "text-gray-500 hover:text-gray-900"
+                      }`}
+                    >
+                      Average / Day
+                    </button>
+                    <button
+                      onClick={() => setActivityMetricMode("total")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                        activityMetricMode === "total"
+                          ? "bg-white text-gray-900 shadow-sm font-semibold"
+                          : "text-gray-500 hover:text-gray-900"
+                      }`}
+                    >
+                      Total Volume
+                    </button>
                   </div>
                 </div>
 
-                {/* 24-Hour Activity Bar Chart */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">24-Hour Activity Distribution</h4>
-                    <span className="text-[11px] text-gray-400">12:00 AM (00) to 11:00 PM (23)</span>
-                  </div>
+                {/* SIDE BY SIDE 2-COLUMN GRID */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   
-                  {(!data.peakTimes.hourly || data.peakTimes.hourly.length === 0) ? (
-                    <p className="text-xs text-gray-400 italic py-6 text-center">Hourly activity data is aggregating...</p>
-                  ) : (
-                    (() => {
-                      const maxHourUsers = Math.max(...data.peakTimes.hourly.map((h: any) => Number(h.users) || 0), 1);
-                      return (
-                        <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100">
-                          <div className="grid grid-cols-12 md:grid-cols-24 gap-1 sm:gap-1.5 items-end h-36 pt-4">
-                            {data.peakTimes.hourly.map((h: any, i: number) => {
-                              const u = Number(h.users) || 0;
-                              const heightPct = Math.max(6, Math.round((u / maxHourUsers) * 100));
-                              const isPeak = u === maxHourUsers && u > 0;
+                  {/* LEFT: 24-HOUR ACTIVITY BAR CHART */}
+                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 flex flex-col justify-between">
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800">24-Hour Distribution</h4>
+                        <p className="text-[11px] text-gray-400">12:00 AM (00) to 11:00 PM (23)</p>
+                      </div>
+                      <span className="text-[11px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
+                        {activityMetricMode === "avg" ? "Avg Users / Hour" : "Total Users"}
+                      </span>
+                    </div>
+
+                    {(!data.peakTimes.hourly || data.peakTimes.hourly.length === 0) ? (
+                      <p className="text-xs text-gray-400 italic py-10 text-center">Hourly activity data is aggregating...</p>
+                    ) : (
+                      (() => {
+                        const numDays = days === "1h" || days === "1" ? 1 : days === "7" ? 7 : days === "30" ? 30 : days === "90" ? 90 : days === "365" ? 365 : 30;
+                        const hourValues = data.peakTimes.hourly.map((h: any) => {
+                          const raw = Number(h.users) || 0;
+                          const val = activityMetricMode === "avg" && numDays > 1 ? Number((raw / numDays).toFixed(1)) : raw;
+                          return { ...h, displayVal: val, rawVal: raw };
+                        });
+                        const maxVal = Math.max(...hourValues.map((h: any) => h.displayVal), 0.1);
+
+                        return (
+                          <div className="grid grid-cols-12 md:grid-cols-24 gap-1 items-end h-36 pt-4">
+                            {hourValues.map((h: any, i: number) => {
+                              const isPeak = h.displayVal === maxVal && h.displayVal > 0;
+                              const heightPct = Math.max(6, Math.round((h.displayVal / maxVal) * 100));
 
                               return (
                                 <div key={i} className="flex flex-col items-center group relative h-full justify-end">
                                   {/* Tooltip */}
                                   <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
                                     <div className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
-                                      {h.label || `${h.hour}:00`}: {u} {u === 1 ? 'user' : 'users'}
+                                      {h.label || `${h.hour}:00`}: {h.displayVal} {activityMetricMode === "avg" && numDays > 1 ? "avg/day" : "users"}
                                     </div>
                                   </div>
                                   <div 
-                                    className={`w-full rounded-t transition-all ${isPeak ? 'bg-blue-600' : u > 0 ? 'bg-blue-300 hover:bg-blue-400' : 'bg-gray-200 hover:bg-gray-300'}`}
+                                    className={`w-full rounded-t transition-all ${
+                                      isPeak 
+                                        ? 'bg-blue-600 shadow-sm shadow-blue-200' 
+                                        : h.displayVal > 0 
+                                        ? 'bg-blue-300 hover:bg-blue-400' 
+                                        : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
                                     style={{ height: `${heightPct}%` }}
                                   />
                                   <span className="text-[9px] text-gray-400 mt-1.5 font-mono">{h.hour}</span>
@@ -702,34 +746,76 @@ export default function AnalyticsPage() {
                               );
                             })}
                           </div>
-                        </div>
-                      );
-                    })()
-                  )}
-                </div>
+                        );
+                      })()
+                    )}
+                  </div>
 
-                {/* Day of Week Activity Grid */}
-                {data.peakTimes.days && data.peakTimes.days.length > 0 && (
-                  <div className="mt-6 pt-5 border-t border-gray-100">
+                  {/* RIGHT: 7-DAY WEEK ACTIVITY BAR CHART */}
+                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 flex flex-col justify-between">
                     <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">Day-of-Week Activity</h4>
-                      <span className="text-[11px] text-gray-400">Total visitors per day</span>
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800">Day-of-Week Distribution</h4>
+                        <p className="text-[11px] text-gray-400">Monday through Sunday</p>
+                      </div>
+                      <span className="text-[11px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
+                        {activityMetricMode === "avg" ? "Avg Users / Day" : "Total Users"}
+                      </span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2.5">
-                      {data.peakTimes.days.map((d: any, i: number) => {
-                        const maxDayUsers = Math.max(...data.peakTimes.days.map((item: any) => Number(item.users) || 0), 1);
-                        const isTop = Number(d.users) === maxDayUsers && maxDayUsers > 0;
+
+                    {(!data.peakTimes.days || data.peakTimes.days.length === 0) ? (
+                      <p className="text-xs text-gray-400 italic py-10 text-center">Day-of-week data is aggregating...</p>
+                    ) : (
+                      (() => {
+                        const numDays = days === "1h" || days === "1" ? 1 : days === "7" ? 7 : days === "30" ? 30 : days === "90" ? 90 : days === "365" ? 365 : 30;
+                        const weekDivisor = numDays > 7 ? numDays / 7 : 1;
+                        const dayValues = data.peakTimes.days.map((d: any) => {
+                          const raw = Number(d.users) || 0;
+                          const val = activityMetricMode === "avg" && numDays > 7 ? Number((raw / weekDivisor).toFixed(1)) : raw;
+                          return { ...d, displayVal: val, rawVal: raw };
+                        });
+                        const maxDayVal = Math.max(...dayValues.map((d: any) => d.displayVal), 0.1);
+
                         return (
-                          <div key={i} className={`p-3 rounded-xl border text-center transition ${isTop ? 'bg-blue-50/70 border-blue-200' : 'bg-gray-50/70 border-gray-100'}`}>
-                            <p className="text-xs font-bold text-gray-700 truncate">{d.day}</p>
-                            <p className={`text-lg font-black mt-1 ${isTop ? 'text-blue-700' : 'text-gray-900'}`}>{d.users || 0}</p>
-                            <span className="text-[10px] text-gray-400">visitors</span>
+                          <div className="grid grid-cols-7 gap-2.5 items-end h-36 pt-4">
+                            {dayValues.map((d: any, i: number) => {
+                              const isPeak = d.displayVal === maxDayVal && d.displayVal > 0;
+                              const heightPct = Math.max(8, Math.round((d.displayVal / maxDayVal) * 100));
+
+                              return (
+                                <div key={i} className="flex flex-col items-center group relative h-full justify-end">
+                                  {/* Tooltip */}
+                                  <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
+                                    <div className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
+                                      {d.day}: {d.displayVal} {activityMetricMode === "avg" && numDays > 7 ? "avg/day" : "visitors"}
+                                    </div>
+                                  </div>
+                                  <div 
+                                    className={`w-full rounded-t transition-all ${
+                                      isPeak 
+                                        ? 'bg-blue-600 shadow-md shadow-blue-200' 
+                                        : d.displayVal > 0 
+                                        ? 'bg-blue-300 hover:bg-blue-400' 
+                                        : 'bg-gray-200 hover:bg-gray-300'
+                                    }`}
+                                    style={{ height: `${heightPct}%` }}
+                                  />
+                                  <span className={`text-[11px] mt-2 font-medium truncate ${isPeak ? 'text-blue-700 font-bold' : 'text-gray-500'}`}>
+                                    {d.short || d.day.slice(0, 3)}
+                                  </span>
+                                  <span className="text-[10px] text-gray-400 font-mono">
+                                    {d.displayVal}
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         );
-                      })}
-                    </div>
+                      })()
+                    )}
                   </div>
-                )}
+
+                </div>
               </div>
             )}
 
