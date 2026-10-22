@@ -497,10 +497,11 @@ export async function GET(request: Request) {
             const firmRaw = (j.firm_name || "").trim();
             if (!firmRaw || firmRaw.toLowerCase() === "confidential" || firmRaw.toLowerCase() === "not disclosed") return;
 
-            if (!firmMap[firmRaw]) {
-              firmMap[firmRaw] = {
+            const firmKey = firmRaw.toLowerCase();
+            if (!firmMap[firmKey]) {
+              firmMap[firmKey] = {
                 name: firmRaw,
-                slug: j.company_slug || "",
+                slug: firmRaw.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, ""),
                 totalJobs: 0,
                 totalShares: 0,
                 totalSaves: 0,
@@ -509,7 +510,7 @@ export async function GET(request: Request) {
               };
             }
 
-            const f = firmMap[firmRaw];
+            const f = firmMap[firmKey];
             f.totalJobs += 1;
             f.totalShares += (j.share_count || 0);
             f.totalSaves += (j.save_count || 0);
