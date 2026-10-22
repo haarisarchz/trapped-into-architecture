@@ -273,14 +273,14 @@ export async function GET(request: Request) {
         if (activeJobIds.length > 0) {
           const { data: jobMeta } = await sb
             .from("jobs")
-            .select("id, position, firm_name, city, state, share_count, save_count, created_at")
+            .select("id, position, firm_name, city, state, share_count, save_count, posted_date")
             .in("id", activeJobIds);
 
           if (jobMeta) {
             const enriched = jobMeta.map(j => {
               const act = jobActivityMap[j.id] || { 
                 shares: 0, adminShares: 0, candidateShares: 0, saves: 0, 
-                latestActivity: j.created_at, whoShared: [], platforms: [] 
+                latestActivity: j.posted_date || new Date().toISOString(), whoShared: [], platforms: [] 
               };
               return {
                 ...j,
@@ -303,18 +303,18 @@ export async function GET(request: Request) {
           }
         }
 
-        // Fetch all-time lifetime baseline for fallback
+        // Fetch all-time published jobs baseline for fallback & total lifetime numbers
         const { data: allJobsStats } = await sb
           .from("jobs")
-          .select("id, position, firm_name, city, state, share_count, save_count, created_at")
+          .select("id, position, firm_name, city, state, share_count, save_count, posted_date")
           .eq("status", "published")
-          .order("share_count", { ascending: false })
-          .limit(10);
+          .order("share_count", { ascending: false });
 
-        if (allJobsStats) {
+        if (allJobsStats && allJobsStats.length > 0) {
           totalLifetimeShares = allJobsStats.reduce((sum, j) => sum + (j.share_count || 0), 0);
           totalLifetimeSaves = allJobsStats.reduce((sum, j) => sum + (j.save_count || 0), 0);
 
+          // If topSharedJobs has 0 entries (e.g. before any new shares were logged in the new table), fallback to historical shared jobs
           if (days === 'lifetime' || days === 'all' || topSharedJobs.length === 0) {
             const fallbackJobs = allJobsStats
               .filter(j => (j.share_count || 0) > 0 || (j.save_count || 0) > 0)
@@ -324,7 +324,7 @@ export async function GET(request: Request) {
                 admin_shares: 0,
                 candidate_shares: j.share_count || 0,
                 period_saves: j.save_count || 0,
-                latest_activity: j.created_at,
+                latest_activity: j.posted_date || new Date().toISOString(),
                 who_shared: ["Organic"],
                 platforms: ["whatsapp"],
                 location: [j.city, j.state].filter(Boolean).join(", ") || "Location not set",
@@ -332,11 +332,7 @@ export async function GET(request: Request) {
 
             if (topSharedJobs.length === 0) {
               topSharedJobs = fallbackJobs;
-              recentJobs = [...fallbackJobs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-              if (days === 'lifetime' || days === 'all') {
-                periodShares = totalLifetimeShares;
-                periodSaves = totalLifetimeSaves;
-              }
+              recentJobs = [...fallbackJobs].sort((a, b) => new Date(b.posted_date || 0).getTime() - new Date(a.posted_date || 0).getTime());
             }
           }
         }
@@ -365,9 +361,14 @@ export async function GET(request: Request) {
       eventsMap[ev.event] = ev.count;
     });
 
-    // If periodShares was recorded from job_shares table use it; otherwise fallback to GA event count
-    const finalShareCount = periodShares > 0 ? periodShares : (eventsMap["share_click"] || 0);
-    const finalSaveCount = periodSaves > 0 ? periodSaves : (eventsMap["save_click"] || 0);
+    // If lifetime selected, use total lifetime counts. Otherwise use period counts or GA events
+    const finalShareCount = (days === 'lifetime' || days === 'all')
+      ? totalLifetimeShares
+      : (periodShares > 0 ? periodShares : (eventsMap["share_click"] || 0));
+
+    const finalSaveCount = (days === 'lifetime' || days === 'all')
+      ? totalLifetimeSaves
+      : (periodSaves > 0 ? periodSaves : (eventsMap["save_click"] || 0));
 
     const conversions = {
       applyClicks: eventsMap["apply_click"] || 0,

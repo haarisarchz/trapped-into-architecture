@@ -178,7 +178,9 @@ export default function AnalyticsPage() {
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.shareClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">
-                    {days === '1h' ? 'Last 60 minutes' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In selected period'}
+                    {days === 'lifetime' || days === 'all' 
+                      ? 'All-time lifetime shares' 
+                      : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · ${data.conversions?.totalLifetimeShares || 0} all-time`}
                   </p>
                 </div>
 
@@ -186,7 +188,9 @@ export default function AnalyticsPage() {
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Saved Jobs</span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.saveClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">
-                    {days === '1h' ? 'Last 60 minutes' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In selected period'}
+                    {days === 'lifetime' || days === 'all' 
+                      ? 'All-time lifetime bookmarks' 
+                      : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · ${data.conversions?.totalLifetimeSaves || 0} all-time`}
                   </p>
                 </div>
               </div>
