@@ -28,6 +28,10 @@ export default function AnalyticsPage() {
   const [filterAdminShares, setFilterAdminShares] = useState(false);
   const [trafficTab, setTrafficTab] = useState<"outside" | "inside">("outside");
   const [pageMode, setPageMode] = useState<"views" | "landing">("views");
+  const [gscData, setGscData] = useState<any>(null);
+  const [gscLoading, setGscLoading] = useState(false);
+  const [gscTab, setGscTab] = useState<"keywords" | "pages">("keywords");
+  const [copiedEmail, setCopiedEmail] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -53,7 +57,22 @@ export default function AnalyticsPage() {
         setLoading(false);
       }
     }
+
+    async function fetchGsc() {
+      setGscLoading(true);
+      try {
+        const res = await fetch(`/api/gsc/report?days=${days}`);
+        const json = await res.json();
+        setGscData(json);
+      } catch (e) {
+        console.warn("GSC fetch error", e);
+      } finally {
+        setGscLoading(false);
+      }
+    }
+
     fetchData();
+    fetchGsc();
   }, [days]);
 
   return (
@@ -396,6 +415,220 @@ export default function AnalyticsPage() {
 
               </div>
             </div>
+
+            {/* GOOGLE SEARCH CONSOLE (SEO KEYWORDS & SEARCH RANKINGS) */}
+            {gscData && gscData.connected ? (
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <span>🔎 Google Search Console (SEO Keywords &amp; Google Rankings)</span>
+                      <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full">Connected</span>
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Exact keywords people typed on Google Search, clicks, impressions, and your average Google ranking
+                    </p>
+                  </div>
+                  <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0">
+                    <button 
+                      onClick={() => setGscTab("keywords")} 
+                      className={`px-3 py-1.5 rounded-full transition flex items-center gap-1.5 ${gscTab === "keywords" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}
+                    >
+                      <span>🔑 Top Google Queries ({gscData.keywords?.length || 0})</span>
+                    </button>
+                    <button 
+                      onClick={() => setGscTab("pages")} 
+                      className={`px-3 py-1.5 rounded-full transition flex items-center gap-1.5 ${gscTab === "pages" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}
+                    >
+                      <span>📄 Top Ranking Pages ({gscData.pages?.length || 0})</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4 Macro SEO Badges */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-blue-50/60 border border-blue-100 p-4 rounded-xl">
+                    <p className="text-[11px] font-medium text-blue-700 uppercase tracking-wider">Google Clicks</p>
+                    <p className="text-2xl font-bold text-blue-900 mt-1">{gscData.totals?.clicks?.toLocaleString() || 0}</p>
+                    <p className="text-[10px] text-blue-600 mt-0.5">Direct visitors from Google</p>
+                  </div>
+                  <div className="bg-purple-50/60 border border-purple-100 p-4 rounded-xl">
+                    <p className="text-[11px] font-medium text-purple-700 uppercase tracking-wider">Google Impressions</p>
+                    <p className="text-2xl font-bold text-purple-900 mt-1">{gscData.totals?.impressions?.toLocaleString() || 0}</p>
+                    <p className="text-[10px] text-purple-600 mt-0.5">Times seen in Google search</p>
+                  </div>
+                  <div className="bg-emerald-50/60 border border-emerald-100 p-4 rounded-xl">
+                    <p className="text-[11px] font-medium text-emerald-700 uppercase tracking-wider">Average CTR</p>
+                    <p className="text-2xl font-bold text-emerald-900 mt-1">{gscData.totals?.ctr || "0%"}</p>
+                    <p className="text-[10px] text-emerald-600 mt-0.5">Click-through percentage</p>
+                  </div>
+                  <div className="bg-amber-50/60 border border-amber-100 p-4 rounded-xl">
+                    <p className="text-[11px] font-medium text-amber-700 uppercase tracking-wider">Average Position</p>
+                    <p className="text-2xl font-bold text-amber-900 mt-1">#{gscData.totals?.position || 0}</p>
+                    <p className="text-[10px] text-amber-600 mt-0.5">Average Google search rank</p>
+                  </div>
+                </div>
+
+                {/* Content Tables */}
+                {gscTab === "keywords" ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          <th className="pb-3 pl-1">Search Query / Keyword</th>
+                          <th className="pb-3 text-right">Clicks</th>
+                          <th className="pb-3 text-right">Impressions</th>
+                          <th className="pb-3 text-right">CTR</th>
+                          <th className="pb-3 text-right pr-1">Google Rank</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {(!gscData.keywords || gscData.keywords.length === 0) ? (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-gray-400 italic">No Google search query data recorded in this period.</td>
+                          </tr>
+                        ) : (
+                          gscData.keywords.map((k: any, i: number) => {
+                            const rank = k.position;
+                            const rankBadgeColor = rank <= 3 
+                              ? "bg-green-100 text-green-800 border-green-200" 
+                              : rank <= 10 
+                                ? "bg-blue-100 text-blue-800 border-blue-200" 
+                                : "bg-gray-100 text-gray-700 border-gray-200";
+
+                            return (
+                              <tr key={i} className="hover:bg-gray-50/70 transition">
+                                <td className="py-3 pl-1 font-medium text-gray-900">
+                                  <span className="capitalize">{k.query}</span>
+                                </td>
+                                <td className="py-3 text-right font-mono font-bold text-gray-800">{k.clicks}</td>
+                                <td className="py-3 text-right font-mono text-gray-500">{k.impressions}</td>
+                                <td className="py-3 text-right font-mono text-gray-600">{k.ctr}%</td>
+                                <td className="py-3 text-right pr-1">
+                                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-mono font-bold border ${rankBadgeColor}`}>
+                                    #{rank}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          <th className="pb-3 pl-1">Page URL</th>
+                          <th className="pb-3 text-right">Google Clicks</th>
+                          <th className="pb-3 text-right">Impressions</th>
+                          <th className="pb-3 text-right">CTR</th>
+                          <th className="pb-3 text-right pr-1">Rank</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {(!gscData.pages || gscData.pages.length === 0) ? (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-gray-400 italic">No ranking pages recorded in this period.</td>
+                          </tr>
+                        ) : (
+                          gscData.pages.map((p: any, i: number) => {
+                            let path = p.page;
+                            try {
+                              const u = new URL(p.page);
+                              path = u.pathname;
+                            } catch (_) {}
+
+                            return (
+                              <tr key={i} className="hover:bg-gray-50/70 transition">
+                                <td className="py-3 pl-1 max-w-[320px] truncate">
+                                  <a href={p.page} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
+                                    {path || p.page}
+                                  </a>
+                                </td>
+                                <td className="py-3 text-right font-mono font-bold text-gray-800">{p.clicks}</td>
+                                <td className="py-3 text-right font-mono text-gray-500">{p.impressions}</td>
+                                <td className="py-3 text-right font-mono text-gray-600">{p.ctr}%</td>
+                                <td className="py-3 text-right pr-1 font-mono text-gray-700">#{p.position}</td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ) : gscData && !gscData.connected ? (
+              <div className="bg-gradient-to-br from-blue-50/60 via-indigo-50/40 to-white p-6 rounded-2xl border border-blue-200/80 shadow-sm">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <span>🔎 Google Search Console (SEO Analytics)</span>
+                      <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">Setup Guide</span>
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-1 max-w-2xl">
+                      View the exact search queries candidates type on Google, your impressions, CTR, and average Google ranking right here in this dashboard.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setGscLoading(true);
+                      fetch(`/api/gsc/report?days=${days}`)
+                        .then(r => r.json())
+                        .then(j => setGscData(j))
+                        .finally(() => setGscLoading(false));
+                    }}
+                    className="px-4 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-semibold transition shrink-0"
+                  >
+                    {gscLoading ? "Checking..." : "🔄 Test Connection"}
+                  </button>
+                </div>
+
+                <div className="bg-white/90 p-4 rounded-xl border border-blue-100 space-y-3 text-xs text-gray-700">
+                  <p className="font-semibold text-gray-900">2-Minute Quick Setup:</p>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">1</span>
+                      <div className="flex-1">
+                        <span>In <strong>Google Cloud Console</strong>, ensure <strong>Google Search Console API</strong> is enabled</span>
+                        {gscData.projectId && <span className="text-gray-500 font-mono"> (Project: {gscData.projectId})</span>}.
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5">2</span>
+                      <div className="flex-1">
+                        <span>In <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">Google Search Console</a>, go to <strong>Settings ➔ Users and permissions ➔ Add user</strong> and paste your service account email:</span>
+                        {gscData.clientEmail && (
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <code className="bg-gray-100 border border-gray-200 px-2 py-1 rounded text-[11px] font-mono text-gray-800 select-all truncate max-w-md">
+                              {gscData.clientEmail}
+                            </code>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(gscData.clientEmail);
+                                setCopiedEmail(true);
+                                setTimeout(() => setCopiedEmail(false), 2000);
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-800 font-medium shrink-0"
+                            >
+                              {copiedEmail ? "✓ Copied!" : "Copy Email"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {gscData.error && (
+                    <p className="text-[11px] text-gray-400 border-t border-gray-100 pt-2 font-mono truncate">
+                      Status: {gscData.error}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             {/* DETAILED TABLES */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
