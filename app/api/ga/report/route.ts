@@ -918,30 +918,55 @@ export async function GET(request: Request) {
       (p: any) => !p.path?.toLowerCase().includes("admin")
     );
 
-    // Parse Hourly (00 to 23) and Day of Week
+    // Parse Hourly (00 to 23 in chronological numerical order)
     const rawHourly = parseRows(hourlyRes, ["hour"], ["users"]);
+    const hourMap: Record<number, number> = {};
+    rawHourly.forEach((h: any) => {
+      const hr = parseInt(h.hour, 10);
+      if (!isNaN(hr)) {
+        hourMap[hr] = (hourMap[hr] || 0) + (Number(h.users) || 0);
+      }
+    });
+
+    const full24Hours = Array.from({ length: 24 }, (_, i) => {
+      const paddedHour = i.toString().padStart(2, "0");
+      const h12 = i === 0 ? 12 : i > 12 ? i - 12 : i;
+      const ampm = i >= 12 ? "PM" : "AM";
+      return {
+        hour: paddedHour,
+        label: `${h12} ${ampm}`,
+        users: hourMap[i] || 0,
+      };
+    });
+
+    // Parse Day of Week (Monday to Sunday in standard sequence)
     const rawDayOfWeek = parseRows(dayOfWeekRes, ["day"], ["users"]);
+    const dayMap: Record<string, number> = {};
+    rawDayOfWeek.forEach((d: any) => {
+      if (d.day) {
+        dayMap[d.day.toLowerCase().trim()] = (dayMap[d.day.toLowerCase().trim()] || 0) + (Number(d.users) || 0);
+      }
+    });
 
-    // Calculate Best Day and Peak Posting Window
-    const sortedHours = [...rawHourly].sort((a, b) => b.users - a.users);
-    const maxHourObj = sortedHours[0];
-    const peakHourInt = maxHourObj ? parseInt(maxHourObj.hour, 10) : null;
-    let peakHourLabel = "Evening (7:00 PM – 10:00 PM)";
-    if (peakHourInt !== null && !isNaN(peakHourInt)) {
-      const ampm = peakHourInt >= 12 ? "PM" : "AM";
-      const h12 = peakHourInt % 12 === 0 ? 12 : peakHourInt % 12;
-      const nextH12 = (h12 % 12) + 1;
-      const nextAmpm = (peakHourInt + 1) >= 12 && (peakHourInt + 1) < 24 ? "PM" : "AM";
-      peakHourLabel = `${h12}:00 ${ampm} – ${nextH12}:00 ${nextAmpm}`;
-    }
+    const weekDaysSequence = [
+      { day: "Monday", short: "Mon" },
+      { day: "Tuesday", short: "Tue" },
+      { day: "Wednesday", short: "Wed" },
+      { day: "Thursday", short: "Thu" },
+      { day: "Friday", short: "Fri" },
+      { day: "Saturday", short: "Sat" },
+      { day: "Sunday", short: "Sun" },
+    ];
 
-    const bestDay = rawDayOfWeek[0]?.day || "Weekdays";
+    const fullWeekDays = weekDaysSequence.map(item => ({
+      day: item.day,
+      short: item.short,
+      users: dayMap[item.day.toLowerCase()] || 0,
+    }));
 
     const peakTimes = {
-      hourly: rawHourly,
-      days: rawDayOfWeek,
-      peakHour: peakHourLabel,
-      bestDay,
+      hourly: full24Hours,
+      days: fullWeekDays,
     };
 
     // Calculate total candidate application clicks
