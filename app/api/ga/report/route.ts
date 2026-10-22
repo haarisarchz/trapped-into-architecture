@@ -118,6 +118,36 @@ export async function GET(request: Request) {
       limit: 10,
     });
 
+    // 5B. Acquisition Channels (Direct, Organic Social, Organic Search, Referral)
+    const channelsReq = analyticsDataClient.runReport({
+      property,
+      dateRanges,
+      dimensions: [{ name: "sessionDefaultChannelGroup" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: 8,
+    }).catch(() => [{ rows: [] }]);
+
+    // 5C. Referring Domains & Apps (WhatsApp, Instagram, LinkedIn, etc.)
+    const referrersReq = analyticsDataClient.runReport({
+      property,
+      dateRanges,
+      dimensions: [{ name: "pageReferrer" }],
+      metrics: [{ name: "activeUsers" }],
+      orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+      limit: 12,
+    }).catch(() => [{ rows: [] }]);
+
+    // 5D. Top Entry Doors (Landing Pages)
+    const landingPagesReq = analyticsDataClient.runReport({
+      property,
+      dateRanges,
+      dimensions: [{ name: "landingPagePlusQueryString" }],
+      metrics: [{ name: "sessions" }],
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit: 10,
+    }).catch(() => [{ rows: [] }]);
+
     // 6. By City
     const cityReq = analyticsDataClient.runReport({
       property,
@@ -336,14 +366,64 @@ export async function GET(request: Request) {
             }
           }
         }
+
+        // B. Query On-Site Search Keywords & Zero-Result Searches from site_searches
+        let sQuery = sb.from("site_searches").select("id, search_query, city, state, position, results_count, created_at");
+        if (sinceDate) {
+          sQuery = sQuery.gte("created_at", sinceDate);
+        }
+        const { data: sData } = await sQuery.order("created_at", { ascending: false }).limit(200);
+
+        if (sData && sData.length > 0) {
+          totalSearchesCount = sData.length;
+          const kwMap: Record<string, { count: number; totalResults: number }> = {};
+          const cityMap: Record<string, number> = {};
+          const zeroMap: Record<string, { query: string; city: string; count: number; date: string }> = {};
+
+          sData.forEach((row: any) => {
+            const kw = (row.search_query || "").trim().toLowerCase();
+            if (kw) {
+              if (!kwMap[kw]) kwMap[kw] = { count: 0, totalResults: 0 };
+              kwMap[kw].count++;
+              kwMap[kw].totalResults += (row.results_count || 0);
+            }
+
+            const c = (row.city || "").trim();
+            if (c) {
+              cityMap[c] = (cityMap[c] || 0) + 1;
+            }
+
+            if ((row.results_count || 0) === 0 && (kw || c)) {
+              const zeroKey = `${kw}__${c}`;
+              if (!zeroMap[zeroKey]) {
+                zeroMap[zeroKey] = { query: row.search_query || "Any Role", city: row.city || "All Cities", count: 0, date: row.created_at };
+              }
+              zeroMap[zeroKey].count++;
+            }
+          });
+
+          topSearchKeywords = Object.entries(kwMap)
+            .map(([keyword, stat]) => ({ keyword, count: stat.count, avgResults: Math.round(stat.totalResults / stat.count) }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+
+          topSearchedCities = Object.entries(cityMap)
+            .map(([city, count]) => ({ city, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 8);
+
+          zeroResultSearches = Object.values(zeroMap)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 8);
+        }
       } catch (sbErr) {
         console.warn("Supabase analytics stats error:", sbErr);
       }
     }
 
     // Execute GA queries
-    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes, realtimeRes, eventsRes] = await Promise.all([
-      overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq, realtimeReq, eventsReq
+    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes, realtimeRes, eventsRes, channelsRes, referrersRes, landingPagesRes] = await Promise.all([
+      overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq, realtimeReq, eventsReq, channelsReq, referrersReq, landingPagesReq
     ]);
 
     const parseRows = (res: any, dimKeys: string[], metricKeys: string[]) => {
@@ -402,6 +482,15 @@ export async function GET(request: Request) {
       browsers: parseRows(browserRes, ["browser"], ["users"]),
       pages: parseRows(pagesRes, ["title", "path"], ["views"]),
       sources: parseRows(sourcesRes, ["source"], ["sessions"]),
+      channels: parseRows(channelsRes, ["channel"], ["sessions"]),
+      referrers: parseRows(referrersRes, ["referrer"], ["users"]),
+      landingPages: parseRows(landingPagesRes, ["path"], ["sessions"]),
+      searches: {
+        topKeywords: topSearchKeywords,
+        topCities: topSearchedCities,
+        zeroResults: zeroResultSearches,
+        totalCount: totalSearchesCount,
+      },
       cities: parseRows(cityRes, ["city"], ["users"]),
       devices: parseRows(deviceRes, ["deviceCategory"], ["users"])
     });
