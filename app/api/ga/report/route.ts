@@ -190,6 +190,32 @@ export async function GET(request: Request) {
       return [{ rows: [] }];
     });
 
+    // 9B. Hourly Activity (00 to 23)
+    const hourlyReq = analyticsDataClient.runReport({
+      property,
+      dateRanges,
+      dimensions: [{ name: "hour" }],
+      metrics: [{ name: "activeUsers" }],
+      orderBys: [{ dimension: { dimensionName: "hour" }, desc: false }],
+      limit: 24,
+    }).catch(err => {
+      console.warn("GA hourly error:", err.message);
+      return [{ rows: [] }];
+    });
+
+    // 9C. Day of Week Activity (Monday to Sunday)
+    const dayOfWeekReq = analyticsDataClient.runReport({
+      property,
+      dateRanges,
+      dimensions: [{ name: "dayOfWeekName" }],
+      metrics: [{ name: "activeUsers" }],
+      orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+      limit: 7,
+    }).catch(err => {
+      console.warn("GA dayOfWeek error:", err.message);
+      return [{ rows: [] }];
+    });
+
     // 10. Supabase Real-Time Engagement (Shares & Saves strictly within the selected time window)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -435,8 +461,8 @@ export async function GET(request: Request) {
     }
 
     // Execute GA queries
-    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes, realtimeRes, eventsRes, channelsRes, referrersRes, landingPagesRes] = await Promise.all([
-      overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq, realtimeReq, eventsReq, channelsReq, referrersReq, landingPagesReq
+    const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes, realtimeRes, eventsRes, channelsRes, referrersRes, landingPagesRes, hourlyRes, dayOfWeekRes] = await Promise.all([
+      overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq, realtimeReq, eventsReq, channelsReq, referrersReq, landingPagesReq, hourlyReq, dayOfWeekReq
     ]);
 
     const parseRows = (res: any, dimKeys: string[], metricKeys: string[]) => {
@@ -665,7 +691,7 @@ export async function GET(request: Request) {
     });
 
     // Enrich with session sources (especially catching utm_source=whatsapp or UTM-tagged campaigns)
-    if (sourcesRes[0]?.rows?.length > 0) {
+    if (sourcesRes[0]?.rows && sourcesRes[0].rows.length > 0) {
       const rawSources = parseRows(sourcesRes, ["source"], ["sessions"]);
       rawSources.forEach((s: any) => {
         const src = (s.source || "").toLowerCase();
@@ -714,16 +740,54 @@ export async function GET(request: Request) {
       (p: any) => !p.path?.toLowerCase().includes("admin")
     );
 
+    // Parse Hourly (00 to 23) and Day of Week
+    const rawHourly = parseRows(hourlyRes, ["hour"], ["users"]);
+    const rawDayOfWeek = parseRows(dayOfWeekRes, ["day"], ["users"]);
+
+    // Calculate Best Day and Peak Posting Window
+    const sortedHours = [...rawHourly].sort((a, b) => b.users - a.users);
+    const maxHourObj = sortedHours[0];
+    const peakHourInt = maxHourObj ? parseInt(maxHourObj.hour, 10) : null;
+    let peakHourLabel = "Evening (7:00 PM – 10:00 PM)";
+    if (peakHourInt !== null && !isNaN(peakHourInt)) {
+      const ampm = peakHourInt >= 12 ? "PM" : "AM";
+      const h12 = peakHourInt % 12 === 0 ? 12 : peakHourInt % 12;
+      const nextH12 = (h12 % 12) + 1;
+      const nextAmpm = (peakHourInt + 1) >= 12 && (peakHourInt + 1) < 24 ? "PM" : "AM";
+      peakHourLabel = `${h12}:00 ${ampm} – ${nextH12}:00 ${nextAmpm}`;
+    }
+
+    const bestDay = rawDayOfWeek[0]?.day || "Weekdays";
+
+    const peakTimes = {
+      hourly: rawHourly,
+      days: rawDayOfWeek,
+      peakHour: peakHourLabel,
+      bestDay,
+    };
+
+    // Calculate total candidate application clicks
+    const totalApplications = (conversions.applyClicks || 0) + (conversions.emailClicks || 0) + (conversions.contactClicks || 0);
+    const totalSessions = Number(overviewRes[0]?.rows?.[0]?.metricValues?.[1]?.value || 0);
+    const conversionRate = totalSessions > 0 ? `${((totalApplications / totalSessions) * 100).toFixed(1)}%` : "0%";
+
     return NextResponse.json({
       overview: {
         realtimeUsers: realtimeRes[0]?.rows?.[0]?.metricValues?.[0]?.value || 0,
         activeUsers: overviewRes[0]?.rows?.[0]?.metricValues?.[0]?.value || 0,
-        sessions: overviewRes[0]?.rows?.[0]?.metricValues?.[1]?.value || 0,
+        sessions: totalSessions,
         pageViews: overviewRes[0]?.rows?.[0]?.metricValues?.[2]?.value || 0,
         avgSessionDuration: overviewRes[0]?.rows?.[0]?.metricValues?.[3]?.value || 0,
         bounceRate: bouncePercent ? `${bouncePercent}%` : "0%",
+        totalApplications,
+        conversionRate,
       },
-      conversions,
+      conversions: {
+        ...conversions,
+        totalApplications,
+        conversionRate,
+      },
+      peakTimes,
       countries: parseRows(countryRes, ["country"], ["users"]),
       browsers: parseRows(browserRes, ["browser"], ["users"]),
       pages: parseRows(pagesRes, ["title", "path"], ["views"]),
