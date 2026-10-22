@@ -91,11 +91,17 @@ export default function RootLayout({
               dangerouslySetInnerHTML={{
                 __html: `
                   try {
+                    if (window.location.pathname.startsWith('/admin')) {
+                      window['ga-disable-${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}'] = true;
+                    }
+                    if (document.referrer && document.referrer.toLowerCase().indexOf('/admin') !== -1) {
+                      window['ga-disable-${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}'] = true;
+                    }
                     var userStr = localStorage.getItem('currentUser');
                     if (userStr) {
                       var user = JSON.parse(userStr);
                       var role = user.role ? user.role.toLowerCase().replace(/[\s_]+/g, "") : '';
-                      if (role === 'admin' || role === 'superadmin' || role === 'ceo') {
+                      if (role === 'admin' || role === 'superadmin' || role === 'ceo' || role === 'jobadmin') {
                         window['ga-disable-${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}'] = true;
                       }
                     }

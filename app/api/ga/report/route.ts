@@ -135,7 +135,7 @@ export async function GET(request: Request) {
       dimensions: [{ name: "pageReferrer" }],
       metrics: [{ name: "activeUsers" }],
       orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
-      limit: 12,
+      limit: 50,
     }).catch(() => [{ rows: [] }]);
 
     // 5D. Top Entry Doors (Landing Pages)
@@ -472,6 +472,136 @@ export async function GET(request: Request) {
     const bounceVal = Number(overviewRes[0]?.rows?.[0]?.metricValues?.[4]?.value || 0);
     const bouncePercent = Math.round(bounceVal * 100);
 
+    // Process referrers and classify into Outside vs Inside, strictly excluding /admin
+    const rawReferrers = parseRows(referrersRes, ["referrer"], ["users"]);
+
+    const isInternal = (url: string) => {
+      if (!url) return false;
+      const lower = url.toLowerCase();
+      return lower.includes("trappedintoarchitecture.com") || lower.includes("localhost") || lower.startsWith("/");
+    };
+
+    const outsideReferrers: any[] = [];
+    const insideReferrers: any[] = [];
+
+    rawReferrers.forEach((r: any) => {
+      const raw = (r.referrer || "").trim();
+      const users = Number(r.users) || 0;
+      const lower = raw.toLowerCase();
+
+      // STRICT EXCLUSION: Never count any admin link or navigation
+      if (lower.includes("/admin") || lower.includes("admin/") || lower.includes("add-job")) {
+        return;
+      }
+
+      if (!raw || raw === "(direct)" || raw === "(empty)") {
+        outsideReferrers.push({
+          referrer: raw || "(direct)",
+          label: "Direct / Bookmarks / Typed URL",
+          users,
+          category: "direct",
+        });
+        return;
+      }
+
+      if (isInternal(raw)) {
+        // Internal page navigation
+        let path = raw;
+        try {
+          if (raw.startsWith("http://") || raw.startsWith("https://")) {
+            const u = new URL(raw);
+            path = u.pathname;
+          }
+        } catch (_) {}
+
+        // Secondary check to ensure admin paths are completely blocked
+        if (path.toLowerCase().includes("admin")) return;
+
+        let cleanLabel = path;
+        const cleanPath = path.split("?")[0];
+        if (cleanPath === "/" || cleanPath === "") cleanLabel = "Home Page (/)";
+        else if (cleanPath === "/jobs") cleanLabel = "Jobs Page (/jobs)";
+        else if (cleanPath.startsWith("/jobs/")) cleanLabel = `Job Details (${cleanPath})`;
+        else if (cleanPath === "/companies") cleanLabel = "Companies Directory (/companies)";
+        else if (cleanPath.startsWith("/companies/")) cleanLabel = `Company Profile (${cleanPath})`;
+        else if (cleanPath === "/internships") cleanLabel = "Internships Page (/internships)";
+        else if (cleanPath === "/about") cleanLabel = "About Us (/about)";
+        else if (cleanPath === "/contact") cleanLabel = "Contact Us (/contact)";
+
+        insideReferrers.push({
+          referrer: raw,
+          path: cleanPath,
+          label: cleanLabel,
+          users,
+          category: "internal",
+        });
+      } else {
+        // External traffic source
+        let cleanLabel = raw;
+        let category = "website";
+
+        if (lower.includes("whatsapp")) {
+          cleanLabel = "WhatsApp (Web / Mobile App)";
+          category = "whatsapp";
+        } else if (lower.includes("instagram")) {
+          cleanLabel = "Instagram (Bio / Story Link)";
+          category = "instagram";
+        } else if (lower.includes("linkedin")) {
+          cleanLabel = "LinkedIn";
+          category = "linkedin";
+        } else if (lower.includes("google")) {
+          cleanLabel = "Google Organic Search";
+          category = "google";
+        } else if (lower.includes("facebook") || lower.includes("fb.me")) {
+          cleanLabel = "Facebook";
+          category = "facebook";
+        } else if (lower.includes("twitter") || lower.includes("t.co") || lower.includes("x.com")) {
+          cleanLabel = "X / Twitter";
+          category = "twitter";
+        } else {
+          try {
+            if (raw.startsWith("http://") || raw.startsWith("https://")) {
+              const u = new URL(raw);
+              cleanLabel = u.hostname.replace(/^www\./, "");
+            }
+          } catch (_) {}
+        }
+
+        outsideReferrers.push({
+          referrer: raw,
+          label: cleanLabel,
+          users,
+          category,
+        });
+      }
+    });
+
+    // If outsideReferrers is empty, populate from sourcesRes as fallback (ignoring admin)
+    if (outsideReferrers.length === 0 && sourcesRes[0]?.rows?.length > 0) {
+      const rawSources = parseRows(sourcesRes, ["source"], ["sessions"]);
+      rawSources.forEach((s: any) => {
+        const src = (s.source || "").toLowerCase();
+        if (src.includes("admin")) return;
+        let label = s.source;
+        let category = "website";
+        if (src === "(direct)") { label = "Direct / Bookmarks / Typed URL"; category = "direct"; }
+        else if (src.includes("google")) { label = "Google Organic Search"; category = "google"; }
+        else if (src.includes("whatsapp")) { label = "WhatsApp"; category = "whatsapp"; }
+        else if (src.includes("instagram")) { label = "Instagram"; category = "instagram"; }
+        else if (src.includes("linkedin")) { label = "LinkedIn"; category = "linkedin"; }
+        outsideReferrers.push({
+          referrer: s.source,
+          label,
+          users: s.sessions,
+          category,
+        });
+      });
+    }
+
+    const cleanLandingPages = parseRows(landingPagesRes, ["path"], ["sessions"]).filter(
+      (p: any) => !p.path?.toLowerCase().includes("admin")
+    );
+
     return NextResponse.json({
       overview: {
         realtimeUsers: realtimeRes[0]?.rows?.[0]?.metricValues?.[0]?.value || 0,
@@ -487,8 +617,10 @@ export async function GET(request: Request) {
       pages: parseRows(pagesRes, ["title", "path"], ["views"]),
       sources: parseRows(sourcesRes, ["source"], ["sessions"]),
       channels: parseRows(channelsRes, ["channel"], ["sessions"]),
-      referrers: parseRows(referrersRes, ["referrer"], ["users"]),
-      landingPages: parseRows(landingPagesRes, ["path"], ["sessions"]),
+      referrers: outsideReferrers,
+      outsideReferrers,
+      insideReferrers,
+      landingPages: cleanLandingPages,
       searches: {
         topKeywords: topSearchKeywords,
         topCities: topSearchedCities,

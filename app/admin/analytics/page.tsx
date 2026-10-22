@@ -26,6 +26,7 @@ export default function AnalyticsPage() {
   const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("all");
   const [listingMode, setListingMode] = useState<"top" | "recent">("top");
   const [filterAdminShares, setFilterAdminShares] = useState(false);
+  const [trafficTab, setTrafficTab] = useState<"outside" | "inside">("outside");
 
   useEffect(() => {
     async function fetchData() {
@@ -316,12 +317,16 @@ export default function AnalyticsPage() {
                 
                 {/* Top Search Keywords */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3 flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
                     <span>Top Keywords Searched</span>
                     <span className="text-[10px] text-gray-400 font-normal">Hits</span>
                   </h4>
+                  <p className="text-[10px] text-gray-500 mb-3">Job titles &amp; software searched on the jobs page</p>
                   {(!data.searches?.topKeywords || data.searches.topKeywords.length === 0) ? (
-                    <p className="text-xs text-gray-400 italic py-4 text-center">No keyword searches logged in this period yet.</p>
+                    <div className="py-4 text-center">
+                      <p className="text-xs text-gray-400 italic">No keyword searches logged in this period yet.</p>
+                      <p className="text-[10px] text-gray-400 mt-1">Live logger active — searches on /jobs will appear here automatically.</p>
+                    </div>
                   ) : (
                     <div className="space-y-2.5">
                       {data.searches.topKeywords.map((k: any, i: number) => (
@@ -336,12 +341,16 @@ export default function AnalyticsPage() {
 
                 {/* Top Searched Cities */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3 flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
                     <span>Top Locations Filtered</span>
                     <span className="text-[10px] text-gray-400 font-normal">Filters</span>
                   </h4>
+                  <p className="text-[10px] text-gray-500 mb-3">Cities candidates filtered by on the jobs page</p>
                   {(!data.searches?.topCities || data.searches.topCities.length === 0) ? (
-                    <p className="text-xs text-gray-400 italic py-4 text-center">No location filters used in this period yet.</p>
+                    <div className="py-4 text-center">
+                      <p className="text-xs text-gray-400 italic">No location filters used in this period yet.</p>
+                      <p className="text-[10px] text-gray-400 mt-1">Live logger active — city filters on /jobs will appear here automatically.</p>
+                    </div>
                   ) : (
                     <div className="space-y-2.5">
                       {data.searches.topCities.map((c: any, i: number) => (
@@ -355,15 +364,18 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Unmet Demand (Zero Result Searches) */}
-                <div className="bg-amber-50/60 p-4 rounded-xl border border-amber-200/80">
+                <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200/90">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-1 flex items-center justify-between">
                     <span>⚠️ Missing Jobs (0 Results Found)</span>
-                    <span className="text-[10px] text-amber-700 font-normal">Demand</span>
+                    <span className="text-[10px] bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded font-bold">Market Demand</span>
                   </h4>
-                  <p className="text-[10px] text-amber-700 mb-3">Roles candidates searched for where NO matching jobs were found. Post these next!</p>
+                  <p className="text-[10px] text-amber-700 mb-3">Roles candidates searched for where NO jobs were found. Post these next!</p>
                   
                   {(!data.searches?.zeroResults || data.searches.zeroResults.length === 0) ? (
-                    <p className="text-xs text-gray-400 italic py-4 text-center">No missing job searches detected. All searches found matching jobs!</p>
+                    <div className="py-4 text-center">
+                      <p className="text-xs text-amber-800/60 italic">No missing job searches detected yet.</p>
+                      <p className="text-[10px] text-amber-700/60 mt-1">When someone searches for a role with 0 results, it flags here.</p>
+                    </div>
                   ) : (
                     <div className="space-y-2.5">
                       {data.searches.zeroResults.map((z: any, i: number) => (
@@ -451,47 +463,128 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* TRAFFIC SOURCES & APPS (WHATSAPP, INSTAGRAM, LINKEDIN, GOOGLE) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[500px]">
-                <div className="flex justify-between items-center mb-4">
+              {/* TRAFFIC SOURCES & REFERRALS (OUTSIDE TRAFFIC VS INSIDE NAVIGATION) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div>
                     <h3 className="text-lg font-bold">Inbound Traffic &amp; Referrals</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">Which apps &amp; websites brought visitors</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {trafficTab === "outside" 
+                        ? "External apps & websites bringing visitors (WhatsApp, Instagram, etc.)" 
+                        : "Internal page-to-page navigation across the website (Excludes Admin)"}
+                    </p>
+                  </div>
+                  <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0">
+                    <button 
+                      onClick={() => setTrafficTab("outside")} 
+                      className={`px-3 py-1.5 rounded-full transition flex items-center gap-1.5 ${trafficTab === "outside" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}
+                    >
+                      <span>🌐</span>
+                      <span>Outside Traffic</span>
+                    </button>
+                    <button 
+                      onClick={() => setTrafficTab("inside")} 
+                      className={`px-3 py-1.5 rounded-full transition flex items-center gap-1.5 ${trafficTab === "inside" ? "bg-white shadow text-black font-semibold" : "text-gray-500 hover:text-black"}`}
+                    >
+                      <span>🔄</span>
+                      <span>Inside Navigation</span>
+                    </button>
                   </div>
                 </div>
+
                 <div className="space-y-4 overflow-y-auto pr-2 flex-1">
-                  {(() => {
-                    const refList = (data.referrers && data.referrers.length > 0) 
-                      ? data.referrers 
-                      : data.sources || [];
-                    
-                    if (refList.length === 0) return <p className="text-gray-400 text-sm">No referrer data available.</p>;
-                    
-                    const maxCount = Math.max(...refList.map((p: any) => Number(p.users || p.sessions) || 0));
+                  {trafficTab === "outside" ? (
+                    (() => {
+                      const list = (data.outsideReferrers && data.outsideReferrers.length > 0)
+                        ? data.outsideReferrers
+                        : (data.referrers || data.sources || []);
+                      
+                      // Safety filter: NEVER allow admin references in outside traffic
+                      const cleanList = list.filter((item: any) => {
+                        const raw = (item.referrer || item.source || item.label || "").toLowerCase();
+                        return !raw.includes("admin");
+                      });
 
-                    return refList.map((item: any, i: number) => {
-                      let rawName = item.referrer || item.source || "Direct Traffic";
-                      let cleanName = rawName;
-                      if (rawName.includes("whatsapp")) cleanName = "WhatsApp Web / Mobile";
-                      else if (rawName.includes("instagram")) cleanName = "Instagram (Bio / Story Link)";
-                      else if (rawName.includes("linkedin")) cleanName = "LinkedIn";
-                      else if (rawName.includes("google")) cleanName = "Google Organic Search";
-                      else if (rawName.includes("facebook")) cleanName = "Facebook";
-                      else if (rawName === "(direct)" || rawName.includes("direct")) cleanName = "Direct / Bookmark / Typing URL";
+                      if (cleanList.length === 0) {
+                        return <p className="text-gray-400 text-sm py-8 text-center">No external referrer traffic recorded in this period yet.</p>;
+                      }
 
-                      const val = Number(item.users || item.sessions) || 0;
+                      const maxVal = Math.max(...cleanList.map((p: any) => Number(p.users || p.sessions) || 0));
 
-                      return (
-                        <div key={i} className="text-sm">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-medium truncate max-w-[75%]" title={rawName}>{cleanName}</span>
-                            <span className="font-semibold text-gray-700">{val}</span>
+                      const getIcon = (cat: string, label: string) => {
+                        const l = (label || "").toLowerCase();
+                        if (cat === "whatsapp" || l.includes("whatsapp")) return "💬";
+                        if (cat === "instagram" || l.includes("instagram")) return "📸";
+                        if (cat === "linkedin" || l.includes("linkedin")) return "💼";
+                        if (cat === "google" || l.includes("google")) return "🔍";
+                        if (cat === "facebook" || l.includes("facebook")) return "👥";
+                        if (cat === "twitter" || l.includes("twitter") || l.includes("x.com")) return "🐦";
+                        if (cat === "direct" || l.includes("direct")) return "🔗";
+                        return "🌐";
+                      };
+
+                      return cleanList.map((item: any, i: number) => {
+                        const rawName = item.referrer || item.source || "Direct Traffic";
+                        let label = item.label || rawName;
+                        if (rawName.includes("whatsapp")) label = "WhatsApp Web / Mobile";
+                        else if (rawName.includes("instagram")) label = "Instagram (Bio / Story Link)";
+                        else if (rawName.includes("linkedin")) label = "LinkedIn";
+                        else if (rawName.includes("google")) label = "Google Organic Search";
+                        else if (rawName.includes("facebook")) label = "Facebook";
+                        else if (rawName === "(direct)" || rawName.includes("direct")) label = "Direct / Bookmark / Typing URL";
+
+                        const val = Number(item.users || item.sessions) || 0;
+                        const icon = getIcon(item.category, label);
+
+                        return (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium truncate max-w-[75%] flex items-center gap-1.5" title={rawName}>
+                                <span className="text-base">{icon}</span>
+                                <span>{label}</span>
+                              </span>
+                              <span className="font-semibold text-gray-700">{val}</span>
+                            </div>
+                            <ProgressBar value={val} max={maxVal || 1} />
                           </div>
-                          <ProgressBar value={val} max={maxCount || 1} />
-                        </div>
-                      );
-                    });
-                  })()}
+                        );
+                      });
+                    })()
+                  ) : (
+                    (() => {
+                      const list = (data.insideReferrers || []).filter((item: any) => {
+                        const path = (item.path || item.referrer || item.label || "").toLowerCase();
+                        return !path.includes("admin");
+                      });
+
+                      if (list.length === 0) {
+                        return (
+                          <div className="text-center py-8">
+                            <p className="text-gray-400 text-sm">No internal page navigation recorded in this period.</p>
+                            <p className="text-[11px] text-gray-400 mt-1">Shows when candidates move between pages (e.g. Home → Jobs)</p>
+                          </div>
+                        );
+                      }
+
+                      const maxVal = Math.max(...list.map((p: any) => Number(p.users || p.sessions) || 0));
+
+                      return list.map((item: any, i: number) => {
+                        const val = Number(item.users || item.sessions) || 0;
+                        return (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <div className="truncate max-w-[75%] flex items-center gap-2">
+                                <span className="text-xs text-gray-400">↳</span>
+                                <span className="font-medium truncate" title={item.referrer}>{item.label || item.path}</span>
+                              </div>
+                              <span className="font-semibold text-gray-700">{val}</span>
+                            </div>
+                            <ProgressBar value={val} max={maxVal || 1} />
+                          </div>
+                        );
+                      });
+                    })()
+                  )}
                 </div>
               </div>
 
