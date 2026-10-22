@@ -206,6 +206,7 @@ export async function GET(request: Request) {
     let topSearchedCities: any[] = [];
     let zeroResultSearches: any[] = [];
     let totalSearchesCount = 0;
+    const jobInfoMap: Record<string, string> = {};
 
     if (supabaseUrl && supabaseAnonKey) {
       try {
@@ -345,6 +346,14 @@ export async function GET(request: Request) {
           .order("share_count", { ascending: false });
 
         if (allJobsStats && allJobsStats.length > 0) {
+          allJobsStats.forEach((j: any) => {
+            const parts = [
+              j.position || "Architecture Job",
+              j.city ? `in ${j.city}` : "",
+              j.firm_name ? `at ${j.firm_name}` : ""
+            ].filter(Boolean);
+            jobInfoMap[j.id] = parts.join(" ");
+          });
           totalLifetimeShares = allJobsStats.reduce((sum, j) => sum + (j.share_count || 0), 0);
           totalLifetimeSaves = allJobsStats.reduce((sum, j) => sum + (j.save_count || 0), 0);
 
@@ -472,6 +481,72 @@ export async function GET(request: Request) {
     const bounceVal = Number(overviewRes[0]?.rows?.[0]?.metricValues?.[4]?.value || 0);
     const bouncePercent = Math.round(bounceVal * 100);
 
+    // Parse pages to build a path-to-title map for human-readable navigation labels
+    const rawPages = parseRows(pagesRes, ["title", "path"], ["views"]);
+    const pageTitleMap: Record<string, string> = {};
+    rawPages.forEach((p: any) => {
+      if (p.path && p.title && p.title !== "(not set)") {
+        const clean = p.title
+          .replace(/ \| Trapped Into Architecture/gi, "")
+          .replace(/ - Trapped Into Architecture/gi, "")
+          .trim();
+        const normPath = (p.path || "").split("?")[0].replace(/\/+$/, "") || "/";
+        if (clean && !pageTitleMap[normPath]) {
+          pageTitleMap[normPath] = clean;
+        }
+      }
+    });
+
+    const resolveInsideLabel = (cleanPath: string): string => {
+      const norm = cleanPath.replace(/\/+$/, "") || "/";
+
+      // 1. Exact match in GA page titles (contains exact document title)
+      if (pageTitleMap[norm]) {
+        return pageTitleMap[norm];
+      }
+
+      // 2. Standard root pages
+      if (norm === "/" || norm === "") return "Home Page";
+      if (norm === "/jobs") return "Jobs Page";
+      if (norm === "/companies") return "Companies Directory";
+      if (norm === "/internships") return "Internships Page";
+      if (norm === "/about") return "About Us";
+      if (norm === "/contact") return "Contact Us";
+
+      // 3. City & State filter routes
+      if (norm.startsWith("/jobs/city/")) {
+        const slug = norm.replace("/jobs/city/", "");
+        const formatted = decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        return `Jobs in ${formatted}`;
+      }
+      if (norm.startsWith("/jobs/state/")) {
+        const slug = norm.replace("/jobs/state/", "");
+        const formatted = decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        return `Jobs in ${formatted}`;
+      }
+
+      // 4. Specific Job Details by ID (/jobs/[id])
+      if (norm.startsWith("/jobs/")) {
+        const jobId = norm.replace("/jobs/", "").trim();
+        if (jobInfoMap[jobId]) {
+          return jobInfoMap[jobId];
+        }
+        if (pageTitleMap[`/jobs/${jobId}`]) {
+          return pageTitleMap[`/jobs/${jobId}`];
+        }
+        return `Job Listing (${jobId.slice(0, 8)}...)`;
+      }
+
+      // 5. Company Details by slug (/companies/[slug])
+      if (norm.startsWith("/companies/")) {
+        const slug = norm.replace("/companies/", "").trim();
+        const formatted = decodeURIComponent(slug).replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        return `${formatted} Profile`;
+      }
+
+      return norm;
+    };
+
     // Process referrers and classify into Outside vs Inside, strictly excluding /admin
     const rawReferrers = parseRows(referrersRes, ["referrer"], ["users"]);
 
@@ -481,8 +556,8 @@ export async function GET(request: Request) {
       return lower.includes("trappedintoarchitecture.com") || lower.includes("localhost") || lower.startsWith("/");
     };
 
-    const outsideReferrers: any[] = [];
-    const insideReferrers: any[] = [];
+    const insideAggMap: Record<string, { label: string; path: string; users: number }> = {};
+    const outsideAggMap: Record<string, { label: string; referrer: string; users: number; category: string }> = {};
 
     rawReferrers.forEach((r: any) => {
       const raw = (r.referrer || "").trim();
@@ -495,12 +570,16 @@ export async function GET(request: Request) {
       }
 
       if (!raw || raw === "(direct)" || raw === "(empty)") {
-        outsideReferrers.push({
-          referrer: raw || "(direct)",
-          label: "Direct / Bookmarks / Typed URL",
-          users,
-          category: "direct",
-        });
+        const key = "direct";
+        if (!outsideAggMap[key]) {
+          outsideAggMap[key] = {
+            referrer: raw || "(direct)",
+            label: "Direct / Bookmarks / Typed URL",
+            users: 0,
+            category: "direct",
+          };
+        }
+        outsideAggMap[key].users += users;
         return;
       }
 
@@ -517,24 +596,17 @@ export async function GET(request: Request) {
         // Secondary check to ensure admin paths are completely blocked
         if (path.toLowerCase().includes("admin")) return;
 
-        let cleanLabel = path;
-        const cleanPath = path.split("?")[0];
-        if (cleanPath === "/" || cleanPath === "") cleanLabel = "Home Page (/)";
-        else if (cleanPath === "/jobs") cleanLabel = "Jobs Page (/jobs)";
-        else if (cleanPath.startsWith("/jobs/")) cleanLabel = `Job Details (${cleanPath})`;
-        else if (cleanPath === "/companies") cleanLabel = "Companies Directory (/companies)";
-        else if (cleanPath.startsWith("/companies/")) cleanLabel = `Company Profile (${cleanPath})`;
-        else if (cleanPath === "/internships") cleanLabel = "Internships Page (/internships)";
-        else if (cleanPath === "/about") cleanLabel = "About Us (/about)";
-        else if (cleanPath === "/contact") cleanLabel = "Contact Us (/contact)";
+        const cleanPath = path.split("?")[0].replace(/\/+$/, "") || "/";
+        const label = resolveInsideLabel(cleanPath);
 
-        insideReferrers.push({
-          referrer: raw,
-          path: cleanPath,
-          label: cleanLabel,
-          users,
-          category: "internal",
-        });
+        if (!insideAggMap[cleanPath]) {
+          insideAggMap[cleanPath] = {
+            label,
+            path: cleanPath,
+            users: 0,
+          };
+        }
+        insideAggMap[cleanPath].users += users;
       } else {
         // External traffic source
         let cleanLabel = raw;
@@ -567,14 +639,21 @@ export async function GET(request: Request) {
           } catch (_) {}
         }
 
-        outsideReferrers.push({
-          referrer: raw,
-          label: cleanLabel,
-          users,
-          category,
-        });
+        const key = cleanLabel.toLowerCase();
+        if (!outsideAggMap[key]) {
+          outsideAggMap[key] = {
+            referrer: raw,
+            label: cleanLabel,
+            users: 0,
+            category,
+          };
+        }
+        outsideAggMap[key].users += users;
       }
     });
+
+    const outsideReferrers = Object.values(outsideAggMap).sort((a, b) => b.users - a.users);
+    const insideReferrers = Object.values(insideAggMap).sort((a, b) => b.users - a.users);
 
     // If outsideReferrers is empty, populate from sourcesRes as fallback (ignoring admin)
     if (outsideReferrers.length === 0 && sourcesRes[0]?.rows?.length > 0) {

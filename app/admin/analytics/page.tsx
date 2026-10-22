@@ -570,12 +570,21 @@ export default function AnalyticsPage() {
 
                       return list.map((item: any, i: number) => {
                         const val = Number(item.users || item.sessions) || 0;
+                        const displayLabel = item.label || item.path;
                         return (
                           <div key={i} className="text-sm">
                             <div className="flex justify-between items-center mb-1">
                               <div className="truncate max-w-[75%] flex items-center gap-2">
                                 <span className="text-xs text-gray-400">↳</span>
-                                <span className="font-medium truncate" title={item.referrer}>{item.label || item.path}</span>
+                                <a 
+                                  href={item.path || "#"} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="font-medium truncate hover:text-blue-600 hover:underline transition cursor-pointer" 
+                                  title={displayLabel}
+                                >
+                                  {displayLabel}
+                                </a>
                               </div>
                               <span className="font-semibold text-gray-700">{val}</span>
                             </div>
