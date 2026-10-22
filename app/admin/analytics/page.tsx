@@ -24,6 +24,8 @@ export default function AnalyticsPage() {
   const [error, setError] = useState("");
   const [days, setDays] = useState("1");
   const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("all");
+  const [listingMode, setListingMode] = useState<"top" | "recent">("top");
+  const [filterAdminShares, setFilterAdminShares] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -126,8 +128,9 @@ export default function AnalyticsPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm bg-gradient-to-br from-white to-orange-50/40">
                 <h3 className="text-sm font-medium text-orange-600 mb-1">Total Actions</h3>
                 <p className="text-3xl font-bold text-gray-900">
-                  {((data.conversions?.applyClicks || 0) + (data.conversions?.emailClicks || 0) + (data.conversions?.contactClicks || 0) + (data.conversions?.totalShares || 0) + (data.conversions?.totalSaves || 0))}
+                  {((data.conversions?.applyClicks || 0) + (data.conversions?.emailClicks || 0) + (data.conversions?.contactClicks || 0) + (data.conversions?.shareClicks || 0) + (data.conversions?.saveClicks || 0))}
                 </p>
+                <p className="text-[11px] text-gray-400 mt-1">In selected time period</p>
               </div>
             </div>
 
@@ -138,7 +141,7 @@ export default function AnalyticsPage() {
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>⚡ Candidate Conversions &amp; Actions</span>
                   </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Direct candidate interactions: applications, inquiries, shares, and bookmarks</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Direct candidate interactions within the selected time period</p>
                 </div>
                 <span className="text-xs font-semibold px-3 py-1 bg-green-100 text-green-800 rounded-full w-fit">
                   Live Tracking Active
@@ -165,36 +168,128 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Job Shares</span>
-                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.totalShares || data.conversions?.shareClicks || 0}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">WhatsApp &amp; social shares</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Job Shares</span>
+                    {data.conversions?.adminSharesCount > 0 && (
+                      <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded" title="Candidate vs Admin Breakdown">
+                        {data.conversions.candidateSharesCount || 0} user · {data.conversions.adminSharesCount} admin
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.shareClicks || 0}</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {days === '1h' ? 'Last 60 minutes' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In selected period'}
+                  </p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Saved Jobs</span>
-                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.totalSaves || data.conversions?.saveClicks || 0}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">User bookmarks</p>
+                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.saveClicks || 0}</p>
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    {days === '1h' ? 'Last 60 minutes' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In selected period'}
+                  </p>
                 </div>
               </div>
 
-              {/* TOP ENGAGED JOBS */}
-              {data.conversions?.topEngagedJobs && data.conversions.topEngagedJobs.length > 0 && (
-                <div className="mt-6 pt-5 border-t border-gray-100">
-                  <h4 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wider text-xs">Top Shared &amp; Saved Listings</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    {data.conversions.topEngagedJobs.slice(0, 4).map((j: any) => (
-                      <div key={j.id} className="p-3 bg-gray-50 rounded-xl border border-gray-200/70 text-xs">
-                        <p className="font-bold text-gray-900 truncate" title={j.position}>{j.position}</p>
-                        <p className="text-gray-500 truncate mt-0.5">{j.firm_name}</p>
-                        <div className="flex items-center gap-3 mt-2 text-gray-600 font-semibold text-[11px]">
-                          <span>🔗 {j.share_count || 0} shares</span>
-                          <span>🔖 {j.save_count || 0} saves</span>
+              {/* TOP SHARED & RECENT LISTINGS (WITH VIEW TOGGLE & LOCATION) */}
+              {(() => {
+                const listPool = listingMode === "top" 
+                  ? (data.conversions?.topSharedJobs || data.conversions?.topEngagedJobs || [])
+                  : (data.conversions?.recentJobs || data.conversions?.topSharedJobs || []);
+                
+                const displayedJobs = listPool.filter((j: any) => {
+                  if (filterAdminShares) {
+                    return (j.candidate_shares || 0) > 0 || (j.period_saves || 0) > 0;
+                  }
+                  return true;
+                });
+
+                return (
+                  <div className="mt-6 pt-5 border-t border-gray-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold">
+                          <button 
+                            type="button"
+                            onClick={() => setListingMode("top")}
+                            className={`px-3 py-1.5 rounded-lg transition ${listingMode === "top" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                          >
+                            🔥 Top Shared &amp; Saved
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => setListingMode("recent")}
+                            className={`px-3 py-1.5 rounded-lg transition ${listingMode === "recent" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                          >
+                            🕒 Recent Activity / Trendings
+                          </button>
                         </div>
                       </div>
-                    ))}
+
+                      {data.conversions?.adminSharesCount > 0 && (
+                        <label className="flex items-center gap-2 text-xs font-medium text-gray-600 cursor-pointer select-none">
+                          <input 
+                            type="checkbox" 
+                            checked={filterAdminShares} 
+                            onChange={(e) => setFilterAdminShares(e.target.checked)}
+                            className="rounded border-gray-300 text-black focus:ring-black"
+                          />
+                          <span>Exclude admin shares (organic only)</span>
+                        </label>
+                      )}
+                    </div>
+
+                    {displayedJobs.length === 0 ? (
+                      <p className="text-gray-400 text-xs italic py-4">No job engagement recorded in this time period yet.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {displayedJobs.slice(0, 8).map((j: any) => (
+                          <div key={j.id} className="p-3.5 bg-gray-50 rounded-xl border border-gray-200/70 text-xs flex flex-col justify-between hover:border-gray-300 transition">
+                            <div>
+                              <div className="flex items-start justify-between gap-1 mb-1">
+                                <p className="font-bold text-gray-900 truncate flex-1" title={j.position}>{j.position}</p>
+                              </div>
+                              <p className="text-gray-600 truncate font-medium">{j.firm_name}</p>
+                              
+                              {/* Location Badge */}
+                              <div className="mt-1.5 flex items-center gap-1 text-[11px] text-gray-500 font-medium">
+                                <span className="truncate">📍 {j.location || [j.city, j.state].filter(Boolean).join(", ") || "India"}</span>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 pt-2 border-t border-gray-200/50">
+                              <div className="flex items-center justify-between text-gray-700 font-semibold text-[11px]">
+                                <span>🔗 {j.period_shares ?? j.share_count ?? 0} shares</span>
+                                <span>🔖 {j.period_saves ?? j.save_count ?? 0} saves</span>
+                              </div>
+
+                              {/* Who Shared Badges */}
+                              {j.who_shared && j.who_shared.length > 0 && (
+                                <div className="mt-1.5 flex flex-wrap gap-1">
+                                  {j.who_shared.slice(0, 2).map((ws: string, wIdx: number) => (
+                                    <span 
+                                      key={wIdx} 
+                                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded truncate max-w-[130px] ${
+                                        ws.startsWith("Admin") ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
+                                      }`}
+                                      title={ws}
+                                    >
+                                      {ws}
+                                    </span>
+                                  ))}
+                                  {j.who_shared.length > 2 && (
+                                    <span className="text-[9px] text-gray-400 font-bold">+{j.who_shared.length - 2}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* DETAILED TABLES */}

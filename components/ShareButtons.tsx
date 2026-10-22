@@ -139,36 +139,46 @@ export default function ShareButtons({
     };
   }, [isOpen, isMobile]);
 
-  const trackShare = async () => {
+  const trackShare = async (platform: string = "whatsapp") => {
     setShareCount(prev => prev + 1);
     try {
       if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag("event", "share_click", { job_id: jobId, firm_name: companyName, position });
+        (window as any).gtag("event", "share_click", { job_id: jobId, firm_name: companyName, position, platform });
       }
     } catch (e) {}
+
+    let userId = null;
+    let userName = null;
+    let userEmail = null;
+    let userRole = "guest";
+
+    try {
+      const stored = typeof window !== "undefined" ? JSON.parse(localStorage.getItem("currentUser") || "null") : null;
+      if (stored) {
+        userId = stored.id || null;
+        userName = stored.full_name || stored.display_name || stored.username || stored.email || null;
+        userEmail = stored.email || null;
+        userRole = (stored.role || "user").toLowerCase().trim();
+      }
+    } catch (e) {}
+
     try {
       if (jobId) {
-        const res = await fetch("/api/jobs/share", {
+        await fetch("/api/jobs/share", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ jobId })
+          body: JSON.stringify({
+            jobId,
+            userId,
+            userName,
+            userEmail,
+            userRole,
+            platform,
+          })
         });
-        if (!res.ok) {
-          const { data: job } = await supabase.from("jobs").select("share_count").eq("id", jobId).single();
-          if (job) {
-            await supabase.from("jobs").update({ share_count: (job.share_count || 0) + 1 }).eq("id", jobId);
-          }
-        }
       }
     } catch (err) {
-      try {
-        if (jobId) {
-          const { data: job } = await supabase.from("jobs").select("share_count").eq("id", jobId).single();
-          if (job) {
-            await supabase.from("jobs").update({ share_count: (job.share_count || 0) + 1 }).eq("id", jobId);
-          }
-        }
-      } catch (e) {}
+      console.warn("Share track error", err);
     }
   };
 
@@ -194,7 +204,7 @@ export default function ShareButtons({
         document.body.removeChild(input);
       }
       setCopied(true);
-      trackShare();
+      trackShare("copy_link");
       setTimeout(() => { setCopied(false); setIsOpen(false); }, 1500);
     } catch (err) {
       console.warn("Copy link failed", err);
@@ -217,7 +227,7 @@ export default function ShareButtons({
         document.body.removeChild(textarea);
       }
       setCopiedText(true);
-      trackShare();
+      trackShare("copy_text");
       setTimeout(() => { setCopiedText(false); setIsOpen(false); }, 1500);
     } catch (err) {
       console.warn("Copy post failed", err);
@@ -286,7 +296,7 @@ export default function ShareButtons({
             rel="noopener noreferrer"
             onClick={(e) => {
               e.stopPropagation();
-              trackShare();
+              trackShare(link.name.toLowerCase());
               setIsOpen(false);
             }}
             className={`flex items-center gap-3 px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-gray-700 hover:bg-gray-50 rounded-lg transition`}

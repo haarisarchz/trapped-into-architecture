@@ -11,13 +11,31 @@ export async function GET(request: Request) {
     
     let startDate = `${days}daysAgo`;
     if (days === '1h') {
-      startDate = 'today'; // Fallback for standard report. Note: GA4 standard reports have latency.
+      startDate = 'today';
     } else if (days === '1') {
       startDate = '1daysAgo';
     } else if (days === 'lifetime' || days === 'all') {
-      startDate = '2015-08-14'; // Beginning of GA property lifetime
+      startDate = '2015-08-14';
     }
 
+    // Determine timestamp cutoff for database queries
+    const now = new Date();
+    let sinceDate: string | null = null;
+    if (days === '1h') {
+      sinceDate = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
+    } else if (days === '1') {
+      sinceDate = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    } else if (days === '7') {
+      sinceDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (days === '30') {
+      sinceDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (days === '90') {
+      sinceDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
+    } else if (days === '365') {
+      sinceDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString();
+    } else {
+      sinceDate = null; // lifetime
+    }
 
     const propertyId = process.env.GA_PROPERTY_ID || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
     const credentialsEnv = process.env.GA_SERVICE_ACCOUNT;
@@ -100,8 +118,6 @@ export async function GET(request: Request) {
       limit: 10,
     });
 
-    // Execute all in parallel
-    
     // 6. By City
     const cityReq = analyticsDataClient.runReport({
       property,
@@ -128,7 +144,7 @@ export async function GET(request: Request) {
       metrics: [{ name: "activeUsers" }],
     }).catch(err => {
       console.warn("Realtime API error:", err.message);
-      return [{ rows: [] }]; // Fallback if realtime fails
+      return [{ rows: [] }];
     });
 
     // 9. Event Conversions (apply_click, email_click, contact_click, share_click, save_click)
@@ -144,38 +160,196 @@ export async function GET(request: Request) {
       return [{ rows: [] }];
     });
 
-    // 10. Supabase Engagement Stats (Shares, Saves, Top Engaged Jobs)
+    // 10. Supabase Real-Time Engagement (Shares & Saves strictly within the selected time window)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-    let totalShares = 0;
-    let totalSaves = 0;
-    let topEngagedJobs: any[] = [];
+    
+    let periodShares = 0;
+    let periodSaves = 0;
+    let adminSharesCount = 0;
+    let candidateSharesCount = 0;
+    let totalLifetimeShares = 0;
+    let totalLifetimeSaves = 0;
+    let topSharedJobs: any[] = [];
+    let recentJobs: any[] = [];
+
     if (supabaseUrl && supabaseAnonKey) {
       try {
         const sb = createClient(supabaseUrl, supabaseAnonKey);
-        const { data: jobsStats } = await sb
+
+        // A. Query timestamped shares from job_shares table
+        let sharesQuery = sb.from("job_shares").select("id, job_id, user_id, user_name, user_role, platform, created_at");
+        if (sinceDate) {
+          sharesQuery = sharesQuery.gte("created_at", sinceDate);
+        }
+        const { data: sharesData, error: sharesErr } = await sharesQuery.order("created_at", { ascending: false });
+
+        // B. Query timestamped saves from saved_jobs table
+        let savesQuery = sb.from("saved_jobs").select("id, job_id, user_id, created_at");
+        if (sinceDate) {
+          savesQuery = savesQuery.gte("created_at", sinceDate);
+        }
+        const { data: savesData, error: savesErr } = await savesQuery.order("created_at", { ascending: false });
+
+        // Group activity per job_id
+        const jobActivityMap: Record<string, {
+          shares: number;
+          adminShares: number;
+          candidateShares: number;
+          saves: number;
+          latestActivity: string;
+          whoShared: string[];
+          platforms: string[];
+        }> = {};
+
+        if (sharesData && sharesData.length > 0) {
+          periodShares = sharesData.length;
+          sharesData.forEach((s: any) => {
+            const role = (s.user_role || "guest").toLowerCase().trim();
+            const isAdmin = ["superadmin", "admin", "jobadmin", "ceo"].includes(role);
+            if (isAdmin) {
+              adminSharesCount++;
+            } else {
+              candidateSharesCount++;
+            }
+
+            if (!jobActivityMap[s.job_id]) {
+              jobActivityMap[s.job_id] = {
+                shares: 0,
+                adminShares: 0,
+                candidateShares: 0,
+                saves: 0,
+                latestActivity: s.created_at || new Date().toISOString(),
+                whoShared: [],
+                platforms: [],
+              };
+            }
+            jobActivityMap[s.job_id].shares++;
+            if (isAdmin) {
+              jobActivityMap[s.job_id].adminShares++;
+            } else {
+              jobActivityMap[s.job_id].candidateShares++;
+            }
+
+            const shareLabel = isAdmin 
+              ? `Admin (${s.user_name || "Admin"})` 
+              : s.user_name ? `Candidate (${s.user_name})` : "Guest / Public";
+
+            if (!jobActivityMap[s.job_id].whoShared.includes(shareLabel)) {
+              jobActivityMap[s.job_id].whoShared.push(shareLabel);
+            }
+            if (s.platform && !jobActivityMap[s.job_id].platforms.includes(s.platform)) {
+              jobActivityMap[s.job_id].platforms.push(s.platform);
+            }
+            if (s.created_at && (!jobActivityMap[s.job_id].latestActivity || new Date(s.created_at) > new Date(jobActivityMap[s.job_id].latestActivity))) {
+              jobActivityMap[s.job_id].latestActivity = s.created_at;
+            }
+          });
+        }
+
+        if (savesData && savesData.length > 0) {
+          periodSaves = savesData.length;
+          savesData.forEach((sv: any) => {
+            if (!jobActivityMap[sv.job_id]) {
+              jobActivityMap[sv.job_id] = {
+                shares: 0,
+                adminShares: 0,
+                candidateShares: 0,
+                saves: 0,
+                latestActivity: sv.created_at || new Date().toISOString(),
+                whoShared: [],
+                platforms: [],
+              };
+            }
+            jobActivityMap[sv.job_id].saves++;
+            if (sv.created_at && (!jobActivityMap[sv.job_id].latestActivity || new Date(sv.created_at) > new Date(jobActivityMap[sv.job_id].latestActivity))) {
+              jobActivityMap[sv.job_id].latestActivity = sv.created_at;
+            }
+          });
+        }
+
+        // Fetch job metadata for active jobs
+        const activeJobIds = Object.keys(jobActivityMap);
+        if (activeJobIds.length > 0) {
+          const { data: jobMeta } = await sb
+            .from("jobs")
+            .select("id, position, firm_name, city, state, share_count, save_count, created_at")
+            .in("id", activeJobIds);
+
+          if (jobMeta) {
+            const enriched = jobMeta.map(j => {
+              const act = jobActivityMap[j.id] || { 
+                shares: 0, adminShares: 0, candidateShares: 0, saves: 0, 
+                latestActivity: j.created_at, whoShared: [], platforms: [] 
+              };
+              return {
+                ...j,
+                period_shares: act.shares,
+                admin_shares: act.adminShares,
+                candidate_shares: act.candidateShares,
+                period_saves: act.saves,
+                latest_activity: act.latestActivity,
+                who_shared: act.whoShared,
+                platforms: act.platforms,
+                location: [j.city, j.state].filter(Boolean).join(", ") || "Location not set",
+              };
+            });
+
+            // Top Shared: sorted by period shares descending, then saves
+            topSharedJobs = [...enriched].sort((a, b) => (b.period_shares - a.period_shares) || (b.period_saves - a.period_saves));
+
+            // Recent Jobs: sorted by latest activity timestamp descending
+            recentJobs = [...enriched].sort((a, b) => new Date(b.latest_activity).getTime() - new Date(a.latest_activity).getTime());
+          }
+        }
+
+        // Fetch all-time lifetime baseline for fallback
+        const { data: allJobsStats } = await sb
           .from("jobs")
-          .select("id, position, firm_name, share_count, save_count")
+          .select("id, position, firm_name, city, state, share_count, save_count, created_at")
           .eq("status", "published")
           .order("share_count", { ascending: false })
-          .limit(8);
+          .limit(10);
 
-        if (jobsStats) {
-          totalShares = jobsStats.reduce((sum, j) => sum + (j.share_count || 0), 0);
-          totalSaves = jobsStats.reduce((sum, j) => sum + (j.save_count || 0), 0);
-          topEngagedJobs = jobsStats.filter(j => (j.share_count || 0) > 0 || (j.save_count || 0) > 0);
+        if (allJobsStats) {
+          totalLifetimeShares = allJobsStats.reduce((sum, j) => sum + (j.share_count || 0), 0);
+          totalLifetimeSaves = allJobsStats.reduce((sum, j) => sum + (j.save_count || 0), 0);
+
+          if (days === 'lifetime' || days === 'all' || topSharedJobs.length === 0) {
+            const fallbackJobs = allJobsStats
+              .filter(j => (j.share_count || 0) > 0 || (j.save_count || 0) > 0)
+              .map(j => ({
+                ...j,
+                period_shares: j.share_count || 0,
+                admin_shares: 0,
+                candidate_shares: j.share_count || 0,
+                period_saves: j.save_count || 0,
+                latest_activity: j.created_at,
+                who_shared: ["Organic"],
+                platforms: ["whatsapp"],
+                location: [j.city, j.state].filter(Boolean).join(", ") || "Location not set",
+              }));
+
+            if (topSharedJobs.length === 0) {
+              topSharedJobs = fallbackJobs;
+              recentJobs = [...fallbackJobs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+              if (days === 'lifetime' || days === 'all') {
+                periodShares = totalLifetimeShares;
+                periodSaves = totalLifetimeSaves;
+              }
+            }
+          }
         }
       } catch (sbErr) {
         console.warn("Supabase analytics stats error:", sbErr);
       }
     }
 
-    // Execute all in parallel
+    // Execute GA queries
     const [overviewRes, countryRes, browserRes, pagesRes, sourcesRes, cityRes, deviceRes, realtimeRes, eventsRes] = await Promise.all([
       overviewReq, countryReq, browserReq, pagesReq, sourcesReq, cityReq, deviceReq, realtimeReq, eventsReq
     ]);
 
-    // Parse Data
     const parseRows = (res: any, dimKeys: string[], metricKeys: string[]) => {
       return (res[0]?.rows || []).map((row: any) => {
         const obj: any = {};
@@ -191,15 +365,22 @@ export async function GET(request: Request) {
       eventsMap[ev.event] = ev.count;
     });
 
+    // If periodShares was recorded from job_shares table use it; otherwise fallback to GA event count
+    const finalShareCount = periodShares > 0 ? periodShares : (eventsMap["share_click"] || 0);
+    const finalSaveCount = periodSaves > 0 ? periodSaves : (eventsMap["save_click"] || 0);
+
     const conversions = {
       applyClicks: eventsMap["apply_click"] || 0,
       emailClicks: eventsMap["email_click"] || 0,
       contactClicks: eventsMap["contact_click"] || 0,
-      shareClicks: eventsMap["share_click"] || totalShares,
-      saveClicks: eventsMap["save_click"] || totalSaves,
-      totalShares,
-      totalSaves,
-      topEngagedJobs,
+      shareClicks: finalShareCount,
+      saveClicks: finalSaveCount,
+      adminSharesCount,
+      candidateSharesCount,
+      totalLifetimeShares,
+      totalLifetimeSaves,
+      topSharedJobs,
+      recentJobs,
       rawEvents
     };
 
