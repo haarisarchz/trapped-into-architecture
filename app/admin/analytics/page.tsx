@@ -735,6 +735,203 @@ export default function AnalyticsPage() {
               </div>
             )}
 
+            {/* CANDIDATE APPLICATION & CONVERSION FUNNEL */}
+            {data.funnel && (
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <span>🎯 Candidate Conversion &amp; Drop-off Funnel</span>
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Track the step-by-step candidate journey from first arrival to applied vacancy, identifying where candidates drop off
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 self-start">
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Overall Conversion</p>
+                      <p className="text-lg font-bold text-emerald-600">{data.funnel.overallConversionRate}</p>
+                    </div>
+                    <div className="w-px h-8 bg-gray-200" />
+                    <div>
+                      <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">View-to-Apply Rate</p>
+                      <p className="text-lg font-bold text-blue-600">{data.funnel.jobToApplyRate}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4-Step Funnel Visual Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {data.funnel.steps.map((step: any, idx: number) => {
+                    const stepColors = [
+                      { bg: "bg-blue-50/60", border: "border-blue-100", bar: "bg-blue-600", text: "text-blue-700", badge: "bg-blue-100 text-blue-800" },
+                      { bg: "bg-indigo-50/60", border: "border-indigo-100", bar: "bg-indigo-600", text: "text-indigo-700", badge: "bg-indigo-100 text-indigo-800" },
+                      { bg: "bg-purple-50/60", border: "border-purple-100", bar: "bg-purple-600", text: "text-purple-700", badge: "bg-purple-100 text-purple-800" },
+                      { bg: "bg-emerald-50/60", border: "border-emerald-100", bar: "bg-emerald-600", text: "text-emerald-700", badge: "bg-emerald-100 text-emerald-800" },
+                    ][idx] || { bg: "bg-gray-50", border: "border-gray-100", bar: "bg-gray-600", text: "text-gray-700", badge: "bg-gray-100 text-gray-800" };
+
+                    return (
+                      <div key={step.id} className={`p-4 rounded-xl border ${stepColors.border} ${stepColors.bg} flex flex-col justify-between relative`}>
+                        <div>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400">Step {step.id}</span>
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${stepColors.badge}`}>{step.badge}</span>
+                          </div>
+                          <h4 className="font-bold text-gray-900 text-sm">{step.name}</h4>
+                          <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">{step.description}</p>
+                        </div>
+
+                        <div className="mt-4">
+                          <div className="flex items-baseline justify-between mb-1.5">
+                            <span className="text-2xl font-black text-gray-900">{Number(step.count).toLocaleString()}</span>
+                            <span className={`text-xs font-bold ${stepColors.text}`}>{step.percentage}%</span>
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="w-full bg-gray-200/80 rounded-full h-2 overflow-hidden">
+                            <div className={`h-2 rounded-full ${stepColors.bar} transition-all duration-500`} style={{ width: `${Math.max(6, step.percentage)}%` }} />
+                          </div>
+
+                          {/* Drop-off stat */}
+                          {step.dropoff > 0 && (
+                            <p className="text-[10px] text-rose-600 font-medium mt-2 flex items-center gap-1">
+                              <span>↓ {step.dropoff}% drop-off from previous step</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 2-COLUMN GRID: FIRMS LEADERBOARD & EXPERIENCE RADAR */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* FIRMS DEMAND LEADERBOARD */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <span>🏢 Top Architecture Firms Leaderboard</span>
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Firms with highest candidate views, job shares, and engagement
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+                      Top {data.topFirms ? data.topFirms.length : 0}
+                    </span>
+                  </div>
+
+                  {(!data.topFirms || data.topFirms.length === 0) ? (
+                    <p className="text-xs text-gray-400 italic py-8 text-center">No firm data available for this period.</p>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {data.topFirms.map((firm: any, i: number) => {
+                        const rankMedals = ["🥇", "🥈", "🥉"];
+                        return (
+                          <div key={i} className="py-3 flex items-center justify-between gap-3 group">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="w-7 text-center font-bold text-sm shrink-0">
+                                {i < 3 ? rankMedals[i] : <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition">
+                                  {firm.name}
+                                </p>
+                                <p className="text-[11px] text-gray-400 truncate">
+                                  📍 {firm.locations} {firm.positions && firm.positions.length > 0 ? `• ${firm.positions.join(", ")}` : ""}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0 text-right">
+                              <div className="hidden sm:block">
+                                <p className="text-xs font-semibold text-gray-700">{firm.totalJobs} {firm.totalJobs === 1 ? 'job' : 'jobs'}</p>
+                                <p className="text-[10px] text-gray-400">{firm.totalShares + firm.totalSaves} interactions</p>
+                              </div>
+                              <div className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                {firm.engagementScore} pts
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* EXPERIENCE LEVEL DEMAND VS SUPPLY RADAR */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <span>⚖️ Experience Level Demand vs. Supply</span>
+                      </h3>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Candidate search interest compared to actual posted job inventory
+                      </p>
+                    </div>
+                  </div>
+
+                  {(!data.experienceGap || data.experienceGap.length === 0) ? (
+                    <p className="text-xs text-gray-400 italic py-8 text-center">No experience data available for this period.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {data.experienceGap.map((tier: any, i: number) => {
+                        const isShortage = tier.statusColor === "amber";
+                        const isSurplus = tier.statusColor === "blue";
+
+                        return (
+                          <div key={i} className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h4 className="font-bold text-gray-900 text-sm">{tier.tier}</h4>
+                                <p className="text-[11px] text-gray-400">{tier.subtitle}</p>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                isShortage ? "bg-amber-100 text-amber-800" : isSurplus ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"
+                              }`}>
+                                {tier.status}
+                              </span>
+                            </div>
+
+                            {/* Comparison Bars */}
+                            <div className="space-y-1.5 mt-3">
+                              <div>
+                                <div className="flex justify-between text-[11px] mb-0.5">
+                                  <span className="text-gray-500 font-medium">Candidate Search Demand</span>
+                                  <span className="font-bold text-gray-800">{tier.demandPct}% ({tier.demandCount} searches)</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                  <div className="h-1.5 rounded-full bg-indigo-600 transition-all duration-500" style={{ width: `${Math.min(100, Math.max(5, tier.demandPct))}%` }} />
+                                </div>
+                              </div>
+
+                              <div>
+                                <div className="flex justify-between text-[11px] mb-0.5">
+                                  <span className="text-gray-500 font-medium">Posted Job Supply</span>
+                                  <span className="font-bold text-gray-800">{tier.supplyPct}% ({tier.supplyCount} jobs)</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                  <div className="h-1.5 rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${Math.min(100, Math.max(5, tier.supplyPct))}%` }} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* DETAILED TABLES */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
