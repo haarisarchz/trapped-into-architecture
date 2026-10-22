@@ -1,10 +1,14 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Navbar from "../../../components/Navbar";
-import { Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine, UploadCloud, Loader2 } from "lucide-react";
+import { 
+  Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, 
+  EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine, UploadCloud, Loader2,
+  ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, X, Sparkles, Filter
+} from "lucide-react";
 
 // Initialize Supabase
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
@@ -29,7 +33,7 @@ CREATE TABLE IF NOT EXISTS catalog_columns (
   is_visible BOOLEAN DEFAULT true
 );
 
--- Insert specific requested columns
+-- Insert 16 Core Columns
 INSERT INTO catalog_columns (id, title, type, order_index, is_core) VALUES
 ('building_name', 'Building Name', 'text', 1, true),
 ('architect', 'Architect / Firm', 'text', 2, false),
@@ -61,10 +65,20 @@ export default function CatalogPage() {
   const [newColTitle, setNewColTitle] = useState("");
   const [newColType, setNewColType] = useState("text");
 
+  // Filtering & Sorting State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "india" | "pritzker">("all");
+  const [sortCol, setSortCol] = useState<string | null>("opened_year");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [savingAll, setSavingAll] = useState(false);
+
   // Excel UX States
   const [activeColMenu, setActiveColMenu] = useState<string | null>(null);
   const [insertPos, setInsertPos] = useState<{ colId: string, direction: 'left' | 'right' } | null>(null);
   const [uploadingCells, setUploadingCells] = useState<Record<string, boolean>>({});
+  
+  // Ref for table scroll control
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const checkDatabase = async () => {
     setLoading(true);
@@ -128,7 +142,7 @@ export default function CatalogPage() {
       id: slug,
       title: newColTitle,
       type: newColType,
-      order_index: 999, // Temp, will be re-indexed
+      order_index: 999,
       is_core: false,
       is_visible: true
     };
@@ -143,7 +157,6 @@ export default function CatalogPage() {
       updatedColumns.push(newCol);
     }
     
-    // Re-index all columns
     updatedColumns = updatedColumns.map((c, i) => ({ ...c, order_index: i + 1 }));
     
     setColumns(updatedColumns);
@@ -178,7 +191,7 @@ export default function CatalogPage() {
     
     if (isNew) {
       const insertData = { data: row.data, is_locked: lock };
-      const { data, error } = await supabase.from("architecture_catalog").insert([insertData]).select();
+      const { data } = await supabase.from("architecture_catalog").insert([insertData]).select();
       if (data && data.length > 0) {
         setRows(current => current.map(r => r.id === row.id ? data[0] : r));
       }
@@ -187,8 +200,23 @@ export default function CatalogPage() {
     }
   };
 
+  const toggleAllLock = async (lockState: boolean) => {
+    setSavingAll(true);
+    try {
+      await supabase
+        .from("architecture_catalog")
+        .update({ is_locked: lockState })
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+      setRows(rows.map(r => ({ ...r, is_locked: lockState })));
+    } catch (e: any) {
+      alert("Error: " + e.message);
+    } finally {
+      setSavingAll(false);
+    }
+  };
+
   const deleteRow = async (rowId: string) => {
-    if (!confirm("Delete this row?")) return;
+    if (!confirm("Delete this building from catalog?")) return;
     setRows(rows.filter(r => r.id !== rowId));
     if (!rowId.startsWith("temp-")) {
       await supabase.from("architecture_catalog").delete().eq("id", rowId);
@@ -231,6 +259,70 @@ export default function CatalogPage() {
     }
   };
 
+  // Horizontal Scroll Action
+  const scrollHorizontal = (dir: 'left' | 'right') => {
+    if (!tableContainerRef.current) return;
+    const offset = dir === 'left' ? -400 : 400;
+    tableContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+  };
+
+  // Sorting Handler
+  const handleSort = (colId: string) => {
+    if (sortCol === colId) {
+      if (sortDir === "asc") setSortDir("desc");
+      else {
+        setSortCol(null);
+        setSortDir("asc");
+      }
+    } else {
+      setSortCol(colId);
+      setSortDir("asc");
+    }
+  };
+
+  // Filtered & Sorted Rows
+  const processedRows = useMemo(() => {
+    let result = [...rows];
+
+    // Category Filter
+    if (categoryFilter === "india") {
+      result = result.filter(r => (r.data?.country || "").toLowerCase().includes("india"));
+    } else if (categoryFilter === "pritzker") {
+      result = result.filter(r => r.data?.pritzker_prize_year != null && String(r.data.pritzker_prize_year).trim() !== "");
+    }
+
+    // Global Search Query across all fields
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(r => {
+        const d = r.data || {};
+        return Object.values(d).some(v => String(v || "").toLowerCase().includes(q));
+      });
+    }
+
+    // Sort
+    if (sortCol) {
+      result.sort((a, b) => {
+        let valA = a.data?.[sortCol];
+        let valB = b.data?.[sortCol];
+
+        if (valA == null) valA = "";
+        if (valB == null) valB = "";
+
+        const numA = Number(valA);
+        const numB = Number(valB);
+        if (!isNaN(numA) && !isNaN(numB) && valA !== "" && valB !== "") {
+          return sortDir === "asc" ? numA - numB : numB - numA;
+        }
+
+        const cmp = String(valA).localeCompare(String(valB), undefined, { numeric: true, sensitivity: 'base' });
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+    }
+
+    return result;
+  }, [rows, categoryFilter, searchQuery, sortCol, sortDir]);
+
   const renderCellInput = (row: any, col: any) => {
     const val = row.data[col.id] || "";
     
@@ -238,22 +330,29 @@ export default function CatalogPage() {
       if (col.type === "image") {
         return val ? (
           <a href={val} target="_blank" rel="noreferrer" className="flex items-center gap-2 group">
-            <img src={val} alt="preview" className="h-9 w-9 object-cover rounded border border-gray-200 group-hover:opacity-80 transition shrink-0" />
-            <span className="text-[11px] text-blue-600 underline truncate max-w-[120px] font-mono">View</span>
+            <img src={val} alt="preview" className="h-8 w-8 object-cover rounded border border-gray-200 group-hover:opacity-80 transition shrink-0 shadow-xs" />
+            <span className="text-[11px] text-blue-600 underline truncate max-w-[100px] font-mono">View Photo</span>
           </a>
-        ) : <span className="text-gray-400 text-xs">No image</span>;
+        ) : <span className="text-gray-300 text-xs italic">No image</span>;
       }
       if (col.type === "link") {
-        return val ? <a href={val} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1"><LinkIcon size={12}/> Link</a> : <span className="text-gray-400 text-xs">-</span>;
+        return val ? <a href={val} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1 text-xs"><LinkIcon size={12}/> Link</a> : <span className="text-gray-400 text-xs">-</span>;
       }
-      return <div className="truncate px-2 py-1 max-w-[200px]" title={val}>{val || "-"}</div>;
-    }
-
-    if (col.type === "image") {
-      const cellKey = `${row.id}-${col.id}`;
-      const isUploading = !!uploadingCells[cellKey];
       return (
-        <div className="flex items-center gap-1.5">
+        <div 
+          className="truncate px-2 py-1 text-xs font-medium text-gray-800" 
+          title={typeof val === "string" ? val : JSON.stringify(val)}
+        >
+          {val || <span className="text-gray-300">-</span>}
+        </div>
+      );
+    }
+    
+    // Editable cell
+    if (col.type === "image") {
+      const isUploading = uploadingCells[`${row.id}-${col.id}`];
+      return (
+        <div className="flex items-center gap-1.5 w-full">
           {val ? (
             <div className="relative shrink-0">
               <img src={val} alt="preview" className="h-7 w-7 object-cover rounded border border-gray-200" />
@@ -294,49 +393,165 @@ export default function CatalogPage() {
         type={col.type === "number" ? "number" : "text"}
         value={val}
         onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
-        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:border-black bg-white"
+        className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-black bg-white"
         placeholder={`${col.title}...`}
       />
     );
   };
 
   const visibleColumns = columns.filter(c => c.is_visible);
+  const indiaCount = useMemo(() => rows.filter(r => (r.data?.country || "").toLowerCase().includes("india")).length, [rows]);
+  const pritzkerCount = useMemo(() => rows.filter(r => r.data?.pritzker_prize_year != null && String(r.data.pritzker_prize_year).trim() !== "").length, [rows]);
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-white flex flex-col pt-[80px]" onClick={() => setActiveColMenu(null)}>
+      <div className="h-screen max-h-screen bg-gray-50 flex flex-col pt-[80px] overflow-hidden" onClick={() => setActiveColMenu(null)}>
         
-        {/* HEADER */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 shrink-0">
+        {/* HEADER TOOLBAR */}
+        <div className="bg-white border-b border-gray-200 px-6 py-3 flex flex-wrap items-center justify-between gap-3 z-10 shrink-0 shadow-xs">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-3">
-              Architecture Catalog <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold tracking-wide">EXCEL MODE</span>
+            <h1 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+              🏛️ Architecture Catalog 
+              <span className="bg-blue-100 text-blue-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                {rows.length} Projects
+              </span>
             </h1>
-            <p className="text-sm text-gray-500 mt-1">Manage catalog entries using spreadsheet interactions.</p>
+            <p className="text-xs text-gray-500 mt-0.5">Sort by column, search, filter, and slide horizontally through all 16 architectural fields.</p>
           </div>
+
           {!setupRequired && !loading && (
-            <div className="flex items-center gap-3">
-              <button onClick={() => { setInsertPos(null); setShowColModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-lg transition text-sm">
-                <Plus size={16} /> Add Column
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Horizontal Scroll Controls */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200">
+                <button 
+                  onClick={() => scrollHorizontal('left')} 
+                  className="px-2.5 py-1.5 hover:bg-white text-gray-700 hover:text-black rounded text-xs font-bold transition flex items-center gap-1 shadow-xs"
+                  title="Scroll Left across columns"
+                >
+                  <ChevronLeft size={14} /> Slide Left
+                </button>
+                <div className="w-px h-4 bg-gray-300 my-auto"></div>
+                <button 
+                  onClick={() => scrollHorizontal('right')} 
+                  className="px-2.5 py-1.5 hover:bg-white text-gray-700 hover:text-black rounded text-xs font-bold transition flex items-center gap-1 shadow-xs"
+                  title="Scroll Right across columns"
+                >
+                  Slide Right <ChevronRight size={14} />
+                </button>
+              </div>
+
+              {/* Lock / Unlock All */}
+              <button 
+                onClick={() => toggleAllLock(true)} 
+                disabled={savingAll}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg transition text-xs border border-gray-300"
+                title="Lock all rows (clean read mode)"
+              >
+                <Lock size={13} className="text-green-600" /> Lock All
               </button>
-              <button onClick={addRow} className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white font-semibold rounded-lg transition text-sm shadow-sm">
-                <Plus size={16} /> Add Row
+
+              <button 
+                onClick={() => toggleAllLock(false)} 
+                disabled={savingAll}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-lg transition text-xs border border-gray-300"
+                title="Unlock all rows for editing"
+              >
+                <Unlock size={13} className="text-amber-600" /> Unlock All
               </button>
+
+              <button 
+                onClick={() => { setInsertPos(null); setShowColModal(true); }} 
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-lg transition text-xs border border-gray-300"
+              >
+                <Plus size={13} /> Add Column
+              </button>
+
+              <button 
+                onClick={addRow} 
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-black hover:bg-gray-800 text-white font-semibold rounded-lg transition text-xs shadow-xs"
+              >
+                <Plus size={13} /> Add Building
+              </button>
+
               <AdminQuickMenu />
             </div>
           )}
         </div>
 
-        {/* CONTENT */}
-        <div className="flex-1 flex flex-col bg-gray-50/50 p-4 md:p-6 overflow-hidden">
+        {/* SEARCH & FILTER BAR */}
+        {!setupRequired && !loading && (
+          <div className="bg-white border-b border-gray-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            {/* Search Input */}
+            <div className="relative min-w-[280px] max-w-md flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input 
+                type="text"
+                placeholder="Search by building, architect, city, state, style..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-8 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50/50"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black">
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            {/* Quick Filter Chips */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Filter:</span>
+              <button 
+                onClick={() => setCategoryFilter("all")}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
+                  categoryFilter === "all" ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                All ({rows.length})
+              </button>
+              <button 
+                onClick={() => setCategoryFilter("india")}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
+                  categoryFilter === "india" ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                🇮🇳 Indian Masterpieces ({indiaCount})
+              </button>
+              <button 
+                onClick={() => setCategoryFilter("pritzker")}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition flex items-center gap-1 ${
+                  categoryFilter === "pritzker" ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                🏆 Pritzker Laureates ({pritzkerCount})
+              </button>
+            </div>
+
+            {/* Results counter & active sort indicator */}
+            <div className="text-xs text-gray-500 font-medium">
+              Showing <span className="font-bold text-gray-900">{processedRows.length}</span> of {rows.length} Projects
+              {sortCol && (
+                <span className="ml-2 text-blue-600 font-mono text-[11px]">
+                  (Sorted by {columns.find(c => c.id === sortCol)?.title || sortCol} {sortDir === "asc" ? "▲" : "▼"})
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TABLE CONTENT AREA */}
+        <div className="flex-1 p-4 md:p-6 overflow-hidden flex flex-col bg-gray-100/60">
           {loading ? (
-            <div className="text-center text-gray-500 font-bold animate-pulse mt-20">Loading Database...</div>
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 font-bold gap-2">
+              <Loader2 size={24} className="animate-spin text-black" />
+              <span>Loading Architecture Catalog...</span>
+            </div>
           ) : setupRequired ? (
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-200 max-w-3xl mx-auto mt-10">
               <h2 className="text-2xl font-bold text-red-600 mb-4">Database Setup Required</h2>
               <p className="text-gray-600 mb-6">
-                The Architecture Catalog tables do not exist yet. Please go to your Supabase SQL Editor and run the following script to create them with the required columns:
+                The Architecture Catalog tables do not exist yet. Please run the script in your Supabase SQL editor:
               </p>
               <div className="relative">
                 <pre className="bg-gray-900 text-green-400 p-6 rounded-xl overflow-x-auto text-sm font-mono mb-6">
@@ -354,113 +569,182 @@ export default function CatalogPage() {
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] border border-gray-200 flex-1 overflow-auto max-h-[calc(100vh-190px)] relative excel-scrollbar">
-              <table className="w-max min-w-full text-left border-collapse table-fixed">
-                <thead className="bg-white sticky top-0 z-30 shadow-[0_2px_10px_rgba(0,0,0,0.06)]">
+            <div 
+              ref={tableContainerRef}
+              className="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-200 flex-1 overflow-auto relative excel-scrollbar"
+              style={{ maxHeight: 'calc(100vh - 230px)' }}
+            >
+              <table className="w-max min-w-full text-left border-collapse table-fixed select-text">
+                <thead className="bg-gray-50 sticky top-0 z-30 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
                   <tr>
-                    <th className="px-4 py-3 text-xs font-bold text-gray-500 uppercase w-12 text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 z-40">#</th>
+                    {/* Index Col # */}
+                    <th className="px-3 py-3 text-xs font-bold text-gray-500 uppercase w-12 min-w-[48px] text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 z-40">
+                      #
+                    </th>
                     
-                    {visibleColumns.map((col) => (
-                      <th key={col.id} className="px-4 py-3 text-xs font-bold text-gray-600 border-r border-b border-gray-200 bg-gray-50 relative group min-w-[210px] w-[210px]">
-                        
-                        {/* Hover Dropdown Trigger */}
-                        <div className="flex items-center justify-between relative z-10">
-                          <span className="uppercase tracking-wider truncate pr-2" title={col.title}>{col.title}</span>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setActiveColMenu(activeColMenu === col.id ? null : col.id); }} 
-                            className="text-gray-400 hover:text-black hover:bg-gray-200 rounded p-1 opacity-0 group-hover:opacity-100 transition focus:opacity-100"
-                          >
-                            <ChevronDown size={14} />
-                          </button>
-                        </div>
-                        
-                        {/* Dropdown Menu */}
-                        {activeColMenu === col.id && (
-                          <div className="absolute top-full right-0 mt-1 bg-white shadow-xl border border-gray-200 rounded-xl py-1.5 w-48 z-[100] text-sm font-medium text-gray-700 font-sans normal-case">
-                            <button onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'left'}); setShowColModal(true); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2">
-                              <ArrowLeftToLine size={14} /> Insert Column Left
-                            </button>
-                            <button onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'right'}); setShowColModal(true); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2">
-                              <ArrowRightToLine size={14} /> Insert Column Right
-                            </button>
-                            <div className="h-px bg-gray-100 my-1"></div>
-                            <button onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col.id, true); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2">
-                              <EyeOff size={14} /> Hide Column
-                            </button>
-                            {!col.is_core && (
-                              <button onClick={(e) => { e.stopPropagation(); deleteColumn(col.id); }} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2">
-                                <Trash2 size={14} /> Delete Column
-                              </button>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Excel-style Plus Line on Hover between columns */}
-                        <div 
-                          className="absolute top-0 right-[-6px] w-3 h-full cursor-col-resize group/edge flex items-center justify-center z-20"
-                          onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'right'}); setShowColModal(true); }}
+                    {visibleColumns.map((col) => {
+                      const isBuildingName = col.id === "building_name";
+                      return (
+                        <th 
+                          key={col.id} 
+                          className={`px-3 py-2.5 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors ${
+                            isBuildingName 
+                              ? "sticky left-12 z-40 bg-gray-100 min-w-[240px] w-[240px] border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
+                              : "min-w-[190px] w-[190px] bg-gray-50 hover:bg-gray-100"
+                          }`}
                         >
-                          <div className="h-full w-[2px] bg-blue-500 opacity-0 group-hover/edge:opacity-100 transition-opacity"></div>
-                          <div className="hidden group-hover/edge:flex absolute bg-blue-500 text-white rounded-full w-4 h-4 items-center justify-center text-[10px] z-30 shadow-md border border-white">
-                            <Plus size={10} strokeWidth={3} />
-                          </div>
-                        </div>
+                          {/* Column Header Content with Click to Sort */}
+                          <div className="flex items-center justify-between gap-1 relative z-10">
+                            <div 
+                              onClick={() => handleSort(col.id)}
+                              className="flex items-center gap-1.5 cursor-pointer select-none py-1 group/sort flex-1 truncate"
+                              title={`Click to sort by ${col.title}`}
+                            >
+                              <span className="uppercase tracking-wider font-bold truncate text-[11px] text-gray-700 group-hover/sort:text-black">
+                                {col.title}
+                              </span>
+                              {sortCol === col.id ? (
+                                sortDir === "asc" ? (
+                                  <ArrowUp size={13} className="text-black shrink-0 font-bold" />
+                                ) : (
+                                  <ArrowDown size={13} className="text-black shrink-0 font-bold" />
+                                )
+                              ) : (
+                                <ArrowUpDown size={11} className="text-gray-400 opacity-30 group-hover/sort:opacity-100 shrink-0 transition" />
+                              )}
+                            </div>
 
-                      </th>
-                    ))}
+                            {/* Dropdown Options Trigger */}
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setActiveColMenu(activeColMenu === col.id ? null : col.id); }} 
+                              className="text-gray-400 hover:text-black hover:bg-gray-200 rounded p-1 opacity-0 group-hover:opacity-100 transition focus:opacity-100 shrink-0"
+                              title="Column Options"
+                            >
+                              <ChevronDown size={13} />
+                            </button>
+                          </div>
+                          
+                          {/* Dropdown Menu */}
+                          {activeColMenu === col.id && (
+                            <div className="absolute top-full right-0 mt-1 bg-white shadow-2xl border border-gray-200 rounded-xl py-1.5 w-48 z-[100] text-sm font-medium text-gray-700 font-sans normal-case">
+                              <button onClick={() => { handleSort(col.id); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
+                                <ArrowUpDown size={13} /> Sort {col.title}
+                              </button>
+                              <div className="h-px bg-gray-100 my-1"></div>
+                              <button onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'left'}); setShowColModal(true); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
+                                <ArrowLeftToLine size={13} /> Insert Column Left
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'right'}); setShowColModal(true); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
+                                <ArrowRightToLine size={13} /> Insert Column Right
+                              </button>
+                              <div className="h-px bg-gray-100 my-1"></div>
+                              <button onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col.id, true); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
+                                <EyeOff size={13} /> Hide Column
+                              </button>
+                              {!col.is_core && (
+                                <button onClick={(e) => { e.stopPropagation(); deleteColumn(col.id); }} className="w-full text-left px-4 py-2 hover:bg-red-50 text-red-600 flex items-center gap-2 text-xs">
+                                  <Trash2 size={13} /> Delete Column
+                                </button>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Excel-style Plus Line on Hover between columns */}
+                          <div 
+                            className="absolute top-0 right-[-6px] w-3 h-full cursor-col-resize group/edge flex items-center justify-center z-20"
+                            onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'right'}); setShowColModal(true); }}
+                          >
+                            <div className="h-full w-[2px] bg-blue-500 opacity-0 group-hover/edge:opacity-100 transition-opacity"></div>
+                            <div className="hidden group-hover/edge:flex absolute bg-blue-500 text-white rounded-full w-4 h-4 items-center justify-center text-[10px] z-30 shadow-md border border-white">
+                              <Plus size={10} strokeWidth={3} />
+                            </div>
+                          </div>
+                        </th>
+                      );
+                    })}
                     
-                    <th className="px-4 py-3 text-xs font-bold text-gray-600 uppercase sticky right-0 bg-gray-100 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.04)] z-40 w-28 min-w-[112px]">
-                      Actions
+                    {/* Action Column */}
+                    <th className="px-3 py-3 text-xs font-bold text-gray-600 uppercase sticky right-0 bg-gray-100 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.04)] z-40 w-24 min-w-[96px] text-center">
+                      Action
                     </th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {rows.length === 0 && (
+                  {processedRows.length === 0 && (
                     <tr>
-                      <td colSpan={visibleColumns.length + 2} className="px-6 py-10 text-center text-gray-400 italic">
-                        No rows added yet. Click "Add Row" to start building your catalog.
+                      <td colSpan={visibleColumns.length + 2} className="px-6 py-12 text-center text-gray-400 italic">
+                        {searchQuery ? `No buildings match "${searchQuery}".` : "No rows found in catalog."}
                       </td>
                     </tr>
                   )}
-                  {rows.map((row, index) => (
-                    <tr key={row.id} className={`border-b border-gray-100 transition ${row.is_locked ? "bg-gray-50/70 hover:bg-gray-100/60" : "bg-white hover:bg-gray-50/40"}`}>
-                      <td className={`px-4 py-2 text-gray-500 text-center border-r border-gray-100 font-mono text-xs sticky left-0 z-20 ${row.is_locked ? "bg-gray-100" : "bg-gray-50"}`}>{index + 1}</td>
-                      
-                      {visibleColumns.map((col) => (
-                        <td key={col.id} className="px-2 py-2 border-r border-gray-100 align-middle">
-                          {renderCellInput(row, col)}
+                  {processedRows.map((row, index) => {
+                    const isRowLocked = row.is_locked !== false;
+                    return (
+                      <tr 
+                        key={row.id} 
+                        className={`border-b border-gray-100 transition ${
+                          isRowLocked ? "bg-white hover:bg-blue-50/20" : "bg-amber-50/30 hover:bg-amber-50/50"
+                        }`}
+                      >
+                        {/* Row Index */}
+                        <td className={`px-3 py-2 text-gray-400 text-center border-r border-gray-200 font-mono text-xs sticky left-0 z-20 ${
+                          isRowLocked ? "bg-gray-50" : "bg-amber-100/50 text-amber-800 font-bold"
+                        }`}>
+                          {index + 1}
                         </td>
-                      ))}
-                      
-                      <td className={`px-4 py-2 sticky right-0 border-l border-gray-100 shadow-[-4px_0_10px_rgba(0,0,0,0.03)] flex items-center justify-center gap-2 z-20 ${row.is_locked ? "bg-gray-100" : "bg-white"}`}>
-                        {row.is_locked ? (
-                          <>
-                            <button onClick={() => saveRow(row, false)} className="p-1.5 text-gray-500 hover:bg-gray-200 rounded transition" title="Unlock Row for Editing">
-                              <Edit2 size={16} />
+                        
+                        {/* Data Cells */}
+                        {visibleColumns.map((col) => {
+                          const isBuildingName = col.id === "building_name";
+                          return (
+                            <td 
+                              key={col.id} 
+                              className={`px-2 py-1.5 border-r border-gray-100 align-middle ${
+                                isBuildingName 
+                                  ? `sticky left-12 z-20 font-bold border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)] ${
+                                      isRowLocked ? "bg-white text-gray-900" : "bg-amber-50/70"
+                                    }` 
+                                  : ""
+                              }`}
+                            >
+                              {renderCellInput(row, col)}
+                            </td>
+                          );
+                        })}
+                        
+                        {/* Row Action (Edit / Save / Delete) */}
+                        <td className={`px-3 py-1.5 sticky right-0 border-l border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.03)] flex items-center justify-center gap-1.5 z-20 ${
+                          isRowLocked ? "bg-white" : "bg-amber-50/70"
+                        }`}>
+                          {isRowLocked ? (
+                            <button 
+                              onClick={() => saveRow(row, false)} 
+                              className="p-1 text-gray-500 hover:text-black hover:bg-gray-100 rounded transition" 
+                              title="Edit this project"
+                            >
+                              <Edit2 size={14} />
                             </button>
-                            <span className="p-1.5 text-green-600 bg-green-50 rounded flex items-center gap-1 text-xs font-bold" title="Locked">
-                              <Lock size={12} />
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => saveRow(row, true)} className="px-3 py-1.5 bg-black text-white rounded text-xs font-bold hover:bg-gray-800 transition shadow-sm flex items-center gap-1">
-                              <Save size={14} /> Save
-                            </button>
-                            <button onClick={() => deleteRow(row.id)} className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600 rounded transition" title="Delete Row">
-                              <Trash2 size={16} />
-                            </button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  
-                  {/* Empty space filler for Excel feel */}
-                  <tr className="h-full">
-                    <td className="bg-gray-50 border-r border-gray-100 sticky left-0 z-20"></td>
-                    <td colSpan={visibleColumns.length + 1}></td>
-                  </tr>
+                          ) : (
+                            <>
+                              <button 
+                                onClick={() => saveRow(row, true)} 
+                                className="px-2 py-1 bg-black text-white rounded text-[11px] font-bold hover:bg-gray-800 transition shadow-xs flex items-center gap-1"
+                              >
+                                <Save size={12} /> Save
+                              </button>
+                              <button 
+                                onClick={() => deleteRow(row.id)} 
+                                className="p-1 text-red-400 hover:bg-red-50 hover:text-red-600 rounded transition" 
+                                title="Delete Project"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -484,7 +768,7 @@ export default function CatalogPage() {
                   value={newColTitle}
                   onChange={e => setNewColTitle(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-black"
-                  placeholder="e.g. Prize Winning Year"
+                  placeholder="e.g. Structural Material"
                   autoFocus
                 />
               </div>
@@ -515,8 +799,6 @@ export default function CatalogPage() {
           </div>
         </div>
       )}
-      
-      <AdminQuickMenu />
     </>
   );
 }
