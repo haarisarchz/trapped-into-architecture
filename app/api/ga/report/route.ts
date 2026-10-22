@@ -202,6 +202,10 @@ export async function GET(request: Request) {
     let totalLifetimeSaves = 0;
     let topSharedJobs: any[] = [];
     let recentJobs: any[] = [];
+    let topSearchKeywords: any[] = [];
+    let topSearchedCities: any[] = [];
+    let zeroResultSearches: any[] = [];
+    let totalSearchesCount = 0;
 
     if (supabaseUrl && supabaseAnonKey) {
       try {
