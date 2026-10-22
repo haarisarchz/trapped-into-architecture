@@ -154,13 +154,64 @@ export function analyzeBatch(jobs: any[], company?: any) {
  * Generates up to 15 relevant hashtags for Facebook and 5 for Instagram.
  */
 export function generateDeterministicHashtags(jobs: any[], platform: string, company?: any): string[] {
-  const maxLimit = platform === "facebook" ? 15 : platform === "instagram" ? 5 : platform === "x" ? 4 : 5;
   const analysis = analyzeBatch(jobs, company);
 
   const cleanFirm = cleanHashtagWord(analysis.firmName);
   const cleanCity = cleanHashtagWord(analysis.city);
   const cleanState = cleanHashtagWord(analysis.state);
   const cleanCountry = cleanHashtagWord(analysis.country);
+
+  // High-search-volume Telegram discovery strategy
+  if (platform === "telegram") {
+    const teleTags: string[] = [];
+
+    // 1. High-search City job tag (e.g. #KochiJobs, #ChennaiJobs)
+    if (cleanCity) {
+      teleTags.push(`#${cleanCity}Jobs`);
+    }
+
+    // 2. High-search State job tag (e.g. #KeralaJobs, #TamilNaduJobs)
+    if (cleanState && cleanState.toLowerCase() !== cleanCity.toLowerCase()) {
+      teleTags.push(`#${cleanState}Jobs`);
+    }
+
+    // 3. High-velocity City tag (e.g. #Kochi, #Chennai, #Bangalore)
+    if (cleanCity) {
+      teleTags.push(`#${cleanCity}`);
+    }
+
+    // 4. High-velocity State tag (e.g. #Kerala, #TamilNadu)
+    if (cleanState && cleanState.toLowerCase() !== cleanCity.toLowerCase()) {
+      teleTags.push(`#${cleanState}`);
+    }
+
+    // 5. Industry domain tags (high search in creative/technical channels)
+    if (analysis.hasArchitecture) {
+      teleTags.push("#ArchitectureJobs");
+      teleTags.push("#ArchitectJobs");
+    }
+    if (analysis.hasInterior) {
+      teleTags.push("#InteriorDesignJobs");
+    }
+
+    // 6. Experience-level specific tags
+    if (analysis.hasInternship) {
+      teleTags.push("#ArchitectureInternship");
+    } else if (analysis.hasJuniorFresher) {
+      teleTags.push("#FreshersJobs");
+    }
+
+    // 7. Broad viral job discovery tags on Telegram
+    teleTags.push("#JobAlert");
+    teleTags.push("#HiringNow");
+    if (analysis.isIndia) {
+      teleTags.push("#JobsInIndia");
+    }
+
+    return deduplicateAndLimitHashtags(teleTags, 8);
+  }
+
+  const maxLimit = platform === "facebook" ? 15 : platform === "instagram" ? 5 : platform === "x" ? 4 : 5;
 
   const tier1Specific: string[] = [];
   const tier2Recruitment: string[] = [];
@@ -371,6 +422,10 @@ STRICT RULES:
  * Strictly enforces platform limits (up to 15 for Facebook, max 5 for Instagram).
  */
 export async function generateSocialHashtags(jobs: any[], platform: string, company?: any): Promise<string[]> {
+  if (platform === "telegram") {
+    return generateDeterministicHashtags(jobs, "telegram", company);
+  }
+
   try {
     const aiTags = await generateAiHashtags(jobs, platform, company);
     if (aiTags && aiTags.length > 0) {
