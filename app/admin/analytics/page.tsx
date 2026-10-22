@@ -622,9 +622,30 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                   {gscData.error && (
-                    <p className="text-[11px] text-gray-400 border-t border-gray-100 pt-2 font-mono truncate">
-                      Status: {gscData.error}
-                    </p>
+                    <div className="border-t border-gray-100 pt-3">
+                      {(gscData.error.includes("console.developers.google.com") || gscData.error.includes("disabled") || gscData.error.includes("has not been used")) ? (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-bold text-amber-900">⚠️ Final Step Required: Enable API in Google Cloud</p>
+                            <p className="text-[11px] text-amber-700 mt-0.5">
+                              You added the user in Search Console. Now click the button below to enable the Search Console API for your project:
+                            </p>
+                          </div>
+                          <a
+                            href={`https://console.developers.google.com/apis/api/webmasters.googleapis.com/overview?project=${gscData.projectId || "667017739967"}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shrink-0 text-center shadow-sm transition"
+                          >
+                            👉 Enable API on Google Cloud
+                          </a>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-gray-500 font-mono">
+                          Status: {gscData.error}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

@@ -236,8 +236,8 @@ export async function GET(request: Request) {
     });
 
     // 10. Supabase Real-Time Engagement (Shares & Saves strictly within the selected time window)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bcifyymjfktabtsmocnc.supabase.co";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjaWZ5eW1qZmt0YWJ0c21vY25jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMzU2MDYsImV4cCI6MjA5NDcxMTYwNn0.FNk_rSL4FDQL0puOyc_0-xGXgEmqieZ-cmc6yYLNa2Y";
     
     let periodShares = 0;
     let periodSaves = 0;
@@ -386,11 +386,15 @@ export async function GET(request: Request) {
         }
 
         // Fetch all-time published jobs baseline for fallback & total lifetime numbers
-        const { data: allJobsStats } = await sb
+        const { data: allJobsStats, error: allJobsErr } = await sb
           .from("jobs")
-          .select("id, position, firm_name, city, state, experience, employment_type, share_count, save_count, posted_date, company_slug")
+          .select("id, position, firm_name, city, state, experience, employment_type, share_count, save_count, posted_date")
           .eq("status", "published")
           .order("share_count", { ascending: false });
+
+        if (allJobsErr) {
+          console.error("allJobsStats query error:", allJobsErr);
+        }
 
         if (allJobsStats && allJobsStats.length > 0) {
           allJobsStats.forEach((j: any) => {
