@@ -323,85 +323,132 @@ export async function POST(req: Request) {
           }
           case "telegram": {
             const botToken = process.env.TELEGRAM_BOT_TOKEN;
-            const channelId = process.env.TELEGRAM_CHANNEL_ID || process.env.TELEGRAM_CHAT_ID;
-            if (!botToken || !channelId) throw new Error("Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHANNEL_ID.");
+            if (!botToken) throw new Error("Missing TELEGRAM_BOT_TOKEN.");
 
-            // Build Telegram URL with UTM tracking
-            const teleJobUrl = jobUrl.includes("?") 
-              ? `${jobUrl}&utm_source=telegram&utm_medium=channel` 
-              : `${jobUrl}?utm_source=telegram&utm_medium=channel`;
+            // 1. Target Channels Configuration:
+            // - Main Channel: Always receives every job (All India / Architecture & Interior Design)
+            // - State Channels: Specific to the job's state/location
+            const mainChannel = process.env.TELEGRAM_MAIN_CHANNEL_ID || process.env.TELEGRAM_CHANNEL_ID || process.env.TELEGRAM_CHAT_ID;
+            const tnChannel = process.env.TELEGRAM_TN_CHANNEL_ID;
+            const klChannel = process.env.TELEGRAM_KL_CHANNEL_ID;
+            const kaChannel = process.env.TELEGRAM_KA_CHANNEL_ID;
+            const apTsChannel = process.env.TELEGRAM_AP_TS_CHANNEL_ID;
 
-            // Format Telegram HTML Message
+            // Combine location text across all jobs in batch for state matching
+            const locText = batchJobs.map(j => `${j.state || ""} ${j.city || ""} ${j.area || ""} ${j.neighborhood || ""}`).join(" ").toLowerCase();
+
+            const isTN = /tamil\s*nadu|\btn\b|chennai|coimbatore|madurai|trichy|tiruchirappalli|salem|tiruppur|erode|vellore|tirunelveli|thoothukudi|tuticorin|dindigul|thanjavur|ranipet|sivakasi|karur|hosur|nagercoil|kanchipuram|kumarakonam|karaikudi|neyveli|cuddalore|tiruvannamalai|pollachi|rajapalayam|pudukkottai/i.test(locText);
+
+            const isKL = /kerala|\bkl\b|kochi|cochin|ernakulam|thiruvananthapuram|trivandrum|kozhikode|calicut|thrissur|kollam|palakkad|alappuzha|alleppey|kannur|kottayam|malappuram|manjeri|thalassery|kasaragod|pathanamthitta|idukki|wayanad/i.test(locText);
+
+            const isKA = /karnataka|\bka\b|bengaluru|bangalore|mysuru|mysore|mangaluru|mangalore|hubballi|hubli|belagavi|belgaum|kalaburagi|gulbarga|dharwad|udupi|bellary|ballari|shimoga|shivamogga|tumakuru|tumkur|davangere|hassan|bidar|hospet|manipal/i.test(locText);
+
+            const isAP_TS = /andhra|telangana|\bap\b|\bts\b|hyderabad|secunderabad|visakhapatnam|vizag|vijayawada|guntur|warangal|nellore|kurnool|rajahmundry|tirupati|kakinada|kadapa|anantapur|nizamabad|karimnagar|khammam|ramagundam|mahbubnagar|nalgonda|eluru|ongole|amaravati/i.test(locText);
+
+            const targets: { id: string; name: string; tag: string }[] = [];
+            if (mainChannel) targets.push({ id: mainChannel, name: "Main Channel", tag: "main" });
+            if (tnChannel && isTN) targets.push({ id: tnChannel, name: "Tamil Nadu", tag: "tamil_nadu" });
+            if (klChannel && isKL) targets.push({ id: klChannel, name: "Kerala", tag: "kerala" });
+            if (kaChannel && isKA) targets.push({ id: kaChannel, name: "Karnataka", tag: "karnataka" });
+            if (apTsChannel && isAP_TS) targets.push({ id: apTsChannel, name: "Andhra & Telangana", tag: "ap_telangana" });
+
+            if (targets.length === 0) {
+              throw new Error("No Telegram target channels configured or matched for this job.");
+            }
+
+            // Format Telegram HTML Base Message
             const firmName = batchJobs[0].firm_name || "Unknown Firm";
             const locParts = [batchJobs[0].area || batchJobs[0].neighborhood, batchJobs[0].city, batchJobs[0].state].filter(Boolean);
             const location = locParts.length > 0 ? locParts.join(", ") : "Remote / Not specified";
 
-            let teleMsg = `🏛️ <b>HIRING: ${batchJobs.length === 1 ? batchJobs[0].position : 'Multiple Positions'}</b>\n\n`;
-            teleMsg += `🏢 <b>Firm:</b> ${firmName}\n`;
-            teleMsg += `📍 <b>Location:</b> ${location}\n\n`;
-            teleMsg += `💼 <b>Positions:</b>\n`;
+            let baseTeleMsg = `🏛️ <b>HIRING: ${batchJobs.length === 1 ? batchJobs[0].position : 'Multiple Positions'}</b>\n\n`;
+            baseTeleMsg += `🏢 <b>Firm:</b> ${firmName}\n`;
+            baseTeleMsg += `📍 <b>Location:</b> ${location}\n\n`;
+            baseTeleMsg += `💼 <b>Positions:</b>\n`;
 
             batchJobs.forEach((job, index) => {
               const exp = Array.isArray(job.experience) ? job.experience.join(', ') : job.experience;
               const expText = exp && String(exp).trim() && job.employment_type !== "Internship" && !job.position?.toLowerCase().includes("intern") ? ` (${exp})` : '';
               const prefix = batchJobs.length === 1 ? '• ' : `${index + 1}. `;
-              teleMsg += `${prefix}<b>${job.position || 'Position'}</b>${expText}\n`;
+              baseTeleMsg += `${prefix}<b>${job.position || 'Position'}</b>${expText}\n`;
             });
 
             if (batchJobs[0].salary && String(batchJobs[0].salary).toLowerCase() !== "not disclosed") {
-              teleMsg += `\n💰 <b>Compensation:</b> ${batchJobs[0].salary}\n`;
+              baseTeleMsg += `\n💰 <b>Compensation:</b> ${batchJobs[0].salary}\n`;
             }
 
-            teleMsg += `\n🔗 <b>Direct Link:</b> <a href="${teleJobUrl}">Apply on Website</a>\n`;
-
-            // Add hashtags
             const teleTags = await generateSocialHashtags(batchJobs, "telegram", companyData);
-            if (teleTags && teleTags.length > 0) {
-              teleMsg += `\n${teleTags.slice(0, 5).join(" ")}\n`;
+
+            // Broadcast to each matched target channel
+            const channelResults: string[] = [];
+            for (const target of targets) {
+              const teleJobUrl = jobUrl.includes("?") 
+                ? `${jobUrl}&utm_source=telegram&utm_medium=${target.tag}` 
+                : `${jobUrl}?utm_source=telegram&utm_medium=${target.tag}`;
+
+              let channelMsg = `${baseTeleMsg}\n🔗 <b>Direct Link:</b> <a href="${teleJobUrl}">Apply on Website</a>\n`;
+              if (teleTags && teleTags.length > 0) {
+                channelMsg += `\n${teleTags.slice(0, 5).join(" ")}\n`;
+              }
+
+              const inlineKeyboard = {
+                inline_keyboard: [
+                  [
+                    { text: "🚀 View & Apply Now", url: teleJobUrl }
+                  ]
+                ]
+              };
+
+              try {
+                if (triggerJob.image) {
+                  // Telegram photo captions are limited to 1024 chars
+                  const caption = channelMsg.length > 1020 ? channelMsg.slice(0, 1017) + "..." : channelMsg;
+                  const teleRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      chat_id: target.id,
+                      photo: triggerJob.image,
+                      caption,
+                      parse_mode: "HTML",
+                      reply_markup: inlineKeyboard
+                    })
+                  });
+                  if (!teleRes.ok) {
+                    const errText = await teleRes.text();
+                    console.error(`Telegram publish error to ${target.name} (${target.id}):`, errText);
+                    channelResults.push(`${target.name}: Failed (${errText})`);
+                  } else {
+                    channelResults.push(`${target.name}: Success`);
+                  }
+                } else {
+                  const teleRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      chat_id: target.id,
+                      text: channelMsg,
+                      parse_mode: "HTML",
+                      reply_markup: inlineKeyboard
+                    })
+                  });
+                  if (!teleRes.ok) {
+                    const errText = await teleRes.text();
+                    console.error(`Telegram publish error to ${target.name} (${target.id}):`, errText);
+                    channelResults.push(`${target.name}: Failed (${errText})`);
+                  } else {
+                    channelResults.push(`${target.name}: Success`);
+                  }
+                }
+              } catch (targetErr: any) {
+                console.error(`Telegram error to ${target.name}:`, targetErr);
+                channelResults.push(`${target.name}: ${targetErr.message}`);
+              }
             }
 
-            const inlineKeyboard = {
-              inline_keyboard: [
-                [
-                  { text: "🚀 View & Apply Now", url: teleJobUrl }
-                ]
-              ]
-            };
-
-            // If image is present, send photo with caption; otherwise send text message
-            if (triggerJob.image) {
-              // Telegram photo captions are limited to 1024 chars
-              const caption = teleMsg.length > 1020 ? teleMsg.slice(0, 1017) + "..." : teleMsg;
-              const teleRes = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  chat_id: channelId,
-                  photo: triggerJob.image,
-                  caption: caption,
-                  parse_mode: "HTML",
-                  reply_markup: inlineKeyboard
-                })
-              });
-              if (!teleRes.ok) {
-                const errText = await teleRes.text();
-                throw new Error(`Telegram API Error: ${errText}`);
-              }
-            } else {
-              const teleRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  chat_id: channelId,
-                  text: teleMsg,
-                  parse_mode: "HTML",
-                  reply_markup: inlineKeyboard
-                })
-              });
-              if (!teleRes.ok) {
-                const errText = await teleRes.text();
-                throw new Error(`Telegram API Error: ${errText}`);
-              }
+            const anySuccess = channelResults.some(r => r.includes("Success"));
+            if (!anySuccess) {
+              throw new Error(`Telegram broadcast failed across all channels: ${channelResults.join("; ")}`);
             }
 
             success = true;
