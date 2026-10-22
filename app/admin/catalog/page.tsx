@@ -32,15 +32,22 @@ CREATE TABLE IF NOT EXISTS catalog_columns (
 -- Insert specific requested columns
 INSERT INTO catalog_columns (id, title, type, order_index, is_core) VALUES
 ('building_name', 'Building Name', 'text', 1, true),
-('architect', 'Architect', 'text', 2, false),
-('opened_year', 'Opened Year', 'number', 3, false),
-('building_photo', 'Building Photo', 'image', 4, false),
-('architect_photo', 'Architect''s Photo', 'image', 5, false),
-('building_location', 'Location of the Building', 'text', 6, false),
-('architect_native', 'Architect''s Native', 'text', 7, false),
-('architect_other_projects', 'Architect''s Other Projects', 'text', 8, false),
-('pritzker_prize_year', 'Pritzker Prize Winning Year', 'number', 9, false)
-ON CONFLICT (id) DO NOTHING;`;
+('architect', 'Architect / Firm', 'text', 2, false),
+('city', 'City', 'text', 3, false),
+('state_region', 'State / Region', 'text', 4, false),
+('country', 'Country', 'text', 5, false),
+('opened_year', 'Opened Year', 'number', 6, false),
+('architect_native', 'Architect''s Nationality', 'text', 7, false),
+('pritzker_prize_year', 'Pritzker Prize Year', 'number', 8, false),
+('major_awards', 'Major Awards & Honors', 'text', 9, false),
+('architectural_style', 'Architectural Style', 'text', 10, false),
+('building_height', 'Building Height', 'text', 11, false),
+('building_area', 'Built-up Area', 'text', 12, false),
+('architect_other_projects', 'Architect''s Other Projects', 'text', 13, false),
+('building_photo', 'Building Photo', 'image', 14, false),
+('architect_photo', 'Architect''s Photo', 'image', 15, false),
+('puzzle_clues', 'Puzzle Clues & Trivia', 'text', 16, false)
+ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, type = EXCLUDED.type, order_index = EXCLUDED.order_index;`;
 
 export default function CatalogPage() {
   const router = useRouter();
@@ -309,13 +316,14 @@ export default function CatalogPage() {
             <p className="text-sm text-gray-500 mt-1">Manage catalog entries using spreadsheet interactions.</p>
           </div>
           {!setupRequired && !loading && (
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
               <button onClick={() => { setInsertPos(null); setShowColModal(true); }} className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-lg transition text-sm">
                 <Plus size={16} /> Add Column
               </button>
               <button onClick={addRow} className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-gray-800 text-white font-semibold rounded-lg transition text-sm shadow-sm">
                 <Plus size={16} /> Add Row
               </button>
+              <AdminQuickMenu />
             </div>
           )}
         </div>
