@@ -630,6 +630,111 @@ export default function AnalyticsPage() {
               </div>
             ) : null}
 
+            {/* PEAK TRAFFIC HOURS & BEST TIME TO POST HEATMAP */}
+            {data.peakTimes && (
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <span>⏱️ Peak Candidate Hours &amp; Best Time to Post</span>
+                    </h2>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Hourly candidate traffic patterns to optimize when you drop new job vacancies on WhatsApp &amp; social channels
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2 Strategic Advice Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50/40 p-4 rounded-xl border border-blue-100 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl shrink-0">
+                      ⚡
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-blue-800 uppercase tracking-wider">Best Time to Post Jobs</p>
+                      <p className="text-xl font-bold text-gray-900 mt-0.5">{data.peakTimes.peakHour}</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Candidates are most active on the site during this time window</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-emerald-50 to-teal-50/40 p-4 rounded-xl border border-emerald-100 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shrink-0">
+                      📅
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">Top Day of the Week</p>
+                      <p className="text-xl font-bold text-gray-900 mt-0.5">{data.peakTimes.bestDay}</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Highest candidate traffic and job search engagement</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 24-Hour Activity Bar Chart */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">24-Hour Activity Distribution</h4>
+                    <span className="text-[11px] text-gray-400">Hours in 24h format (00 – 23)</span>
+                  </div>
+                  
+                  {(!data.peakTimes.hourly || data.peakTimes.hourly.length === 0) ? (
+                    <p className="text-xs text-gray-400 italic py-6 text-center">Hourly activity data is aggregating...</p>
+                  ) : (
+                    (() => {
+                      const maxHourUsers = Math.max(...data.peakTimes.hourly.map((h: any) => Number(h.users) || 0), 1);
+                      return (
+                        <div className="bg-gray-50/60 p-4 rounded-xl border border-gray-100">
+                          <div className="grid grid-cols-12 md:grid-cols-24 gap-1 items-end h-32 pt-4">
+                            {data.peakTimes.hourly.map((h: any, i: number) => {
+                              const u = Number(h.users) || 0;
+                              const heightPct = Math.max(8, Math.round((u / maxHourUsers) * 100));
+                              const isPeak = u === maxHourUsers && u > 0;
+                              const hourNum = parseInt(h.hour, 10);
+                              const label = hourNum === 0 ? "12A" : hourNum === 12 ? "12P" : hourNum > 12 ? `${hourNum - 12}P` : `${hourNum}A`;
+
+                              return (
+                                <div key={i} className="flex flex-col items-center group relative h-full justify-end">
+                                  {/* Tooltip */}
+                                  <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-10 pointer-events-none">
+                                    <div className="bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded shadow whitespace-nowrap">
+                                      {label}: {u} users
+                                    </div>
+                                  </div>
+                                  <div 
+                                    className={`w-full rounded-t transition-all ${isPeak ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'}`}
+                                    style={{ height: `${heightPct}%` }}
+                                  />
+                                  <span className="text-[9px] text-gray-400 mt-1.5 font-mono">{h.hour}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  )}
+                </div>
+
+                {/* Day of Week Activity Grid */}
+                {data.peakTimes.days && data.peakTimes.days.length > 0 && (
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3">Day-of-Week Activity</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                      {data.peakTimes.days.map((d: any, i: number) => {
+                        const isTop = d.day === data.peakTimes.bestDay;
+                        return (
+                          <div key={i} className={`p-2.5 rounded-lg border text-center ${isTop ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-100'}`}>
+                            <p className="text-[11px] font-bold text-gray-700 truncate">{d.day}</p>
+                            <p className={`text-base font-bold mt-0.5 ${isTop ? 'text-emerald-700' : 'text-gray-900'}`}>{d.users}</p>
+                            <span className="text-[9px] text-gray-400">visitors</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* DETAILED TABLES */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
