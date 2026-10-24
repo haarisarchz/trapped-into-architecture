@@ -1,4 +1,47 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
+
+function getTwitterOAuthHeader(
+  method: string,
+  url: string,
+  consumerKey: string,
+  consumerSecret: string,
+  accessToken: string,
+  accessTokenSecret: string
+): string {
+  const oauthParams: Record<string, string> = {
+    oauth_consumer_key: consumerKey,
+    oauth_nonce: crypto.randomBytes(16).toString("hex"),
+    oauth_signature_method: "HMAC-SHA1",
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_token: accessToken,
+    oauth_version: "1.0",
+  };
+
+  const sortedKeys = Object.keys(oauthParams).sort();
+  const paramString = sortedKeys
+    .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(oauthParams[k])}`)
+    .join("&");
+
+  const baseString = [
+    method.toUpperCase(),
+    encodeURIComponent(url),
+    encodeURIComponent(paramString),
+  ].join("&");
+
+  const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(accessTokenSecret)}`;
+  const signature = crypto
+    .createHmac("sha1", signingKey)
+    .update(baseString)
+    .digest("base64");
+
+  const headerParts = sortedKeys.map(
+    (k) => `${encodeURIComponent(k)}="${encodeURIComponent(oauthParams[k])}"`
+  );
+  headerParts.push(`oauth_signature="${encodeURIComponent(signature)}"`);
+
+  return `OAuth ${headerParts.join(", ")}`;
+}
 import { supabase } from "@/lib/supabase";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { generateSocialHashtags } from "@/utils/socialHashtags";
@@ -12,6 +55,22 @@ async function generatePostText(jobs: any[], platform: string, jobUrl: string, c
   }
   if (platform === "whatsapp" || platform === "telegram") {
     return formatWhatsAppPost(jobs, jobUrl);
+  }
+
+  if (platform === "x") {
+    const firmName = jobs[0].firm_name || "Unknown Firm";
+    const locParts = [jobs[0].city, jobs[0].state].filter(Boolean);
+    const location = locParts.length > 0 ? locParts.join(", ") : "";
+
+    let positionsText = jobs.map(j => j.position).filter(Boolean).join(", ");
+    if (positionsText.length > 75) positionsText = positionsText.slice(0, 72) + "...";
+
+    let tweet = `🏛️ HIRING: ${firmName}\n💼 ${positionsText}\n`;
+    if (location) tweet += `📍 ${location}\n`;
+    tweet += `\n🔗 Apply: ${jobUrl}\n`;
+    tweet += `#ArchitectureJobs #Hiring`;
+
+    return tweet.length > 280 ? tweet.slice(0, 277) + "..." : tweet;
   }
 
   if (platform === "instagram") {
@@ -130,16 +189,38 @@ export async function POST(req: Request) {
 
         switch (platform) {
           case "x": {
-            if (!process.env.TWITTER_API_KEY || !process.env.TWITTER_ACCESS_TOKEN) throw new Error("Missing X/Twitter credentials.");
-            const xRes = await fetch("https://api.twitter.com/2/tweets", {
+            const consumerKey = process.env.TWITTER_API_KEY;
+            const consumerSecret = process.env.TWITTER_API_SECRET;
+            const accessToken = process.env.TWITTER_ACCESS_TOKEN;
+            const accessTokenSecret = process.env.TWITTER_ACCESS_SECRET;
+
+            if (!consumerKey || !consumerSecret || !accessToken || !accessTokenSecret) {
+              throw new Error("Missing X/Twitter credentials (requires TWITTER_API_KEY, TWITTER_API_SECRET, TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_SECRET).");
+            }
+
+            const endpoint = "https://api.twitter.com/2/tweets";
+            const authHeader = getTwitterOAuthHeader(
+              "POST",
+              endpoint,
+              consumerKey,
+              consumerSecret,
+              accessToken,
+              accessTokenSecret
+            );
+
+            const xRes = await fetch(endpoint, {
               method: "POST",
               headers: {
-                "Authorization": `Bearer ${process.env.TWITTER_ACCESS_TOKEN}`,
+                "Authorization": authHeader,
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({ text: postText })
             });
-            if (!xRes.ok) throw new Error(await xRes.text());
+
+            if (!xRes.ok) {
+              const errBody = await xRes.text();
+              throw new Error(`X API Error (${xRes.status}): ${errBody}`);
+            }
             success = true;
             break;
           }
