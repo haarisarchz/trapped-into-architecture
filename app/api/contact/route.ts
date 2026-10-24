@@ -32,14 +32,30 @@ export async function POST(req: Request) {
       console.warn("DB insert exception for contact inquiry:", dbErr);
     }
 
-    // 2. Dispatch Email alert to admin via Resend
+    // 2. Determine recipient email (defaults to admin.ti2a@gmail.com, or configured site_settings email)
+    let recipientEmail = process.env.ADMIN_NOTIFICATION_EMAIL || "admin.ti2a@gmail.com";
+    try {
+      const { data: settings } = await supabase
+        .from("site_settings")
+        .select("email")
+        .eq("id", "global")
+        .maybeSingle();
+      if (settings?.email && settings.email.trim()) {
+        recipientEmail = settings.email.trim();
+      }
+    } catch (e) {
+      // fallback to default
+    }
+
+    // 3. Dispatch Email alert to admin via Resend
     let emailSent = false;
     let emailErrorMsg = null;
     if (resend) {
       try {
+        const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
         const mailResult = await resend.emails.send({
-          from: "onboarding@resend.dev",
-          to: "haaris.archz@gmail.com",
+          from: fromEmail,
+          to: recipientEmail,
           replyTo: email.trim(),
           subject: `📩 [Ti2A Contact] ${subject ? subject.trim() : `New message from ${name}`}`,
           html: `
@@ -72,6 +88,7 @@ export async function POST(req: Request) {
           emailSent = true;
         } else if (mailResult.error) {
           emailErrorMsg = mailResult.error.message;
+          console.warn("Resend email response error:", mailResult.error);
         }
       } catch (mailErr: any) {
         console.warn("Resend email dispatch error:", mailErr);
@@ -79,7 +96,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, dbSaved, emailSent, emailErrorMsg });
+    return NextResponse.json({ success: true, dbSaved, emailSent, emailErrorMsg, recipient: recipientEmail });
   } catch (err: any) {
     console.error("Contact API error:", err);
     return NextResponse.json({ error: err.message || "Failed to send message" }, { status: 500 });
