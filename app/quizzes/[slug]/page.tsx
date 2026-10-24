@@ -13,7 +13,7 @@ import {
 interface Question {
   id: string;
   order_index: number;
-  question_type: "choose" | "fill_up";
+  question_type: "choose" | "fill_up" | "missing_letters";
   question_text: string;
   media_type: "none" | "image";
   media_url: string;
@@ -25,6 +25,22 @@ interface Question {
 
 type Difficulty = "easy" | "medium" | "hard";
 type FeedbackMode = "instant" | "end";
+
+function generateMissingLettersMask(text: string): string {
+  if (!text) return "";
+  let result = "";
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === " " || char === "-" || char === "'" || char === ".") {
+      result += "   ";
+    } else if (i % 2 === 0 || i === text.length - 1) {
+      result += char.toUpperCase() + " ";
+    } else {
+      result += "_ ";
+    }
+  }
+  return result.trim();
+}
 
 export default function QuizPlayPage() {
   const params = useParams();
@@ -66,7 +82,6 @@ export default function QuizPlayPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Generate or retrieve persistent guest session ID
     let gid = localStorage.getItem("quiz_guest_id");
     if (!gid) {
       gid = "anon_" + Math.random().toString(36).substring(2, 9);
@@ -74,7 +89,6 @@ export default function QuizPlayPage() {
     }
     setGuestId(gid);
 
-    // Retrieve logged in user from localStorage if present
     const stored = localStorage.getItem("currentUser");
     if (stored) {
       try { setCurrentUser(JSON.parse(stored)); } catch (e) {}
@@ -103,6 +117,7 @@ export default function QuizPlayPage() {
       if (quesData) {
         setQuestions(quesData.map(q => ({
           ...q,
+          question_type: (q.question_type as any) || "choose",
           options: Array.isArray(q.options) ? q.options : [],
           accepted_aliases: Array.isArray(q.accepted_aliases) ? q.accepted_aliases : []
         })));
@@ -114,7 +129,6 @@ export default function QuizPlayPage() {
     }
   };
 
-  // Timer countdown hook during active gameplay
   useEffect(() => {
     if (!gameStarted || isGameOver || isAnswerSubmitted || difficulty === "easy") {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -158,7 +172,6 @@ export default function QuizPlayPage() {
   };
 
   const handleTimeExpired = () => {
-    // Timeout counted as incorrect
     handleSelectAnswer("__TIMEOUT__");
   };
 
@@ -169,7 +182,6 @@ export default function QuizPlayPage() {
     const target = normalize(question.correct_answer);
     if (normalize(selected) === target) return true;
 
-    // Check alternate spellings / aliases for fill-ups
     if (question.accepted_aliases && question.accepted_aliases.length > 0) {
       return question.accepted_aliases.some(a => normalize(a) === normalize(selected));
     }
@@ -181,12 +193,10 @@ export default function QuizPlayPage() {
 
     let base = difficulty === "easy" ? 10 : difficulty === "medium" ? 20 : 30;
     
-    // Speed bonus for medium and hard
     let speedBonus = 0;
     if (difficulty === "medium" && timeRemaining > 15) speedBonus = 5;
     else if (difficulty === "hard" && timeRemaining > 7) speedBonus = 10;
 
-    // Streak multiplier
     let multiplier = 1;
     if (streak >= 4) multiplier = 1.5;
     else if (streak >= 2) multiplier = 1.2;
@@ -200,12 +210,10 @@ export default function QuizPlayPage() {
     const currentQ = questions[currentIndex];
     const correct = isAnswerCorrect(currentQ, selected);
 
-    // Update streak
     const newStreak = correct ? streak + 1 : 0;
     setStreak(newStreak);
     if (newStreak > maxStreak) setMaxStreak(newStreak);
 
-    // Calculate XP
     const pts = calculatePointsForQuestion(correct, timerSeconds);
     setTotalPoints(prev => prev + pts);
 
@@ -213,7 +221,6 @@ export default function QuizPlayPage() {
     setIsAnswerSubmitted(true);
 
     if (feedbackMode === "end") {
-      // In "Answer at the end" mode, auto-advance smoothly
       setTimeout(() => {
         advanceNextQuestion();
       }, 350);
@@ -235,20 +242,17 @@ export default function QuizPlayPage() {
     setIsGameOver(true);
     if (timerRef.current) clearInterval(timerRef.current);
 
-    // Calculate total correct
     let correctCount = 0;
     questions.forEach((q, idx) => {
       if (isAnswerCorrect(q, userAnswers[idx])) correctCount++;
     });
 
-    // Flawless finish bonus (100% correct)
     let finalXP = totalPoints;
     if (correctCount === questions.length) {
       finalXP += 50;
       setTotalPoints(finalXP);
     }
 
-    // Save score to Supabase
     try {
       const displayName = currentUser?.name || currentUser?.username || `Architect_#${guestId.slice(-4)}`;
       await supabase.from("quiz_scores").insert([{
@@ -267,7 +271,6 @@ export default function QuizPlayPage() {
     }
   };
 
-  // Social Share Generators
   const getShareUrl = () => {
     if (typeof window === "undefined") return "";
     const name = encodeURIComponent(currentUser?.username || currentUser?.name || "Architect");
@@ -314,7 +317,6 @@ export default function QuizPlayPage() {
   }
 
   const currentQ = questions[currentIndex];
-  const answeredCount = Object.keys(userAnswers).length;
   const correctCount = questions.filter((q, idx) => isAnswerCorrect(q, userAnswers[idx])).length;
 
   return (
@@ -323,11 +325,10 @@ export default function QuizPlayPage() {
       <div className="min-h-screen bg-gray-50/70 pt-[80px] pb-16 flex flex-col items-center">
         <div className="w-full max-w-3xl px-4 py-6 flex-1 flex flex-col">
 
-          {/* PRE-GAME SCREEN: DIFFICULTY & MODE SELECTOR */}
+          {/* PRE-GAME SCREEN */}
           {!gameStarted ? (
             <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-10 shadow-sm my-auto text-center">
               
-              {/* CHALLENGER CARD BANNER (If accessed via challenge link) */}
               {challengerName && challengerScore && (
                 <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-2 border-amber-400 text-left flex items-center gap-3.5">
                   <span className="text-3xl">⚔️</span>
@@ -412,7 +413,7 @@ export default function QuizPlayPage() {
                 </div>
               </div>
 
-              {/* Step 2: Answer Feedback Preference */}
+              {/* Step 2: Answer Review Style */}
               <div className="text-left mb-8">
                 <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
                   2. Answer Review Style:
@@ -444,7 +445,7 @@ export default function QuizPlayPage() {
                 </div>
               </div>
 
-              {/* Start Game Button */}
+              {/* Start Button */}
               <button
                 onClick={handleStartGame}
                 className="w-full sm:w-auto px-8 py-3.5 bg-black hover:bg-gray-800 text-white text-sm font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2 mx-auto"
@@ -454,7 +455,7 @@ export default function QuizPlayPage() {
             </div>
           ) : isGameOver ? (
 
-            /* GAME OVER: SCORECARD & CHALLENGE CREATOR */
+            /* GAME OVER: SCORECARD & CHALLENGE */
             <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-10 shadow-sm text-center">
               <span className="text-5xl block mb-2">🏆</span>
               <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
@@ -484,7 +485,7 @@ export default function QuizPlayPage() {
                 </div>
               </div>
 
-              {/* ANONYMOUS GUEST POINTS CLAIM HOOK */}
+              {/* GUEST XP HOOK */}
               {!currentUser && (
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 text-left mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div>
@@ -495,12 +496,16 @@ export default function QuizPlayPage() {
                       Create a free account or log in now to claim your <strong>{totalPoints} XP</strong> to your official profile and lock your rank on the leaderboard!
                     </p>
                   </div>
-                  <Link 
-                    href="/login?redirect=quiz" 
+                  <button 
+                    onClick={() => {
+                      const btn = document.querySelector('[data-auth-trigger="login"]') as HTMLButtonElement;
+                      if (btn) btn.click();
+                      else window.location.href = "/login?redirect=quizzes";
+                    }}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition whitespace-nowrap shadow-xs shrink-0"
                   >
                     Claim Points & Login
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -528,7 +533,7 @@ export default function QuizPlayPage() {
                 </div>
               </div>
 
-              {/* DETAILED ANSWER REVIEW LIST */}
+              {/* BREAKDOWN */}
               <div className="text-left mb-8">
                 <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider mb-3">
                   Question Breakdown & Answers:
@@ -578,7 +583,7 @@ export default function QuizPlayPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Actions */}
               <div className="flex items-center justify-center gap-3">
                 <button
                   onClick={handleStartGame}
@@ -599,7 +604,6 @@ export default function QuizPlayPage() {
             /* ACTIVE QUESTION CARD */
             <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 shadow-sm flex-1 flex flex-col justify-between">
               
-              {/* TOP HUD: QUESTION PROGRESS + TIMER + LIVE POINTS */}
               <div>
                 <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
                   <div className="flex items-center gap-2">
@@ -614,7 +618,6 @@ export default function QuizPlayPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {/* Timer indicator */}
                     {difficulty !== "easy" && (
                       <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
                         timerSeconds <= 5 ? "bg-red-100 text-red-700 animate-pulse" : "bg-gray-100 text-gray-700"
@@ -629,9 +632,9 @@ export default function QuizPlayPage() {
                   </div>
                 </div>
 
-                {/* Question Image (if attached) */}
+                {/* Question Image Clue */}
                 {currentQ.media_url && (
-                  <div className="mb-4 rounded-2xl overflow-hidden max-h-64 bg-gray-900 border border-gray-200 flex items-center justify-center">
+                  <div className="mb-4 rounded-2xl overflow-hidden max-h-64 bg-gray-900 border border-gray-200 flex items-center justify-center shadow-xs">
                     <img 
                       src={currentQ.media_url} 
                       alt="Question photo" 
@@ -644,6 +647,18 @@ export default function QuizPlayPage() {
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-6">
                   {currentQ.question_text}
                 </h2>
+
+                {/* MISSING LETTERS HANGMAN MASK DISPLAY */}
+                {currentQ.question_type === "missing_letters" && (
+                  <div className="mb-5 p-4 bg-amber-50/70 rounded-2xl border-2 border-amber-300 text-center shadow-xs">
+                    <p className="text-[10px] font-extrabold text-amber-900 uppercase tracking-widest mb-1.5">
+                      Fill the Missing Letters:
+                    </p>
+                    <p className="font-mono text-xl sm:text-2xl font-black text-amber-950 tracking-[0.25em] select-none">
+                      {generateMissingLettersMask(currentQ.correct_answer)}
+                    </p>
+                  </div>
+                )}
 
                 {/* MULTIPLE CHOICE OPTIONS */}
                 {currentQ.question_type === "choose" ? (
@@ -685,7 +700,7 @@ export default function QuizPlayPage() {
                     })}
                   </div>
                 ) : (
-                  /* FILL-IN-THE-BLANKS INPUT */
+                  /* FILL-IN-THE-BLANKS / MISSING LETTERS INPUT */
                   <div className="mb-6">
                     <form 
                       onSubmit={(e) => {
@@ -696,7 +711,7 @@ export default function QuizPlayPage() {
                     >
                       <input 
                         type="text"
-                        placeholder="Type your answer here..."
+                        placeholder={currentQ.question_type === "missing_letters" ? "Type the full word here..." : "Type your answer here..."}
                         value={fillInput}
                         onChange={e => setFillInput(e.target.value)}
                         disabled={isAnswerSubmitted}
@@ -737,7 +752,7 @@ export default function QuizPlayPage() {
                 )}
               </div>
 
-              {/* NEXT QUESTION BUTTON (for Instant Feedback Mode) */}
+              {/* NEXT QUESTION BUTTON */}
               {isAnswerSubmitted && feedbackMode === "instant" && (
                 <div className="pt-4 border-t border-gray-100 flex justify-end">
                   <button

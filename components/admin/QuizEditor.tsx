@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { 
   Plus, Trash2, ArrowUp, ArrowDown, Save, Sparkles, UploadCloud, 
-  Loader2, CheckCircle2, ArrowLeft, Image as ImageIcon, HelpCircle, Eye, RefreshCw
+  Loader2, CheckCircle2, ArrowLeft, Image as ImageIcon, HelpCircle, Eye, RefreshCw, Wand2
 } from "lucide-react";
 
 interface Question {
   id?: string;
   order_index: number;
-  question_type: "choose" | "fill_up";
+  question_type: "choose" | "fill_up" | "missing_letters";
   question_text: string;
   media_type: "none" | "image";
   media_url: string;
@@ -21,51 +21,66 @@ interface Question {
 }
 
 interface QuizEditorProps {
-  quizId?: string; // If editing an existing quiz
+  quizId?: string;
   onBack?: () => void;
+}
+
+// Generate missing letter mask like "C _ A R _ E S   C _ R R _ A"
+export function generateMissingLettersMask(text: string): string {
+  if (!text) return "";
+  let result = "";
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === " " || char === "-" || char === "'" || char === ".") {
+      result += "   ";
+    } else if (i % 2 === 0 || i === text.length - 1) {
+      result += char.toUpperCase() + " ";
+    } else {
+      result += "_ ";
+    }
+  }
+  return result.trim();
 }
 
 export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(!!quizId);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [toastMsg, setToastMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   // Quiz Meta
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Architects");
+  const [category, setCategory] = useState("Guess the Building");
   const [coverImage, setCoverImage] = useState("");
   const [isPublished, setIsPublished] = useState(false);
 
   // Questions
-  const [questions, setQuestions] = useState<Question[]>([
-    {
-      order_index: 1,
-      question_type: "choose",
-      question_text: "",
-      media_type: "none",
-      media_url: "",
-      options: ["", "", "", ""],
-      correct_answer: "",
-      accepted_aliases: [],
-      explanation_clue: ""
-    }
-  ]);
+  const [questions, setQuestions] = useState<Question[]>([]);
 
-  // Catalog Drawer State
-  const [showCatalogModal, setShowCatalogModal] = useState(false);
+  // 1-Click Generator Configuration
+  const [questionCol, setQuestionCol] = useState<"building_photo" | "architect_photo" | "building_name" | "puzzle_clues">("building_photo");
+  const [answerCol, setAnswerCol] = useState<"building_name" | "architect" | "opened_year" | "city" | "architectural_style">("building_name");
+  const [answerFormat, setAnswerFormat] = useState<"choose" | "fill_up" | "missing_letters">("choose");
+  const [questionCount, setQuestionCount] = useState<number>(10);
+  const [optionsCount, setOptionsCount] = useState<number>(4);
+
+  // Available catalog rows
   const [catalogRows, setCatalogRows] = useState<any[]>([]);
-  const [catalogLoading, setCatalogLoading] = useState(false);
-  const [catalogSearch, setCatalogSearch] = useState("");
 
   useEffect(() => {
+    loadCatalogRows();
     if (quizId) {
       loadQuizData();
     }
   }, [quizId]);
+
+  const loadCatalogRows = async () => {
+    const { data } = await supabase.from("architecture_catalog").select("*").limit(100);
+    if (data) setCatalogRows(data);
+  };
 
   const loadQuizData = async () => {
     try {
@@ -79,7 +94,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       setTitle(qData.title || "");
       setSlug(qData.slug || "");
       setDescription(qData.description || "");
-      setCategory(qData.category || "Architects");
+      setCategory(qData.category || "Guess the Building");
       setCoverImage(qData.cover_image || "");
       setIsPublished(qData.is_published || false);
 
@@ -92,7 +107,8 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       if (quesData && quesData.length > 0) {
         setQuestions(quesData.map(q => ({
           ...q,
-          options: Array.isArray(q.options) ? q.options : ["", "", "", ""],
+          question_type: (q.question_type as any) || "choose",
+          options: Array.isArray(q.options) ? q.options : [],
           accepted_aliases: Array.isArray(q.accepted_aliases) ? q.accepted_aliases : []
         })));
       }
@@ -114,136 +130,138 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     }
   };
 
-  const addQuestion = () => {
-    setQuestions([
-      ...questions,
-      {
-        order_index: questions.length + 1,
-        question_type: "choose",
-        question_text: "",
-        media_type: "none",
-        media_url: "",
-        options: ["", "", "", ""],
-        correct_answer: "",
-        accepted_aliases: [],
-        explanation_clue: ""
+  // ⚡ 1-CLICK GENERATE QUIZ FROM ARCHITECTURE CATALOG
+  const generateQuizFromDatabase = () => {
+    if (catalogRows.length === 0) {
+      alert("No rows found in architecture catalog. Please ensure rows are loaded.");
+      return;
+    }
+
+    setGenerating(true);
+
+    // Filter valid rows having the question and answer columns
+    const validRows = catalogRows.filter(r => {
+      const d = r.data || {};
+      const qVal = d[questionCol];
+      const aVal = d[answerCol];
+      return qVal && String(qVal).trim() !== "" && aVal && String(aVal).trim() !== "";
+    });
+
+    if (validRows.length === 0) {
+      alert(`No projects have both ${questionCol} and ${answerCol}.`);
+      setGenerating(false);
+      return;
+    }
+
+    // Shuffle rows randomly
+    const shuffled = [...validRows].sort(() => Math.random() - 0.5);
+    const selectedRows = shuffled.slice(0, questionCount === 999 ? shuffled.length : questionCount);
+
+    // Get all unique answer values for distractors
+    const allAnswerValues = Array.from(new Set(catalogRows.map(r => r.data?.[answerCol]).filter(Boolean)));
+
+    const generatedQuestions: Question[] = selectedRows.map((row, idx) => {
+      const d = row.data || {};
+      const targetAnswer = String(d[answerCol] || "").trim();
+
+      // Determine Question Prompt Text
+      let promptText = "";
+      let mediaUrl = "";
+      let mediaType: "none" | "image" = "none";
+
+      if (questionCol === "building_photo" || questionCol === "architect_photo") {
+        mediaUrl = d[questionCol] || "";
+        mediaType = mediaUrl ? "image" : "none";
+        
+        if (answerCol === "building_name") {
+          promptText = "Identify this iconic building from the photo:";
+        } else if (answerCol === "architect") {
+          promptText = `Who is the architect of this building${d.city ? ` in ${d.city}` : ""}?`;
+        } else if (answerCol === "opened_year") {
+          promptText = `In which year was ${d.building_name || "this building"} opened?`;
+        } else if (answerCol === "city") {
+          promptText = `In which city is ${d.building_name || "this project"} located?`;
+        } else if (answerCol === "architectural_style") {
+          promptText = `What is the architectural style of ${d.building_name || "this building"}?`;
+        } else {
+          promptText = "Identify the correct detail for this structure:";
+        }
+      } else {
+        const qContent = d[questionCol] || "";
+        if (answerCol === "architect") {
+          promptText = `Who designed ${qContent}?`;
+        } else if (answerCol === "building_name") {
+          promptText = `Name the iconic project designed by ${qContent}:`;
+        } else {
+          promptText = `Regarding ${qContent}, what is the ${answerCol.replace(/_/g, " ")}?`;
+        }
       }
-    ]);
+
+      // Generate Options for "choose" mode
+      let optionsList: string[] = [];
+      if (answerFormat === "choose") {
+        const distractors = allAnswerValues
+          .filter(v => v !== targetAnswer)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, optionsCount - 1);
+        optionsList = [targetAnswer, ...distractors].sort(() => Math.random() - 0.5);
+      }
+
+      // Aliases for fill-ups
+      const aliases = [targetAnswer];
+      if (answerCol === "architect" && targetAnswer.includes(" ")) {
+        const lastName = targetAnswer.split(" ").pop();
+        if (lastName) aliases.push(lastName);
+      }
+
+      // Explanation Trivia
+      const explanation = d.puzzle_clues || 
+        `${d.building_name || "Project"} was designed by ${d.architect || "Master Architect"} in ${d.city || "India"} (${d.opened_year || ""}).`;
+
+      return {
+        order_index: idx + 1,
+        question_type: answerFormat,
+        question_text: promptText,
+        media_type: mediaType,
+        media_url: mediaUrl,
+        options: optionsList,
+        correct_answer: targetAnswer,
+        accepted_aliases: aliases,
+        explanation_clue: explanation
+      };
+    });
+
+    setQuestions(generatedQuestions);
+
+    // Auto-suggest Title and Category if empty
+    if (!title.trim()) {
+      let suggestedTitle = "";
+      let cat = "Guess the Building";
+      if (answerCol === "architect") {
+        suggestedTitle = "Guess the Architect from the Building Photo";
+        cat = "Guess the Architect";
+      } else if (answerCol === "building_name") {
+        suggestedTitle = "Guess the Building: Can you identify these structures?";
+        cat = "Guess the Building";
+      } else if (answerCol === "opened_year") {
+        suggestedTitle = "Guess the Year: When were these iconic buildings opened?";
+        cat = "Guess the Year";
+      } else if (answerCol === "city") {
+        suggestedTitle = "Guess the Location: Where are these buildings located?";
+        cat = "Guess the Location";
+      }
+      handleTitleChange(suggestedTitle);
+      setCategory(cat);
+    }
+
+    setGenerating(false);
+    setToastMsg({ text: `Generated ${generatedQuestions.length} questions from your database!`, type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
   };
 
   const removeQuestion = (idx: number) => {
-    if (questions.length <= 1) {
-      alert("A quiz must have at least one question.");
-      return;
-    }
     const updated = questions.filter((_, i) => i !== idx).map((q, i) => ({ ...q, order_index: i + 1 }));
     setQuestions(updated);
-  };
-
-  const moveQuestion = (idx: number, dir: "up" | "down") => {
-    const targetIdx = dir === "up" ? idx - 1 : idx + 1;
-    if (targetIdx < 0 || targetIdx >= questions.length) return;
-    const copy = [...questions];
-    const temp = copy[idx];
-    copy[idx] = copy[targetIdx];
-    copy[targetIdx] = temp;
-    setQuestions(copy.map((q, i) => ({ ...q, order_index: i + 1 })));
-  };
-
-  const updateQuestion = (idx: number, updates: Partial<Question>) => {
-    const copy = [...questions];
-    copy[idx] = { ...copy[idx], ...updates };
-    setQuestions(copy);
-  };
-
-  const updateOption = (qIdx: number, optIdx: number, val: string) => {
-    const copy = [...questions];
-    const opts = [...copy[qIdx].options];
-    opts[optIdx] = val;
-    copy[qIdx].options = opts;
-    setQuestions(copy);
-  };
-
-  // Image upload via /api/upload (ImageKit)
-  const handleImageUpload = async (file: File, callback: (url: string) => void) => {
-    setUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "/quiz-media");
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Image upload failed");
-      const data = await res.json();
-      if (data.url) callback(data.url);
-    } catch (err: any) {
-      alert("Error uploading image: " + err.message);
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  // Open Catalog Importer
-  const openCatalogImporter = async () => {
-    setShowCatalogModal(true);
-    if (catalogRows.length === 0) {
-      setCatalogLoading(true);
-      const { data, error } = await supabase.from("architecture_catalog").select("*").limit(100);
-      if (data) setCatalogRows(data);
-      setCatalogLoading(false);
-    }
-  };
-
-  // 1-Click Import from Architecture Catalog
-  const importFromCatalog = (row: any, presetType: "architect" | "building") => {
-    const d = row.data || {};
-    const buildingName = d.building_name || "Historic Building";
-    const architect = d.architect || "Master Architect";
-    const photo = d.building_photo || d.architect_photo || "";
-    const city = d.city ? ` in ${d.city}` : "";
-
-    // Gather 3 other random architects or building names from other catalog rows for multiple choice options
-    let otherOptions: string[] = [];
-    if (presetType === "architect") {
-      otherOptions = catalogRows
-        .map(r => r.data?.architect)
-        .filter(a => a && a !== architect)
-        .slice(0, 3);
-      if (otherOptions.length < 3) otherOptions.push("Charles Correa", "B.V. Doshi", "Raj Rewal");
-    } else {
-      otherOptions = catalogRows
-        .map(r => r.data?.building_name)
-        .filter(b => b && b !== buildingName)
-        .slice(0, 3);
-      if (otherOptions.length < 3) otherOptions.push("Lotus Temple", "IIM Ahmedabad", "Matrimandir");
-    }
-
-    const allOpts = presetType === "architect" 
-      ? [architect, ...otherOptions.slice(0, 3)].sort(() => Math.random() - 0.5)
-      : [buildingName, ...otherOptions.slice(0, 3)].sort(() => Math.random() - 0.5);
-
-    const newQ: Question = {
-      order_index: questions.length + 1,
-      question_type: "choose",
-      question_text: presetType === "architect"
-        ? `Who is the architect of ${buildingName}${city}?`
-        : `Identify this iconic project designed by ${architect}:`,
-      media_type: photo ? "image" : "none",
-      media_url: photo,
-      options: allOpts,
-      correct_answer: presetType === "architect" ? architect : buildingName,
-      accepted_aliases: presetType === "architect" ? [architect.split(" ").pop() || architect, architect] : [buildingName],
-      explanation_clue: d.puzzle_clues || (d.opened_year ? `Opened in ${d.opened_year} in ${d.city || "India"}.` : "")
-    };
-
-    setQuestions([...questions, newQ]);
-    setShowCatalogModal(false);
-    setToastMsg({ text: `Imported "${buildingName}" into questions!`, type: "success" });
-    setTimeout(() => setToastMsg(null), 3000);
   };
 
   const handleSaveQuiz = async (publishState?: boolean) => {
@@ -255,21 +273,9 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       alert("Please provide a URL slug.");
       return;
     }
-
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i];
-      if (!q.question_text.trim()) {
-        alert(`Question #${i + 1} has no question text.`);
-        return;
-      }
-      if (!q.correct_answer.trim()) {
-        alert(`Question #${i + 1} has no correct answer set.`);
-        return;
-      }
-      if (q.question_type === "choose" && (!q.options || q.options.some(o => !o.trim()))) {
-        alert(`Question #${i + 1} is Multiple Choice and needs all 4 options filled out.`);
-        return;
-      }
+    if (questions.length === 0) {
+      alert("Please add or generate questions for the quiz.");
+      return;
     }
 
     setSaving(true);
@@ -280,7 +286,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         slug: slug.trim().toLowerCase(),
         description: description.trim(),
         category,
-        cover_image: coverImage.trim(),
+        cover_image: coverImage.trim() || questions[0]?.media_url || "",
         is_published: pub,
         updated_at: new Date().toISOString()
       };
@@ -303,7 +309,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         activeQuizId = newQ.id;
       }
 
-      // Sync Questions: delete old questions and insert fresh set
+      // Sync Questions
       if (activeQuizId) {
         await supabase.from("quiz_questions").delete().eq("quiz_id", activeQuizId);
 
@@ -314,10 +320,10 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
           question_text: q.question_text.trim(),
           media_type: q.media_url ? "image" : "none",
           media_url: q.media_url.trim(),
-          options: q.options.map(o => o.trim()),
+          options: q.options || [],
           correct_answer: q.correct_answer.trim(),
-          accepted_aliases: q.accepted_aliases,
-          explanation_clue: q.explanation_clue.trim()
+          accepted_aliases: q.accepted_aliases || [],
+          explanation_clue: (q.explanation_clue || "").trim()
         }));
 
         const { error: qInsertErr } = await supabase
@@ -326,7 +332,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         if (qInsertErr) throw qInsertErr;
       }
 
-      setToastMsg({ text: `Quiz saved successfully! (${pub ? "Published" : "Saved as Draft"})`, type: "success" });
+      setToastMsg({ text: `Quiz saved successfully! (${pub ? "Published Live" : "Saved as Draft"})`, type: "success" });
       setTimeout(() => {
         if (onBack) onBack();
         else router.push("/admin/quizzes");
@@ -348,14 +354,9 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     );
   }
 
-  const filteredCatalog = catalogRows.filter(r => {
-    const text = `${r.data?.building_name || ""} ${r.data?.architect || ""} ${r.data?.city || ""}`.toLowerCase();
-    return text.includes(catalogSearch.toLowerCase());
-  });
-
   return (
     <div className="max-w-5xl mx-auto py-6 px-4">
-      {/* Top Action Bar */}
+      {/* Top Header */}
       <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200">
         <button 
           onClick={onBack ? onBack : () => router.push("/admin/quizzes")}
@@ -393,20 +394,123 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         </div>
       </div>
 
-      {/* QUIZ META CARD */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs mb-8">
-        <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-          ⚙️ 1. Quiz Settings & Meta
-        </h2>
+      {/* ⚡ STEP 1: 1-CLICK COLUMN-BASED QUIZ GENERATOR (Primary Feature) */}
+      <div className="bg-gradient-to-br from-blue-50/70 via-indigo-50/50 to-white rounded-3xl border-2 border-blue-200 p-6 sm:p-8 shadow-sm mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+            ⚡
+          </span>
+          <div>
+            <h2 className="text-lg font-black text-gray-900">
+              Auto-Generate Quiz from Database ({catalogRows.length} Projects Available)
+            </h2>
+            <p className="text-xs text-gray-500">
+              Select what the question should show and what the answer should be. The system will build all questions automatically.
+            </p>
+          </div>
+        </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          {/* Question Clue Column */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+              1. What is the Question?
+            </label>
+            <select
+              value={questionCol}
+              onChange={e => setQuestionCol(e.target.value as any)}
+              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white shadow-xs"
+            >
+              <option value="building_photo">🖼️ Building Photo</option>
+              <option value="architect_photo">👤 Architect's Photo</option>
+              <option value="building_name">🏛️ Building Name</option>
+              <option value="puzzle_clues">💡 Puzzle Clue / Description</option>
+            </select>
+          </div>
+
+          {/* Answer Column */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+              2. What is the Answer?
+            </label>
+            <select
+              value={answerCol}
+              onChange={e => setAnswerCol(e.target.value as any)}
+              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white shadow-xs"
+            >
+              <option value="building_name">🏛️ Building Name</option>
+              <option value="architect">👤 Architect / Firm</option>
+              <option value="opened_year">📅 Opened Year</option>
+              <option value="city">📍 City</option>
+              <option value="architectural_style">🎨 Architectural Style</option>
+            </select>
+          </div>
+
+          {/* Answer Type Format */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+              3. Answer Format
+            </label>
+            <select
+              value={answerFormat}
+              onChange={e => setAnswerFormat(e.target.value as any)}
+              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white shadow-xs"
+            >
+              <option value="choose">Choose (4 Options)</option>
+              <option value="fill_up">Fill-ups (Full Text)</option>
+              <option value="missing_letters">Fill Missing Letters (C _ A R _ E S)</option>
+            </select>
+          </div>
+
+          {/* Number of Questions */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider mb-1.5">
+              4. How Many Questions?
+            </label>
+            <select
+              value={questionCount}
+              onChange={e => setQuestionCount(Number(e.target.value))}
+              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white shadow-xs"
+            >
+              <option value={5}>5 Questions (Quick Test)</option>
+              <option value={10}>10 Questions (Standard)</option>
+              <option value={15}>15 Questions</option>
+              <option value={20}>20 Questions (Challenger)</option>
+              <option value={999}>All {catalogRows.length} Projects</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Generate Button */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-blue-200/60">
+          <p className="text-[11px] text-gray-500 font-medium">
+            💡 Wrong options will be automatically sampled from other database rows to make options challenging.
+          </p>
+
+          <button
+            onClick={generateQuizFromDatabase}
+            disabled={generating}
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition shadow-md flex items-center gap-2"
+          >
+            {generating ? <Loader2 size={15} className="animate-spin" /> : <Wand2 size={15} />}
+            ⚡ Generate Quiz from Database
+          </button>
+        </div>
+      </div>
+
+      {/* STEP 2: QUIZ TITLE & INFO */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-xs mb-8">
+        <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-1.5">
+          🏷️ Quiz Details
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
               Quiz Title *
             </label>
             <input 
               type="text"
-              placeholder="e.g. Master Architects: Can you identify India's iconic landmarks?"
+              placeholder="e.g. Guess the Building from the Photo"
               value={title}
               onChange={e => handleTitleChange(e.target.value)}
               className="w-full px-3.5 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-black font-semibold"
@@ -414,411 +518,141 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-              URL Slug *
-            </label>
-            <div className="flex items-center">
-              <span className="text-xs text-gray-400 bg-gray-100 px-3 py-2 rounded-l-lg border border-r-0 border-gray-300">
-                /quizzes/
-              </span>
-              <input 
-                type="text"
-                placeholder="guess-the-architect"
-                value={slug}
-                onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-r-lg focus:outline-none focus:border-black font-mono"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-              Category
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+              Quiz Type / Category
             </label>
             <select 
               value={category}
               onChange={e => setCategory(e.target.value)}
               className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-white"
             >
-              <option value="Architects">Architects & Firms</option>
-              <option value="Contemporary">Contemporary Architecture</option>
-              <option value="History">Heritage & History</option>
-              <option value="Pritzker">Pritzker Prize Laureates</option>
-              <option value="Software">Software & CAD Shortcuts</option>
-              <option value="Exam Prep">GATE / NATA Prep</option>
+              <option value="Guess the Building">Guess the Building</option>
+              <option value="Guess the Architect">Guess the Architect</option>
+              <option value="Guess the Year">Guess the Year</option>
+              <option value="Guess the Location">Guess the Location</option>
+              <option value="Guess the Style">Guess the Style</option>
             </select>
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-              Description / Instructions
+          <div>
+            <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1">
+              URL Slug *
             </label>
-            <textarea 
-              rows={2}
-              placeholder="Brief description shown to players before starting the quiz..."
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black"
+            <input 
+              type="text"
+              placeholder="guess-the-building"
+              value={slug}
+              onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black font-mono"
             />
           </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-              Cover Image URL (Optional)
-            </label>
-            <div className="flex items-center gap-2">
-              <input 
-                type="text"
-                placeholder="https://ik.imagekit.io/... or upload"
-                value={coverImage}
-                onChange={e => setCoverImage(e.target.value)}
-                className="w-full px-3.5 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black"
-              />
-              <label className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-lg cursor-pointer transition shrink-0 flex items-center gap-1 border border-gray-300">
-                <UploadCloud size={14} /> Upload
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], url => setCoverImage(url))}
-                />
-              </label>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* QUESTION BUILDER HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <div>
-          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            📝 2. Questions ({questions.length})
-          </h2>
-          <p className="text-xs text-gray-500">Create multiple choice or fill-in-the-blank questions.</p>
-        </div>
-
-        <div className="flex items-center gap-2">
+      {/* STEP 3: PREVIEW & GENERATED QUESTIONS */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+          📝 Generated Questions ({questions.length})
+        </h3>
+        {questions.length > 0 && (
           <button 
-            onClick={openCatalogImporter}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100 text-xs font-bold rounded-lg transition"
-            title="Import photo and details directly from Architecture Catalog"
+            onClick={() => setQuestions([])} 
+            className="text-xs text-red-600 hover:underline font-bold"
           >
-            <Sparkles size={14} className="text-blue-600" /> ⚡ Quick Import from Catalog
+            Clear Questions
           </button>
-          <button 
-            onClick={addQuestion}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-lg transition shadow-xs"
-          >
-            <Plus size={14} /> Add Question
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* QUESTIONS LIST */}
-      <div className="space-y-6">
-        {questions.map((q, qIdx) => (
-          <div key={qIdx} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs relative group">
-            {/* Question Top Header */}
-            <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center">
-                  {qIdx + 1}
+      {questions.length === 0 ? (
+        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 text-center text-gray-400">
+          <p className="text-sm font-bold text-gray-700 mb-1">No questions generated yet</p>
+          <p className="text-xs text-gray-400">
+            Click <strong>"⚡ Generate Quiz from Database"</strong> above to auto-create questions instantly.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {questions.map((q, idx) => (
+            <div key={idx} className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-7 h-7 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center shrink-0">
+                  {idx + 1}
                 </span>
 
-                {/* Question Type Selector */}
-                <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200">
-                  <button 
-                    onClick={() => updateQuestion(qIdx, { question_type: "choose" })}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition ${
-                      q.question_type === "choose" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
-                    }`}
-                  >
-                    Choose (Options)
-                  </button>
-                  <button 
-                    onClick={() => updateQuestion(qIdx, { question_type: "fill_up" })}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-md transition ${
-                      q.question_type === "fill_up" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
-                    }`}
-                  >
-                    Fill-up (Text Typing)
-                  </button>
+                {q.media_url ? (
+                  <img src={q.media_url} alt="clue" className="w-14 h-14 object-cover rounded-xl border border-gray-200 shrink-0 shadow-xs" />
+                ) : null}
+
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-gray-900 truncate">
+                    {q.question_text}
+                  </p>
+                  
+                  {q.question_type === "choose" ? (
+                    <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                      {q.options.map((opt, oIdx) => (
+                        <span 
+                          key={oIdx} 
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                            opt === q.correct_answer 
+                              ? "bg-emerald-100 text-emerald-800 font-bold border border-emerald-300" 
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {opt}
+                        </span>
+                      ))}
+                    </div>
+                  ) : q.question_type === "missing_letters" ? (
+                    <div className="mt-1">
+                      <span className="text-[11px] font-mono font-bold bg-amber-50 text-amber-900 px-2 py-0.5 rounded border border-amber-200">
+                        Mask: {generateMissingLettersMask(q.correct_answer)}
+                      </span>
+                      <span className="text-[10px] text-gray-500 ml-2">
+                        (Answer: {q.correct_answer})
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-emerald-700 font-bold mt-0.5">
+                      Target: {q.correct_answer}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Move up / down / delete */}
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => moveQuestion(qIdx, "up")} 
-                  disabled={qIdx === 0}
-                  className="p-1 text-gray-400 hover:text-black disabled:opacity-30 rounded hover:bg-gray-100"
-                  title="Move Up"
-                >
-                  <ArrowUp size={14} />
-                </button>
-                <button 
-                  onClick={() => moveQuestion(qIdx, "down")} 
-                  disabled={qIdx === questions.length - 1}
-                  className="p-1 text-gray-400 hover:text-black disabled:opacity-30 rounded hover:bg-gray-100"
-                  title="Move Down"
-                >
-                  <ArrowDown size={14} />
-                </button>
-                <button 
-                  onClick={() => removeQuestion(qIdx)} 
-                  className="p-1 text-red-400 hover:text-red-600 rounded hover:bg-red-50 ml-1"
-                  title="Delete Question"
+              <div className="shrink-0 flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">
+                  {q.question_type}
+                </span>
+                <button
+                  onClick={() => removeQuestion(idx)}
+                  className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                  title="Remove this question"
                 >
                   <Trash2 size={14} />
                 </button>
               </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            {/* Question Text */}
-            <div className="mb-3">
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                Question Prompt *
-              </label>
-              <input 
-                type="text"
-                placeholder="e.g. Which architect designed this building?"
-                value={q.question_text}
-                onChange={e => updateQuestion(qIdx, { question_text: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black font-medium"
-              />
-            </div>
+      {/* Save Action Footer */}
+      {questions.length > 0 && (
+        <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between">
+          <p className="text-xs text-gray-500">
+            {questions.length} questions ready. Click save to publish.
+          </p>
 
-            {/* Media Attachment (Photo) */}
-            <div className="mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-                  <ImageIcon size={13} /> Photo Attachment (Optional)
-                </label>
-                {q.media_url && (
-                  <button 
-                    onClick={() => updateQuestion(qIdx, { media_url: "" })}
-                    className="text-[11px] text-red-600 hover:underline"
-                  >
-                    Remove Image
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                {q.media_url ? (
-                  <img src={q.media_url} alt="question preview" className="w-12 h-12 object-cover rounded-lg border border-gray-300 shrink-0 shadow-xs" />
-                ) : null}
-                <input 
-                  type="text"
-                  placeholder="Paste image URL or click Upload..."
-                  value={q.media_url}
-                  onChange={e => updateQuestion(qIdx, { media_url: e.target.value })}
-                  className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-white"
-                />
-                <label className="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-800 text-xs font-bold rounded-lg cursor-pointer transition shrink-0 flex items-center gap-1 border border-gray-300 shadow-xs">
-                  <UploadCloud size={13} /> Upload
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    className="hidden" 
-                    onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0], url => updateQuestion(qIdx, { media_url: url }))}
-                  />
-                </label>
-              </div>
-            </div>
-
-            {/* MULTIPLE CHOICE OPTIONS */}
-            {q.question_type === "choose" ? (
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                  Options (Select radio for correct answer) *
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                  {q.options.map((opt, optIdx) => {
-                    const isCorrect = q.correct_answer === opt && opt.trim() !== "";
-                    return (
-                      <div 
-                        key={optIdx} 
-                        className={`flex items-center gap-2 p-2 rounded-xl border transition ${
-                          isCorrect ? "bg-emerald-50/60 border-emerald-500" : "bg-white border-gray-200"
-                        }`}
-                      >
-                        <input 
-                          type="radio" 
-                          name={`correct-${qIdx}`}
-                          checked={isCorrect}
-                          onChange={() => updateQuestion(qIdx, { correct_answer: opt })}
-                          className="accent-emerald-600 w-4 h-4 cursor-pointer"
-                          title="Mark as correct answer"
-                        />
-                        <input 
-                          type="text"
-                          placeholder={`Option ${optIdx + 1}...`}
-                          value={opt}
-                          onChange={e => {
-                            const val = e.target.value;
-                            updateOption(qIdx, optIdx, val);
-                            if (isCorrect) updateQuestion(qIdx, { correct_answer: val });
-                          }}
-                          className="w-full px-2 py-1 text-xs border-0 focus:outline-none bg-transparent font-medium"
-                        />
-                        {isCorrect && (
-                          <span className="text-[10px] font-bold text-emerald-700 uppercase px-1.5 py-0.5 bg-emerald-100 rounded shrink-0">
-                            Correct
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              /* FILL-UP TEXT TYPING */
-              <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Correct Answer *
-                  </label>
-                  <input 
-                    type="text"
-                    placeholder="e.g. Charles Correa"
-                    value={q.correct_answer}
-                    onChange={e => updateQuestion(qIdx, { correct_answer: e.target.value })}
-                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black font-bold text-emerald-800 bg-emerald-50/30"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Accepted Alternate Spellings (Comma separated)
-                  </label>
-                  <input 
-                    type="text"
-                    placeholder="e.g. Correa, C Correa, Charles"
-                    value={q.accepted_aliases.join(", ")}
-                    onChange={e => updateQuestion(qIdx, { 
-                      accepted_aliases: e.target.value.split(",").map(s => s.trim()).filter(Boolean) 
-                    })}
-                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* EXPLANATION / TRIVIA CLUE */}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <HelpCircle size={12} /> Post-Answer Trivia / Explanation (Optional)
-              </label>
-              <input 
-                type="text"
-                placeholder="e.g. Kanchanjunga is a 28-storey residential tower in Mumbai, completed in 1983."
-                value={q.explanation_clue}
-                onChange={e => updateQuestion(qIdx, { explanation_clue: e.target.value })}
-                className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-black text-gray-600 bg-gray-50/50"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* BOTTOM BUTTON */}
-      <div className="mt-8 pt-4 border-t border-gray-200 flex items-center justify-between">
-        <button 
-          onClick={addQuestion}
-          className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-black text-xs font-bold rounded-xl transition border border-gray-300"
-        >
-          <Plus size={14} /> Add Another Question
-        </button>
-
-        <button 
-          onClick={() => handleSaveQuiz(true)}
-          disabled={saving}
-          className="px-6 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-2"
-        >
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-          Save & Publish Quiz
-        </button>
-      </div>
-
-      {/* CATALOG IMPORTER MODAL */}
-      {showCatalogModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
-                  <Sparkles size={16} className="text-blue-600" /> Quick Import from Architecture Catalog
-                </h3>
-                <p className="text-xs text-gray-500">Pick any project to automatically generate a visual question.</p>
-              </div>
-              <button onClick={() => setShowCatalogModal(false)} className="text-gray-400 hover:text-black font-bold p-1">
-                ✕
-              </button>
-            </div>
-
-            <div className="p-3 border-b border-gray-200 bg-gray-50">
-              <input 
-                type="text" 
-                placeholder="Search catalog by building, architect, or city..."
-                value={catalogSearch}
-                onChange={e => setCatalogSearch(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black"
-                autoFocus
-              />
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {catalogLoading ? (
-                <div className="p-8 text-center text-gray-400 flex items-center justify-center gap-2">
-                  <Loader2 size={18} className="animate-spin" /> Loading Catalog Projects...
-                </div>
-              ) : filteredCatalog.length === 0 ? (
-                <div className="p-8 text-center text-gray-400 text-xs">
-                  No projects found.
-                </div>
-              ) : (
-                filteredCatalog.map((row) => {
-                  const d = row.data || {};
-                  return (
-                    <div 
-                      key={row.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-black hover:bg-gray-50 transition gap-3"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        {d.building_photo ? (
-                          <img src={d.building_photo} alt="thumb" className="w-12 h-12 object-cover rounded-lg border border-gray-200 shrink-0" />
-                        ) : (
-                          <div className="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 text-xs shrink-0">
-                            🏛️
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-gray-900 truncate">{d.building_name || "Untitled Building"}</p>
-                          <p className="text-[11px] text-gray-500 truncate">Architect: {d.architect || "Unknown"} • {d.city || ""}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button 
-                          onClick={() => importFromCatalog(row, "architect")}
-                          className="px-2.5 py-1.5 bg-black hover:bg-gray-800 text-white rounded-lg text-xs font-bold transition"
-                        >
-                          + "Guess Architect"
-                        </button>
-                        <button 
-                          onClick={() => importFromCatalog(row, "building")}
-                          className="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-xs font-bold transition border border-gray-300"
-                        >
-                          + "Guess Building"
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+          <button 
+            onClick={() => handleSaveQuiz(true)}
+            disabled={saving}
+            className="px-6 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-2"
+          >
+            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+            Publish Quiz ({questions.length} Questions)
+          </button>
         </div>
       )}
 
