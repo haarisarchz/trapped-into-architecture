@@ -1,0 +1,13 @@
+-- Migration: Add WhatsApp, Social Links, and Privacy Settings to public.profiles
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS whatsapp_number TEXT,
+  ADD COLUMN IF NOT EXISTS whatsapp_same_as_phone BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS linkedin_url TEXT,
+  ADD COLUMN IF NOT EXISTS instagram_url TEXT,
+  ADD COLUMN IF NOT EXISTS portfolio_url TEXT,
+  ADD COLUMN IF NOT EXISTS twitter_url TEXT,
+  ADD COLUMN IF NOT EXISTS hide_phone BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS hide_whatsapp BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS hide_email BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS hide_dob BOOLEAN DEFAULT FALSE;

@@ -13,7 +13,8 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "", email: "", phone: "", subject: "", message: ""
   });
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -32,11 +33,25 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("submitting");
+    setErrorMessage("");
     
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send message. Please try again.");
+      }
       setStatus("success");
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
-    }, 1000);
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      setStatus("error");
+      setErrorMessage(err.message || "Failed to send message. Please try again or reach out directly.");
+    }
   };
 
   if (loading) return null;
@@ -209,14 +224,27 @@ export default function ContactPage() {
               <button 
                 type="submit" 
                 disabled={status === 'submitting'}
-                className="w-full bg-black text-white rounded-xl py-3.5 font-bold hover:bg-gray-800 transition disabled:opacity-50"
+                className="w-full bg-black text-white rounded-xl py-3.5 font-bold hover:bg-gray-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {status === 'submitting' ? 'Sending...' : 'Send Message'}
+                {status === 'submitting' ? (
+                  <>
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Sending your message...</span>
+                  </>
+                ) : (
+                  'Send Message'
+                )}
               </button>
               
               {status === 'success' && (
-                <div className="p-4 bg-green-50 text-green-700 rounded-xl text-center font-medium">
-                  Message sent successfully!
+                <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl text-center text-sm font-medium animate-fadeIn">
+                  ✓ Thank you! Your message has been sent to our team. We will get back to you shortly.
+                </div>
+              )}
+
+              {status === 'error' && (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-center text-sm font-medium animate-fadeIn">
+                  ✕ {errorMessage || "Something went wrong. Please try again or reach out to us directly."}
                 </div>
               )}
             </form>
