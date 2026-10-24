@@ -27,25 +27,57 @@ export default function ProfileHero({
   const [likeLoading, setLikeLoading] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
+  // Helper to safely get the current logged in user's profile ID
+  const getLoggedInUserId = async (): Promise<string | null> => {
+    try {
+      const stored = typeof window !== "undefined" ? localStorage.getItem("currentUser") : null;
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u?.id) return u.id;
+        if (u?.username || u?.email) {
+          const { data } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq(u.username ? "username" : "email", u.username || u.email)
+            .maybeSingle();
+          if (data?.id) {
+            // cache it back into currentUser
+            localStorage.setItem("currentUser", JSON.stringify({ ...u, id: data.id }));
+            return data.id;
+          }
+        }
+      }
+      const { data: authData } = await supabase.auth.getUser();
+      return authData?.user?.id || null;
+    } catch (e) {
+      console.error("Error resolving logged in user ID:", e);
+      return null;
+    }
+  };
+
   // Sync likesCount when user changes
   useEffect(() => {
     setLikesCount(user.likes_count || 0);
   }, [user.likes_count]);
 
-  // Check if current visitor has liked this profile
+  // Check if current visitor has liked this profile (localStorage cache + Supabase DB)
   useEffect(() => {
     const checkUserLike = async () => {
+      if (!user?.id) return;
+
+      // 1. Instant check from localStorage cache
       try {
-        const storedUser = typeof window !== "undefined" ? localStorage.getItem("currentUser") : null;
-        let loggedInUserId = storedUser ? JSON.parse(storedUser)?.id : null;
-
-        if (!loggedInUserId) {
-          const { data } = await supabase.auth.getUser();
-          loggedInUserId = data?.user?.id;
+        const localLiked = JSON.parse(localStorage.getItem("liked_profiles") || "[]");
+        if (Array.isArray(localLiked) && localLiked.includes(user.id)) {
+          setHasLiked(true);
         }
+      } catch (e) {}
 
-        if (!loggedInUserId || !user?.id) return;
+      // 2. Authoritative check from Supabase profile_likes
+      const loggedInUserId = await getLoggedInUserId();
+      if (!loggedInUserId) return;
 
+      try {
         const { data: likeRecord } = await supabase
           .from("profile_likes")
           .select("id")
@@ -55,6 +87,21 @@ export default function ProfileHero({
 
         if (likeRecord) {
           setHasLiked(true);
+          // Sync localStorage cache
+          const localLiked = JSON.parse(localStorage.getItem("liked_profiles") || "[]");
+          if (!localLiked.includes(user.id)) {
+            localStorage.setItem("liked_profiles", JSON.stringify([...localLiked, user.id]));
+          }
+        } else {
+          // If not in DB, update local cache
+          const localLiked = JSON.parse(localStorage.getItem("liked_profiles") || "[]");
+          if (localLiked.includes(user.id)) {
+            localStorage.setItem(
+              "liked_profiles",
+              JSON.stringify(localLiked.filter((id: string) => id !== user.id))
+            );
+            setHasLiked(false);
+          }
         }
       } catch (err) {
         console.error("Error checking profile like status:", err);
@@ -67,16 +114,9 @@ export default function ProfileHero({
   const handleToggleLike = async () => {
     if (likeLoading) return;
 
-    const storedUser = typeof window !== "undefined" ? localStorage.getItem("currentUser") : null;
-    let loggedInUserId = storedUser ? JSON.parse(storedUser)?.id : null;
-
+    const loggedInUserId = await getLoggedInUserId();
     if (!loggedInUserId) {
-      const { data } = await supabase.auth.getUser();
-      loggedInUserId = data?.user?.id;
-    }
-
-    if (!loggedInUserId) {
-      alert("Please log in to like this profile.");
+      alert("Please log in first to like this profile.");
       return;
     }
 
@@ -84,7 +124,7 @@ export default function ProfileHero({
 
     try {
       if (hasLiked) {
-        // Unlike
+        // Unlike: Remove from Supabase profile_likes
         const { error } = await supabase
           .from("profile_likes")
           .delete()
@@ -94,9 +134,22 @@ export default function ProfileHero({
         if (!error) {
           setHasLiked(false);
           setLikesCount((prev) => Math.max(0, prev - 1));
+
+          // Update local cache
+          const localLiked = JSON.parse(localStorage.getItem("liked_profiles") || "[]");
+          localStorage.setItem(
+            "liked_profiles",
+            JSON.stringify(localLiked.filter((id: string) => id !== user.id))
+          );
+
+          // Fallback update profiles.likes_count directly if trigger is slow
+          await supabase
+            .from("profiles")
+            .update({ likes_count: Math.max(0, (user.likes_count || likesCount) - 1) })
+            .eq("id", user.id);
         }
       } else {
-        // Like
+        // Like: Insert into Supabase profile_likes
         const { error } = await supabase
           .from("profile_likes")
           .insert({ profile_id: user.id, user_id: loggedInUserId });
@@ -104,6 +157,18 @@ export default function ProfileHero({
         if (!error) {
           setHasLiked(true);
           setLikesCount((prev) => prev + 1);
+
+          // Update local cache
+          const localLiked = JSON.parse(localStorage.getItem("liked_profiles") || "[]");
+          if (!localLiked.includes(user.id)) {
+            localStorage.setItem("liked_profiles", JSON.stringify([...localLiked, user.id]));
+          }
+
+          // Fallback update profiles.likes_count directly
+          await supabase
+            .from("profiles")
+            .update({ likes_count: (user.likes_count || likesCount) + 1 })
+            .eq("id", user.id);
         }
       }
     } catch (err) {
@@ -120,7 +185,6 @@ export default function ProfileHero({
     setUploadingImage(true);
     try {
       let uploadedUrl = "";
-      // 1. Try ImageKit upload endpoint if available
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -131,10 +195,9 @@ export default function ProfileHero({
           if (data.url) uploadedUrl = data.url;
         }
       } catch (e) {
-        console.warn("ImageKit upload error, falling back to base64 / Supabase:", e);
+        console.warn("Upload fallback:", e);
       }
 
-      // 2. Fallback to Supabase Storage or FileReader
       if (!uploadedUrl) {
         uploadedUrl = await new Promise((resolve) => {
           const reader = new FileReader();
