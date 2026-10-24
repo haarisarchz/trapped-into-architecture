@@ -15,7 +15,7 @@ export async function generateMetadata({
       .maybeSingle();
 
     if (!quiz) {
-      return { title: "Architecture Quiz | Trapped Into Architecture" };
+      return { title: "Architecture Quiz" };
     }
 
     const title = `${quiz.title} | Architecture Quiz & Practice Test`;
@@ -29,20 +29,20 @@ export async function generateMetadata({
         canonical: url,
       },
       openGraph: {
-        title,
+        title: `${quiz.title} | Trapped Into Architecture`,
         description,
         url,
         images: quiz.cover_image ? [quiz.cover_image] : ["https://trappedintoarchitecture.com/og-image.png"],
       },
       twitter: {
         card: "summary_large_image",
-        title,
+        title: `${quiz.title} | Trapped Into Architecture`,
         description,
         images: quiz.cover_image ? [quiz.cover_image] : ["https://trappedintoarchitecture.com/og-image.png"],
       },
     };
   } catch {
-    return { title: "Architecture Quiz | Trapped Into Architecture" };
+    return { title: "Architecture Quiz" };
   }
 }
 

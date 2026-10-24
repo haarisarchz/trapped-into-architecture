@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Architecture Internships & Paid Architectural Trainee Openings | Trapped Into Architecture",
+  title: "Architecture Internships & Paid Architectural Trainee Openings",
   description: "Discover verified architecture internships, student architectural trainee positions, and interior design internships at top architectural studios across India.",
   alternates: {
     canonical: "https://trappedintoarchitecture.com/internships",
   },
   openGraph: {
-    title: "Architecture Internships & Paid Architectural Trainee Openings",
+    title: "Architecture Internships & Paid Architectural Trainee Openings | Trapped Into Architecture",
     description: "Discover verified architecture internships and student architectural trainee positions at top studios across India.",
     url: "https://trappedintoarchitecture.com/internships",
     type: "website",

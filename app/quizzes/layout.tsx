@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Architecture Quizzes, Practice Tests & Trivia | Trapped Into Architecture",
+  title: "Architecture Quizzes, Practice Tests & Trivia",
   description: "Test your architectural knowledge with interactive quizzes on architectural history, building construction, sustainability, codes, and design theory.",
   alternates: {
     canonical: "https://trappedintoarchitecture.com/quizzes",

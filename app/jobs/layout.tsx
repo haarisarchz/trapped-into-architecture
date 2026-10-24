@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Architecture Jobs & Architect Vacancies across India | Trapped Into Architecture",
+  title: "Architecture Jobs & Architect Vacancies across India",
   description: "Browse verified architecture jobs, junior & senior architect openings, and interior design vacancies across Chennai, Bangalore, Mumbai, Delhi, and pan-India.",
   alternates: {
     canonical: "https://trappedintoarchitecture.com/jobs",

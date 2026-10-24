@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Top Architecture Firms & Interior Design Studios Directory | Trapped Into Architecture",
+  title: "Top Architecture Firms & Interior Design Studios Directory",
   description: "Browse top architecture firms, design practices, and studios across India. Explore active job openings, office locations, and firm hiring profiles.",
   alternates: {
     canonical: "https://trappedintoarchitecture.com/companies",
   },
   openGraph: {
-    title: "Top Architecture Firms & Interior Design Studios Directory",
+    title: "Top Architecture Firms & Interior Design Studios Directory | Trapped Into Architecture",
     description: "Browse top architecture firms and interior design studios across India. Check active vacancies and firm profiles.",
     url: "https://trappedintoarchitecture.com/companies",
     type: "website",
