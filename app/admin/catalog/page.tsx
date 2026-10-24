@@ -7,7 +7,7 @@ import Navbar from "../../../components/Navbar";
 import { 
   Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, 
   EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine, UploadCloud, Loader2,
-  ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, X, Sparkles, Filter
+  ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, X, Sparkles, Filter, CheckCircle2
 } from "lucide-react";
 
 // Initialize Supabase
@@ -67,15 +67,19 @@ export default function CatalogPage() {
 
   // Filtering & Sorting State
   const [searchQuery, setSearchQuery] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [showFiltersRow, setShowFiltersRow] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<"all" | "india" | "pritzker">("all");
   const [sortCol, setSortCol] = useState<string | null>("opened_year");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [savingAll, setSavingAll] = useState(false);
+  const [statusNotification, setStatusNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
   // Excel UX States
   const [activeColMenu, setActiveColMenu] = useState<string | null>(null);
   const [insertPos, setInsertPos] = useState<{ colId: string, direction: 'left' | 'right' } | null>(null);
   const [uploadingCells, setUploadingCells] = useState<Record<string, boolean>>({});
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Ref for table scroll control
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -200,6 +204,63 @@ export default function CatalogPage() {
     }
   };
 
+  // Master Save All functionality
+  const saveAllRows = async () => {
+    setSavingAll(true);
+    setStatusNotification(null);
+    try {
+      const newRows = rows.filter(r => r.isNew || String(r.id).startsWith("temp-"));
+      const existingRows = rows.filter(r => !r.isNew && !String(r.id).startsWith("temp-"));
+
+      let updatedRows = [...rows];
+
+      // 1. Insert newly added rows
+      if (newRows.length > 0) {
+        const rowsToInsert = newRows.map(r => ({
+          data: r.data || {},
+          is_locked: true
+        }));
+        const { data: insertedData, error: insertError } = await supabase
+          .from("architecture_catalog")
+          .insert(rowsToInsert)
+          .select();
+
+        if (insertError) throw new Error("Insert failed: " + insertError.message);
+
+        if (insertedData) {
+          let insertIdx = 0;
+          updatedRows = updatedRows.map(r => {
+            if (r.isNew || String(r.id).startsWith("temp-")) {
+              const matched = insertedData[insertIdx++];
+              return matched ? { ...matched, is_locked: true, isNew: false } : { ...r, is_locked: true, isNew: false };
+            }
+            return r;
+          });
+        }
+      }
+
+      // 2. Update all existing rows
+      for (const row of existingRows) {
+        const { error: updateError } = await supabase
+          .from("architecture_catalog")
+          .update({ data: row.data || {}, is_locked: true })
+          .eq("id", row.id);
+        if (updateError) console.warn("Row update error:", updateError);
+      }
+
+      // 3. Mark all rows as saved & locked in state
+      updatedRows = updatedRows.map(r => ({ ...r, is_locked: true, isNew: false }));
+      setRows(updatedRows);
+      setStatusNotification({ msg: `Successfully saved all ${rows.length} projects to Supabase!`, type: "success" });
+      setTimeout(() => setStatusNotification(null), 4000);
+    } catch (err: any) {
+      console.error("Save all error:", err);
+      setStatusNotification({ msg: "Error saving catalog: " + (err.message || String(err)), type: "error" });
+    } finally {
+      setSavingAll(false);
+    }
+  };
+
   const toggleAllLock = async (lockState: boolean) => {
     setSavingAll(true);
     try {
@@ -266,6 +327,26 @@ export default function CatalogPage() {
     tableContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
   };
 
+  const handleTableScroll = () => {
+    if (!tableContainerRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    if (maxScroll > 0) {
+      setScrollProgress(Math.round((scrollLeft / maxScroll) * 100));
+    } else {
+      setScrollProgress(0);
+    }
+  };
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const pct = Number(e.target.value);
+    setScrollProgress(pct);
+    if (!tableContainerRef.current) return;
+    const { scrollWidth, clientWidth } = tableContainerRef.current;
+    const maxScroll = scrollWidth - clientWidth;
+    tableContainerRef.current.scrollLeft = (pct / 100) * maxScroll;
+  };
+
   // Sorting Handler
   const handleSort = (colId: string) => {
     if (sortCol === colId) {
@@ -279,6 +360,14 @@ export default function CatalogPage() {
       setSortDir("asc");
     }
   };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setColumnFilters({});
+    setCategoryFilter("all");
+  };
+
+  const hasActiveFilters = searchQuery.trim() !== "" || Object.keys(columnFilters).length > 0 || categoryFilter !== "all";
 
   // Filtered & Sorted Rows
   const processedRows = useMemo(() => {
@@ -299,6 +388,17 @@ export default function CatalogPage() {
         return Object.values(d).some(v => String(v || "").toLowerCase().includes(q));
       });
     }
+
+    // Column-specific individual filters
+    Object.entries(columnFilters).forEach(([colId, filterVal]) => {
+      if (filterVal && filterVal.trim()) {
+        const f = filterVal.toLowerCase().trim();
+        result = result.filter(r => {
+          const val = r.data?.[colId];
+          return val != null && String(val).toLowerCase().includes(f);
+        });
+      }
+    });
 
     // Sort
     if (sortCol) {
@@ -321,7 +421,7 @@ export default function CatalogPage() {
     }
 
     return result;
-  }, [rows, categoryFilter, searchQuery, sortCol, sortDir]);
+  }, [rows, categoryFilter, searchQuery, columnFilters, sortCol, sortDir]);
 
   const renderCellInput = (row: any, col: any) => {
     const val = row.data[col.id] || "";
@@ -416,30 +516,36 @@ export default function CatalogPage() {
               <span className="bg-blue-100 text-blue-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                 {rows.length} Projects
               </span>
+              <span className="bg-emerald-100 text-emerald-800 text-[11px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                {columns.length} Columns
+              </span>
             </h1>
-            <p className="text-xs text-gray-500 mt-0.5">Sort by column, search, filter, and slide horizontally through all 16 architectural fields.</p>
+            <p className="text-xs text-gray-500 mt-0.5">Excel-style architecture database. Sort by clicking any header, filter individual columns, and slide horizontally.</p>
           </div>
 
           {!setupRequired && !loading && (
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Horizontal Scroll Controls */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200">
-                <button 
-                  onClick={() => scrollHorizontal('left')} 
-                  className="px-2.5 py-1.5 hover:bg-white text-gray-700 hover:text-black rounded text-xs font-bold transition flex items-center gap-1 shadow-xs"
-                  title="Scroll Left across columns"
-                >
-                  <ChevronLeft size={14} /> Slide Left
-                </button>
-                <div className="w-px h-4 bg-gray-300 my-auto"></div>
-                <button 
-                  onClick={() => scrollHorizontal('right')} 
-                  className="px-2.5 py-1.5 hover:bg-white text-gray-700 hover:text-black rounded text-xs font-bold transition flex items-center gap-1 shadow-xs"
-                  title="Scroll Right across columns"
-                >
-                  Slide Right <ChevronRight size={14} />
-                </button>
-              </div>
+              {/* MASTER SAVE ALL BUTTON */}
+              <button 
+                onClick={saveAllRows} 
+                disabled={savingAll}
+                className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition text-xs shadow-sm disabled:opacity-50"
+                title="Save all rows and modifications at once to Supabase"
+              >
+                {savingAll ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                {savingAll ? "Saving All..." : `Save All (${rows.length})`}
+              </button>
+
+              {/* TOGGLE COLUMN FILTERS */}
+              <button 
+                onClick={() => setShowFiltersRow(!showFiltersRow)} 
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition text-xs font-semibold border ${
+                  showFiltersRow ? "bg-black text-white border-black" : "bg-gray-100 hover:bg-gray-200 text-gray-800 border-gray-300"
+                }`}
+                title="Toggle column-by-column filter inputs"
+              >
+                <Filter size={13} /> {showFiltersRow ? "Hide Filters" : "Filter Columns"}
+              </button>
 
               {/* Lock / Unlock All */}
               <button 
@@ -479,7 +585,7 @@ export default function CatalogPage() {
           )}
         </div>
 
-        {/* SEARCH & FILTER BAR */}
+        {/* SEARCH & QUICK CATEGORY FILTER BAR */}
         {!setupRequired && !loading && (
           <div className="bg-white border-b border-gray-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
             {/* Search Input */}
@@ -487,7 +593,7 @@ export default function CatalogPage() {
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input 
                 type="text"
-                placeholder="Search by building, architect, city, state, style..."
+                placeholder="Global search across all columns..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-8 pr-8 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50/50"
@@ -501,7 +607,7 @@ export default function CatalogPage() {
 
             {/* Quick Filter Chips */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Filter:</span>
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Category:</span>
               <button 
                 onClick={() => setCategoryFilter("all")}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
@@ -528,14 +634,74 @@ export default function CatalogPage() {
               </button>
             </div>
 
-            {/* Results counter & active sort indicator */}
-            <div className="text-xs text-gray-500 font-medium">
-              Showing <span className="font-bold text-gray-900">{processedRows.length}</span> of {rows.length} Projects
-              {sortCol && (
-                <span className="ml-2 text-blue-600 font-mono text-[11px]">
-                  (Sorted by {columns.find(c => c.id === sortCol)?.title || sortCol} {sortDir === "asc" ? "▲" : "▼"})
-                </span>
+            {/* Active status & clear filters */}
+            <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
+              <div>
+                Showing <span className="font-bold text-gray-900">{processedRows.length}</span> of {rows.length} Projects
+                {sortCol && (
+                  <span className="ml-2 text-blue-600 font-mono text-[11px]">
+                    (Sorted by {columns.find(c => c.id === sortCol)?.title || sortCol} {sortDir === "asc" ? "▲" : "▼"})
+                  </span>
+                )}
+              </div>
+              {hasActiveFilters && (
+                <button 
+                  onClick={clearAllFilters}
+                  className="text-xs text-red-600 hover:text-red-800 flex items-center gap-1 font-bold underline"
+                  title="Clear all search and column filters"
+                >
+                  <X size={12} /> Clear Filters
+                </button>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* HORIZONTAL SCROLL NAVIGATOR SLIDER */}
+        {!setupRequired && !loading && (
+          <div className="bg-gray-100/90 border-b border-gray-200 px-6 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                Horizontal Scroll Cursor:
+              </span>
+              <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1 border border-gray-300 shadow-xs">
+                <button 
+                  onClick={() => scrollHorizontal('left')} 
+                  className="p-1 hover:bg-gray-100 text-gray-700 hover:text-black rounded transition shadow-xs" 
+                  title="Slide Left across columns"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  value={scrollProgress} 
+                  onChange={handleSliderChange} 
+                  className="w-36 sm:w-64 accent-black cursor-ew-resize"
+                  title="Drag slider to scroll sideways across all 16 columns"
+                />
+                <button 
+                  onClick={() => scrollHorizontal('right')} 
+                  className="p-1 hover:bg-gray-100 text-gray-700 hover:text-black rounded transition shadow-xs" 
+                  title="Slide Right across columns"
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <span className="text-[11px] font-mono text-gray-700 font-bold ml-1 w-12 text-right">
+                  {scrollProgress}%
+                </span>
+              </div>
+              <span className="text-[11px] text-gray-500 hidden md:inline">
+                ({visibleColumns.length} Columns Total — slide right to view Pritzker, style, dimensions, photos & trivia)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded shadow-xs">
+                💡 Tip: Hold <kbd className="font-bold text-gray-800">Shift</kbd> + Scroll Wheel to glide sideways
+              </span>
             </div>
           </div>
         )}
@@ -571,11 +737,13 @@ export default function CatalogPage() {
           ) : (
             <div 
               ref={tableContainerRef}
-              className="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-200 flex-1 overflow-auto relative excel-scrollbar"
-              style={{ maxHeight: 'calc(100vh - 230px)' }}
+              onScroll={handleTableScroll}
+              className="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-200 flex-1 overflow-x-scroll overflow-y-auto relative excel-scrollbar"
+              style={{ maxHeight: 'calc(100vh - 280px)' }}
             >
               <table className="w-max min-w-full text-left border-collapse table-fixed select-text">
                 <thead className="bg-gray-50 sticky top-0 z-30 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+                  {/* MAIN HEADER ROW */}
                   <tr>
                     {/* Index Col # */}
                     <th className="px-3 py-3 text-xs font-bold text-gray-500 uppercase w-12 min-w-[48px] text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 z-40">
@@ -584,12 +752,15 @@ export default function CatalogPage() {
                     
                     {visibleColumns.map((col) => {
                       const isBuildingName = col.id === "building_name";
+                      const isSorted = sortCol === col.id;
                       return (
                         <th 
                           key={col.id} 
                           className={`px-3 py-2.5 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors ${
                             isBuildingName 
                               ? "sticky left-12 z-40 bg-gray-100 min-w-[240px] w-[240px] border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
+                              : isSorted
+                              ? "min-w-[190px] w-[190px] bg-blue-50/70 border-b-2 border-b-blue-500"
                               : "min-w-[190px] w-[190px] bg-gray-50 hover:bg-gray-100"
                           }`}
                         >
@@ -598,19 +769,19 @@ export default function CatalogPage() {
                             <div 
                               onClick={() => handleSort(col.id)}
                               className="flex items-center gap-1.5 cursor-pointer select-none py-1 group/sort flex-1 truncate"
-                              title={`Click to sort by ${col.title}`}
+                              title={`Click to sort by ${col.title} (${isSorted ? (sortDir === 'asc' ? 'Ascending' : 'Descending') : 'Click to Sort'})`}
                             >
-                              <span className="uppercase tracking-wider font-bold truncate text-[11px] text-gray-700 group-hover/sort:text-black">
+                              <span className={`uppercase tracking-wider font-bold truncate text-[11px] ${isSorted ? "text-blue-900" : "text-gray-700 group-hover/sort:text-black"}`}>
                                 {col.title}
                               </span>
-                              {sortCol === col.id ? (
+                              {isSorted ? (
                                 sortDir === "asc" ? (
-                                  <ArrowUp size={13} className="text-black shrink-0 font-bold" />
+                                  <ArrowUp size={13} className="text-blue-600 shrink-0 font-bold" />
                                 ) : (
-                                  <ArrowDown size={13} className="text-black shrink-0 font-bold" />
+                                  <ArrowDown size={13} className="text-blue-600 shrink-0 font-bold" />
                                 )
                               ) : (
-                                <ArrowUpDown size={11} className="text-gray-400 opacity-30 group-hover/sort:opacity-100 shrink-0 transition" />
+                                <ArrowUpDown size={11} className="text-gray-400 opacity-40 group-hover/sort:opacity-100 shrink-0 transition" />
                               )}
                             </div>
 
@@ -668,12 +839,72 @@ export default function CatalogPage() {
                       Action
                     </th>
                   </tr>
+
+                  {/* COLUMN-SPECIFIC FILTER INPUT ROW */}
+                  {showFiltersRow && (
+                    <tr className="bg-gray-100/95 border-b border-gray-200 shadow-xs">
+                      {/* Under # column */}
+                      <th className="p-1.5 text-center border-r border-gray-200 bg-gray-200 sticky left-0 z-40">
+                        <Filter size={11} className="mx-auto text-gray-500" />
+                      </th>
+                      {visibleColumns.map((col) => {
+                        const isBuildingName = col.id === "building_name";
+                        return (
+                          <th 
+                            key={`filter-${col.id}`}
+                            className={`p-1.5 border-r border-gray-200 ${
+                              isBuildingName 
+                                ? "sticky left-12 z-40 bg-gray-200 border-r-2 border-r-gray-300" 
+                                : "bg-gray-100"
+                            }`}
+                          >
+                            <div className="relative">
+                              <input 
+                                type="text"
+                                placeholder={`Filter ${col.title}...`}
+                                value={columnFilters[col.id] || ""}
+                                onChange={(e) => setColumnFilters(prev => ({ ...prev, [col.id]: e.target.value }))}
+                                className="w-full pl-2 pr-5 py-1 text-[11px] font-normal border border-gray-300 rounded bg-white focus:outline-none focus:border-black shadow-inner"
+                              />
+                              {columnFilters[col.id] && (
+                                <button 
+                                  onClick={() => setColumnFilters(prev => {
+                                    const copy = { ...prev };
+                                    delete copy[col.id];
+                                    return copy;
+                                  })}
+                                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
+                                  title="Clear filter"
+                                >
+                                  <X size={10} />
+                                </button>
+                              )}
+                            </div>
+                          </th>
+                        );
+                      })}
+                      {/* Action column reset button */}
+                      <th className="p-1.5 sticky right-0 bg-gray-200 border-l border-gray-200 z-40 text-center">
+                        {Object.keys(columnFilters).length > 0 && (
+                          <button 
+                            onClick={() => setColumnFilters({})}
+                            className="text-[10px] text-red-600 font-bold hover:underline"
+                            title="Clear all column filters"
+                          >
+                            Reset
+                          </button>
+                        )}
+                      </th>
+                    </tr>
+                  )}
                 </thead>
                 <tbody className="text-sm">
                   {processedRows.length === 0 && (
                     <tr>
                       <td colSpan={visibleColumns.length + 2} className="px-6 py-12 text-center text-gray-400 italic">
-                        {searchQuery ? `No buildings match "${searchQuery}".` : "No rows found in catalog."}
+                        {searchQuery || Object.keys(columnFilters).length > 0 
+                          ? "No architecture projects match your filter criteria." 
+                          : "No rows found in catalog."}
                       </td>
                     </tr>
                   )}
@@ -751,6 +982,19 @@ export default function CatalogPage() {
           )}
         </div>
       </div>
+
+      {/* Floating Status Notification Toast */}
+      {statusNotification && (
+        <div className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs font-bold text-white transition-all transform animate-in fade-in slide-in-from-bottom-3 ${
+          statusNotification.type === "success" ? "bg-emerald-600" : "bg-red-600"
+        }`}>
+          {statusNotification.type === "success" && <CheckCircle2 size={16} />}
+          <span>{statusNotification.msg}</span>
+          <button onClick={() => setStatusNotification(null)} className="ml-2 hover:opacity-80">
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Add Column Modal */}
       {showColModal && (

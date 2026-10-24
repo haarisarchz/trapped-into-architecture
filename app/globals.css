@@ -27,19 +27,19 @@ body {
 
 /* Custom Visible Scrollbar for Catalog & Spreadsheets */
 .excel-scrollbar::-webkit-scrollbar {
-  height: 14px;
+  height: 16px;
   width: 14px;
 }
 
 .excel-scrollbar::-webkit-scrollbar-track {
-  background: #e2e8f0;
+  background: #cbd5e1;
   border-radius: 8px;
 }
 
 .excel-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #1e293b;
   border-radius: 8px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #cbd5e1;
 }
 
 .excel-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -48,7 +48,7 @@ body {
 
 .excel-scrollbar {
   scrollbar-width: auto;
-  scrollbar-color: #475569 #e2e8f0;
+  scrollbar-color: #1e293b #cbd5e1;
 }
 
 /* Custom Visible Scrollbar for filter lists */
