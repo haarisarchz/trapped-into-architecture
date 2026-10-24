@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import { 
   Trophy, Play, Clock, HelpCircle, Users, Sparkles, 
-  ArrowRight, Filter, ChevronRight, Award, Flame, Search
+  ArrowRight, Filter, ChevronRight, Award, Flame, Search, Lock
 } from "lucide-react";
 
 export default function QuizzesHubPage() {
@@ -14,12 +14,20 @@ export default function QuizzesHubPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   
+  // Auth state
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   // Leaderboard state
   const [leaderboardTab, setLeaderboardTab] = useState<"weekly" | "monthly" | "all">("weekly");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
 
   useEffect(() => {
+    // Check if user is logged in
+    const stored = localStorage.getItem("currentUser");
+    if (stored) {
+      try { setCurrentUser(JSON.parse(stored)); } catch (e) {}
+    }
     fetchQuizzes();
   }, []);
 
@@ -240,9 +248,9 @@ export default function QuizzesHubPage() {
               )}
             </div>
 
-            {/* RIGHT SIDEBAR: LEADERBOARD WIDGET (4 Columns) */}
+            {/* RIGHT SIDEBAR: LEADERBOARD WIDGET WITH BLURRED GUEST LOCK */}
             <div className="lg:col-span-4">
-              <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-xs sticky top-[100px]">
+              <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-xs sticky top-[100px] relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                     <Trophy size={18} className="text-amber-500" /> Leaderboard
@@ -291,55 +299,90 @@ export default function QuizzesHubPage() {
                     Be the first to claim #1 on the leaderboard!
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    {leaderboard.map((item, idx) => {
-                      const rank = idx + 1;
-                      const isTop3 = rank <= 3;
-                      const badgeColors = [
-                        "bg-amber-400 text-amber-950", // #1 Gold
-                        "bg-slate-300 text-slate-900", // #2 Silver
-                        "bg-amber-700 text-amber-50"   // #3 Bronze
-                      ];
+                  <div className="relative">
+                    <div className="space-y-2">
+                      {leaderboard.map((item, idx) => {
+                        const rank = idx + 1;
+                        const isTop3 = rank <= 3;
+                        const badgeColors = [
+                          "bg-amber-400 text-amber-950", // #1 Gold
+                          "bg-slate-300 text-slate-900", // #2 Silver
+                          "bg-amber-700 text-amber-50"   // #3 Bronze
+                        ];
 
-                      return (
-                        <div 
-                          key={idx}
-                          className={`flex items-center justify-between p-2.5 rounded-xl transition ${
-                            isTop3 ? "bg-gray-50 border border-gray-100" : "hover:bg-gray-50/50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className={`w-6 h-6 rounded-full text-[11px] font-extrabold flex items-center justify-center shrink-0 ${
-                              isTop3 ? badgeColors[idx] : "text-gray-400 font-mono"
-                            }`}>
-                              {rank}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-gray-900 truncate">
-                                {item.display_name || "Architect"}
-                              </p>
-                              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-mono">
-                                {item.difficulty} mode • {item.score}/{item.total_questions} correct
-                              </p>
+                        // If user is guest, blur rows 2+
+                        const shouldBlur = !currentUser && rank > 1;
+                        const displayName = shouldBlur
+                          ? (item.display_name ? item.display_name.slice(0, 3) + "***" : "Architect")
+                          : (!currentUser && rank === 1 ? (item.display_name ? item.display_name.slice(0, 4) + "***" : "Ar. Top Scorer") : item.display_name || "Architect");
+
+                        return (
+                          <div 
+                            key={idx}
+                            className={`flex items-center justify-between p-2.5 rounded-xl transition ${
+                              isTop3 ? "bg-gray-50 border border-gray-100" : "hover:bg-gray-50/50"
+                            } ${shouldBlur ? "filter blur-[3px] opacity-40 select-none pointer-events-none" : ""}`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className={`w-6 h-6 rounded-full text-[11px] font-extrabold flex items-center justify-center shrink-0 ${
+                                isTop3 ? badgeColors[idx] : "text-gray-400 font-mono"
+                              }`}>
+                                {rank}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-gray-900 truncate">
+                                  {displayName}
+                                </p>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-mono">
+                                  {item.difficulty} mode • {item.score}/{item.total_questions} correct
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="text-xs font-black text-blue-600 font-mono">
+                                {shouldBlur ? "•••" : (item.points || 0)}
+                              </span>
+                              <span className="text-[10px] text-gray-400 block font-bold">XP</span>
                             </div>
                           </div>
+                        );
+                      })}
+                    </div>
 
-                          <div className="text-right shrink-0">
-                            <span className="text-xs font-black text-blue-600 font-mono">
-                              {item.points || 0}
-                            </span>
-                            <span className="text-[10px] text-gray-400 block font-bold">XP</span>
-                          </div>
+                    {/* FROSTED GLASS OVERLAY LOCK FOR GUESTS */}
+                    {!currentUser && leaderboard.length > 1 && (
+                      <div className="absolute inset-x-0 bottom-0 top-16 bg-white/75 backdrop-blur-[3px] rounded-2xl flex flex-col items-center justify-center p-5 text-center z-10 border border-gray-100/80 shadow-md">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mb-2 shadow-xs">
+                          <Lock size={18} />
                         </div>
-                      );
-                    })}
+                        <h4 className="text-xs font-extrabold text-gray-900 mb-1">
+                          Full Leaderboard Locked
+                        </h4>
+                        <p className="text-[11px] text-gray-500 mb-3 max-w-[200px] leading-relaxed">
+                          Register a free account or log in to view full architect rankings and see where you place.
+                        </p>
+                        <button 
+                          onClick={() => {
+                            const btn = document.querySelector('[data-auth-trigger="login"]') as HTMLButtonElement;
+                            if (btn) btn.click();
+                            else window.location.href = "/login?redirect=quizzes";
+                          }}
+                          className="px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5"
+                        >
+                          Unlock Leaderboard
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Score Registration Incentive Notice */}
+                {/* Footer Notice */}
                 <div className="mt-6 pt-4 border-t border-gray-100 text-center">
                   <p className="text-[11px] text-gray-500 leading-normal">
-                    Play any quiz to earn XP. Your high scores are calculated using accuracy, speed, and streaks.
+                    {currentUser 
+                      ? "Play quizzes in Hard Mode to maximize your XP and climb into the Top 3!"
+                      : "Scores are updated live. Register to compete for the #1 spot."}
                   </p>
                 </div>
               </div>
