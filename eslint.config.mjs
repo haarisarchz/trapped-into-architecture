@@ -27,7 +27,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "*.js",
-    "old_*.tsx"
+    "old_*.tsx",
+    "route_clean.ts",
+    "testBase62.ts"
   ]),
 ]);
 
