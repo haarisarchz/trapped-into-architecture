@@ -7,13 +7,24 @@ import InteractiveHome from "@/components/home/InteractiveHome";
 import { getLifetimePageViews } from "@/lib/analytics";
 
 export const metadata: Metadata = {
-  title: "Trapped Into Architecture | Find Architecture Jobs Faster",
-  description: "Discover architecture firms, internships, remote jobs, and career resources in one place.",
+  title: "Architecture Jobs, Internships & Top Design Firms in India | Trapped Into Architecture",
+  description: "Discover verified architecture jobs, internships, junior & senior architect vacancies, and top design studios across Chennai, Bangalore, Mumbai, and Delhi.",
+  alternates: {
+    canonical: "https://trappedintoarchitecture.com",
+  },
   openGraph: {
-    title: "Trapped Into Architecture | Find Architecture Jobs Faster",
-    description: "Discover architecture firms, internships, remote jobs, and career resources in one place.",
+    title: "Architecture Jobs, Internships & Top Design Firms in India | Trapped Into Architecture",
+    description: "Discover verified architecture jobs, internships, junior & senior architect vacancies, and top design studios across India.",
     type: "website",
-  }
+    url: "https://trappedintoarchitecture.com",
+    images: ["https://trappedintoarchitecture.com/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Architecture Jobs, Internships & Top Design Firms in India",
+    description: "Discover verified architecture jobs, internships, junior & senior architect vacancies, and top design studios across India.",
+    images: ["https://trappedintoarchitecture.com/og-image.png"],
+  },
 };
 
 export const revalidate = 0;

@@ -113,5 +113,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
+  // Fetch Quizzes
+  try {
+    const { data: quizzes } = await supabase
+      .from('quizzes')
+      .select('slug, updated_at, created_at')
+      .eq('is_published', true);
+
+    if (quizzes && quizzes.length > 0) {
+      sitemapData.push({
+        url: `${BASE_URL}/quizzes`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.8,
+      });
+
+      quizzes.forEach((quiz) => {
+        if (quiz.slug) {
+          sitemapData.push({
+            url: `${BASE_URL}/quizzes/${quiz.slug}`,
+            lastModified: quiz.updated_at || quiz.created_at || new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.7,
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Error adding quizzes to sitemap:', err);
+  }
+
   return sitemapData;
 }
