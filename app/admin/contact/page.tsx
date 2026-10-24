@@ -390,7 +390,7 @@ CREATE POLICY "Allow public delete on contact_inquiries" ON public.contact_inqui
                     </h3>
                     <p className="text-amber-800 text-sm mt-1">
                       The <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono text-xs font-bold">contact_inquiries</code> table hasn&apos;t been created in Supabase yet. 
-                      Visitor emails are being delivered to your email (<span className="font-bold">haaris.archz@gmail.com</span>), but storing them inside this dashboard requires running this one-time SQL script.
+                      Visitor emails are being delivered to your email (<span className="font-bold">admin.ti2a@gmail.com</span>), but storing them inside this dashboard requires running this one-time SQL script.
                     </p>
                   </div>
                   <button
@@ -473,7 +473,7 @@ CREATE POLICY "Allow public delete on contact_inquiries" ON public.contact_inqui
                 <p className="text-gray-500 text-sm max-w-md mx-auto">
                   {searchQuery || filterStatus !== "all" 
                     ? "No inquiries match your current search or filter."
-                    : "When visitors submit messages via the /contact page, they will appear here and trigger an instant email alert to haaris.archz@gmail.com."}
+                    : "When visitors submit messages via the /contact page, they will appear here and trigger an instant email alert to admin.ti2a@gmail.com."}
                 </p>
               </div>
             ) : (
