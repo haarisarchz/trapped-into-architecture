@@ -70,6 +70,43 @@ export default function ProfileHero({
     const checkUserLike = async () => {
       if (!user?.id) return;
 
+      const loggedInUserId = await getLoggedInUserId();
+
+      // If user is on their own profile: Self-likes are strictly forbidden
+      if (isOwner || (loggedInUserId && loggedInUserId === user.id)) {
+        setHasLiked(false);
+
+        // Clean up any historical self-like in database and local cache
+        try {
+          const localLiked = JSON.parse(localStorage.getItem("liked_profiles") || "[]");
+          if (localLiked.includes(user.id)) {
+            localStorage.setItem(
+              "liked_profiles",
+              JSON.stringify(localLiked.filter((id: string) => id !== user.id))
+            );
+          }
+
+          await supabase
+            .from("profile_likes")
+            .delete()
+            .eq("profile_id", user.id)
+            .eq("user_id", user.id);
+
+          // Get accurate non-self count
+          const { count } = await supabase
+            .from("profile_likes")
+            .select("id", { count: "exact", head: true })
+            .eq("profile_id", user.id);
+
+          if (typeof count === "number" && count !== likesCount) {
+            setLikesCount(count);
+          }
+        } catch (e) {}
+
+        return;
+      }
+
+      // Check local cache for instant feedback
       try {
         const localLiked = JSON.parse(localStorage.getItem("liked_profiles") || "[]");
         if (Array.isArray(localLiked) && localLiked.includes(user.id)) {
@@ -77,7 +114,6 @@ export default function ProfileHero({
         }
       } catch (e) {}
 
-      const loggedInUserId = await getLoggedInUserId();
       if (!loggedInUserId) return;
 
       try {
@@ -110,7 +146,7 @@ export default function ProfileHero({
     };
 
     checkUserLike();
-  }, [user?.id]);
+  }, [user?.id, isOwner]);
 
   const handleToggleLike = async () => {
     if (likeLoading) return;
@@ -118,6 +154,12 @@ export default function ProfileHero({
     const loggedInUserId = await getLoggedInUserId();
     if (!loggedInUserId) {
       alert("Please log in first to like this profile.");
+      return;
+    }
+
+    // DISALLOW SELF-LIKE
+    if (isOwner || loggedInUserId === user.id) {
+      alert("You cannot like your own profile.");
       return;
     }
 
@@ -316,7 +358,7 @@ export default function ProfileHero({
                 {user.user_track === "recruiter" ? "🏢 Recruiter / Firm" : "🎯 Job Seeker"}
               </span>
 
-              {/* Tier Badge (Clean badge pill without question mark here) */}
+              {/* Tier Badge */}
               <span
                 className={`px-3 py-1 rounded-full font-semibold border flex items-center gap-1 ${badge.bg} ${badge.color} ${badge.border}`}
               >
@@ -348,20 +390,25 @@ export default function ProfileHero({
             onClick={handleToggleLike}
             disabled={likeLoading}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold transition border shadow-sm ${
-              hasLiked
-                ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
-                : "bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:text-red-600"
+              isOwner
+                ? "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 cursor-pointer"
+                : hasLiked
+                ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 cursor-pointer"
+                : "bg-white text-gray-700 border-gray-200 hover:border-red-300 hover:text-red-600 cursor-pointer"
             }`}
+            title={isOwner ? "You cannot like your own profile" : hasLiked ? "Unlike profile" : "Like profile"}
           >
             <Heart
               size={18}
               className={`transition transform ${
-                hasLiked
+                isOwner
+                  ? "text-gray-400"
+                  : hasLiked
                   ? "fill-red-600 text-red-600 scale-110"
                   : "text-gray-400 group-hover:text-red-500"
               }`}
             />
-            <span>{hasLiked ? "Liked" : "Like Profile"}</span>
+            <span>{isOwner ? "Likes Received" : hasLiked ? "Liked" : "Like Profile"}</span>
             <span
               className={`ml-1 text-xs px-2 py-0.5 rounded-full font-bold ${
                 hasLiked
