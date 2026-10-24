@@ -2,7 +2,14 @@
 
 import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { ShieldCheck, User, Briefcase, Mail, Phone, Calendar, Heart } from "lucide-react";
+import {
+  ShieldCheck,
+  Phone,
+  MessageSquare,
+  Globe,
+  EyeOff,
+} from "lucide-react";
+import { LinkedInBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
 interface PersonalInfoTabProps {
   user: any;
@@ -42,6 +49,22 @@ export default function PersonalInfoTab({
   const [formData, setFormData] = useState({ ...user });
   const [saving, setSaving] = useState(false);
 
+  const handlePhoneChange = (val: string) => {
+    const updated: any = { ...formData, phone: val };
+    if (formData.whatsapp_same_as_phone) {
+      updated.whatsapp_number = val;
+    }
+    setFormData(updated);
+  };
+
+  const handleSameAsPhoneToggle = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      whatsapp_same_as_phone: checked,
+      whatsapp_number: checked ? (formData.phone || "") : (formData.whatsapp_number || ""),
+    });
+  };
+
   const handleSave = async () => {
     if (!formData.fullName || formData.fullName.trim() === "") {
       alert("Full Name is a required field.");
@@ -60,7 +83,13 @@ export default function PersonalInfoTab({
         display_name: formData.displayName,
         username: formData.username,
         email: formData.email,
-        phone: formData.phone,
+        phone: formData.phone || null,
+        whatsapp_number: formData.whatsapp_same_as_phone ? (formData.phone || null) : (formData.whatsapp_number || null),
+        whatsapp_same_as_phone: Boolean(formData.whatsapp_same_as_phone),
+        linkedin_url: formData.linkedin_url || null,
+        instagram_url: formData.instagram_url || null,
+        portfolio_url: formData.portfolio_url || null,
+        twitter_url: formData.twitter_url || null,
         dob: formData.dob || null,
         profession: formData.profession,
         education: formData.education || null,
@@ -87,9 +116,9 @@ export default function PersonalInfoTab({
       const updatedUser = {
         ...user,
         ...formData,
+        ...payload,
       };
 
-      // Sync local storage
       const stored = localStorage.getItem("currentUser");
       if (stored) {
         const current = JSON.parse(stored);
@@ -100,7 +129,7 @@ export default function PersonalInfoTab({
 
       onUserUpdate(updatedUser);
       setIsEditing(false);
-      alert("Personal information saved successfully!");
+      alert("Personal & contact details saved successfully!");
     } catch (err: any) {
       console.error("Save error:", err);
       alert(err.message || "Failed to update profile.");
@@ -113,9 +142,9 @@ export default function PersonalInfoTab({
     <div className="border rounded-3xl p-6 md:p-8 bg-gray-50">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Personal & Professional Info</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Personal & Credentials</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Manage your identity, career track, and architectural council details
+            Identity, Council of Architecture registration, contact info, and portfolio
           </p>
         </div>
 
@@ -130,7 +159,7 @@ export default function PersonalInfoTab({
               }
             }}
             disabled={saving}
-            className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl font-semibold transition"
+            className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl font-semibold transition text-sm cursor-pointer shadow-sm"
           >
             {saving ? "Saving..." : isEditing ? "Save Changes" : "Edit Details"}
           </button>
@@ -290,9 +319,16 @@ export default function PersonalInfoTab({
 
         {/* DATE OF BIRTH */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Date of Birth
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Date of Birth
+            </label>
+            {user.hide_dob && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                <EyeOff size={11} /> Secret
+              </span>
+            )}
+          </div>
           {isEditing ? (
             <input
               type="date"
@@ -300,6 +336,10 @@ export default function PersonalInfoTab({
               onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
               className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black text-sm"
             />
+          ) : (!isOwner && user.hide_dob) ? (
+            <p className="text-sm font-medium text-gray-400 bg-white p-3.5 rounded-xl border border-gray-100 italic">
+              Hidden by user
+            </p>
           ) : (
             <p className="text-base font-semibold text-gray-900 bg-white p-3.5 rounded-xl border border-gray-100">
               {user.dob || "Not added"}
@@ -309,9 +349,16 @@ export default function PersonalInfoTab({
 
         {/* EMAIL */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Email Address
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Email Address
+            </label>
+            {user.hide_email && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                <EyeOff size={11} /> Secret
+              </span>
+            )}
+          </div>
           {isEditing ? (
             <input
               type="email"
@@ -319,6 +366,10 @@ export default function PersonalInfoTab({
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black text-sm"
             />
+          ) : (!isOwner && user.hide_email) ? (
+            <p className="text-sm font-medium text-gray-400 bg-white p-3.5 rounded-xl border border-gray-100 italic">
+              Hidden by user
+            </p>
           ) : (
             <p className="text-base font-semibold text-gray-900 bg-white p-3.5 rounded-xl border border-gray-100">
               {user.email || "Not added"}
@@ -326,23 +377,182 @@ export default function PersonalInfoTab({
           )}
         </div>
 
-        {/* PHONE */}
+        {/* PHONE NUMBER */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Phone Number
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              Phone Number
+            </label>
+            {user.hide_phone && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                <EyeOff size={11} /> Secret
+              </span>
+            )}
+          </div>
           {isEditing ? (
             <input
               type="text"
               value={formData.phone || ""}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) => handlePhoneChange(e.target.value)}
+              placeholder="+91 98765 43210"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black text-sm"
             />
+          ) : (!isOwner && user.hide_phone) ? (
+            <p className="text-sm font-medium text-gray-400 bg-white p-3.5 rounded-xl border border-gray-100 italic">
+              Hidden by user
+            </p>
           ) : (
             <p className="text-base font-semibold text-gray-900 bg-white p-3.5 rounded-xl border border-gray-100">
               {user.phone || "Not added"}
             </p>
           )}
+        </div>
+
+        {/* WHATSAPP NUMBER & "SAME AS PHONE NUMBER" */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              WhatsApp Number
+            </label>
+            {user.hide_whatsapp && (
+              <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                <EyeOff size={11} /> Secret
+              </span>
+            )}
+          </div>
+          {isEditing ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                disabled={formData.whatsapp_same_as_phone}
+                value={formData.whatsapp_same_as_phone ? (formData.phone || "") : (formData.whatsapp_number || "")}
+                onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
+                placeholder="+91 98765 43210"
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black text-sm disabled:bg-gray-100"
+              />
+              <label className="flex items-center gap-2 cursor-pointer pt-0.5">
+                <input
+                  type="checkbox"
+                  checked={Boolean(formData.whatsapp_same_as_phone)}
+                  onChange={(e) => handleSameAsPhoneToggle(e.target.checked)}
+                  className="w-4 h-4 text-black rounded"
+                />
+                <span className="text-xs font-semibold text-gray-700">Same as phone number</span>
+              </label>
+            </div>
+          ) : (!isOwner && user.hide_whatsapp) ? (
+            <p className="text-sm font-medium text-gray-400 bg-white p-3.5 rounded-xl border border-gray-100 italic">
+              Hidden by user
+            </p>
+          ) : (
+            <p className="text-base font-semibold text-gray-900 bg-white p-3.5 rounded-xl border border-gray-100">
+              {user.whatsapp_same_as_phone
+                ? `${user.phone || "Not added"} (Same as phone)`
+                : user.whatsapp_number || "Not added"}
+            </p>
+          )}
+        </div>
+
+        {/* SOCIAL & PORTFOLIO LINKS SECTION */}
+        <div className="md:col-span-2 bg-white border border-gray-200/80 rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Globe className="text-gray-700" size={18} />
+            <h3 className="font-bold text-gray-900 text-sm md:text-base">
+              Social Media Accounts & Portfolio Links
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            {/* LinkedIn */}
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                <LinkedInBrandIcon size={14} />
+                <span>LinkedIn Profile URL</span>
+              </label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  value={formData.linkedin_url || ""}
+                  onChange={(e) => setFormData({ ...formData, linkedin_url: e.target.value })}
+                  placeholder="https://linkedin.com/in/username"
+                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs bg-white"
+                />
+              ) : user.linkedin_url ? (
+                <a
+                  href={user.linkedin_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 font-semibold hover:underline block truncate bg-gray-50 p-2.5 rounded-xl border border-gray-100"
+                >
+                  {user.linkedin_url}
+                </a>
+              ) : (
+                <p className="text-xs text-gray-400 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                  Not added
+                </p>
+              )}
+            </div>
+
+            {/* Instagram */}
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                <InstagramBrandIcon size={14} />
+                <span>Instagram Profile URL</span>
+              </label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  value={formData.instagram_url || ""}
+                  onChange={(e) => setFormData({ ...formData, instagram_url: e.target.value })}
+                  placeholder="https://instagram.com/username"
+                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs bg-white"
+                />
+              ) : user.instagram_url ? (
+                <a
+                  href={user.instagram_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-pink-600 font-semibold hover:underline block truncate bg-gray-50 p-2.5 rounded-xl border border-gray-100"
+                >
+                  {user.instagram_url}
+                </a>
+              ) : (
+                <p className="text-xs text-gray-400 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                  Not added
+                </p>
+              )}
+            </div>
+
+            {/* Portfolio / Website */}
+            <div>
+              <label className="text-xs font-bold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                <Globe size={14} className="text-emerald-600" />
+                <span>Portfolio / Behance / Website</span>
+              </label>
+              {isEditing ? (
+                <input
+                  type="url"
+                  value={formData.portfolio_url || ""}
+                  onChange={(e) => setFormData({ ...formData, portfolio_url: e.target.value })}
+                  placeholder="https://behance.net/... or personal site"
+                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs bg-white"
+                />
+              ) : user.portfolio_url ? (
+                <a
+                  href={user.portfolio_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-emerald-600 font-semibold hover:underline block truncate bg-gray-50 p-2.5 rounded-xl border border-gray-100"
+                >
+                  {user.portfolio_url}
+                </a>
+              ) : (
+                <p className="text-xs text-gray-400 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                  Not added
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* COA SECTION (Council of Architecture) */}
@@ -352,6 +562,9 @@ export default function PersonalInfoTab({
             <h3 className="font-bold text-gray-900 text-base">
               Council of Architecture (COA) Registration
             </h3>
+            <span className="text-[11px] font-bold text-blue-800 bg-blue-100 border border-blue-300 px-2 py-0.5 rounded-full ml-auto">
+              +15% High Trust
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

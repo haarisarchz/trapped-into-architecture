@@ -9,6 +9,7 @@ import {
   BookmarkCheck,
   User as UserIcon,
   Building2,
+  Settings as SettingsIcon,
   LogOut,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ import CompletionMeter from "@/components/profile/CompletionMeter";
 import PersonalInfoTab from "@/components/profile/PersonalInfoTab";
 import EducationSection from "@/components/profile/EducationSection";
 import ExperienceSection from "@/components/profile/ExperienceSection";
+import ProfileSettingsTab from "@/components/profile/ProfileSettingsTab";
 import {
   calculateProfileCompletion,
   calculateTotalExperience,
@@ -36,7 +38,7 @@ export default function ProfilePage() {
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"details" | "saved" | "companies">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "saved" | "companies" | "settings">("details");
 
   // Related Sub-data
   const [educations, setEducations] = useState<EducationEntry[]>([]);
@@ -67,6 +69,16 @@ export default function ProfilePage() {
           displayName: profile.display_name || "",
           email: profile.email || "",
           phone: profile.phone || "",
+          whatsapp_number: profile.whatsapp_number || "",
+          whatsapp_same_as_phone: profile.whatsapp_same_as_phone ?? false,
+          linkedin_url: profile.linkedin_url || "",
+          instagram_url: profile.instagram_url || "",
+          portfolio_url: profile.portfolio_url || "",
+          twitter_url: profile.twitter_url || "",
+          hide_phone: profile.hide_phone ?? false,
+          hide_whatsapp: profile.hide_whatsapp ?? false,
+          hide_email: profile.hide_email ?? false,
+          hide_dob: profile.hide_dob ?? false,
           role: profile.role || "user",
           bio: profile.bio || "",
           dob: profile.dob || "",
@@ -296,12 +308,12 @@ export default function ProfilePage() {
           {/* PROFILE COMPLETION METER (Visible to Profile Owner) */}
           {isOwner && <CompletionMeter completion={completion} />}
 
-          {/* THREE MAIN TABS: Profile Details, Saved Jobs, Favourite Companies */}
+          {/* FOUR MAIN TABS: Profile Details, Saved Jobs, Favourite Companies, Settings */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex gap-2 flex-wrap">
             {/* TAB 1: Profile Details */}
             <button
               onClick={() => setActiveTab("details")}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "details"
                   ? "bg-black text-white shadow-sm"
                   : "text-gray-600 hover:text-black hover:bg-gray-100"
@@ -314,7 +326,7 @@ export default function ProfilePage() {
             {/* TAB 2: Saved Jobs */}
             <button
               onClick={() => setActiveTab("saved")}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "saved"
                   ? "bg-black text-white shadow-sm"
                   : "text-gray-600 hover:text-black hover:bg-gray-100"
@@ -338,7 +350,7 @@ export default function ProfilePage() {
             {/* TAB 3: Favourite Companies */}
             <button
               onClick={() => setActiveTab("companies")}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm ${
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "companies"
                   ? "bg-black text-white shadow-sm"
                   : "text-gray-600 hover:text-black hover:bg-gray-100"
@@ -358,19 +370,32 @@ export default function ProfilePage() {
                 </span>
               )}
             </button>
+
+            {/* TAB 4: Settings & Privacy (Visible to Profile Owner) */}
+            {isOwner && (
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
+                  activeTab === "settings"
+                    ? "bg-black text-white shadow-sm"
+                    : "text-gray-600 hover:text-black hover:bg-gray-100"
+                }`}
+              >
+                <SettingsIcon size={16} />
+                <span>Settings</span>
+              </button>
+            )}
           </div>
 
-          {/* TAB 1 CONTENT: PROFILE DETAILS (Personal & Credentials + Experience + Education) */}
+          {/* TAB 1 CONTENT: PROFILE DETAILS */}
           {activeTab === "details" && (
             <div className="space-y-6">
-              {/* Personal & Professional Credentials */}
               <PersonalInfoTab
                 user={user}
                 isOwner={isOwner}
                 onUserUpdate={handleUserUpdate}
               />
 
-              {/* Work Experience with cumulative duration & roles */}
               <ExperienceSection
                 userId={user.id}
                 isOwner={isOwner}
@@ -378,7 +403,6 @@ export default function ProfilePage() {
                 onExperiencesChange={setExperiences}
               />
 
-              {/* Education Details with separate university & college, board & school */}
               <EducationSection
                 userId={user.id}
                 isOwner={isOwner}
@@ -453,7 +477,7 @@ export default function ProfilePage() {
                             className={`p-2 rounded-xl transition ${
                               job.isSaved
                                 ? "bg-black text-white"
-                                : "bg-gray-100 text-gray-500 hover:text-black"
+                                : "bg-gray-100 text-gray-500 hover:text-black cursor-pointer"
                             }`}
                           >
                             {job.isSaved ? (
@@ -535,12 +559,20 @@ export default function ProfilePage() {
             </div>
           )}
 
+          {/* TAB 4 CONTENT: SETTINGS & PRIVACY (Only for Profile Owner) */}
+          {activeTab === "settings" && isOwner && (
+            <ProfileSettingsTab
+              user={user}
+              onUserUpdate={handleUserUpdate}
+            />
+          )}
+
           {/* LOGOUT BUTTON (Only for Profile Owner) */}
           {isOwner && (
             <div className="pt-4 flex justify-end">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-6 py-3 rounded-2xl font-semibold transition text-sm shadow-sm"
+                className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-6 py-3 rounded-2xl font-semibold transition text-sm shadow-sm cursor-pointer"
               >
                 <LogOut size={16} />
                 <span>Logout from Account</span>

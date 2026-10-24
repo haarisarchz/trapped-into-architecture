@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Award, X, Sparkles } from "lucide-react";
+import { Award, X, Sparkles, Shield, EyeOff } from "lucide-react";
 
 interface BadgeExplanationModalProps {
   isOpen: boolean;
@@ -45,7 +45,7 @@ export default function BadgeExplanationModal({
                 Profile Badges & Scoring System
               </h3>
               <p className="text-xs text-gray-500">
-                How member levels are calculated and points distributed
+                High-trust scoring weights and member tier milestones
               </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function BadgeExplanationModal({
                 <span className="text-lg">🥉</span>
                 <div>
                   <p className="font-bold text-amber-900">Bronze Member</p>
-                  <p className="text-[11px] text-amber-700">Unlocked on signup with initial registration</p>
+                  <p className="text-[11px] text-amber-700">Unlocked immediately on signup (20%)</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800 shrink-0">
@@ -85,7 +85,7 @@ export default function BadgeExplanationModal({
                 <span className="text-lg">🥈</span>
                 <div>
                   <p className="font-bold text-slate-800">Silver Member</p>
-                  <p className="text-[11px] text-slate-600">Core details, avatar & bio added</p>
+                  <p className="text-[11px] text-slate-600">Avatar, phone, whatsapp & bio added</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shrink-0">
@@ -99,7 +99,7 @@ export default function BadgeExplanationModal({
                 <span className="text-lg">🥇</span>
                 <div>
                   <p className="font-bold text-yellow-900">Gold Member</p>
-                  <p className="text-[11px] text-yellow-700">Detailed degrees & work experience added</p>
+                  <p className="text-[11px] text-yellow-700">COA registration & degrees added</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-yellow-300 text-yellow-900 shrink-0">
@@ -113,7 +113,7 @@ export default function BadgeExplanationModal({
                 <span className="text-lg">💎</span>
                 <div>
                   <p className="font-bold text-cyan-900">Platinum Member</p>
-                  <p className="text-[11px] text-cyan-700">In-depth career history & institution details</p>
+                  <p className="text-[11px] text-cyan-700">In-depth practice tenure & portfolio</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-cyan-200 text-cyan-900 shrink-0">
@@ -127,7 +127,7 @@ export default function BadgeExplanationModal({
                 <span className="text-xl">👑</span>
                 <div>
                   <p className="font-bold text-purple-900">Diamond Member</p>
-                  <p className="text-[11px] text-purple-700">Complete, comprehensive architectural profile across all sections</p>
+                  <p className="text-[11px] text-purple-700">Complete, authentic architectural dossier across all fields</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-900 shrink-0">
@@ -136,120 +136,146 @@ export default function BadgeExplanationModal({
             </div>
           </div>
 
-          {/* VIP NOTE */}
-          <div className="mt-3 p-3 rounded-2xl border border-amber-200 bg-amber-50/50 flex items-start gap-2.5 text-xs text-amber-950">
-            <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
-            <p className="leading-relaxed">
-              <strong className="font-bold">⭐ VIP User Status:</strong> VIP is an honorary Diamond distinction awarded to important community figures, platform favorites, and notable supporters of Trapped Into Architecture.
-            </p>
+          {/* PRIVACY & VIP NOTE */}
+          <div className="mt-3 space-y-2 text-xs">
+            <div className="p-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 flex items-start gap-2.5 text-emerald-950">
+              <EyeOff size={16} className="text-emerald-700 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                <strong className="font-bold">Privacy Guarantee:</strong> You can mark your Phone Number, WhatsApp Number, Email, or Date of Birth as <strong>Secret</strong> under <span className="font-semibold underline">Settings → Privacy</span>. Secret fields are never exposed publicly and still earn 100% full points towards your Diamond status!
+              </p>
+            </div>
+
+            <div className="p-3 rounded-2xl border border-amber-200 bg-amber-50/50 flex items-start gap-2.5 text-amber-950">
+              <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">
+                <strong className="font-bold">⭐ VIP User Status:</strong> VIP is an honorary Diamond distinction awarded to important community figures, platform favorites, and top contributors.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* SECTION 2: FIELD DISTRIBUTION TABLE */}
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
-            2. Field Distribution & Points Chart (Total: 100%)
+            2. High-Trust Points Breakdown (Total: 100%)
           </h4>
 
           <div className="border border-gray-200 rounded-2xl overflow-hidden text-xs">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Category</th>
-                  <th className="py-2.5 px-3">Field / Requirement</th>
-                  <th className="py-2.5 px-3 text-center">Registration</th>
+                  <th className="py-2.5 px-3">Section</th>
+                  <th className="py-2.5 px-3">Field / Data Point</th>
+                  <th className="py-2.5 px-3 text-center">Type</th>
                   <th className="py-2.5 px-3 text-right">Points</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {/* Basic Identity */}
+                {/* Registration Identity */}
                 <tr className="hover:bg-gray-50 bg-amber-50/20">
-                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={6}>
-                    Basic Identity<br/>
-                    <span className="text-[10px] text-gray-500 font-normal">(40% total)</span>
+                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={4}>
+                    Identity<br/>
+                    <span className="text-[10px] text-gray-500 font-normal">(25% total)</span>
                   </td>
                   <td className="py-2 px-3 text-gray-800 font-medium">Full Name & Username</td>
                   <td className="py-2 px-3 text-center"><span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold text-[10px]">On Signup</span></td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
                 <tr className="hover:bg-gray-50 bg-amber-50/20">
-                  <td className="py-2 px-3 text-gray-800 font-medium">Email Address</td>
+                  <td className="py-2 px-3 text-gray-800 font-medium">Email Address (Can be hidden)</td>
                   <td className="py-2 px-3 text-center"><span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold text-[10px]">On Signup</span></td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 text-gray-700">Profile Picture / Avatar</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Optional</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 text-gray-700">Professional Tagline (Headline)</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-700">About Me / Professional Bio</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-700">Date of Birth & Gender</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Optional</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
 
-                {/* Professional Credentials */}
-                <tr className="hover:bg-gray-50 bg-gray-50/50">
+                {/* High Trust Contact & Social */}
+                <tr className="hover:bg-gray-50 bg-blue-50/20">
+                  <td className="py-2 px-3 font-semibold text-blue-900" rowSpan={3}>
+                    Trust Contacts<br/>
+                    <span className="text-[10px] text-blue-600 font-normal">(15% total)</span>
+                  </td>
+                  <td className="py-2 px-3 text-gray-800 font-medium">Phone Number (Can be made Secret)</td>
+                  <td className="py-2 px-3 text-center"><span className="text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-bold text-[10px]">High Trust</span></td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                </tr>
+                <tr className="hover:bg-gray-50 bg-blue-50/20">
+                  <td className="py-2 px-3 text-gray-800 font-medium">WhatsApp Number / Same as Phone (Can be Secret)</td>
+                  <td className="py-2 px-3 text-center"><span className="text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-bold text-[10px]">High Trust</span></td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                </tr>
+                <tr className="hover:bg-gray-50 bg-blue-50/20">
+                  <td className="py-2 px-3 text-gray-800 font-medium">LinkedIn or Portfolio URL</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Optional</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                </tr>
+
+                {/* Professional & COA Credentials */}
+                <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={2}>
                     Credentials<br/>
-                    <span className="text-[10px] text-gray-500 font-normal">(20% total)</span>
+                    <span className="text-[10px] text-gray-500 font-normal">(25% total)</span>
                   </td>
                   <td className="py-2 px-3 text-gray-800 font-medium">Profession Selection</td>
                   <td className="py-2 px-3 text-center"><span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold text-[10px]">On Signup</span></td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
+                <tr className="hover:bg-gray-50">
+                  <td className="py-2 px-3 text-gray-800 font-medium">Council of Architecture (COA) Registration</td>
+                  <td className="py-2 px-3 text-center"><span className="text-amber-800 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded font-bold text-[10px]">Top Credibility</span></td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">15%</td>
+                </tr>
+
+                {/* Bio & Personal */}
                 <tr className="hover:bg-gray-50 bg-gray-50/50">
-                  <td className="py-2 px-3 text-gray-700">COA Registration (or Highest Qual for Students)</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={2}>
+                    About<br/>
+                    <span className="text-[10px] text-gray-500 font-normal">(10% total)</span>
+                  </td>
+                  <td className="py-2 px-3 text-gray-700">About Me / Professional Bio</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Optional</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                </tr>
+                <tr className="hover:bg-gray-50 bg-gray-50/50">
+                  <td className="py-2 px-3 text-gray-700">Date of Birth & Gender (Can be Secret)</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Optional</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
 
                 {/* Education */}
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={2}>
+                  <td className="py-2 px-3 font-semibold text-gray-900">
                     Education<br/>
-                    <span className="text-[10px] text-gray-500 font-normal">(20% total)</span>
+                    <span className="text-[10px] text-gray-500 font-normal">(15% total)</span>
                   </td>
-                  <td className="py-2 px-3 text-gray-700">At least 1 Education entry (UG / PG / PhD / School)</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
+                  <td className="py-2 px-3 text-gray-700">Architecture degree / schooling with separated college & university</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Optional</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">15%</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-700">Separation of University & College (or Board & School)</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
 
                 {/* Experience */}
                 <tr className="hover:bg-gray-50 bg-gray-50/50">
-                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={2}>
+                  <td className="py-2 px-3 font-semibold text-gray-900">
                     Experience<br/>
-                    <span className="text-[10px] text-gray-500 font-normal">(20% total)</span>
+                    <span className="text-[10px] text-gray-500 font-normal">(10% total)</span>
                   </td>
-                  <td className="py-2 px-3 text-gray-700">At least 1 Work Experience or Internship entry</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">15%</td>
-                </tr>
-                <tr className="hover:bg-gray-50 bg-gray-50/50">
-                  <td className="py-2 px-3 text-gray-700">Organization Type & Responsibilities filled</td>
-                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                  <td className="py-2 px-3 text-gray-700">Work experience / practice roles with firm name & dates</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Optional</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
 
                 {/* Total Row */}
                 <tr className="bg-black text-white font-bold">
                   <td className="py-2.5 px-3" colSpan={3}>
-                    Total Profile Score (Initial registration starts with Bronze 20%)
+                    Total Profile Score (Initial registration gives Bronze 20%)
                   </td>
                   <td className="py-2.5 px-3 text-right text-sm">100%</td>
                 </tr>

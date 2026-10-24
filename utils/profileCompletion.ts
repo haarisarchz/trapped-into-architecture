@@ -38,8 +38,9 @@ export interface ExperienceEntry {
 
 /**
  * Calculates dynamic profile completion percentage (0-100%) and badge tier.
- * Newly registered users collect Full Name & Username (5%), Email (5%), and Profession (10%),
- * guaranteeing 20% on registration and Bronze Member status.
+ * Registration collects: Full Name & Username (5%), Email (5%), Profession (10%) = 20% (Bronze Member).
+ * High trust fields (Phone, WhatsApp, COA, Social) carry strong weights.
+ * Secret/hidden fields still count toward completion!
  */
 export function calculateProfileCompletion(
   user: any,
@@ -49,15 +50,15 @@ export function calculateProfileCompletion(
   let score = 0;
   const missing: { label: string; points: number }[] = [];
 
-  // 1. Basic Identity (40 points total)
-  // 1.1 Full Name & Username (5%) - Collected at registration
+  // 1. Basic Identity & Registration (25% total)
+  // 1.1 Full Name & Username (5%) - Required at registration
   if (user?.fullName && user?.username) {
     score += 5;
   } else {
     missing.push({ label: "Full Name & Username", points: 5 });
   }
 
-  // 1.2 Email (5%) - Collected at registration
+  // 1.2 Email Address (5%) - Required at registration
   if (user?.email) {
     score += 5;
   } else {
@@ -78,91 +79,91 @@ export function calculateProfileCompletion(
     missing.push({ label: "Professional Tagline (headline)", points: 5 });
   }
 
-  // 1.5 Bio / About (10%)
-  if (user?.bio && user.bio.trim().length > 10) {
-    score += 10;
-  } else {
-    missing.push({ label: "About Me / Professional Bio", points: 10 });
-  }
-
-  // 1.6 Date of Birth & Gender (5%)
-  if (user?.dob && user?.gender) {
+  // 2. High-Trust Contact & Social (15% total)
+  // 2.1 Phone Number (5%) - High trust
+  if (user?.phone && user.phone.trim().length > 5) {
     score += 5;
   } else {
-    missing.push({ label: "Date of Birth & Gender", points: 5 });
+    missing.push({ label: "Phone Number", points: 5 });
   }
 
-  // 2. Professional & Council Credentials (20 points total)
-  // 2.1 Profession (10%) - Required & selected at registration
+  // 2.2 WhatsApp Number or Same as Phone (5%) - High trust
+  if (
+    user?.whatsapp_same_as_phone ||
+    (user?.whatsapp_number && user.whatsapp_number.trim().length > 5)
+  ) {
+    score += 5;
+  } else {
+    missing.push({ label: "WhatsApp Number (or Same as Phone)", points: 5 });
+  }
+
+  // 2.3 Social / Portfolio / LinkedIn (5%)
+  if (
+    (user?.linkedin_url && user.linkedin_url.trim().length > 3) ||
+    (user?.portfolio_url && user.portfolio_url.trim().length > 3) ||
+    (user?.instagram_url && user.instagram_url.trim().length > 3)
+  ) {
+    score += 5;
+  } else {
+    missing.push({ label: "LinkedIn or Portfolio / Social link", points: 5 });
+  }
+
+  // 3. Professional & Council Credentials (25% total)
+  // 3.1 Profession (10%) - Required at registration
   if (user?.profession) {
     score += 10;
   } else {
     missing.push({ label: "Profession Selection", points: 10 });
   }
 
-  // 2.2 COA Registration (or Highest Qualification for students) (10%)
+  // 3.2 COA Registration (15% - High trust for credibility, or Highest Qual for students)
   const isStudent =
     user?.profession?.toLowerCase().includes("student") || false;
-  if (user?.coa_number || (isStudent && user?.highest_qualification)) {
-    score += 10;
+  if (
+    (user?.coa_number && user.coa_number.trim().length > 3) ||
+    (isStudent && user?.highest_qualification)
+  ) {
+    score += 15;
   } else {
     missing.push({
-      label: isStudent ? "Highest Qualification" : "COA Registration Details",
-      points: 10,
+      label: isStudent ? "Highest Qualification" : "Council of Architecture (COA) Registration",
+      points: 15,
     });
   }
 
-  // 3. Education Details (20 points total)
+  // 4. Bio & Personal Details (10% total)
+  // 4.1 Bio / About (5%)
+  if (user?.bio && user.bio.trim().length > 10) {
+    score += 5;
+  } else {
+    missing.push({ label: "About Me / Professional Bio", points: 5 });
+  }
+
+  // 4.2 Date of Birth & Gender (5%)
+  if (user?.dob && user?.gender) {
+    score += 5;
+  } else {
+    missing.push({ label: "Date of Birth & Gender", points: 5 });
+  }
+
+  // 5. Education Details (15% total)
   if (educations.length > 0) {
     score += 15;
-    const hasDetailedInstitutions = educations.some(
-      (e) =>
-        (e.university_name && e.college_name) ||
-        (e.school_board && e.school_name)
-    );
-    if (hasDetailedInstitutions) {
-      score += 5;
-    } else {
-      missing.push({
-        label: "Separate University/College or Board/School details",
-        points: 5,
-      });
-    }
   } else {
     missing.push({ label: "Add at least one Education degree", points: 15 });
-    missing.push({
-      label: "Detailed College & University specification",
-      points: 5,
-    });
   }
 
-  // 4. Experience Details (20 points total)
+  // 6. Experience Details (10% total)
   if (experiences.length > 0) {
-    score += 15;
-    const hasDetailedOrg = experiences.some(
-      (e) => e.organization_type && e.role_description
-    );
-    if (hasDetailedOrg) {
-      score += 5;
-    } else {
-      missing.push({
-        label: "Organization type & role description in experience",
-        points: 5,
-      });
-    }
+    score += 10;
   } else {
-    missing.push({ label: "Add at least one Work Experience", points: 15 });
-    missing.push({
-      label: "Organization type & role details",
-      points: 5,
-    });
+    missing.push({ label: "Add at least one Work Experience", points: 10 });
   }
 
   // Ensure 0-100 clamp
   const percentage = Math.min(100, Math.max(0, score));
 
-  // Determine Badge Tier strictly across the 5 member levels:
-  // Bronze: 20-49, Silver: 50-69, Gold: 70-84, Platinum: 85-94, Diamond: 95-100
+  // Determine Badge Tier
   let badgeTier: BadgeTier = "bronze";
   if (percentage >= 95) {
     badgeTier = "diamond";
@@ -174,7 +175,6 @@ export function calculateProfileCompletion(
     badgeTier = "silver";
   }
 
-  // VIP is an honorary distinction on Diamond for favorites / notable architects / fans
   const isVip = Boolean(user?.is_vip);
 
   return {
