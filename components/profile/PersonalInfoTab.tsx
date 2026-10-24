@@ -17,6 +17,15 @@ interface PersonalInfoTabProps {
   onUserUpdate: (updated: any) => void;
 }
 
+const USER_TRACKS = [
+  { value: "job_seeker", label: "🎯 Job Seeker / Candidate" },
+  { value: "student", label: "🎓 Architecture Student / Intern" },
+  { value: "recruiter", label: "🏢 Recruiter / Architecture Firm" },
+  { value: "academician", label: "🏛️ Academician / Researcher / Educator" },
+  { value: "freelancer", label: "💼 Freelancer / Design Consultant" },
+  { value: "explorer", label: "☕ Explorer / Architecture Enthusiast" },
+];
+
 const VALID_PROFESSIONS = [
   "Practising Architect",
   "Academician",
@@ -238,12 +247,13 @@ export default function PersonalInfoTab({
               onChange={(e) => setFormData({ ...formData, user_track: e.target.value })}
               className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black text-sm"
             >
-              <option value="job_seeker">Job Seeker / Candidate</option>
-              <option value="recruiter">Recruiter / Employer / Firm</option>
+              {USER_TRACKS.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
             </select>
           ) : (
             <p className="text-base font-semibold text-gray-900 bg-white p-3.5 rounded-xl border border-gray-100">
-              {user.user_track === "recruiter" ? "🏢 Recruiter / Firm" : "🎯 Job Seeker / Candidate"}
+              {USER_TRACKS.find((t) => t.value === user.user_track)?.label || "🎯 Job Seeker / Candidate"}
             </p>
           )}
         </div>
@@ -569,9 +579,16 @@ export default function PersonalInfoTab({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5 block">
-                COA Number
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-600 block">
+                  COA Number
+                </label>
+                {user.hide_coa && (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-semibold border border-amber-200">
+                    <EyeOff size={11} /> Secret
+                  </span>
+                )}
+              </div>
               {isEditing ? (
                 <input
                   type="text"
@@ -580,6 +597,10 @@ export default function PersonalInfoTab({
                   placeholder="CA/YYYY/XXXXX"
                   className="w-full border border-gray-300 rounded-xl px-4 py-2.5 bg-white text-sm"
                 />
+              ) : (!isOwner && user.hide_coa) ? (
+                <p className="text-sm font-semibold text-gray-900 bg-white p-2.5 rounded-xl border border-blue-100 italic">
+                  {user.coa_number ? "COA Verified (Number Hidden)" : "Not registered / Not added"}
+                </p>
               ) : (
                 <p className="text-sm font-semibold text-gray-900 bg-white p-2.5 rounded-xl border border-blue-100">
                   {user.coa_number || "Not registered / Not added"}

@@ -79,6 +79,9 @@ export default function ProfilePage() {
           hide_whatsapp: profile.hide_whatsapp ?? false,
           hide_email: profile.hide_email ?? false,
           hide_dob: profile.hide_dob ?? false,
+          hide_coa: profile.hide_coa ?? false,
+          hide_experience: profile.hide_experience ?? false,
+          hide_education: profile.hide_education ?? false,
           role: profile.role || "user",
           bio: profile.bio || "",
           dob: profile.dob || "",
@@ -396,19 +399,45 @@ export default function ProfilePage() {
                 onUserUpdate={handleUserUpdate}
               />
 
-              <ExperienceSection
-                userId={user.id}
-                isOwner={isOwner}
-                experiences={experiences}
-                onExperiencesChange={setExperiences}
-              />
+              {/* Work Experience with cumulative duration & roles (or Private Notice) */}
+              {(!isOwner && user.hide_experience) ? (
+                <div className="border rounded-3xl p-6 md:p-8 bg-gray-50 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Work Experience</h3>
+                    <p className="text-xs text-gray-500 mt-1">Kept private by user</p>
+                  </div>
+                  <span className="text-xs font-bold text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-xl shadow-xs">
+                    Private
+                  </span>
+                </div>
+              ) : (
+                <ExperienceSection
+                  userId={user.id}
+                  isOwner={isOwner}
+                  experiences={experiences}
+                  onExperiencesChange={setExperiences}
+                />
+              )}
 
-              <EducationSection
-                userId={user.id}
-                isOwner={isOwner}
-                educations={educations}
-                onEducationsChange={setEducations}
-              />
+              {/* Education Details with separate university & college (or Private Notice) */}
+              {(!isOwner && user.hide_education) ? (
+                <div className="border rounded-3xl p-6 md:p-8 bg-gray-50 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900">Education Details</h3>
+                    <p className="text-xs text-gray-500 mt-1">Kept private by user</p>
+                  </div>
+                  <span className="text-xs font-bold text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-xl shadow-xs">
+                    Private
+                  </span>
+                </div>
+              ) : (
+                <EducationSection
+                  userId={user.id}
+                  isOwner={isOwner}
+                  educations={educations}
+                  onEducationsChange={setEducations}
+                />
+              )}
             </div>
           )}
 

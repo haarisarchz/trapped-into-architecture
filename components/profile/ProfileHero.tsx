@@ -347,16 +347,32 @@ export default function ProfileHero({
 
             {/* Badges / Track / Experience Row */}
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              {/* User Track: Job Seeker / Recruiter */}
-              <span
-                className={`px-3 py-1 rounded-full font-semibold border ${
-                  user.user_track === "recruiter"
-                    ? "bg-purple-50 text-purple-700 border-purple-200"
-                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                }`}
-              >
-                {user.user_track === "recruiter" ? "🏢 Recruiter / Firm" : "🎯 Job Seeker"}
-              </span>
+              {/* User Track: Job Seeker, Student, Recruiter, Academician, Freelancer, Explorer */}
+              {(() => {
+                const getTrackBadge = (track: string) => {
+                  switch (track) {
+                    case "student":
+                      return { label: "🎓 Architecture Student", style: "bg-blue-50 text-blue-700 border-blue-200" };
+                    case "recruiter":
+                      return { label: "🏢 Recruiter / Firm", style: "bg-purple-50 text-purple-700 border-purple-200" };
+                    case "academician":
+                      return { label: "🏛️ Academician / Educator", style: "bg-amber-50 text-amber-800 border-amber-200" };
+                    case "freelancer":
+                      return { label: "💼 Freelancer / Consultant", style: "bg-teal-50 text-teal-700 border-teal-200" };
+                    case "explorer":
+                      return { label: "☕ Architecture Enthusiast", style: "bg-orange-50 text-orange-700 border-orange-200" };
+                    case "job_seeker":
+                    default:
+                      return { label: "🎯 Job Seeker", style: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+                  }
+                };
+                const trackInfo = getTrackBadge(user.user_track);
+                return (
+                  <span className={`px-3 py-1 rounded-full font-semibold border ${trackInfo.style}`}>
+                    {trackInfo.label}
+                  </span>
+                );
+              })()}
 
               {/* Tier Badge */}
               <span

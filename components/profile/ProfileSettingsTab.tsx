@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Lock, EyeOff, Shield, Check, Info } from "lucide-react";
+import { Lock, EyeOff, Shield, Check, GraduationCap, Briefcase } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface ProfileSettingsTabProps {
@@ -17,6 +17,10 @@ export default function ProfileSettingsTab({
   const [hideWhatsapp, setHideWhatsapp] = useState<boolean>(Boolean(user.hide_whatsapp));
   const [hideEmail, setHideEmail] = useState<boolean>(Boolean(user.hide_email));
   const [hideDob, setHideDob] = useState<boolean>(Boolean(user.hide_dob));
+  const [hideCoa, setHideCoa] = useState<boolean>(Boolean(user.hide_coa));
+  const [hideExperience, setHideExperience] = useState<boolean>(Boolean(user.hide_experience));
+  const [hideEducation, setHideEducation] = useState<boolean>(Boolean(user.hide_education));
+
   const [saving, setSaving] = useState<boolean>(false);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
 
@@ -30,6 +34,9 @@ export default function ProfileSettingsTab({
         hide_whatsapp: hideWhatsapp,
         hide_email: hideEmail,
         hide_dob: hideDob,
+        hide_coa: hideCoa,
+        hide_experience: hideExperience,
+        hide_education: hideEducation,
       };
 
       const { error } = await supabase
@@ -70,7 +77,7 @@ export default function ProfileSettingsTab({
             <span>Profile Settings & Privacy</span>
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Control which contact details and personal information are visible publicly
+            Choose which personal and professional details to keep secret from public view
           </p>
         </div>
       </div>
@@ -80,28 +87,28 @@ export default function ProfileSettingsTab({
         <Shield size={20} className="text-emerald-600 shrink-0 mt-0.5" />
         <div>
           <p className="font-bold text-emerald-900 mb-0.5">
-            Badge Points Guarantee
+            Diamond Points & Privacy Guarantee
           </p>
           <p className="text-emerald-800 leading-relaxed text-xs">
-            Hiding your phone number, WhatsApp, email, or date of birth will <strong>never reduce your profile completion score</strong>. You still receive 100% full points and maintain your <strong>Gold, Platinum, or Diamond Member</strong> rank while keeping your sensitive details completely secret.
+            Hiding any of your details will <strong>never decrease your profile completion score</strong>. You still earn 100% full points and maintain your <strong>Gold, Platinum, or Diamond Member</strong> rank while keeping your sensitive records completely secret from public visitors.
           </p>
         </div>
       </div>
 
       {/* Privacy Checkboxes */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5 mb-8">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">
-          Make Personal Details Secret
+      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4 mb-8">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+          Make Personal & Professional Details Secret
         </h3>
 
         {/* 1. Hide Phone */}
-        <label className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
+        <label className="flex items-start justify-between p-3.5 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
           <div className="pr-4">
             <div className="flex items-center gap-2">
-              <EyeOff size={16} className="text-gray-600" />
+              <EyeOff size={15} className="text-gray-600" />
               <p className="text-sm font-bold text-gray-900">Hide Phone Number</p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Public visitors and other users will not see your phone number. Only you can view it.
             </p>
           </div>
@@ -114,14 +121,14 @@ export default function ProfileSettingsTab({
         </label>
 
         {/* 2. Hide WhatsApp */}
-        <label className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
+        <label className="flex items-start justify-between p-3.5 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
           <div className="pr-4">
             <div className="flex items-center gap-2">
-              <EyeOff size={16} className="text-gray-600" />
+              <EyeOff size={15} className="text-gray-600" />
               <p className="text-sm font-bold text-gray-900">Hide WhatsApp Number</p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Keep your WhatsApp contact number hidden from public profile visitors.
+            <p className="text-xs text-gray-500 mt-0.5">
+              Keep your WhatsApp contact number hidden from public visitors.
             </p>
           </div>
           <input
@@ -133,14 +140,14 @@ export default function ProfileSettingsTab({
         </label>
 
         {/* 3. Hide Email */}
-        <label className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
+        <label className="flex items-start justify-between p-3.5 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
           <div className="pr-4">
             <div className="flex items-center gap-2">
-              <EyeOff size={16} className="text-gray-600" />
+              <EyeOff size={15} className="text-gray-600" />
               <p className="text-sm font-bold text-gray-900">Hide Email Address</p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Prevent public visitors from viewing your direct email address.
+            <p className="text-xs text-gray-500 mt-0.5">
+              Prevent visitors from viewing your direct email address.
             </p>
           </div>
           <input
@@ -152,20 +159,77 @@ export default function ProfileSettingsTab({
         </label>
 
         {/* 4. Hide Date of Birth */}
-        <label className="flex items-start justify-between p-4 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
+        <label className="flex items-start justify-between p-3.5 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
           <div className="pr-4">
             <div className="flex items-center gap-2">
-              <EyeOff size={16} className="text-gray-600" />
+              <EyeOff size={15} className="text-gray-600" />
               <p className="text-sm font-bold text-gray-900">Hide Date of Birth</p>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Your birth date will be kept private from other users while still enabling birthday congratulations.
+            <p className="text-xs text-gray-500 mt-0.5">
+              Keep your exact birth date private from public view.
             </p>
           </div>
           <input
             type="checkbox"
             checked={hideDob}
             onChange={(e) => setHideDob(e.target.checked)}
+            className="w-5 h-5 text-black rounded mt-1 cursor-pointer"
+          />
+        </label>
+
+        {/* 5. Hide COA Number */}
+        <label className="flex items-start justify-between p-3.5 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
+          <div className="pr-4">
+            <div className="flex items-center gap-2">
+              <EyeOff size={15} className="text-gray-600" />
+              <p className="text-sm font-bold text-gray-900">Hide COA Registration Number</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Keeps your official registration number secret while still proudly showing the &quot;COA Verified&quot; badge to visitors.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={hideCoa}
+            onChange={(e) => setHideCoa(e.target.checked)}
+            className="w-5 h-5 text-black rounded mt-1 cursor-pointer"
+          />
+        </label>
+
+        {/* 6. Hide Work Experience */}
+        <label className="flex items-start justify-between p-3.5 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
+          <div className="pr-4">
+            <div className="flex items-center gap-2">
+              <Briefcase size={15} className="text-gray-600" />
+              <p className="text-sm font-bold text-gray-900">Hide Work Experience Details</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Keep past firm names, roles, and employment history private from other users.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={hideExperience}
+            onChange={(e) => setHideExperience(e.target.checked)}
+            className="w-5 h-5 text-black rounded mt-1 cursor-pointer"
+          />
+        </label>
+
+        {/* 7. Hide Education */}
+        <label className="flex items-start justify-between p-3.5 rounded-xl border border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition cursor-pointer">
+          <div className="pr-4">
+            <div className="flex items-center gap-2">
+              <GraduationCap size={15} className="text-gray-600" />
+              <p className="text-sm font-bold text-gray-900">Hide Education Details</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Keep your colleges, universities, and high school records private from other users.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={hideEducation}
+            onChange={(e) => setHideEducation(e.target.checked)}
             className="w-5 h-5 text-black rounded mt-1 cursor-pointer"
           />
         </label>
