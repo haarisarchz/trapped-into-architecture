@@ -38,6 +38,8 @@ export interface ExperienceEntry {
 
 /**
  * Calculates dynamic profile completion percentage (0-100%) and badge tier.
+ * Newly registered users collect Full Name & Username (5%), Email (5%), and Profession (10%),
+ * guaranteeing 20% on registration and Bronze Member status.
  */
 export function calculateProfileCompletion(
   user: any,
@@ -48,50 +50,57 @@ export function calculateProfileCompletion(
   const missing: { label: string; points: number }[] = [];
 
   // 1. Basic Identity (40 points total)
+  // 1.1 Full Name & Username (5%) - Collected at registration
   if (user?.fullName && user?.username) {
     score += 5;
   } else {
     missing.push({ label: "Full Name & Username", points: 5 });
   }
 
+  // 1.2 Email (5%) - Collected at registration
+  if (user?.email) {
+    score += 5;
+  } else {
+    missing.push({ label: "Email Address", points: 5 });
+  }
+
+  // 1.3 Profile Picture (10%)
   if (user?.profileImage || user?.avatar_url) {
     score += 10;
   } else {
-    missing.push({ label: "Profile Picture", points: 10 });
+    missing.push({ label: "Profile Picture / Avatar", points: 10 });
   }
 
+  // 1.4 Tagline / Headline (5%)
   if (user?.tagline && user.tagline.trim().length > 3) {
     score += 5;
   } else {
     missing.push({ label: "Professional Tagline (headline)", points: 5 });
   }
 
+  // 1.5 Bio / About (10%)
   if (user?.bio && user.bio.trim().length > 10) {
     score += 10;
   } else {
-    missing.push({ label: "About Me / Bio", points: 10 });
+    missing.push({ label: "About Me / Professional Bio", points: 10 });
   }
 
+  // 1.6 Date of Birth & Gender (5%)
   if (user?.dob && user?.gender) {
     score += 5;
   } else {
     missing.push({ label: "Date of Birth & Gender", points: 5 });
   }
 
-  if (user?.phone && user?.email) {
-    score += 5;
-  } else {
-    missing.push({ label: "Phone Number & Email", points: 5 });
-  }
-
   // 2. Professional & Council Credentials (20 points total)
+  // 2.1 Profession (10%) - Required & selected at registration
   if (user?.profession) {
     score += 10;
   } else {
     missing.push({ label: "Profession Selection", points: 10 });
   }
 
-  // COA or Highest Qualification
+  // 2.2 COA Registration (or Highest Qualification for students) (10%)
   const isStudent =
     user?.profession?.toLowerCase().includes("student") || false;
   if (user?.coa_number || (isStudent && user?.highest_qualification)) {
@@ -152,7 +161,8 @@ export function calculateProfileCompletion(
   // Ensure 0-100 clamp
   const percentage = Math.min(100, Math.max(0, score));
 
-  // Determine Badge Tier
+  // Determine Badge Tier strictly across the 5 member levels:
+  // Bronze: 20-49, Silver: 50-69, Gold: 70-84, Platinum: 85-94, Diamond: 95-100
   let badgeTier: BadgeTier = "bronze";
   if (percentage >= 95) {
     badgeTier = "diamond";
@@ -164,7 +174,8 @@ export function calculateProfileCompletion(
     badgeTier = "silver";
   }
 
-  const isVip = Boolean(user?.is_vip || (percentage >= 95 && user?.coa_number));
+  // VIP is an honorary distinction on Diamond for favorites / notable architects / fans
+  const isVip = Boolean(user?.is_vip);
 
   return {
     percentage,
@@ -205,10 +216,8 @@ export function calculateTotalExperience(experiences: ExperienceEntry[]): {
     return { years: 0, months: 0, days: 0, formatted: "Fresher / No experience added" };
   }
 
-  // Sort intervals by start date
   intervals.sort((a, b) => a.start - b.start);
 
-  // Merge overlapping intervals
   const merged: { start: number; end: number }[] = [intervals[0]];
   for (let i = 1; i < intervals.length; i++) {
     const prev = merged[merged.length - 1];
@@ -220,7 +229,6 @@ export function calculateTotalExperience(experiences: ExperienceEntry[]): {
     }
   }
 
-  // Sum total days
   let totalMs = 0;
   merged.forEach((int) => {
     totalMs += int.end - int.start;
@@ -282,11 +290,11 @@ export function getBadgeDetails(tier: BadgeTier, isVip = false) {
       icon: "💎",
     },
     diamond: {
-      title: "Diamond Member",
+      title: isVip ? "Diamond Member (VIP)" : "Diamond Member",
       color: "text-purple-800",
       bg: "bg-purple-100",
-      border: "border-purple-300",
-      icon: "👑",
+      border: isVip ? "border-amber-400" : "border-purple-300",
+      icon: isVip ? "⭐" : "👑",
     },
   };
 
@@ -294,6 +302,6 @@ export function getBadgeDetails(tier: BadgeTier, isVip = false) {
   return {
     ...badge,
     isVip,
-    vipTitle: isVip ? "VIP Verified" : undefined,
+    vipTitle: isVip ? "VIP Diamond Member" : undefined,
   };
 }

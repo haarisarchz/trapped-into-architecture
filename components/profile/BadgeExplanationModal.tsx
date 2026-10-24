@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Award, X } from "lucide-react";
+import { Award, X, Sparkles } from "lucide-react";
 
 interface BadgeExplanationModalProps {
   isOpen: boolean;
@@ -12,7 +12,6 @@ export default function BadgeExplanationModal({
   isOpen,
   onClose,
 }: BadgeExplanationModalProps) {
-  // Prevent background scroll when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -46,7 +45,7 @@ export default function BadgeExplanationModal({
                 Profile Badges & Scoring System
               </h3>
               <p className="text-xs text-gray-500">
-                How levels are calculated and points distributed
+                How member levels are calculated and points distributed
               </p>
             </div>
           </div>
@@ -60,18 +59,19 @@ export default function BadgeExplanationModal({
           </button>
         </div>
 
-        {/* SECTION 1: BADGE TIERS & PERCENTAGE RANGES */}
+        {/* SECTION 1: THE 5 MEMBER LEVELS */}
         <div className="mb-6">
           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
             1. Member Levels & Required Scores
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            {/* Bronze */}
             <div className="p-3 rounded-2xl border border-amber-200 bg-amber-50/60 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥉</span>
                 <div>
                   <p className="font-bold text-amber-900">Bronze Member</p>
-                  <p className="text-[11px] text-amber-700">Basic identification & profile start</p>
+                  <p className="text-[11px] text-amber-700">Unlocked on signup with initial registration</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800 shrink-0">
@@ -79,12 +79,13 @@ export default function BadgeExplanationModal({
               </span>
             </div>
 
+            {/* Silver */}
             <div className="p-3 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥈</span>
                 <div>
                   <p className="font-bold text-slate-800">Silver Member</p>
-                  <p className="text-[11px] text-slate-600">Core details & education added</p>
+                  <p className="text-[11px] text-slate-600">Core details, avatar & bio added</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shrink-0">
@@ -92,12 +93,13 @@ export default function BadgeExplanationModal({
               </span>
             </div>
 
+            {/* Gold */}
             <div className="p-3 rounded-2xl border border-yellow-300 bg-yellow-50/80 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥇</span>
                 <div>
                   <p className="font-bold text-yellow-900">Gold Member</p>
-                  <p className="text-[11px] text-yellow-700">Detailed degrees, bio & experience</p>
+                  <p className="text-[11px] text-yellow-700">Detailed degrees & work experience added</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-yellow-300 text-yellow-900 shrink-0">
@@ -105,12 +107,13 @@ export default function BadgeExplanationModal({
               </span>
             </div>
 
+            {/* Platinum */}
             <div className="p-3 rounded-2xl border border-cyan-200 bg-cyan-50/70 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-lg">💎</span>
                 <div>
                   <p className="font-bold text-cyan-900">Platinum Member</p>
-                  <p className="text-[11px] text-cyan-700">Comprehensive professional portfolio</p>
+                  <p className="text-[11px] text-cyan-700">In-depth career history & institution details</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-cyan-200 text-cyan-900 shrink-0">
@@ -118,31 +121,27 @@ export default function BadgeExplanationModal({
               </span>
             </div>
 
-            <div className="p-3 rounded-2xl border border-purple-200 bg-purple-50/80 flex items-center justify-between sm:col-span-2">
+            {/* Diamond */}
+            <div className="p-3.5 rounded-2xl border border-purple-200 bg-purple-50/80 flex items-center justify-between sm:col-span-2">
               <div className="flex items-center gap-2">
-                <span className="text-lg">👑</span>
+                <span className="text-xl">👑</span>
                 <div>
                   <p className="font-bold text-purple-900">Diamond Member</p>
-                  <p className="text-[11px] text-purple-700">Complete architectural dossier across all fields</p>
+                  <p className="text-[11px] text-purple-700">Complete, comprehensive architectural profile across all sections</p>
                 </div>
               </div>
-              <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-purple-200 text-purple-900 shrink-0">
+              <span className="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-900 shrink-0">
                 95% – 100%
               </span>
             </div>
+          </div>
 
-            <div className="p-3 rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50 flex items-center justify-between sm:col-span-2">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">⭐</span>
-                <div>
-                  <p className="font-bold text-amber-950">VIP User Status</p>
-                  <p className="text-[11px] text-amber-800">Special privilege for 95%+ completion + Active COA Architect or Vetted Recruiter</p>
-                </div>
-              </div>
-              <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-amber-400 text-black shrink-0">
-                Elite
-              </span>
-            </div>
+          {/* VIP NOTE */}
+          <div className="mt-3 p-3 rounded-2xl border border-amber-200 bg-amber-50/50 flex items-start gap-2.5 text-xs text-amber-950">
+            <Sparkles size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <p className="leading-relaxed">
+              <strong className="font-bold">⭐ VIP User Status:</strong> VIP is an honorary Diamond distinction awarded to important community figures, platform favorites, and notable supporters of Trapped Into Architecture.
+            </p>
           </div>
         </div>
 
@@ -158,44 +157,44 @@ export default function BadgeExplanationModal({
                 <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
                   <th className="py-2.5 px-3">Category</th>
                   <th className="py-2.5 px-3">Field / Requirement</th>
-                  <th className="py-2.5 px-3 text-center">Type</th>
+                  <th className="py-2.5 px-3 text-center">Registration</th>
                   <th className="py-2.5 px-3 text-right">Points</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {/* Basic Identity */}
-                <tr className="hover:bg-gray-50">
+                <tr className="hover:bg-gray-50 bg-amber-50/20">
                   <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={6}>
                     Basic Identity<br/>
                     <span className="text-[10px] text-gray-500 font-normal">(40% total)</span>
                   </td>
-                  <td className="py-2 px-3 text-gray-700">Full Name & Username</td>
-                  <td className="py-2 px-3 text-center"><span className="text-red-500 font-bold">Required</span></td>
+                  <td className="py-2 px-3 text-gray-800 font-medium">Full Name & Username</td>
+                  <td className="py-2 px-3 text-center"><span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold text-[10px]">On Signup</span></td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                </tr>
+                <tr className="hover:bg-gray-50 bg-amber-50/20">
+                  <td className="py-2 px-3 text-gray-800 font-medium">Email Address</td>
+                  <td className="py-2 px-3 text-center"><span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold text-[10px]">On Signup</span></td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 text-gray-700">Profile Picture / Avatar</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 text-gray-700">Professional Tagline (Headline)</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 text-gray-700">About Me / Professional Bio</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 text-gray-700">Date of Birth & Gender</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
-                </tr>
-                <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-700">Phone Number & Email</td>
-                  <td className="py-2 px-3 text-center"><span className="text-red-500 font-bold">Required</span></td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
 
@@ -205,13 +204,13 @@ export default function BadgeExplanationModal({
                     Credentials<br/>
                     <span className="text-[10px] text-gray-500 font-normal">(20% total)</span>
                   </td>
-                  <td className="py-2 px-3 text-gray-700">Profession Selection</td>
-                  <td className="py-2 px-3 text-center"><span className="text-red-500 font-bold">Required</span></td>
+                  <td className="py-2 px-3 text-gray-800 font-medium">Profession Selection</td>
+                  <td className="py-2 px-3 text-center"><span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold text-[10px]">On Signup</span></td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50 bg-gray-50/50">
                   <td className="py-2 px-3 text-gray-700">COA Registration (or Highest Qual for Students)</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
 
@@ -222,12 +221,12 @@ export default function BadgeExplanationModal({
                     <span className="text-[10px] text-gray-500 font-normal">(20% total)</span>
                   </td>
                   <td className="py-2 px-3 text-gray-700">At least 1 Education entry (UG / PG / PhD / School)</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">15%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
                   <td className="py-2 px-3 text-gray-700">Separation of University & College (or Board & School)</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
 
@@ -238,18 +237,20 @@ export default function BadgeExplanationModal({
                     <span className="text-[10px] text-gray-500 font-normal">(20% total)</span>
                   </td>
                   <td className="py-2 px-3 text-gray-700">At least 1 Work Experience or Internship entry</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">15%</td>
                 </tr>
                 <tr className="hover:bg-gray-50 bg-gray-50/50">
                   <td className="py-2 px-3 text-gray-700">Organization Type & Responsibilities filled</td>
-                  <td className="py-2 px-3 text-center text-gray-500">Optional</td>
+                  <td className="py-2 px-3 text-center text-gray-400">Profile Page</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
                 </tr>
 
                 {/* Total Row */}
                 <tr className="bg-black text-white font-bold">
-                  <td className="py-2.5 px-3" colSpan={3}>Total Profile Score</td>
+                  <td className="py-2.5 px-3" colSpan={3}>
+                    Total Profile Score (Initial registration starts with Bronze 20%)
+                  </td>
                   <td className="py-2.5 px-3 text-right text-sm">100%</td>
                 </tr>
               </tbody>
