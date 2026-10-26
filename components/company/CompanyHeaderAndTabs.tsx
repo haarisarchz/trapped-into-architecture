@@ -23,6 +23,8 @@ import {
   Trophy,
   Edit,
   PlusCircle,
+  X,
+  UserPlus,
 } from "lucide-react";
 import CompanyActions from "@/components/CompanyActions";
 import CompanyBadgeExplanationModal from "./CompanyBadgeExplanationModal";
@@ -47,12 +49,15 @@ export default function CompanyHeaderAndTabs({
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       const userStr = localStorage.getItem("currentUser");
       if (userStr) {
         const user = JSON.parse(userStr);
+        setCurrentUser(user);
         const role = (user.role || "").toLowerCase().replace(/[\s_]+/g, "");
         if (role === "admin" || role === "superadmin" || role === "ceo" || role === "jobadmin") {
           setIsAdmin(true);
@@ -60,6 +65,18 @@ export default function CompanyHeaderAndTabs({
       }
     } catch (e) {}
   }, []);
+
+  const handleClaimClick = () => {
+    const userStr = localStorage.getItem("currentUser");
+    if (!userStr) {
+      setAuthNotice("Register as a user to claim this studio");
+      // Trigger the native registration popup in Navbar
+      window.dispatchEvent(new CustomEvent("openAuth", { detail: "register" }));
+      setTimeout(() => setAuthNotice(null), 6000);
+      return;
+    }
+    setIsClaimModalOpen(true);
+  };
 
   const tier = (company.badge_tier || "bronze").toLowerCase();
   const completionPercentage = company.completion_percentage ?? 20;
@@ -79,7 +96,39 @@ export default function CompanyHeaderAndTabs({
   const location = [company.neighborhood, company.address, company.city, company.state].filter(Boolean).join(", ");
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      {/* FLOATING AUTH NOTIFICATION TOAST */}
+      {authNotice && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-700 animate-in fade-in slide-in-from-top-4 duration-300 max-w-md w-[92%] sm:w-auto">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <UserPlus size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-white leading-tight">
+              Register as a user to claim this studio
+            </p>
+            <p className="text-xs text-gray-300 mt-0.5 truncate">
+              Create a free account to manage {company.firm_name}.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("openAuth", { detail: "register" }));
+              setAuthNotice(null);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer shrink-0"
+          >
+            Register
+          </button>
+          <button
+            onClick={() => setAuthNotice(null)}
+            className="text-gray-400 hover:text-white p-1 cursor-pointer shrink-0"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       {/* ADMIN AI NOTICE BANNER */}
       {isAdmin && (
         <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
@@ -160,7 +209,7 @@ export default function CompanyHeaderAndTabs({
                   </span>
                 ) : (
                   <button
-                    onClick={() => setIsClaimModalOpen(true)}
+                    onClick={handleClaimClick}
                     className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition cursor-pointer"
                   >
                     <Building2 size={13} />
@@ -362,7 +411,7 @@ export default function CompanyHeaderAndTabs({
                     Claim this studio profile to add your firm&apos;s story, showcase your design philosophy, highlight built projects, and attract top architecture talent.
                   </p>
                   <button
-                    onClick={() => setIsClaimModalOpen(true)}
+                    onClick={handleClaimClick}
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm px-6 py-3 rounded-2xl transition shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
                   >
                     <Building2 size={16} />
@@ -622,7 +671,7 @@ export default function CompanyHeaderAndTabs({
           </p>
           {!isClaimed && (
             <button
-              onClick={() => setIsClaimModalOpen(true)}
+              onClick={handleClaimClick}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md transition cursor-pointer"
             >
               Claim this Studio to Add Projects
