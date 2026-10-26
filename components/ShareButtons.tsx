@@ -140,13 +140,6 @@ export default function ShareButtons({
   }, [isOpen, isMobile]);
 
   const trackShare = async (platform: string = "whatsapp") => {
-    setShareCount(prev => prev + 1);
-    try {
-      if (typeof window !== "undefined" && (window as any).gtag) {
-        (window as any).gtag("event", "share_click", { job_id: jobId, firm_name: companyName, position, platform });
-      }
-    } catch (e) {}
-
     let userId = null;
     let userName = null;
     let userEmail = null;
@@ -162,6 +155,22 @@ export default function ShareButtons({
       }
     } catch (e) {}
 
+    // Check if the current user is an admin: CEO, Super Admin, Job Admin, Admin
+    const normRole = userRole.toLowerCase().replace(/[\s_-]+/g, "");
+    const isAdmin = ["superadmin", "admin", "jobadmin", "ceo"].includes(normRole) || normRole.includes("admin") || normRole === "ceo";
+
+    // Admin shares are NOT recorded in analytics or job share counts
+    if (isAdmin) {
+      return;
+    }
+
+    setShareCount(prev => prev + 1);
+    try {
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag("event", "share_click", { job_id: jobId, firm_name: companyName, position, platform });
+      }
+    } catch (e) {}
+
     try {
       if (jobId) {
         await fetch("/api/jobs/share", {
@@ -172,7 +181,7 @@ export default function ShareButtons({
             userId,
             userName,
             userEmail,
-            userRole,
+            userRole: userId ? (userRole || "user") : "unregistered",
             platform,
           })
         });
