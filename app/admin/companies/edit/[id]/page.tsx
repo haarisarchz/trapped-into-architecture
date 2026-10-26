@@ -7,7 +7,17 @@ import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import ImageUploader from "@/components/ImageUploader";
-import { Sparkles, Award, ShieldCheck, MailCheck, PhoneCall, Check, AlertCircle } from "lucide-react";
+import {
+  Sparkles,
+  Award,
+  ShieldCheck,
+  MailCheck,
+  PhoneCall,
+  Check,
+  AlertCircle,
+  RotateCcw,
+  CheckCircle2,
+} from "lucide-react";
 
 const normalizeOrganizationType = (raw: any): string => {
   if (!raw) return "Architecture Firm";
@@ -30,6 +40,9 @@ function EditCompanyContent() {
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiMessage, setAiMessage] = useState<string | null>(null);
+
+  // AI-Enriched tracking: key -> { original, suggested }
+  const [aiFields, setAiFields] = useState<Record<string, { original: string; suggested: string }>>({});
 
   // Form State
   const [firmName, setFirmName] = useState("");
@@ -154,7 +167,8 @@ function EditCompanyContent() {
   };
 
   const handleAutoEnrich = async (targetName = firmName, targetCity = city, targetState = state, targetWeb = companyWebsite) => {
-    if (!targetName) {
+    const nameToUse = targetName || firmName;
+    if (!nameToUse) {
       alert("Please enter a company name before running AI enrichment.");
       return;
     }
@@ -167,49 +181,83 @@ function EditCompanyContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          firmName: targetName,
-          city: targetCity,
-          state: targetState,
+          firmName: nameToUse,
+          city: targetCity || city,
+          state: targetState || state,
           organizationType,
-          website: targetWeb,
+          website: targetWeb || companyWebsite,
         }),
       });
 
       const json = await res.json();
       if (json.success && json.suggestions) {
         const s = json.suggestions;
+        const newAiFields: Record<string, { original: string; suggested: string }> = { ...aiFields };
         let filledCount = 0;
 
-        if (!companyDescription && s.description) {
+        // Description
+        if (s.description && s.description !== companyDescription) {
+          newAiFields.description = { original: companyDescription, suggested: s.description };
           setCompanyDescription(s.description);
           filledCount++;
         }
-        if (!principalArchitect && s.principal_architect) {
+
+        // Principal Architect
+        if (s.principal_architect && s.principal_architect !== principalArchitect) {
+          newAiFields.principalArchitect = { original: principalArchitect, suggested: s.principal_architect };
           setPrincipalArchitect(s.principal_architect);
           filledCount++;
         }
-        if (!foundedYear && s.founded_year) {
+
+        // Founded Year
+        if (s.founded_year && s.founded_year.toString() !== foundedYear) {
+          newAiFields.foundedYear = { original: foundedYear, suggested: s.founded_year.toString() };
           setFoundedYear(s.founded_year.toString());
           filledCount++;
         }
-        if (!employeeSize && s.employee_size) {
+
+        // Employee Size
+        if (s.employee_size && s.employee_size !== employeeSize) {
+          newAiFields.employeeSize = { original: employeeSize, suggested: s.employee_size };
           setEmployeeSize(s.employee_size);
           filledCount++;
         }
-        if (!companyWebsite && s.website) {
+
+        // Organization Type
+        if (s.organization_type && s.organization_type !== organizationType) {
+          newAiFields.organizationType = { original: organizationType, suggested: s.organization_type };
+          setOrganizationType(s.organization_type);
+          filledCount++;
+        }
+
+        // Website
+        if (s.website && s.website !== companyWebsite) {
+          newAiFields.website = { original: companyWebsite, suggested: s.website };
           setCompanyWebsite(s.website);
           filledCount++;
         }
-        if (!companyInstagram && s.instagram) {
+
+        // Instagram
+        if (s.instagram && s.instagram !== companyInstagram) {
+          newAiFields.instagram = { original: companyInstagram, suggested: s.instagram };
           setCompanyInstagram(s.instagram);
           filledCount++;
         }
-        if (!companyLinkedin && s.linkedin) {
+
+        // LinkedIn
+        if (s.linkedin && s.linkedin !== companyLinkedin) {
+          newAiFields.linkedin = { original: companyLinkedin, suggested: s.linkedin };
           setCompanyLinkedin(s.linkedin);
           filledCount++;
         }
 
-        setAiMessage(`✨ AI enriched ${filledCount} studio attributes! Review the fields below and save.`);
+        setAiFields(newAiFields);
+
+        if (filledCount > 0) {
+          setAiMessage(`✨ AI enriched ${filledCount} studio attributes! Look for the purple highlights below.`);
+        } else {
+          setAiMessage("AI verified your studio profile. All current attributes already match the latest details!");
+        }
       } else {
         setAiMessage("Could not retrieve AI suggestions. You can manually enter details below.");
       }
@@ -219,6 +267,30 @@ function EditCompanyContent() {
     } finally {
       setAiLoading(false);
     }
+  };
+
+  // Revert a single AI field
+  const handleRevertField = (fieldName: string, setter: (val: string) => void) => {
+    if (aiFields[fieldName]) {
+      setter(aiFields[fieldName].original);
+      const copy = { ...aiFields };
+      delete copy[fieldName];
+      setAiFields(copy);
+    }
+  };
+
+  // Revert all AI fields
+  const handleRevertAll = () => {
+    if (aiFields.description) setCompanyDescription(aiFields.description.original);
+    if (aiFields.principalArchitect) setPrincipalArchitect(aiFields.principalArchitect.original);
+    if (aiFields.foundedYear) setFoundedYear(aiFields.foundedYear.original);
+    if (aiFields.employeeSize) setEmployeeSize(aiFields.employeeSize.original);
+    if (aiFields.organizationType) setOrganizationType(aiFields.organizationType.original);
+    if (aiFields.website) setCompanyWebsite(aiFields.website.original);
+    if (aiFields.instagram) setCompanyInstagram(aiFields.instagram.original);
+    if (aiFields.linkedin) setCompanyLinkedin(aiFields.linkedin.original);
+    setAiFields({});
+    setAiMessage("All AI suggestions reverted to their previous values.");
   };
 
   const handleSave = async () => {
@@ -283,7 +355,6 @@ function EditCompanyContent() {
         const origCb = searchParams.get("cb") || authorId;
         const origCa = searchParams.get("ca") || new Date().toISOString();
         
-        // Attempt insert with extended fields, fall back to base if columns not created yet
         let res = await supabase.from("companies").insert([
           {
             ...extendedPayload,
@@ -296,7 +367,6 @@ function EditCompanyContent() {
         ]);
 
         if (res.error && res.error.message?.includes("badge_tier")) {
-          // Fallback to base fields
           res = await supabase.from("companies").insert([
             {
               ...baseCompanyPayload,
@@ -310,7 +380,6 @@ function EditCompanyContent() {
         }
         error = res.error;
       } else {
-        // Attempt update with extended fields, fall back to base if columns not created yet
         let res = await supabase
           .from("companies")
           .update({
@@ -335,6 +404,9 @@ function EditCompanyContent() {
 
       if (error) throw error;
 
+      // Reset AI field tracking once saved
+      setAiFields({});
+
       alert("Company details updated successfully!");
       router.push("/admin/companies");
     } catch (err: any) {
@@ -344,6 +416,38 @@ function EditCompanyContent() {
       setSaving(false);
     }
   };
+
+  // Helper styling for AI fields
+  const getFieldClass = (fieldName: string, baseClass = "w-full border rounded-xl px-3 py-2.5 text-sm") => {
+    if (aiFields[fieldName]) {
+      return `${baseClass} border-purple-400 bg-purple-50/30 ring-2 ring-purple-100 transition-all`;
+    }
+    return `${baseClass} border-gray-200 transition-all`;
+  };
+
+  // Helper label badge for AI fields
+  const renderAiBadge = (fieldName: string, revertFn?: () => void) => {
+    if (!aiFields[fieldName]) return null;
+    return (
+      <span className="inline-flex items-center gap-1 ml-2">
+        <span className="text-[10px] font-extrabold text-purple-700 bg-purple-100 border border-purple-300 px-2 py-0.5 rounded-md shadow-2xs animate-pulse">
+          ✨ AI Enriched
+        </span>
+        {revertFn && (
+          <button
+            type="button"
+            onClick={revertFn}
+            className="text-[10px] text-gray-400 hover:text-black underline cursor-pointer"
+            title="Revert to previous value"
+          >
+            (Undo)
+          </button>
+        )}
+      </span>
+    );
+  };
+
+  const aiFieldsCount = Object.keys(aiFields).length;
 
   if (loading) {
     return (
@@ -380,10 +484,33 @@ function EditCompanyContent() {
           </button>
         </div>
 
+        {/* AI BANNER NOTIFICATION */}
         {aiMessage && (
-          <div className="p-4 bg-purple-50 border border-purple-200 text-purple-900 rounded-2xl mb-6 text-sm flex items-center gap-2">
-            <Sparkles size={16} className="text-purple-600 shrink-0" />
-            <span>{aiMessage}</span>
+          <div className="p-4 bg-purple-50 border border-purple-200 text-purple-900 rounded-2xl mb-6 text-sm flex items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2">
+              <Sparkles size={18} className="text-purple-600 shrink-0" />
+              <span>{aiMessage}</span>
+            </div>
+            {aiFieldsCount > 0 && (
+              <button
+                type="button"
+                onClick={handleRevertAll}
+                className="text-xs text-purple-700 font-bold hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+              >
+                <RotateCcw size={12} />
+                <span>Revert All AI Changes</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* AI ACTIVE ENRICHMENT CALLOUT */}
+        {aiFieldsCount > 0 && (
+          <div className="p-3 bg-gradient-to-r from-purple-100/80 to-indigo-100/80 border border-purple-300 text-purple-950 rounded-2xl mb-6 text-xs flex items-center justify-between">
+            <span className="font-semibold">
+              🟣 Currently highlighting <strong>{aiFieldsCount} AI-enriched attributes</strong> in purple. Color highlights will clear when you click &quot;Save Company&quot;.
+            </span>
+            <span className="text-[11px] text-purple-700 font-bold">Unsaved AI Draft</span>
           </div>
         )}
 
@@ -462,8 +589,15 @@ function EditCompanyContent() {
               <input type="text" value={firmName} onChange={(e) => setFirmName(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
             </div>
             <div>
-              <label className="block mb-1.5 text-sm font-medium">Organization Type</label>
-              <select value={organizationType} onChange={(e) => setOrganizationType(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white">
+              <label className="block mb-1.5 text-sm font-medium flex items-center">
+                <span>Organization Type</span>
+                {renderAiBadge("organizationType", () => handleRevertField("organizationType", setOrganizationType))}
+              </label>
+              <select
+                value={organizationType}
+                onChange={(e) => setOrganizationType(e.target.value)}
+                className={getFieldClass("organizationType", "w-full border rounded-xl px-3 py-2.5 text-sm bg-white")}
+              >
                 <option value="Architecture Firm">Architecture Firm</option>
                 <option value="Interior Design Studio">Interior Design Studio</option>
                 <option value="Architecture & Interior Design">Architecture & Interior Design</option>
@@ -498,12 +632,28 @@ function EditCompanyContent() {
               <ImageUploader value={companyLogo} onChange={(url) => setCompanyLogo(url)} label="Upload Logo" />
             </div>
             <div>
-              <label className="block mb-1.5 text-sm font-medium">Principal Architect / Head</label>
-              <input type="text" value={principalArchitect} onChange={(e) => setPrincipalArchitect(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+              <label className="block mb-1.5 text-sm font-medium flex items-center">
+                <span>Principal Architect / Head</span>
+                {renderAiBadge("principalArchitect", () => handleRevertField("principalArchitect", setPrincipalArchitect))}
+              </label>
+              <input
+                type="text"
+                value={principalArchitect}
+                onChange={(e) => setPrincipalArchitect(e.target.value)}
+                className={getFieldClass("principalArchitect")}
+                placeholder="e.g. Ar. Haaris"
+              />
             </div>
             <div>
-              <label className="block mb-1.5 text-sm font-medium">Employee Size</label>
-              <select value={employeeSize} onChange={(e) => setEmployeeSize(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm bg-white">
+              <label className="block mb-1.5 text-sm font-medium flex items-center">
+                <span>Employee Size</span>
+                {renderAiBadge("employeeSize", () => handleRevertField("employeeSize", setEmployeeSize))}
+              </label>
+              <select
+                value={employeeSize}
+                onChange={(e) => setEmployeeSize(e.target.value)}
+                className={getFieldClass("employeeSize", "w-full border rounded-xl px-3 py-2.5 text-sm bg-white")}
+              >
                 <option value="">Select Size</option>
                 <option value="1-10">1-10</option>
                 <option value="11-50">11-50</option>
@@ -513,31 +663,74 @@ function EditCompanyContent() {
               </select>
             </div>
             <div>
-              <label className="block mb-1.5 text-sm font-medium">Founded Year</label>
-              <input type="number" min="1800" max={new Date().getFullYear()} value={foundedYear} onChange={(e) => setFoundedYear(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+              <label className="block mb-1.5 text-sm font-medium flex items-center">
+                <span>Founded Year</span>
+                {renderAiBadge("foundedYear", () => handleRevertField("foundedYear", setFoundedYear))}
+              </label>
+              <input
+                type="number"
+                min="1800"
+                max={new Date().getFullYear()}
+                value={foundedYear}
+                onChange={(e) => setFoundedYear(e.target.value)}
+                className={getFieldClass("foundedYear")}
+                placeholder="2018"
+              />
             </div>
           </div>
 
           {/* About & Contacts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
-              <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">About {organizationType}</h3>
-              <textarea rows={6} value={companyDescription} onChange={(e) => setCompanyDescription(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm resize-none h-[230px]" />
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider flex items-center">
+                  <span>About {organizationType}</span>
+                  {renderAiBadge("description", () => handleRevertField("description", setCompanyDescription))}
+                </h3>
+              </div>
+              <textarea
+                rows={6}
+                value={companyDescription}
+                onChange={(e) => setCompanyDescription(e.target.value)}
+                className={getFieldClass("description", "w-full border rounded-xl px-3 py-2.5 text-sm resize-none h-[230px]")}
+                placeholder="Describe practice design philosophy, typologies, and notable accomplishments..."
+              />
             </div>
             <div>
               <h3 className="font-bold mb-3 text-sm text-gray-500 uppercase tracking-wider">Contact Details</h3>
               <div className="flex flex-col gap-4">
                 <div>
-                  <label className="block mb-1.5 text-sm font-medium">Website</label>
-                  <input type="url" value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  <label className="block mb-1.5 text-sm font-medium flex items-center">
+                    <span>Website</span>
+                    {renderAiBadge("website", () => handleRevertField("website", setCompanyWebsite))}
+                  </label>
+                  <input
+                    type="url"
+                    value={companyWebsite}
+                    onChange={(e) => setCompanyWebsite(e.target.value)}
+                    className={getFieldClass("website")}
+                    placeholder="https://studio.com"
+                  />
                 </div>
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">Email</label>
-                  <input type="email" value={companyEmail} onChange={(e) => setCompanyEmail(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  <input
+                    type="email"
+                    value={companyEmail}
+                    onChange={(e) => setCompanyEmail(e.target.value)}
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
+                    placeholder="contact@studio.com"
+                  />
                 </div>
                 <div>
                   <label className="block mb-1.5 text-sm font-medium">Phone</label>
-                  <input type="text" value={companyPhone} onChange={(e) => setCompanyPhone(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                  <input
+                    type="text"
+                    value={companyPhone}
+                    onChange={(e) => setCompanyPhone(e.target.value)}
+                    className="w-full border rounded-xl px-3 py-2.5 text-sm"
+                    placeholder="+91 98765 43210"
+                  />
                 </div>
               </div>
             </div>
@@ -556,12 +749,30 @@ function EditCompanyContent() {
                 <input type="url" value={companyFacebook} onChange={(e) => setCompanyFacebook(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
               </div>
               <div>
-                <label className="block mb-1.5 text-sm font-medium">Instagram</label>
-                <input type="url" value={companyInstagram} onChange={(e) => setCompanyInstagram(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                <label className="block mb-1.5 text-sm font-medium flex items-center">
+                  <span>Instagram</span>
+                  {renderAiBadge("instagram", () => handleRevertField("instagram", setCompanyInstagram))}
+                </label>
+                <input
+                  type="url"
+                  value={companyInstagram}
+                  onChange={(e) => setCompanyInstagram(e.target.value)}
+                  className={getFieldClass("instagram")}
+                  placeholder="https://instagram.com/studio"
+                />
               </div>
               <div>
-                <label className="block mb-1.5 text-sm font-medium">LinkedIn</label>
-                <input type="url" value={companyLinkedin} onChange={(e) => setCompanyLinkedin(e.target.value)} className="w-full border rounded-xl px-3 py-2.5 text-sm" />
+                <label className="block mb-1.5 text-sm font-medium flex items-center">
+                  <span>LinkedIn</span>
+                  {renderAiBadge("linkedin", () => handleRevertField("linkedin", setCompanyLinkedin))}
+                </label>
+                <input
+                  type="url"
+                  value={companyLinkedin}
+                  onChange={(e) => setCompanyLinkedin(e.target.value)}
+                  className={getFieldClass("linkedin")}
+                  placeholder="https://linkedin.com/company/studio"
+                />
               </div>
             </div>
           </div>
@@ -570,7 +781,7 @@ function EditCompanyContent() {
             <button 
               onClick={handleSave} 
               disabled={saving}
-              className="bg-black text-white px-8 py-3 rounded-xl hover:bg-gray-800 disabled:opacity-50 font-bold transition cursor-pointer"
+              className="bg-black text-white px-8 py-3 rounded-xl hover:bg-gray-800 disabled:opacity-50 font-bold transition cursor-pointer shadow-sm"
             >
               {saving ? "Saving Changes..." : "Save Company"}
             </button>
