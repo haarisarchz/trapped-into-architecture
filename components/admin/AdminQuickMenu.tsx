@@ -103,14 +103,7 @@ export default function AdminQuickMenu() {
         {navItem("/admin", "Job Dashboard")}
         {navItem("/admin/jobs", "Manage Jobs")}
         {navItem("/admin/add-job", "Add New Job")}
-        {navItem("/admin/companies", "Companies")}
-        
-        {["ceo", "superadmin"].includes(userRole) && (
-          <>
-            {navItem("/admin/badges", "Badges Management")}
-            {navItem("/admin/claims", "Company Claim Requests")}
-          </>
-        )}
+        {navItem("/admin/companies", "Manage Companies")}
         
         {userRole === "ceo" && (
           <>

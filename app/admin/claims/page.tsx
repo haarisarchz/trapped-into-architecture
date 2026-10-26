@@ -1,7 +1,18 @@
 "use client";
 
-import AdminBadgesPage from "@/app/admin/badges/page";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminClaimsPage() {
-  return <AdminBadgesPage initialTab="claims" />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/admin/companies?tab=claims");
+  }, [router]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-gray-200 border-t-black rounded-full animate-spin" />
+    </div>
+  );
 }

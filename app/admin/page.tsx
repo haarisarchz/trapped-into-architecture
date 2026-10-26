@@ -224,31 +224,15 @@ if (loading) {
                   </button>
                   <button
                     onClick={() => router.push("/admin/companies")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white flex items-center justify-between"
                   >
-                    Companies
+                    <span>Manage Companies</span>
+                    {pendingClaimsCount > 0 && (
+                      <span className="bg-gray-800 text-gray-300 border border-gray-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
+                        {pendingClaimsCount}
+                      </span>
+                    )}
                   </button>
-                  {(userRole === "ceo" || userRole === "superadmin") && (
-                    <>
-                      <button
-                        onClick={() => router.push("/admin/badges")}
-                        className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white flex items-center justify-between"
-                      >
-                        <span>Badges Managing</span>
-                      </button>
-                      <button
-                        onClick={() => router.push("/admin/claims")}
-                        className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white flex items-center justify-between"
-                      >
-                        <span>Company Claim Requests</span>
-                        {pendingClaimsCount > 0 && (
-                          <span className="bg-gray-800 text-gray-300 border border-gray-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
-                            {pendingClaimsCount}
-                          </span>
-                        )}
-                      </button>
-                    </>
-                  )}
                 </div>
               )}
             </div>
