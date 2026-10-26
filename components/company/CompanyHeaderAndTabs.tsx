@@ -14,8 +14,6 @@ import {
   ShieldCheck,
   MailCheck,
   PhoneCall,
-  Calendar,
-  Layers,
   ExternalLink,
   ChevronRight,
   HelpCircle,
@@ -48,6 +46,42 @@ const ensureUrl = (url?: string) => {
   const trimmed = url.trim();
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
   return `https://${trimmed}`;
+};
+
+const getDisplayUrl = (url?: string) => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  try {
+    const full = trimmed.startsWith("http://") || trimmed.startsWith("https://") ? trimmed : `https://${trimmed}`;
+    const parsed = new URL(full);
+    const host = parsed.hostname.replace(/^www\./i, "");
+    const pathname = parsed.pathname !== "/" ? parsed.pathname : "";
+    return `${host}${pathname}`;
+  } catch (e) {
+    return trimmed.replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
+  }
+};
+
+const formatPracticeTypology = (raw?: string): string => {
+  if (!raw) return "Architecture Firm";
+  const trimmed = raw.trim();
+  const lower = trimmed.toLowerCase();
+
+  // If already ends with an architectural firm classification, keep as is
+  if (/\b(firm|studio|practice|office|atelier|agency)\b$/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (lower.includes("architecture") && lower.includes("interior")) {
+    return "Architecture & Interior Design Firm";
+  }
+  if (lower.includes("interior")) {
+    return "Interior Design Studio";
+  }
+  if (lower.includes("architecture") || lower.includes("architectural")) {
+    return "Architecture Firm";
+  }
+  return `${trimmed} Firm`;
 };
 
 // Interactive Phone Dropdown: On Desktop shows Copy + WhatsApp, on Mobile shows Call + WhatsApp
@@ -108,7 +142,7 @@ function PhoneActionDropdown({ phone, isMobile }: { phone: string; isMobile: boo
             <span>{phone}</span>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-black p-0.5"
+              className="text-gray-400 hover:text-black p-0.5 cursor-pointer"
             >
               <X size={12} />
             </button>
@@ -219,8 +253,11 @@ export default function CompanyHeaderAndTabs({
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.firm_name} ${location}`)}`
     : "";
 
-  const websiteUrl = ensureUrl(company.website || company.website_link);
+  const websiteRaw = company.website || company.website_link;
+  const websiteUrl = ensureUrl(websiteRaw);
+  const displayWebsite = getDisplayUrl(websiteRaw);
   const emailAddr = company.email || company.contact_email;
+  const formattedTypology = formatPracticeTypology(company.organization_type);
 
   return (
     <div className="w-full relative">
@@ -256,41 +293,6 @@ export default function CompanyHeaderAndTabs({
         </div>
       )}
 
-      {/* ADMIN AI NOTICE BANNER */}
-      {isAdmin && (
-        <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
-              <Sparkles size={18} />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-gray-900">
-                Admin Studio Controls & AI Suggested Edits
-              </p>
-              <p className="text-xs text-gray-600">
-                Auto-enrich details, add open positions, and manage badges for {company.firm_name}.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}&ai=true`}
-              className="bg-black text-white hover:bg-gray-800 text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs"
-            >
-              <Edit size={13} />
-              <span>Edit & AI Enrich</span>
-            </Link>
-            <Link
-              href={`/admin/add-job?firm_name=${encodeURIComponent(company.firm_name)}`}
-              className="bg-white border border-gray-300 text-gray-800 hover:bg-gray-50 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow-xs"
-            >
-              <PlusCircle size={13} />
-              <span>Add Position</span>
-            </Link>
-          </div>
-        </div>
-      )}
-
       {/* COMPANY HEADER CARD */}
       <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-start mb-8">
         {/* LOGO */}
@@ -323,25 +325,33 @@ export default function CompanyHeaderAndTabs({
                 </div>
               </div>
 
-              {/* BADGES & CATEGORY ROW */}
+              {/* SPECIFIC TYPOLOGY + PRIMARY ACTION (ADMIN EDIT OR USER CLAIM) + VERIFICATION BADGES */}
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-block px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg">
-                  {company.organization_type || "Architecture Firm"}
+                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-800 text-xs font-bold rounded-lg">
+                  {formattedTypology}
                 </span>
 
-                {isClaimed ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg">
+                {/* SINGLE PRIMARY BUTTON: Admin gets "Edit / Add Company Details", Visitors get "Claim this Studio" */}
+                {isAdmin ? (
+                  <Link
+                    href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-black hover:bg-gray-800 text-white font-bold text-xs rounded-lg shadow-xs transition cursor-pointer"
+                  >
+                    <Edit size={13} />
+                    <span>Edit / Add Company Details</span>
+                  </Link>
+                ) : isClaimed ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg">
                     <ShieldCheck size={13} className="text-blue-600" />
                     <span>Claimed Studio</span>
                   </span>
                 ) : (
                   <button
                     onClick={handleClaimClick}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-xs hover:shadow-md transition cursor-pointer"
                   >
                     <Building2 size={13} />
                     <span>Claim this Studio</span>
-                    <Sparkles size={12} className="text-yellow-300" />
                   </button>
                 )}
 
@@ -361,17 +371,8 @@ export default function CompanyHeaderAndTabs({
               </div>
             </div>
 
-            {/* LIKE & SHARE ACTIONS */}
+            {/* LIKE & SHARE ACTIONS ONLY (CLEAN AND COMPACT) */}
             <div className="md:ml-auto shrink-0 pt-2 md:pt-0 flex items-center gap-2">
-              {isAdmin && (
-                <Link
-                  href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1"
-                >
-                  <Edit size={13} />
-                  <span>Edit</span>
-                </Link>
-              )}
               <CompanyActions slug={slug} companyName={company.firm_name} initialFavorites={favoriteCount} variant="page" />
             </div>
           </div>
@@ -393,7 +394,7 @@ export default function CompanyHeaderAndTabs({
               </a>
             )}
 
-            {/* WEBSITE LINK */}
+            {/* WEBSITE LINK WITH ACTUAL URL (ONLY SHOWN IF URL EXISTS) */}
             {websiteUrl && (
               <a
                 href={websiteUrl}
@@ -403,7 +404,7 @@ export default function CompanyHeaderAndTabs({
                 title="Open official studio website"
               >
                 <Globe size={16} className="text-gray-400 group-hover:text-blue-500 transition shrink-0" />
-                <span>Website</span>
+                <span className="font-medium">{displayWebsite}</span>
                 <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
               </a>
             )}
@@ -503,185 +504,78 @@ export default function CompanyHeaderAndTabs({
         </button>
       </div>
 
-      {/* TAB CONTENT: OVERVIEW */}
+      {/* TAB CONTENT: OVERVIEW (SINGLE UNIFIED ELEGANT WHITE BOX WITH SUBHEADINGS) */}
       {activeTab === "overview" && (
-        <div className="space-y-6">
-          {/* DESCRIPTION SECTION (OR SLEEK ARCHITECTURAL CURATION CARD) */}
-          {(company.company_description || company.description) ? (
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xs border border-gray-100">
-              <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-                <div className="flex items-center gap-2">
-                  <Compass size={18} className="text-gray-700" />
-                  <h3 className="text-lg font-bold text-gray-900">Studio Statement & Philosophy</h3>
-                </div>
-                {isAdmin && (
-                  <Link
-                    href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
-                    className="text-xs text-gray-500 hover:text-black flex items-center gap-1 font-semibold hover:underline"
-                  >
-                    <Edit size={12} />
-                    <span>Edit Bio</span>
-                  </Link>
-                )}
+        <div className="bg-white rounded-3xl p-6 md:p-10 shadow-xs border border-gray-100 divide-y divide-gray-100 space-y-8">
+          {/* SUBHEADING 1: ABOUT / STUDIO STATEMENT */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Compass size={20} className="text-gray-900" />
+                <h2 className="text-lg md:text-xl font-extrabold text-gray-900">
+                  About {company.firm_name}
+                </h2>
               </div>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm md:text-base font-normal">
-                {company.company_description || company.description}
-              </p>
-            </div>
-          ) : (
-            /* PROFESSIONAL ARCHITECTURAL DOSSIER CARD */
-            <div className="bg-gradient-to-br from-slate-900 via-gray-900 to-black text-white rounded-3xl p-8 md:p-10 shadow-lg border border-gray-800 relative overflow-hidden">
-              {/* Subtle decorative architectural blueprint grid lines */}
-              <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px] opacity-25 pointer-events-none" />
-
-              <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto">
-                {isAdmin ? (
-                  <>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-300 text-xs font-semibold tracking-wider uppercase mb-4">
-                      <Sparkles size={13} className="text-purple-400" />
-                      <span>Studio Dossier Incomplete</span>
-                    </div>
-
-                    <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-3">
-                      Curate the Architectural Dossier for {company.firm_name}
-                    </h3>
-
-                    <p className="text-sm md:text-base text-gray-300 leading-relaxed mb-8 max-w-lg">
-                      Articulate this practice&apos;s design philosophy, typologies, and sustainability ethos to showcase their work to top architecture talent and prospective clients.
-                    </p>
-
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      <Link
-                        href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}&ai=true`}
-                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm px-6 py-3 rounded-2xl shadow-lg transition flex items-center gap-2 cursor-pointer"
-                      >
-                        <Sparkles size={16} />
-                        <span>Auto-Enrich with AI</span>
-                      </Link>
-
-                      <Link
-                        href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 font-semibold text-sm px-5 py-3 rounded-2xl transition flex items-center gap-2 cursor-pointer"
-                      >
-                        <Edit size={14} />
-                        <span>Edit Details Manually</span>
-                      </Link>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/15 border border-blue-400/30 text-blue-300 text-xs font-semibold tracking-wider uppercase mb-4">
-                      <ShieldCheck size={14} className="text-blue-400" />
-                      <span>Verified Practice Directory</span>
-                    </div>
-
-                    <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight mb-3">
-                      Are you representing {company.firm_name}?
-                    </h3>
-
-                    <p className="text-sm md:text-base text-gray-300 leading-relaxed mb-8 max-w-lg">
-                      Claim this studio profile to add your firm&apos;s story, feature built architectural works, publish job openings, and connect verified staff.
-                    </p>
-
-                    <button
-                      onClick={handleClaimClick}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm px-8 py-3.5 rounded-2xl shadow-xl hover:shadow-2xl transition flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <Building2 size={18} />
-                      <span>Claim & Verify Studio Profile</span>
-                      <Sparkles size={15} className="text-yellow-300" />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* STUDIO METRICS & PRACTICE SPECIFICATIONS GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {/* PRACTICE TYPOLOGY */}
-            <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:border-gray-300 transition flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-gray-400 mb-2">
-                  <Compass size={16} />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Practice Typology</span>
-                </div>
-                <p className="text-sm font-extrabold text-gray-900 leading-snug">
-                  {company.organization_type || "Architecture Firm"}
-                </p>
-              </div>
-              <span className="text-[10px] text-gray-400 mt-3 block">Specialized Studio Domain</span>
-            </div>
-
-            {/* HEADQUARTERS & MAP LINK */}
-            <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:border-gray-300 transition flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-gray-400 mb-2">
-                  <MapPin size={16} className="text-rose-500" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Studio Headquarters</span>
-                </div>
-                {location ? (
-                  <p className="text-sm font-extrabold text-gray-900 leading-snug">
-                    {location}
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-400 font-medium">Location not specified</p>
-                )}
-              </div>
-              {googleMapsUrl && (
-                <a
-                  href={googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-3 transition group"
+              {isAdmin && (
+                <Link
+                  href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                  className="text-xs font-semibold text-gray-600 hover:text-black flex items-center gap-1 hover:underline"
                 >
-                  <span>Open in Google Maps</span>
-                  <ExternalLink size={10} className="group-hover:translate-x-0.5 transition-transform" />
-                </a>
+                  <Edit size={12} />
+                  <span>Edit Details</span>
+                </Link>
               )}
             </div>
 
-            {/* PRINCIPAL ARCHITECT */}
-            <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:border-gray-300 transition flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-gray-400 mb-2">
-                  <Award size={16} className="text-amber-500" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Studio Leadership</span>
-                </div>
-                <p className="text-sm font-extrabold text-gray-900 leading-snug">
-                  {company.principal_architect || "Principal / Founder"}
+            {(company.company_description || company.description) ? (
+              <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm md:text-base font-normal">
+                {company.company_description || company.description}
+              </p>
+            ) : (
+              <div className="p-6 md:p-8 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center flex flex-col items-center">
+                <Compass size={28} className="text-gray-400 mb-2" />
+                <p className="text-sm font-bold text-gray-800 mb-1">
+                  No studio overview has been curated yet
                 </p>
-              </div>
-              <span className="text-[10px] text-gray-400 mt-3 block">Lead Architect / Director</span>
-            </div>
-
-            {/* STUDIO SCALE & FOUNDED */}
-            <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs hover:border-gray-300 transition flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-gray-400 mb-2">
-                  <Users size={16} className="text-indigo-500" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Scale & Tenure</span>
-                </div>
-                <p className="text-sm font-extrabold text-gray-900 leading-snug">
-                  {company.employee_size ? `${company.employee_size} Employees` : "Studio Practice"}
+                <p className="text-xs text-gray-500 max-w-md mb-4">
+                  {isAdmin
+                    ? "Add this practice's design philosophy, typologies, and history to complete the studio profile."
+                    : "Are you representing this architecture studio? Claim this profile to share your design statement, showcase built works, and post open positions."}
                 </p>
+                {isAdmin ? (
+                  <Link
+                    href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                    className="inline-flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs"
+                  >
+                    <Edit size={13} />
+                    <span>Edit / Add Company Details</span>
+                  </Link>
+                ) : !isClaimed ? (
+                  <button
+                    onClick={handleClaimClick}
+                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs cursor-pointer"
+                  >
+                    <Building2 size={13} />
+                    <span>Claim this Studio</span>
+                  </button>
+                ) : null}
               </div>
-              <span className="text-[10px] text-gray-400 mt-3 block">
-                {company.founded_year ? `Established in ${company.founded_year}` : "Verified Architecture Practice"}
-              </span>
-            </div>
+            )}
           </div>
 
-          {/* OFFICIAL CHANNELS & SOCIAL NETWORKS */}
-          <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xs border border-gray-100">
-            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-              <div>
-                <h3 className="text-base font-extrabold text-gray-900">Official Channels & Verified Presence</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Direct studio links for portfolios, inquiries, and public profiles</p>
-              </div>
+          {/* SUBHEADING 2: OFFICIAL CHANNELS & VERIFIED WEB PRESENCE */}
+          <div className="pt-8">
+            <div className="mb-4">
+              <h3 className="text-base font-extrabold text-gray-900">
+                Official Channels & Verified Web Presence
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Direct studio links for portfolios, inquiries, and public profiles
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              {/* OFFICIAL WEBSITE - DISPLAYS ACTUAL WEB ADDRESS */}
               {websiteUrl && (
                 <a
                   href={websiteUrl}
@@ -690,11 +584,12 @@ export default function CompanyHeaderAndTabs({
                   className="px-4 py-2.5 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs group"
                 >
                   <Globe size={15} className="text-gray-300 group-hover:text-white" />
-                  <span>Official Website</span>
+                  <span className="font-semibold">{displayWebsite}</span>
                   <ExternalLink size={12} className="opacity-60 group-hover:opacity-100" />
                 </a>
               )}
 
+              {/* INSTAGRAM */}
               {company.instagram && (
                 <a
                   href={company.instagram.startsWith("http") ? company.instagram : `https://instagram.com/${company.instagram.replace(/^@/, "")}`}
@@ -708,6 +603,7 @@ export default function CompanyHeaderAndTabs({
                 </a>
               )}
 
+              {/* LINKEDIN */}
               {company.linkedin && (
                 <a
                   href={company.linkedin.startsWith("http") ? company.linkedin : `https://linkedin.com/company/${company.linkedin.replace(/^@/, "")}`}
@@ -721,6 +617,7 @@ export default function CompanyHeaderAndTabs({
                 </a>
               )}
 
+              {/* FACEBOOK */}
               {company.facebook && (
                 <a
                   href={ensureUrl(company.facebook)}
@@ -733,6 +630,7 @@ export default function CompanyHeaderAndTabs({
                 </a>
               )}
 
+              {/* TWITTER */}
               {company.twitter && (
                 <a
                   href={ensureUrl(company.twitter)}
@@ -745,19 +643,7 @@ export default function CompanyHeaderAndTabs({
                 </a>
               )}
 
-              {googleMapsUrl && (
-                <a
-                  href={googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs group"
-                >
-                  <MapPin size={14} className="text-rose-500" />
-                  <span>Google Maps Location</span>
-                  <ExternalLink size={12} className="text-gray-400 group-hover:text-black" />
-                </a>
-              )}
-
+              {/* EMAIL */}
               {emailAddr && (
                 <a
                   href={`mailto:${emailAddr}`}
@@ -766,6 +652,11 @@ export default function CompanyHeaderAndTabs({
                   <Mail size={14} className="text-indigo-500" />
                   <span>{emailAddr}</span>
                 </a>
+              )}
+
+              {/* EMPTY CHANNELS NOTICE */}
+              {!websiteUrl && !company.instagram && !company.linkedin && !company.facebook && !company.twitter && !emailAddr && (
+                <p className="text-xs text-gray-400 italic">No external web channels added yet.</p>
               )}
             </div>
           </div>
