@@ -139,26 +139,27 @@ export default function CompanyActions({
 
   if (variant === "page") {
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <button
           onClick={toggleFavorite}
           disabled={loading}
-          className="flex flex-col items-center justify-center p-3 rounded-full hover:bg-gray-100 transition group"
-          title="Favorite"
+          className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-100 transition group cursor-pointer"
+          title="Favorite this company"
         >
           <Heart
-            className={`w-8 h-8 transition ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400 group-hover:text-red-500"}`}
+            size={19}
+            className={`transition ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400 group-hover:text-red-500"}`}
           />
-          <span className="text-xs font-semibold mt-1 text-gray-500">{favoriteCount}</span>
+          <span className="text-[11px] font-bold mt-0.5 text-gray-500">{favoriteCount}</span>
         </button>
 
         <button
           onClick={shareCompany}
-          className="flex flex-col items-center justify-center p-3 rounded-full hover:bg-gray-100 transition group"
-          title="Share"
+          className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-100 transition group cursor-pointer"
+          title="Share company profile"
         >
-          <Share className="w-8 h-8 text-gray-400 group-hover:text-black transition" />
-          <span className="text-xs font-semibold mt-1 text-gray-500">Share</span>
+          <Share size={19} className="text-gray-400 group-hover:text-black transition" />
+          <span className="text-[11px] font-bold mt-0.5 text-gray-500">Share</span>
         </button>
       </div>
     );
@@ -170,10 +171,10 @@ export default function CompanyActions({
       <button
         onClick={toggleFavorite}
         disabled={loading}
-        className="flex flex-col items-center group"
+        className="flex flex-col items-center group cursor-pointer"
       >
         <Heart
-          size={20}
+          size={18}
           className={`transition ${isFavorite ? "fill-red-500 text-red-500" : "text-gray-400 group-hover:text-red-500"}`}
         />
         <span className="text-[10px] font-medium text-gray-500">{favoriteCount}</span>
@@ -181,9 +182,9 @@ export default function CompanyActions({
 
       <button
         onClick={shareCompany}
-        className="flex flex-col items-center group"
+        className="flex flex-col items-center group cursor-pointer"
       >
-        <Share size={20} className="text-gray-400 group-hover:text-black transition" />
+        <Share size={18} className="text-gray-400 group-hover:text-black transition" />
         <span className="text-[10px] font-medium text-gray-500">Share</span>
       </button>
     </div>
