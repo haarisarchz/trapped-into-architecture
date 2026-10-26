@@ -26,6 +26,8 @@ import {
   UserCheck,
   PhoneCall,
   MessageCircle,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 
 // Map raw DB role values to clean display labels
@@ -254,11 +256,15 @@ function UserDetailModal({
   onClose,
   onCopy,
   copiedField,
+  canDelete,
+  onDeleteUser,
 }: {
   user: any;
   onClose: () => void;
   onCopy: (val: string, id: string) => void;
   copiedField: string | null;
+  canDelete?: boolean;
+  onDeleteUser?: (u: any) => void;
 }) {
   if (!user) return null;
 
@@ -493,6 +499,74 @@ export default function AdminUsersPage() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
+
+  // User Deletion State
+  const [userToDelete, setUserToDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteUser = (user: any) => {
+    if (!user) return;
+    if (user.id === loggedUser?.id) {
+      alert("You cannot remove your own account.");
+      return;
+    }
+    setUserToDelete(user);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete || isDeleting) return;
+    setIsDeleting(true);
+    const userId = userToDelete.id;
+
+    try {
+      // 1. Unlink foreign references safely
+      try {
+        await supabase.from("jobs").update({ author_id: null }).eq("author_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("companies").update({ created_by: null }).eq("created_by", userId);
+        await supabase.from("companies").update({ updated_by: null }).eq("updated_by", userId);
+        await supabase.from("companies").update({ claimed_by: null, is_claimed: false }).eq("claimed_by", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("company_claim_requests").update({ reviewed_by: null }).eq("reviewed_by", userId);
+        await supabase.from("company_claim_requests").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("saved_jobs").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("favorite_companies").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("profile_likes").delete().or(`user_id.eq.${userId},profile_id.eq.${userId}`);
+      } catch (e) {}
+      try {
+        await supabase.from("candidate_education").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("candidate_experience").delete().eq("user_id", userId);
+      } catch (e) {}
+
+      // 2. Delete the profile
+      const { error } = await supabase.from("profiles").delete().eq("id", userId);
+      if (error) throw error;
+
+      // 3. Update local list state
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      if (selectedUser?.id === userId) {
+        setSelectedUser(null);
+      }
+      setSaveMsg(`User "${userToDelete.full_name || userToDelete.username || userToDelete.email || "User"}" was removed successfully.`);
+      setTimeout(() => setSaveMsg(""), 5000);
+      setUserToDelete(null);
+    } catch (err: any) {
+      console.error("Error removing user:", err);
+      alert("Failed to remove user: " + (err.message || "Unknown error"));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Detail Modal
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -1021,7 +1095,7 @@ export default function AdminUsersPage() {
                     <th className="px-4 py-3.5 min-w-[120px]">DOB</th>
                     <th className="px-4 py-3.5 min-w-[100px] text-center">Verified</th>
                     <th className="px-4 py-3.5 min-w-[130px]">Joined</th>
-                    <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[100px]">Actions</th>
+                    <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[170px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
@@ -1197,13 +1271,24 @@ export default function AdminUsersPage() {
 
                         {/* Actions (Sticky Right) */}
                         <td className="px-4 py-3.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 transition shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
-                          <button
-                            onClick={() => setSelectedUser(u)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-black hover:text-white text-gray-700 transition"
-                            title="View Full Profile Details"
-                          >
-                            <Eye size={13} /> View
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setSelectedUser(u)}
+                              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-black hover:text-white text-gray-700 transition"
+                              title="View Full Profile Details"
+                            >
+                              <Eye size={13} /> View
+                            </button>
+                            {isCEO && u.id !== loggedUser?.id && (
+                              <button
+                                onClick={() => handleDeleteUser(u)}
+                                className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-600 hover:text-white text-red-600 border border-red-200 hover:border-transparent transition"
+                                title="Remove User"
+                              >
+                                <Trash2 size={13} /> Remove
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1265,7 +1350,62 @@ export default function AdminUsersPage() {
           onClose={() => setSelectedUser(null)}
           onCopy={handleCopy}
           copiedField={copiedField}
+          canDelete={isCEO && selectedUser.id !== loggedUser?.id}
+          onDeleteUser={handleDeleteUser}
         />
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center shrink-0">
+                <Trash2 size={22} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Remove User Account</h3>
+                <p className="text-xs text-gray-500">Permanent action • Cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              Are you sure you want to remove{" "}
+              <strong className="text-gray-900">
+                {userToDelete.full_name || userToDelete.display_name || userToDelete.username || "this user"}
+              </strong>{" "}
+              {userToDelete.username && (
+                <span className="font-mono text-gray-500">(@{userToDelete.username})</span>
+              )}
+              ? Their account profile and saved data will be permanently removed.
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setUserToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                disabled={isDeleting}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" /> Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} /> Yes, Remove User
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <Footer />
