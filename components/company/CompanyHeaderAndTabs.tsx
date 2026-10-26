@@ -25,6 +25,7 @@ import {
   PlusCircle,
   X,
   UserPlus,
+  MessageCircle,
 } from "lucide-react";
 import CompanyActions from "@/components/CompanyActions";
 import CompanyBadgeExplanationModal from "./CompanyBadgeExplanationModal";
@@ -38,6 +39,13 @@ interface CompanyHeaderAndTabsProps {
   slug: string;
   favoriteCount: number;
 }
+
+const ensureUrl = (url?: string) => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  return `https://${trimmed}`;
+};
 
 export default function CompanyHeaderAndTabs({
   company,
@@ -94,6 +102,12 @@ export default function CompanyHeaderAndTabs({
 
   const currentTierBadge = tierBadgeInfo[tier] || tierBadgeInfo.bronze;
   const location = [company.neighborhood, company.address, company.city, company.state].filter(Boolean).join(", ");
+  const googleMapsUrl = location
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.firm_name} ${location}`)}`
+    : "";
+
+  const websiteUrl = ensureUrl(company.website || company.website_link);
+  const emailAddr = company.email || company.contact_email;
 
   return (
     <div className="w-full relative">
@@ -250,44 +264,87 @@ export default function CompanyHeaderAndTabs({
           </div>
 
           {/* CONTACT & LOCATION SNIPPETS */}
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-gray-600 text-xs md:text-sm mt-4">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 text-gray-600 text-xs md:text-sm mt-4">
+            {/* GOOGLE MAPS LOCATION LINK */}
             {location && (
-              <div className="flex items-center gap-1.5">
-                <MapPin size={16} className="text-gray-400 shrink-0" />
-                <span>{location}</span>
-              </div>
-            )}
-            {(company.website || company.website_link) && (
               <a
-                href={company.website || company.website_link}
+                href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 hover:text-black transition"
+                className="flex items-center gap-1.5 hover:text-blue-600 transition group"
+                title="Open address in Google Maps"
               >
-                <Globe size={16} className="text-gray-400 shrink-0" />
-                <span>Website</span>
-                <ExternalLink size={12} className="text-gray-400" />
+                <MapPin size={16} className="text-gray-400 group-hover:text-red-500 transition shrink-0" />
+                <span className="underline decoration-dotted underline-offset-2">{location}</span>
+                <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
               </a>
             )}
-            {(company.email || company.contact_email) && (
+
+            {/* WEBSITE LINK */}
+            {websiteUrl && (
               <a
-                href={`mailto:${company.email || company.contact_email}`}
-                className="flex items-center gap-1.5 hover:text-black transition"
+                href={websiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 hover:text-blue-600 transition group"
+                title="Open official studio website"
               >
-                <Mail size={16} className="text-gray-400 shrink-0" />
-                <span>{company.email || company.contact_email}</span>
+                <Globe size={16} className="text-gray-400 group-hover:text-blue-500 transition shrink-0" />
+                <span>Website</span>
+                <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
               </a>
             )}
+
+            {/* MAILING EMAIL LINK */}
+            {emailAddr && (
+              <a
+                href={`mailto:${emailAddr}`}
+                className="flex items-center gap-1.5 hover:text-blue-600 transition group"
+                title={`Send email to ${emailAddr}`}
+              >
+                <Mail size={16} className="text-gray-400 group-hover:text-indigo-500 transition shrink-0" />
+                <span>{emailAddr}</span>
+              </a>
+            )}
+
+            {/* PHONE & WHATSAPP ACTIONS */}
             {company.phone && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <PhoneCall size={16} className="text-gray-400 shrink-0" />
-                <div className="flex gap-1">
-                  {String(company.phone).split(",").map((p) => p.trim()).filter(Boolean).map((ph, idx, arr) => (
-                    <span key={idx}>
-                      <a href={`tel:${ph}`} className="hover:text-black transition">{ph}</a>
-                      {idx < arr.length - 1 && <span>,</span>}
-                    </span>
-                  ))}
+                <div className="flex flex-wrap items-center gap-2">
+                  {String(company.phone)
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter(Boolean)
+                    .map((ph, idx) => {
+                      const cleanNumber = ph.replace(/\D/g, "");
+                      const waNumber = cleanNumber.length === 10 ? `91${cleanNumber}` : cleanNumber;
+                      return (
+                        <div
+                          key={idx}
+                          className="inline-flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-2.5 py-1 rounded-xl text-xs transition"
+                        >
+                          <a
+                            href={`tel:${ph}`}
+                            className="font-medium hover:text-blue-600 transition"
+                            title={`Call ${ph}`}
+                          >
+                            <span>{ph}</span>
+                          </a>
+                          <span className="text-gray-300">|</span>
+                          <a
+                            href={`https://wa.me/${waNumber}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-700 hover:text-emerald-800 font-bold transition flex items-center gap-1"
+                            title={`Chat on WhatsApp: ${ph}`}
+                          >
+                            <MessageCircle size={12} className="text-emerald-600 fill-emerald-600" />
+                            <span>WhatsApp</span>
+                          </a>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -466,54 +523,81 @@ export default function CompanyHeaderAndTabs({
                 <span className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">
                   Studio Headquarters
                 </span>
-                <p className="text-sm font-bold text-gray-900">{location}</p>
+                <a
+                  href={googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-bold text-gray-900 hover:text-blue-600 transition flex items-center gap-1.5 group"
+                  title="Open in Google Maps"
+                >
+                  <MapPin size={14} className="text-gray-400 group-hover:text-red-500 transition shrink-0" />
+                  <span className="underline decoration-dotted">{location}</span>
+                </a>
               </div>
             )}
           </div>
 
           {/* SOCIAL MEDIA HANDLES */}
-          {(company.instagram || company.linkedin || company.facebook || company.twitter || company.whatsapp) && (
+          {(company.instagram || company.linkedin || company.facebook || company.twitter || company.whatsapp || websiteUrl) && (
             <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xs border border-gray-100">
               <h3 className="text-base font-bold text-gray-900 mb-4">Official Channels & Socials</h3>
               <div className="flex flex-wrap gap-3">
-                {company.instagram && (
+                {websiteUrl && (
                   <a
-                    href={company.instagram.startsWith("http") ? company.instagram : `https://instagram.com/${company.instagram}`}
+                    href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-pink-50 text-pink-700 hover:bg-pink-100 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center gap-2 group shadow-2xs"
                   >
-                    <span>📸 Instagram</span>
+                    <Globe size={15} className="text-gray-600 group-hover:text-black transition" />
+                    <span>Official Website</span>
+                    <ExternalLink size={12} className="text-gray-400" />
+                  </a>
+                )}
+                {company.instagram && (
+                  <a
+                    href={company.instagram.startsWith("http") ? company.instagram : `https://instagram.com/${company.instagram.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 bg-pink-50 text-pink-700 hover:bg-pink-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs"
+                  >
+                    <span className="text-base leading-none">📸</span>
+                    <span>Instagram Profile</span>
+                    <ExternalLink size={12} className="text-pink-400" />
                   </a>
                 )}
                 {company.linkedin && (
                   <a
-                    href={company.linkedin.startsWith("http") ? company.linkedin : `https://linkedin.com/company/${company.linkedin}`}
+                    href={company.linkedin.startsWith("http") ? company.linkedin : `https://linkedin.com/company/${company.linkedin.replace(/^@/, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs"
                   >
-                    <span>💼 LinkedIn</span>
+                    <span className="text-base leading-none">💼</span>
+                    <span>LinkedIn Company</span>
+                    <ExternalLink size={12} className="text-blue-400" />
                   </a>
                 )}
                 {company.facebook && (
                   <a
-                    href={company.facebook}
+                    href={ensureUrl(company.facebook)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs"
                   >
                     <span>Facebook</span>
+                    <ExternalLink size={12} className="text-indigo-400" />
                   </a>
                 )}
                 {company.twitter && (
                   <a
-                    href={company.twitter}
+                    href={ensureUrl(company.twitter)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs"
                   >
                     <span>X (Twitter)</span>
+                    <ExternalLink size={12} className="text-gray-400" />
                   </a>
                 )}
                 {company.whatsapp && (
@@ -521,9 +605,11 @@ export default function CompanyHeaderAndTabs({
                     href={`https://wa.me/${company.whatsapp.replace(/\D/g, "")}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs"
                   >
-                    <span>WhatsApp</span>
+                    <MessageCircle size={15} className="text-emerald-600 fill-emerald-600" />
+                    <span>Chat on WhatsApp</span>
+                    <ExternalLink size={12} className="text-emerald-400" />
                   </a>
                 )}
               </div>
