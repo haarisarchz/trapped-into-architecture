@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Building2, ShieldCheck, Send, CheckCircle2 } from "lucide-react";
+import { X, Building2, ShieldCheck, Send, CheckCircle2, Sparkles, AlertCircle, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
 interface ClaimCompanyModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export default function ClaimCompanyModal({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [designation, setDesignation] = useState("");
   const [verificationNotes, setVerificationNotes] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -35,9 +37,12 @@ export default function ClaimCompanyModal({
       if (userStr) {
         try {
           const user = JSON.parse(userStr);
+          setIsLoggedIn(true);
           if (user.full_name) setFullName(user.full_name);
           if (user.email) setWorkEmail(user.email);
         } catch (e) {}
+      } else {
+        setIsLoggedIn(false);
       }
     } else {
       document.body.style.overflow = "unset";
@@ -87,7 +92,6 @@ export default function ClaimCompanyModal({
       ]);
 
       if (error) {
-        // If table doesn't exist yet, we still record friendly success or explain
         console.warn("Could not save to company_claim_requests:", error.message);
       }
       setSubmitted(true);
@@ -107,17 +111,17 @@ export default function ClaimCompanyModal({
         className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border border-gray-100 my-auto text-left"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+        <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700">
-              <Building2 size={22} />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
+              <Building2 size={20} />
             </div>
             <div>
               <h3 className="text-xl font-extrabold text-gray-900">
                 Claim {companyName}
               </h3>
               <p className="text-xs text-gray-500">
-                Verify studio ownership to edit details and post jobs
+                Verify studio leadership to manage jobs, portfolio & team
               </p>
             </div>
           </div>
@@ -136,18 +140,27 @@ export default function ClaimCompanyModal({
               <CheckCircle2 size={36} />
             </div>
             <h4 className="text-xl font-bold text-gray-900 mb-2">Claim Request Received!</h4>
-            <p className="text-gray-600 text-sm max-w-sm mb-6">
-              Thank you! Our administration team will review your details for <strong>{companyName}</strong> and activate your verified studio management privileges shortly.
+            <p className="text-gray-600 text-sm max-w-sm mb-6 leading-relaxed">
+              Thank you! Our platform team will verify your credentials for <strong>{companyName}</strong> and activate your verified studio management privileges shortly.
             </p>
             <button
               onClick={onClose}
-              className="bg-black text-white px-6 py-2.5 rounded-xl font-medium hover:bg-gray-800 transition"
+              className="bg-black text-white px-6 py-2.5 rounded-xl font-medium hover:bg-gray-800 transition cursor-pointer"
             >
               Done
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLoggedIn && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-900 flex items-start gap-2">
+                <Sparkles size={16} className="text-blue-600 shrink-0 mt-0.5" />
+                <p>
+                  You are submitting as a guest representative. Once approved, this studio profile will be verified and linked to your contact info.
+                </p>
+              </div>
+            )}
+
             {errorMsg && (
               <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
                 {errorMsg}
@@ -201,25 +214,30 @@ export default function ClaimCompanyModal({
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                 Your Role / Designation *
               </label>
-              <input
-                type="text"
+              <select
                 required
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
-                placeholder="e.g. Principal Architect / Founder / HR"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-black"
-              />
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-black bg-white"
+              >
+                <option value="">Select your role</option>
+                <option value="Principal Architect">Principal Architect / Head</option>
+                <option value="Founder / Partner">Founder / Partner / Director</option>
+                <option value="HR / Studio Manager">HR / Talent Manager</option>
+                <option value="Associate / Senior Architect">Associate / Senior Architect</option>
+                <option value="Authorized Representative">Authorized Representative</option>
+              </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                Verification Details (LinkedIn Profile / Website / Note)
+                Verification Proof (LinkedIn / Website / Studio Note)
               </label>
               <textarea
                 rows={3}
                 value={verificationNotes}
                 onChange={(e) => setVerificationNotes(e.target.value)}
-                placeholder="Link to your LinkedIn profile, official studio website, or verification note..."
+                placeholder="Paste your LinkedIn profile URL, link to official studio website team page, or verification note..."
                 className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-black resize-none"
               />
             </div>
@@ -228,7 +246,7 @@ export default function ClaimCompanyModal({
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full bg-black text-white font-semibold py-3 rounded-xl hover:bg-gray-800 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {submitting ? (
                   <span>Submitting claim...</span>

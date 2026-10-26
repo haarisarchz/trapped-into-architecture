@@ -21,6 +21,8 @@ import {
   HelpCircle,
   FolderGit2,
   Trophy,
+  Edit,
+  PlusCircle,
 } from "lucide-react";
 import CompanyActions from "@/components/CompanyActions";
 import CompanyBadgeExplanationModal from "./CompanyBadgeExplanationModal";
@@ -90,17 +92,26 @@ export default function CompanyHeaderAndTabs({
                 Admin Studio Controls & AI Suggested Edits
               </p>
               <p className="text-xs text-gray-600">
-                Auto-enrich details, adjust verification badges, and edit company attributes.
+                Auto-enrich details, add open positions, and manage badges for {company.firm_name}.
               </p>
             </div>
           </div>
-          <Link
-            href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}&ai=true`}
-            className="shrink-0 bg-black text-white hover:bg-gray-800 text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs"
-          >
-            <span>Edit & AI Enrich</span>
-            <ChevronRight size={14} />
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}&ai=true`}
+              className="bg-black text-white hover:bg-gray-800 text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs"
+            >
+              <Edit size={13} />
+              <span>Edit & AI Enrich</span>
+            </Link>
+            <Link
+              href={`/admin/add-job?firm_name=${encodeURIComponent(company.firm_name)}`}
+              className="bg-white border border-gray-300 text-gray-800 hover:bg-gray-50 text-xs font-semibold px-3 py-2 rounded-xl transition flex items-center gap-1 shadow-xs"
+            >
+              <PlusCircle size={13} />
+              <span>Add Position</span>
+            </Link>
+          </div>
         </div>
       )}
 
@@ -150,10 +161,11 @@ export default function CompanyHeaderAndTabs({
                 ) : (
                   <button
                     onClick={() => setIsClaimModalOpen(true)}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-700 border border-gray-200 hover:border-blue-300 text-xs font-medium rounded-lg transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition cursor-pointer"
                   >
                     <Building2 size={13} />
                     <span>Claim this Studio</span>
+                    <Sparkles size={12} className="text-yellow-300" />
                   </button>
                 )}
 
@@ -174,7 +186,16 @@ export default function CompanyHeaderAndTabs({
             </div>
 
             {/* LIKE & SHARE ACTIONS */}
-            <div className="md:ml-auto shrink-0 pt-2 md:pt-0">
+            <div className="md:ml-auto shrink-0 pt-2 md:pt-0 flex items-center gap-2">
+              {isAdmin && (
+                <Link
+                  href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                >
+                  <Edit size={13} />
+                  <span>Edit</span>
+                </Link>
+              )}
               <CompanyActions slug={slug} companyName={company.firm_name} initialFavorites={favoriteCount} variant="page" />
             </div>
           </div>
@@ -292,16 +313,64 @@ export default function CompanyHeaderAndTabs({
           {/* DESCRIPTION */}
           {(company.company_description || company.description) ? (
             <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xs border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">About {company.firm_name}</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">About {company.firm_name}</h3>
+                {isAdmin && (
+                  <Link
+                    href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                    className="text-xs text-gray-500 hover:text-black flex items-center gap-1 font-semibold"
+                  >
+                    <Edit size={12} />
+                    <span>Edit Bio</span>
+                  </Link>
+                )}
+              </div>
               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm md:text-base">
                 {company.company_description || company.description}
               </p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-8 shadow-xs border border-gray-100 text-center">
-              <p className="text-gray-500 text-sm">
-                No detailed description has been added for {company.firm_name} yet.
-              </p>
+            <div className="bg-white rounded-3xl p-8 md:p-10 shadow-xs border border-gray-100 text-center">
+              {isAdmin ? (
+                <div className="flex flex-col items-center max-w-md mx-auto">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3">
+                    <Sparkles size={24} />
+                  </div>
+                  <h4 className="text-base font-bold text-gray-900 mb-1">
+                    No studio description added yet
+                  </h4>
+                  <p className="text-xs text-gray-500 mb-5">
+                    Add practice details, design philosophy, and projects, or use AI to research and auto-fill in seconds.
+                  </p>
+                  <Link
+                    href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}&ai=true`}
+                    className="bg-black text-white hover:bg-gray-800 px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs cursor-pointer"
+                  >
+                    <Edit size={14} />
+                    <span>Edit / Add Studio Details</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center max-w-lg mx-auto">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center mb-4 shadow-md">
+                    <Building2 size={28} />
+                  </div>
+                  <h4 className="text-lg font-extrabold text-gray-900 mb-2">
+                    Are you representing {company.firm_name}?
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                    Claim this studio profile to add your firm&apos;s story, showcase your design philosophy, highlight built projects, and attract top architecture talent.
+                  </p>
+                  <button
+                    onClick={() => setIsClaimModalOpen(true)}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm px-6 py-3 rounded-2xl transition shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
+                  >
+                    <Building2 size={16} />
+                    <span>Claim this Studio to Add Details</span>
+                    <Sparkles size={14} className="text-yellow-300" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -417,11 +486,32 @@ export default function CompanyHeaderAndTabs({
       {/* TAB CONTENT: JOBS & OPEN POSITIONS */}
       {activeTab === "jobs" && (
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Current Open Positions</h2>
-            <span className="text-xs text-gray-500 font-medium">
-              {companyJobs.length} {companyJobs.length === 1 ? "position" : "positions"} available
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Current Open Positions</h2>
+              <span className="text-xs text-gray-500 font-medium">
+                {companyJobs.length} {companyJobs.length === 1 ? "position" : "positions"} available
+              </span>
+            </div>
+
+            {isAdmin && (
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/admin/add-job?firm_name=${encodeURIComponent(company.firm_name)}`}
+                  className="bg-black text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <PlusCircle size={14} />
+                  <span>Add / Post Position</span>
+                </Link>
+                <Link
+                  href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                  className="bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition flex items-center gap-1 cursor-pointer"
+                >
+                  <Edit size={13} />
+                  <span>Edit Studio</span>
+                </Link>
+              </div>
+            )}
           </div>
 
           {companyJobs.length > 0 ? (
@@ -464,7 +554,16 @@ export default function CompanyHeaderAndTabs({
             </div>
           ) : (
             <div className="bg-white rounded-2xl p-10 text-center border border-gray-100">
-              <p className="text-gray-500 text-sm">No open positions available at this time.</p>
+              <p className="text-gray-500 text-sm mb-4">No open positions available at this time.</p>
+              {isAdmin && (
+                <Link
+                  href={`/admin/add-job?firm_name=${encodeURIComponent(company.firm_name)}`}
+                  className="inline-flex items-center gap-1.5 bg-black text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition cursor-pointer"
+                >
+                  <PlusCircle size={14} />
+                  <span>Post First Job for {company.firm_name}</span>
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -524,7 +623,7 @@ export default function CompanyHeaderAndTabs({
           {!isClaimed && (
             <button
               onClick={() => setIsClaimModalOpen(true)}
-              className="bg-black text-white px-5 py-2.5 rounded-xl text-xs font-semibold hover:bg-gray-800 transition"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md transition cursor-pointer"
             >
               Claim this Studio to Add Projects
             </button>
