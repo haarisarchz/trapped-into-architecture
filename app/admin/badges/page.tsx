@@ -64,15 +64,33 @@ export default function AdminBadgesPage({ initialTab = "companies" }: { initialT
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const userStr = localStorage.getItem("currentUser");
-    if (!userStr) {
-      router.push("/");
-      return;
-    }
-    const user = JSON.parse(userStr);
-    setCurrentUser(user);
+    const checkRoleAndFetch = async () => {
+      const userStr = localStorage.getItem("currentUser");
+      if (!userStr) {
+        router.push("/");
+        return;
+      }
+      const user = JSON.parse(userStr);
+      setCurrentUser(user);
 
-    fetchData();
+      const lookupField = user.username ? "username" : "email";
+      const lookupValue = user.username || user.email;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq(lookupField, lookupValue)
+        .maybeSingle();
+
+      const role = (profile?.role || user.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      if (!["ceo", "superadmin"].includes(role)) {
+        router.push("/admin");
+        return;
+      }
+
+      await fetchData();
+    };
+
+    checkRoleAndFetch();
   }, []);
 
   const showToast = (msg: string) => {

@@ -104,10 +104,15 @@ export default function AdminQuickMenu() {
         {navItem("/admin/jobs", "Manage Jobs")}
         {navItem("/admin/add-job", "Add New Job")}
         {navItem("/admin/companies", "Companies")}
-        {navItem("/admin/badges", "Badges Management")}
-        {navItem("/admin/claims", "Company Claim Requests")}
         
-        {userRole !== "jobadmin" && (
+        {["ceo", "superadmin"].includes(userRole) && (
+          <>
+            {navItem("/admin/badges", "Badges Management")}
+            {navItem("/admin/claims", "Company Claim Requests")}
+          </>
+        )}
+        
+        {userRole === "ceo" && (
           <>
             {navItem("/admin/catalog", "Database Catalog")}
             {navItem("/admin/quizzes", "Architecture Quizzes")}
