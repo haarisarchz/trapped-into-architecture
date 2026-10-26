@@ -4,6 +4,7 @@ import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import React, { Suspense, useEffect, useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PaginationControls from "@/components/PaginationControls";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/utils/formatDate";
@@ -81,12 +82,22 @@ function AdminCompaniesContent() {
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  // Tab 2 (Badges) Filters
+  // Tab 2 (Badges) Filters & Pagination
   const [badgesSearch, setBadgesSearch] = useState("");
   const [tierFilter, setTierFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [badgesPage, setBadgesPage] = useState(1);
+  const [badgesPerPage, setBadgesPerPage] = useState(20);
+
+  // Tab 3 (Claims) Pagination
+  const [claimsPage, setClaimsPage] = useState(1);
+  const [claimsPerPage, setClaimsPerPage] = useState(20);
+
+  // Tab 4 (Submissions) Pagination
+  const [submissionsPage, setSubmissionsPage] = useState(1);
+  const [submissionsPerPage, setSubmissionsPerPage] = useState(20);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -543,6 +554,31 @@ function AdminCompaniesContent() {
       });
   }, [companies, badgesSearch, tierFilter, statusFilter]);
 
+  // Tab 2, 3, 4 Slicing & Pagination
+  const totalBadgesPages = Math.ceil(filteredBadgesCompanies.length / badgesPerPage);
+  const paginatedBadgesCompanies = useMemo(() => {
+    return filteredBadgesCompanies.slice(
+      (badgesPage - 1) * badgesPerPage,
+      badgesPage * badgesPerPage
+    );
+  }, [filteredBadgesCompanies, badgesPage, badgesPerPage]);
+
+  const totalClaimsPages = Math.ceil(claims.length / claimsPerPage);
+  const paginatedClaims = useMemo(() => {
+    return claims.slice(
+      (claimsPage - 1) * claimsPerPage,
+      claimsPage * claimsPerPage
+    );
+  }, [claims, claimsPage, claimsPerPage]);
+
+  const totalSubmissionsPages = Math.ceil(pendingSubmissions.length / submissionsPerPage);
+  const paginatedSubmissions = useMemo(() => {
+    return pendingSubmissions.slice(
+      (submissionsPage - 1) * submissionsPerPage,
+      submissionsPage * submissionsPerPage
+    );
+  }, [pendingSubmissions, submissionsPage, submissionsPerPage]);
+
   const tierColors: Record<string, { bg: string; text: string; icon: string }> = {
     bronze: { bg: "bg-amber-100", text: "text-amber-800", icon: "🥉" },
     silver: { bg: "bg-slate-200", text: "text-slate-800", icon: "🥈" },
@@ -858,30 +894,20 @@ function AdminCompaniesContent() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
-                  <span>Page {currentPage} of {totalPages}</span>
-                  <div className="flex gap-1">
-                    <button
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Pagination */}
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              itemsPerPage={itemsPerPage}
+              totalItems={sortedCompanies.length}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+              pageSizeOptions={[20, 50, 100]}
+              itemLabel="companies"
+              className="mt-6"
+            />
           </div>
         )}
 
@@ -899,14 +925,20 @@ function AdminCompaniesContent() {
                     type="text"
                     placeholder="Search studios..."
                     value={badgesSearch}
-                    onChange={(e) => setBadgesSearch(e.target.value)}
+                    onChange={(e) => {
+                      setBadgesSearch(e.target.value);
+                      setBadgesPage(1);
+                    }}
                     className="w-full pl-10 pr-9 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition"
                   />
                 </div>
 
                 <select
                   value={tierFilter}
-                  onChange={(e) => setTierFilter(e.target.value)}
+                  onChange={(e) => {
+                    setTierFilter(e.target.value);
+                    setBadgesPage(1);
+                  }}
                   className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 >
                   <option value="all">All Tiers (Bronze–Diamond)</option>
@@ -919,7 +951,10 @@ function AdminCompaniesContent() {
 
                 <select
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setBadgesPage(1);
+                  }}
                   className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-black"
                 >
                   <option value="all">All Badges</option>
@@ -950,7 +985,7 @@ function AdminCompaniesContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-xs sm:text-sm">
-                    {filteredBadgesCompanies.map((c: any) => {
+                    {paginatedBadgesCompanies.map((c: any) => {
                       const tier = (c.badge_tier || "bronze").toLowerCase();
                       const tierStyle = tierColors[tier] || tierColors.bronze;
 
@@ -1067,6 +1102,19 @@ function AdminCompaniesContent() {
                 </table>
               </div>
             </div>
+
+            {/* Pagination Controls */}
+            <PaginationControls
+              currentPage={badgesPage}
+              totalPages={totalBadgesPages}
+              itemsPerPage={badgesPerPage}
+              totalItems={filteredBadgesCompanies.length}
+              onPageChange={setBadgesPage}
+              onItemsPerPageChange={setBadgesPerPage}
+              pageSizeOptions={[20, 50, 100]}
+              itemLabel="studios"
+              className="mt-6"
+            />
           </div>
         )}
 
@@ -1102,9 +1150,10 @@ function AdminCompaniesContent() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {claims.map((claim: any) => {
-                  const isPending = claim.status === "pending";
+              <>
+                <div className="space-y-4">
+                  {paginatedClaims.map((claim: any) => {
+                    const isPending = claim.status === "pending";
 
                   return (
                     <div
@@ -1191,9 +1240,23 @@ function AdminCompaniesContent() {
                   );
                 })}
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Pagination Controls */}
+              <PaginationControls
+                currentPage={claimsPage}
+                totalPages={totalClaimsPages}
+                itemsPerPage={claimsPerPage}
+                totalItems={claims.length}
+                onPageChange={setClaimsPage}
+                onItemsPerPageChange={setClaimsPerPage}
+                pageSizeOptions={[20, 50, 100]}
+                itemLabel="claim requests"
+                className="mt-6"
+              />
+            </>
+          )}
+        </div>
+      )}
 
         {/* ======================================================== */}
         {/* TAB 4: NEW STUDIO SUBMISSIONS (VERIFICATION QUEUE)       */}
@@ -1227,8 +1290,9 @@ function AdminCompaniesContent() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {pendingSubmissions.map((comp: any) => (
+              <>
+                <div className="space-y-4">
+                  {paginatedSubmissions.map((comp: any) => (
                   <div
                     key={comp.id}
                     className="bg-white rounded-3xl p-6 border border-blue-200 bg-blue-50/15 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
@@ -1315,9 +1379,23 @@ function AdminCompaniesContent() {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Pagination Controls */}
+              <PaginationControls
+                currentPage={submissionsPage}
+                totalPages={totalSubmissionsPages}
+                itemsPerPage={submissionsPerPage}
+                totalItems={pendingSubmissions.length}
+                onPageChange={setSubmissionsPage}
+                onItemsPerPageChange={setSubmissionsPerPage}
+                pageSizeOptions={[20, 50, 100]}
+                itemLabel="submissions"
+                className="mt-6"
+              />
+            </>
+          )}
+        </div>
+      )}
       </section>
 
       <Footer />

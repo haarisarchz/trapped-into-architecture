@@ -9,6 +9,7 @@ import { useState, useEffect, Suspense, useMemo, Fragment } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { generateCompanySlug } from "@/utils/jobUrl";
 import FavoriteCompanyButton from "@/components/FavoriteCompanyButton";
+import PaginationControls from "@/components/PaginationControls";
 
 const normalizeOrganizationType = (raw: any): string => {
   if (!raw) return "Architecture Firm";
@@ -260,7 +261,7 @@ function CompaniesPageContent() {
   }, [companies, searchQuery, selectedCategories, selectedStates, selectedCities, sortBy]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(24);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   const totalPages = Math.ceil(filteredCompanies.length / itemsPerPage);
   const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -737,42 +738,23 @@ function CompaniesPageContent() {
 
               {/* Pagination Controls */}
               {filteredCompanies.length > 0 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <span>Companies per page:</span>
-                    <select 
-                      value={itemsPerPage} 
-                      onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                      className="border border-gray-200 rounded-lg px-2 py-1 outline-none"
-                    >
-                      <option value={20}>20</option>
-                      <option value={24}>24</option>
-                      <option value={50}>50</option>
-                    </select>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
-                    >
-                      Previous
-                    </button>
-                    
-                    <span className="text-sm font-medium px-4">
-                      Page {currentPage} of {totalPages || 1}
-                    </span>
-                    
-                    <button 
-                      onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); window.scrollTo({top: 0, behavior: 'smooth'}); }}
-                      disabled={currentPage === totalPages || totalPages === 0}
-                      className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm disabled:opacity-50 hover:bg-gray-50 transition"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={filteredCompanies.length}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  onItemsPerPageChange={(sz) => {
+                    setItemsPerPage(sz);
+                    setCurrentPage(1);
+                  }}
+                  pageSizeOptions={[20, 50, 100]}
+                  itemLabel="companies"
+                  className="mt-8"
+                />
               )}
             </div>
 
