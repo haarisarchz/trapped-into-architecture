@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -26,6 +26,8 @@ import {
   X,
   UserPlus,
   MessageCircle,
+  Copy,
+  Check,
 } from "lucide-react";
 import CompanyActions from "@/components/CompanyActions";
 import CompanyBadgeExplanationModal from "./CompanyBadgeExplanationModal";
@@ -47,6 +49,109 @@ const ensureUrl = (url?: string) => {
   return `https://${trimmed}`;
 };
 
+// Interactive Phone Dropdown: On Desktop shows Copy + WhatsApp, on Mobile shows Call + WhatsApp
+function PhoneActionDropdown({ phone, isMobile }: { phone: string; isMobile: boolean }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  const cleanNumber = phone.replace(/\D/g, "");
+  const waNumber = cleanNumber.length === 10 ? `91${cleanNumber}` : cleanNumber;
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(phone);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+      setIsOpen(false);
+    }, 1200);
+  };
+
+  const handleCall = () => {
+    window.location.href = `tel:${cleanNumber}`;
+    setIsOpen(false);
+  };
+
+  const handleWhatsApp = () => {
+    window.open(`https://wa.me/${waNumber}`, "_blank", "noopener,noreferrer");
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative inline-block" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="font-medium hover:text-blue-600 underline decoration-dotted underline-offset-2 transition cursor-pointer flex items-center gap-1"
+        title="Click to view contact options"
+      >
+        <span>{phone}</span>
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-2 z-50 bg-white border border-gray-200 shadow-2xl rounded-2xl py-1.5 min-w-[210px] text-xs font-semibold text-gray-800 animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-3 py-1 text-[10px] uppercase font-bold text-gray-400 border-b border-gray-100 mb-1 flex items-center justify-between">
+            <span>{phone}</span>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-gray-400 hover:text-black p-0.5"
+            >
+              <X size={12} />
+            </button>
+          </div>
+
+          {/* DESKTOP VS MOBILE PRIMARY ACTION */}
+          {isMobile ? (
+            <button
+              type="button"
+              onClick={handleCall}
+              className="w-full text-left px-3.5 py-2.5 hover:bg-gray-50 flex items-center gap-2 text-gray-900 transition cursor-pointer"
+            >
+              <PhoneCall size={14} className="text-blue-600" />
+              <span>Call {phone}</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="w-full text-left px-3.5 py-2.5 hover:bg-gray-50 flex items-center justify-between text-gray-900 transition cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} className="text-gray-600" />}
+                <span>{copied ? "Phone Number Copied!" : "Copy Phone Number"}</span>
+              </div>
+              {copied && <span className="text-[10px] text-emerald-600 font-bold">✓</span>}
+            </button>
+          )}
+
+          {/* WHATSAPP ACTION */}
+          <button
+            type="button"
+            onClick={handleWhatsApp}
+            className="w-full text-left px-3.5 py-2.5 hover:bg-emerald-50/60 flex items-center gap-2 text-emerald-700 transition cursor-pointer"
+          >
+            <MessageCircle size={14} className="text-emerald-600 fill-emerald-600" />
+            <span>Chat on WhatsApp</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CompanyHeaderAndTabs({
   company,
   companyJobs,
@@ -59,6 +164,7 @@ export default function CompanyHeaderAndTabs({
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     try {
@@ -72,6 +178,13 @@ export default function CompanyHeaderAndTabs({
         }
       }
     } catch (e) {}
+
+    const checkMobile = () => {
+      setIsMobile(/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const handleClaimClick = () => {
@@ -307,44 +420,21 @@ export default function CompanyHeaderAndTabs({
               </a>
             )}
 
-            {/* PHONE & WHATSAPP ACTIONS */}
+            {/* CLEAN PHONE NUMBER WITH POPUP OPTIONS */}
             {company.phone && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <PhoneCall size={16} className="text-gray-400 shrink-0" />
                 <div className="flex flex-wrap items-center gap-2">
                   {String(company.phone)
                     .split(",")
                     .map((p) => p.trim())
                     .filter(Boolean)
-                    .map((ph, idx) => {
-                      const cleanNumber = ph.replace(/\D/g, "");
-                      const waNumber = cleanNumber.length === 10 ? `91${cleanNumber}` : cleanNumber;
-                      return (
-                        <div
-                          key={idx}
-                          className="inline-flex items-center gap-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-2.5 py-1 rounded-xl text-xs transition"
-                        >
-                          <a
-                            href={`tel:${ph}`}
-                            className="font-medium hover:text-blue-600 transition"
-                            title={`Call ${ph}`}
-                          >
-                            <span>{ph}</span>
-                          </a>
-                          <span className="text-gray-300">|</span>
-                          <a
-                            href={`https://wa.me/${waNumber}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-emerald-700 hover:text-emerald-800 font-bold transition flex items-center gap-1"
-                            title={`Chat on WhatsApp: ${ph}`}
-                          >
-                            <MessageCircle size={12} className="text-emerald-600 fill-emerald-600" />
-                            <span>WhatsApp</span>
-                          </a>
-                        </div>
-                      );
-                    })}
+                    .map((ph, idx, arr) => (
+                      <span key={idx} className="flex items-center gap-1">
+                        <PhoneActionDropdown phone={ph} isMobile={isMobile} />
+                        {idx < arr.length - 1 && <span className="text-gray-300">,</span>}
+                      </span>
+                    ))}
                 </div>
               </div>
             )}
