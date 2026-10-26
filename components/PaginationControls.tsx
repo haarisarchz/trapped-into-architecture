@@ -20,18 +20,28 @@ export function getPaginationPages(currentPage: number, totalPages: number): (nu
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
 
-  // If near the beginning
+  // If near the beginning (show first 5 pages, ellipsis, last page)
   if (currentPage <= 4) {
     return [1, 2, 3, 4, 5, "...", totalPages];
   }
 
-  // If near the end
+  // If near the end (show page 1, ellipsis, last 5 pages)
   if (currentPage >= totalPages - 3) {
     return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
   }
 
-  // In the middle
-  return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+  // In the middle: show page 1, ellipsis, 5 window pages centered on current page, ellipsis, last page
+  return [
+    1,
+    "...",
+    currentPage - 2,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+    currentPage + 2,
+    "...",
+    totalPages,
+  ];
 }
 
 export default function PaginationControls({
