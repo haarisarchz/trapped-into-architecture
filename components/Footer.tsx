@@ -110,19 +110,41 @@ export default function Footer() {
           <h3 className="text-lg font-semibold mb-3">Quick Links</h3>
           <ul className="space-y-2 text-gray-400 text-sm md:text-base">
             <li><Link href="/" className="hover:text-white transition block p-1 -m-1">Home</Link></li>
-            <li><Link href="/jobs" className="hover:text-white transition block p-1 -m-1">Jobs</Link></li>
-            <li><Link href="/companies" className="hover:text-white transition block p-1 -m-1">Companies</Link></li>
-            <li><Link href="/privacy-policy" className="hover:text-white transition block p-1 -m-1">Privacy Policy</Link></li>
+            <li><Link href="/jobs" className="hover:text-white transition block p-1 -m-1">Browse Jobs</Link></li>
+            <li><Link href="/companies" className="hover:text-white transition block p-1 -m-1">Companies Directory</Link></li>
+            <li><a href="#" onClick={handleSavedJobs} className="hover:text-white transition block p-1 -m-1">Saved Jobs</a></li>
+            <li>
+              <a href="#" onClick={handleCreateProfile} className="hover:text-white transition block p-1 -m-1">
+                {isLoggedIn ? "My Profile" : "Create Profile"}
+              </a>
+            </li>
           </ul>
         </div>
 
-        {/* JOB SEEKERS */}
+        {/* FOR RECRUITERS & STUDIOS */}
         <div>
-          <h3 className="text-lg font-semibold mb-3">For Job Seekers</h3>
+          <h3 className="text-lg font-semibold mb-3">For Recruiters</h3>
           <ul className="space-y-2 text-gray-400 text-sm md:text-base">
-            <li><Link href="/jobs" className="hover:text-white transition block p-1 -m-1">Browse Jobs</Link></li>
-            <li><a href="#" onClick={handleCreateProfile} className="hover:text-white transition block p-1 -m-1">Create Profile</a></li>
-            <li><a href="#" onClick={handleSavedJobs} className="hover:text-white transition block p-1 -m-1">Saved Jobs</a></li>
+            <li>
+              <Link href="/companies/new" className="hover:text-white transition block p-1 -m-1">
+                Create Company Profile
+              </Link>
+            </li>
+            <li>
+              <Link href="/companies/new" className="hover:text-white transition block p-1 -m-1">
+                Add Company / Studio
+              </Link>
+            </li>
+            <li>
+              <Link href="/admin/add-job" className="hover:text-white transition block p-1 -m-1">
+                Post a Job Opening
+              </Link>
+            </li>
+            <li>
+              <Link href="/individuals" className="hover:text-white transition block p-1 -m-1">
+                Browse Architecture Talent
+              </Link>
+            </li>
           </ul>
         </div>
 

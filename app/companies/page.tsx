@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { Search, MapPin, Building2, SlidersHorizontal, X, LayoutGrid, Rows3, List, Share2 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect, Suspense, useMemo } from "react";
+import { useState, useEffect, Suspense, useMemo, Fragment } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { generateCompanySlug } from "@/utils/jobUrl";
 import FavoriteCompanyButton from "@/components/FavoriteCompanyButton";
@@ -301,9 +301,18 @@ function CompaniesPageContent() {
       <section className="w-full px-6 lg:px-12 py-10 max-w-[1440px] mx-auto flex-1">
         
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Companies</h1>
-          <p className="text-lg text-gray-600">Explore architecture firms and discover open opportunities.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">Companies</h1>
+            <p className="text-lg text-gray-600">Explore architecture firms and discover open opportunities.</p>
+          </div>
+          <Link
+            href="/companies/new"
+            className="self-start sm:self-auto inline-flex items-center gap-2 bg-black hover:bg-gray-800 text-white font-bold text-sm px-5 py-3 rounded-2xl shadow-sm transition shrink-0 cursor-pointer"
+          >
+            <Building2 size={16} />
+            <span>Register your Practice</span>
+          </Link>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -546,10 +555,42 @@ function CompaniesPageContent() {
                 viewMode === "detailed" ? "flex flex-col gap-4" : 
                 "flex flex-col gap-2"
               }>
-                {paginatedCompanies.map((company: any) => {
+                {paginatedCompanies.map((company: any, index: number) => {
+                  const showInFeedCTA = index === 6;
+
+                  const inFeedBanner = showInFeedCTA ? (
+                    <div
+                      key="in-feed-register-practice"
+                      className={`${
+                        viewMode === "visual" ? "col-span-1 md:col-span-2 xl:col-span-3" : "w-full"
+                      } bg-gradient-to-r from-gray-900 via-slate-900 to-black text-white rounded-3xl p-6 sm:p-8 shadow-md border border-gray-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 my-2`}
+                    >
+                      <div className="max-w-2xl">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-gray-300 text-xs font-semibold uppercase tracking-wider mb-3">
+                          <Building2 size={13} className="text-blue-400" />
+                          <span>Practice Directory</span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-extrabold text-white mb-2 tracking-tight">
+                          Get your Studio / Firm listed on Trapped into Architecture
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                          Build your practice&apos;s verified digital presence, showcase built architecture projects, and hire passionate talent directly from India&apos;s dedicated architectural community.
+                        </p>
+                      </div>
+                      <Link
+                        href="/companies/new"
+                        className="bg-white text-black hover:bg-gray-100 font-bold text-sm px-6 py-3 rounded-xl transition shadow-xs whitespace-nowrap shrink-0 cursor-pointer"
+                      >
+                        Create Studio Profile →
+                      </Link>
+                    </div>
+                  ) : null;
+
                   if (viewMode === "visual") {
                     return (
-                      <Link href={`/companies/${company.slug}`} key={company.slug} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col h-full">
+                      <Fragment key={company.slug}>
+                        {inFeedBanner}
+                        <Link href={`/companies/${company.slug}`} className="group bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col h-full">
                         <div className="h-32 bg-gray-50 flex items-center justify-center p-6 border-b border-gray-100 relative">
                           {company.logo ? (
                             <img src={company.logo} alt={company.company} className="h-full w-auto object-contain max-w-[140px] group-hover:scale-105 transition-transform" />
@@ -583,12 +624,15 @@ function CompaniesPageContent() {
                           </div>
                         </div>
                       </Link>
+                      </Fragment>
                     );
                   }
 
                   if (viewMode === "detailed") {
                     return (
-                      <Link href={`/companies/${company.slug}`} key={company.slug} className="group bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
+                      <Fragment key={company.slug}>
+                        {inFeedBanner}
+                        <Link href={`/companies/${company.slug}`} className="group bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm hover:shadow-md transition flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center">
                         <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shrink-0 group-hover:scale-105 transition-transform">
                           {company.logo ? (
                             <img src={company.logo} alt={company.company} className="w-full h-full object-cover" />
@@ -639,12 +683,15 @@ function CompaniesPageContent() {
                           </div>
                         </div>
                       </Link>
+                      </Fragment>
                     );
                   }
 
                   // Compact View
                   return (
-                    <Link href={`/companies/${company.slug}`} key={company.slug} className="group bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-300 hover:shadow-sm transition flex items-center gap-4">
+                    <Fragment key={company.slug}>
+                      {inFeedBanner}
+                      <Link href={`/companies/${company.slug}`} className="group bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-300 hover:shadow-sm transition flex items-center gap-4">
                       <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 shrink-0">
                         {company.logo ? (
                           <img src={company.logo} alt={company.company} className="w-full h-full object-cover" />
@@ -681,6 +728,7 @@ function CompaniesPageContent() {
                         </button>
                       </div>
                     </Link>
+                    </Fragment>
                   );
                 })}
               
