@@ -31,6 +31,7 @@ import {
 import CompanyActions from "@/components/CompanyActions";
 import CompanyBadgeExplanationModal from "./CompanyBadgeExplanationModal";
 import ClaimCompanyModal from "./ClaimCompanyModal";
+import LoginOrRegisterClaimModal from "./LoginOrRegisterClaimModal";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { formatExperience } from "@/utils/formatJobDetails";
 
@@ -196,9 +197,9 @@ export default function CompanyHeaderAndTabs({
   const [activeTab, setActiveTab] = useState<"overview" | "jobs" | "team" | "projects" | "awards">("overview");
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [isAuthChoiceModalOpen, setIsAuthChoiceModalOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -225,9 +226,7 @@ export default function CompanyHeaderAndTabs({
   const handleClaimClick = () => {
     const userStr = localStorage.getItem("currentUser");
     if (!userStr) {
-      setAuthNotice("Register as a user to claim this studio");
-      window.dispatchEvent(new CustomEvent("openAuth", { detail: "register" }));
-      setTimeout(() => setAuthNotice(null), 6000);
+      setIsAuthChoiceModalOpen(true);
       return;
     }
     setIsClaimModalOpen(true);
@@ -261,38 +260,6 @@ export default function CompanyHeaderAndTabs({
 
   return (
     <div className="w-full relative">
-      {/* FLOATING AUTH NOTIFICATION TOAST */}
-      {authNotice && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-gray-700 animate-in fade-in slide-in-from-top-4 duration-300 max-w-md w-[92%] sm:w-auto">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <UserPlus size={18} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white leading-tight">
-              Register as a user to claim this studio
-            </p>
-            <p className="text-xs text-gray-300 mt-0.5 truncate">
-              Create a free account to manage {company.firm_name}.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent("openAuth", { detail: "register" }));
-              setAuthNotice(null);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer shrink-0"
-          >
-            Register
-          </button>
-          <button
-            onClick={() => setAuthNotice(null)}
-            className="text-gray-400 hover:text-white p-1 cursor-pointer shrink-0"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
       {/* COMPANY HEADER CARD */}
       <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-start mb-8">
         {/* LOGO */}
@@ -841,6 +808,13 @@ export default function CompanyHeaderAndTabs({
         onClose={() => setIsClaimModalOpen(false)}
         companyId={company.id}
         companySlug={slug}
+        companyName={company.firm_name}
+      />
+
+      {/* LOGIN OR REGISTER CHOICE MODAL */}
+      <LoginOrRegisterClaimModal
+        isOpen={isAuthChoiceModalOpen}
+        onClose={() => setIsAuthChoiceModalOpen(false)}
         companyName={company.firm_name}
       />
     </div>
