@@ -187,7 +187,7 @@ if (loading) {
             {/* ADMIN ACTIVITY */}
             <button
               onClick={() => router.push("/admin/activity")}
-              className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition text-blue-400 font-bold text-sm"
+              className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition text-white font-bold text-sm"
             >
               Admin Activity
             </button>
@@ -206,41 +206,41 @@ if (loading) {
                 <div className="mt-1 space-y-0.5 pl-2.5 border-l border-gray-800 ml-2">
                   <button
                     onClick={() => router.push("/admin")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg bg-black hover:bg-gray-900 transition text-xs font-medium text-gray-200 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg bg-gray-800 transition text-[13px] font-medium text-white"
                   >
                     Job Dashboard
                   </button>
                   <button
                     onClick={() => router.push("/admin/jobs")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
                   >
                     Manage Jobs
                   </button>
                   <button
                     onClick={() => router.push("/admin/add-job")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
                   >
                     Add New Job
                   </button>
                   <button
                     onClick={() => router.push("/admin/companies")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
                   >
                     Companies
                   </button>
                   <button
                     onClick={() => router.push("/admin/badges")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-amber-400 hover:text-amber-300 flex items-center justify-between"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white flex items-center justify-between"
                   >
                     <span>Badges Managing</span>
                   </button>
                   <button
                     onClick={() => router.push("/admin/claims")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-amber-400 hover:text-amber-300 flex items-center justify-between"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white flex items-center justify-between"
                   >
                     <span>Company Claim Requests</span>
                     {pendingClaimsCount > 0 && (
-                      <span className="bg-amber-500 text-black text-[10px] font-extrabold px-1.5 py-0.5 rounded-full leading-none">
+                      <span className="bg-gray-800 text-gray-300 border border-gray-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
                         {pendingClaimsCount}
                       </span>
                     )}
@@ -264,13 +264,13 @@ if (loading) {
                   <div className="mt-1 space-y-0.5 pl-2.5 border-l border-gray-800 ml-2">
                     <button
                       onClick={() => router.push("/admin/catalog")}
-                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
+                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
                     >
                       Architecture Catalog
                     </button>
                     <button
                       onClick={() => router.push("/admin/quizzes")}
-                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
+                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
                     >
                       Manage Quizzes
                     </button>
@@ -283,7 +283,7 @@ if (loading) {
             <div className="space-y-1.5 pt-1">
               <button
                 onClick={() => router.push("/admin/analytics")}
-                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-gray-200"
+                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
               >
                 Analytics
               </button>
@@ -291,13 +291,13 @@ if (loading) {
                 <>
                   <button
                     onClick={() => router.push("/admin/users")}
-                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-gray-200"
+                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
                   >
                     Users
                   </button>
                   <button
                     onClick={() => router.push("/admin/contact")}
-                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-gray-200"
+                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
                   >
                     Contact
                   </button>
