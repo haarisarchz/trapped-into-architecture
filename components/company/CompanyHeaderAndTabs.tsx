@@ -63,6 +63,20 @@ const getDisplayUrl = (url?: string) => {
   }
 };
 
+const getInstagramHandle = (raw?: string) => {
+  if (!raw) return "";
+  const trimmed = raw.trim();
+  const cleaned = trimmed.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "");
+  return cleaned.startsWith("@") ? cleaned : `@${cleaned}`;
+};
+
+const getLinkedInDisplay = (raw?: string) => {
+  if (!raw) return "Profile";
+  const trimmed = raw.trim();
+  const cleaned = trimmed.replace(/^https?:\/\/(www\.)?linkedin\.com\/(company\/|in\/)?/i, "").replace(/\/$/, "");
+  return cleaned || "Profile";
+};
+
 const formatPracticeTypology = (raw?: string): string => {
   if (!raw) return "Architecture Firm";
   const trimmed = raw.trim();
@@ -471,25 +485,22 @@ export default function CompanyHeaderAndTabs({
         </button>
       </div>
 
-      {/* TAB CONTENT: OVERVIEW (SINGLE UNIFIED ELEGANT WHITE BOX WITH SUBHEADINGS) */}
+      {/* TAB CONTENT: OVERVIEW */}
       {activeTab === "overview" && (
         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-xs border border-gray-100 divide-y divide-gray-100 space-y-8">
-          {/* SUBHEADING 1: ABOUT / STUDIO STATEMENT */}
+          {/* SECTION 1: ABOUT */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Compass size={20} className="text-gray-900" />
-                <h2 className="text-lg md:text-xl font-extrabold text-gray-900">
-                  About {company.firm_name}
-                </h2>
-              </div>
+              <h2 className="text-lg md:text-xl font-extrabold text-gray-900">
+                About
+              </h2>
               {isAdmin && (
                 <Link
                   href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
                   className="text-xs font-semibold text-gray-600 hover:text-black flex items-center gap-1 hover:underline"
                 >
                   <Edit size={12} />
-                  <span>Edit Details</span>
+                  <span>Edit</span>
                 </Link>
               )}
             </div>
@@ -499,15 +510,9 @@ export default function CompanyHeaderAndTabs({
                 {company.company_description || company.description}
               </p>
             ) : (
-              <div className="p-6 md:p-8 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center flex flex-col items-center">
-                <Compass size={28} className="text-gray-400 mb-2" />
-                <p className="text-sm font-bold text-gray-800 mb-1">
-                  No studio overview has been curated yet
-                </p>
-                <p className="text-xs text-gray-500 max-w-md mb-4">
-                  {isAdmin
-                    ? "Add this practice's design philosophy, typologies, and history to complete the studio profile."
-                    : "Are you representing this architecture studio? Claim this profile to share your design statement, showcase built works, and post open positions."}
+              <div className="p-6 md:p-8 rounded-2xl bg-gray-50 border border-gray-150 text-center flex flex-col items-center justify-center">
+                <p className="text-base font-extrabold text-gray-900 mb-3">
+                  Do you represent this studio or firm?
                 </p>
                 {isAdmin ? (
                   <Link
@@ -515,14 +520,14 @@ export default function CompanyHeaderAndTabs({
                     className="inline-flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs"
                   >
                     <Edit size={13} />
-                    <span>Edit / Add Company Details</span>
+                    <span>Edit / Add Details</span>
                   </Link>
                 ) : !isClaimed ? (
                   <button
                     onClick={handleClaimClick}
-                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
                   >
-                    <Building2 size={13} />
+                    <Building2 size={14} />
                     <span>Claim this Studio</span>
                   </button>
                 ) : null}
@@ -530,29 +535,88 @@ export default function CompanyHeaderAndTabs({
             )}
           </div>
 
-          {/* SUBHEADING 2: OFFICIAL CHANNELS & VERIFIED WEB PRESENCE */}
+          {/* SECTION 2: DETAILS */}
           <div className="pt-8">
-            <div className="mb-4">
-              <h3 className="text-base font-extrabold text-gray-900">
-                Official Channels & Verified Web Presence
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Direct studio links for portfolios, inquiries, and public profiles
-              </p>
+            <h3 className="text-lg md:text-xl font-extrabold text-gray-900 mb-4">
+              Details
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+              <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-150">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                  Practice Typology
+                </span>
+                <span className="text-sm font-bold text-gray-900">
+                  {formattedTypology}
+                </span>
+              </div>
+
+              {location && (
+                <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-150">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                    Headquarters
+                  </span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {location}
+                  </span>
+                </div>
+              )}
+
+              {company.principal_architect && (
+                <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-150">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                    Principal Architect / Founder
+                  </span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {company.principal_architect}
+                  </span>
+                </div>
+              )}
+
+              {company.founded_year && (
+                <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-150">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                    Established Year
+                  </span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {company.founded_year}
+                  </span>
+                </div>
+              )}
+
+              {company.employee_size && (
+                <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-150">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                    Studio Team Scale
+                  </span>
+                  <span className="text-sm font-bold text-gray-900">
+                    {company.employee_size} Employees
+                  </span>
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* SECTION 3: SOCIAL MEDIA CHANNELS & CONTACTS */}
+          <div className="pt-8">
+            <h3 className="text-lg md:text-xl font-extrabold text-gray-900 mb-4">
+              Social Media Channels & Contacts
+            </h3>
 
             <div className="flex flex-wrap items-center gap-3">
-              {/* OFFICIAL WEBSITE - DISPLAYS ACTUAL WEB ADDRESS */}
+              {/* WEBSITE */}
               {websiteUrl && (
                 <a
                   href={websiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xs group"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 rounded-xl text-xs font-medium transition group"
                 >
-                  <Globe size={15} className="text-gray-300 group-hover:text-white" />
-                  <span className="font-semibold">{displayWebsite}</span>
-                  <ExternalLink size={12} className="opacity-60 group-hover:opacity-100" />
+                  <Globe size={14} className="text-blue-600" />
+                  <span className="font-bold text-gray-500">Website:</span>
+                  <span className="font-semibold text-blue-600 underline decoration-dotted group-hover:text-blue-800">
+                    {displayWebsite}
+                  </span>
+                  <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
                 </a>
               )}
 
@@ -562,12 +626,49 @@ export default function CompanyHeaderAndTabs({
                   href={company.instagram.startsWith("http") ? company.instagram : `https://instagram.com/${company.instagram.replace(/^@/, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs group"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 rounded-xl text-xs font-medium transition group"
                 >
                   <span className="text-sm">📸</span>
-                  <span>Instagram</span>
-                  <ExternalLink size={12} className="text-gray-400 group-hover:text-black" />
+                  <span className="font-bold text-gray-500">Instagram:</span>
+                  <span className="font-semibold text-pink-600 underline decoration-dotted group-hover:text-pink-800">
+                    {getInstagramHandle(company.instagram)}
+                  </span>
+                  <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
                 </a>
+              )}
+
+              {/* EMAIL */}
+              {emailAddr && (
+                <a
+                  href={`mailto:${emailAddr}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 rounded-xl text-xs font-medium transition group"
+                >
+                  <Mail size={14} className="text-indigo-600" />
+                  <span className="font-bold text-gray-500">Email:</span>
+                  <span className="font-semibold text-indigo-600 underline decoration-dotted group-hover:text-indigo-800">
+                    {emailAddr}
+                  </span>
+                </a>
+              )}
+
+              {/* PHONE */}
+              {company.phone && (
+                <div className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl text-xs font-medium">
+                  <PhoneCall size={14} className="text-emerald-600" />
+                  <span className="font-bold text-gray-500">Phone:</span>
+                  <div className="flex flex-wrap items-center gap-1 font-semibold text-gray-900">
+                    {String(company.phone)
+                      .split(",")
+                      .map((p) => p.trim())
+                      .filter(Boolean)
+                      .map((ph, idx, arr) => (
+                        <span key={idx} className="flex items-center gap-1">
+                          <PhoneActionDropdown phone={ph} isMobile={isMobile} />
+                          {idx < arr.length - 1 && <span className="text-gray-300">,</span>}
+                        </span>
+                      ))}
+                  </div>
+                </div>
               )}
 
               {/* LINKEDIN */}
@@ -576,11 +677,14 @@ export default function CompanyHeaderAndTabs({
                   href={company.linkedin.startsWith("http") ? company.linkedin : `https://linkedin.com/company/${company.linkedin.replace(/^@/, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs group"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 rounded-xl text-xs font-medium transition group"
                 >
                   <span className="text-sm">💼</span>
-                  <span>LinkedIn</span>
-                  <ExternalLink size={12} className="text-gray-400 group-hover:text-black" />
+                  <span className="font-bold text-gray-500">LinkedIn:</span>
+                  <span className="font-semibold text-blue-700 underline decoration-dotted group-hover:text-blue-900">
+                    {getLinkedInDisplay(company.linkedin)}
+                  </span>
+                  <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
                 </a>
               )}
 
@@ -590,10 +694,10 @@ export default function CompanyHeaderAndTabs({
                   href={ensureUrl(company.facebook)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs group"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 rounded-xl text-xs font-medium transition group"
                 >
-                  <span>Facebook</span>
-                  <ExternalLink size={12} className="text-gray-400 group-hover:text-black" />
+                  <span className="font-bold text-gray-500">Facebook</span>
+                  <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
                 </a>
               )}
 
@@ -603,27 +707,16 @@ export default function CompanyHeaderAndTabs({
                   href={ensureUrl(company.twitter)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs group"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-900 rounded-xl text-xs font-medium transition group"
                 >
-                  <span>X (Twitter)</span>
-                  <ExternalLink size={12} className="text-gray-400 group-hover:text-black" />
-                </a>
-              )}
-
-              {/* EMAIL */}
-              {emailAddr && (
-                <a
-                  href={`mailto:${emailAddr}`}
-                  className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-2xs group"
-                >
-                  <Mail size={14} className="text-indigo-500" />
-                  <span>{emailAddr}</span>
+                  <span className="font-bold text-gray-500">X (Twitter)</span>
+                  <ExternalLink size={11} className="text-gray-400 opacity-60 group-hover:opacity-100" />
                 </a>
               )}
 
               {/* EMPTY CHANNELS NOTICE */}
-              {!websiteUrl && !company.instagram && !company.linkedin && !company.facebook && !company.twitter && !emailAddr && (
-                <p className="text-xs text-gray-400 italic">No external web channels added yet.</p>
+              {!websiteUrl && !company.instagram && !company.linkedin && !company.facebook && !company.twitter && !emailAddr && !company.phone && (
+                <p className="text-xs text-gray-400 italic">No contact channels added yet.</p>
               )}
             </div>
           </div>
