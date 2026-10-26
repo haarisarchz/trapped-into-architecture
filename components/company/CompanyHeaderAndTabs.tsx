@@ -67,7 +67,8 @@ const getDisplayUrl = (url?: string) => {
 const getInstagramHandle = (raw?: string) => {
   if (!raw) return "";
   const trimmed = raw.trim();
-  const cleaned = trimmed.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "");
+  const withoutQuery = trimmed.split("?")[0].split("#")[0];
+  const cleaned = withoutQuery.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "");
   return cleaned.startsWith("@") ? cleaned : `@${cleaned}`;
 };
 
