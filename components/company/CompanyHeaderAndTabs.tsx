@@ -15,6 +15,7 @@ import {
   MailCheck,
   PhoneCall,
   ExternalLink,
+  ChevronLeft,
   ChevronRight,
   HelpCircle,
   FolderGit2,
@@ -274,6 +275,17 @@ export default function CompanyHeaderAndTabs({
 
   return (
     <div className="w-full relative">
+      {/* NAVIGATION: VIEW ALL COMPANIES BUTTON */}
+      <div className="mb-6 flex items-center justify-between">
+        <Link
+          href="/companies"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 hover:text-black rounded-xl text-xs font-bold transition shadow-2xs group cursor-pointer"
+        >
+          <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+          <span>View All Companies</span>
+        </Link>
+      </div>
+
       {/* COMPANY HEADER CARD */}
       <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-start mb-8">
         {/* LOGO */}
