@@ -1,6 +1,7 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,7 @@ import {
   MessageCircle,
   Trash2,
   AlertTriangle,
+  Settings,
 } from "lucide-react";
 
 // Map raw DB role values to clean display labels
@@ -477,6 +479,116 @@ function UserDetailModal({
         </div>
       </div>
     </div>
+  );
+}
+
+// ---- User Row Settings Dropdown Menu ----
+function UserSettingsActionMenu({
+  user,
+  onView,
+  onDelete,
+  canDelete,
+}: {
+  user: any;
+  onView: () => void;
+  onDelete: () => void;
+  canDelete: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const updatePosition = () => {
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setMenuStyle({
+          position: "fixed",
+          top: rect.bottom + 6,
+          right: window.innerWidth - rect.right,
+          zIndex: 9999,
+        });
+      }
+    };
+
+    updatePosition();
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isOpen]);
+
+  const menu = (
+    <div
+      ref={menuRef}
+      style={menuStyle}
+      onClick={(e) => e.stopPropagation()}
+      className="bg-white rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.15)] border border-gray-100 py-1.5 w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5 text-xs font-semibold"
+    >
+      <button
+        onClick={() => {
+          setIsOpen(false);
+          onView();
+        }}
+        className="w-full text-left px-3.5 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-black transition cursor-pointer"
+      >
+        <Eye size={14} className="text-gray-500" />
+        <span>View Details</span>
+      </button>
+
+      {canDelete && (
+        <>
+          <div className="h-px bg-gray-100 my-0.5" />
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              onDelete();
+            }}
+            className="w-full text-left px-3.5 py-2 hover:bg-red-50 flex items-center gap-2 text-red-600 transition cursor-pointer"
+          >
+            <Trash2 size={14} className="text-red-500" />
+            <span>Remove User</span>
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition cursor-pointer shadow-xs border border-gray-200/60"
+        title="Settings / Actions"
+      >
+        <Settings size={13} className="text-gray-600" />
+        <span>Settings</span>
+      </button>
+      {isOpen && typeof document !== "undefined" && createPortal(menu, document.body)}
+    </>
   );
 }
 
@@ -1095,7 +1207,7 @@ export default function AdminUsersPage() {
                     <th className="px-4 py-3.5 min-w-[120px]">DOB</th>
                     <th className="px-4 py-3.5 min-w-[100px] text-center">Verified</th>
                     <th className="px-4 py-3.5 min-w-[130px]">Joined</th>
-                    <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[170px]">Actions</th>
+                    <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[110px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
@@ -1271,23 +1383,13 @@ export default function AdminUsersPage() {
 
                         {/* Actions (Sticky Right) */}
                         <td className="px-4 py-3.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 transition shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => setSelectedUser(u)}
-                              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-black hover:text-white text-gray-700 transition"
-                              title="View Full Profile Details"
-                            >
-                              <Eye size={13} /> View
-                            </button>
-                            {isCEO && u.id !== loggedUser?.id && (
-                              <button
-                                onClick={() => handleDeleteUser(u)}
-                                className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-600 hover:text-white text-red-600 border border-red-200 hover:border-transparent transition"
-                                title="Remove User"
-                              >
-                                <Trash2 size={13} /> Remove
-                              </button>
-                            )}
+                          <div className="flex items-center justify-end">
+                            <UserSettingsActionMenu
+                              user={u}
+                              onView={() => setSelectedUser(u)}
+                              onDelete={() => handleDeleteUser(u)}
+                              canDelete={isCEO && u.id !== loggedUser?.id}
+                            />
                           </div>
                         </td>
                       </tr>
