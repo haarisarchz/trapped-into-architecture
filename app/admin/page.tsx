@@ -25,6 +25,7 @@ const [draftJobs, setDraftJobs] = useState(0);
 const [scheduledJobs, setScheduledJobs] = useState(0);
 
 const [totalJobs, setTotalJobs] = useState(0);
+const [pendingClaimsCount, setPendingClaimsCount] = useState(0);
 
   useEffect(() => {
 
@@ -91,6 +92,16 @@ if (!error) {
 
 setTotalJobs(data.length);
 
+try {
+  const { count } = await supabase
+    .from("company_claim_requests")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "pending");
+  if (typeof count === "number") setPendingClaimsCount(count);
+} catch (e) {
+  // table might be empty or migrating
+}
+
 const today =
 new Date().toISOString().split("T")[0];
 
@@ -151,19 +162,19 @@ if (loading) {
 
       {/* SIDEBAR */}
 
-      <aside className="flex w-full md:w-72 bg-black text-white md:sticky md:top-0 md:h-screen p-6 flex-col justify-between gap-6 overflow-y-auto">
+      <aside className="flex w-full md:w-64 lg:w-72 bg-black text-white md:sticky md:top-0 md:h-screen p-4 flex-col justify-between gap-3 overflow-y-auto">
 
         <div>
 
           {/* WEBSITE NAME */}
 
-          <div className="mb-6">
+          <div className="mb-3.5">
 
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-xl font-bold tracking-tight text-white">
               Trapped Into Architecture
             </h1>
 
-            <p className="text-gray-400 mt-1">
+            <p className="text-xs text-gray-400 mt-0.5 font-medium tracking-wide">
               Admin Panel
             </p>
 
@@ -171,12 +182,12 @@ if (loading) {
 
           {/* MENU */}
 
-          <div className="space-y-4 flex-1">
+          <div className="space-y-1.5 flex-1">
             
             {/* ADMIN ACTIVITY */}
             <button
               onClick={() => router.push("/admin/activity")}
-              className="w-full text-left px-4 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 transition text-blue-400 font-bold"
+              className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition text-blue-400 font-bold text-sm"
             >
               Admin Activity
             </button>
@@ -185,37 +196,54 @@ if (loading) {
             <div>
               <button
                 onClick={() => setIsJobMenuOpen(!isJobMenuOpen)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition"
+                className="w-full flex items-center justify-between px-3.5 py-2 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition text-sm"
               >
                 <span>Job Dashboard</span>
-                {isJobMenuOpen ? <Minus size={16} /> : <Plus size={16} />}
+                {isJobMenuOpen ? <Minus size={15} /> : <Plus size={15} />}
               </button>
 
               {isJobMenuOpen && (
-                <div className="mt-2 space-y-1 pl-2 border-l border-gray-800 ml-2">
+                <div className="mt-1 space-y-0.5 pl-2.5 border-l border-gray-800 ml-2">
                   <button
                     onClick={() => router.push("/admin")}
-                    className="w-full text-left px-4 py-2 rounded-xl bg-black hover:bg-gray-900 transition text-sm text-gray-300 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg bg-black hover:bg-gray-900 transition text-xs font-medium text-gray-200 hover:text-white"
                   >
                     Job Dashboard
                   </button>
                   <button
                     onClick={() => router.push("/admin/jobs")}
-                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-800 transition text-sm text-gray-300 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
                   >
                     Manage Jobs
                   </button>
                   <button
                     onClick={() => router.push("/admin/add-job")}
-                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-800 transition text-sm text-gray-300 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
                   >
                     Add New Job
                   </button>
                   <button
                     onClick={() => router.push("/admin/companies")}
-                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-800 transition text-sm text-gray-300 hover:text-white"
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
                   >
                     Companies
+                  </button>
+                  <button
+                    onClick={() => router.push("/admin/badges")}
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-amber-400 hover:text-amber-300 flex items-center justify-between"
+                  >
+                    <span>Badges Managing</span>
+                  </button>
+                  <button
+                    onClick={() => router.push("/admin/claims")}
+                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-amber-400 hover:text-amber-300 flex items-center justify-between"
+                  >
+                    <span>Company Claim Requests</span>
+                    {pendingClaimsCount > 0 && (
+                      <span className="bg-amber-500 text-black text-[10px] font-extrabold px-1.5 py-0.5 rounded-full leading-none">
+                        {pendingClaimsCount}
+                      </span>
+                    )}
                   </button>
                 </div>
               )}
@@ -226,19 +254,25 @@ if (loading) {
               <div>
                 <button
                   onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition"
+                  className="w-full flex items-center justify-between px-3.5 py-2 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition text-sm"
                 >
                   <span>Database Dashboard</span>
-                  {isDbMenuOpen ? <Minus size={16} /> : <Plus size={16} />}
+                  {isDbMenuOpen ? <Minus size={15} /> : <Plus size={15} />}
                 </button>
 
                 {isDbMenuOpen && (
-                  <div className="mt-2 space-y-1 pl-2 border-l border-gray-800 ml-2">
+                  <div className="mt-1 space-y-0.5 pl-2.5 border-l border-gray-800 ml-2">
                     <button
                       onClick={() => router.push("/admin/catalog")}
-                      className="w-full text-left px-4 py-2 rounded-xl hover:bg-gray-800 transition text-sm text-gray-300 hover:text-white"
+                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
                     >
                       Architecture Catalog
+                    </button>
+                    <button
+                      onClick={() => router.push("/admin/quizzes")}
+                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-xs font-medium text-gray-400 hover:text-white"
+                    >
+                      Manage Quizzes
                     </button>
                   </div>
                 )}
@@ -246,25 +280,24 @@ if (loading) {
             )}
 
             {/* STANDALONE MENUS */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-1.5 pt-1">
               <button
                 onClick={() => router.push("/admin/analytics")}
-                className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
+                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-gray-200"
               >
                 Analytics
               </button>
               {userRole === "ceo" && (
                 <>
-                  
                   <button
                     onClick={() => router.push("/admin/users")}
-                    className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
+                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-gray-200"
                   >
                     Users
                   </button>
                   <button
                     onClick={() => router.push("/admin/contact")}
-                    className="w-full text-left px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-medium text-gray-200"
+                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-gray-200"
                   >
                     Contact
                   </button>
@@ -273,11 +306,11 @@ if (loading) {
             </div>
 
             <button
-  onClick={() => window.open("/jobs", "_blank")}
-  className="w-full mt-10 bg-white text-black py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
->
-  Visit Jobs Page
-</button>
+              onClick={() => window.open("/jobs", "_blank")}
+              className="w-full mt-3 bg-white text-black py-2 rounded-xl font-bold text-xs hover:bg-gray-200 transition"
+            >
+              Visit Jobs Page
+            </button>
 
           </div>
 
@@ -287,7 +320,7 @@ if (loading) {
 
         <a
           href="https://www.trappedintoarchitecture.com/" target="_blank" rel="noopener noreferrer"
-          className="border border-gray-700 rounded-2xl px-4 py-2.5 hover:bg-gray-800 transition text-center block w-full"
+          className="border border-gray-800 rounded-xl px-3 py-2 hover:bg-gray-900 transition text-center block w-full text-xs text-gray-300 hover:text-white"
         >
           View Website
         </a>

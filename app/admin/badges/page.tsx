@@ -23,11 +23,32 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminBadgesPage() {
+export default function AdminBadgesPage({ initialTab = "companies" }: { initialTab?: "companies" | "claims" }) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"companies" | "claims">("companies");
+  const [activeTab, setActiveTab] = useState<"companies" | "claims">(initialTab);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam === "claims" || initialTab === "claims") {
+        setActiveTab("claims");
+      } else if (tabParam === "companies") {
+        setActiveTab("companies");
+      }
+    }
+  }, [initialTab]);
+
+  const handleTabChange = (tab: "companies" | "claims") => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
 
   // Companies data
   const [companies, setCompanies] = useState<any[]>([]);
@@ -313,7 +334,7 @@ export default function AdminBadgesPage() {
         {/* TAB CONTROLS */}
         <div className="flex items-center gap-2 border-b border-gray-200 mb-6 pb-px">
           <button
-            onClick={() => setActiveTab("companies")}
+            onClick={() => handleTabChange("companies")}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
               activeTab === "companies"
                 ? "border-black text-black"
@@ -325,7 +346,7 @@ export default function AdminBadgesPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("claims")}
+            onClick={() => handleTabChange("claims")}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
               activeTab === "claims"
                 ? "border-black text-black"
