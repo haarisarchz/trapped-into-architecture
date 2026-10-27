@@ -6,6 +6,13 @@ import { generateJobUrl } from "@/utils/jobUrl";
 import { Search, MapPin, Building2, ArrowRight, MessageCircle, Globe, Mail, Smartphone, Send } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TwitterIcon } from "@/components/icons/SocialIcons";
 
+const ensureHttp = (url?: string) => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return "https://" + trimmed;
+};
+
 export default function InteractiveHome({
   recentJobs = [],
   popularJobs = [],
@@ -246,7 +253,7 @@ export default function InteractiveHome({
         <h2 className="text-2xl font-bold text-gray-900 mb-5">Follow Us</h2>
         <div className="flex flex-wrap justify-center gap-6">
           {siteSettings?.whatsapp_channel_url ? (
-            <a href={siteSettings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-green-600 font-medium">
+            <a href={ensureHttp(siteSettings.whatsapp_channel_url)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-green-600 font-medium">
               <MessageCircle size={20} /> WhatsApp
             </a>
           ) : (
@@ -256,7 +263,7 @@ export default function InteractiveHome({
           )}
 
           {siteSettings?.instagram ? (
-            <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-pink-600 font-medium">
+            <a href={ensureHttp(siteSettings.instagram)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-pink-600 font-medium">
               <InstagramIcon size={20} /> Instagram
             </a>
           ) : (
@@ -266,7 +273,7 @@ export default function InteractiveHome({
           )}
 
           {siteSettings?.facebook ? (
-            <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-800 font-medium">
+            <a href={ensureHttp(siteSettings.facebook)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-800 font-medium">
               <FacebookIcon size={20} /> Facebook
             </a>
           ) : (
@@ -276,7 +283,7 @@ export default function InteractiveHome({
           )}
 
           {siteSettings?.twitter ? (
-            <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-400 font-medium">
+            <a href={ensureHttp(siteSettings.twitter)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-400 font-medium">
               <TwitterIcon size={20} /> X
             </a>
           ) : (
@@ -285,15 +292,15 @@ export default function InteractiveHome({
             </Link>
           )}
 
-          {siteSettings?.telegram_channel_url ? (
-            <a href={siteSettings.telegram_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-500 font-medium">
-              <Send size={20} /> Telegram
-            </a>
-          ) : (
-            <Link href="/unavailable?service=Telegram" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-500 font-medium">
-              <Send size={20} /> Telegram
-            </Link>
-          )}
+          <a 
+            href={ensureHttp(siteSettings?.website_url || siteSettings?.telegram_channel_url || "https://t.me/ArchitectJobsTi2A")} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-500 font-medium"
+            title="Join All India Architecture Jobs on Telegram"
+          >
+            <Send size={20} /> Telegram
+          </a>
         </div>
       </section>
     </main>
