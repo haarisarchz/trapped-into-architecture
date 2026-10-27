@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import PaginationControls from "@/components/PaginationControls";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { calculateProfileCompletion, getBadgeDetails } from "@/utils/profileCompletion";
 import {
   Search,
   Download,
@@ -335,6 +336,21 @@ function UserDetailModal({
                 <span className="font-mono text-gray-900">@{user.username || "—"}</span>
               </div>
               <div>
+                <span className="text-xs text-gray-500 block">User Level</span>
+                {(() => {
+                  const comp = calculateProfileCompletion(user);
+                  const tier = (user.badge_tier || comp.badgeTier || "bronze").toLowerCase();
+                  const badge = getBadgeDetails(tier as any, Boolean(user.is_vip));
+                  return (
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border mt-1 ${badge.bg} ${badge.color} ${badge.border}`}>
+                      <span>{badge.icon}</span>
+                      <span>{badge.title}</span>
+                      <span className="text-[10px] opacity-75">({comp.percentage}%)</span>
+                    </span>
+                  );
+                })()}
+              </div>
+              <div>
                 <span className="text-xs text-gray-500 block">User UUID</span>
                 <div className="flex items-center gap-1.5">
                   <span className="font-mono text-xs text-gray-600 truncate max-w-[180px]">{user.id}</span>
@@ -611,6 +627,7 @@ export default function AdminUsersPage() {
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
   const [professionFilter, setProfessionFilter] = useState("all");
   const [sortOption, setSortOption] = useState("recent");
 
@@ -856,6 +873,15 @@ export default function AdminUsersPage() {
       });
     }
 
+    // User Level filter
+    if (levelFilter !== "all") {
+      result = result.filter((u) => {
+        const comp = calculateProfileCompletion(u);
+        const tier = (u.badge_tier || comp.badgeTier || "bronze").toLowerCase();
+        return tier === levelFilter;
+      });
+    }
+
     // Profession filter
     if (professionFilter !== "all") {
       result = result.filter((u) => {
@@ -889,7 +915,7 @@ export default function AdminUsersPage() {
     });
 
     return result;
-  }, [users, searchQuery, roleFilter, professionFilter, sortOption]);
+  }, [users, searchQuery, roleFilter, levelFilter, professionFilter, sortOption]);
 
   // Reset to first page when search or filters change
   useEffect(() => {
@@ -1101,6 +1127,23 @@ export default function AdminUsersPage() {
               <option value="user">User</option>
             </select>
 
+            {/* User Level Filter */}
+            <select
+              value={levelFilter}
+              onChange={(e) => {
+                setLevelFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+            >
+              <option value="all">All User Levels</option>
+              <option value="bronze">🥉 Bronze Member</option>
+              <option value="silver">🥈 Silver Member</option>
+              <option value="gold">🥇 Gold Member</option>
+              <option value="platinum">💎 Platinum Member</option>
+              <option value="diamond">👑 Diamond Member</option>
+            </select>
+
             {/* Profession Filter */}
             <select
               value={professionFilter}
@@ -1165,12 +1208,13 @@ export default function AdminUsersPage() {
             {filteredUsers.length !== users.length && (
               <span className="text-gray-400 ml-1">({users.length} total)</span>
             )}
-            {(searchQuery || roleFilter !== "all" || professionFilter !== "all") && (
+            {(searchQuery || roleFilter !== "all" || levelFilter !== "all" || professionFilter !== "all") && (
               <span
                 className="ml-2 text-blue-600 font-semibold cursor-pointer hover:underline"
                 onClick={() => {
                   setSearchQuery("");
                   setRoleFilter("all");
+                  setLevelFilter("all");
                   setProfessionFilter("all");
                 }}
               >
@@ -1210,6 +1254,7 @@ export default function AdminUsersPage() {
                     <th className="px-4 py-3.5 min-w-[200px]">Email</th>
                     <th className="px-4 py-3.5 min-w-[160px]">Phone</th>
                     <th className="px-4 py-3.5 min-w-[150px]">Role</th>
+                    <th className="px-4 py-3.5 min-w-[170px]">User Level</th>
                     <th className="px-4 py-3.5 min-w-[180px]">Profession</th>
                     <th className="px-4 py-3.5 min-w-[160px]">Education</th>
                     <th className="px-4 py-3.5 min-w-[120px]">DOB</th>
