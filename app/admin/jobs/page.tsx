@@ -12,7 +12,7 @@ import Footer from "@/components/Footer";
 import PaginationControls from "@/components/PaginationControls";
 
 
-import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight } from "lucide-react";
+import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight, RefreshCw } from "lucide-react";
 import { formatWhatsAppPost } from "@/utils/socialFormats";
 
 function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) {
@@ -295,26 +295,33 @@ const fetchJobs = async () => {
     const todayStr = today.toISOString().split("T")[0];
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-    if (statusFilter === "active") {
-      filteredJobs = filteredJobs.filter((job) => {
-        if (job.status !== "published") return false;
-        const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < todayStr;
-        const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
-        return !isExplicitlyExpired && !isOld;
-      });
-    }
-    if (statusFilter === "outdated") {
-      filteredJobs = filteredJobs.filter((job) => {
-        if (job.status !== "published") return false;
-        const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < todayStr;
-        const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
-        return isOld && !isExplicitlyExpired;
-      });
-    }
-    if (statusFilter === "expired") {
-      filteredJobs = filteredJobs.filter(
-        (job) => job.status === "published" && job.post_expiry_date && job.post_expiry_date < todayStr
-      );
+    if (statusFilter === "trash") {
+      filteredJobs = filteredJobs.filter((job) => job.status === "trash");
+    } else {
+      // Exclude soft-deleted jobs from all active views
+      filteredJobs = filteredJobs.filter((job) => job.status !== "trash");
+
+      if (statusFilter === "active") {
+        filteredJobs = filteredJobs.filter((job) => {
+          if (job.status !== "published") return false;
+          const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < todayStr;
+          const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
+          return !isExplicitlyExpired && !isOld;
+        });
+      }
+      if (statusFilter === "outdated") {
+        filteredJobs = filteredJobs.filter((job) => {
+          if (job.status !== "published") return false;
+          const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < todayStr;
+          const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
+          return isOld && !isExplicitlyExpired;
+        });
+      }
+      if (statusFilter === "expired") {
+        filteredJobs = filteredJobs.filter(
+          (job) => job.status === "published" && job.post_expiry_date && job.post_expiry_date < todayStr
+        );
+      }
     }
 
     setJobs(filteredJobs);
@@ -327,11 +334,20 @@ const fetchJobs = async () => {
 
   const executeDelete = async (mode: "single" | "all") => {
     if (!jobToDelete) return;
+    const now = new Date().toISOString();
     
     if (mode === "single") {
-      await supabase.from("jobs").delete().eq("id", jobToDelete.id);
+      await supabase.from("jobs").update({
+        status: "trash",
+        deleted_at: now,
+        deleted_by: currentUser?.id || null,
+      }).eq("id", jobToDelete.id);
     } else {
-      let query = supabase.from("jobs").delete()
+      let query = supabase.from("jobs").update({
+        status: "trash",
+        deleted_at: now,
+        deleted_by: currentUser?.id || null,
+      })
         .eq("firm_name", jobToDelete.firm_name)
         .eq("status", jobToDelete.status);
       
@@ -342,6 +358,21 @@ const fetchJobs = async () => {
     }
     
     setJobToDelete(null);
+    fetchJobs();
+  };
+
+  const handleRestoreJob = async (job: any) => {
+    await supabase.from("jobs").update({
+      status: "published",
+      deleted_at: null,
+      deleted_by: null,
+    }).eq("id", job.id);
+    fetchJobs();
+  };
+
+  const handlePermanentDeleteJob = async (job: any) => {
+    if (!confirm(`Permanently delete "${job.position || 'this job'}" at "${job.firm_name}"? This CANNOT be undone.`)) return;
+    await supabase.from("jobs").delete().eq("id", job.id);
     fetchJobs();
   };
 
@@ -449,6 +480,18 @@ return (
     }`}
   >
     Expired
+  </button>
+
+  <button
+    onClick={() => router.push("/admin/jobs?status=trash")}
+    className={`px-5 py-2 rounded-full border transition flex items-center gap-1.5 cursor-pointer ${
+      statusFilter === "trash"
+        ? "bg-red-600 text-white border-red-600 font-bold shadow-xs"
+        : "bg-white hover:bg-red-50 text-red-600 border-red-200"
+    }`}
+  >
+    <Trash2 size={14} />
+    <span>Recycle Bin (Trash)</span>
   </button>
 
 </div>
@@ -651,15 +694,15 @@ return (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Delete Job</h2>
-            <p className="mb-6 text-gray-600 text-sm">Do you want to delete just this position, or all positions created together in this form?</p>
+            <h2 className="text-2xl font-bold mb-2">Move to Trash</h2>
+            <p className="mb-6 text-gray-600 text-sm">Do you want to move just this position to Trash, or all positions created together in this form? (They can be restored within 7 days).</p>
             <div className="flex flex-col gap-3">
               <button onClick={() => {
                 if (window.confirm("Confirm delete ONE job?")) {
                   executeDelete("single");
                 }
               }} className="px-5 py-3.5 bg-red-50 text-red-700 font-bold rounded-xl hover:bg-red-100 transition border border-red-100">
-                Delete One Job
+                Move One Job to Trash
               </button>
               
               <button onClick={() => {
@@ -667,7 +710,7 @@ return (
                   executeDelete("all");
                 }
               }} className="px-5 py-3.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition shadow-md">
-                Delete All Jobs in Form
+                Move All Jobs to Trash
               </button>
 
               <button onClick={() => setJobToDelete(null)} className="px-5 py-3.5 border rounded-xl hover:bg-gray-50 mt-2 font-semibold transition text-gray-700">
