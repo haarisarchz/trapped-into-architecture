@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Building2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import {
   WhatsAppBrandIcon,
   FacebookBrandIcon,
@@ -23,6 +24,7 @@ const ensureHttp = (url?: string) => {
 export default function Footer() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showNoCompanyModal, setShowNoCompanyModal] = useState(false);
   const [username, setUsername] = useState("");
   const [userRole, setUserRole] = useState("");
   const [settings, setSettings] = useState<any>(null);
@@ -80,14 +82,64 @@ export default function Footer() {
     alert("Job Alerts feature is coming soon! Stay tuned.");
   };
 
-  const handleManageCompany = (e: React.MouseEvent) => {
+  const handleCreateCompany = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (isLoggedIn && username) {
-      router.push(`/profile/${username}?tab=companies`);
-    } else {
-      alert("Please log in to manage your studio / firm profile.");
-      window.dispatchEvent(new CustomEvent("openAuth", { detail: "login" }));
+    if (!isLoggedIn) {
+      router.push("/companies/new");
+      return;
     }
+
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (user?.id) {
+        const { data: comp } = await supabase
+          .from("companies")
+          .select("id, slug, firm_name")
+          .or(`claimed_by.eq.${user.id},created_by.eq.${user.id}`)
+          .neq("status", "trash")
+          .maybeSingle();
+
+        if (comp && comp.slug) {
+          alert(`You are already registered as the admin of "${comp.firm_name}". Redirecting to your studio profile.`);
+          router.push(`/companies/${comp.slug}`);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Check owned company error:", err);
+    }
+
+    router.push("/companies/new");
+  };
+
+  const handleManageCompany = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      alert("Please log in to manage your studio profile.");
+      window.dispatchEvent(new CustomEvent("openAuth", { detail: "login" }));
+      return;
+    }
+
+    try {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (user?.id) {
+        const { data: comp } = await supabase
+          .from("companies")
+          .select("id, slug, firm_name")
+          .or(`claimed_by.eq.${user.id},created_by.eq.${user.id}`)
+          .neq("status", "trash")
+          .maybeSingle();
+
+        if (comp && comp.slug) {
+          router.push(`/companies/${comp.slug}`);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Check owned company error:", err);
+    }
+
+    setShowNoCompanyModal(true);
   };
 
   const handlePostJob = (e: React.MouseEvent) => {
@@ -257,9 +309,9 @@ export default function Footer() {
           </h3>
           <ul className="space-y-2.5 text-gray-400 text-xs sm:text-sm">
             <li>
-              <Link href="/companies/new" className="hover:text-white transition block">
+              <a href="#" onClick={handleCreateCompany} className="hover:text-white transition block">
                 Create Company Profile
-              </Link>
+              </a>
             </li>
             <li>
               <a href="#" onClick={handleManageCompany} className="hover:text-white transition block">
@@ -319,6 +371,43 @@ export default function Footer() {
           </Link>
         </div>
       </div>
+
+      {/* NO COMPANY OWNED MODAL */}
+      {showNoCompanyModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-200">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+              <Building2 size={24} />
+            </div>
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
+              You Don't Own a Studio Profile Yet
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 mb-6 leading-relaxed">
+              You are not yet linked to an architecture practice. Would you like to create and register your studio on Trapped Into Architecture?
+            </p>
+
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNoCompanyModal(false);
+                  router.push("/companies/new");
+                }}
+                className="w-full py-3 px-4 bg-black hover:bg-gray-800 text-white font-bold rounded-xl text-sm transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>+ Register New Studio Profile</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowNoCompanyModal(false)}
+                className="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition cursor-pointer"
+              >
+                <span>Cancel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 }

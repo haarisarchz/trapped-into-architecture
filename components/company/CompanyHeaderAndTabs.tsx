@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   Globe,
@@ -200,20 +201,23 @@ function PhoneActionDropdown({ phone, isMobile }: { phone: string; isMobile: boo
           </button>
         </div>
       )}
+
     </div>
   );
 }
 
 export default function CompanyHeaderAndTabs({
   company,
-  companyJobs,
+  companyJobs = [],
   slug,
-  favoriteCount,
+  favoriteCount = 0,
 }: CompanyHeaderAndTabsProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "jobs" | "team" | "projects" | "awards">("overview");
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [isAuthChoiceModalOpen, setIsAuthChoiceModalOpen] = useState(false);
+  const [showEditConfirmModal, setShowEditConfirmModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -253,6 +257,25 @@ export default function CompanyHeaderAndTabs({
   const isClaimed = Boolean(company.is_claimed);
   const isEmailVerified = Boolean(company.email_verified || company.is_verified);
   const isPhoneVerified = Boolean(company.phone_verified);
+
+  const isCompanyOwner = Boolean(
+    currentUser &&
+    company &&
+    (
+      (company.claimed_by && company.claimed_by === currentUser.id) ||
+      (company.created_by && company.created_by === currentUser.id)
+    )
+  );
+  const canEditCompany = isAdmin || isCompanyOwner;
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isAdmin) {
+      router.push(`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`);
+    } else if (isCompanyOwner) {
+      setShowEditConfirmModal(true);
+    }
+  };
 
   const tierBadgeInfo: Record<string, { label: string; icon: string; bg: string; text: string; border: string }> = {
     bronze: { label: "Bronze Level Studio", icon: "🥉", bg: "bg-amber-50", text: "text-amber-800", border: "border-amber-200" },
@@ -325,15 +348,15 @@ export default function CompanyHeaderAndTabs({
                   {formattedTypology}
                 </span>
 
-                {/* SINGLE PRIMARY BUTTON: Admin gets "Edit / Add Company Details", Visitors get "Claim this Studio" */}
-                {isAdmin ? (
-                  <Link
-                    href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                {/* PRIMARY ACTION: Admin or Company Owner gets "Edit Company Details", Visitors get "Claim this Studio" */}
+                {canEditCompany ? (
+                  <button
+                    onClick={handleEditClick}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-black hover:bg-gray-800 text-white font-bold text-xs rounded-lg shadow-xs transition cursor-pointer"
                   >
                     <Edit size={13} />
-                    <span>Edit / Add Company Details</span>
-                  </Link>
+                    <span>{isCompanyOwner && !isAdmin ? "Edit Studio Profile" : "Edit / Add Company Details"}</span>
+                  </button>
                 ) : isClaimed ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg">
                     <ShieldCheck size={13} className="text-blue-600" />
@@ -507,14 +530,14 @@ export default function CompanyHeaderAndTabs({
               <h2 className="text-lg md:text-xl font-extrabold text-gray-900">
                 About
               </h2>
-              {isAdmin && (
-                <Link
-                  href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
-                  className="text-xs font-semibold text-gray-600 hover:text-black flex items-center gap-1 hover:underline"
+              {canEditCompany && (
+                <button
+                  onClick={handleEditClick}
+                  className="text-xs font-semibold text-gray-600 hover:text-black flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   <Edit size={12} />
                   <span>Edit</span>
-                </Link>
+                </button>
               )}
             </div>
 
@@ -923,6 +946,41 @@ export default function CompanyHeaderAndTabs({
         onClose={() => setIsAuthChoiceModalOpen(false)}
         companyName={company.firm_name}
       />
+
+{/* OWNER EDIT CONFIRMATION MODAL */}
+      {showEditConfirmModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white text-gray-900 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-200">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+              <Edit size={24} />
+            </div>
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
+              Edit Studio Profile
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 mb-6 leading-relaxed">
+              Are you sure you want to edit your company profile? Changes will be submitted for administrative verification before appearing live on the directory.
+            </p>
+
+            <div className="space-y-2.5">
+              <button
+                onClick={() => {
+                  setShowEditConfirmModal(false);
+                  router.push(`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`);
+                }}
+                className="w-full py-3 px-4 bg-black hover:bg-gray-800 text-white font-bold rounded-xl text-sm transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>✓ Yes, Continue to Edit Form</span>
+              </button>
+              <button
+                onClick={() => setShowEditConfirmModal(false)}
+                className="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition cursor-pointer"
+              >
+                <span>Cancel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
