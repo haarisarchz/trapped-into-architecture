@@ -32,6 +32,7 @@ import {
   Trash2,
   AlertTriangle,
   Settings,
+  Award,
 } from "lucide-react";
 
 // Map raw DB role values to clean display labels
@@ -630,6 +631,115 @@ export default function AdminUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
+  // Sub-tabs State ("all" vs "levels")
+  const [activeTab, setActiveTab] = useState<"all" | "levels">("all");
+
+  // Tab 2: Levels & Verification Filters and Pagination
+  const [levelsSearch, setLevelsSearch] = useState("");
+  const [levelsTierFilter, setLevelsTierFilter] = useState("all");
+  const [verificationFilter, setVerificationFilter] = useState("all");
+  const [levelsPage, setLevelsPage] = useState(1);
+  const [levelsPerPage, setLevelsPerPage] = useState(25);
+
+  // Toggle user verified status
+  const handleToggleUserVerified = async (userId: string, currentVal: boolean) => {
+    const newVal = !currentVal;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ verified: newVal })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, verified: newVal } : u))
+      );
+      setSaveMsg(newVal ? "User marked as Verified." : "User verification revoked.");
+      setTimeout(() => setSaveMsg(""), 4000);
+    } catch (err: any) {
+      alert("Failed to update verification: " + err.message);
+    }
+  };
+
+  // Toggle VIP status for Diamond members
+  const handleToggleUserVip = async (userId: string, currentVal: boolean) => {
+    const newVal = !currentVal;
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_vip: newVal })
+        .eq("id", userId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, is_vip: newVal } : u))
+      );
+      setSaveMsg(newVal ? "⭐ VIP status granted to user." : "VIP status removed.");
+      setTimeout(() => setSaveMsg(""), 4000);
+    } catch (err: any) {
+      alert("Failed to toggle VIP: " + err.message);
+    }
+  };
+
+  // Specific Stats for Tab 2
+  const diamondCount = useMemo(() => {
+    return users.filter((u) => {
+      const comp = calculateProfileCompletion(u);
+      return (u.badge_tier || comp.badgeTier) === "diamond";
+    }).length;
+  }, [users]);
+
+  const coaCount = useMemo(() => {
+    return users.filter((u) => !!u.coa_number && u.coa_number.trim().length > 0).length;
+  }, [users]);
+
+  // Tab 2 Filtered Users
+  const filteredLevelsUsers = useMemo(() => {
+    let result = [...users];
+
+    if (levelsSearch.trim()) {
+      const q = levelsSearch.toLowerCase().trim();
+      result = result.filter((u) =>
+        (u.full_name && u.full_name.toLowerCase().includes(q)) ||
+        (u.display_name && u.display_name.toLowerCase().includes(q)) ||
+        (u.username && u.username.toLowerCase().includes(q)) ||
+        (u.email && u.email.toLowerCase().includes(q)) ||
+        (u.phone && u.phone.toLowerCase().includes(q)) ||
+        (u.coa_number && u.coa_number.toLowerCase().includes(q))
+      );
+    }
+
+    if (levelsTierFilter !== "all") {
+      result = result.filter((u) => {
+        const comp = calculateProfileCompletion(u);
+        const tier = (u.badge_tier || comp.badgeTier || "bronze").toLowerCase();
+        return tier === levelsTierFilter;
+      });
+    }
+
+    if (verificationFilter === "verified") {
+      result = result.filter((u) => Boolean(u.verified));
+    } else if (verificationFilter === "unverified") {
+      result = result.filter((u) => !u.verified);
+    } else if (verificationFilter === "phone") {
+      result = result.filter((u) => Boolean(u.phone && u.phone.trim().length > 0));
+    } else if (verificationFilter === "coa") {
+      result = result.filter((u) => Boolean(u.coa_number && u.coa_number.trim().length > 0));
+    } else if (verificationFilter === "vip") {
+      result = result.filter((u) => Boolean(u.is_vip));
+    }
+
+    return result;
+  }, [users, levelsSearch, levelsTierFilter, verificationFilter]);
+
+  const totalLevelsPages = Math.ceil(filteredLevelsUsers.length / levelsPerPage);
+  const currentLevelsUsers = useMemo(() => {
+    const start = (levelsPage - 1) * levelsPerPage;
+    return filteredLevelsUsers.slice(start, start + levelsPerPage);
+  }, [filteredLevelsUsers, levelsPage, levelsPerPage]);
+
   // User Deletion State
   const [userToDelete, setUserToDelete] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1073,6 +1183,33 @@ export default function AdminUsersPage() {
           </div>
         </div>
 
+        {/* Navigation Tabs (Matching Manage Companies) */}
+        <div className="flex items-center gap-2 border-b border-gray-200 mb-6 pb-px overflow-x-auto">
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+              activeTab === "all"
+                ? "border-black text-black font-extrabold"
+                : "border-transparent text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <Users size={16} />
+            <span>All Users ({users.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("levels")}
+            className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+              activeTab === "levels"
+                ? "border-black text-black font-extrabold"
+                : "border-transparent text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <Award size={16} />
+            <span>User Levels & Verification</span>
+          </button>
+        </div>
+
         {/* Role update alert message */}
         {saveMsg && (
           <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-3.5 rounded-2xl text-sm font-semibold flex items-center gap-2 shadow-sm animate-in fade-in duration-200">
@@ -1081,7 +1218,10 @@ export default function AdminUsersPage() {
           </div>
         )}
 
-        {/* Controls Bar: Search, Filters & CSV Export */}
+        {/* TAB 1: ALL USERS DIRECTORY */}
+        {activeTab === "all" && (
+          <div>
+          {/* Controls Bar: Search, Filters & CSV Export */}
         <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[300px]">
             {/* Search Input */}
@@ -1118,23 +1258,6 @@ export default function AdminUsersPage() {
               <option value="superadmin">Super Admin</option>
               <option value="jobadmin">Job Admin</option>
               <option value="user">User</option>
-            </select>
-
-            {/* User Level Filter */}
-            <select
-              value={levelFilter}
-              onChange={(e) => {
-                setLevelFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
-            >
-              <option value="all">All User Levels</option>
-              <option value="bronze">🥉 Bronze Member</option>
-              <option value="silver">🥈 Silver Member</option>
-              <option value="gold">🥇 Gold Member</option>
-              <option value="platinum">💎 Platinum Member</option>
-              <option value="diamond">👑 Diamond Member</option>
             </select>
 
             {/* Profession Filter */}
@@ -1247,7 +1370,6 @@ export default function AdminUsersPage() {
                     <th className="px-4 py-3.5 min-w-[200px]">Email</th>
                     <th className="px-4 py-3.5 min-w-[160px]">Phone</th>
                     <th className="px-4 py-3.5 min-w-[150px]">Role</th>
-                    <th className="px-4 py-3.5 min-w-[170px]">User Level</th>
                     <th className="px-4 py-3.5 min-w-[180px]">Profession</th>
                     <th className="px-4 py-3.5 min-w-[160px]">Education</th>
                     <th className="px-4 py-3.5 min-w-[120px]">DOB</th>
@@ -1466,6 +1588,303 @@ export default function AdminUsersPage() {
             itemLabel="users"
             className="mt-6"
           />
+        )}
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 2: USER LEVELS & VERIFICATION                         */}
+        {/* ======================================================== */}
+        {activeTab === "levels" && (
+          <div>
+            {/* Tab 2 Specific Quick Stats Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-700">
+                  <CheckCircle2 size={20} />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-gray-900">{verifiedCount}</div>
+                  <div className="text-xs text-gray-500 font-medium">Email Verified</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-700">
+                  <PhoneCall size={20} />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-gray-900">{phoneCount}</div>
+                  <div className="text-xs text-gray-500 font-medium">Phone Numbers Provided</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-700">
+                  <Award size={20} />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-gray-900">{diamondCount}</div>
+                  <div className="text-xs text-gray-500 font-medium">Diamond & VIP Members</div>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-700">
+                  <Briefcase size={20} />
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-gray-900">{coaCount}</div>
+                  <div className="text-xs text-gray-500 font-medium">COA Registered</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab 2 Controls Bar */}
+            <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[300px]">
+                {/* Search */}
+                <div className="relative flex-1 min-w-[220px] max-w-md">
+                  <Search
+                    size={16}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search members by name, email, coa..."
+                    value={levelsSearch}
+                    onChange={(e) => {
+                      setLevelsSearch(e.target.value);
+                      setLevelsPage(1);
+                    }}
+                    className="w-full pl-10 pr-9 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black focus:bg-white transition"
+                  />
+                  {levelsSearch && (
+                    <button
+                      onClick={() => setLevelsSearch("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Level Filter */}
+                <select
+                  value={levelsTierFilter}
+                  onChange={(e) => {
+                    setLevelsTierFilter(e.target.value);
+                    setLevelsPage(1);
+                  }}
+                  className="border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                >
+                  <option value="all">All User Levels</option>
+                  <option value="bronze">🥉 Bronze Member</option>
+                  <option value="silver">🥈 Silver Member</option>
+                  <option value="gold">🥇 Gold Member</option>
+                  <option value="platinum">💎 Platinum Member</option>
+                  <option value="diamond">👑 Diamond Member</option>
+                </select>
+
+                {/* Verification Filter */}
+                <select
+                  value={verificationFilter}
+                  onChange={(e) => {
+                    setVerificationFilter(e.target.value);
+                    setLevelsPage(1);
+                  }}
+                  className="border border-gray-200 bg-gray-50 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                >
+                  <option value="all">All Verification Statuses</option>
+                  <option value="verified">Email Verified Only</option>
+                  <option value="unverified">Unverified Only</option>
+                  <option value="phone">Has Phone Number</option>
+                  <option value="coa">Has COA Registration</option>
+                  <option value="vip">VIP Members Only</option>
+                </select>
+              </div>
+
+              <div className="text-xs text-gray-500 font-semibold">
+                Showing {filteredLevelsUsers.length} of {users.length} members
+              </div>
+            </div>
+
+            {/* Tab 2 Table */}
+            {loading ? (
+              <div className="bg-white rounded-3xl border border-gray-200 p-16 text-center shadow-sm">
+                <RefreshCw size={28} className="animate-spin mx-auto text-gray-400 mb-3" />
+                <div className="text-gray-500 font-medium text-sm">Loading levels database...</div>
+              </div>
+            ) : filteredLevelsUsers.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-gray-200 p-16 text-center shadow-sm">
+                <Award size={32} className="mx-auto text-gray-300 mb-3" />
+                <h3 className="text-lg font-bold text-gray-800">No members found</h3>
+                <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
+                  No members matched your level or verification filter.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[1100px]">
+                    <thead>
+                      <tr className="bg-gray-50/90 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3.5 text-center w-12">#</th>
+                        <th className="px-4 py-3.5 min-w-[220px]">Member</th>
+                        <th className="px-4 py-3.5 min-w-[190px]">User Level</th>
+                        <th className="px-4 py-3.5 min-w-[140px] text-center">Email Verified</th>
+                        <th className="px-4 py-3.5 min-w-[160px]">Phone Number</th>
+                        <th className="px-4 py-3.5 min-w-[160px]">COA Registration</th>
+                        <th className="px-4 py-3.5 min-w-[140px] text-center">VIP Status</th>
+                        <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[110px]">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-xs">
+                      {currentLevelsUsers.map((u, i) => {
+                        const globalIndex = (levelsPage - 1) * levelsPerPage + i + 1;
+                        const comp = calculateProfileCompletion(u);
+                        const tier = (u.badge_tier || comp.badgeTier || "bronze").toLowerCase();
+                        const badge = getBadgeDetails(tier as any, Boolean(u.is_vip));
+                        const isDiamond = tier === "diamond";
+
+                        return (
+                          <tr key={u.id} className="hover:bg-gray-50/80 transition group">
+                            <td className="px-4 py-3.5 text-center text-gray-400 font-medium">
+                              {globalIndex}
+                            </td>
+
+                            {/* Member info */}
+                            <td className="px-4 py-3.5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-black text-white font-bold flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+                                  {u.avatar_url ? (
+                                    <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span>{(u.full_name || u.display_name || u.username || "U").charAt(0).toUpperCase()}</span>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-bold text-gray-900 truncate">
+                                    {u.full_name || u.display_name || u.username}
+                                  </div>
+                                  <div className="text-[11px] text-gray-400 font-mono truncate">
+                                    @{u.username || "—"}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* User Level */}
+                            <td className="px-4 py-3.5">
+                              <span
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${badge.bg} ${badge.color} ${badge.border}`}
+                                title={`Profile Completion: ${comp.percentage}%`}
+                              >
+                                <span>{badge.icon}</span>
+                                <span>{badge.title}</span>
+                                <span className="text-[10px] opacity-75 font-semibold">({comp.percentage}%)</span>
+                              </span>
+                            </td>
+
+                            {/* Email Verified Toggle */}
+                            <td className="px-4 py-3.5 text-center">
+                              <button
+                                onClick={() => handleToggleUserVerified(u.id, Boolean(u.verified))}
+                                className={`px-2.5 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
+                                  u.verified
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                    : "bg-gray-100 text-gray-400 border-gray-200 hover:bg-gray-200"
+                                }`}
+                                title="Click to toggle email verified status"
+                              >
+                                {u.verified ? "✓ Verified" : "Unverified"}
+                              </button>
+                            </td>
+
+                            {/* Phone number */}
+                            <td className="px-4 py-3.5 text-gray-700">
+                              {u.phone ? (
+                                <div className="flex items-center gap-1.5 font-mono">
+                                  <span>{u.phone}</span>
+                                  <span className="text-emerald-600 text-[10px] font-bold">✓</span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-300 italic">Not added</span>
+                              )}
+                            </td>
+
+                            {/* COA Registration */}
+                            <td className="px-4 py-3.5">
+                              {u.coa_number ? (
+                                <span className="bg-blue-50 text-blue-800 border border-blue-200 px-2 py-0.5 rounded-lg font-mono text-[11px] font-semibold">
+                                  {u.coa_number}
+                                </span>
+                              ) : (
+                                <span className="text-gray-300 italic text-xs">Not provided</span>
+                              )}
+                            </td>
+
+                            {/* VIP Status */}
+                            <td className="px-4 py-3.5 text-center">
+                              {isDiamond ? (
+                                <button
+                                  onClick={() => handleToggleUserVip(u.id, Boolean(u.is_vip))}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold transition cursor-pointer border ${
+                                    u.is_vip
+                                      ? "bg-amber-100 text-amber-900 border-amber-300 shadow-2xs"
+                                      : "bg-white hover:bg-amber-50 text-amber-700 border-amber-300"
+                                  }`}
+                                  title={u.is_vip ? "VIP Active (Click to revoke)" : "Grant VIP Badge to this Diamond member"}
+                                >
+                                  <span>⭐</span>
+                                  <span>{u.is_vip ? "VIP Active" : "Grant VIP"}</span>
+                                </button>
+                              ) : (
+                                <span className="text-gray-300 text-[11px] italic">Diamond only</span>
+                              )}
+                            </td>
+
+                            {/* Actions (Sticky Right) */}
+                            <td className="px-4 py-3.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 transition shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
+                              <div className="flex items-center justify-end">
+                                <UserSettingsActionMenu
+                                  user={u}
+                                  onView={() => setSelectedUser(u)}
+                                  onDelete={() => handleDeleteUser(u)}
+                                  canDelete={isCEO && u.id !== loggedUser?.id}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Tab 2 Pagination */}
+                {filteredLevelsUsers.length > 0 && (
+                  <PaginationControls
+                    currentPage={levelsPage}
+                    totalPages={totalLevelsPages}
+                    itemsPerPage={levelsPerPage}
+                    totalItems={filteredLevelsUsers.length}
+                    onPageChange={(page) => {
+                      setLevelsPage(page);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    onItemsPerPageChange={(sz) => {
+                      setLevelsPerPage(sz);
+                      setLevelsPage(1);
+                    }}
+                    pageSizeOptions={[20, 50, 100]}
+                    itemLabel="members"
+                    className="p-4 border-t border-gray-100 bg-white"
+                  />
+                )}
+              </div>
+            )}
+          </div>
         )}
       </section>
 

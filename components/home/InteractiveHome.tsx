@@ -49,22 +49,46 @@ export default function InteractiveHome({
 
       {/* 2. PLATFORM STATISTICS */}
       <section className="py-6 px-6 lg:px-12 bg-black text-white">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
-          <div className="pt-4 md:pt-0">
-            <div className="text-4xl md:text-5xl font-bold mb-1">{stats?.jobs || 0}</div>
-            <div className="text-gray-400 font-medium">Jobs Available</div>
-          </div>
-          <div className="pt-4 md:pt-0">
-            <div className="text-4xl md:text-5xl font-bold mb-1">{stats?.internships || 0}</div>
-            <div className="text-gray-400 font-medium">Internship Opportunities</div>
-          </div>
-          <div className="pt-4 md:pt-0">
-            <div className="text-4xl md:text-5xl font-bold mb-1">{stats?.companies || 0}</div>
-            <div className="text-gray-400 font-medium">Companies Listed</div>
-          </div>
-          <div className="pt-4 md:pt-0">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-4 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
+          <Link 
+            href="/jobs" 
+            className="pt-4 md:pt-0 p-3 rounded-2xl hover:bg-white/10 transition-all duration-200 cursor-pointer group block"
+            title="Browse all Architecture Jobs"
+          >
+            <div className="text-4xl md:text-5xl font-bold mb-1 group-hover:scale-105 transition-transform">{stats?.jobs || 0}</div>
+            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-sm md:text-base">
+              <span>Jobs Available</span>
+              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span>
+            </div>
+          </Link>
+
+          <Link 
+            href="/internships" 
+            className="pt-4 md:pt-0 p-3 rounded-2xl hover:bg-white/10 transition-all duration-200 cursor-pointer group block"
+            title="Explore Architectural Internships"
+          >
+            <div className="text-4xl md:text-5xl font-bold mb-1 group-hover:scale-105 transition-transform">{stats?.internships || 0}</div>
+            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-sm md:text-base">
+              <span>Internship Opportunities</span>
+              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span>
+            </div>
+          </Link>
+
+          <Link 
+            href="/companies" 
+            className="pt-4 md:pt-0 p-3 rounded-2xl hover:bg-white/10 transition-all duration-200 cursor-pointer group block"
+            title="Explore Architecture Studios"
+          >
+            <div className="text-4xl md:text-5xl font-bold mb-1 group-hover:scale-105 transition-transform">{stats?.companies || 0}</div>
+            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-sm md:text-base">
+              <span>Companies Listed</span>
+              <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity">&rarr;</span>
+            </div>
+          </Link>
+
+          <div className="pt-4 md:pt-0 p-3 select-none">
             <div className="text-4xl md:text-5xl font-bold mb-1">{stats?.pageVisits ? stats.pageVisits.toLocaleString() : (stats?.users || 0)}</div>
-            <div className="text-gray-400 font-medium">Total Page Visits</div>
+            <div className="text-gray-400 font-medium text-sm md:text-base">Total Page Visits</div>
           </div>
         </div>
       </section>
@@ -140,7 +164,7 @@ export default function InteractiveHome({
       </section>
 
       {/* 4. COMPANIES SECTION */}
-      <section className="py-12 px-6 lg:px-12 bg-[#F5F6F8] w-full text-black border-y border-gray-200/70">
+      <section className="py-12 px-6 lg:px-12 bg-[#EEF0F4] w-full text-black border-y border-gray-200">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">Explore Companies</h2>
