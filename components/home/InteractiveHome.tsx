@@ -70,7 +70,7 @@ export default function InteractiveHome({
       </section>
 
       {/* 3. JOBS SECTION */}
-      <section className="py-8 px-6 lg:px-12 w-full">
+      <section className="py-12 px-6 lg:px-12 w-full bg-white text-black">
         <div className="max-w-7xl mx-auto">
 
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
@@ -140,12 +140,12 @@ export default function InteractiveHome({
       </section>
 
       {/* 4. COMPANIES SECTION */}
-      <section className="py-8 px-6 lg:px-12 bg-white w-full text-black">
+      <section className="py-12 px-6 lg:px-12 bg-[#F5F6F8] w-full text-black border-y border-gray-200/70">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-4 md:mb-0">Explore Companies</h2>
             
-            <div className="flex bg-gray-100 p-1 rounded-full w-fit border border-gray-200">
+            <div className="flex bg-white p-1 rounded-full w-fit border border-gray-200 shadow-xs">
               <button onClick={() => setCompanyTab("latest")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "latest" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Latest</button>
               <button onClick={() => setCompanyTab("most-jobs")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "most-jobs" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Most Jobs Posted</button>
             </div>
@@ -163,7 +163,7 @@ export default function InteractiveHome({
                   key={company.slug}
                   className={`bg-gray-50 hover:bg-gray-100 p-3 py-5 rounded-2xl flex flex-col items-center justify-center text-center transition group border border-transparent hover:border-gray-200 shadow-sm aspect-auto ${index === 5 ? "lg:hidden" : ""}`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center mb-2 overflow-hidden shadow-sm">
+                  <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3 overflow-hidden shadow-xs border border-gray-100 group-hover:scale-105 transition-transform">
                     {company.logo_url ? (
                       <img src={company.logo_url} alt={company.firm_name} className="w-full h-full object-cover" />
                     ) : (
@@ -186,19 +186,19 @@ export default function InteractiveHome({
       </section>
       
       {/* 5. ARCHITECTURE SERVICES (White Background) */}
-      <section className="py-8 px-6 lg:px-12 bg-white text-black w-full border-b border-gray-100">
+      <section className="py-12 px-6 lg:px-12 bg-white text-black w-full">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">Architecture Services</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link href="/contact?service=software-tutor" className="bg-gray-50 hover:bg-gray-100 p-5 py-6 rounded-xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
+            <Link href="/contact?service=software-tutor" className="bg-gradient-to-b from-gray-50/80 to-white hover:to-gray-50 p-6 py-8 rounded-2xl transition-all duration-200 border border-gray-200 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.07)] hover:-translate-y-0.5 hover:border-gray-300 flex flex-col justify-center text-center group">
               <h3 className="font-semibold text-lg mb-2 text-gray-900">Hire a Software Tutor</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Master BIM, CAD, and rendering tools with expert tutors.</p>
             </Link>
-            <Link href="/contact?service=freelance-architect" className="bg-gray-50 hover:bg-gray-100 p-5 py-6 rounded-xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
+            <Link href="/contact?service=freelance-architect" className="bg-gradient-to-b from-gray-50/80 to-white hover:to-gray-50 p-6 py-8 rounded-2xl transition-all duration-200 border border-gray-200 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.07)] hover:-translate-y-0.5 hover:border-gray-300 flex flex-col justify-center text-center group">
               <h3 className="font-semibold text-lg mb-2 text-gray-900">Hire an Architect</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Find top-tier freelance architects for your projects.</p>
             </Link>
-            <Link href="/contact?service=portfolio-review" className="bg-gray-50 hover:bg-gray-100 p-5 py-6 rounded-xl transition border border-gray-200 hover:border-gray-300 flex flex-col justify-center text-center shadow-sm hover:shadow-md">
+            <Link href="/contact?service=portfolio-review" className="bg-gradient-to-b from-gray-50/80 to-white hover:to-gray-50 p-6 py-8 rounded-2xl transition-all duration-200 border border-gray-200 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.07)] hover:-translate-y-0.5 hover:border-gray-300 flex flex-col justify-center text-center group">
               <h3 className="font-semibold text-lg mb-2 text-gray-900">Get your portfolio critiqued ready</h3>
               <p className="text-gray-600 text-sm leading-relaxed">Get expert feedback to help you land your dream job.</p>
             </Link>
@@ -218,55 +218,55 @@ export default function InteractiveHome({
       </section>
 
       {/* 6. CONNECT WITH US */}
-      <section className="py-10 px-6 lg:px-12 bg-white text-center w-full border-t border-gray-100">
+      <section className="py-12 px-6 lg:px-12 bg-white text-center w-full">
         <h2 className="text-2xl font-bold text-gray-900 mb-5">Follow Us</h2>
         <div className="flex flex-wrap justify-center gap-6">
           {siteSettings?.whatsapp_channel_url ? (
-            <a href={siteSettings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-green-600 font-medium">
+            <a href={siteSettings.whatsapp_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-green-600 font-medium">
               <MessageCircle size={20} /> WhatsApp
             </a>
           ) : (
-            <Link href="/unavailable?service=WhatsApp" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-green-600 font-medium">
+            <Link href="/unavailable?service=WhatsApp" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-green-600 font-medium">
               <MessageCircle size={20} /> WhatsApp
             </Link>
           )}
 
           {siteSettings?.instagram ? (
-            <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-pink-600 font-medium">
+            <a href={siteSettings.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-pink-600 font-medium">
               <InstagramIcon size={20} /> Instagram
             </a>
           ) : (
-            <Link href="/unavailable?service=Instagram" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-pink-600 font-medium">
+            <Link href="/unavailable?service=Instagram" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-pink-600 font-medium">
               <InstagramIcon size={20} /> Instagram
             </Link>
           )}
 
           {siteSettings?.facebook ? (
-            <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-800 font-medium">
+            <a href={siteSettings.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-800 font-medium">
               <FacebookIcon size={20} /> Facebook
             </a>
           ) : (
-            <Link href="/unavailable?service=Facebook" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-800 font-medium">
+            <Link href="/unavailable?service=Facebook" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-800 font-medium">
               <FacebookIcon size={20} /> Facebook
             </Link>
           )}
 
           {siteSettings?.twitter ? (
-            <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-400 font-medium">
+            <a href={siteSettings.twitter} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-400 font-medium">
               <TwitterIcon size={20} /> X
             </a>
           ) : (
-            <Link href="/unavailable?service=X" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-400 font-medium">
+            <Link href="/unavailable?service=X" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-400 font-medium">
               <TwitterIcon size={20} /> X
             </Link>
           )}
 
           {siteSettings?.telegram_channel_url ? (
-            <a href={siteSettings.telegram_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-500 font-medium">
+            <a href={siteSettings.telegram_channel_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-500 font-medium">
               <Send size={20} /> Telegram
             </a>
           ) : (
-            <Link href="/unavailable?service=Telegram" className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-6 py-3 rounded-full transition text-gray-700 hover:text-blue-500 font-medium">
+            <Link href="/unavailable?service=Telegram" className="flex items-center gap-3 bg-white hover:bg-gray-50 border border-gray-200 px-6 py-3 rounded-full transition-all duration-200 text-gray-700 shadow-xs hover:shadow-sm hover:-translate-y-0.5 hover:text-blue-500 font-medium">
               <Send size={20} /> Telegram
             </Link>
           )}

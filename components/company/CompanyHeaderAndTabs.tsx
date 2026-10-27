@@ -36,6 +36,7 @@ import ClaimCompanyModal from "./ClaimCompanyModal";
 import LoginOrRegisterClaimModal from "./LoginOrRegisterClaimModal";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { formatExperience } from "@/utils/formatJobDetails";
+import { calculateCompanyLevel } from "@/utils/companyLevel";
 
 interface CompanyHeaderAndTabsProps {
   company: any;
