@@ -10,7 +10,15 @@ import {
   LinkedInBrandIcon,
   TelegramBrandIcon,
   InstagramBrandIcon,
+  XBrandIcon,
 } from "@/components/icons/BrandIcons";
+
+const ensureHttp = (url?: string) => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+};
 
 export default function Footer() {
   const router = useRouter();
@@ -114,7 +122,7 @@ export default function Footer() {
           <div className="mt-5 flex flex-wrap items-center gap-3.5 text-gray-400">
             {settings?.whatsapp_channel_url && (
               <a
-                href={settings.whatsapp_channel_url}
+                href={ensureHttp(settings.whatsapp_channel_url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition hover:scale-110 transform"
@@ -125,7 +133,7 @@ export default function Footer() {
             )}
             {settings?.facebook && (
               <a
-                href={settings.facebook}
+                href={ensureHttp(settings.facebook)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition hover:scale-110 transform"
@@ -134,9 +142,20 @@ export default function Footer() {
                 <FacebookBrandIcon size={24} />
               </a>
             )}
+            {settings?.twitter && (
+              <a
+                href={ensureHttp(settings.twitter)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-80 transition hover:scale-110 transform"
+                title="X / Twitter"
+              >
+                <XBrandIcon size={24} />
+              </a>
+            )}
             {settings?.linkedin && (
               <a
-                href={settings.linkedin}
+                href={ensureHttp(settings.linkedin)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition hover:scale-110 transform"
@@ -147,7 +166,7 @@ export default function Footer() {
             )}
             {settings?.website_url && (
               <a
-                href={settings.website_url}
+                href={ensureHttp(settings.website_url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition hover:scale-110 transform"
@@ -158,7 +177,7 @@ export default function Footer() {
             )}
             {settings?.instagram && (
               <a
-                href={settings.instagram}
+                href={ensureHttp(settings.instagram)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition hover:scale-110 transform"

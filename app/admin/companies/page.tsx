@@ -44,18 +44,19 @@ function AdminCompaniesContent() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Main Tabs: "all" | "badges" | "claims" | "submissions"
-  const [activeMainTab, setActiveMainTab] = useState<"all" | "badges" | "claims" | "submissions">(
-    urlTab === "badges" ? "badges" : urlTab === "claims" ? "claims" : urlTab === "submissions" ? "submissions" : "all"
+  const [activeMainTab, setActiveMainTab] = useState<"all" | "badges" | "claims" | "submissions" | "trash">(
+    urlTab === "badges" ? "badges" : urlTab === "claims" ? "claims" : urlTab === "submissions" ? "submissions" : urlTab === "trash" ? "trash" : "all"
   );
 
   useEffect(() => {
     if (urlTab === "badges") setActiveMainTab("badges");
     else if (urlTab === "claims") setActiveMainTab("claims");
     else if (urlTab === "submissions") setActiveMainTab("submissions");
+    else if (urlTab === "trash") setActiveMainTab("trash");
     else if (urlTab === "all") setActiveMainTab("all");
   }, [urlTab]);
 
-  const handleTabSwitch = (tab: "all" | "badges" | "claims" | "submissions") => {
+  const handleTabSwitch = (tab: "all" | "badges" | "claims" | "submissions" | "trash") => {
     setActiveMainTab(tab);
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set("tab", tab);
@@ -98,6 +99,15 @@ function AdminCompaniesContent() {
   // Tab 4 (Submissions) Pagination
   const [submissionsPage, setSubmissionsPage] = useState(1);
   const [submissionsPerPage, setSubmissionsPerPage] = useState(20);
+
+  // Tab 5 (Trash) Pagination
+  const [trashPage, setTrashPage] = useState(1);
+  const [trashPerPage, setTrashPerPage] = useState(20);
+
+  // Merge modal state
+  const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+  const [mergeSourceId, setMergeSourceId] = useState("");
+  const [mergeTargetId, setMergeTargetId] = useState("");
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -165,29 +175,22 @@ function AdminCompaniesContent() {
           const name = job.firm_name;
           if (!name) return;
 
-          if (!grouped[name]) {
-            grouped[name] = {
-              id: null,
-              firm_name: name,
-              city: job.city || "",
-              state: job.state || "",
-              organization_type: job.organization_type || "Architecture Firm",
-              is_active: false,
-              created_by: job.author_id,
-              created_at: job.posted_date,
-              logo_url: null,
-              creatorProfile: job.author_id ? profilesMap[job.author_id] : null,
-              totalJobs: 0,
-              activeJobs: 0,
-              isFromCompaniesTable: false,
-              status: "published",
-            };
+          // Match by company_id first or by firm_name
+          let targetComp = null;
+          if (job.company_id) {
+            targetComp = Object.values(grouped).find((c: any) => c.id === job.company_id);
+          }
+          if (!targetComp && grouped[name]) {
+            targetComp = grouped[name];
           }
 
-          grouped[name].totalJobs += 1;
-          if (job.status === "published") {
-            grouped[name].activeJobs += 1;
+          if (targetComp) {
+            targetComp.totalJobs += 1;
+            if (job.status === "published") {
+              targetComp.activeJobs += 1;
+            }
           }
+          // Do NOT create ghost companies if not in companies table!
         });
       }
 
@@ -265,26 +268,97 @@ function AdminCompaniesContent() {
     }
   };
 
-  // Delete
+  // Soft-Delete (Move to 7-Day Trash)
   const handleDeleteCompany = async (company: any) => {
-    if (company.totalJobs > 0 || company.activeJobs > 0) {
-      alert("Warning: this company has jobs published. Delete the jobs before removing the company.");
-      return;
-    }
-
-    if (!confirm(`Are you sure you want to delete "${company.firm_name}"?`)) return;
-
     if (!company.id) {
-      alert("This company exists only via jobs. Remove the jobs directly from the Jobs page.");
+      alert("Cannot delete this company record.");
       return;
     }
 
-    const { error } = await supabase.from("companies").delete().eq("id", company.id);
+    if (!confirm(`Move "${company.firm_name}" to Trash? It will be safely held in the Recycle Bin for 7 days before permanent deletion.`)) return;
+
+    const { error } = await supabase
+      .from("companies")
+      .update({
+        status: "trash",
+        is_active: false,
+        deleted_at: new Date().toISOString(),
+        deleted_by: currentUser?.id || null,
+      })
+      .eq("id", company.id);
+
     if (!error) {
-      showToast(`Company "${company.firm_name}" deleted.`);
+      showToast(`Studio "${company.firm_name}" moved to Trash.`);
       fetchCompaniesData();
     } else {
-      alert("Error deleting company: " + error.message);
+      alert("Error moving company to Trash: " + error.message);
+    }
+  };
+
+  const handleRestoreCompany = async (company: any) => {
+    const { error } = await supabase
+      .from("companies")
+      .update({
+        status: "published",
+        is_active: true,
+        deleted_at: null,
+        deleted_by: null,
+      })
+      .eq("id", company.id);
+
+    if (!error) {
+      showToast(`Studio "${company.firm_name}" restored to active directory.`);
+      fetchCompaniesData();
+    } else {
+      alert("Error restoring company: " + error.message);
+    }
+  };
+
+  const handlePermanentDeleteCompany = async (company: any) => {
+    if (!confirm(`Are you sure you want to PERMANENTLY delete "${company.firm_name}"? This action cannot be undone.`)) return;
+    const { error } = await supabase.from("companies").delete().eq("id", company.id);
+    if (!error) {
+      showToast(`Studio "${company.firm_name}" permanently deleted.`);
+      fetchCompaniesData();
+    } else {
+      alert("Error permanently deleting: " + error.message);
+    }
+  };
+
+  const handleMergeStudios = async () => {
+    if (!mergeSourceId || !mergeTargetId || mergeSourceId === mergeTargetId) {
+      alert("Please select two distinct studios to merge.");
+      return;
+    }
+    const source = companies.find((c) => c.id === mergeSourceId);
+    const target = companies.find((c) => c.id === mergeTargetId);
+    if (!source || !target) return;
+
+    if (!confirm(`Merge "${source.firm_name}" into "${target.firm_name}"?\n\nAll associated jobs will be reassigned to "${target.firm_name}" and the duplicate "${source.firm_name}" will be deleted.`)) return;
+
+    try {
+      // 1. Move all jobs
+      const { error: jobErr } = await supabase
+        .from("jobs")
+        .update({
+          company_id: target.id,
+          firm_name: target.firm_name,
+        })
+        .or(`company_id.eq.${source.id},firm_name.eq.${source.firm_name}`);
+
+      if (jobErr) console.warn("Job merge update warning:", jobErr.message);
+
+      // 2. Delete source duplicate
+      const { error: compErr } = await supabase.from("companies").delete().eq("id", source.id);
+      if (compErr) throw compErr;
+
+      showToast(`Successfully merged "${source.firm_name}" into "${target.firm_name}"!`);
+      setIsMergeModalOpen(false);
+      setMergeSourceId("");
+      setMergeTargetId("");
+      fetchCompaniesData();
+    } catch (err: any) {
+      alert("Failed to merge studios: " + (err.message || "Unknown error"));
     }
   };
 
@@ -458,7 +532,7 @@ function AdminCompaniesContent() {
 
   // Filtered for Tab 1 (All Companies)
   const filteredCompaniesTab1 = useMemo(() => {
-    let list = [...companies].filter((c) => c.status !== "pending_verification");
+    let list = [...companies].filter((c) => c.status !== "pending_verification" && c.status !== "trash");
 
     if (filterMode === "missing-logo") {
       list = list.filter((c) => {
@@ -534,7 +608,7 @@ function AdminCompaniesContent() {
   // Filtered for Tab 2 (Badges)
   const filteredBadgesCompanies = useMemo(() => {
     return companies
-      .filter((c) => c.status !== "pending_verification")
+      .filter((c) => c.status !== "pending_verification" && c.status !== "trash")
       .filter((c) => {
         const matchesSearch =
           !badgesSearch ||
@@ -579,6 +653,18 @@ function AdminCompaniesContent() {
     );
   }, [pendingSubmissions, submissionsPage, submissionsPerPage]);
 
+  const trashCompanies = useMemo(() => {
+    return companies.filter((c) => c.status === "trash");
+  }, [companies]);
+
+  const totalTrashPages = Math.ceil(trashCompanies.length / trashPerPage);
+  const paginatedTrashCompanies = useMemo(() => {
+    return trashCompanies.slice(
+      (trashPage - 1) * trashPerPage,
+      trashPage * trashPerPage
+    );
+  }, [trashCompanies, trashPage, trashPerPage]);
+
   const tierColors: Record<string, { bg: string; text: string; icon: string }> = {
     bronze: { bg: "bg-amber-100", text: "text-amber-800", icon: "🥉" },
     silver: { bg: "bg-slate-200", text: "text-slate-800", icon: "🥈" },
@@ -603,6 +689,13 @@ function AdminCompaniesContent() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMergeModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              title="Merge duplicate studios into a single master profile"
+            >
+              <span>🔀 Merge Studios</span>
+            </button>
             <Link
               href="/companies/new"
               target="_blank"
@@ -687,6 +780,18 @@ function AdminCompaniesContent() {
                 {pendingSubmissions.length}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => handleTabSwitch("trash")}
+            className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+              activeMainTab === "trash"
+                ? "border-red-600 text-red-600 font-extrabold"
+                : "border-transparent text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <Trash2 size={16} />
+            <span>Recycle Bin ({trashCompanies.length})</span>
           </button>
         </div>
 
@@ -1396,6 +1501,185 @@ function AdminCompaniesContent() {
           )}
         </div>
       )}
+        {/* ======================================================== */}
+        {/* TAB 5: RECYCLE BIN (7-DAY TRASH)                         */}
+        {/* ======================================================== */}
+        {activeMainTab === "trash" && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-extrabold text-gray-900">
+                  Studios Recycle Bin (7-Day Trash)
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                  Deleted studios are kept here for 7 days before permanent deletion. You can restore them anytime.
+                </p>
+              </div>
+            </div>
+
+            {trashCompanies.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-200">
+                <Trash2 size={40} className="text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-bold text-gray-800 mb-1">Recycle Bin is Empty</h3>
+                <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto">
+                  No studios currently in trash. When you delete a studio, it will appear here safely for 7 days.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {paginatedTrashCompanies.map((comp: any) => {
+                    const deletedDate = comp.deleted_at ? new Date(comp.deleted_at) : new Date();
+                    const daysRemaining = Math.max(
+                      0,
+                      7 - Math.floor((Date.now() - deletedDate.getTime()) / (1000 * 60 * 60 * 24))
+                    );
+
+                    return (
+                      <div
+                        key={comp.id}
+                        className="bg-white rounded-3xl p-6 border border-red-200 bg-red-50/15 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+                      >
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className="w-12 h-12 rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+                            {comp.logo_url ? (
+                              <img src={comp.logo_url} alt={comp.firm_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <Building2 size={20} className="text-gray-400" />
+                            )}
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-lg font-extrabold text-gray-900">
+                                {comp.firm_name}
+                              </h3>
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                                {daysRemaining} days left before auto-purge
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-gray-500">
+                              {[comp.city, comp.state].filter(Boolean).join(", ") || "Location not set"} • Deleted on {formatDate(comp.deleted_at)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => handleRestoreCompany(comp)}
+                            className="px-4 py-2 bg-black hover:bg-gray-800 text-white font-bold text-xs rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                          >
+                            <RefreshCw size={13} />
+                            <span>Restore Studio</span>
+                          </button>
+                          <button
+                            onClick={() => handlePermanentDeleteCompany(comp)}
+                            className="px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1"
+                          >
+                            <Trash2 size={13} />
+                            <span>Delete Permanently</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <PaginationControls
+                  currentPage={trashPage}
+                  totalPages={totalTrashPages}
+                  itemsPerPage={trashPerPage}
+                  totalItems={trashCompanies.length}
+                  onPageChange={setTrashPage}
+                  onItemsPerPageChange={setTrashPerPage}
+                  pageSizeOptions={[20, 50, 100]}
+                  itemLabel="studios in trash"
+                  className="mt-6"
+                />
+              </>
+            )}
+          </div>
+        )}
+
+        {/* MERGE STUDIOS MODAL */}
+        {isMergeModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-extrabold text-gray-900">🔀 Merge Duplicate Studios</h3>
+                <button
+                  onClick={() => setIsMergeModalOpen(false)}
+                  className="text-gray-400 hover:text-black p-1 cursor-pointer"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <p className="text-xs sm:text-sm text-gray-600 mb-6 leading-relaxed">
+                Combine two duplicate studio profiles into one. All job posts attached to the duplicate studio will be safely reassigned to the master profile.
+              </p>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-xs font-bold text-red-600 uppercase tracking-wider mb-1.5">
+                    1. Duplicate Studio to Remove (Jobs will be moved)
+                  </label>
+                  <select
+                    value={mergeSourceId}
+                    onChange={(e) => setMergeSourceId(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    <option value="">-- Select Duplicate Studio --</option>
+                    {companies
+                      .filter((c) => c.status !== "trash")
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.firm_name} ({[c.city, c.state].filter(Boolean).join(", ") || "No location"}) [ID: {c.id}]
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1.5">
+                    2. Master Studio to Keep (Receives all jobs)
+                  </label>
+                  <select
+                    value={mergeTargetId}
+                    onChange={(e) => setMergeTargetId(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs sm:text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    <option value="">-- Select Master Studio to Keep --</option>
+                    {companies
+                      .filter((c) => c.status !== "trash" && c.id !== mergeSourceId)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.firm_name} ({[c.city, c.state].filter(Boolean).join(", ") || "No location"}) [ID: {c.id}]
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleMergeStudios}
+                  disabled={!mergeSourceId || !mergeTargetId}
+                  className="flex-1 py-3 px-4 bg-black hover:bg-gray-800 disabled:opacity-40 text-white font-bold rounded-xl text-sm transition shadow-sm cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Confirm & Merge Studios
+                </button>
+                <button
+                  onClick={() => setIsMergeModalOpen(false)}
+                  className="py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       <Footer />

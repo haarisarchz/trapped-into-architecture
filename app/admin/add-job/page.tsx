@@ -9,6 +9,8 @@ import ImageUploader from "@/components/ImageUploader";
 import { useState } from "react";
 import { useEffect } from "react";
 import ApiServerManager from "@/components/ApiServerManager";
+import { AlertCircle } from "lucide-react";
+import { findMatchingCompany, MatchResult } from "@/utils/companyMatcher";
 
 
 const compressImage = async (file: File): Promise<File> => {
@@ -551,6 +553,10 @@ const [initialStatus, setInitialStatus] = useState<string | null>(null);
   const router = useRouter();
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [allCompaniesList, setAllCompaniesList] = useState<any[]>([]);
+  const [duplicateMatch, setDuplicateMatch] = useState<MatchResult | null>(null);
+  const [showDuplicateGateModal, setShowDuplicateGateModal] = useState(false);
+  const [pendingPublishStatus, setPendingPublishStatus] = useState<"draft" | "scheduled" | "published" | "save_company" | null>(null);
   const [isCompanyProfileDirty, setIsCompanyProfileDirty] = useState(false);
 
   const [existingFirms, setExistingFirms] = useState<any[]>([]);
@@ -1215,16 +1221,19 @@ const [uploadSuccess, setUploadSuccess] =
   const fetchCompanies = async () => {
     const { data, error } = await supabase
       .from("companies")
-      .select("firm_name");
+      .select("id, firm_name, slug, city, state, logo_url, website, email, phone, organization_type, description, principal_architect, address, neighborhood, facebook, instagram, linkedin, whatsapp, twitter, employee_size, founded_year")
+      .neq("status", "trash")
+      .order("firm_name");
 
     if (error) {
-      console.log(error);
+      console.log("Error loading companies:", error);
       return;
     }
 
-    setExistingFirms(
-      data.map((company) => company.firm_name)
-    );
+    if (data) {
+      setAllCompaniesList(data);
+      setExistingFirms(data.map((company) => company.firm_name));
+    }
   };
 
   fetchCompanies();
@@ -1405,13 +1414,109 @@ const handleSchedule = async () => {
     }
   };
 
-const handlePublishJob = async (
-  status: "draft" | "scheduled" | "published" = "published"
-) => {
-  setActionLoading(status);
+  const handleSaveCompany = async () => {
+    if (!firmName || !firmName.trim()) {
+      alert("Please enter a company name.");
+      return;
+    }
 
-  try {
-              let authorId = (await supabase.auth.getUser()).data.user?.id;
+    // Pre-save duplicate check
+    if (!selectedCompanyId) {
+      const match = findMatchingCompany(firmName.trim(), allCompaniesList);
+      if (match) {
+        if (match.isExact) {
+          setSelectedCompanyId(match.matchedCompany.id);
+          return executeSaveCompany(match.matchedCompany.id);
+        } else {
+          setDuplicateMatch(match);
+          setPendingPublishStatus("save_company");
+          setShowDuplicateGateModal(true);
+          return;
+        }
+      }
+    }
+
+    return executeSaveCompany();
+  };
+
+  const handleConfirmUseExistingStudio = async () => {
+    if (!duplicateMatch) return;
+    const existing = duplicateMatch.matchedCompany;
+
+    setSelectedCompanyId(existing.id);
+    setFirmName(existing.firm_name);
+    setOrganizationType(normalizeOrganizationType(existing.organization_type));
+    setArea(existing.neighborhood || "");
+    setCity(existing.city || "");
+    setState(existing.state || "");
+    setCountry(existing.country || "India");
+    setCompanyLogo(existing.logo_url || "");
+    setCompanyAddress(existing.address || "");
+    setCompanyDescription(existing.description || "");
+    setCompanyWebsite(existing.website || "");
+    setCompanyEmail(existing.email || "");
+    setCompanyPhone(existing.phone || "");
+    setCompanyFacebook(existing.facebook || "");
+    setCompanyInstagram(existing.instagram || "");
+    setCompanyLinkedin(existing.linkedin || "");
+    setCompanyWhatsapp(existing.whatsapp || "");
+    setCompanyTwitter(existing.twitter || "");
+    setPrincipalArchitect(existing.principal_architect || "");
+    setEmployeeSize(existing.employee_size || "");
+    setFoundedYear(existing.founded_year?.toString() || "");
+    setIsCompanyProfileDirty(false);
+
+    const pending = pendingPublishStatus;
+    setShowDuplicateGateModal(false);
+    setDuplicateMatch(null);
+    setPendingPublishStatus(null);
+
+    if (pending === "save_company") {
+      alert(`Linked to existing studio "${existing.firm_name}"!`);
+    } else if (pending) {
+      executePublishJob(pending, existing.id);
+    }
+  };
+
+  const handleRejectDuplicate = () => {
+    setShowDuplicateGateModal(false);
+    setDuplicateMatch(null);
+    setPendingPublishStatus(null);
+    setActionLoading(null);
+    setIsSavingCompany(false);
+  };
+
+  const handlePublishJob = async (
+    status: "draft" | "scheduled" | "published" = "published"
+  ) => {
+    // PRE-PUBLISH DUPLICATE GUARD
+    if (!selectedCompanyId && firmName && firmName.trim()) {
+      const match = findMatchingCompany(firmName.trim(), allCompaniesList);
+      if (match) {
+        if (match.isExact) {
+          setSelectedCompanyId(match.matchedCompany.id);
+          return executePublishJob(status, match.matchedCompany.id);
+        } else {
+          setDuplicateMatch(match);
+          setPendingPublishStatus(status);
+          setShowDuplicateGateModal(true);
+          setActionLoading(null);
+          return;
+        }
+      }
+    }
+
+    return executePublishJob(status);
+  };
+
+  const executePublishJob = async (
+    status: "draft" | "scheduled" | "published" = "published",
+    overrideCompanyId?: any
+  ) => {
+    setActionLoading(status);
+
+    try {
+      let authorId = (await supabase.auth.getUser()).data.user?.id;
         if (!authorId) {
           const activeUser = JSON.parse(localStorage.getItem("currentUser") || "null");
           authorId = activeUser?.id || null;
@@ -1424,7 +1529,7 @@ const handlePublishJob = async (
              }
           }
         }
-      let currentCompanyId = selectedCompanyId;
+      let currentCompanyId = overrideCompanyId || selectedCompanyId;
 
     if (firmName) {
       const companyPayload = {
@@ -3299,6 +3404,60 @@ const handleSmartExtraction = async () => {
           <span className="font-bold text-lg tracking-tight">Smart Job Upload</span>
         </button>
       </div>
+
+      {/* PRE-PUBLISH DUPLICATE GATEKEEPER MODAL */}
+      {showDuplicateGateModal && duplicateMatch && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-amber-200">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-4">
+              <AlertCircle size={28} />
+            </div>
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
+              Studio Already Exists or Similar Practice Found
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 mb-4 leading-relaxed">
+              To avoid creating duplicate directory entries and splitting jobs between two profiles, publication is paused because a matching studio already exists:
+            </p>
+
+            <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 mb-5 space-y-2 text-xs sm:text-sm">
+              <div className="flex justify-between items-start">
+                <span className="text-gray-500 font-medium">You entered:</span>
+                <span className="font-bold text-gray-900 text-right">{firmName}</span>
+              </div>
+              <div className="border-t border-amber-200/60 pt-2 flex justify-between items-start">
+                <span className="text-gray-500 font-medium">Existing Studio:</span>
+                <div className="text-right">
+                  <span className="font-extrabold text-black block">{duplicateMatch.matchedCompany.firm_name}</span>
+                  <span className="text-xs text-gray-500 block">
+                    {[duplicateMatch.matchedCompany.city, duplicateMatch.matchedCompany.state].filter(Boolean).join(", ") || "Location not set"}
+                  </span>
+                </div>
+              </div>
+              <div className="border-t border-amber-200/60 pt-2 flex justify-between items-center text-xs text-amber-800 font-semibold">
+                <span>Match Reason:</span>
+                <span className="bg-amber-200/70 px-2 py-0.5 rounded-md">{duplicateMatch.reason}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={handleConfirmUseExistingStudio}
+                className="w-full py-3 px-4 bg-black hover:bg-gray-800 text-white font-bold rounded-xl text-sm transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>✓ Yes, Use Existing Studio</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectDuplicate}
+                className="w-full py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-xs transition cursor-pointer"
+              >
+                <span>✕ No, Change Studio Name / Fix Spelling</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -51,14 +51,22 @@ const LockedField = ({ label, value, onChange, fieldKey, type = "text", subLabel
         if (onChange) onChange(localValue);
         return;
      }
+     let finalVal = localValue;
+     if (type === "url" && finalVal && typeof finalVal === "string") {
+       finalVal = finalVal.trim();
+       if (finalVal && !/^https?:\/\//i.test(finalVal)) {
+         finalVal = "https://" + finalVal;
+       }
+     }
      setSaving(true);
-     const { error } = await supabase.from('site_settings').update({ [fieldKey]: localValue }).eq('id', 'global');
+     const { error } = await supabase.from('site_settings').update({ [fieldKey]: finalVal }).eq('id', 'global');
      setSaving(false);
      if (error) {
        alert("Failed to save: " + error.message);
        return;
      }
-     if (onChange) onChange(localValue);
+     setLocalValue(finalVal);
+     if (onChange) onChange(finalVal);
      setIsEditing(false);
   };
   
