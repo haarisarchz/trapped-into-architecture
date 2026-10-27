@@ -1329,7 +1329,7 @@ const handleSchedule = async () => {
 
   const [isSavingCompany, setIsSavingCompany] = useState(false);
 
-  const handleSaveCompany = async (e?: any) => {
+  const executeSaveCompany = async (overrideCompanyId?: any) => {
     if (e) e.preventDefault();
     if (!firmName) {
       alert("Organization name is required to save company details.");
@@ -1372,8 +1372,9 @@ const handleSchedule = async () => {
         founded_year: foundedYear ? parseInt(foundedYear) : null
       };
 
-      if (selectedCompanyId) {
-        const { error } = await supabase.from("companies").update(companyPayload).eq("id", selectedCompanyId);
+      const targetCompId = overrideCompanyId || selectedCompanyId;
+      if (targetCompId) {
+        const { error } = await supabase.from("companies").update(companyPayload).eq("id", targetCompId);
         if (error) throw error;
         alert("Company details updated successfully!");
         setIsCompanyProfileDirty(false);

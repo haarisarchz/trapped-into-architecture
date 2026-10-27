@@ -407,8 +407,27 @@ function EditCompanyContent() {
       // Reset AI field tracking once saved
       setAiFields({});
 
-      alert("Company details updated successfully!");
-      router.push("/admin/companies");
+      const userStr = localStorage.getItem("currentUser");
+      const loggedUser = userStr ? JSON.parse(userStr) : null;
+      const role = (loggedUser?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      const isPlatformAdmin = ["ceo", "superadmin", "admin", "jobadmin"].includes(role);
+
+      if (!isPlatformAdmin) {
+        // Mark as pending verification for platform admin review
+        await supabase
+          .from("companies")
+          .update({
+            status: "pending_verification",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", companyId);
+
+        alert("Your studio profile edits have been submitted for admin verification! They will be published live once verified.");
+        router.push(`/companies/${companySlug || ""}`);
+      } else {
+        alert("Company details updated successfully!");
+        router.push("/admin/companies");
+      }
     } catch (err: any) {
       console.error(err.message);
       alert("Failed to update company details: " + (err.message || JSON.stringify(err)));
