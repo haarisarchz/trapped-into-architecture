@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/utils/formatDate";
 import Link from "next/link";
-import { Bookmark, BookmarkCheck } from "lucide-react";
+import { Bookmark, BookmarkCheck, ChevronLeft } from "lucide-react";
 import { generateJobUrl, decodeUuid, generateCompanySlug } from "@/utils/jobUrl";
 import ShareButtons from "@/components/ShareButtons";
 import SaveButton from "@/components/SaveButton";
@@ -203,14 +203,25 @@ export default async function JobDetailsPage({
 
       <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
 
-        {/* BREADCRUMB */}
-        <nav className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 mb-2">
-          <Link href="/" className="hover:text-black transition">Home</Link>
-          <span>/</span>
-          <Link href="/jobs" className="hover:text-black transition">Jobs</Link>
-          <span>/</span>
-          <span className="text-black font-medium truncate">{job.firm_name} is hiring {job.position} in {job.city}, {job.state}</span>
-        </nav>
+        {/* TOP ACTION BAR: VIEW ALL JOBS & BREADCRUMB */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <Link
+            href="/jobs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 hover:text-black rounded-xl text-xs font-bold transition shadow-2xs group w-fit cursor-pointer"
+          >
+            <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+            <span>View All Jobs</span>
+          </Link>
+
+          {/* BREADCRUMB */}
+          <nav className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 overflow-hidden truncate">
+            <Link href="/" className="hover:text-black transition">Home</Link>
+            <span>/</span>
+            <Link href="/jobs" className="hover:text-black transition">Jobs</Link>
+            <span>/</span>
+            <span className="text-black font-medium truncate">{job.firm_name} is hiring {job.position} in {job.city}, {job.state}</span>
+          </nav>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
 

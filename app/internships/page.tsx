@@ -4,6 +4,7 @@
 import Navbar from "@/components/Navbar";
 import JobCard from "@/components/Jobcard";
 import Footer from "@/components/Footer";
+import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase";
 
 import {
@@ -46,7 +47,7 @@ function InternshipsPageContent() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(24);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
 
   // Helper for aggregating counts
   const getAggregatedList = (items: any[], key: string, additionalFilter: (item: any) => boolean = () => true) => {
@@ -656,34 +657,24 @@ function InternshipsPageContent() {
             </div>
 
             {/* PAGINATION */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-gray-200 mt-10 pt-6">
-                <span className="text-sm text-gray-500">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setCurrentPage((p) => Math.max(1, p - 1));
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition bg-white"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCurrentPage((p) => Math.min(totalPages, p + 1));
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition bg-white"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+            {filteredJobs.length > 0 && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                itemsPerPage={itemsPerPage}
+                totalItems={filteredJobs.length}
+                onPageChange={(page) => {
+                  setCurrentPage(page);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                onItemsPerPageChange={(sz) => {
+                  setItemsPerPage(sz);
+                  setCurrentPage(1);
+                }}
+                pageSizeOptions={[20, 50, 100]}
+                itemLabel="internships"
+                className="mt-8"
+              />
             )}
           </div>
         </div>

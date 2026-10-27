@@ -243,6 +243,7 @@ export async function GET(request: Request) {
     let periodSaves = 0;
     let adminSharesCount = 0;
     let candidateSharesCount = 0;
+    let unregisteredSharesCount = 0;
     let totalLifetimeShares = 0;
     let totalLifetimeSaves = 0;
     let topSharedJobs: any[] = [];
@@ -278,6 +279,7 @@ export async function GET(request: Request) {
           shares: number;
           adminShares: number;
           candidateShares: number;
+          unregisteredShares: number;
           saves: number;
           latestActivity: string;
           whoShared: string[];
@@ -285,12 +287,21 @@ export async function GET(request: Request) {
         }> = {};
 
         if (sharesData && sharesData.length > 0) {
-          periodShares = sharesData.length;
           sharesData.forEach((s: any) => {
-            const role = (s.user_role || "guest").toLowerCase().trim();
-            const isAdmin = ["superadmin", "admin", "jobadmin", "ceo"].includes(role);
+            const normRole = (s.user_role || "guest").toLowerCase().replace(/[\s_-]+/g, "");
+            const isAdmin = ["superadmin", "admin", "jobadmin", "ceo"].includes(normRole) || normRole.includes("admin") || normRole === "ceo";
+            
+            // STRICTLY EXCLUDE ADMIN SHARES - do not count towards periodShares or stats
             if (isAdmin) {
               adminSharesCount++;
+              return;
+            }
+
+            periodShares++;
+
+            const isUnregistered = !s.user_id && (!s.user_name || s.user_role === "guest" || s.user_role === "unregistered");
+            if (isUnregistered) {
+              unregisteredSharesCount++;
             } else {
               candidateSharesCount++;
             }
@@ -300,6 +311,7 @@ export async function GET(request: Request) {
                 shares: 0,
                 adminShares: 0,
                 candidateShares: 0,
+                unregisteredShares: 0,
                 saves: 0,
                 latestActivity: s.created_at || new Date().toISOString(),
                 whoShared: [],
@@ -307,15 +319,15 @@ export async function GET(request: Request) {
               };
             }
             jobActivityMap[s.job_id].shares++;
-            if (isAdmin) {
-              jobActivityMap[s.job_id].adminShares++;
+            if (isUnregistered) {
+              jobActivityMap[s.job_id].unregisteredShares = (jobActivityMap[s.job_id].unregisteredShares || 0) + 1;
             } else {
               jobActivityMap[s.job_id].candidateShares++;
             }
 
-            const shareLabel = isAdmin 
-              ? `Admin (${s.user_name || "Admin"})` 
-              : s.user_name ? `Candidate (${s.user_name})` : "Guest / Public";
+            const shareLabel = isUnregistered 
+              ? "Unregistered User" 
+              : (s.user_name ? `Candidate (${s.user_name})` : "Unregistered User");
 
             if (!jobActivityMap[s.job_id].whoShared.includes(shareLabel)) {
               jobActivityMap[s.job_id].whoShared.push(shareLabel);
@@ -337,6 +349,7 @@ export async function GET(request: Request) {
                 shares: 0,
                 adminShares: 0,
                 candidateShares: 0,
+                unregisteredShares: 0,
                 saves: 0,
                 latestActivity: sv.created_at || new Date().toISOString(),
                 whoShared: [],
@@ -361,7 +374,7 @@ export async function GET(request: Request) {
           if (jobMeta) {
             const enriched = jobMeta.map(j => {
               const act = jobActivityMap[j.id] || { 
-                shares: 0, adminShares: 0, candidateShares: 0, saves: 0, 
+                shares: 0, adminShares: 0, candidateShares: 0, unregisteredShares: 0, saves: 0, 
                 latestActivity: j.posted_date || new Date().toISOString(), whoShared: [], platforms: [] 
               };
               return {
@@ -369,6 +382,7 @@ export async function GET(request: Request) {
                 period_shares: act.shares,
                 admin_shares: act.adminShares,
                 candidate_shares: act.candidateShares,
+                unregistered_shares: act.unregisteredShares || 0,
                 period_saves: act.saves,
                 latest_activity: act.latestActivity,
                 who_shared: act.whoShared,
@@ -419,7 +433,7 @@ export async function GET(request: Request) {
                 candidate_shares: j.share_count || 0,
                 period_saves: j.save_count || 0,
                 latest_activity: j.posted_date || new Date().toISOString(),
-                who_shared: ["Organic"],
+                who_shared: ["Unregistered User"],
                 platforms: ["whatsapp"],
                 location: [j.city, j.state].filter(Boolean).join(", ") || "Location not set",
               }));
@@ -662,7 +676,7 @@ export async function GET(request: Request) {
     // If lifetime selected, use total lifetime counts. Otherwise use period counts or GA events
     const finalShareCount = (days === 'lifetime' || days === 'all')
       ? totalLifetimeShares
-      : (periodShares > 0 ? periodShares : (eventsMap["share_click"] || 0));
+      : periodShares;
 
     const finalSaveCount = (days === 'lifetime' || days === 'all')
       ? totalLifetimeSaves
@@ -674,8 +688,9 @@ export async function GET(request: Request) {
       contactClicks: eventsMap["contact_click"] || 0,
       shareClicks: finalShareCount,
       saveClicks: finalSaveCount,
-      adminSharesCount,
+      adminSharesCount: 0,
       candidateSharesCount,
+      unregisteredSharesCount,
       totalLifetimeShares,
       totalLifetimeSaves,
       topSharedJobs,

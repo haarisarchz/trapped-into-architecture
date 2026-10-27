@@ -1,8 +1,10 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PaginationControls from "@/components/PaginationControls";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
@@ -26,6 +28,9 @@ import {
   UserCheck,
   PhoneCall,
   MessageCircle,
+  Trash2,
+  AlertTriangle,
+  Settings,
 } from "lucide-react";
 
 // Map raw DB role values to clean display labels
@@ -259,11 +264,15 @@ function UserDetailModal({
   onClose,
   onCopy,
   copiedField,
+  canDelete,
+  onDeleteUser,
 }: {
   user: any;
   onClose: () => void;
   onCopy: (val: string, id: string) => void;
   copiedField: string | null;
+  canDelete?: boolean;
+  onDeleteUser?: (u: any) => void;
 }) {
   if (!user) return null;
 
@@ -479,6 +488,116 @@ function UserDetailModal({
   );
 }
 
+// ---- User Row Settings Dropdown Menu ----
+function UserSettingsActionMenu({
+  user,
+  onView,
+  onDelete,
+  canDelete,
+}: {
+  user: any;
+  onView: () => void;
+  onDelete: () => void;
+  canDelete: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    const updatePosition = () => {
+      if (buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setMenuStyle({
+          position: "fixed",
+          top: rect.bottom + 6,
+          right: window.innerWidth - rect.right,
+          zIndex: 9999,
+        });
+      }
+    };
+
+    updatePosition();
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isOpen]);
+
+  const menu = (
+    <div
+      ref={menuRef}
+      style={menuStyle}
+      onClick={(e) => e.stopPropagation()}
+      className="bg-white rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.15)] border border-gray-100 py-1.5 w-44 overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col gap-0.5 text-xs font-semibold"
+    >
+      <button
+        onClick={() => {
+          setIsOpen(false);
+          onView();
+        }}
+        className="w-full text-left px-3.5 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700 hover:text-black transition cursor-pointer"
+      >
+        <Eye size={14} className="text-gray-500" />
+        <span>View Details</span>
+      </button>
+
+      {canDelete && (
+        <>
+          <div className="h-px bg-gray-100 my-0.5" />
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              onDelete();
+            }}
+            className="w-full text-left px-3.5 py-2 hover:bg-red-50 flex items-center gap-2 text-red-600 transition cursor-pointer"
+          >
+            <Trash2 size={14} className="text-red-500" />
+            <span>Remove User</span>
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 transition cursor-pointer shadow-xs border border-gray-200/60"
+        title="Settings / Actions"
+      >
+        <Settings size={13} className="text-gray-600" />
+        <span>Settings</span>
+      </button>
+      {isOpen && typeof document !== "undefined" && createPortal(menu, document.body)}
+    </>
+  );
+}
+
 // ---- Main Page Component ----
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -497,7 +616,75 @@ export default function AdminUsersPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+
+  // User Deletion State
+  const [userToDelete, setUserToDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteUser = (user: any) => {
+    if (!user) return;
+    if (user.id === loggedUser?.id) {
+      alert("You cannot remove your own account.");
+      return;
+    }
+    setUserToDelete(user);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete || isDeleting) return;
+    setIsDeleting(true);
+    const userId = userToDelete.id;
+
+    try {
+      // 1. Unlink foreign references safely
+      try {
+        await supabase.from("jobs").update({ author_id: null }).eq("author_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("companies").update({ created_by: null }).eq("created_by", userId);
+        await supabase.from("companies").update({ updated_by: null }).eq("updated_by", userId);
+        await supabase.from("companies").update({ claimed_by: null, is_claimed: false }).eq("claimed_by", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("company_claim_requests").update({ reviewed_by: null }).eq("reviewed_by", userId);
+        await supabase.from("company_claim_requests").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("saved_jobs").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("favorite_companies").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("profile_likes").delete().or(`user_id.eq.${userId},profile_id.eq.${userId}`);
+      } catch (e) {}
+      try {
+        await supabase.from("candidate_education").delete().eq("user_id", userId);
+      } catch (e) {}
+      try {
+        await supabase.from("candidate_experience").delete().eq("user_id", userId);
+      } catch (e) {}
+
+      // 2. Delete the profile
+      const { error } = await supabase.from("profiles").delete().eq("id", userId);
+      if (error) throw error;
+
+      // 3. Update local list state
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      if (selectedUser?.id === userId) {
+        setSelectedUser(null);
+      }
+      setSaveMsg(`User "${userToDelete.full_name || userToDelete.username || userToDelete.email || "User"}" was removed successfully.`);
+      setTimeout(() => setSaveMsg(""), 5000);
+      setUserToDelete(null);
+    } catch (err: any) {
+      console.error("Error removing user:", err);
+      alert("Failed to remove user: " + (err.message || "Unknown error"));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Detail Modal
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -1028,7 +1215,7 @@ export default function AdminUsersPage() {
                     <th className="px-4 py-3.5 min-w-[120px]">DOB</th>
                     <th className="px-4 py-3.5 min-w-[100px] text-center">Verified</th>
                     <th className="px-4 py-3.5 min-w-[130px]">Joined</th>
-                    <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[100px]">Actions</th>
+                    <th className="px-4 py-3.5 text-right sticky right-0 bg-gray-50/95 min-w-[110px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
@@ -1204,13 +1391,14 @@ export default function AdminUsersPage() {
 
                         {/* Actions (Sticky Right) */}
                         <td className="px-4 py-3.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 transition shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
-                          <button
-                            onClick={() => setSelectedUser(u)}
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-gray-100 hover:bg-black hover:text-white text-gray-700 transition"
-                            title="View Full Profile Details"
-                          >
-                            <Eye size={13} /> View
-                          </button>
+                          <div className="flex items-center justify-end">
+                            <UserSettingsActionMenu
+                              user={u}
+                              onView={() => setSelectedUser(u)}
+                              onDelete={() => handleDeleteUser(u)}
+                              canDelete={isCEO && u.id !== loggedUser?.id}
+                            />
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1223,45 +1411,23 @@ export default function AdminUsersPage() {
 
         {/* Pagination Controls */}
         {filteredUsers.length > 0 && (
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3 text-sm text-gray-600">
-              <span>Users per page:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none bg-white font-medium cursor-pointer focus:ring-2 focus:ring-black"
-              >
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3.5 py-1.5 border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition cursor-pointer disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-
-              <span className="text-sm font-medium px-4">
-                Page {currentPage} of {totalPages || 1}
-              </span>
-
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="px-3.5 py-1.5 border border-gray-200 rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-gray-50 transition cursor-pointer disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredUsers.length}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onItemsPerPageChange={(sz) => {
+              setItemsPerPage(sz);
+              setCurrentPage(1);
+            }}
+            pageSizeOptions={[20, 50, 100]}
+            itemLabel="users"
+            className="mt-6"
+          />
         )}
       </section>
 
@@ -1272,7 +1438,62 @@ export default function AdminUsersPage() {
           onClose={() => setSelectedUser(null)}
           onCopy={handleCopy}
           copiedField={copiedField}
+          canDelete={isCEO && selectedUser.id !== loggedUser?.id}
+          onDeleteUser={handleDeleteUser}
         />
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center shrink-0">
+                <Trash2 size={22} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Remove User Account</h3>
+                <p className="text-xs text-gray-500">Permanent action • Cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              Are you sure you want to remove{" "}
+              <strong className="text-gray-900">
+                {userToDelete.full_name || userToDelete.display_name || userToDelete.username || "this user"}
+              </strong>{" "}
+              {userToDelete.username && (
+                <span className="font-mono text-gray-500">(@{userToDelete.username})</span>
+              )}
+              ? Their account profile and saved data will be permanently removed.
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setUserToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                disabled={isDeleting}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-sm transition flex items-center gap-2 cursor-pointer"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" /> Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} /> Yes, Remove User
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <Footer />

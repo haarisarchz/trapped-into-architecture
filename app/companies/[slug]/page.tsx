@@ -5,11 +5,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import CompanyActions from "@/components/CompanyActions";
+import CompanyHeaderAndTabs from "@/components/company/CompanyHeaderAndTabs";
 import { generateJobUrl, generateCompanySlug } from "@/utils/jobUrl";
 import { Metadata } from "next";
-import { Building2, Globe, Mail, MapPin, Briefcase, ShieldCheck } from "lucide-react";
+import { Building2, Globe, Mail, MapPin, Briefcase } from "lucide-react";
 import { formatExperience } from "@/utils/formatJobDetails";
-import ClaimCompanyButton from "@/components/ClaimCompanyButton";
 
 export async function generateMetadata({
   params,
@@ -214,142 +214,12 @@ export default async function CompanyPage({
         <Navbar />
 
         <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-10 md:py-16">
-          {/* COMPANY HEADER */}
-          <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 flex flex-col md:flex-row gap-8 items-start mb-10">
-            {/* LOGO */}
-            <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
-              {company.logo_url ? (
-                <img src={company.logo_url} alt={company.firm_name} className="w-full h-full object-cover" />
-              ) : (
-                <Building2 size={40} className="text-gray-400" />
-              )}
-            </div>
-
-            {/* DETAILS */}
-            <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                <div>
-                  <div className="flex items-center gap-3 flex-wrap mb-2">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{company.firm_name}</h1>
-                    {company.verification_badge === "gold_verified" || company.is_claimed ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded-full text-xs font-bold tracking-wide uppercase shadow-xs" title="Gold Verified Studio">
-                        <ShieldCheck size={14} className="text-amber-600 fill-amber-500" />
-                        Gold Verified
-                      </span>
-                    ) : company.verification_badge === "scrutiny_needed" ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded-full text-xs font-medium" title="Claim under review">
-                        Under Scrutiny
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg">
-                      {company.organization_type || "Firm"}
-                    </span>
-                    <ClaimCompanyButton company={company} />
-                  </div>
-                </div>
-                
-                <div className="md:ml-auto shrink-0 pt-2 md:pt-0">
-                  <CompanyActions slug={slug} companyName={company.firm_name} initialFavorites={favoriteCount} variant="page" />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-x-6 gap-y-3 text-gray-600 text-sm md:text-base mb-6">
-                {location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin size={18} className="text-gray-400" />
-                    {location}
-                  </div>
-                )}
-                {company.website_link && (
-                  <a href={company.website_link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-black transition">
-                    <Globe size={18} className="text-gray-400" />
-                    Website
-                  </a>
-                )}
-                {company.contact_email && (
-                  <a href={`mailto:${company.contact_email}`} className="flex items-center gap-2 hover:text-black transition">
-                    <Mail size={18} className="text-gray-400" />
-                    Email
-                  </a>
-                )}
-                {company.phone && (
-                  <div className="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                    <div className="flex gap-1">
-                      {String(company.phone).split(',').map(p => p.trim()).filter(Boolean).map((ph, idx, arr) => (
-                        <span key={idx}>
-                          <a href={`tel:${ph}`} className="hover:text-black transition">{ph}</a>
-                          {idx < arr.length - 1 && <span>,</span>}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {company.company_description && (
-                <div className="prose prose-sm md:prose-base text-gray-700 max-w-none border-t border-gray-100 pt-6">
-                  <p className="whitespace-pre-wrap">{company.company_description}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* OPEN POSITIONS */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Current Open Positions</h2>
-              <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm font-bold">
-                {companyJobs.length} {companyJobs.length === 1 ? 'Job' : 'Jobs'}
-              </span>
-            </div>
-
-            {companyJobs.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {companyJobs.map((job: any) => (
-                  <Link
-                    key={job.id}
-                    href={generateJobUrl(job)}
-                    className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-300 transition group flex flex-col justify-between"
-                  >
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-red-500 transition mb-2">
-                        {job.position}
-                      </h3>
-                      <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                        <Briefcase size={16} />
-                        {job.experience ? formatExperience(job.experience) : "Experience not specified"}
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {job.employment_type && (
-                        <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md border border-gray-200">
-                          {job.employment_type}
-                        </span>
-                      )}
-                      {job.workplace_type && (
-                        <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md border border-gray-200">
-                          {job.workplace_type}
-                        </span>
-                      )}
-                      {(job.city || job.state) && (
-                        <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-md border border-gray-200 flex items-center gap-1">
-                          <MapPin size={12} />
-                          {[job.city, job.state].filter(Boolean).join(", ")}
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl p-8 text-center border border-gray-100">
-                <p className="text-gray-500">No open positions available at this time.</p>
-              </div>
-            )}
-          </div>
+          <CompanyHeaderAndTabs
+            company={company}
+            companyJobs={companyJobs}
+            slug={slug}
+            favoriteCount={favoriteCount}
+          />
         </div>
 
         <Footer />

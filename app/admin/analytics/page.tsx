@@ -192,9 +192,9 @@ export default function AnalyticsPage() {
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Job Shares</span>
-                    {data.conversions?.adminSharesCount > 0 && (
-                      <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded" title="Candidate vs Admin Breakdown">
-                        {data.conversions.candidateSharesCount || 0} user · {data.conversions.adminSharesCount} admin
+                    {(data.conversions?.candidateSharesCount > 0 || data.conversions?.unregisteredSharesCount > 0) && (
+                      <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded" title="Candidate vs Unregistered Breakdown">
+                        {data.conversions.candidateSharesCount || 0} user · {data.conversions.unregisteredSharesCount || 0} unregistered
                       </span>
                     )}
                   </div>
@@ -225,7 +225,7 @@ export default function AnalyticsPage() {
                 
                 const displayedJobs = listPool.filter((j: any) => {
                   if (filterAdminShares) {
-                    return (j.candidate_shares || 0) > 0 || (j.period_saves || 0) > 0;
+                    return (j.candidate_shares || 0) > 0 || (j.unregistered_shares || 0) > 0 || (j.period_saves || 0) > 0;
                   }
                   return true;
                 });
@@ -296,7 +296,7 @@ export default function AnalyticsPage() {
                                     <span 
                                       key={wIdx} 
                                       className={`text-[9px] font-bold px-1.5 py-0.5 rounded truncate max-w-[130px] ${
-                                        ws.startsWith("Admin") ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"
+                                        ws.startsWith("Unregistered") ? "bg-purple-100 text-purple-800" : "bg-emerald-100 text-emerald-800"
                                       }`}
                                       title={ws}
                                     >
