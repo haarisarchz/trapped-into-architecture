@@ -46,6 +46,7 @@ function EditCompanyContent() {
 
   // Form State
   const [firmName, setFirmName] = useState("");
+  const [existingSlug, setExistingSlug] = useState("");
   const [organizationType, setOrganizationType] = useState("Architecture Firm");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
@@ -126,6 +127,7 @@ function EditCompanyContent() {
       if (error) throw error;
       if (data) {
         setFirmName(data.firm_name || "");
+        setExistingSlug(data.slug || "");
         setOrganizationType(normalizeOrganizationType(data.organization_type));
         setCity(data.city || "");
         setState(data.state || "");
@@ -294,6 +296,7 @@ function EditCompanyContent() {
   };
 
   const handleSave = async () => {
+    const computedSlug = existingSlug || firmName.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^\w-]+/g, "");
     if (!firmName) {
       alert("Company Name is required.");
       return;
@@ -423,7 +426,7 @@ function EditCompanyContent() {
           .eq("id", companyId);
 
         alert("Your studio profile edits have been submitted for admin verification! They will be published live once verified.");
-        router.push(`/companies/${companySlug || ""}`);
+        router.push(`/companies/${computedSlug || ""}`);
       } else {
         alert("Company details updated successfully!");
         router.push("/admin/companies");

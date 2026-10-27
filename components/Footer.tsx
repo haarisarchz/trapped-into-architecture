@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Building2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import {
   WhatsAppBrandIcon,
   FacebookBrandIcon,

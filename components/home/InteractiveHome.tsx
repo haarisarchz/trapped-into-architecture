@@ -26,8 +26,8 @@ export default function InteractiveHome({
   const [jobTab, setJobTab] = useState<"recent" | "popular">("recent");
   const displayJobs = (jobTab === "popular" ? popularJobs : recentJobs).slice(0, 8);
 
-  const [companyTab, setCompanyTab] = useState<"latest" | "popular" | "most-jobs">("latest");
-  const displayCompanies = (companyTab === "popular" ? popularCompanies : companyTab === "most-jobs" ? mostJobsCompanies : recentCompanies).slice(0, 6);
+  const [companyTab, setCompanyTab] = useState<"latest" | "most-jobs">("latest");
+  const displayCompanies = (companyTab === "most-jobs" ? mostJobsCompanies : recentCompanies).slice(0, 6);
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
@@ -139,8 +139,6 @@ export default function InteractiveHome({
               </div>
       </section>
 
-      <div className="w-full border-t-[3px] border-black my-2"></div>
-
       {/* 4. COMPANIES SECTION */}
       <section className="py-8 px-6 lg:px-12 bg-white w-full text-black">
         <div className="max-w-7xl mx-auto">
@@ -149,7 +147,6 @@ export default function InteractiveHome({
             
             <div className="flex bg-gray-100 p-1 rounded-full w-fit border border-gray-200">
               <button onClick={() => setCompanyTab("latest")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "latest" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Latest</button>
-              <button onClick={() => setCompanyTab("popular")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "popular" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Popular</button>
               <button onClick={() => setCompanyTab("most-jobs")} className={`px-4 py-2 rounded-full text-sm font-medium transition ${companyTab === "most-jobs" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}>Most Jobs Posted</button>
             </div>
           </div>

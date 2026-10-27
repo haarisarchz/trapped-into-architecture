@@ -134,6 +134,32 @@ export default async function Home() {
     .order("posted_date", { ascending: false })
     .limit(8);
 
+  // Fetch Popular Jobs: Sorted by views_count (falling back to engagement saves/shares)
+  let popularJobs: any[] = [];
+  try {
+    const { data: popJobs, error: popErr } = await supabase
+      .from("jobs")
+      .select("*")
+      .eq("status", "published")
+      .order("views_count", { ascending: false, nullsFirst: false })
+      .limit(8);
+
+    if (!popErr && popJobs && popJobs.length > 0) {
+      popularJobs = popJobs;
+    } else {
+      const { data: fallbackPop } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("status", "published")
+        .order("save_count", { ascending: false, nullsFirst: false })
+        .order("share_count", { ascending: false, nullsFirst: false })
+        .limit(8);
+      popularJobs = fallbackPop || [];
+    }
+  } catch (e) {
+    popularJobs = recentJobs ? [...recentJobs].reverse() : [];
+  }
+
   // Fetch Site Settings
   const { data: siteSettings } = await supabase
     .from("site_settings")
@@ -195,10 +221,10 @@ export default async function Home() {
 
       <InteractiveHome 
         recentJobs={recentJobs || []} 
-        popularJobs={recentJobs ? [...recentJobs].reverse() : []}
+        popularJobs={popularJobs.length > 0 ? popularJobs : (recentJobs || [])}
         recentCompanies={recentCompanies || []} 
         popularCompanies={recentCompanies ? [...recentCompanies].reverse() : []}
-        mostJobsCompanies={recentCompanies || []}
+        mostJobsCompanies={mostJobsCompanies || []}
         stats={stats}
         siteSettings={siteSettings} 
       />

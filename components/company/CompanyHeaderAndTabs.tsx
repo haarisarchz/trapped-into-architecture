@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Building2,
   Globe,
@@ -207,10 +208,11 @@ function PhoneActionDropdown({ phone, isMobile }: { phone: string; isMobile: boo
 
 export default function CompanyHeaderAndTabs({
   company,
-  companyJobs,
+  companyJobs = [],
   slug,
-  favoriteCount,
+  favoriteCount = 0,
 }: CompanyHeaderAndTabsProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"overview" | "jobs" | "team" | "projects" | "awards">("overview");
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
