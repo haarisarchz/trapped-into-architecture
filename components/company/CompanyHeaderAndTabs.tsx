@@ -252,8 +252,9 @@ export default function CompanyHeaderAndTabs({
     setIsClaimModalOpen(true);
   };
 
-  const tier = (company.badge_tier || "bronze").toLowerCase();
-  const completionPercentage = company.completion_percentage ?? 20;
+  const levelInfo = calculateCompanyLevel(company);
+  const tier = levelInfo.tier;
+  const completionPercentage = levelInfo.score;
   const isClaimed = Boolean(company.is_claimed);
   const isEmailVerified = Boolean(company.email_verified || company.is_verified);
   const isPhoneVerified = Boolean(company.phone_verified);
@@ -285,7 +286,13 @@ export default function CompanyHeaderAndTabs({
     diamond: { label: "Diamond Level Studio", icon: "👑", bg: "bg-purple-50", text: "text-purple-800", border: "border-purple-300" },
   };
 
-  const currentTierBadge = tierBadgeInfo[tier] || tierBadgeInfo.bronze;
+  const currentTierBadge = {
+    label: levelInfo.label,
+    icon: levelInfo.icon,
+    bg: levelInfo.bg,
+    text: levelInfo.text,
+    border: levelInfo.border,
+  };
   const location = [company.neighborhood, company.address, company.city, company.state].filter(Boolean).join(", ");
   const googleMapsUrl = location
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.firm_name} ${location}`)}`

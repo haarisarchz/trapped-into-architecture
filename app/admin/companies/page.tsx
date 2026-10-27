@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import PaginationControls from "@/components/PaginationControls";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { calculateCompanyLevel } from "@/utils/companyLevel";
 import { formatDate } from "@/utils/formatDate";
 import {
   Edit2,
@@ -362,19 +363,35 @@ function AdminCompaniesContent() {
     }
   };
 
-  // Badges & Tier Controls
+  // Badges & VIP Controls
   const handleToggleBadge = async (companyId: string, field: "is_claimed" | "email_verified" | "phone_verified", currentVal: boolean) => {
     const newVal = !currentVal;
     try {
-      const { error } = await supabase
+      let payload: any = { [field]: newVal, updated_at: new Date().toISOString() };
+      if (field === "email_verified") {
+        payload.is_verified = newVal;
+      }
+
+      let { error } = await supabase
         .from("companies")
-        .update({ [field]: newVal, updated_at: new Date().toISOString() })
+        .update(payload)
         .eq("id", companyId);
+
+      // Graceful fallback if custom column is not yet migrated in Supabase
+      if (error && error.message.includes("schema cache")) {
+        if (field === "email_verified") {
+          const fb = await supabase.from("companies").update({ is_verified: newVal }).eq("id", companyId);
+          error = fb.error;
+        } else {
+          alert("Notice: Please run the SQL migration in your Supabase SQL Editor to enable " + field);
+          return;
+        }
+      }
 
       if (error) throw error;
 
       setCompanies((prev) =>
-        prev.map((c) => (c.id === companyId ? { ...c, [field]: newVal } : c))
+        prev.map((c) => (c.id === companyId ? { ...c, [field]: newVal, ...(field === "email_verified" ? { is_verified: newVal } : {}) } : c))
       );
       showToast("Studio badge updated successfully.");
     } catch (err: any) {
@@ -382,21 +399,29 @@ function AdminCompaniesContent() {
     }
   };
 
-  const handleChangeTier = async (companyId: string, newTier: string) => {
+  // VIP Badge toggle for Diamond level studios
+  const handleToggleVip = async (companyId: string, currentVal: boolean) => {
+    const newVal = !currentVal;
     try {
       const { error } = await supabase
         .from("companies")
-        .update({ badge_tier: newTier, updated_at: new Date().toISOString() })
+        .update({ is_vip: newVal, updated_at: new Date().toISOString() })
         .eq("id", companyId);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("is_vip") || error.message.includes("schema cache")) {
+          alert("Notice: The 'is_vip' column is not yet in your Supabase schema. Please run the SQL migration snippet in your Supabase SQL Editor to enable VIP storage.");
+          return;
+        }
+        throw error;
+      }
 
       setCompanies((prev) =>
-        prev.map((c) => (c.id === companyId ? { ...c, badge_tier: newTier } : c))
+        prev.map((c) => (c.id === companyId ? { ...c, is_vip: newVal } : c))
       );
-      showToast(`Studio level updated to ${newTier.toUpperCase()}`);
+      showToast(newVal ? "⭐ VIP Badge granted to studio!" : "VIP Badge removed.");
     } catch (err: any) {
-      alert("Failed to update level: " + err.message);
+      alert("Failed to toggle VIP badge: " + err.message);
     }
   };
 
@@ -615,8 +640,8 @@ function AdminCompaniesContent() {
           c.firm_name?.toLowerCase().includes(badgesSearch.toLowerCase()) ||
           c.city?.toLowerCase().includes(badgesSearch.toLowerCase());
 
-        const tier = (c.badge_tier || "bronze").toLowerCase();
-        const matchesTier = tierFilter === "all" || tier === tierFilter;
+        const level = calculateCompanyLevel(c);
+        const matchesTier = tierFilter === "all" || level.tier === tierFilter;
 
         let matchesStatus = true;
         if (statusFilter === "claimed") matchesStatus = Boolean(c.is_claimed);
@@ -1120,23 +1145,39 @@ function AdminCompaniesContent() {
                             {[c.city, c.state].filter(Boolean).join(", ") || "--"}
                           </td>
 
-                          {/* TIER LEVEL SELECTOR */}
+                          {/* AUTOMATIC STUDIO LEVEL & VIP TOGGLE */}
                           <td className="px-6 py-4">
-                            {c.id ? (
-                              <select
-                                value={tier}
-                                onChange={(e) => handleChangeTier(c.id, e.target.value)}
-                                className={`px-2.5 py-1 rounded-xl text-xs font-bold border border-gray-200 focus:outline-none cursor-pointer ${tierStyle.bg} ${tierStyle.text}`}
-                              >
-                                <option value="bronze">🥉 Bronze Level</option>
-                                <option value="silver">🥈 Silver Level</option>
-                                <option value="gold">🥇 Gold Level</option>
-                                <option value="platinum">💎 Platinum Level</option>
-                                <option value="diamond">👑 Diamond Level</option>
-                              </select>
-                            ) : (
-                              <span className="text-xs text-gray-400 italic">Save as studio to assign</span>
-                            )}
+                            {(() => {
+                              const level = calculateCompanyLevel(c);
+                              return (
+                                <div className="flex flex-col gap-1 items-start">
+                                  <span
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${level.bg} ${level.text} ${level.border}`}
+                                    title={`Profile Completion: ${level.score}% (${level.missingFields.length ? "Missing: " + level.missingFields.slice(0, 3).join(", ") : "Complete profile"})`}
+                                  >
+                                    <span>{level.icon}</span>
+                                    <span>{level.label}</span>
+                                    <span className="text-[10px] opacity-75 font-semibold">({level.score}%)</span>
+                                  </span>
+
+                                  {/* VIP Badge Option: Only available when Diamond Level */}
+                                  {level.tier === "diamond" && (
+                                    <button
+                                      onClick={() => handleToggleVip(c.id, Boolean(c.is_vip))}
+                                      className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold transition cursor-pointer border ${
+                                        c.is_vip
+                                          ? "bg-amber-100 text-amber-900 border-amber-300 shadow-xs"
+                                          : "bg-white hover:bg-amber-50 text-amber-700 border-amber-300"
+                                      }`}
+                                      title={c.is_vip ? "VIP Active (Click to toggle)" : "Click to grant VIP Badge to this Diamond Studio"}
+                                    >
+                                      <span>⭐</span>
+                                      <span>{c.is_vip ? "VIP Active" : "Grant VIP"}</span>
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </td>
 
                           {/* BADGE TOGGLES */}
