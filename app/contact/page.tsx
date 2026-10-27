@@ -161,6 +161,17 @@ export default function ContactPage() {
                   <LinkedInBrandIcon size={24} />
                 </a>
               )}
+              {(settings?.website_url || settings?.telegram_channel_url) && (
+                <a 
+                  href={ensureHttp(settings.website_url || settings.telegram_channel_url || "https://t.me/ArchitectJobsTi2A")} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="text-gray-500 hover:text-blue-500 transition hover:scale-110 transform" 
+                  title="Telegram Channel (@ArchitectJobsTi2A)"
+                >
+                  <TelegramBrandIcon size={24} />
+                </a>
+              )}
             </div>
           </div>
 
