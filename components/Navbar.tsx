@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Bell } from "lucide-react";
+import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check } from "lucide-react";
+import { calculateProfileCompletion } from "@/utils/profileCompletion";
+import { calculateCompanyLevel } from "@/utils/companyLevel";
 
 export default function Navbar() {
   const router = useRouter();
@@ -62,9 +64,126 @@ const [showUserMenu, setShowUserMenu] =
 
   useEffect(() => {
     const fetchNotifs = async () => {
-      if (!currentUser?.role) return;
-      const role = currentUser.role.toLowerCase().replace(/[\s_]+/g, "");
+      if (!currentUser) return;
+      const role = (currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "");
       const notifs: any[] = [];
+
+      let userId = currentUser.id;
+      let userProf: any = null;
+      if (userId) {
+        const { data: pData } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+        userProf = pData;
+      }
+      if (!userProf && currentUser.username) {
+        const { data: pData } = await supabase.from("profiles").select("*").eq("username", currentUser.username).maybeSingle();
+        userProf = pData;
+        if (userProf) userId = userProf.id;
+      }
+      if (!userProf && currentUser.email) {
+        const { data: pData } = await supabase.from("profiles").select("*").eq("email", currentUser.email).maybeSingle();
+        userProf = pData;
+        if (userProf) userId = userProf.id;
+      }
+
+      // A. Member Milestone Level-Up Notifications (Silver 45%, Gold 66%, Platinum 81%, Diamond 91%)
+      if (userProf && userId) {
+        try {
+          const { data: edus } = await supabase.from("educations").select("*").eq("user_id", userId);
+          const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", userId);
+          const { percentage } = calculateProfileCompletion(userProf, edus || [], exps || []);
+          const profTime = userProf.updated_at || userProf.created_at || new Date().toISOString();
+
+          if (percentage >= 91) {
+            notifs.push({
+              id: `member-tier-diamond-${userId}`,
+              message: `👑 Diamond Rank Unlocked (${percentage}%)! Your profile is among the top 1% of architecture professionals.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          } else if (percentage >= 81) {
+            notifs.push({
+              id: `member-tier-platinum-${userId}`,
+              message: `💎 Platinum Member Unlocked (${percentage}%)! You receive priority recommendations and exclusive alerts.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          } else if (percentage >= 66) {
+            notifs.push({
+              id: `member-tier-gold-${userId}`,
+              message: `🏆 Gold Member Unlocked (${percentage}%)! You can now publish job openings and feature your profile.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          } else if (percentage >= 45) {
+            notifs.push({
+              id: `member-tier-silver-${userId}`,
+              message: `🥈 Silver Member Unlocked (${percentage}%)! You can now claim existing studios or register a new practice.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          }
+        } catch (e) {
+          console.warn("Could not calculate profile milestone notif:", e);
+        }
+      }
+
+      // B. Studio Milestone Level-Up Notifications (for companies owned or claimed by this user)
+      if (userId) {
+        try {
+          const { data: myComps } = await supabase
+            .from("companies")
+            .select("*")
+            .or(`created_by.eq.${userId},claimed_by.eq.${userId}`);
+
+          (myComps || []).forEach((c: any) => {
+            const compLvl = calculateCompanyLevel(c);
+            const compTime = c.updated_at || c.created_at || new Date().toISOString();
+            if (compLvl.score >= 45) {
+              notifs.push({
+                id: `comp-tier-${c.id}-${compLvl.tier}`,
+                message: `${compLvl.icon} Studio Milestone: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.score >= 66 ? ' Eligible to post job openings!' : ''}`,
+                time: compTime,
+                link: `/companies/${c.slug}`
+              });
+            }
+          });
+        } catch (e) {
+          console.warn("Could not calculate studio milestone notif:", e);
+        }
+      }
+
+      // C. User's Submitted Jobs Review Notifications (Approved / Rejected)
+      if (userId) {
+        try {
+          const { data: userJobs } = await supabase
+            .from("jobs")
+            .select("id, firm_name, position, status, updated_at, posted_date")
+            .eq("author_id", userId)
+            .order("posted_date", { ascending: false })
+            .limit(5);
+
+          (userJobs || []).forEach((j: any) => {
+            const jTime = j.updated_at || j.posted_date || new Date().toISOString();
+            if (j.status === "published") {
+              notifs.push({
+                id: `job-pub-${j.id}`,
+                message: `✅ Your job listing for "${j.position}" at ${j.firm_name} has been approved and published!`,
+                time: jTime,
+                link: `/jobs`
+              });
+            } else if (j.status === "rejected") {
+              notifs.push({
+                id: `job-rej-${j.id}`,
+                message: `⚠️ Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
+                time: jTime,
+                link: `/post-job`
+              });
+            }
+          });
+        } catch (e) {
+          console.warn("Could not fetch user job status notif:", e);
+        }
+      }
       
       // 1. CEO Instagram Notifs
       if (role === "ceo") {
@@ -234,7 +353,7 @@ useEffect(() => {
         className="flex items-center gap-2 text-lg font-medium hover:text-gray-300 transition"
         aria-label="Open navigation menu"
       >
-        <span className="text-2xl">☰</span>
+        <Menu size={24} />
         <span>Menu</span>
       </button>
 
@@ -250,7 +369,7 @@ useEffect(() => {
                 aria-label="Open account menu"
               >
                 {currentUser.displayName || currentUser.username || "Profile"}
-                <span className="text-xs">▼</span>
+                <ChevronDown size={14} className="ml-1" />
               </button>
               
     {showUserMenu && (
@@ -263,6 +382,16 @@ useEffect(() => {
           className="w-full text-left px-5 py-4 hover:bg-red-50 text-red-500 font-bold border-b border-gray-100"
         >
           My Profile
+        </button>
+
+        <button
+          onClick={() => {
+            router.push("/post-job");
+            setShowUserMenu(false);
+          }}
+          className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+        >
+          Post a Job
         </button>
 
         {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
@@ -412,6 +541,14 @@ useEffect(() => {
             Contact
           </Link>
 
+          {/* POST A JOB */}
+          <Link
+            href="/post-job"
+            className="bg-white text-black hover:bg-gray-200 font-bold px-4 py-2 rounded-xl text-sm transition shadow-xs flex items-center gap-1.5"
+          >
+            <span>Post a Job</span>
+          </Link>
+
           {/* LOGIN REGISTER BUTTON */}
 
 
@@ -437,6 +574,16 @@ useEffect(() => {
           className="w-full text-left px-5 py-4 hover:bg-red-50 text-red-500 font-bold"
         >
           My Profile
+        </button>
+
+        <button
+          onClick={() => {
+            router.push("/post-job");
+            setShowUserMenu(false);
+          }}
+          className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+        >
+          Post a Job
         </button>
 
         {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
@@ -530,6 +677,10 @@ useEffect(() => {
     <Link href="/companies" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
     <Link href="/internships" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
       <Link href="/contact" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+    <Link href="/post-job" className="block px-6 py-4 border-b border-gray-800 text-lg font-bold text-amber-400 hover:bg-gray-900 transition flex items-center justify-between" onClick={() => setMobileMenuOpen(false)}>
+      <span>Post a Job</span>
+      <span className="text-xs bg-amber-400 text-black px-2 py-0.5 rounded-full font-extrabold uppercase">For Studios</span>
+    </Link>
     
     
     
@@ -577,8 +728,8 @@ useEffect(() => {
                 setShowAuthPopup(false)
               }
               className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md text-3xl hover:bg-gray-100 transition z-50"
-            >
-              ×
+             aria-label="Close dialog">
+              <X size={20} />
             </button>
 
             {/* TABS */}
@@ -695,14 +846,49 @@ useEffect(() => {
 
       <button
         type="button"
-        className="text-gray-500 hover:text-black transition"
+        onClick={async () => {
+          const email = prompt("Enter your registered email address to recover your username:");
+          if (!email) return;
+          try {
+            const res = await fetch("/api/auth/forgot-username", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email.trim() }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+              alert(data.message || "Your username has been emailed to you.");
+            } else {
+              alert(data.error || "Could not retrieve username. Please verify your email.");
+            }
+          } catch (e) {
+            alert("Error sending username reminder. Please try again.");
+          }
+        }}
+        className="text-gray-500 hover:text-black transition cursor-pointer"
       >
         Forgot Username?
       </button>
 
       <button
         type="button"
-        className="text-gray-500 hover:text-black transition"
+        onClick={async () => {
+          const email = prompt("Enter your registered email address to receive a password reset link:");
+          if (!email) return;
+          try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+              redirectTo: `${window.location.origin}/reset-password`,
+            });
+            if (error) {
+              alert(error.message);
+            } else {
+              alert("Password reset link has been sent to your email!");
+            }
+          } catch (e) {
+            alert("Failed to send reset link. Please try again.");
+          }
+        }}
+        className="text-gray-500 hover:text-black transition cursor-pointer"
       >
         Forgot Password?
       </button>
@@ -793,7 +979,9 @@ window.location.reload();
 
 {authTab === "success" && (
   <div className="text-center space-y-6 py-8">
-    <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto text-4xl mb-4">✓</div>
+    <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Check size={44} strokeWidth={2.5} />
+      </div>
     <h2 className="text-3xl font-bold">Registration Successful</h2>
     <p className="text-gray-600 text-lg">Your account has been created successfully. Login to continue.</p>
     <button 
@@ -862,11 +1050,11 @@ window.location.reload();
 
       <div className="absolute left-7 top-0 hidden group-hover:block bg-black text-white text-xs rounded-xl px-4 py-3 w-72 z-50 shadow-lg">
 
-        • Minimum 5 characters <br />
-        • Maximum 12 characters <br />
-        • Username is non-case sensitive <br />
-        • Only letters, numbers, dots and underscore allowed <br />
-        • No spaces allowed
+        &bull; Minimum 5 characters <br />
+        &bull; Maximum 12 characters <br />
+        &bull; Username is non-case sensitive <br />
+        &bull; Only letters, numbers, dots and underscore allowed <br />
+        &bull; No spaces allowed
 
       </div>
 
@@ -920,7 +1108,7 @@ window.location.reload();
               usernameMessage.innerHTML = "Username already taken";
               usernameMessage.className = "text-sm mt-2 text-red-500";
             } else {
-              usernameMessage.innerHTML = "Username available ✓";
+              usernameMessage.innerHTML = "Username available &#10003;";
               usernameMessage.className = "text-sm mt-2 text-green-600";
             }
           });
@@ -1035,7 +1223,7 @@ window.location.reload();
               emailMessage.innerHTML = "Email already registered";
               emailMessage.className = "text-sm mt-2 text-red-500";
             } else {
-              emailMessage.innerHTML = "Email available ✓";
+              emailMessage.innerHTML = "Email available &#10003;";
               emailMessage.className = "text-sm mt-2 text-green-600";
             }
           });
@@ -1120,7 +1308,7 @@ window.location.reload();
               phoneMessage.innerHTML = "Phone number already registered";
               phoneMessage.className = "text-sm mt-2 text-red-500";
             } else {
-              phoneMessage.innerHTML = "Phone available ✓";
+              phoneMessage.innerHTML = "Phone available &#10003;";
               phoneMessage.className = "text-sm mt-2 text-green-600";
             }
           });
@@ -1169,10 +1357,10 @@ window.location.reload();
 
       <div className="absolute left-7 top-0 hidden group-hover:block bg-black text-white text-xs rounded-xl px-4 py-3 w-64 z-50 shadow-lg">
 
-        • Minimum 8 characters <br />
-        • Maximum 16 characters <br />
-        • Must contain letters and numbers <br />
-        • Special characters allowed
+        &bull; Minimum 8 characters <br />
+        &bull; Maximum 16 characters <br />
+        &bull; Must contain letters and numbers <br />
+        &bull; Special characters allowed
 
       </div>
 
@@ -1237,7 +1425,7 @@ window.location.reload();
       } else {
 
         passwordMessage.innerHTML =
-          "Strong password ✓";
+          "Strong password &#10003;";
 
         passwordMessage.className =
           "text-sm mt-2 text-green-600";
@@ -1369,7 +1557,7 @@ window.location.reload();
 
         if (!usernameRegex.test(username)) {
           alert(
-            "Username must be 5–12 characters and only contain letters, numbers, dots, or underscores."
+            "Username must be 5 to 12 characters and only contain letters, numbers, dots, or underscores."
           );
           return;
         }
@@ -1380,7 +1568,7 @@ window.location.reload();
           /^[a-zA-Z0-9!@#$%^&*()_+={}:;"'<>,.?/-]{8,16}$/;
 
         if (!passwordRegex.test(password)) {
-          alert("Password must be 8–16 characters.");
+          alert("Password must be 8 to 16 characters.");
           return;
         }
 

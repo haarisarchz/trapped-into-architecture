@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Lock, EyeOff, Shield, Check, GraduationCap, Briefcase } from "lucide-react";
+import { Lock, EyeOff, Shield, Check, GraduationCap, Briefcase, Globe } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface ProfileSettingsTabProps {
@@ -20,6 +20,7 @@ export default function ProfileSettingsTab({
   const [hideCoa, setHideCoa] = useState<boolean>(Boolean(user.hide_coa));
   const [hideExperience, setHideExperience] = useState<boolean>(Boolean(user.hide_experience));
   const [hideEducation, setHideEducation] = useState<boolean>(Boolean(user.hide_education));
+  const [displayProfilePublicly, setDisplayProfilePublicly] = useState<boolean>(Boolean(user.display_profile_publicly));
 
   const [saving, setSaving] = useState<boolean>(false);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
@@ -29,7 +30,7 @@ export default function ProfileSettingsTab({
     setSavedSuccess(false);
 
     try {
-      const payload = {
+      const payload: any = {
         hide_phone: hidePhone,
         hide_whatsapp: hideWhatsapp,
         hide_email: hideEmail,
@@ -37,14 +38,21 @@ export default function ProfileSettingsTab({
         hide_coa: hideCoa,
         hide_experience: hideExperience,
         hide_education: hideEducation,
+        display_profile_publicly: displayProfilePublicly,
       };
 
-      const { error } = await supabase
+      let { error } = await supabase
         .from("profiles")
         .update(payload)
         .eq("id", user.id);
 
-      if (error) throw error;
+      if (error && error.message?.includes("display_profile_publicly")) {
+        delete payload.display_profile_publicly;
+        const retry = await supabase.from("profiles").update(payload).eq("id", user.id);
+        if (retry.error) throw retry.error;
+      } else if (error) {
+        throw error;
+      }
 
       const updated = {
         ...user,
@@ -96,6 +104,29 @@ export default function ProfileSettingsTab({
       </div>
 
       {/* Privacy Checkboxes */}
+            {/* Directory Public Visibility */}
+      <div className="bg-white rounded-2xl border border-blue-200 p-5 space-y-3 mb-6 bg-gradient-to-r from-blue-50/40 to-white shadow-xs">
+        <label className="flex items-start justify-between cursor-pointer">
+          <div className="pr-4">
+            <div className="flex items-center gap-2">
+              <Globe size={18} className="text-blue-600" />
+              <p className="text-sm font-bold text-gray-900">
+                Display Profile Publicly in Professionals Directory
+              </p>
+            </div>
+            <p className="text-xs text-gray-600 mt-1 leading-relaxed max-w-xl">
+              Opt-in to be discoverable in the upcoming All-India Architects &amp; Professionals directory. If unchecked, your profile is only visible to people who have your direct link.
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={displayProfilePublicly}
+            onChange={(e) => setDisplayProfilePublicly(e.target.checked)}
+            className="w-5 h-5 accent-blue-600 rounded mt-1 cursor-pointer"
+          />
+        </label>
+      </div>
+
       <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4 mb-8">
         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
           Make Personal & Professional Details Secret

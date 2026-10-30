@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ImageUploader from "@/components/ImageUploader";
 import { generateCompanySlug } from "@/utils/jobUrl";
+import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import {
   Building2,
   MapPin,
@@ -43,6 +44,8 @@ export default function RegisterPracticePage() {
   const [createdSlug, setCreatedSlug] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [profileScore, setProfileScore] = useState<number | null>(null);
+  const [checkingScore, setCheckingScore] = useState(true);
 
   // Form Fields
   const [firmName, setFirmName] = useState("");
@@ -65,16 +68,41 @@ export default function RegisterPracticePage() {
   const [linkedin, setLinkedin] = useState("");
 
   useEffect(() => {
-    try {
-      const userStr = localStorage.getItem("currentUser");
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        setCurrentUser(user);
-        if (user.email && !email) {
-          setEmail(user.email);
+    const checkUser = async () => {
+      try {
+        const userStr = localStorage.getItem("currentUser");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setCurrentUser(user);
+          if (user.email && !email) {
+            setEmail(user.email);
+          }
+
+          // Check Silver status
+          const uId = user.id;
+          const uName = user.username;
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq(uId ? "id" : "username", uId || uName)
+            .maybeSingle();
+
+          if (prof) {
+            const { data: edus } = await supabase.from("educations").select("*").eq("user_id", prof.id);
+            const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", prof.id);
+            const res = calculateProfileCompletion(prof, edus || [], exps || []);
+            setProfileScore(res.percentage);
+          } else {
+            setProfileScore(20);
+          }
         }
+      } catch (e) {
+        console.error("Error checking user for new company:", e);
+      } finally {
+        setCheckingScore(false);
       }
-    } catch (e) {}
+    };
+    checkUser();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,6 +237,51 @@ export default function RegisterPracticePage() {
           </div>
         ) : (
           /* MAIN FORM CONTENT */
+          <div>
+            {/* IN-DIALOG GATING: Silver Member Required */}
+        {!checkingScore && currentUser && profileScore !== null && profileScore < 45 ? (
+          <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-sm border border-gray-200 text-center max-w-2xl mx-auto my-8">
+            <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-4 border border-slate-300">
+              <ShieldCheck size={32} />
+            </div>
+
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 bg-slate-100 px-3 py-1 rounded-full mb-3 inline-block">
+              Silver Member (45%) Required
+            </span>
+
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-3">
+              Silver Member Status Required to Register a Practice
+            </h1>
+
+            <p className="text-xs sm:text-sm text-gray-600 mb-6 leading-relaxed">
+              Your profile is currently at <strong>Bronze ({profileScore}%)</strong>. To protect our architecture directory from spam or duplicate practices, only verified architects and designers at <strong>Silver Tier (45%)</strong> or above can register new studio practices.
+            </p>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 text-left mb-6 text-xs text-gray-700 space-y-2">
+              <p className="font-bold text-gray-900">How to reach 45% (takes under 60 seconds):</p>
+              <p>&bull; Upload a Profile Picture / Avatar (+10%)</p>
+              <p>&bull; Add Phone or WhatsApp Number (+5% &ndash; 10%)</p>
+              <p>&bull; Add a Tagline or Brief Bio (+5% &ndash; 10%)</p>
+              <p>&bull; Add an Education Degree (+15%)</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href={`/profile/${currentUser?.username || ""}?tab=details`}
+                className="w-full sm:w-auto px-8 py-3.5 bg-black hover:bg-gray-800 text-white rounded-xl text-sm font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              >
+                <span>Complete Profile (+{45 - profileScore}% needed)</span>
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                href="/companies"
+                className="w-full sm:w-auto px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-sm font-bold transition flex items-center justify-center"
+              >
+                Browse Directory
+              </Link>
+            </div>
+          </div>
+        ) : (
           <div>
             {/* HERO TITLE */}
             <div className="mb-8">
@@ -592,8 +665,9 @@ export default function RegisterPracticePage() {
           </div>
         )}
       </div>
-
-      <Footer />
-    </main>
+    )}
+  </div>
+  <Footer />
+</main>
   );
 }

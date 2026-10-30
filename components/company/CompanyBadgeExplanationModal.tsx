@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import Link from "next/link";
 import { Award, X, Sparkles, ShieldCheck, MailCheck, PhoneCall, Building2, CheckCircle2 } from "lucide-react";
 
 interface CompanyBadgeExplanationModalProps {
@@ -79,7 +80,7 @@ export default function CompanyBadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800 shrink-0">
-                20% – 49%
+                0% – 44%
               </span>
             </div>
 
@@ -93,7 +94,7 @@ export default function CompanyBadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shrink-0">
-                50% – 69%
+                45% – 65%
               </span>
             </div>
 
@@ -107,7 +108,7 @@ export default function CompanyBadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-yellow-300 text-yellow-900 shrink-0">
-                70% – 84%
+                66% – 80%
               </span>
             </div>
 
@@ -121,7 +122,7 @@ export default function CompanyBadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-cyan-200 text-cyan-900 shrink-0">
-                85% – 94%
+                81% – 90%
               </span>
             </div>
 
@@ -135,7 +136,7 @@ export default function CompanyBadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-900 shrink-0">
-                95% – 100%
+                91% – 100%
               </span>
             </div>
           </div>

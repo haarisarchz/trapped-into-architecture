@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Building2, ShieldCheck, Send, CheckCircle2, Sparkles, AlertCircle, Lock } from "lucide-react";
+import { X, Building2, ShieldCheck, Send, CheckCircle2, Sparkles, AlertCircle, Lock, ArrowRight } from "lucide-react";
+import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 
@@ -29,6 +30,8 @@ export default function ClaimCompanyModal({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [userCompletion, setUserCompletion] = useState<number | null>(null);
+  const [userUsername, setUserUsername] = useState<string>("");
 
   useEffect(() => {
     if (isOpen) {
@@ -40,9 +43,31 @@ export default function ClaimCompanyModal({
           setIsLoggedIn(true);
           if (user.full_name) setFullName(user.full_name);
           if (user.email) setWorkEmail(user.email);
+          if (user.username) setUserUsername(user.username);
+
+          // Calculate profile completion score
+          const uId = user.id;
+          const uName = user.username;
+          supabase
+            .from("profiles")
+            .select("*")
+            .eq(uId ? "id" : "username", uId || uName)
+            .maybeSingle()
+            .then(async ({ data: prof }) => {
+              if (prof) {
+                if (prof.username) setUserUsername(prof.username);
+                const { data: edus } = await supabase.from("educations").select("*").eq("user_id", prof.id);
+                const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", prof.id);
+                const res = calculateProfileCompletion(prof, edus || [], exps || []);
+                setUserCompletion(res.percentage);
+              } else {
+                setUserCompletion(20);
+              }
+            });
         } catch (e) {}
       } else {
         setIsLoggedIn(false);
+        setUserCompletion(null);
       }
     } else {
       document.body.style.overflow = "unset";
@@ -134,7 +159,45 @@ export default function ClaimCompanyModal({
           </button>
         </div>
 
-        {submitted ? (
+        {isLoggedIn && userCompletion !== null && userCompletion < 45 ? (
+          <div className="py-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center mx-auto mb-3 border border-amber-200">
+              <ShieldCheck size={28} />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-3 py-1 rounded-full mb-2 inline-block">
+              Silver Member (45%) Required
+            </span>
+            <h4 className="text-xl font-extrabold text-gray-900 mb-2">
+              Silver Status Required to Claim Practice
+            </h4>
+            <p className="text-xs text-gray-600 mb-5 leading-relaxed max-w-sm mx-auto">
+              Your profile is currently at <strong>{userCompletion}%</strong>. To protect architectural practices from false claims, only members at <strong>Silver Tier (45%)</strong> or above can claim studio profiles.
+            </p>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-xs text-gray-700 space-y-1.5 mb-5 max-w-sm mx-auto">
+              <p className="font-bold text-gray-900">How to reach 45% (under 60 seconds):</p>
+              <p>&bull; Upload Avatar (+10%)</p>
+              <p>&bull; Add Education Degree (+15%)</p>
+              <p>&bull; Add Phone or WhatsApp (+10%)</p>
+              <p>&bull; Add Tagline or Bio (+10%)</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2.5 justify-center max-w-sm mx-auto">
+              <Link
+                href={`/profile/${userUsername || ""}?tab=details`}
+                className="w-full py-3 px-5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <span>Complete Profile (+{45 - userCompletion}% needed)</span>
+                <ArrowRight size={14} />
+              </Link>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full sm:w-auto py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : submitted ? (
           <div className="py-8 text-center flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
               <CheckCircle2 size={36} />

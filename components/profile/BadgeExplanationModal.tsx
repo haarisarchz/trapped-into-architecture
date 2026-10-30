@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import Link from "next/link";
 import { Award, X, Sparkles, Shield, EyeOff } from "lucide-react";
 
 interface BadgeExplanationModalProps {
@@ -75,7 +76,7 @@ export default function BadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800 shrink-0">
-                20% – 49%
+                0% – 44%
               </span>
             </div>
 
@@ -89,7 +90,7 @@ export default function BadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shrink-0">
-                50% – 69%
+                45% – 65%
               </span>
             </div>
 
@@ -103,7 +104,7 @@ export default function BadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-yellow-300 text-yellow-900 shrink-0">
-                70% – 84%
+                66% – 80%
               </span>
             </div>
 
@@ -117,7 +118,7 @@ export default function BadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-cyan-200 text-cyan-900 shrink-0">
-                85% – 94%
+                81% – 90%
               </span>
             </div>
 
@@ -131,7 +132,7 @@ export default function BadgeExplanationModal({
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-900 shrink-0">
-                95% – 100%
+                91% – 100%
               </span>
             </div>
           </div>
@@ -284,8 +285,15 @@ export default function BadgeExplanationModal({
           </div>
         </div>
 
-        {/* Close Button */}
-        <div className="mt-6 flex justify-end sticky bottom-0 bg-white pt-2 border-t border-gray-100">
+        {/* Footer Actions */}
+        <div className="mt-6 flex items-center justify-between sticky bottom-0 bg-white pt-2 border-t border-gray-100">
+          <Link
+            href="/badges-and-perks"
+            onClick={onClose}
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline flex items-center gap-1"
+          >
+            <span>View Full Badges &amp; Perks Guide &rarr;</span>
+          </Link>
           <button
             type="button"
             onClick={onClose}

@@ -4,6 +4,7 @@ import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/utils/formatDate";
 import { generateJobUrl } from "@/utils/jobUrl";
@@ -12,7 +13,7 @@ import Footer from "@/components/Footer";
 import PaginationControls from "@/components/PaginationControls";
 
 
-import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight, RefreshCw } from "lucide-react";
+import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight, RefreshCw, CheckCircle2, XCircle, Clock, Building2, User, ExternalLink, AlertCircle, Briefcase, FileText } from "lucide-react";
 import { formatWhatsAppPost } from "@/utils/socialFormats";
 
 function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) {
@@ -182,6 +183,13 @@ function AdminJobsContent() {
 
 const statusFilter = searchParams.get("status");
 const typeFilter = searchParams.get("type");
+const tabParam = searchParams.get("tab");
+
+  const [activeMainTab, setActiveMainTab] = useState<"main" | "submissions">(
+    tabParam === "submissions" ? "submissions" : "main"
+  );
+  const [selectedFlyer, setSelectedFlyer] = useState<string | null>(null);
+  const [reviewModalJob, setReviewModalJob] = useState<any | null>(null);
 
     const [jobs, setJobs] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -376,9 +384,58 @@ const fetchJobs = async () => {
     fetchJobs();
   };
 
+  const handleApproveJob = async (job: any) => {
+    if (!confirm(`Approve and publish opening for "${job.position || 'position'}" at "${job.firm_name}"?`)) return;
+    try {
+      let updatePayload: any = {
+        status: "published",
+        posted_date: new Date().toISOString(),
+        review_notes: null,
+      };
 
-  const sortedJobs = getSortedJobs(jobs);
-  const totalPages = Math.ceil(sortedJobs.length / itemsPerPage);
+      if (job.edit_request_payload && typeof job.edit_request_payload === "object") {
+        updatePayload = {
+          ...updatePayload,
+          ...job.edit_request_payload,
+          edit_request_payload: null,
+        };
+      }
+
+      const { error } = await supabase.from("jobs").update(updatePayload).eq("id", job.id);
+      if (error) throw error;
+      alert(`Opening for "${job.position}" at "${job.firm_name}" is now live and published!`);
+      fetchJobs();
+    } catch (e: any) {
+      alert("Failed to approve job: " + e.message);
+    }
+  };
+
+  const handleRejectJob = async (job: any) => {
+    const reason = prompt(`Reason for rejecting "${job.position || 'this opening'}" at "${job.firm_name}" (optional):`);
+    if (reason === null) return;
+    try {
+      const { error } = await supabase.from("jobs").update({
+        status: "rejected",
+        review_notes: reason || "Rejected by editorial team",
+      }).eq("id", job.id);
+      if (error) throw error;
+      alert("Opening marked as rejected.");
+      fetchJobs();
+    } catch (e: any) {
+      alert("Failed to reject job: " + e.message);
+    }
+  };
+
+
+  const pendingReviewJobs = jobs.filter(
+    (j) => j.status === "pending_review" || (j.edit_request_payload && Object.keys(j.edit_request_payload).length > 0)
+  );
+
+  const mainPlatformJobs = jobs.filter((j) => j.status !== "pending_review");
+
+  const jobsToDisplay = activeMainTab === "submissions" ? pendingReviewJobs : mainPlatformJobs;
+  const sortedJobs = getSortedJobs(jobsToDisplay);
+  const totalPages = Math.max(1, Math.ceil(sortedJobs.length / itemsPerPage));
   const currentJobs = sortedJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 return (
@@ -399,12 +456,53 @@ return (
     </h1>
 
     <p className="text-gray-600 mt-2">
-      View and manage all Active jobs.
+      View, verify, and manage all architectural job listings and employer submissions.
     </p>
 
-    {/* FILTERS */}
+    {/* TWO PRIMARY SUB-TABS: Main Platform Jobs vs Submissions & Edit Requests */}
+    <div className="flex border-b border-gray-200 mt-8 mb-6 gap-8">
+      <button
+        onClick={() => {
+          setActiveMainTab("main");
+          router.push("/admin/jobs");
+        }}
+        className={`pb-3 text-base font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+          activeMainTab === "main"
+            ? "border-black text-black"
+            : "border-transparent text-gray-400 hover:text-black"
+        }`}
+      >
+        <Briefcase size={18} />
+        <span>Main Platform Jobs</span>
+        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full font-semibold">
+          {jobs.filter((j) => j.status !== "pending_review").length}
+        </span>
+      </button>
 
-<div className="flex flex-wrap gap-3 mt-8 mb-8">
+      <button
+        onClick={() => {
+          setActiveMainTab("submissions");
+          router.push("/admin/jobs?tab=submissions");
+        }}
+        className={`pb-3 text-base font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+          activeMainTab === "submissions"
+            ? "border-black text-black"
+            : "border-transparent text-gray-400 hover:text-black"
+        }`}
+      >
+        <Clock size={18} />
+        <span>Submissions &amp; Review Requests</span>
+        {jobs.filter((j) => j.status === "pending_review" || j.edit_request_payload).length > 0 && (
+          <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">
+            {jobs.filter((j) => j.status === "pending_review" || j.edit_request_payload).length}
+          </span>
+        )}
+      </button>
+    </div>
+
+    {/* FILTERS (Visible on Main Jobs tab) */}
+{activeMainTab === "main" && (
+<div className="flex flex-wrap gap-3 mt-4 mb-8">
 
   <button
     onClick={() => router.push("/admin/jobs")}
@@ -495,6 +593,7 @@ return (
   </button>
 
 </div>
+)}
 
   </div>
 
@@ -716,6 +815,31 @@ return (
               <button onClick={() => setJobToDelete(null)} className="px-5 py-3.5 border rounded-xl hover:bg-gray-50 mt-2 font-semibold transition text-gray-700">
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* FLYER PREVIEW MODAL */}
+      {selectedFlyer && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setSelectedFlyer(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b mb-4">
+              <h3 className="font-bold text-lg text-gray-900">Hiring Flyer Preview</h3>
+              <button
+                onClick={() => setSelectedFlyer(null)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 cursor-pointer"
+              >
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div className="rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
+              <img src={selectedFlyer} alt="Flyer" className="max-h-[70vh] w-auto object-contain" />
             </div>
           </div>
         </div>

@@ -142,13 +142,13 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
 
   // Determine Tier
   let tier: StudioLevelTier = "bronze";
-  if (score >= 95) {
+  if (score >= 91) {
     tier = "diamond";
-  } else if (score >= 80) {
+  } else if (score >= 81) {
     tier = "platinum";
-  } else if (score >= 60) {
+  } else if (score >= 66) {
     tier = "gold";
-  } else if (score >= 40) {
+  } else if (score >= 45) {
     tier = "silver";
   }
 
@@ -187,11 +187,11 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
       border: "border-cyan-300",
     },
     diamond: {
-      label: isVip ? "VIP Diamond Studio" : "Diamond Level Studio",
-      icon: isVip ? "⭐" : "👑",
-      bg: isVip ? "bg-amber-100" : "bg-purple-50",
-      text: isVip ? "text-amber-900" : "text-purple-800",
-      border: isVip ? "border-amber-400" : "border-purple-300",
+      label: "Diamond Level Studio",
+      icon: "👑",
+      bg: "bg-purple-50",
+      text: "text-purple-800",
+      border: "border-purple-300",
     },
   };
 

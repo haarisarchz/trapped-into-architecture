@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
   Phone,
   MessageSquare,
   Globe,
@@ -57,6 +59,63 @@ export default function PersonalInfoTab({
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...user });
   const [saving, setSaving] = useState(false);
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [verifyingPhone, setVerifyingPhone] = useState(false);
+
+  const handleVerifyEmail = async () => {
+    if (!user.email) {
+      alert("Please enter and save your email address first.");
+      return;
+    }
+    setVerifyingEmail(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: user.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile/${user.username || ""}?verified=email`,
+        },
+      });
+      if (error) {
+        console.warn("Auth resend note:", error.message);
+      }
+      alert(`Verification link sent to ${user.email}! Click the link in your email to verify and unlock +5% profile completion score.`);
+    } catch (e) {
+      alert("Failed to send verification email. Please try again.");
+    } finally {
+      setVerifyingEmail(false);
+    }
+  };
+
+  const handleVerifyPhone = async () => {
+    if (!user.phone) {
+      alert("Please enter and save your phone number first.");
+      return;
+    }
+    const confirmed = confirm(
+      `Confirm Phone Verification:\n\nIs ${user.phone} your active mobile/WhatsApp contact number?\n\nClick OK to verify and add +5% to your profile completion score.`
+    );
+    if (!confirmed) return;
+
+    setVerifyingPhone(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ phone_verified: true })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      if (onUserUpdate) {
+        onUserUpdate({ ...user, phone_verified: true });
+      }
+      alert(`Phone number ${user.phone} verified! +5% added to your profile completion score.`);
+    } catch (err: any) {
+      alert(err.message || "Could not verify phone. Please try again.");
+    } finally {
+      setVerifyingPhone(false);
+    }
+  };
 
   const handlePhoneChange = (val: string) => {
     const updated: any = { ...formData, phone: val };
@@ -385,6 +444,29 @@ export default function PersonalInfoTab({
               {user.email || "Not added"}
             </p>
           )}
+          <div className="flex items-center justify-between mt-2 px-1">
+            {user.email_verified || user.is_email_verified ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md font-semibold border border-emerald-200">
+                <CheckCircle2 size={11} /> Email Verified (+5% earned)
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                  <AlertCircle size={11} /> Unverified (Verify for +5%)
+                </span>
+                {isOwner && user.email && (
+                  <button
+                    type="button"
+                    onClick={handleVerifyEmail}
+                    disabled={verifyingEmail}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer disabled:opacity-50"
+                  >
+                    {verifyingEmail ? "Sending..." : "Verify Email"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* PHONE NUMBER */}
@@ -416,6 +498,29 @@ export default function PersonalInfoTab({
               {user.phone || "Not added"}
             </p>
           )}
+          <div className="flex items-center justify-between mt-2 px-1">
+            {user.phone_verified || user.is_phone_verified ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md font-semibold border border-emerald-200">
+                <CheckCircle2 size={11} /> Phone Verified (+5% earned)
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                  <AlertCircle size={11} /> Unverified (Verify for +5%)
+                </span>
+                {isOwner && user.phone && (
+                  <button
+                    type="button"
+                    onClick={handleVerifyPhone}
+                    disabled={verifyingPhone}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer disabled:opacity-50"
+                  >
+                    {verifyingPhone ? "Verifying..." : "Verify Phone (+5%)"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* WHATSAPP NUMBER & "SAME AS PHONE NUMBER" */}

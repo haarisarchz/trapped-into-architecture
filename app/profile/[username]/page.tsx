@@ -45,6 +45,7 @@ export default function ProfilePage() {
   const [experiences, setExperiences] = useState<ExperienceEntry[]>([]);
   const [savedJobsData, setSavedJobsData] = useState<any[]>([]);
   const [favoriteCompanies, setFavoriteCompanies] = useState<any[]>([]);
+  const [ownedCompanies, setOwnedCompanies] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -99,6 +100,8 @@ export default function ProfilePage() {
           badge_tier: profile.badge_tier || "bronze",
           is_vip: profile.is_vip || false,
           likes_count: profile.likes_count || 0,
+          email_verified: Boolean(profile.email_verified || profile.is_email_verified),
+          phone_verified: Boolean(profile.phone_verified || profile.is_phone_verified),
         };
 
         setUser(formattedUser);
@@ -121,6 +124,10 @@ export default function ProfilePage() {
           const { data: authData } = await supabase.auth.getUser();
           if (authData?.user?.id === profile.id || authData?.user?.email === profile.email) {
             setIsOwner(true);
+            if (authData.user.email_confirmed_at && !profile.email_verified) {
+              formattedUser.email_verified = true;
+              supabase.from("profiles").update({ email_verified: true }).eq("id", profile.id).then();
+            }
           }
         }
 
@@ -168,6 +175,17 @@ export default function ProfilePage() {
             .select("slug, firm_name, logo_url, city")
             .in("slug", slugs);
           if (comps) setFavoriteCompanies(comps);
+        }
+
+        // Fetch Owned/Claimed Companies (Company Admin check for Recruiter status)
+        try {
+          const { data: ownedComps } = await supabase
+            .from("companies")
+            .select("id, firm_name, slug, logo_url, city, is_claimed")
+            .or(`created_by.eq.${profile.id},claimed_by.eq.${profile.id}`);
+          if (ownedComps) setOwnedCompanies(ownedComps);
+        } catch (e) {
+          console.warn("Could not fetch owned companies:", e);
         }
       } catch (err) {
         console.error("Error loading full profile:", err);
@@ -305,6 +323,7 @@ export default function ProfilePage() {
             totalExpFormatted={totalExp.formatted}
             badgeTier={completion.badgeTier}
             isVip={completion.isVip}
+            ownedCompanies={ownedCompanies}
             onAvatarUpdate={handleAvatarUpdate}
           />
 

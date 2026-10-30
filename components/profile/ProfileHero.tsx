@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Briefcase,
   Camera,
+  Building2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getBadgeDetails, BadgeTier } from "@/utils/profileCompletion";
@@ -17,6 +18,7 @@ interface ProfileHeroProps {
   totalExpFormatted: string;
   badgeTier: BadgeTier;
   isVip: boolean;
+  ownedCompanies?: any[];
   onAvatarUpdate: (newUrl: string) => void;
 }
 
@@ -26,6 +28,7 @@ export default function ProfileHero({
   totalExpFormatted,
   badgeTier,
   isVip,
+  ownedCompanies = [],
   onAvatarUpdate,
 }: ProfileHeroProps) {
   const [likesCount, setLikesCount] = useState<number>(user.likes_count || 0);
@@ -347,6 +350,19 @@ export default function ProfileHero({
 
             {/* Badges / Track / Experience Row */}
             <div className="flex flex-wrap items-center gap-2 text-xs">
+              {/* Verified Recruiter Badge (Company Admin) */}
+              {((ownedCompanies && ownedCompanies.length > 0) || user.is_recruiter) && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-purple-50 to-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-full shadow-xs"
+                  title={ownedCompanies && ownedCompanies.length > 0 ? `Verified Recruiter for ${ownedCompanies.map((c: any) => c.firm_name).join(', ')}` : "Verified Recruiter"}
+                >
+                  <Building2 size={12} className="text-indigo-600" />
+                  <span>
+                    Recruiter {ownedCompanies && ownedCompanies.length > 0 ? `• ${ownedCompanies[0].firm_name}` : ""}
+                  </span>
+                </span>
+              )}
+
               {/* User Track: Job Seeker, Student, Recruiter, Academician, Freelancer, Explorer */}
               {(() => {
                 const getTrackBadge = (track: string) => {

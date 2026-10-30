@@ -79,7 +79,11 @@ export default function Footer() {
 
   const handleJobAlerts = (e: React.MouseEvent) => {
     e.preventDefault();
-    alert("Job Alerts feature is coming soon! Stay tuned.");
+    if (settings?.whatsapp_channel_url) {
+      window.open(settings.whatsapp_channel_url, "_blank");
+    } else {
+      window.open("https://chat.whatsapp.com/", "_blank");
+    }
   };
 
   const handleCreateCompany = async (e: React.MouseEvent) => {
@@ -144,23 +148,16 @@ export default function Footer() {
 
   const handlePostJob = (e: React.MouseEvent) => {
     e.preventDefault();
-    const isAdmin = ["ceo", "superadmin", "admin", "jobadmin"].includes(userRole);
-    if (isAdmin) {
-      router.push("/admin/add-job");
-    } else {
-      alert(
-        "Job posting access is currently restricted to verified administrators. Please contact admin at admin.ti2a@gmail.com to publish your opening."
-      );
-    }
+    router.push("/post-job");
   };
 
   return (
     <footer className="bg-black text-white">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 md:py-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 pt-8 pb-4 md:pt-9 md:pb-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-7">
         {/* BRAND */}
         <div className="lg:col-span-1">
-          <div className="mb-5">
-            <div className="flex items-center gap-3 mb-3">
+          <div className="mb-3">
+            <div className="flex items-center gap-2.5 mb-2">
               {settings?.logo_url && (
                 <img src={settings.logo_url} alt="Site Logo" className="h-10 w-auto md:h-12 object-contain shrink-0" />
               )}
@@ -171,7 +168,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center gap-3.5 text-gray-400">
+          <div className="mt-3.5 flex flex-wrap items-center gap-3 text-gray-400">
             {settings?.whatsapp_channel_url && (
               <a
                 href={ensureHttp(settings.whatsapp_channel_url)}
@@ -268,8 +265,8 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/contact" className="hover:text-white transition block">
-                Contact Page
+              <Link href="/badges-and-perks" className="hover:text-white transition block">
+                Badges &amp; Perks
               </Link>
             </li>
           </ul>
@@ -283,21 +280,21 @@ export default function Footer() {
           <ul className="space-y-2.5 text-gray-400 text-xs sm:text-sm">
             {!isLoggedIn ? (
               <li>
-                <a href="#" onClick={handleCreateProfile} className="hover:text-white transition block">
+                <button type="button" onClick={handleCreateProfile} className="hover:text-white transition block text-left cursor-pointer">
                   Create Profile
-                </a>
+                </button>
               </li>
             ) : (
               <li>
-                <a href="#" onClick={handleManageProfile} className="hover:text-white transition block">
+                <button type="button" onClick={handleManageProfile} className="hover:text-white transition block text-left cursor-pointer">
                   Manage Profile
-                </a>
+                </button>
               </li>
             )}
             <li>
-              <a href="#" onClick={handleJobAlerts} className="hover:text-white transition block">
+              <button type="button" onClick={handleJobAlerts} className="hover:text-white transition block text-left cursor-pointer">
                 Get Job Alerts
-              </a>
+              </button>
             </li>
           </ul>
         </div>
@@ -309,19 +306,19 @@ export default function Footer() {
           </h3>
           <ul className="space-y-2.5 text-gray-400 text-xs sm:text-sm">
             <li>
-              <a href="#" onClick={handleCreateCompany} className="hover:text-white transition block">
+              <button type="button" onClick={handleCreateCompany} className="hover:text-white transition block text-left cursor-pointer">
                 Create Company Profile
-              </a>
+              </button>
             </li>
             <li>
-              <a href="#" onClick={handleManageCompany} className="hover:text-white transition block">
+              <button type="button" onClick={handleManageCompany} className="hover:text-white transition block text-left cursor-pointer">
                 Manage Company Profile
-              </a>
+              </button>
             </li>
             <li>
-              <a href="#" onClick={handlePostJob} className="hover:text-white transition block">
+              <button type="button" onClick={handlePostJob} className="hover:text-white transition block text-left cursor-pointer">
                 Post a Job Opening
-              </a>
+              </button>
             </li>
           </ul>
         </div>
@@ -358,12 +355,17 @@ export default function Footer() {
             <li className="pt-1 text-gray-500">
               {settings?.contact_address || "Madurai, India"}
             </li>
+            <li className="pt-1">
+              <Link href="/contact" className="hover:text-white transition block text-gray-400">
+                Contact Page
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
 
       {/* BOTTOM BAR */}
-      <div className="border-t border-gray-900 py-4 px-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-gray-500 text-xs">
+      <div className="border-t border-gray-900 py-2.5 px-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-gray-500 text-xs">
         <div>© {new Date().getFullYear()} Trapped Into Architecture. All rights reserved.</div>
         <div>
           <Link href="/privacy-policy" className="hover:text-gray-300 transition underline underline-offset-4">
