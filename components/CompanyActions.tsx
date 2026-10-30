@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Heart, Share } from "lucide-react";
+import { Heart, Share, X, Copy, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 export default function CompanyActions({
@@ -19,6 +19,8 @@ export default function CompanyActions({
   const [favoriteCount, setFavoriteCount] = useState(initialFavorites);
   const [loading, setLoading] = useState(false);
   const [tableExists, setTableExists] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setFavoriteCount(initialFavorites);

@@ -35,6 +35,32 @@ export default function ProfileHero({
   const [hasLiked, setHasLiked] = useState<boolean>(false);
   const [likeLoading, setLikeLoading] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+
+  const handleCopyLink = () => {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/profile/${user.username}` : "";
+    if (url) {
+      navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }
+  };
+
+  const handleNativeShare = async () => {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/profile/${user.username}` : "";
+    const title = `${user.fullName || user.username}'s Architecture Profile`;
+    const text = `Explore ${user.fullName || user.username}'s architectural profile, portfolio, and experience on Trapped Into Architecture!`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+      } catch (e) {
+        // User cancelled or unsupported
+      }
+    } else {
+      handleCopyLink();
+    }
+  };
 
   // Helper to safely get the current logged in user's profile ID
   const getLoggedInUserId = async (): Promise<string | null> => {

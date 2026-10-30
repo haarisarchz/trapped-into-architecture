@@ -206,12 +206,28 @@ export default function ClaimCompanyModal({
             <p className="text-gray-600 text-sm max-w-sm mb-6 leading-relaxed">
               Thank you! Our platform team will verify your credentials for <strong>{companyName}</strong> and activate your verified studio management privileges shortly.
             </p>
-            <button
-              onClick={onClose}
-              className="bg-black text-white px-6 py-2.5 rounded-xl font-medium hover:bg-gray-800 transition cursor-pointer"
-            >
-              Done
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full max-w-sm">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  `Check out ${companyName} on Trapped Into Architecture! Explore our practice profile, projects, and careers: ${
+                    typeof window !== "undefined" ? window.location.origin : "https://trappedintoarchitecture.com"
+                  }/companies/${companySlug}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
+              >
+                <span>📲</span>
+                <span>Share Studio on WhatsApp</span>
+              </a>
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full sm:w-auto bg-black text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-gray-800 transition cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

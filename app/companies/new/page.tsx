@@ -220,6 +220,19 @@ export default function RegisterPracticePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  `Check out ${firmName} on Trapped Into Architecture! Explore our practice profile, projects, and careers: ${
+                    typeof window !== "undefined" ? window.location.origin : "https://trappedintoarchitecture.com"
+                  }/companies/${createdSlug}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto px-6 py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <span>📲</span>
+                <span>Share Studio on WhatsApp</span>
+              </a>
               <Link
                 href={`/companies/${createdSlug}`}
                 className="w-full sm:w-auto px-6 py-3 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs"
@@ -231,7 +244,7 @@ export default function RegisterPracticePage() {
                 href="/companies"
                 className="w-full sm:w-auto px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center justify-center"
               >
-                Browse Companies Directory
+                Browse Directory
               </Link>
             </div>
           </div>

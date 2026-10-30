@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check } from "lucide-react";
+import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
 
@@ -33,6 +33,16 @@ const [showUserMenu, setShowUserMenu] =
   useState<any>(null);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && typeof window !== 'undefined') {
+      const hasSeen = localStorage.getItem('tia_has_seen_welcome');
+      if (!hasSeen) {
+        setShowWelcomeModal(true);
+      }
+    }
+  }, [currentUser]);
   const [settings, setSettings] = useState<any>(null);
 
   const [authTab, setAuthTab] =
@@ -978,17 +988,27 @@ window.location.reload();
 {/* SUCCESS */}
 
 {authTab === "success" && (
-  <div className="text-center space-y-6 py-8">
-    <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Check size={44} strokeWidth={2.5} />
-      </div>
-    <h2 className="text-3xl font-bold">Registration Successful</h2>
-    <p className="text-gray-600 text-lg">Your account has been created successfully. Login to continue.</p>
+  <div className="text-center space-y-5 py-6">
+    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
+      <Check size={44} strokeWidth={2.5} />
+    </div>
+    <div className="space-y-1">
+      <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+        Thanks for Registering with Us! 🎉
+      </h2>
+      <p className="text-xs sm:text-sm font-semibold text-emerald-700 bg-emerald-50 py-1 px-3 rounded-full inline-block border border-emerald-200 mt-1">
+        Welcome to Trapped Into Architecture
+      </p>
+    </div>
+    <p className="text-gray-600 text-sm max-w-sm mx-auto leading-relaxed">
+      Your account is ready. Log in now to build your architectural profile, claim or register your studio, and start connecting with firms across India.
+    </p>
     <button 
+      type="button"
       onClick={() => setAuthTab("login")} 
-      className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition mt-6"
+      className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-2xl font-bold transition shadow-sm mt-4 cursor-pointer"
     >
-      Login
+      Proceed to Login →
     </button>
   </div>
 )}
@@ -1655,6 +1675,138 @@ window.location.reload();
 </div>
 
 )}
-  </>
+  
+      {/* FIRST-TIME LOGIN WELCOME MODAL */}
+      {showWelcomeModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => {
+            localStorage.setItem("tia_has_seen_welcome", "true");
+            setShowWelcomeModal(false);
+          }}
+        >
+          <div
+            className="bg-[#FBF9F5] border border-[#E8E2D5] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-left relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Background architectural glow */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4 relative z-10">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold uppercase tracking-wider mb-2">
+                  🏛️ Welcome to TIA
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                  Welcome, {currentUser?.displayName || currentUser?.username || "Architect"}!
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed">
+                  You are now part of India&apos;s premier platform dedicated exclusively to architecture, interior design, and studio careers.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* 3 Quick Action Steps */}
+            <div className="space-y-2.5 mb-6 relative z-10">
+              <Link
+                href={`/profile/${currentUser?.username || ""}?tab=details`}
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="flex items-center gap-3.5 p-3 rounded-2xl bg-white border border-gray-200 hover:border-black transition group cursor-pointer shadow-xs"
+              >
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
+                  1
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-bold text-gray-900 group-hover:text-black">
+                    Complete Your Profile
+                  </h4>
+                  <p className="text-[11px] text-gray-500 truncate">
+                    Reach Gold Tier (66%+) to post jobs and unlock verified perks.
+                  </p>
+                </div>
+                <ArrowRight size={14} className="text-gray-400 group-hover:text-black transition" />
+              </Link>
+
+              <Link
+                href="/companies"
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="flex items-center gap-3.5 p-3 rounded-2xl bg-white border border-gray-200 hover:border-black transition group cursor-pointer shadow-xs"
+              >
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">
+                  2
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-bold text-gray-900 group-hover:text-black">
+                    Claim or Register Your Studio
+                  </h4>
+                  <p className="text-[11px] text-gray-500 truncate">
+                    Manage your practice dossier, invite team, and publish openings.
+                  </p>
+                </div>
+                <ArrowRight size={14} className="text-gray-400 group-hover:text-black transition" />
+              </Link>
+
+              <div className="p-3 rounded-2xl bg-[#E8F8EE] border border-[#A7E8BD] flex items-center gap-3.5 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-[#25D366] text-white flex items-center justify-center text-lg shrink-0">
+                  📲
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-bold text-gray-900">
+                    Invite Peers on WhatsApp
+                  </h4>
+                  <p className="text-[11px] text-gray-600">
+                    Help fellow architects, students, and studios discover the portal.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Buttons: Direct WhatsApp Invite + Get Started */}
+            <div className="flex flex-col sm:flex-row gap-2.5 relative z-10">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  "Hey! I just joined Trapped Into Architecture — India's dedicated architectural job, studio directory & professional networking portal. Explore studios, jobs & perks: https://trappedintoarchitecture.com"
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition"
+              >
+                <span>📲</span>
+                <span>Invite Friends on WhatsApp</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="py-3 px-5 rounded-xl bg-black hover:bg-gray-800 text-white font-bold text-xs sm:text-sm transition cursor-pointer"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+</>
 );
 }
