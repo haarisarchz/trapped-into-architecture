@@ -273,128 +273,142 @@ export default function BadgesAndPerksPage() {
                       <th className="py-3 px-4 text-right">Points</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-[#EAE5DC]">
                     {/* Basic Identity */}
-                    <tr className="hover:bg-amber-50/30">
-                      <td className="py-3 px-4 font-bold text-gray-900" rowSpan={4}>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3.5 px-4 font-bold text-gray-900" rowSpan={4}>
                         Basic Identity<br/>
-                        <span className="text-[10px] text-gray-500 font-normal">20% total</span>
+                        <span className="text-[10px] text-gray-500 font-medium">20% total</span>
                       </td>
-                      <td className="py-3 px-4 text-gray-800 font-medium">Full Name &amp; Unique Username</td>
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Full Name &amp; Unique Username</td>
                       <td className="py-3 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">On Signup</span>
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">On Signup</span>
                       </td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">5%</td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
-                    <tr className="hover:bg-amber-50/30">
-                      <td className="py-3 px-4 text-gray-800 font-medium">Email Address Added</td>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Email Address Added</td>
                       <td className="py-3 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">On Signup</span>
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">On Signup</span>
                       </td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">5%</td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
-                    <tr className="hover:bg-amber-50/30">
-                      <td className="py-3 px-4 text-gray-700">Profile Picture / Avatar Uploaded</td>
-                      <td className="py-3 px-4 text-center text-gray-400">Media Upload</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">5%</td>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Profile Picture / Avatar Uploaded</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Media Upload</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
-                    <tr className="hover:bg-amber-50/30">
-                      <td className="py-3 px-4 text-gray-700">Professional Tagline / Headline</td>
-                      <td className="py-3 px-4 text-center text-gray-400">Text Entry</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">5%</td>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Professional Tagline / Headline</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Text Entry</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
 
-                    {/* Contact & Verification (Highlighted in soft blue) */}
-                    <tr className="bg-sky-50/30 hover:bg-sky-50/50">
-                      <td className="py-3 px-4 font-bold text-sky-950" rowSpan={4}>
+                    {/* Contact & Verification */}
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3.5 px-4 font-bold text-gray-900" rowSpan={4}>
                         Contact &amp; Verifications<br/>
-                        <span className="text-[10px] text-sky-700 font-normal">20% total</span>
+                        <span className="text-[10px] text-gray-500 font-medium">20% total</span>
                       </td>
-                      <td className="py-3 px-4 text-gray-800 font-medium">Phone Number Added</td>
-                      <td className="py-3 px-4 text-center text-gray-500">Can be marked Secret</td>
-                      <td className="py-3 px-4 text-right font-black text-sky-900">5%</td>
-                    </tr>
-                    <tr className="bg-sky-50/30 hover:bg-sky-50/50">
-                      <td className="py-3 px-4 text-gray-800 font-medium">WhatsApp Number (or Same as Phone)</td>
-                      <td className="py-3 px-4 text-center text-gray-500">Direct Contact</td>
-                      <td className="py-3 px-4 text-right font-black text-sky-900">5%</td>
-                    </tr>
-                    <tr className="bg-sky-50/30 hover:bg-sky-50/50">
-                      <td className="py-3 px-4 text-emerald-800 font-bold flex items-center gap-1.5">
-                        <CheckCircle2 size={13} className="text-emerald-600" />
-                        <span>Email Verification Confirmed</span>
-                      </td>
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Phone Number Added</td>
                       <td className="py-3 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">Email Link</span>
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Can be marked Secret</span>
                       </td>
-                      <td className="py-3 px-4 text-right font-black text-emerald-800">5%</td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
-                    <tr className="bg-sky-50/30 hover:bg-sky-50/50">
-                      <td className="py-3 px-4 text-emerald-800 font-bold flex items-center gap-1.5">
-                        <CheckCircle2 size={13} className="text-emerald-600" />
-                        <span>Phone Verification Confirmed</span>
-                      </td>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">WhatsApp Number (or Same as Phone)</td>
                       <td className="py-3 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">Active Contact</span>
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Direct Contact</span>
                       </td>
-                      <td className="py-3 px-4 text-right font-black text-emerald-800">5%</td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
+                    </tr>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Email Address Verification</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Email Link</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
+                    </tr>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Phone / WhatsApp Verification</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Active Contact</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
 
                     {/* Professional Credentials & Social */}
-                    <tr className="hover:bg-amber-50/20">
-                      <td className="py-3 px-4 font-bold text-gray-900" rowSpan={3}>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3.5 px-4 font-bold text-gray-900" rowSpan={3}>
                         Credentials &amp; Social<br/>
-                        <span className="text-[10px] text-gray-500 font-normal">25% total</span>
+                        <span className="text-[10px] text-gray-500 font-medium">25% total</span>
                       </td>
-                      <td className="py-3 px-4 text-gray-800 font-medium">Profession Selection</td>
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Profession Selection</td>
                       <td className="py-3 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">On Signup</span>
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">On Signup</span>
                       </td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">10%</td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+10%</td>
                     </tr>
-                    <tr className="hover:bg-amber-50/20">
-                      <td className="py-3 px-4 text-gray-800 font-medium">
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">
                         Council of Architecture (COA) Registration / Highest Qual
                       </td>
-                      <td className="py-3 px-4 text-center text-gray-500">High-Trust Proof</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">10%</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">High-Trust Proof</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+10%</td>
                     </tr>
-                    <tr className="hover:bg-amber-50/20">
-                      <td className="py-3 px-4 text-gray-700">LinkedIn Profile or Portfolio Website URL</td>
-                      <td className="py-3 px-4 text-center text-gray-400">External Work Link</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">5%</td>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">LinkedIn Profile or Portfolio Website URL</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">External Work Link</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
 
                     {/* Bio & Personal */}
-                    <tr className="hover:bg-gray-50">
-                      <td className="py-3 px-4 font-bold text-gray-900" rowSpan={2}>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3.5 px-4 font-bold text-gray-900" rowSpan={2}>
                         Bio &amp; Personal<br/>
-                        <span className="text-[10px] text-gray-500 font-normal">10% total</span>
+                        <span className="text-[10px] text-gray-500 font-medium">10% total</span>
                       </td>
-                      <td className="py-3 px-4 text-gray-700">About Me / Professional Biography</td>
-                      <td className="py-3 px-4 text-center text-gray-400">Text Narrative</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">5%</td>
+                      <td className="py-3 px-4 text-gray-800 font-semibold">About Me / Professional Biography</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Text Narrative</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
-                    <tr className="hover:bg-gray-50">
-                      <td className="py-3 px-4 text-gray-700">Date of Birth &amp; Gender</td>
-                      <td className="py-3 px-4 text-center text-gray-400">Can be marked Secret</td>
-                      <td className="py-3 px-4 text-right font-black text-gray-900">5%</td>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Date of Birth &amp; Gender</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Can be marked Secret</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+5%</td>
                     </tr>
 
                     {/* Education & Experience */}
-                    <tr className="bg-amber-50/20 hover:bg-amber-50/40">
-                      <td className="py-3 px-4 font-bold text-amber-950" rowSpan={2}>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3.5 px-4 font-bold text-gray-900" rowSpan={2}>
                         Experience &amp; Edu<br/>
-                        <span className="text-[10px] text-amber-800 font-normal">25% total</span>
+                        <span className="text-[10px] text-gray-500 font-medium">25% total</span>
                       </td>
-                      <td className="py-3 px-4 text-gray-800 font-medium">Add at least one Education Degree (B.Arch, M.Arch, etc.)</td>
-                      <td className="py-3 px-4 text-center text-gray-500">Degree Details</td>
-                      <td className="py-3 px-4 text-right font-black text-amber-950">15%</td>
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Add at least one Education Degree (B.Arch, M.Arch, etc.)</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Degree Details</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+15%</td>
                     </tr>
-                    <tr className="bg-amber-50/20 hover:bg-amber-50/40">
-                      <td className="py-3 px-4 text-gray-800 font-medium">Add at least one Professional Work Experience</td>
-                      <td className="py-3 px-4 text-center text-gray-500">Work Experience</td>
-                      <td className="py-3 px-4 text-right font-black text-amber-950">10%</td>
+                    <tr className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 text-gray-800 font-semibold">Add at least one Professional Work Experience</td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200 text-[10px] font-medium">Work Experience</span>
+                      </td>
+                      <td className="py-3 px-4 text-right font-black text-stone-900 font-mono text-xs">+10%</td>
                     </tr>
                   </tbody>
                 </table>

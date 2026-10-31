@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Lock, EyeOff, Shield, Check, GraduationCap, Briefcase, Globe } from "lucide-react";
+import { Lock, EyeOff, Shield, Check, GraduationCap, Briefcase, Globe, Share2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface ProfileSettingsTabProps {
@@ -21,6 +21,9 @@ export default function ProfileSettingsTab({
   const [hideExperience, setHideExperience] = useState<boolean>(Boolean(user.hide_experience));
   const [hideEducation, setHideEducation] = useState<boolean>(Boolean(user.hide_education));
   const [displayProfilePublicly, setDisplayProfilePublicly] = useState<boolean>(Boolean(user.display_profile_publicly));
+  const [allowPublicSharing, setAllowPublicSharing] = useState<boolean>(
+    user.allow_public_sharing !== false
+  );
 
   const [saving, setSaving] = useState<boolean>(false);
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
