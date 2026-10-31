@@ -481,7 +481,7 @@ CREATE POLICY "Allow public delete on contact_inquiries" ON public.contact_inqui
                 <p className="text-gray-500 text-sm max-w-md mx-auto">
                   {searchQuery || filterStatus !== "all" 
                     ? "No inquiries match your current search or filter."
-                    : "When visitors submit messages via the /contact page, they will appear here and trigger an instant email alert to admin.ti2a@gmail.com."}
+                    : `When visitors submit messages via the /contact page, they will appear here and trigger an instant email alert to ${settings.email || "admin.ti2a@gmail.com"}.`}
                 </p>
               </div>
             ) : (

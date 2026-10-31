@@ -89,6 +89,51 @@ export async function POST(req: Request) {
         } else if (mailResult.error) {
           emailErrorMsg = mailResult.error.message;
           console.warn("Resend email response error:", mailResult.error);
+
+          // Handle Resend free testing tier restriction gracefully:
+          // e.g. "You can only send testing emails to your own email address (haaris.archz@gmail.com)..."
+          const match = mailResult.error.message?.match(/only send testing emails to your own email address \(([^)]+)\)/i);
+          if (match && match[1] && match[1].toLowerCase() !== recipientEmail.toLowerCase()) {
+            const fallbackEmail = match[1].trim();
+            console.log(`Resend test tier restricted to ${fallbackEmail}. Retrying fallback delivery...`);
+            const fallbackResult = await resend.emails.send({
+              from: fromEmail,
+              to: fallbackEmail,
+              replyTo: email.trim(),
+              subject: `?? [Ti2A Contact] ${subject ? subject.trim() : `New message from ${name}`}`,
+              html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background: #ffffff;">
+              <div style="margin-bottom: 20px;">
+                <span style="background: #000; color: #fff; font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase;">New Contact Inquiry</span>
+                <h2 style="color: #111827; margin: 12px 0 4px 0; font-size: 20px;">${subject || "General Inquiry"}</h2>
+                <p style="color: #6b7280; font-size: 13px; margin: 0;">Sent via trappedintoarchitecture.com/contact (Delivered via registered test account: ${fallbackEmail})</p>
+              </div>
+              
+              <div style="background-color: #f9fafb; padding: 16px; border-radius: 12px; margin: 16px 0; border: 1px solid #f3f4f6;">
+                <p style="margin: 6px 0; font-size: 14px; color: #374151;"><strong>Sender:</strong> ${name}</p>
+                <p style="margin: 6px 0; font-size: 14px; color: #374151;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #2563eb;">${email}</a></p>
+                <p style="margin: 6px 0; font-size: 14px; color: #374151;"><strong>Phone:</strong> ${phone ? `<a href="tel:${phone}" style="color: #2563eb;">${phone}</a>` : "Not provided"}</p>
+                <p style="margin: 6px 0; font-size: 14px; color: #374151;"><strong>Intended Admin Recipient:</strong> ${recipientEmail}</p>
+                <p style="margin: 6px 0; font-size: 14px; color: #374151;"><strong>Date:</strong> ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST</p>
+              </div>
+
+              <div style="margin: 20px 0;">
+                <p style="font-size: 13px; font-weight: bold; color: #4b5563; text-transform: uppercase; margin-bottom: 8px;">Message:</p>
+                <div style="background: #ffffff; padding: 16px; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 14px; line-height: 1.6; color: #1f2937; white-space: pre-wrap;">${message}</div>
+              </div>
+
+              <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; text-align: center;">
+                Reply directly to this email to reach <strong>${name}</strong> at <strong>${email}</strong>.
+              </div>
+            </div>
+          `
+            });
+            if (fallbackResult.data?.id) {
+              emailSent = true;
+              emailErrorMsg = null;
+              recipientEmail = `${recipientEmail} (delivered via test email ${fallbackEmail})`;
+            }
+          }
         }
       } catch (mailErr: any) {
         console.warn("Resend email dispatch error:", mailErr);
