@@ -356,27 +356,30 @@ export default function CompanyHeaderAndTabs({
                   {formattedTypology}
                 </span>
 
-                {/* PRIMARY ACTION: Admin or Company Owner gets "Edit Company Details", Visitors get "Claim this Studio" */}
-                {canEditCompany ? (
-                  <button
-                    onClick={handleEditClick}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-black hover:bg-gray-800 text-white font-bold text-xs rounded-lg shadow-xs transition cursor-pointer"
-                  >
-                    <Edit size={13} />
-                    <span>{isCompanyOwner && !isAdmin ? "Edit Studio Profile" : "Edit / Add Company Details"}</span>
-                  </button>
-                ) : isClaimed ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg">
-                    <ShieldCheck size={13} className="text-blue-600" />
-                    <span>Claimed Studio</span>
-                  </span>
-                ) : (
+                {/* 1. CLAIM BUTTON: Available to anyone (including admins) if the studio is NOT yet claimed */}
+                {!isClaimed ? (
                   <button
                     onClick={handleClaimClick}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-xs hover:shadow-md transition cursor-pointer"
                   >
                     <Building2 size={13} />
                     <span>Claim this Studio</span>
+                  </button>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg">
+                    <ShieldCheck size={13} className="text-blue-600" />
+                    <span>{isCompanyOwner ? "Verified Studio Owner" : "Claimed Studio"}</span>
+                  </span>
+                )}
+
+                {/* 2. EDIT / ADD DETAILS BUTTON: Available to Admins (Superadmin, Admin, CEO, Jobadmin) or Verified Owner */}
+                {canEditCompany && (
+                  <button
+                    onClick={handleEditClick}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-black hover:bg-gray-800 text-white font-bold text-xs rounded-lg shadow-xs transition cursor-pointer"
+                  >
+                    <Edit size={13} />
+                    <span>{isCompanyOwner && !isAdmin ? "Edit Studio Profile" : "Edit / Add Company Details"}</span>
                   </button>
                 )}
 
@@ -558,23 +561,26 @@ export default function CompanyHeaderAndTabs({
                 <p className="text-base font-extrabold text-gray-900 mb-3">
                   Do you represent this studio or firm?
                 </p>
-                {isAdmin ? (
-                  <Link
-                    href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
-                    className="inline-flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-xs"
-                  >
-                    <Edit size={13} />
-                    <span>Edit / Add Details</span>
-                  </Link>
-                ) : !isClaimed ? (
-                  <button
-                    onClick={handleClaimClick}
-                    className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
-                  >
-                    <Building2 size={14} />
-                    <span>Claim this Studio</span>
-                  </button>
-                ) : null}
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                  {!isClaimed && (
+                    <button
+                      onClick={handleClaimClick}
+                      className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
+                    >
+                      <Building2 size={14} />
+                      <span>Claim this Studio</span>
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <Link
+                      href={`/admin/companies/edit/${company.id || "new"}?name=${encodeURIComponent(company.firm_name)}`}
+                      className="inline-flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-xs"
+                    >
+                      <Edit size={13} />
+                      <span>Edit / Add Details</span>
+                    </Link>
+                  )}
+                </div>
               </div>
             )}
           </div>
