@@ -45,7 +45,6 @@ export default function ProfilePage() {
   const [experiences, setExperiences] = useState<ExperienceEntry[]>([]);
   const [savedJobsData, setSavedJobsData] = useState<any[]>([]);
   const [favoriteCompanies, setFavoriteCompanies] = useState<any[]>([]);
-  const [ownedCompanies, setOwnedCompanies] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -175,17 +174,6 @@ export default function ProfilePage() {
             .select("slug, firm_name, logo_url, city")
             .in("slug", slugs);
           if (comps) setFavoriteCompanies(comps);
-        }
-
-        // Fetch Owned/Claimed Companies (Company Admin check for Recruiter status)
-        try {
-          const { data: ownedComps } = await supabase
-            .from("companies")
-            .select("id, firm_name, slug, logo_url, city, is_claimed")
-            .or(`created_by.eq.${profile.id},claimed_by.eq.${profile.id}`);
-          if (ownedComps) setOwnedCompanies(ownedComps);
-        } catch (e) {
-          console.warn("Could not fetch owned companies:", e);
         }
       } catch (err) {
         console.error("Error loading full profile:", err);
@@ -323,7 +311,6 @@ export default function ProfilePage() {
             totalExpFormatted={totalExp.formatted}
             badgeTier={completion.badgeTier}
             isVip={completion.isVip}
-            ownedCompanies={ownedCompanies}
             onAvatarUpdate={handleAvatarUpdate}
           />
 

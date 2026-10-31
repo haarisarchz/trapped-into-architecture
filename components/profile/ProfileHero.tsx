@@ -8,6 +8,9 @@ import {
   Briefcase,
   Camera,
   Building2,
+  Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getBadgeDetails, BadgeTier } from "@/utils/profileCompletion";
@@ -18,7 +21,6 @@ interface ProfileHeroProps {
   totalExpFormatted: string;
   badgeTier: BadgeTier;
   isVip: boolean;
-  ownedCompanies?: any[];
   onAvatarUpdate: (newUrl: string) => void;
 }
 
@@ -28,7 +30,6 @@ export default function ProfileHero({
   totalExpFormatted,
   badgeTier,
   isVip,
-  ownedCompanies = [],
   onAvatarUpdate,
 }: ProfileHeroProps) {
   const [likesCount, setLikesCount] = useState<number>(user.likes_count || 0);
@@ -376,18 +377,6 @@ export default function ProfileHero({
 
             {/* Badges / Track / Experience Row */}
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              {/* Verified Recruiter Badge (Company Admin) */}
-              {((ownedCompanies && ownedCompanies.length > 0) || user.is_recruiter) && (
-                <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-purple-50 to-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-full shadow-xs"
-                  title={ownedCompanies && ownedCompanies.length > 0 ? `Verified Recruiter for ${ownedCompanies.map((c: any) => c.firm_name).join(', ')}` : "Verified Recruiter"}
-                >
-                  <Building2 size={12} className="text-indigo-600" />
-                  <span>
-                    Recruiter {ownedCompanies && ownedCompanies.length > 0 ? `• ${ownedCompanies[0].firm_name}` : ""}
-                  </span>
-                </span>
-              )}
 
               {/* User Track: Job Seeker, Student, Recruiter, Academician, Freelancer, Explorer */}
               {(() => {
@@ -442,8 +431,20 @@ export default function ProfileHero({
           </div>
         </div>
 
-        {/* Right: Likes Action Button */}
-        <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 gap-3">
+        {/* Right: Profile Actions (Share & Likes) */}
+        <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 gap-2.5">
+          {/* Share Profile Button */}
+          <button
+            type="button"
+            onClick={() => setShowShareModal(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold transition border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 hover:border-black shadow-xs cursor-pointer"
+            title="Share this profile"
+          >
+            <Share2 size={16} className="text-gray-600" />
+            <span>Share Profile</span>
+          </button>
+
+          {/* Likes Button */}
           <button
             onClick={handleToggleLike}
             disabled={likeLoading}
@@ -479,6 +480,87 @@ export default function ProfileHero({
           </button>
         </div>
       </div>
+
+      {/* Share Modal Dialog */}
+      {showShareModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setShowShareModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 text-left relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center">
+                  <Share2 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Share Profile</h3>
+                  <p className="text-xs text-gray-500">@{user.username}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShareModal(false)}
+                className="text-gray-400 hover:text-black p-1.5 rounded-lg hover:bg-gray-100 transition text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600 mb-4">
+              Share this architectural profile with studios, recruiters, peers, and collaborators.
+            </p>
+
+            {/* WhatsApp Direct Share */}
+            <a
+              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                `Check out ${user.fullName || user.username}'s architectural profile & portfolio on Trapped Into Architecture: ${
+                  typeof window !== "undefined" ? window.location.origin : "https://trappedintoarchitecture.com"
+                }/profile/${user.username}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full mb-3 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition"
+            >
+              <span className="text-base">📲</span>
+              <span>Share on WhatsApp</span>
+            </a>
+
+            {/* Copy Link Input & Button */}
+            <div className="flex items-center gap-2 mb-3 bg-gray-50 border border-gray-200 rounded-xl p-1.5 pl-3">
+              <input
+                type="text"
+                readOnly
+                value={typeof window !== "undefined" ? `${window.location.origin}/profile/${user.username}` : ""}
+                className="bg-transparent text-xs text-gray-600 w-full outline-none font-mono"
+              />
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="px-3 py-2 bg-black hover:bg-gray-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shrink-0 transition cursor-pointer"
+              >
+                {copiedLink ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                <span>{copiedLink ? "Copied!" : "Copy"}</span>
+              </button>
+            </div>
+
+            {/* Native Mobile Share Sheet */}
+            {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+              <button
+                type="button"
+                onClick={handleNativeShare}
+                className="w-full py-2.5 px-4 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+              >
+                <Share2 size={14} />
+                <span>More Sharing Options...</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
