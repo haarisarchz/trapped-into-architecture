@@ -223,7 +223,7 @@ const [showUserMenu, setShowUserMenu] =
       }
       
       // 2. Admin/Superadmin/CEO/JobAdmin missing logo notifs
-      if (["superadmin", "admin", "ceo", "jobadmin"].includes(role)) {
+      if (["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes(role)) {
         let userId = currentUser.id;
         if (!userId && currentUser.username) {
           const { data: pData } = await supabase.from("profiles").select("id").eq("username", currentUser.username).maybeSingle();
@@ -394,16 +394,27 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
-          <button
-            onClick={() => {
-              router.push("/admin");
-              setShowUserMenu(false);
-            }}
-            className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
-          >
-            Admin Panel
-          </button>
+        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+          <>
+            <button
+              onClick={() => {
+                router.push("/post-job");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+            >
+              Post a Job
+            </button>
+            <button
+              onClick={() => {
+                router.push("/admin");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+            >
+              Admin Panel
+            </button>
+          </>
         )}
 
         <button
@@ -493,6 +504,15 @@ useEffect(() => {
         Home
       </Link>
 
+      {/* NEWS FEED */}
+
+      <Link
+        href="/news-feed"
+        className="hover:text-gray-300 transition"
+      >
+        News Feed
+      </Link>
+
       {/* JOBS */}
 
       <Link
@@ -520,8 +540,6 @@ useEffect(() => {
   Companies
 </Link>
 
-          
-
           {/* CONTACT */}
 
           <Link
@@ -529,14 +547,6 @@ useEffect(() => {
             className="hover:text-gray-300 transition"
           >
             Contact
-          </Link>
-
-          {/* POST A JOB */}
-          <Link
-            href="/post-job"
-            className="bg-white text-black hover:bg-gray-200 font-bold px-4 py-2 rounded-xl text-sm transition shadow-xs flex items-center gap-1.5"
-          >
-            <span>Post a Job</span>
           </Link>
 
           {/* LOGIN REGISTER BUTTON */}
@@ -566,16 +576,27 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
-          <button
-            onClick={() => {
-              router.push("/admin");
-              setShowUserMenu(false);
-            }}
-            className="w-full text-left px-5 py-4 hover:bg-gray-100 border-b border-gray-100 font-medium"
-          >
-            Admin Panel
-          </button>
+        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+          <>
+            <button
+              onClick={() => {
+                router.push("/post-job");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-100 border-b border-gray-100 font-medium"
+            >
+              Post a Job
+            </button>
+            <button
+              onClick={() => {
+                router.push("/admin");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-100 border-b border-gray-100 font-medium"
+            >
+              Admin Panel
+            </button>
+          </>
         )}
 
         <button
@@ -643,14 +664,11 @@ useEffect(() => {
 {mobileMenuOpen && (
   <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50 shadow-2xl flex flex-col">
     <Link href="/" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+    <Link href="/news-feed" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>News Feed</Link>
     <Link href="/jobs" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
-    <Link href="/companies" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
     <Link href="/internships" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
-      <Link href="/contact" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-    <Link href="/post-job" className="block px-6 py-4 border-b border-gray-800 text-lg font-bold text-amber-400 hover:bg-gray-900 transition flex items-center justify-between" onClick={() => setMobileMenuOpen(false)}>
-      <span>Post a Job</span>
-      <span className="text-xs bg-amber-400 text-black px-2 py-0.5 rounded-full font-extrabold uppercase">For Studios</span>
-    </Link>
+    <Link href="/companies" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
+    <Link href="/contact" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
     
     
     
