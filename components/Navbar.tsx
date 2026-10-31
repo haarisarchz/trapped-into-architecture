@@ -394,36 +394,16 @@ useEffect(() => {
           My Profile
         </button>
 
-        <button
-          onClick={() => {
-            router.push("/post-job");
-            setShowUserMenu(false);
-          }}
-          className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
-        >
-          Post a Job
-        </button>
-
         {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
-          <>
-            <button
-              onClick={() => {
-                router.push("/admin");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
-            >Admin Panel</button>
-
-            <button
-              onClick={() => {
-                router.push("/admin/add-job");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
-            >
-              Add New Job
-            </button>
-          </>
+          <button
+            onClick={() => {
+              router.push("/admin");
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+          >
+            Admin Panel
+          </button>
         )}
 
         <button
@@ -586,36 +566,16 @@ useEffect(() => {
           My Profile
         </button>
 
-        <button
-          onClick={() => {
-            router.push("/post-job");
-            setShowUserMenu(false);
-          }}
-          className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
-        >
-          Post a Job
-        </button>
-
         {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
-          <>
-            <button
-              onClick={() => {
-                router.push("/admin");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-100"
-            >Admin Panel</button>
-
-            <button
-              onClick={() => {
-                router.push("/admin/add-job");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-100"
-            >
-              Add New Job
-            </button>
-          </>
+          <button
+            onClick={() => {
+              router.push("/admin");
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-4 hover:bg-gray-100 border-b border-gray-100 font-medium"
+          >
+            Admin Panel
+          </button>
         )}
 
         <button
