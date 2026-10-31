@@ -58,8 +58,9 @@ if (require.main === module) {
     feature_highlights: [
       { feature: "UI Refinements", desc: "Two-column responsive feed and quick directory access." }
     ]
-  }).then(() => process.exit(0)).catch((err) => {
+  }).then(() => {
+    // allow event loop to drain cleanly
+  }).catch((err) => {
     console.error(err);
-    process.exit(1);
   });
 }
