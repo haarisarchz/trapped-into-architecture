@@ -1219,6 +1219,7 @@ const [showFilters, setShowFilters] = useState(false);
       skills={job.skills}
       employment_type={job.employment_type || job.employmentType}
       work_mode={job.work_mode || job.workMode}
+      salary={job.salary}
       salary_min={job.salary_min || job.salaryMin}
       salary_max={job.salary_max || job.salaryMax}
       currency={job.currency}

@@ -663,39 +663,12 @@ useEffect(() => {
   {/* MOBILE MENU */}
 {mobileMenuOpen && (
   <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50 shadow-2xl flex flex-col">
-    <Link href="/" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-    <Link href="/news-feed" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>News Feed</Link>
-    <Link href="/jobs" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
-    <Link href="/internships" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
-    <Link href="/companies" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
-    <Link href="/contact" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-    
-    
-    
-    {!currentUser && (
-      <div className="flex bg-gray-900">
-        <button
-          onClick={() => {
-            setAuthTab("login");
-            setShowAuthPopup(true);
-            setMobileMenuOpen(false);
-          }}
-          className="flex-1 text-center px-6 py-4 font-bold hover:bg-gray-800 transition border-r border-gray-800"
-        >
-          Login
-        </button>
-        <button
-          onClick={() => {
-            setAuthTab("register");
-            setShowAuthPopup(true);
-            setMobileMenuOpen(false);
-          }}
-          className="flex-1 text-center px-6 py-4 font-bold hover:bg-gray-800 transition"
-        >
-          Register
-        </button>
-      </div>
-    )}
+    <Link href="/" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+    <Link href="/news-feed" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>News Feed</Link>
+    <Link href="/jobs" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
+    <Link href="/internships" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
+    <Link href="/companies" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
+    <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
   </div>
 )}
 </nav>

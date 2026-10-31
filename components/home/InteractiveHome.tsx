@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatSalary } from "@/utils/formatJobDetails";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -301,15 +302,11 @@ export default function InteractiveHome({
                               {job.workplace_type}
                             </span>
                           )}
-                          {job.salary ? (
+                          {formatSalary(job.salary) ? (
                             <span className="bg-gray-100 px-1.5 py-0.5 rounded font-semibold text-gray-900">
-                              {job.salary}
+                              {formatSalary(job.salary)}
                             </span>
-                          ) : (
-                            <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
-                              {job.employment_type || "Vacancy"}
-                            </span>
-                          )}
+                          ) : null}
                         </div>
                       </Link>
                     ))}
@@ -379,11 +376,11 @@ export default function InteractiveHome({
                           <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">
                             Internship
                           </span>
-                          {internship.salary && (
+                          {formatSalary(internship.salary) ? (
                             <span className="bg-gray-100 px-1.5 py-0.5 rounded font-semibold text-gray-900">
-                              {internship.salary}
+                              {formatSalary(internship.salary)}
                             </span>
-                          )}
+                          ) : null}
                         </div>
                       </Link>
                     ))}
@@ -425,7 +422,6 @@ export default function InteractiveHome({
               </div>
               <Link 
                 href="/post-job" 
-                onClick={handlePostJobClick}
                 className="block w-full text-center bg-white hover:bg-gray-200 text-black font-bold py-2 rounded-lg text-xs transition"
               >
                 Post a Job &rarr;
@@ -545,7 +541,7 @@ export default function InteractiveHome({
                 <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">Practice Directory</span>
                 <h3 className="text-base font-bold text-white mt-1 mb-2">Do you find your studio here?</h3>
                 <p className="text-gray-400 text-xs leading-relaxed mb-4">
-                  Over 850 architecture studios are listed. Claim ownership to manage your vacancies or register your new practice.
+                  {stats?.companies ? `Over ${stats.companies} architecture studios are listed. Claim ownership to manage your vacancies or register your new practice.` : 'Architecture studios across India are listed. Claim ownership to manage your vacancies or register your new practice.'}
                 </p>
               </div>
 
@@ -570,25 +566,25 @@ export default function InteractiveHome({
         </div>
       </section>
 
-      {/* 7. ARCHITECTURE SERVICES & PORTFOLIO BUILDER (MERGED COMPACT ROW) */}
-      <section className="py-6 md:py-8 px-4 sm:px-6 lg:px-12 bg-white text-black w-full border-b border-gray-200">
-        <div className="max-w-7xl mx-auto space-y-3">
+      {/* 7. ARCHITECTURE SERVICES & TOOLS (COMPACT SHELF) */}
+      <section className="py-4 md:py-5 px-4 sm:px-6 lg:px-12 bg-white text-black w-full border-b border-gray-200">
+        <div className="max-w-7xl mx-auto space-y-2.5">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Architecture Services &amp; Tools</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">Architecture Services &amp; Tools</h2>
             <span className="text-[11px] text-gray-400 font-mono">Specialized Shelf</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
             
             {/* Cosmofolio Portfolio Builder (Compact) */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-base">📐</span>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-sm">📐</span>
                   <span className="text-[9px] font-bold bg-black text-white px-1.5 py-0.5 rounded">COSMOFOLIO</span>
                 </div>
-                <h3 className="font-bold text-xs text-gray-900 mb-0.5">Portfolio Builder</h3>
-                <p className="text-gray-600 text-[11px] leading-relaxed mb-2.5">
+                <h3 className="font-bold text-xs text-gray-900 mb-1">Portfolio Builder</h3>
+                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
                   Build a professional architecture folio in seconds without code.
                 </p>
               </div>
@@ -604,11 +600,11 @@ export default function InteractiveHome({
             </div>
 
             {/* Hire a Software Tutor */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <span className="text-base mb-1.5 block">💻</span>
-                <h3 className="font-bold text-xs text-gray-900 mb-0.5">Hire a Software Tutor</h3>
-                <p className="text-gray-600 text-[11px] leading-relaxed mb-2.5">
+                <div className="text-sm mb-1">💻</div>
+                <h3 className="font-bold text-xs text-gray-900 mb-1">Hire a Software Tutor</h3>
+                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
                   Master Revit, Rhino, Grasshopper &amp; Enscape 1-on-1.
                 </p>
               </div>
@@ -621,11 +617,11 @@ export default function InteractiveHome({
             </div>
 
             {/* Hire an Architect */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <span className="text-base mb-1.5 block">🏛️</span>
-                <h3 className="font-bold text-xs text-gray-900 mb-0.5">Hire an Architect</h3>
-                <p className="text-gray-600 text-[11px] leading-relaxed mb-2.5">
+                <div className="text-sm mb-1">🏛️</div>
+                <h3 className="font-bold text-xs text-gray-900 mb-1">Hire an Architect</h3>
+                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
                   Find vetted freelance architects for concept &amp; working drawings.
                 </p>
               </div>
@@ -638,11 +634,11 @@ export default function InteractiveHome({
             </div>
 
             {/* Portfolio Review */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-4 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <span className="text-base mb-1.5 block">🔍</span>
-                <h3 className="font-bold text-xs text-gray-900 mb-0.5">Portfolio &amp; Resume Review</h3>
-                <p className="text-gray-600 text-[11px] leading-relaxed mb-2.5">
+                <div className="text-sm mb-1">🔍</div>
+                <h3 className="font-bold text-xs text-gray-900 mb-1">Portfolio &amp; Resume Review</h3>
+                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
                   Get line-by-line critique before studio applications.
                 </p>
               </div>
@@ -682,14 +678,21 @@ export default function InteractiveHome({
                 placeholder="Your name or studio (optional)..."
                 className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400"
               />
-              <textarea 
-                rows={2}
-                value={suggestionText}
-                onChange={(e) => setSuggestionText(e.target.value)}
-                required
-                placeholder="Type your suggestion here..."
-                className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400 resize-none"
-              />
+              <div>
+                <textarea 
+                  rows={2}
+                  maxLength={1000}
+                  value={suggestionText}
+                  onChange={(e) => setSuggestionText(e.target.value)}
+                  required
+                  placeholder="Type your suggestion here..."
+                  className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400 resize-none max-h-24 overflow-y-auto"
+                />
+                <div className="flex items-center justify-between text-[9px] text-gray-400 -mt-1 px-1">
+                  <span>Scroll for more text</span>
+                  <span>{suggestionText.length}/1000</span>
+                </div>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] text-gray-400">
                   {suggestionStatus === "success" ? (
@@ -697,7 +700,9 @@ export default function InteractiveHome({
                   ) : suggestionStatus === "error" ? (
                     <span className="text-red-500">Failed to submit. Please try again.</span>
                   ) : (
-                    "Direct to founder's desk"
+                    <Link href="/contact?subject=Platform+Suggestion" className="hover:text-black underline">
+                      Or send via Contact Form &rarr;
+                    </Link>
                   )}
                 </span>
                 <button 
