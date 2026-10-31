@@ -2,8 +2,9 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-export default function UnavailablePage({ searchParams }: { searchParams: { service?: string } }) {
-  const service = searchParams.service || "This service";
+export default async function UnavailablePage({ searchParams }: { searchParams: Promise<{ service?: string }> }) {
+  const resolvedParams = await searchParams;
+  const service = resolvedParams?.service || "This service";
   
   return (
     <>

@@ -45,9 +45,9 @@ export default function JobAlertsSubscribeCard() {
         </div>
       </div>
 
-      {/* CTA Button directing to contact page */}
+      {/* CTA Button directing to subscriptions page */}
       <Link
-        href="/contact"
+        href="/subscriptions"
         className="w-full inline-flex items-center justify-center gap-2 bg-gray-950 hover:bg-black text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition shadow-xs group"
       >
         <span>Subscribe & Set Custom Filters</span>
@@ -55,7 +55,7 @@ export default function JobAlertsSubscribeCard() {
       </Link>
 
       <p className="text-[10px] text-gray-400 text-center mt-2.5">
-        Custom plan activation • Dedicated subscription portal coming soon
+        Custom plan activation • Choose weekly or monthly frequency
       </p>
     </div>
   );

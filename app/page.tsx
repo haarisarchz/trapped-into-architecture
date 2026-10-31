@@ -126,13 +126,21 @@ export default async function Home() {
   const popularCompanies = [...mostJobsCompanies]; // Fallback for popular
 
 
-  // Fetch Recent Jobs
-  const { data: recentJobs } = await supabase
+  // Fetch Recent Jobs & Internships for Twin Gateways
+  const { data: allRecentJobsData } = await supabase
     .from("jobs")
     .select("*")
     .eq("status", "published")
     .order("posted_date", { ascending: false })
-    .limit(8);
+    .limit(40);
+
+  const recentInternships = (allRecentJobsData || []).filter((job: any) => 
+    job.employment_type === 'Internship' || (job.position && job.position.toLowerCase().includes('intern'))
+  ).slice(0, 4);
+
+  const recentJobs = (allRecentJobsData || []).filter((job: any) => 
+    !(job.employment_type === 'Internship' || (job.position && job.position.toLowerCase().includes('intern')))
+  ).slice(0, 4);
 
   // Fetch Popular Jobs: Sorted by views_count (falling back to engagement saves/shares)
   let popularJobs: any[] = [];
@@ -220,7 +228,8 @@ export default async function Home() {
       <Navbar />
 
       <InteractiveHome 
-        recentJobs={recentJobs || []} 
+        recentJobs={recentJobs || []}
+        recentInternships={recentInternships || []} 
         popularJobs={popularJobs.length > 0 ? popularJobs : (recentJobs || [])}
         recentCompanies={recentCompanies || []} 
         popularCompanies={recentCompanies ? [...recentCompanies].reverse() : []}

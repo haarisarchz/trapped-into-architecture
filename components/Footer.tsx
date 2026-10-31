@@ -265,6 +265,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/subscriptions" className="hover:text-white transition block">
+                Subscriptions &amp; Upgrades
+              </Link>
+            </li>
+            <li>
               <Link href="/badges-and-perks" className="hover:text-white transition block">
                 Badges &amp; Perks
               </Link>

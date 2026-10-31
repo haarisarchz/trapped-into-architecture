@@ -1,6 +1,8 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import JobAlertsSubscribeCard from "@/components/JobAlertsSubscribeCard";
+import ArchitectureChannelsCard from "@/components/ArchitectureChannelsCard";
+import NewsFeedClientView from "@/components/NewsFeedClientView";
 import { Metadata } from "next";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -11,38 +13,22 @@ import {
   UserCheck,
   GraduationCap,
   ArrowRight,
-  Calendar,
   Compass,
-  CheckCircle2,
-  Clock,
   ExternalLink,
-  Layers,
   ChevronRight,
   TrendingUp,
   Award
 } from "lucide-react";
+import { FeedItem } from "@/components/NewsFeedCard";
 
 export const metadata: Metadata = {
   title: "News Feed & Platform Updates | Trapped Into Architecture",
   description:
-    "Official architectural updates, studio announcements, job listings, and platform releases published automatically as changes roll out.",
+    "Official architectural updates, studio announcements, job listings, and platform releases published automatically as features roll out.",
 };
 
-// Revalidate every 60 seconds for near-instant updates
+// Revalidate every 60 seconds
 export const revalidate = 60;
-
-interface FeedItem {
-  id: string | number;
-  category: string;
-  badge_color?: string;
-  title: string;
-  author?: string;
-  summary: string;
-  feature_highlights?: Array<{ feature: string; desc: string }>;
-  link_url?: string;
-  link_text?: string;
-  published_at?: string;
-}
 
 const DEFAULT_ANNOUNCEMENTS: FeedItem[] = [
   {
@@ -66,6 +52,7 @@ const DEFAULT_ANNOUNCEMENTS: FeedItem[] = [
     link_url: "/companies",
     link_text: "Explore Studio Directory",
     published_at: new Date().toISOString(),
+    status: "published",
   },
   {
     id: "default-2",
@@ -84,6 +71,7 @@ const DEFAULT_ANNOUNCEMENTS: FeedItem[] = [
     link_url: "/jobs",
     link_text: "Explore Job Listings",
     published_at: new Date(Date.now() - 86400000).toISOString(),
+    status: "published",
   },
   {
     id: "default-3",
@@ -102,6 +90,7 @@ const DEFAULT_ANNOUNCEMENTS: FeedItem[] = [
     link_url: "/companies",
     link_text: "Browse Companies",
     published_at: new Date(Date.now() - 172800000).toISOString(),
+    status: "published",
   },
 ];
 
@@ -116,7 +105,7 @@ export default async function NewsFeedPage() {
       .order("published_at", { ascending: false });
 
     if (!error && data && data.length > 0) {
-      announcements = data;
+      announcements = data as FeedItem[];
     }
   } catch {
     // Graceful fallback to default announcements
@@ -132,7 +121,7 @@ export default async function NewsFeedPage() {
           <div className="relative overflow-hidden bg-gradient-to-r from-gray-950 via-gray-900 to-black text-white rounded-3xl p-8 md:p-12 shadow-xl mb-10 border border-gray-800">
             <div className="relative z-10 max-w-3xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-amber-400 text-xs font-semibold uppercase tracking-wider mb-4 border border-white/10 backdrop-blur-xs">
-                <Sparkles size={14} /> Official Feed • Real-Time Platform Updates
+                <Sparkles size={14} /> Official Feed • Architecture Feature Highlights
               </div>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 text-white">
                 Platform News & Updates
@@ -149,115 +138,12 @@ export default async function NewsFeedPage() {
 
           {/* Main 2-Column Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* LEFT / CENTER COLUMN: Feed List (8 Columns) */}
-            <div className="lg:col-span-8 space-y-6">
-              {/* Automated Publishing Status Pill */}
-              <div className="bg-white border border-gray-200/80 rounded-2xl p-4 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
-                    <Clock size={18} />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-900">Live Feature Updates</h4>
-                    <p className="text-[11px] text-gray-500">
-                      Summaries are posted automatically whenever new features and improvements roll out.
-                    </p>
-                  </div>
-                </div>
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Live Sync
-                </span>
-              </div>
-
-              {/* Feed Items */}
-              <div className="space-y-6">
-                {announcements.map((item) => {
-                  const dateStr = item.published_at
-                    ? new Date(item.published_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })
-                    : "Recently";
-
-                  return (
-                    <article
-                      key={item.id}
-                      className="bg-white rounded-2xl p-6 md:p-8 shadow-xs border border-gray-200/80 hover:shadow-md hover:border-gray-300 transition duration-200"
-                    >
-                      {/* Header Row */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-4 border-b border-gray-100">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-xs font-bold px-3 py-1 rounded-full border ${
-                              item.badge_color || "bg-amber-100 text-amber-800 border-amber-300"
-                            }`}
-                          >
-                            {item.category}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <Calendar size={13} />
-                          <span>{dateStr}</span>
-                          <span>•</span>
-                          <span className="font-semibold text-gray-600">
-                            {item.author || "Platform Engineering"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Title */}
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-950 mb-3 hover:text-amber-600 transition">
-                        {item.title}
-                      </h2>
-
-                      {/* Summary */}
-                      <p className="text-gray-600 leading-relaxed mb-5 text-sm md:text-base">
-                        {item.summary}
-                      </p>
-
-                      {/* Feature Highlights Grouping */}
-                      {item.feature_highlights && item.feature_highlights.length > 0 && (
-                        <div className="bg-gray-50/80 rounded-xl p-4 border border-gray-100 mb-5 space-y-3">
-                          <div className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                            <Layers size={13} className="text-amber-600" />
-                            <span>Feature Breakdown</span>
-                          </div>
-                          {item.feature_highlights.map((feat, idx) => (
-                            <div key={idx} className="flex items-start gap-2.5 text-xs text-gray-700">
-                              <CheckCircle2 size={15} className="text-amber-600 shrink-0 mt-0.5" />
-                              <div>
-                                <strong className="text-gray-900 font-semibold">
-                                  {feat.feature}:{" "}
-                                </strong>
-                                <span>{feat.desc}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* CTA Link */}
-                      {item.link_url && (
-                        <div className="pt-2">
-                          <Link
-                            href={item.link_url}
-                            className="inline-flex items-center gap-2 text-xs md:text-sm font-semibold bg-gray-100 hover:bg-black hover:text-white text-gray-900 px-4 py-2.5 rounded-xl transition duration-150"
-                          >
-                            <span>{item.link_text || "Learn More"}</span>
-                            <ArrowRight size={14} />
-                          </Link>
-                        </div>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
+            {/* LEFT / CENTER COLUMN: Feed List with Reactions, Shares, and CEO Inline Admin Controls */}
+            <div className="lg:col-span-8">
+              <NewsFeedClientView initialAnnouncements={announcements} />
             </div>
 
-            {/* RIGHT COLUMN: Sidebar Navigation & Action Widgets (4 Columns) */}
+            {/* RIGHT COLUMN: Sidebar Navigation, Subscription, and Channels (4 Columns) */}
             <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
               {/* Widget 1: Quick Navigation / Directory Bar */}
               <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
@@ -326,7 +212,13 @@ export default async function NewsFeedPage() {
                 </div>
               </div>
 
-              {/* Widget 2: Register Your Profile (For Professionals & Students) */}
+              {/* Widget 2: Custom Filter Job Alerts Subscription */}
+              <JobAlertsSubscribeCard />
+
+              {/* Widget 3: Follow & Connect - WhatsApp & Telegram Architecture Channels */}
+              <ArchitectureChannelsCard />
+
+              {/* Widget 4: Register Your Profile (For Professionals & Students) */}
               <div className="bg-gradient-to-br from-gray-900 to-black text-white rounded-2xl p-5 shadow-sm border border-gray-800">
                 <div className="flex items-center gap-2 mb-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
                   <Award size={14} />
@@ -347,7 +239,7 @@ export default async function NewsFeedPage() {
                 </Link>
               </div>
 
-              {/* Widget 3: Register Your Studio (For Design Practices & Firms) */}
+              {/* Widget 5: Register Your Studio (For Design Practices & Firms) */}
               <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-2 text-indigo-700 text-xs font-bold uppercase tracking-wider">
                   <Building2 size={14} />
@@ -368,10 +260,7 @@ export default async function NewsFeedPage() {
                 </Link>
               </div>
 
-              {/* Widget 4: Subscribe for Job Alerts */}
-              <JobAlertsSubscribeCard />
-
-              {/* Widget 5: Trending Community Activity */}
+              {/* Widget 6: Contact & Support */}
               <div className="bg-gray-100/80 rounded-2xl p-4 border border-gray-200 text-xs text-gray-600 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <TrendingUp size={16} className="text-amber-600" />
