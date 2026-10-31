@@ -186,7 +186,7 @@ export default async function CityJobsPage({
 
             <div className="mt-6 pt-4 border-t border-emerald-800/80">
               <Link
-                href={`/contact?subject=${encodeURIComponent(`WhatsApp Job Alerts for ${cityName}`)}`}
+                href={`/subscriptions?city=${encodeURIComponent(cityName)}`}
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-md"
               >
                 <span>Subscribe for WhatsApp Alerts</span>

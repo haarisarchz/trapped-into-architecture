@@ -231,7 +231,7 @@ export default function InteractiveHome({
             </div>
 
             <Link 
-              href="/contact?service=whatsapp-alerts"
+              href="/subscriptions"
               className="w-full sm:w-auto bg-white hover:bg-gray-100 text-black font-bold px-4 py-1.5 rounded-lg text-xs transition text-center shrink-0"
             >
               Subscribe for Alerts &rarr;

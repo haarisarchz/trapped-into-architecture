@@ -33,6 +33,16 @@ export default function SubscriptionsPage() {
   const [billingCycle, setBillingCycle] = useState<"weekly" | "monthly">("monthly");
   const [isSuccess, setIsSuccess] = useState(false);
 
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const loc = params.get("city") || params.get("state") || params.get("location");
+      if (loc) {
+        setLocation(loc);
+      }
+    }
+  }, []);
+
   const openPlanModal = (title: string, type: string, rate: string, defaultFreq: "daily" | "instant" = "daily") => {
     setSelectedPlan({ title, type, rate });
     setFrequency(defaultFreq);
