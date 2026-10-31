@@ -111,6 +111,7 @@ export default function AdminQuickMenu() {
             {navItem("/admin/quizzes", "Architecture Quizzes")}
           </>
         )}
+        {navItem("/admin/news-feed", "News Feed Management")}
         {navItem("/admin/analytics", "Analytics")}
         
         {userRole === "ceo" && (

@@ -11,14 +11,15 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 async function postUpdate({
   title,
   summary,
-  category = "Platform Update",
-  badge_color = "bg-amber-100 text-amber-800 border-amber-300",
+  category = "Feature Release",
+  badge_color = "bg-emerald-100 text-emerald-800 border-emerald-300",
   feature_highlights = [],
-  link_url = "/jobs",
-  link_text = "Learn More",
-  author = "Platform Engineering"
+  link_url = "/companies",
+  link_text = "Explore Feature",
+  author = "Platform Editorial",
+  status = "draft" // Default to draft so admin must review & approve before public display
 }) {
-  console.log(`Posting update: "${title}"...`);
+  console.log(`Staging draft announcement for admin approval: "${title}"...`);
 
   const { data, error } = await supabase.from("news_feed_posts").insert([
     {
@@ -31,16 +32,16 @@ async function postUpdate({
       link_text,
       author,
       published_at: new Date().toISOString(),
-      status: "published"
+      status
     }
   ]).select();
 
   if (error) {
-    console.error("Failed to post update:", error.message);
+    console.error("Failed to stage update:", error.message);
     return false;
   }
 
-  console.log("Successfully posted update! Record ID:", data[0]?.id);
+  console.log("Successfully staged draft announcement! Record ID:", data[0]?.id);
   return data[0];
 }
 

@@ -270,6 +270,13 @@ if (loading) {
             {/* STANDALONE MENUS */}
             <div className="space-y-1.5 pt-1">
               <button
+                onClick={() => router.push("/admin/news-feed")}
+                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-amber-400 flex items-center justify-between"
+              >
+                <span>News Feed & Approvals</span>
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-semibold">Feed</span>
+              </button>
+              <button
                 onClick={() => router.push("/admin/analytics")}
                 className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
               >

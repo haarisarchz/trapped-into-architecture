@@ -47,28 +47,24 @@ interface FeedItem {
 const DEFAULT_ANNOUNCEMENTS: FeedItem[] = [
   {
     id: "default-1",
-    category: "Platform Update",
-    badge_color: "bg-amber-100 text-amber-800 border-amber-300",
-    title: "Platform Update: 2-Column News Feed & Live Studio Directory",
-    author: "Platform Engineering",
+    category: "Feature Release",
+    badge_color: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    title: "New Section: Architectural Studio Directory & Custom Job Alerts",
+    author: "Platform Editorial",
     summary:
-      "We have updated the News Feed with a dedicated quick-access sidebar, interactive architecture job alerts, and real-time studio registration capabilities.",
+      "Explore verified architecture practices across India, browse project portfolios, and receive customized job alert notifications tailored to your design focus.",
     feature_highlights: [
       {
-        feature: "Sidebar Directory",
-        desc: "One-click access to Jobs, Studio Directory, Internships, and Individual Profiles.",
+        feature: "Architectural Studio Hub",
+        desc: "Browse firm profiles, active vacancies, and design philosophies in one unified directory.",
       },
       {
-        feature: "Interactive Job Alerts",
-        desc: "Subscribe directly to daily architectural vacancy digests tailored to your role.",
-      },
-      {
-        feature: "Studio & Profile Registration",
-        desc: "Instant CTAs for practitioners and studios to showcase their portfolios.",
+        feature: "Custom Job Alerts",
+        desc: "Subscribe to curated vacancy alerts for Junior Architects, Interns, and BIM specialists.",
       },
     ],
-    link_url: "/jobs",
-    link_text: "Explore Job Listings",
+    link_url: "/companies",
+    link_text: "Explore Studio Directory",
     published_at: new Date().toISOString(),
   },
   {
