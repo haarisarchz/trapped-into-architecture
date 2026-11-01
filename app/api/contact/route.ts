@@ -57,7 +57,7 @@ export async function POST(req: Request) {
           from: fromEmail,
           to: recipientEmail,
           replyTo: email.trim(),
-          subject: `📩 [Ti2A Contact] ${subject ? subject.trim() : `New message from ${name}`}`,
+          subject: `[Ti2A Contact] ${subject ? subject.trim() : `New message from ${name}`}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background: #ffffff;">
               <div style="margin-bottom: 20px;">
@@ -100,7 +100,7 @@ export async function POST(req: Request) {
               from: fromEmail,
               to: fallbackEmail,
               replyTo: email.trim(),
-              subject: `?? [Ti2A Contact] ${subject ? subject.trim() : `New message from ${name}`}`,
+              subject: `[Ti2A Contact] ${subject ? subject.trim() : `New message from ${name}`}`,
               html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 16px; background: #ffffff;">
               <div style="margin-bottom: 20px;">

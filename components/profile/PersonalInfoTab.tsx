@@ -69,19 +69,54 @@ export default function PersonalInfoTab({
     }
     setVerifyingEmail(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email: user.email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/profile/${user.username || ""}?verified=email`,
-        },
+      const res = await fetch("/api/auth/send-verification-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          fullName: user.full_name || user.username,
+          userId: user.id,
+          isExistingUser: true,
+        }),
       });
-      if (error) {
-        console.warn("Auth resend note:", error.message);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send verification code.");
       }
-      alert(`Verification link sent to ${user.email}! Click the link in your email to verify and unlock +5% profile completion score.`);
-    } catch (e) {
-      alert("Failed to send verification email. Please try again.");
+
+      const enteredCode = window.prompt(
+        `✉️ Verification code sent to ${user.email}!\n\nPlease enter the 6-digit verification code below to verify your email and unlock +5% profile completion score:`
+      );
+
+      if (!enteredCode || !enteredCode.trim()) {
+        setVerifyingEmail(false);
+        return;
+      }
+
+      const verifyRes = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          userId: user.id,
+          code: enteredCode.trim(),
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (verifyRes.ok && verifyData.success) {
+        alert("🎉 Congratulations! Your email has been verified and your profile score increased by +5%.");
+        const updatedUser = { ...user, email_verified: true, verified: true };
+        setFormData((prev) => ({ ...prev, email_verified: true, verified: true }));
+        if (typeof onUserUpdate === "function") {
+          onUserUpdate(updatedUser);
+        } else {
+          window.location.reload();
+        }
+      } else {
+        alert(verifyData.error || "Incorrect or expired verification code. Please try again.");
+      }
+    } catch (e: any) {
+      alert(e.message || "Failed to process verification. Please try again.");
     } finally {
       setVerifyingEmail(false);
     }

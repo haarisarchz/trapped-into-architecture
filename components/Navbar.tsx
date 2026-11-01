@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, ShieldCheck, RefreshCw, AlertCircle } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
 
@@ -63,8 +63,15 @@ const [showUserMenu, setShowUserMenu] =
   }, [currentUser]);
   const [settings, setSettings] = useState<any>(null);
 
-  const [authTab, setAuthTab] =
-    useState<"login" | "register" | "success">("login");
+    const [authTab, setAuthTab] =
+    useState<"login" | "register" | "verify" | "success">("login");
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationFullName, setVerificationFullName] = useState("");
+  const [verificationUserId, setVerificationUserId] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [verifyStatusMessage, setVerifyStatusMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [resendingCode, setResendingCode] = useState(false);
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -400,6 +407,71 @@ useEffect(() => {
     }
   }
 }, []);
+
+
+  const handleVerifyOtp = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      setVerifyStatusMessage({ text: "Please enter the 6-digit code.", type: "error" });
+      return;
+    }
+    setIsVerifyingCode(true);
+    setVerifyStatusMessage(null);
+
+    try {
+      const res = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: verificationEmail,
+          userId: verificationUserId,
+          code: verificationCode.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerifyStatusMessage({
+          text: data.message || "Email verified successfully! You've unlocked your Verified Badge (+5%).",
+          type: "success",
+        });
+      } else {
+        setVerifyStatusMessage({
+          text: data.error || "Invalid verification code. Please try again.",
+          type: "error",
+        });
+      }
+    } catch (err: any) {
+      setVerifyStatusMessage({ text: "Network error. Please try again.", type: "error" });
+    } finally {
+      setIsVerifyingCode(false);
+    }
+  };
+
+  const handleResendVerificationCode = async () => {
+    if (!verificationEmail) return;
+    setResendingCode(true);
+    try {
+      const res = await fetch("/api/auth/send-verification-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: verificationEmail,
+          fullName: verificationFullName,
+          userId: verificationUserId,
+          isResend: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerifyStatusMessage({ text: "A fresh 6-digit code has been sent to your email!", type: "success" });
+      } else {
+        setVerifyStatusMessage({ text: data.error || "Failed to resend code.", type: "error" });
+      }
+    } catch (e) {
+      setVerifyStatusMessage({ text: "Could not resend code. Please try again.", type: "error" });
+    } finally {
+      setResendingCode(false);
+    }
+  };
 
   return (
     <>
@@ -1052,6 +1124,105 @@ window.location.reload();
 
 
 {/* SUCCESS */}
+
+{/* VERIFY CODE */}
+{authTab === "verify" && (
+  <div className="text-center space-y-5 py-3">
+    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-inner border border-blue-100">
+      <Mail size={32} strokeWidth={2.2} />
+    </div>
+
+    <div className="space-y-1">
+      <h2 className="text-2xl font-extrabold text-gray-900">
+        Verify Your Email
+      </h2>
+      <p className="text-xs font-semibold text-blue-700 bg-blue-50 py-1 px-3 rounded-full inline-block border border-blue-200">
+        Verification Code Sent
+      </p>
+    </div>
+
+    <p className="text-gray-600 text-xs sm:text-sm max-w-sm mx-auto leading-relaxed">
+      We sent a 6-digit verification code to <strong className="text-gray-900">{verificationEmail || "your email"}</strong>. Enter it below to unlock your <strong className="text-emerald-700">Verified Badge (+5% score)</strong>.
+    </p>
+
+    {verifyStatusMessage && (
+      <div className={`p-3 rounded-xl text-xs font-medium flex items-center justify-center gap-2 ${
+        verifyStatusMessage.type === "success" 
+          ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
+          : "bg-red-50 text-red-700 border border-red-200"
+      }`}>
+        {verifyStatusMessage.type === "success" ? <Check size={14} /> : <AlertCircle size={14} />}
+        <span>{verifyStatusMessage.text}</span>
+      </div>
+    )}
+
+    {verifyStatusMessage?.type === "success" ? (
+      <button
+        type="button"
+        onClick={() => {
+          setAuthTab("login");
+          setVerifyStatusMessage(null);
+          setVerificationCode("");
+        }}
+        className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-2xl font-bold transition shadow-sm mt-2 cursor-pointer flex items-center justify-center gap-2"
+      >
+        <span>Proceed to Login</span>
+        <ArrowRight size={16} />
+      </button>
+    ) : (
+      <div className="space-y-3">
+        <div>
+          <input
+            type="text"
+            maxLength={6}
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="• • • • • •"
+            className="w-full text-center tracking-[12px] text-2xl font-mono font-bold py-3.5 px-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-black focus:bg-white focus:outline-none transition shadow-inner"
+          />
+        </div>
+
+        <button
+          type="button"
+          disabled={verificationCode.length !== 6 || isVerifyingCode}
+          onClick={handleVerifyOtp}
+          className="w-full bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-2xl font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+        >
+          {isVerifyingCode ? (
+            <span>Verifying Code...</span>
+          ) : (
+            <>
+              <ShieldCheck size={18} />
+              <span>Verify Email (+5% Score)</span>
+            </>
+          )}
+        </button>
+
+        <div className="flex items-center justify-between text-xs text-gray-500 pt-2 px-1">
+          <button
+            type="button"
+            disabled={resendingCode}
+            onClick={handleResendVerificationCode}
+            className="hover:text-black font-semibold underline underline-offset-4 cursor-pointer disabled:opacity-50"
+          >
+            {resendingCode ? "Sending fresh code..." : "Resend Code"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAuthTab("login");
+              setVerifyStatusMessage(null);
+            }}
+            className="hover:text-gray-900 cursor-pointer text-gray-400"
+          >
+            Verify later & Log In →
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
 {authTab === "success" && (
   <div className="text-center space-y-5 py-6">
@@ -1725,8 +1896,26 @@ window.location.reload();
           console.log("PROFILE CREATED SUCCESSFULLY");
 
           
+                    // Prepare verification state
+          setVerificationEmail(email);
+          setVerificationFullName(fullName);
+          setVerificationUserId(authData.user.id);
+          setVerificationCode("");
+          setVerifyStatusMessage(null);
+
+          // Asynchronously dispatch welcome & verification code email via Resend
+          fetch("/api/auth/send-verification-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email,
+              fullName,
+              userId: authData.user.id,
+            }),
+          }).catch((err) => console.warn("Could not dispatch welcome verification email:", err));
+
           await supabase.auth.signOut();
-          setAuthTab("success");
+          setAuthTab("verify");
         }
       }}
       className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"
