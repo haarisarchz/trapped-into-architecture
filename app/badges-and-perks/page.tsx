@@ -513,9 +513,9 @@ export default function BadgesAndPerksPage() {
                       66% – 80%
                     </span>
                   </div>
-                  <h3 className="font-extrabold text-yellow-950 text-base mb-1.5">Gold Studio</h3>
+                  <h3 className="font-extrabold text-yellow-950 text-base mb-1.5">Gold Studio / Institution</h3>
                   <p className="text-xs text-yellow-900/80 leading-relaxed">
-                    <strong>Hiring Privileges Unlocked:</strong> Studio meets verification standards and can publish vacancies!
+                    <strong>Hiring Privileges Unlocked:</strong> Must be a claimed profile and reach 66%+ to publish vacancies!
                   </p>
                 </div>
                 <div className="pt-3 border-t border-[#FACC15]/40 mt-4 text-[11px] text-yellow-950 font-bold">
@@ -562,16 +562,16 @@ export default function BadgesAndPerksPage() {
               </div>
             </div>
 
-            {/* SPECIAL CARD: COLLEGES & UNIVERSITIES (VERIFIED INSTITUTION) */}
+            {/* SPECIAL CARD: COLLEGES & UNIVERSITIES (ACADEMIC TIER TRACK) */}
             <div className="p-5 rounded-3xl bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border border-indigo-200 text-indigo-950 flex items-start gap-3 shadow-xs">
               <span className="text-2xl shrink-0 mt-0.5">🏛️</span>
               <div className="text-xs sm:text-sm leading-relaxed">
                 <p className="font-extrabold text-indigo-900 mb-0.5 flex items-center gap-2">
-                  <span>Colleges &amp; Universities: Verified Institution Designation</span>
+                  <span>Colleges &amp; Universities: Gold Level Institution Track</span>
                   <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">Academic Track</span>
                 </p>
                 <p className="text-indigo-950/80">
-                  Colleges, universities, and academic departments receive the official <strong>🏛️ Verified Institution</strong> badge when reaching completeness (66%+) or upon campus identity verification, unlocking faculty hiring and student outreach privileges.
+                  Colleges and universities rank as <strong>Bronze, Silver, Gold, Platinum, or Diamond Level Institution</strong>. Reaching <strong>Gold Level Institution</strong> strictly requires a claimed profile and 66%+ completeness to publish faculty and architectural openings. Unclaimed institutions remain capped at Silver.
                 </p>
               </div>
             </div>

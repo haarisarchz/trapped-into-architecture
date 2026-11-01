@@ -176,7 +176,7 @@ const [showUserMenu, setShowUserMenu] =
             if (compLvl.score >= 45) {
               notifs.push({
                 id: `comp-tier-${c.id}-${compLvl.tier}`,
-                message: `${compLvl.icon} ${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.score >= 66 ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
+                message: `${compLvl.icon} ${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.tier === 'gold' || compLvl.tier === 'platinum' || compLvl.tier === 'diamond' ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
                 time: compTime,
                 link: `/companies/${c.slug}`
               });

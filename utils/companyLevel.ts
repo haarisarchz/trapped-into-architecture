@@ -10,6 +10,7 @@ export interface CompanyLevelResult {
   border: string;
   isVip: boolean;
   isInstitution: boolean;
+  isClaimed: boolean;
   missingFields: string[];
 }
 
@@ -51,15 +52,15 @@ export function isInstitution(company: any): boolean {
  * 10. Verified Authenticity: 10%
  *
  * Tiers:
- *  - 0% - 44%: Bronze Level Studio 🥉
- *  - 45% - 65%: Silver Level Studio 🥈
- *  - 66% - 80%: Gold Level Studio 🥇 (Gate to post job openings)
- *  - 81% - 90%: Platinum Level Studio 💎
- *  - 91% - 100%: Diamond Level Studio 👑
+ *  - 0% - 44%: Bronze Level Studio / Institution 🥉
+ *  - 45% - 65%: Silver Level Studio / Institution 🥈
+ *  - 66% - 80%: Gold Level Studio / Institution 🥇 (Gate to post job openings; STRICTLY REQUIRES CLAIMED STATUS)
+ *  - 81% - 90%: Platinum Level Studio / Institution 💎
+ *  - 91% - 100%: Diamond Level Studio / Institution 👑
  * 
- * For Academic Institutions / Colleges / Universities:
- *  - Reaching 66%+ (or verified) -> "Verified Institution" 🏛️
- *  - Below 66% -> "Academic Institution" 🏛️
+ * HARD RULE:
+ *  - Unless a studio or company is claimed (is_claimed === true || claimed_by != null),
+ *    it CANNOT reach Gold Level or above. Its tier is capped at Silver.
  */
 export function calculateCompanyLevel(company: any): CompanyLevelResult {
   const institution = isInstitution(company);
@@ -68,14 +69,15 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
     return {
       score: 0,
       tier: "bronze",
-      label: institution ? "Academic Institution" : "Bronze Level Studio",
-      icon: institution ? "🏛️" : "🥉",
-      bg: institution ? "bg-slate-100" : "bg-amber-50",
-      text: institution ? "text-slate-800" : "text-amber-800",
-      border: institution ? "border-slate-300" : "border-amber-200",
+      label: institution ? "Bronze Level Institution" : "Bronze Level Studio",
+      icon: "🥉",
+      bg: "bg-amber-50",
+      text: "text-amber-800",
+      border: "border-amber-200",
       isVip: false,
       isInstitution: institution,
-      missingFields: ["Studio information"],
+      isClaimed: false,
+      missingFields: ["Profile information"],
     };
   }
 
@@ -173,10 +175,11 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
   }
 
   // 9. Claimed Ownership (10% total)
-  if (company.is_claimed || company.claimed_by) {
+  const isClaimed = Boolean(company.is_claimed || company.claimed_by);
+  if (isClaimed) {
     score += 10;
   } else {
-    missing.push("Claimed Profile");
+    missing.push("Claimed Profile (Required to reach Gold Level)");
   }
 
   // 10. Verification Credibility (10% total)
@@ -188,7 +191,7 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
 
   score = Math.min(100, Math.max(0, score));
 
-  // Determine Tier
+  // Determine Initial Tier by Score
   let tier: StudioLevelTier = "bronze";
   if (score >= 91) {
     tier = "diamond";
@@ -200,43 +203,49 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
     tier = "silver";
   }
 
-  const isVip = Boolean(company.is_vip);
+  // HARD RULE: Unless claimed, CANNOT reach Gold, Platinum, or Diamond!
+  if (!isClaimed && (tier === "gold" || tier === "platinum" || tier === "diamond")) {
+    tier = "silver";
+  }
 
-  // Standard Studio Tier Configs
-  const studioConfigs: Record<
+  const isVip = Boolean(company.is_vip);
+  const entityType = institution ? "Institution" : "Studio";
+
+  // Dynamic Tier Configurations
+  const configs: Record<
     StudioLevelTier,
     { label: string; icon: string; bg: string; text: string; border: string }
   > = {
     bronze: {
-      label: "Bronze Level Studio",
+      label: `Bronze Level ${entityType}`,
       icon: "🥉",
       bg: "bg-amber-50",
       text: "text-amber-800",
       border: "border-amber-200",
     },
     silver: {
-      label: "Silver Level Studio",
+      label: `Silver Level ${entityType}`,
       icon: "🥈",
       bg: "bg-slate-100",
       text: "text-slate-800",
       border: "border-slate-300",
     },
     gold: {
-      label: "Gold Level Studio",
+      label: `Gold Level ${entityType}`,
       icon: "🥇",
       bg: "bg-yellow-50",
       text: "text-yellow-800",
       border: "border-yellow-300",
     },
     platinum: {
-      label: "Platinum Level Studio",
+      label: `Platinum Level ${entityType}`,
       icon: "💎",
       bg: "bg-cyan-50",
       text: "text-cyan-800",
       border: "border-cyan-300",
     },
     diamond: {
-      label: "Diamond Level Studio",
+      label: `Diamond Level ${entityType}`,
       icon: "👑",
       bg: "bg-purple-50",
       text: "text-purple-800",
@@ -244,31 +253,13 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
     },
   };
 
-  // For Colleges & Universities:
-  // Reaching Gold (66%+) or verified -> "Verified Institution"
-  // Otherwise -> "Academic Institution"
-  if (institution) {
-    const isVerifiedInstitution = score >= 66 || company.is_verified;
-    return {
-      score,
-      tier,
-      label: isVerifiedInstitution ? "Verified Institution" : "Academic Institution",
-      icon: "🏛️",
-      bg: isVerifiedInstitution ? "bg-indigo-50" : "bg-slate-100",
-      text: isVerifiedInstitution ? "text-indigo-900" : "text-slate-800",
-      border: isVerifiedInstitution ? "border-indigo-300" : "border-slate-300",
-      isVip,
-      isInstitution: true,
-      missingFields: missing,
-    };
-  }
-
   return {
     score,
     tier,
-    ...studioConfigs[tier],
+    ...configs[tier],
     isVip,
-    isInstitution: false,
+    isInstitution: institution,
+    isClaimed,
     missingFields: missing,
   };
 }

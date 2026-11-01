@@ -75,8 +75,8 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥉</span>
                 <div>
-                  <p className="font-bold text-amber-900">Bronze Level Studio</p>
-                  <p className="text-[11px] text-amber-700">Created from job listing (20% base)</p>
+                  <p className="font-bold text-amber-900">Bronze Level Studio / Institution</p>
+                  <p className="text-[11px] text-amber-700">Initial directory entry</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800 shrink-0">
@@ -89,8 +89,8 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥈</span>
                 <div>
-                  <p className="font-bold text-slate-800">Silver Level Studio</p>
-                  <p className="text-[11px] text-slate-600">Logo, bio, website & socials added</p>
+                  <p className="font-bold text-slate-800">Silver Level Studio / Institution</p>
+                  <p className="text-[11px] text-slate-600">Contact &amp; online presence added</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shrink-0">
@@ -103,8 +103,8 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥇</span>
                 <div>
-                  <p className="font-bold text-yellow-900">Gold Level Studio</p>
-                  <p className="text-[11px] text-yellow-700">Claimed & contact verified</p>
+                  <p className="font-bold text-yellow-900">Gold Level Studio / Institution</p>
+                  <p className="text-[11px] text-yellow-700">Claimed profile strictly required (66%+)</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-yellow-300 text-yellow-900 shrink-0">
@@ -117,8 +117,8 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">💎</span>
                 <div>
-                  <p className="font-bold text-cyan-900">Platinum Level Studio</p>
-                  <p className="text-[11px] text-cyan-700">Team linked & verified track record</p>
+                  <p className="font-bold text-cyan-900">Platinum Level Studio / Institution</p>
+                  <p className="text-[11px] text-cyan-700">Team linked &amp; verified track record</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-cyan-200 text-cyan-900 shrink-0">
@@ -131,8 +131,8 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-xl">👑</span>
                 <div>
-                  <p className="font-bold text-purple-900">Diamond Level Studio</p>
-                  <p className="text-[11px] text-purple-700">Full architectural dossier, portfolio showcase & top employer credibility</p>
+                  <p className="font-bold text-purple-900">Diamond Level Studio / Institution</p>
+                  <p className="text-[11px] text-purple-700">Full architectural dossier, portfolio showcase &amp; top credibility</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-900 shrink-0">
@@ -178,14 +178,14 @@ export default function CompanyBadgeExplanationModal({
               </p>
             </div>
 
-            {/* Verified Institution Badge */}
+            {/* Academic Track Badge */}
             <div className="p-3 rounded-2xl border border-purple-200 bg-purple-50/60 flex flex-col gap-1.5 sm:col-span-3">
               <div className="flex items-center gap-2 font-bold text-purple-900">
                 <span className="text-base">🏛️</span>
-                <span>Verified Institution (Colleges &amp; Universities)</span>
+                <span>Academic Track (Colleges &amp; Universities)</span>
               </div>
               <p className="text-[11px] text-purple-800 leading-relaxed">
-                Colleges, universities, and architectural academia that complete their profile or verify their campus identity receive the <strong>Verified Institution</strong> badge.
+                Colleges and universities rank as <strong>Bronze, Silver, Gold, Platinum, or Diamond Level Institution</strong>. Reaching Gold Level Institution strictly requires a claimed profile and 66%+ completeness.
               </p>
             </div>
           </div>
