@@ -31,6 +31,24 @@ const [showUserMenu, setShowUserMenu] =
 
     const [currentUser, setCurrentUser] =
   useState<any>(null);
+  const [userTier, setUserTier] = useState<string>("bronze");
+
+  const getDisplayNameTierStyles = (tier: string) => {
+    switch (tier) {
+      case "diamond":
+        return "bg-gradient-to-r from-purple-700 via-fuchsia-600 to-indigo-700 text-white border border-purple-300 shadow-sm font-black";
+      case "platinum":
+        return "bg-gradient-to-r from-cyan-400 via-sky-300 to-teal-300 text-slate-950 border border-cyan-200 shadow-sm font-black";
+      case "gold":
+        return "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-amber-950 border border-amber-300 shadow-sm font-black";
+      case "silver":
+        return "bg-gradient-to-r from-slate-200 via-gray-100 to-slate-200 text-slate-950 border border-slate-300 shadow-sm font-black";
+      case "bronze":
+        return "bg-gradient-to-r from-[#935624] to-[#713D14] text-white border border-[#AD6E35] shadow-sm font-bold";
+      default:
+        return "border border-white/80 bg-white/10 text-white hover:bg-white hover:text-black font-semibold";
+    }
+  };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -100,8 +118,15 @@ const [showUserMenu, setShowUserMenu] =
         try {
           const { data: edus } = await supabase.from("educations").select("*").eq("user_id", userId);
           const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", userId);
-          const { percentage } = calculateProfileCompletion(userProf, edus || [], exps || []);
+          const { percentage, badgeTier } = calculateProfileCompletion(userProf, edus || [], exps || []);
           const profTime = userProf.updated_at || userProf.created_at || new Date().toISOString();
+          let calculatedTier = badgeTier || "bronze";
+          if (percentage >= 91) calculatedTier = "diamond";
+          else if (percentage >= 81) calculatedTier = "platinum";
+          else if (percentage >= 66) calculatedTier = "gold";
+          else if (percentage >= 45) calculatedTier = "silver";
+          else calculatedTier = "bronze";
+          setUserTier(calculatedTier);
 
           if (percentage >= 91) {
             notifs.push({
@@ -375,11 +400,12 @@ useEffect(() => {
             <div className="relative">
               <button 
                 onClick={() => setShowUserMenu(!showUserMenu)} 
-                className="font-semibold text-gray-200 hover:text-white transition flex items-center gap-1"
+                className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm transition flex items-center gap-1.5 ${getDisplayNameTierStyles(userTier)}`}
                 aria-label="Open account menu"
+                title={`${userTier.toUpperCase()} Member`}
               >
-                {currentUser.displayName || currentUser.username || "Profile"}
-                <ChevronDown size={14} className="ml-1" />
+                <span>{currentUser.displayName || currentUser.username || "Profile"}</span>
+                <ChevronDown size={14} className="opacity-80" />
               </button>
               
     {showUserMenu && (
@@ -509,9 +535,7 @@ useEffect(() => {
       <Link
         href="/news-feed"
         className="hover:text-gray-300 transition"
-      >
-        News Feed
-      </Link>
+      >Feed</Link>
 
       {/* JOBS */}
 
@@ -556,11 +580,11 @@ useEffect(() => {
   <div className="relative">
     <button
       onClick={() => setShowUserMenu(!showUserMenu)}
-      className="border border-white px-5 py-2 rounded-xl hover:bg-white hover:text-black transition"
+      className={`px-4 py-2 rounded-xl transition flex items-center gap-2 cursor-pointer shadow-xs ${getDisplayNameTierStyles(userTier)}`}
+      title={`${userTier.toUpperCase()} Member`}
     >
-      <div className="flex items-center gap-2">
-        {currentUser.displayName}
-      </div>
+      <span>{currentUser.displayName || currentUser.username || "Profile"}</span>
+      <ChevronDown size={14} className="opacity-80" />
     </button>
 
     {showUserMenu && (
@@ -664,7 +688,7 @@ useEffect(() => {
 {mobileMenuOpen && (
   <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50 shadow-2xl flex flex-col">
     <Link href="/" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-    <Link href="/news-feed" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>News Feed</Link>
+    <Link href="/news-feed" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Feed</Link>
     <Link href="/jobs" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
     <Link href="/internships" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
     <Link href="/companies" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>

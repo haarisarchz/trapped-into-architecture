@@ -9,30 +9,72 @@ export interface CompanyLevelResult {
   text: string;
   border: string;
   isVip: boolean;
+  isInstitution: boolean;
   missingFields: string[];
 }
 
 /**
- * Automatically calculates dynamic studio level based on profile completeness (0-100%).
- * No manual dropdown needed. As firm details (logo, bio, contact, location, socials)
- * are filled, the studio automatically ranks up:
- *  - 0% - 39%: Bronze Level Studio 🥉
- *  - 40% - 64%: Silver Level Studio 🥈
- *  - 65% - 84%: Gold Level Studio 🥇
- *  - 85% - 94%: Platinum Level Studio 💎
- *  - 95% - 100%: Diamond Level Studio 👑 (eligible for VIP Badge ⭐)
+ * Checks whether an entity represents a College, University, or Academic Institution.
+ */
+export function isInstitution(company: any): boolean {
+  if (!company) return false;
+  const orgType = (company.organization_type || "").toLowerCase();
+  const name = (company.firm_name || "").toLowerCase();
+
+  return (
+    orgType.includes("institution") ||
+    orgType.includes("academic") ||
+    orgType.includes("university") ||
+    orgType.includes("college") ||
+    orgType.includes("school") ||
+    name.includes("university") ||
+    name.includes("college") ||
+    name.includes("institute of") ||
+    name.includes("institution") ||
+    name.includes("academy")
+  );
+}
+
+/**
+ * Automatically calculates dynamic studio or institution level based on 10 equally balanced components (10% each = 100%).
+ * 
+ * Equal 10-point distribution:
+ *  1. Firm Name & Typology: 10% (5% name + 5% typology)
+ *  2. Studio Logo / Brand Mark: 10%
+ *  3. Studio Overview / About Bio (>25 chars): 10%
+ *  4. City & State Geographical Location: 10% (10% full, 5% partial)
+ *  5. Direct Contact Coordinates: 10% (5% email + 5% phone/whatsapp)
+ *  6. Official Website URL: 10%
+ *  7. Social Outreach Channels: 10%
+ *  8. Leadership & Scale (Founders/Team/Year): 10%
+ *  9. Claimed Ownership: 10%
+ * 10. Verified Authenticity: 10%
+ *
+ * Tiers:
+ *  - 0% - 44%: Bronze Level Studio 🥉
+ *  - 45% - 65%: Silver Level Studio 🥈
+ *  - 66% - 80%: Gold Level Studio 🥇 (Gate to post job openings)
+ *  - 81% - 90%: Platinum Level Studio 💎
+ *  - 91% - 100%: Diamond Level Studio 👑
+ * 
+ * For Academic Institutions / Colleges / Universities:
+ *  - Reaching 66%+ (or verified) -> "Verified Institution" 🏛️
+ *  - Below 66% -> "Academic Institution" 🏛️
  */
 export function calculateCompanyLevel(company: any): CompanyLevelResult {
+  const institution = isInstitution(company);
+
   if (!company) {
     return {
       score: 0,
       tier: "bronze",
-      label: "Bronze Level Studio",
-      icon: "🥉",
-      bg: "bg-amber-50",
-      text: "text-amber-800",
-      border: "border-amber-200",
+      label: institution ? "Academic Institution" : "Bronze Level Studio",
+      icon: institution ? "🏛️" : "🥉",
+      bg: institution ? "bg-slate-100" : "bg-amber-50",
+      text: institution ? "text-slate-800" : "text-amber-800",
+      border: institution ? "border-slate-300" : "border-amber-200",
       isVip: false,
+      isInstitution: institution,
       missingFields: ["Studio information"],
     };
   }
@@ -40,102 +82,108 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
   let score = 0;
   const missing: string[] = [];
 
-  // 1. Basic Identity (40% total)
-  // 1.1 Firm Name (10%)
+  // 1. Identity & Typology (10% total)
+  let identityScore = 0;
   if (company.firm_name && company.firm_name.trim().length > 1) {
+    identityScore += 5;
+  } else {
+    missing.push("Firm / Entity Name");
+  }
+  if (company.organization_type && company.organization_type.trim().length > 1) {
+    identityScore += 5;
+  } else {
+    missing.push("Practice Typology");
+  }
+  score += identityScore;
+
+  // 2. Studio Logo / Brand Mark (10% total)
+  if (company.logo_url && company.logo_url.trim().length > 5) {
     score += 10;
   } else {
-    missing.push("Firm Name");
+    missing.push("Logo / Brand Mark");
   }
 
-  // 1.2 Studio Logo (15%)
-  if (company.logo_url && company.logo_url.trim().length > 5) {
-    score += 15;
-  } else {
-    missing.push("Studio Logo");
-  }
-
-  // 1.3 Overview / Description (15%)
+  // 3. Overview / About Bio (10% total)
   if (
     (company.description && company.description.trim().length > 25) ||
     (company.about_firm && company.about_firm.trim().length > 25)
   ) {
-    score += 15;
+    score += 10;
   } else {
-    missing.push("Studio Overview / About Description");
+    missing.push("Overview / About Description");
   }
 
-  // 2. Location & Address (15% total)
+  // 4. Physical Location (10% total)
   if (company.city && company.state) {
-    score += 15;
+    score += 10;
   } else if (company.city || company.state || company.neighborhood) {
-    score += 8;
-    missing.push("Complete City & State");
+    score += 5;
+    missing.push("Complete City & State Location");
   } else {
     missing.push("City & State Location");
   }
 
-  // 3. Contact & Connectivity (25% total)
-  // 3.1 Official Email (10%)
+  // 5. Direct Contact Coordinates (10% total)
+  let contactScore = 0;
   if (
     (company.email && company.email.trim().length > 4) ||
     (company.contact_email && company.contact_email.trim().length > 4)
   ) {
-    score += 10;
+    contactScore += 5;
   } else {
     missing.push("Official Contact Email");
   }
-
-  // 3.2 Phone / WhatsApp (10%)
   if (
     (company.phone && company.phone.trim().length > 5) ||
     (company.whatsapp && company.whatsapp.trim().length > 5)
   ) {
-    score += 10;
+    contactScore += 5;
   } else {
     missing.push("Phone or WhatsApp Number");
   }
+  score += contactScore;
 
-  // 3.3 Website (5%)
+  // 6. Official Website URL (10% total)
   if (
     (company.website && company.website.trim().length > 4) ||
     (company.website_link && company.website_link.trim().length > 4)
   ) {
-    score += 5;
+    score += 10;
   } else {
-    missing.push("Official Website Link");
+    missing.push("Official Website URL");
   }
 
-  // 4. Practice Typology & Scale (15% total)
-  // 4.1 Organization Type (5%)
-  if (company.organization_type && company.organization_type.trim().length > 1) {
-    score += 5;
-  } else {
-    missing.push("Practice Typology");
-  }
-
-  // 4.2 Founded Year or Employee Size (5%)
-  if (company.founded_year || company.employee_size) {
-    score += 5;
-  } else {
-    missing.push("Founded Year or Team Size");
-  }
-
-  // 4.3 Social Channels (5%)
+  // 7. Social Media Outreach (10% total)
   if (
     company.instagram ||
     company.linkedin ||
     company.facebook ||
     company.twitter
   ) {
-    score += 5;
+    score += 10;
   } else {
     missing.push("Social Profile (LinkedIn/Instagram)");
   }
 
-  // 5. Verification Bonus (5%)
+  // 8. Scale & Leadership (10% total)
+  if (company.principal_architect || company.founded_year || company.employee_size) {
+    score += 10;
+  } else {
+    missing.push("Leadership / Team Size / Founded Year");
+  }
+
+  // 9. Claimed Ownership (10% total)
+  if (company.is_claimed || company.claimed_by) {
+    score += 10;
+  } else {
+    missing.push("Claimed Profile");
+  }
+
+  // 10. Verification Credibility (10% total)
   if (company.is_verified || company.email_verified || company.phone_verified) {
-    score += 5;
+    score += 10;
+  } else {
+    missing.push("Verified Trust Status");
   }
 
   score = Math.min(100, Math.max(0, score));
@@ -154,7 +202,8 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
 
   const isVip = Boolean(company.is_vip);
 
-  const configs: Record<
+  // Standard Studio Tier Configs
+  const studioConfigs: Record<
     StudioLevelTier,
     { label: string; icon: string; bg: string; text: string; border: string }
   > = {
@@ -195,11 +244,31 @@ export function calculateCompanyLevel(company: any): CompanyLevelResult {
     },
   };
 
+  // For Colleges & Universities:
+  // Reaching Gold (66%+) or verified -> "Verified Institution"
+  // Otherwise -> "Academic Institution"
+  if (institution) {
+    const isVerifiedInstitution = score >= 66 || company.is_verified;
+    return {
+      score,
+      tier,
+      label: isVerifiedInstitution ? "Verified Institution" : "Academic Institution",
+      icon: "🏛️",
+      bg: isVerifiedInstitution ? "bg-indigo-50" : "bg-slate-100",
+      text: isVerifiedInstitution ? "text-indigo-900" : "text-slate-800",
+      border: isVerifiedInstitution ? "border-indigo-300" : "border-slate-300",
+      isVip,
+      isInstitution: true,
+      missingFields: missing,
+    };
+  }
+
   return {
     score,
     tier,
-    ...configs[tier],
+    ...studioConfigs[tier],
     isVip,
+    isInstitution: false,
     missingFields: missing,
   };
 }

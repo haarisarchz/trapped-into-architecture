@@ -1,8 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { 
   Check, 
   Zap, 
@@ -18,11 +22,34 @@ import {
   ArrowRight, 
   CheckCircle2, 
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  AlertCircle
 } from "lucide-react";
 
 export default function SubscriptionsPage() {
+  const router = useRouter();
+
+  // User & Membership state
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [badgeTier, setBadgeTier] = useState<string>("guest");
+  const [profileScore, setProfileScore] = useState<number>(0);
+  const [hasStudio, setHasStudio] = useState<boolean>(false);
+  const [loadingUser, setLoadingUser] = useState<boolean>(true);
+
+  // Modal & Form state
   const [modalOpen, setModalOpen] = useState(false);
+  const [blockedModalOpen, setBlockedModalOpen] = useState(false);
+  const [blockedReason, setBlockedReason] = useState<{
+    requiredTier: "silver" | "gold";
+    title: string;
+    description: string;
+  }>({
+    requiredTier: "silver",
+    title: "",
+    description: ""
+  });
+
   const [selectedPlan, setSelectedPlan] = useState({ title: "", type: "", rate: "" });
   const [role, setRole] = useState("Architect");
   const [experience, setExperience] = useState("2 Years");
@@ -33,7 +60,8 @@ export default function SubscriptionsPage() {
   const [billingCycle, setBillingCycle] = useState<"weekly" | "monthly">("monthly");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  React.useEffect(() => {
+  // Read URL params for location pre-fill
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const loc = params.get("city") || params.get("state") || params.get("location");
@@ -43,14 +71,126 @@ export default function SubscriptionsPage() {
     }
   }, []);
 
-  const openPlanModal = (title: string, type: string, rate: string, defaultFreq: "daily" | "instant" = "daily") => {
-    setSelectedPlan({ title, type, rate });
-    setFrequency(defaultFreq);
+  // Load user and evaluate membership tier
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        let currentUser: any = null;
+        if (typeof window !== "undefined") {
+          const userStr = localStorage.getItem("currentUser");
+          if (userStr) {
+            try {
+              currentUser = JSON.parse(userStr);
+            } catch (e) {}
+          }
+        }
+
+        if (!currentUser) {
+          const { data: authData } = await supabase.auth.getUser();
+          if (authData?.user) {
+            currentUser = { id: authData.user.id, email: authData.user.email };
+          }
+        }
+
+        if (currentUser?.id) {
+          setUser(currentUser);
+          
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .maybeSingle();
+
+          if (prof) {
+            setProfile(prof);
+            if (prof.whatsapp_number) setWhatsapp(prof.whatsapp_number);
+            else if (prof.phone) setWhatsapp(prof.phone);
+            if (prof.email) setEmail(prof.email);
+
+            const [{ data: edus }, { data: exps }, { data: comps }] = await Promise.all([
+              supabase.from("educations").select("*").eq("user_id", currentUser.id),
+              supabase.from("experiences").select("*").eq("user_id", currentUser.id),
+              supabase.from("companies").select("id").or(`claimed_by.eq.${currentUser.id},created_by.eq.${currentUser.id}`).limit(1)
+            ]);
+
+            const completion = calculateProfileCompletion(prof, edus || [], exps || []);
+            setProfileScore(completion.percentage);
+            setBadgeTier(completion.badgeTier);
+            setHasStudio((comps && comps.length > 0) || false);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to load user membership:", err);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    loadProfileData();
+  }, []);
+
+  // Handle Candidate Alert Subscription Click (Requires Silver: >= 45% or tier != bronze)
+  const handleSeekerAlertClick = (title: string, rate: string, freq: "daily" | "instant") => {
+    if (!user) {
+      window.dispatchEvent(new CustomEvent("openAuth", { detail: "login" }));
+      return;
+    }
+
+    const isSilverOrAbove = 
+      badgeTier === "silver" || 
+      badgeTier === "gold" || 
+      badgeTier === "platinum" || 
+      badgeTier === "diamond" || 
+      profileScore >= 45;
+
+    if (!isSilverOrAbove) {
+      setBlockedReason({
+        requiredTier: "silver",
+        title: "Silver Member Status Required (45%+)",
+        description: "To ensure legitimate delivery coordinates and verify recipient identities, WhatsApp & Email Job Alerts require at least Silver Member status. Please verify your phone/WhatsApp number and complete your basic dossier to unlock alerts."
+      });
+      setBlockedModalOpen(true);
+      return;
+    }
+
+    // Allowed: Open checkout modal
+    setSelectedPlan({ title, type: "Candidate Job Alerts", rate });
+    setFrequency(freq);
     setIsSuccess(false);
     setModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle Employer Boost Click (Requires Gold: >= 66% or studio owner)
+  const handleEmployerBoostClick = (title: string, rate: string) => {
+    if (!user) {
+      window.dispatchEvent(new CustomEvent("openAuth", { detail: "login" }));
+      return;
+    }
+
+    const isGoldOrAbove = 
+      badgeTier === "gold" || 
+      badgeTier === "platinum" || 
+      badgeTier === "diamond" || 
+      profileScore >= 66 || 
+      hasStudio;
+
+    if (!isGoldOrAbove) {
+      setBlockedReason({
+        requiredTier: "gold",
+        title: "Gold Member / Studio Status Required (66%+)",
+        description: "To safeguard architectural hiring integrity, only verified practice owners, studio admins, or Gold Members (66%+ profile completion) can publish and boost job postings. Please complete your studio credentials to proceed."
+      });
+      setBlockedModalOpen(true);
+      return;
+    }
+
+    // Allowed: Open boost modal
+    setSelectedPlan({ title, type: "Employer Visibility Upgrades", rate });
+    setIsSuccess(false);
+    setModalOpen(true);
+  };
+
+  const handleModalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSuccess(true);
     setTimeout(() => {
@@ -63,7 +203,7 @@ export default function SubscriptionsPage() {
     <main className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans selection:bg-indigo-50 selection:text-indigo-900">
       <Navbar />
 
-      {/* HERO SECTION */}
+      {/* HERO SECTION (CLEAN & UNCLUTTERED - NO STATUS PILL) */}
       <section className="relative overflow-hidden bg-white border-b border-slate-200/80 pt-12 pb-14 px-6 text-center">
         <div className="max-w-3xl mx-auto space-y-3.5">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-full shadow-xs">
@@ -98,9 +238,12 @@ export default function SubscriptionsPage() {
               </div>
               <p className="text-slate-500 text-xs sm:text-sm mt-1">Delivered straight to your WhatsApp and inbox based on your custom filter criteria.</p>
             </div>
-            <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium border border-slate-200 self-start sm:self-auto">
-              Standard Searching is Free
-            </span>
+            
+            {/* SILVER CRITERIA BADGE */}
+            <div className="inline-flex items-center gap-1.5 text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full font-semibold border border-slate-200 self-start sm:self-auto">
+              <span>🥈</span>
+              <span>Requires Silver Member (45%+)</span>
+            </div>
           </div>
 
           {/* Filter Preview Strip */}
@@ -117,14 +260,14 @@ export default function SubscriptionsPage() {
               </span>
               <span className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-800 px-2.5 py-1 rounded-md text-xs font-semibold">
                 <MapPin size={13} className="text-slate-500" />
-                Location: Tamil Nadu
+                Location: {location}
               </span>
             </div>
             <span 
-              onClick={() => openPlanModal("Custom WhatsApp Job Alert", "Seeker Alerts", "Choose Pass")}
+              onClick={() => handleSeekerAlertClick("Custom WhatsApp Job Alert", "₹49 - ₹149", "daily")}
               className="text-xs text-indigo-600 font-semibold cursor-pointer hover:underline"
             >
-              Select your own filters when subscribing →
+              Configure filters when subscribing →
             </span>
           </div>
 
@@ -175,13 +318,13 @@ export default function SubscriptionsPage() {
                   </li>
                   <li className="flex items-start gap-2.5">
                     <Check size={16} className="text-emerald-600 shrink-0 mt-0.5" />
-                    <span>Delivered to both WhatsApp &amp; Email</span>
+                    <span>Requires verified Silver dossier (verified phone/WhatsApp)</span>
                   </li>
                 </ul>
               </div>
 
               <button 
-                onClick={() => openPlanModal("Daily Summary Alert", "Seeker Alerts", "₹49 (Weekly) / ₹99 (Monthly)", "daily")}
+                onClick={() => handleSeekerAlertClick("Daily Summary Alert", "₹49 (Weekly) / ₹99 (Monthly)", "daily")}
                 className="mt-8 w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition text-center text-sm shadow-xs cursor-pointer"
               >
                 Subscribe to Daily Digest
@@ -244,7 +387,7 @@ export default function SubscriptionsPage() {
               </div>
 
               <button 
-                onClick={() => openPlanModal("Instant Job Alert", "Seeker Alerts", "₹79 (Weekly) / ₹149 (Monthly)", "instant")}
+                onClick={() => handleSeekerAlertClick("Instant Job Alert", "₹79 (Weekly) / ₹149 (Monthly)", "instant")}
                 className="mt-8 w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition text-center text-sm shadow-xs cursor-pointer"
               >
                 Subscribe to Instant Alerts
@@ -268,9 +411,12 @@ export default function SubscriptionsPage() {
               </div>
               <p className="text-slate-500 text-xs sm:text-sm mt-1">Upgrade your job post to gain top placement and direct distribution to matching candidates.</p>
             </div>
-            <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-medium border border-slate-200 self-start sm:self-auto">
-              Standard Job Posting is Free
-            </span>
+            
+            {/* GOLD CRITERIA BADGE */}
+            <div className="inline-flex items-center gap-1.5 text-xs bg-amber-50 text-amber-900 px-3 py-1.5 rounded-full font-semibold border border-amber-200 self-start sm:self-auto">
+              <span>🥇</span>
+              <span>Requires Gold Member / Verified Studio</span>
+            </div>
           </div>
 
           {/* TWO CARDS FOR EMPLOYERS */}
@@ -314,7 +460,7 @@ export default function SubscriptionsPage() {
               </div>
 
               <button 
-                onClick={() => openPlanModal("Featured Job Post", "Employer Upgrades", "30-Day Boost")}
+                onClick={() => handleEmployerBoostClick("Featured Job Post", "30-Day Boost")}
                 className="mt-8 w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl transition text-center text-sm shadow-xs cursor-pointer"
               >
                 Upgrade a Job to Featured
@@ -365,7 +511,7 @@ export default function SubscriptionsPage() {
               </div>
 
               <button 
-                onClick={() => openPlanModal("Company Spotlight & Blast", "Employer Upgrades", "45-Day Enterprise Spotlight")}
+                onClick={() => handleEmployerBoostClick("Company Spotlight & Blast", "45-Day Enterprise Spotlight")}
                 className="mt-8 w-full py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-xl transition text-center text-sm shadow-xs cursor-pointer"
               >
                 Get Company Spotlight
@@ -389,7 +535,66 @@ export default function SubscriptionsPage() {
 
       </div>
 
-      {/* INTERACTIVE CHECKOUT & CONFIGURATION MODAL */}
+      {/* ======================================================== */}
+      {/* BLOCKED / TIER REQUIREMENT MODAL (IF NOT SILVER OR GOLD) */}
+      {/* ======================================================== */}
+      {blockedModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
+            <button 
+              onClick={() => setBlockedModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto text-2xl shadow-xs">
+                {blockedReason.requiredTier === "silver" ? "🥈" : "🥇"}
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{blockedReason.title}</h3>
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed text-left bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                  {blockedReason.description}
+                </p>
+              </div>
+
+              {blockedReason.requiredTier === "silver" ? (
+                <div className="space-y-2 pt-2">
+                  <Link
+                    href="/profile"
+                    className="w-full py-3 bg-black hover:bg-slate-800 text-white font-semibold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <span>Complete Profile &amp; Verify WhatsApp</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                  <p className="text-[11px] text-slate-400">
+                    Adding your verified phone &amp; basic details immediately unlocks Silver status.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2 pt-2">
+                  <Link
+                    href="/companies/new"
+                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <span>Register / Claim Your Architecture Studio</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                  <p className="text-[11px] text-slate-400">
+                    Studio admins automatically get hiring and boost privileges.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* ACTIVE CHECKOUT & CONFIGURATION MODAL (WHEN QUALIFIED)   */}
+      {/* ======================================================== */}
       {modalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-150">
@@ -408,7 +613,7 @@ export default function SubscriptionsPage() {
                 <p className="text-xs text-slate-500">{selectedPlan.rate}</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
+              <form onSubmit={handleModalSubmit} className="space-y-3.5 text-xs">
                 <div>
                   <label className="block font-medium text-slate-700 mb-1">Target Job Title / Category</label>
                   <input 
@@ -449,7 +654,9 @@ export default function SubscriptionsPage() {
                 </div>
 
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">WhatsApp Number (For Direct Delivery)</label>
+                  <label className="block font-medium text-slate-700 mb-1">
+                    WhatsApp Number (Verified on Profile)
+                  </label>
                   <div className="flex">
                     <span className="inline-flex items-center px-2.5 border border-r-0 border-slate-200 bg-slate-50 text-slate-500 text-xs font-medium rounded-l-lg">+91</span>
                     <input 
@@ -464,7 +671,7 @@ export default function SubscriptionsPage() {
                 </div>
 
                 <div>
-                  <label className="block font-medium text-slate-700 mb-1">Email Address (Optional backup)</label>
+                  <label className="block font-medium text-slate-700 mb-1">Delivery Email</label>
                   <input 
                     type="email" 
                     value={email} 

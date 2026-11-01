@@ -17,78 +17,95 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingUp,
-  Award
+  Award,
+  Zap,
+  Radio
 } from "lucide-react";
 import { FeedItem } from "@/components/NewsFeedCard";
 
 export const metadata: Metadata = {
-  title: "News Feed & Platform Updates | Trapped Into Architecture",
+  title: "Feed | Trapped Into Architecture",
   description:
-    "Official architectural updates, studio announcements, job listings, and platform releases published automatically as features roll out.",
+    "Official Feed. Fresh platform features, studio spotlights, and architectural opportunities curated daily.",
 };
 
-// Revalidate every 60 seconds
 export const revalidate = 60;
 
 const DEFAULT_ANNOUNCEMENTS: FeedItem[] = [
   {
     id: "default-1",
-    category: "Feature Release",
+    category: "Feature Drop",
     badge_color: "bg-emerald-100 text-emerald-800 border-emerald-300",
-    title: "New Section: Architectural Studio Directory & Custom Job Alerts",
-    author: "Platform Editorial",
+    title: "Studio Directory is Live 🏛️",
+    author: "TIA Platform Desk",
     summary:
-      "Explore verified architecture practices across India, browse project portfolios, and receive customized job alert notifications tailored to your design focus.",
+      "Explore 50+ leading architecture practices across India in one unified hub. Discover firm design philosophies, active roles, and project portfolios.",
     feature_highlights: [
       {
-        feature: "Architectural Studio Hub",
-        desc: "Browse firm profiles, active vacancies, and design philosophies in one unified directory.",
+        feature: "Filter by Typology",
+        desc: "Search practices specializing in residential, commercial, landscape, and interior design.",
       },
       {
-        feature: "Custom Job Alerts",
-        desc: "Subscribe to curated vacancy alerts for Junior Architects, Interns, and BIM specialists.",
+        feature: "Multi-City Explorer",
+        desc: "Browse studios across Mumbai, Bengaluru, Delhi NCR, and 12+ creative design hubs.",
+      },
+      {
+        feature: "Direct Studio Portals",
+        desc: "Access verified practice contacts, team sizes, and current job vacancies.",
       },
     ],
     link_url: "/companies",
-    link_text: "Explore Studio Directory",
+    link_text: "Explore Studios",
     published_at: new Date().toISOString(),
     status: "published",
   },
   {
     id: "default-2",
-    category: "Hiring & Careers",
-    badge_color: "bg-blue-100 text-blue-800 border-blue-200",
-    title: "New Architectural & Internship Roles Added Across Studios",
-    author: "Careers Desk",
+    category: "New Feature",
+    badge_color: "bg-amber-100 text-amber-800 border-amber-300",
+    title: "Custom Job Alerts: Zero Noise, Just Your Roles 🔔",
+    author: "TIA Careers Hub",
     summary:
-      "Top design studios and firms are actively recruiting for junior architects, landscape designers, and project managers.",
+      "Subscribe to customized vacancy alerts matching your exact role and city preferences. Delivered straight to your WhatsApp and Email.",
     feature_highlights: [
       {
-        feature: "Direct Studio Applications",
-        desc: "Registered candidates can apply directly with pre-filled portfolio links.",
+        feature: "Tailored Role Filters",
+        desc: "Choose from Junior Architect, BIM Coordinator, Interior Designer, or Student Intern.",
+      },
+      {
+        feature: "Priority Alerts",
+        desc: "Get notified as soon as verified firms post, before general public syndication.",
+      },
+      {
+        feature: "Custom Frequency",
+        desc: "Select instant or daily digest broadcasts to fit your workflow.",
       },
     ],
-    link_url: "/jobs",
-    link_text: "Explore Job Listings",
+    link_url: "/subscriptions",
+    link_text: "Set Up Custom Alerts",
     published_at: new Date(Date.now() - 86400000).toISOString(),
     status: "published",
   },
   {
     id: "default-3",
-    category: "Studio Spotlight",
-    badge_color: "bg-purple-100 text-purple-800 border-purple-200",
-    title: "Verified Studio & Professional Profiles Are Live",
-    author: "Community Editorial",
+    category: "Hiring Radar",
+    badge_color: "bg-blue-100 text-blue-800 border-blue-200",
+    title: "Fresh Architectural Roles Dropped This Week 💼",
+    author: "TIA Careers Hub",
     summary:
-      "Browse leading architecture practices, explore their project portfolios, and connect with peer professionals across India.",
+      "New curated openings across top design firms in Bengaluru, Mumbai, and Delhi NCR. Direct recruiter connections enabled.",
     feature_highlights: [
       {
-        feature: "Studio Directory Live",
-        desc: "Firms can claim their practice listing and post vacancy notices.",
+        feature: "Verified Firm Openings",
+        desc: "Junior & intermediate architects, landscape architects, and site supervisors.",
+      },
+      {
+        feature: "1-Click Portfolio Apply",
+        desc: "Apply directly with your portfolio link and experience sheet pre-attached.",
       },
     ],
-    link_url: "/companies",
-    link_text: "Browse Companies",
+    link_url: "/jobs",
+    link_text: "Browse Open Roles",
     published_at: new Date(Date.now() - 172800000).toISOString(),
     status: "published",
   },
@@ -108,51 +125,51 @@ export default async function NewsFeedPage() {
       announcements = data as FeedItem[];
     }
   } catch {
-    // Graceful fallback to default announcements
+    // Fallback to default clean posts
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 text-black flex flex-col justify-between">
+    <main className="min-h-screen bg-[#fafafa] text-black flex flex-col justify-between">
       <div>
         <Navbar />
 
-        <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
           {/* Top Hero Banner */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-gray-950 via-gray-900 to-black text-white rounded-3xl p-8 md:p-12 shadow-xl mb-10 border border-gray-800">
+          <div className="relative overflow-hidden bg-gradient-to-r from-gray-950 via-gray-900 to-black text-white rounded-3xl p-8 sm:p-10 md:p-12 shadow-xl mb-8 sm:mb-10 border border-gray-800">
             <div className="relative z-10 max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-amber-400 text-xs font-semibold uppercase tracking-wider mb-4 border border-white/10 backdrop-blur-xs">
-                <Sparkles size={14} /> Official Feed • Architecture Feature Highlights
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-amber-400 text-xs font-bold uppercase tracking-wider mb-4 border border-white/10 backdrop-blur-xs">
+                <Radio size={13} className="text-amber-400 animate-pulse" /> Official Feed
               </div>
-              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-4 text-white">
-                Platform News & Updates
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-3 text-white">
+                Feed
               </h1>
-              <p className="text-gray-300 text-base md:text-lg leading-relaxed">
-                Stay informed with platform enhancements, newly added architectural vacancies,
-                featured studio spotlights, and community announcements as they roll out.
+              <p className="text-gray-300 text-base sm:text-lg leading-relaxed max-w-2xl font-normal">
+                Fresh feature drops, verified studio directories, and architectural vacancies.
+                Simple, actionable updates designed for modern architects and practices.
               </p>
             </div>
 
-            {/* Decorative background glow */}
+            {/* Subtle aesthetic glow */}
             <div className="absolute -right-10 -bottom-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           </div>
 
           {/* Main 2-Column Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* LEFT / CENTER COLUMN: Feed List with Reactions, Shares, and CEO Inline Admin Controls */}
+            {/* LEFT / CENTER COLUMN: Feed Stream (8 Columns) */}
             <div className="lg:col-span-8">
               <NewsFeedClientView initialAnnouncements={announcements} />
             </div>
 
-            {/* RIGHT COLUMN: Sidebar Navigation, Subscription, and Channels (4 Columns) */}
+            {/* RIGHT COLUMN: Sidebar (4 Columns) */}
             <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
               {/* Widget 1: Quick Navigation / Directory Bar */}
-              <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
+              <div className="bg-white rounded-3xl p-5 border border-gray-200/80 shadow-xs">
                 <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <Compass size={17} className="text-amber-600" />
                     <h3 className="font-bold text-sm text-gray-900">Explore Platform</h3>
                   </div>
-                  <span className="text-[11px] text-gray-400 font-medium">Quick Access</span>
+                  <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Quick Link</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -165,7 +182,7 @@ export default async function NewsFeedPage() {
                     },
                     {
                       label: "Firms & Studios",
-                      desc: "Discover practice profiles & project portfolios",
+                      desc: "Discover practice profiles & portfolios",
                       icon: Building2,
                       href: "/companies",
                     },
@@ -177,7 +194,7 @@ export default async function NewsFeedPage() {
                     },
                     {
                       label: "Architect Profiles",
-                      desc: "Browse individual designers & peer talent",
+                      desc: "Browse individual designers & peers",
                       icon: UserCheck,
                       href: "/individuals",
                     },
@@ -187,14 +204,14 @@ export default async function NewsFeedPage() {
                       <Link
                         key={menuItem.href}
                         href={menuItem.href}
-                        className="group flex items-center justify-between p-3 rounded-xl hover:bg-amber-50/70 border border-transparent hover:border-amber-200/80 transition duration-150"
+                        className="group flex items-center justify-between p-3 rounded-2xl hover:bg-amber-50/70 border border-transparent hover:border-amber-200/80 transition duration-150"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gray-100 group-hover:bg-amber-500 group-hover:text-white text-gray-700 flex items-center justify-center transition">
+                          <div className="w-8 h-8 rounded-xl bg-gray-100 group-hover:bg-amber-500 group-hover:text-white text-gray-700 flex items-center justify-center transition">
                             <IconComponent size={15} />
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-gray-900 group-hover:text-amber-900">
+                            <p className="text-xs font-bold text-gray-900 group-hover:text-amber-950">
                               {menuItem.label}
                             </p>
                             <p className="text-[11px] text-gray-500 leading-tight">
@@ -219,7 +236,7 @@ export default async function NewsFeedPage() {
               <ArchitectureChannelsCard />
 
               {/* Widget 4: Register Your Profile (For Professionals & Students) */}
-              <div className="bg-gradient-to-br from-gray-900 to-black text-white rounded-2xl p-5 shadow-sm border border-gray-800">
+              <div className="bg-gradient-to-br from-gray-900 to-black text-white rounded-3xl p-6 shadow-sm border border-gray-800">
                 <div className="flex items-center gap-2 mb-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
                   <Award size={14} />
                   <span>For Architects & Designers</span>
@@ -240,7 +257,7 @@ export default async function NewsFeedPage() {
               </div>
 
               {/* Widget 5: Register Your Studio (For Design Practices & Firms) */}
-              <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
+              <div className="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs">
                 <div className="flex items-center gap-2 mb-2 text-indigo-700 text-xs font-bold uppercase tracking-wider">
                   <Building2 size={14} />
                   <span>For Studios & Practices</span>
@@ -253,7 +270,7 @@ export default async function NewsFeedPage() {
                 </p>
                 <Link
                   href="/post-job"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-gray-900 hover:bg-black text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-xs"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gray-950 hover:bg-black text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-xs"
                 >
                   <span>Register Studio & Post Roles</span>
                   <ExternalLink size={13} />

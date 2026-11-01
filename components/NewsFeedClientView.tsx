@@ -168,16 +168,16 @@ export default function NewsFeedClientView({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner Row: Live Sync pill + CEO / SuperAdmin "+ Create Announcement" button */}
+      {/* Top Banner Row: Live Sync pill + CEO / SuperAdmin "+ Create Post" button */}
       <div className="bg-white border border-gray-200/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0">
             <Clock size={18} />
           </div>
           <div>
-            <h4 className="text-xs font-bold text-gray-900">Architecture Feature Feed</h4>
+            <h4 className="text-xs font-bold text-gray-900">Feed Activity</h4>
             <p className="text-[11px] text-gray-500">
-              User-facing platform rollouts, studio directories, and verified hiring milestones.
+              Fresh platform rollouts, studio spotlights, and verified hiring calls.
             </p>
           </div>
         </div>
@@ -187,16 +187,16 @@ export default function NewsFeedClientView({
           {isPrivilegedAdmin && (
             <button
               onClick={handleOpenNew}
-              className="inline-flex items-center gap-1.5 bg-gray-950 hover:bg-black text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition shadow-xs"
+              className="inline-flex items-center gap-1.5 bg-gray-950 hover:bg-black text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition shadow-xs"
             >
               <Plus size={14} />
-              <span>New Announcement</span>
+              <span>New Post</span>
             </button>
           )}
 
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Live Sync
+            Live
           </span>
         </div>
       </div>
