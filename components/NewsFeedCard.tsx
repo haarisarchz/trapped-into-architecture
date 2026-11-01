@@ -158,14 +158,15 @@ export default function NewsFeedCard({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shareText = `Check out: "${item.title}" on Trapped Into Architecture:`;
+  // Formatted structured share text answering Where? What? Why? How?
+  const shareText = `🏛️ ${item.title}\n\n📍 Where: Ti2A (Trapped Into Architecture)\n⚡ What: ${item.summary}\n👉 How to view:`;
   const shareUrl = getShareUrl();
 
   const shareLinks = {
     whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
     telegram: `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
-    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`,
   };
 
   const dateStr = item.published_at
@@ -214,13 +215,13 @@ export default function NewsFeedCard({
         <div className="flex items-center gap-3">
           {/* Brand Icon Avatar */}
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-black text-white flex items-center justify-center font-black text-xs shadow-xs tracking-wider shrink-0">
-            TIA
+            Ti2A
           </div>
 
           <div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-bold text-sm text-gray-950">
-                {item.author || "TIA Studio Desk"}
+                {item.author || "Ti2A Studio Desk"}
               </span>
               <CheckCircle2 size={14} className="text-amber-500 fill-amber-500/20" />
               <span className="text-xs text-gray-400">•</span>
