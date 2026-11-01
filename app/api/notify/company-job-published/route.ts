@@ -67,6 +67,16 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
 
     if (!recipientEmail || !recipientEmail.includes("@")) {
       console.log(`[Company Notification] Skipped for job ${job.id}: No valid company email found.`);
+      try {
+        await supabase.from("contact_inquiries").insert([{
+          name: firmName,
+          email: "unspecified@company",
+          subject: "COMPANY_JOB_EMAIL_PENDING",
+          message: `Job "${positionTitle}" at "${firmName}" posted — No company email on file (Mail pending)`,
+          is_read: false,
+        }]);
+      } catch (e) {}
+
       return NextResponse.json({
         success: true,
         message: "No valid company email found. Notification skipped.",
@@ -200,6 +210,15 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
       }
 
       console.log(`[Company Notification] Successfully sent to ${recipientEmail} for job ${job.id}`);
+      try {
+        await supabase.from("contact_inquiries").insert([{
+          name: firmName,
+          email: recipientEmail,
+          subject: "COMPANY_JOB_EMAIL_SENT",
+          message: `Job "${positionTitle}" at "${firmName}" posted — Mail sent successfully to ${recipientEmail}`,
+          is_read: false,
+        }]);
+      } catch (e) {}
       return NextResponse.json({
         success: true,
         message: `Notification email sent to ${recipientEmail}.`,

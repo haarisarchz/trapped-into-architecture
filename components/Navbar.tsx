@@ -69,6 +69,7 @@ const [showUserMenu, setShowUserMenu] =
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotif, setShowNotif] = useState(false);
+  const [calloutDismissed, setCalloutDismissed] = useState(false);
   const [lastRead, setLastRead] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -305,6 +306,35 @@ const [showUserMenu, setShowUserMenu] =
         }
       }
       
+      // 3. Email dispatch & Job Posting activity logs for CEO & Admins
+      if (["ceo", "superadmin", "admin", "jobadmin"].includes(role)) {
+        try {
+          const { data: emailLogs } = await supabase
+            .from("contact_inquiries")
+            .select("id, name, email, subject, message, created_at")
+            .in("subject", [
+              "NOTIFIED_COMPANY_JOB_POSTING",
+              "COMPANY_JOB_EMAIL_SENT",
+              "COMPANY_JOB_EMAIL_PENDING",
+            ])
+            .order("created_at", { ascending: false })
+            .limit(30);
+
+          (emailLogs || []).forEach((log: any) => {
+            let icon = "✉️";
+            if (log.subject === "COMPANY_JOB_EMAIL_PENDING") icon = "⏳";
+            notifs.push({
+              id: `email-log-${log.id}`,
+              message: `${icon} ${log.message}`,
+              time: log.created_at,
+              link: `/admin/jobs`
+            });
+          });
+        } catch (err) {
+          console.warn("Failed to fetch email logs for notifications:", err);
+        }
+      }
+
       setNotifications(notifs.sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
     };
     
@@ -313,6 +343,7 @@ const [showUserMenu, setShowUserMenu] =
 
   const handleBellClick = () => {
     setShowNotif(!showNotif);
+    setCalloutDismissed(true);
     if (!showNotif) {
       const now = new Date();
       setLastRead(now);
@@ -320,7 +351,9 @@ const [showUserMenu, setShowUserMenu] =
     }
   };
 
-  const hasUnread = notifications.some(n => !lastRead || new Date(n.time) > lastRead);
+  const unreadNotifs = notifications.filter(n => !lastRead || new Date(n.time) > lastRead);
+  const hasUnread = unreadNotifs.length > 0;
+  const unreadCount = unreadNotifs.length;
 
   const timeAgo = (dateStr: string) => {
     if (!dateStr) return '';
@@ -478,8 +511,37 @@ useEffect(() => {
           <div className="relative flex items-center ml-3 md:ml-4 notif-container">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
-              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+              {hasUnread && unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-black shadow">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
+            {/* FLOATING CALLOUT POPUP */}
+            {hasUnread && !calloutDismissed && unreadCount > 0 && !showNotif && (
+              <div className="absolute right-0 top-full mt-2.5 z-50 flex items-center bg-zinc-950 text-white text-xs font-semibold py-1.5 pl-3 pr-2 rounded-full shadow-2xl border border-zinc-700 whitespace-nowrap">
+                <div 
+                  onClick={handleBellClick} 
+                  className="cursor-pointer flex items-center gap-1.5 hover:text-gray-200 transition"
+                >
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  <span>{unreadCount} new notification{unreadCount !== 1 ? 's' : ''}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCalloutDismissed(true);
+                  }}
+                  className="ml-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+                  title="Dismiss"
+                  aria-label="Dismiss"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
             {showNotif && (
               <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
                 <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
@@ -649,8 +711,37 @@ useEffect(() => {
           <div className="relative flex items-center ml-3 md:ml-4 notif-container">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
-              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+              {hasUnread && unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-black shadow">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
+            {/* FLOATING CALLOUT POPUP */}
+            {hasUnread && !calloutDismissed && unreadCount > 0 && !showNotif && (
+              <div className="absolute right-0 top-full mt-2.5 z-50 flex items-center bg-zinc-950 text-white text-xs font-semibold py-1.5 pl-3 pr-2 rounded-full shadow-2xl border border-zinc-700 whitespace-nowrap">
+                <div 
+                  onClick={handleBellClick} 
+                  className="cursor-pointer flex items-center gap-1.5 hover:text-gray-200 transition"
+                >
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  <span>{unreadCount} new notification{unreadCount !== 1 ? 's' : ''}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCalloutDismissed(true);
+                  }}
+                  className="ml-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+                  title="Dismiss"
+                  aria-label="Dismiss"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
             {showNotif && (
               <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
                 <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
