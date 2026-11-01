@@ -562,61 +562,75 @@ export default function BadgesAndPerksPage() {
               </div>
             </div>
 
+            {/* SPECIAL CARD: COLLEGES & UNIVERSITIES (VERIFIED INSTITUTION) */}
+            <div className="p-5 rounded-3xl bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 border border-indigo-200 text-indigo-950 flex items-start gap-3 shadow-xs">
+              <span className="text-2xl shrink-0 mt-0.5">🏛️</span>
+              <div className="text-xs sm:text-sm leading-relaxed">
+                <p className="font-extrabold text-indigo-900 mb-0.5 flex items-center gap-2">
+                  <span>Colleges &amp; Universities: Verified Institution Designation</span>
+                  <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">Academic Track</span>
+                </p>
+                <p className="text-indigo-950/80">
+                  Colleges, universities, and academic departments receive the official <strong>🏛️ Verified Institution</strong> badge when reaching completeness (66%+) or upon campus identity verification, unlocking faculty hiring and student outreach privileges.
+                </p>
+              </div>
+            </div>
+
             {/* STUDIO SCORING CRITERIA TABLE */}
             <div className="bg-white rounded-3xl border border-[#E2DBD0] overflow-hidden shadow-xs">
               <div className="p-6 bg-gradient-to-r from-[#FAF8F5] to-[#F3EEE6] border-b border-[#E2DBD0]">
                 <h3 className="font-black text-gray-900 text-lg">
-                  How Studios Reach 100% Completeness
+                  Equally Balanced 100% Completeness Criteria
                 </h3>
                 <p className="text-xs text-gray-600 mt-0.5">
-                  Required credentials for practices to reach Gold (66%) and publish architectural vacancies
+                  10 equally balanced components (10% each) for practices to reach Gold (66%) and publish vacancies
                 </p>
               </div>
 
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Firm Name</span>
+                    <span className="font-bold text-gray-900">1. Firm / Entity Name &amp; Typology</span>
                     <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Studio Logo Uploaded</span>
-                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+15%</span>
+                    <span className="font-bold text-gray-900">2. Studio / Campus Logo Uploaded</span>
+                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Studio Overview / About Description</span>
-                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+15%</span>
+                    <span className="font-bold text-gray-900">3. Studio Overview / About Description</span>
+                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Complete City &amp; State Location</span>
-                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+15%</span>
+                    <span className="font-bold text-gray-900">4. Complete City &amp; State Location</span>
+                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Official Contact Email</span>
+                    <span className="font-bold text-gray-900">5. Official Contact Coordinates (Email &amp; Phone)</span>
                     <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Phone or WhatsApp Contact Number</span>
+                    <span className="font-bold text-gray-900">6. Official Website URL</span>
                     <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Official Website URL</span>
-                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+5%</span>
+                    <span className="font-bold text-gray-900">7. Social Channels (Instagram / LinkedIn)</span>
+                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Practice Typology (Residential, Commercial, etc.)</span>
-                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+5%</span>
+                    <span className="font-bold text-gray-900">8. Leadership &amp; Team Scale</span>
+                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Founded Year &amp; Team Size</span>
-                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+5%</span>
+                    <span className="font-bold text-gray-900">9. Claimed Studio Profile Ownership</span>
+                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-2xl bg-[#FAF8F5] border border-[#E8DEC9]">
-                    <span className="font-bold text-gray-900">Social Channels (Instagram / LinkedIn)</span>
-                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+5%</span>
+                    <span className="font-bold text-gray-900">10. Verified Trust Status (Email / Phone / Domain)</span>
+                    <span className="font-extrabold text-gray-900 bg-white px-2 py-0.5 rounded border border-gray-200">+10%</span>
                   </div>
                 </div>
               </div>

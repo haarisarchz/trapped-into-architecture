@@ -76,18 +76,22 @@ function EditCompanyContent() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
 
-  // Dynamic Score Calculation
+  // Dynamic Score Calculation (10 equally balanced components of 10% = 100%)
   const calculateScore = () => {
-    let score = 20; // Base creation
+    let score = 0;
+    if (firmName && organizationType) score += 10;
+    else if (firmName || organizationType) score += 5;
     if (companyLogo) score += 10;
-    if (companyDescription && companyDescription.length > 30) score += 10;
+    if (companyDescription && companyDescription.length > 25) score += 10;
+    if (city && state) score += 10;
+    else if (city || state || area) score += 5;
+    if (companyEmail && companyPhone) score += 10;
+    else if (companyEmail || companyPhone) score += 5;
     if (companyWebsite) score += 10;
-    if (companyInstagram || companyLinkedin) score += 10;
-    if (principalArchitect) score += 5;
-    if (foundedYear || employeeSize) score += 5;
-    if (isClaimed) score += 15;
-    if (emailVerified) score += 10;
-    if (phoneVerified) score += 5;
+    if (companyInstagram || companyLinkedin || companyFacebook || companyTwitter) score += 10;
+    if (principalArchitect || foundedYear || employeeSize) score += 10;
+    if (isClaimed) score += 10;
+    if (emailVerified || phoneVerified) score += 10;
     return Math.min(score, 100);
   };
 
