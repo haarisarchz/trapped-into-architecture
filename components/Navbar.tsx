@@ -1238,15 +1238,34 @@ window.location.reload();
       </p>
     </div>
     <p className="text-gray-600 text-sm max-w-sm mx-auto leading-relaxed">
-      Your account is ready. Log in now to build your architectural profile, claim or register your studio, and start connecting with firms across India.
+      Your account is ready. Log in now to build your architectural profile, explore studios, and connect with firms across India.
     </p>
-    <button 
-      type="button"
-      onClick={() => setAuthTab("login")} 
-      className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-2xl font-bold transition shadow-sm mt-4 cursor-pointer"
-    >
-      Proceed to Login →
-    </button>
+
+    <div className="space-y-3 pt-2">
+      <button 
+        type="button"
+        onClick={() => setAuthTab("login")} 
+        className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-2xl font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+      >
+        <span>Proceed to Login</span>
+        <ArrowRight size={16} />
+      </button>
+
+      {verificationEmail && (
+        <button
+          type="button"
+          disabled={resendingCode}
+          onClick={async () => {
+            await handleResendVerificationCode();
+            setAuthTab("verify");
+          }}
+          className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 py-3 rounded-2xl font-bold transition cursor-pointer flex items-center justify-center gap-2 text-xs sm:text-sm"
+        >
+          <ShieldCheck size={16} />
+          <span>{resendingCode ? "Sending code..." : "Request Verification Code (+5% Score)"}</span>
+        </button>
+      )}
+    </div>
   </div>
 )}
 
@@ -1896,26 +1915,15 @@ window.location.reload();
           console.log("PROFILE CREATED SUCCESSFULLY");
 
           
-                    // Prepare verification state
+                    // Save registration details in case user requests verification
           setVerificationEmail(email);
           setVerificationFullName(fullName);
           setVerificationUserId(authData.user.id);
           setVerificationCode("");
           setVerifyStatusMessage(null);
 
-          // Asynchronously dispatch welcome & verification code email via Resend
-          fetch("/api/auth/send-verification-code", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email,
-              fullName,
-              userId: authData.user.id,
-            }),
-          }).catch((err) => console.warn("Could not dispatch welcome verification email:", err));
-
           await supabase.auth.signOut();
-          setAuthTab("verify");
+          setAuthTab("success");
         }
       }}
       className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition"

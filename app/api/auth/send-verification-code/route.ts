@@ -6,7 +6,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 export async function POST(req: Request) {
   try {
-    const { email, fullName, userId, isResend, isExistingUser } = await req.json();
+    const { email, fullName, userId, isResend } = await req.json();
     const cleanEmail = (email || "").trim().toLowerCase();
 
     if (!cleanEmail || !cleanEmail.includes("@")) {
@@ -66,22 +66,13 @@ export async function POST(req: Request) {
     const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
     const recipientName = resolvedName || "Architect";
 
-    const isWelcome = !isExistingUser && !isResend;
-    const badgeText = isWelcome ? "🎉 Welcome to the Community" : (isResend ? "🔄 Verification Code Resend" : "🔒 Profile Verification");
-    const headline = isWelcome 
-      ? `Thank you for registering, ${recipientName}!` 
-      : `Verify your Ti2A profile, ${recipientName}!`;
-    const introText = isWelcome
-      ? "We are thrilled to welcome you to <strong>Trapped Into Architecture</strong> — India's dedicated platform connecting emerging architects, designers, and premier studios."
-      : "Complete your email verification to keep your architectural profile secure, receive relevant opportunities, and activate your <strong>Verified Badge (+5% profile score)</strong>.";
-
     const emailHtml = `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Trapped Into Architecture Verification</title>
+        <title>Your Ti2A Verification Code</title>
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #0f172a;">
         <div style="max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 24px; padding: 36px; border: 1px solid #e2e8f0; box-shadow: 0 4px 24px rgba(0,0,0,0.04);">
@@ -94,22 +85,22 @@ export async function POST(req: Request) {
           </div>
 
           <!-- BADGE -->
-          <div style="display: inline-block; background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">
-            ${badgeText}
+          <div style="display: inline-block; background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">
+            ${isResend ? "🔄 Code Resend Request" : "🔒 Email Verification Request"}
           </div>
 
           <h1 style="font-size: 24px; font-weight: 900; color: #0f172a; margin: 0 0 10px 0; line-height: 1.3; letter-spacing: -0.02em;">
-            ${headline}
+            Here is your verification code, ${recipientName}
           </h1>
 
           <p style="color: #475569; line-height: 1.6; font-size: 15px; margin: 0 0 24px 0;">
-            ${introText}
+            You requested an email verification code for your account on <strong>Trapped Into Architecture</strong>. Enter the 6-digit code below on the platform to verify your email and unlock your <strong>Verified Badge (+5% profile score)</strong>.
           </p>
 
           <!-- VERIFICATION CODE BOX -->
           <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 18px; padding: 26px; text-align: center; margin: 24px 0;">
             <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">
-              Your 6-Digit Email Verification Code
+              6-Digit Verification Code
             </div>
             
             <div style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #000000; font-family: ui-monospace, Menlo, Monaco, monospace; margin: 12px 0;">
@@ -117,12 +108,12 @@ export async function POST(req: Request) {
             </div>
 
             <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
-              Enter this code on the platform to verify your email and unlock your <strong>Verified Badge (+5% profile score)</strong>.
+              Valid for <strong>24 hours</strong>. Enter this code on the platform to complete verification.
             </div>
           </div>
 
           <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 16px 0 24px 0; text-align: center;">
-            This verification code is valid for <strong>24 hours</strong>. If you did not request this code, please ignore this email.
+            If you did not request this verification code, please ignore this email. Your account remains safe.
           </p>
 
           <div style="margin: 24px 0;">
@@ -141,15 +132,11 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    const subjectLine = isWelcome
-      ? `Welcome to Ti2A! Your Verification Code: ${code}`
-      : `Your Ti2A Verification Code: ${code}`;
-
     try {
       const sendResult = await resend.emails.send({
         from: fromEmail,
         to: cleanEmail,
-        subject: subjectLine,
+        subject: `Your Ti2A Verification Code: ${code}`,
         html: emailHtml,
       });
 
@@ -163,7 +150,7 @@ export async function POST(req: Request) {
               name: recipientName,
               email: cleanEmail,
               subject: "COMPANY_JOB_EMAIL_SENT",
-              message: `Verification code sent to ${cleanEmail} (${recipientName})`,
+              message: `Verification code requested by user: ${cleanEmail} (${recipientName})`,
               is_read: false,
             },
           ]);
