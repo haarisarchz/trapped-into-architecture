@@ -42,12 +42,11 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
     // 2. Determine company email and slug
     let recipientEmail = (job.application_email || "").trim();
     let companySlug = "";
-    let isClaimed = false;
 
     if (job.company_id) {
       const { data: company } = await supabase
         .from("companies")
-        .select("email, slug, firm_name, is_claimed")
+        .select("email, slug, firm_name")
         .eq("id", job.company_id)
         .maybeSingle();
 
@@ -58,7 +57,6 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
         if (company.slug) {
           companySlug = company.slug;
         }
-        isClaimed = Boolean(company.is_claimed);
       }
     }
 
@@ -116,12 +114,12 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
             ● Active &amp; Live on Platform
           </div>
 
-          <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0; line-height: 1.3; letter-spacing: -0.02em;">
+          <h1 style="font-size: 23px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0; line-height: 1.3; letter-spacing: -0.02em;">
             Your job posting for ${firmName} is now live!
           </h1>
 
           <p style="color: #475569; line-height: 1.6; font-size: 15px; margin: 0 0 24px 0;">
-            Greetings from <strong>Trapped Into Architecture</strong>. Your opportunity for <strong>${positionTitle}</strong> has been published to our platform and syndicated across our architecture community channels.
+            Greetings from <strong>Trapped Into Architecture</strong>. We have featured your firm's opening for <strong>${positionTitle}</strong> on our platform and syndicated it across our verified architecture community to thousands of active architects and designers.
           </p>
 
           <!-- JOB PREVIEW CARD -->
@@ -147,29 +145,29 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
             </div>
           </div>
 
-          <!-- INVITE TO CLAIM STUDIO CARD -->
+          <!-- EDIT YOUR JOBS / CLAIM STUDIO CARD -->
           <div style="background: linear-gradient(135deg, #09090b 0%, #18181b 100%); border-radius: 18px; padding: 26px; margin: 28px 0; color: #ffffff;">
             <div style="display: inline-block; background-color: rgba(255, 255, 255, 0.15); color: #ffffff; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">
-              Studio Ownership
+              Manage &amp; Edit Listings
             </div>
             
             <h2 style="font-size: 18px; font-weight: 800; color: #ffffff; margin: 0 0 8px 0; line-height: 1.3;">
-              Representing ${firmName}? Claim your studio profile
+              Want to edit your jobs or add more details? Claim your studio.
             </h2>
             
             <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6; margin: 0 0 18px 0;">
-              Take control of your studio presence on India's premier architecture platform. Claiming your page is completely free and unlocks:
+              We published this listing so qualified architects across India can discover it right away. Claiming your official studio profile is completely free and unlocks:
             </p>
 
             <ul style="color: #d4d4d8; font-size: 13px; line-height: 1.7; margin: 0 0 20px 0; padding-left: 20px;">
-              <li><strong>Instant Job Uploads:</strong> Post future openings with 0ms AI review</li>
-              <li><strong>Studio Showcase:</strong> Feature your studio portfolio, awards &amp; team</li>
-              <li><strong>Direct Candidate Access:</strong> View applicant profiles &amp; portfolios</li>
-              <li><strong>Verified Badge:</strong> Showcase trust to top architectural talent</li>
+              <li><strong>Edit Your Postings:</strong> Update job descriptions, salary brackets, and deadlines</li>
+              <li><strong>Instant Future Uploads:</strong> Post new openings with 0ms AI extraction</li>
+              <li><strong>Studio Showcase:</strong> Add your principal architects, awards, and portfolio</li>
+              <li><strong>Verified Badge:</strong> Establish trust with top design talent</li>
             </ul>
 
-            <a href="${claimUrl}" style="display: block; text-align: center; background: #ffffff; color: #000000 !important; padding: 12px 20px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none;">
-              Claim ${firmName} Profile Now →
+            <a href="${claimUrl}" style="display: block; text-align: center; background: #ffffff; color: #000000 !important; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none;">
+              Claim ${firmName} &amp; Edit Your Jobs →
             </a>
           </div>
 
