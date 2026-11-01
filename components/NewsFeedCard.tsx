@@ -158,8 +158,7 @@ export default function NewsFeedCard({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Formatted structured share text answering Where? What? Why? How?
-  const shareText = `🏛️ ${item.title}\n\n📍 Where: Ti2A (Trapped Into Architecture)\n⚡ What: ${item.summary}\n👉 How to view:`;
+  const shareText = `🏛️ ${item.title}\n\n${item.summary}\n\nCheck it out on Ti2A:`;
   const shareUrl = getShareUrl();
 
   const shareLinks = {
