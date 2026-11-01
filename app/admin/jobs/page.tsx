@@ -403,6 +403,19 @@ const fetchJobs = async () => {
 
       const { error } = await supabase.from("jobs").update(updatePayload).eq("id", job.id);
       if (error) throw error;
+      // Trigger social publishing and company notification for newly approved opening
+      fetch("/api/publish/social", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: job.id }),
+      }).catch(err => console.error("Social publish error:", err));
+
+      fetch("/api/notify/company-job-published", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: job.id }),
+      }).catch(err => console.error("Company notification error:", err));
+
       alert(`Opening for "${job.position}" at "${job.firm_name}" is now live and published!`);
       fetchJobs();
     } catch (e: any) {
