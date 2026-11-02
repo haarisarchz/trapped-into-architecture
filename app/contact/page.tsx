@@ -28,6 +28,7 @@ const SERVICE_SUBJECT_MAP: Record<string, string> = {
 function ContactFormInner({ settings }: { settings: any }) {
   const searchParams = useSearchParams();
 
+  const [formType, setFormType] = useState<"inquiry" | "suggestion">("inquiry");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -45,6 +46,11 @@ function ContactFormInner({ settings }: { settings: any }) {
     const messageParam = searchParams.get("message") || searchParams.get("suggestion") || "";
     const nameParam = searchParams.get("name") || "";
 
+    const isSuggestion = sParam === "suggestion" || searchParams.has("suggestion");
+    if (isSuggestion) {
+      setFormType("suggestion");
+    }
+
     const resolvedSubject = subjectParam || SERVICE_SUBJECT_MAP[sParam] || "";
 
     setFormData((prev) => ({
@@ -61,10 +67,17 @@ function ContactFormInner({ settings }: { settings: any }) {
     setErrorMessage("");
     
     try {
+      const finalSubject = formType === "suggestion" && !formData.subject.startsWith("[Suggestion]")
+        ? `[Suggestion] ${formData.subject.trim()}`
+        : formData.subject.trim();
+
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          subject: finalSubject,
+        })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -81,6 +94,43 @@ function ContactFormInner({ settings }: { settings: any }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      {/* FORM TYPE SELECTOR: GENERAL INQUIRY VS SUGGESTION BOX */}
+      <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-2xl border border-gray-200">
+        <button
+          type="button"
+          onClick={() => setFormType("inquiry")}
+          className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            formType === "inquiry"
+              ? "bg-white text-black shadow-xs"
+              : "text-gray-500 hover:text-black"
+          }`}
+        >
+          <span>✉️ General Inquiry</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setFormType("suggestion")}
+          className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            formType === "suggestion"
+              ? "bg-amber-500 text-white shadow-xs"
+              : "text-gray-600 hover:text-amber-600"
+          }`}
+        >
+          <span>💡 Suggestion Box</span>
+        </button>
+      </div>
+
+      {formType === "suggestion" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 leading-relaxed flex items-start gap-2.5 animate-in fade-in duration-150">
+          <span className="text-base shrink-0">💡</span>
+          <div>
+            <strong className="font-bold">Have an idea to make Ti2A better?</strong>
+            <p className="text-[11px] text-amber-800 mt-0.5">
+              Share recommendations, feature ideas, or feedback you would love to see for our architecture network!
+            </p>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -113,7 +163,7 @@ function ContactFormInner({ settings }: { settings: any }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1">
-            Subject / Topic <span className="text-red-500">*</span>
+            {formType === "suggestion" ? "Suggestion Topic / Title" : "Subject / Topic"} <span className="text-red-500">*</span>
           </label>
           <input 
             required
@@ -121,7 +171,7 @@ function ContactFormInner({ settings }: { settings: any }) {
             value={formData.subject || ""}
             onChange={(e) => setFormData({...formData, subject: e.target.value})}
             className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-black outline-none" 
-            placeholder="How can we help or what is your suggestion?"
+            placeholder={formType === "suggestion" ? "e.g. Portfolio showcase idea / New filter request" : "How can we help?"}
           />
         </div>
         <div>
@@ -139,7 +189,7 @@ function ContactFormInner({ settings }: { settings: any }) {
       <div>
         <div className="flex items-center justify-between mb-1">
           <label className="block text-xs font-semibold text-gray-700">
-            Type your message or suggestion here <span className="text-red-500">*</span>
+            {formType === "suggestion" ? "Your Suggestion / Feedback" : "Type your message here"} <span className="text-red-500">*</span>
           </label>
           <span className="text-[11px] text-gray-400 font-mono">
             {formData.message.length}/1000
@@ -152,7 +202,7 @@ function ContactFormInner({ settings }: { settings: any }) {
           value={formData.message}
           onChange={(e) => setFormData({...formData, message: e.target.value})}
           className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm focus:ring-2 focus:ring-black outline-none max-h-36 overflow-y-auto resize-none" 
-          placeholder="Share your suggestion, vacancy query, or collaboration request..."
+          placeholder={formType === "suggestion" ? "Share your feedback, ideas, or feature suggestions for Ti2A in detail..." : "Share your vacancy query, collaboration request, or question..."}
         />
         <div className="text-[10px] text-gray-400 -mt-0.5">
           Scroll bar appears automatically when longer text is entered (up to 1,000 characters).
@@ -162,21 +212,27 @@ function ContactFormInner({ settings }: { settings: any }) {
       <button 
         type="submit" 
         disabled={status === 'submitting'}
-        className="w-full bg-black text-white rounded-xl py-2.5 font-bold hover:bg-gray-800 transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer shadow-xs"
+        className={`w-full rounded-xl py-2.5 font-bold transition disabled:opacity-50 flex items-center justify-center gap-2 text-sm cursor-pointer shadow-xs ${
+          formType === "suggestion"
+            ? "bg-amber-600 hover:bg-amber-700 text-white"
+            : "bg-black hover:bg-gray-800 text-white"
+        }`}
       >
         {status === 'submitting' ? (
           <>
             <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span>Sending your message...</span>
+            <span>{formType === "suggestion" ? "Submitting suggestion..." : "Sending inquiry..."}</span>
           </>
         ) : (
-          'Send Message / Suggestion'
+          formType === "suggestion" ? "Submit Suggestion 💡" : "Send Inquiry →"
         )}
       </button>
       
       {status === 'success' && (
         <div className="p-3 bg-green-50 border border-green-200 text-green-800 rounded-xl text-center text-xs font-medium animate-fadeIn">
-          ✓ Thank you! Your message/suggestion has been sent. We will get back to you shortly.
+          {formType === "suggestion"
+            ? "✓ Thank you! Your suggestion has been received. We appreciate your ideas for Ti2A!"
+            : "✓ Thank you! Your message has been sent. We will get back to you shortly."}
         </div>
       )}
 

@@ -117,7 +117,8 @@ export default function AdminQuickMenu() {
         {userRole === "ceo" && (
           <>
             {navItem("/admin/users", "Users")}
-            {navItem("/admin/contact", "Contact")}
+            {navItem("/admin/contact", "Contact & Suggestions")}
+            {navItem("/admin/mails", "Mail Center")}
           </>
         )}
       </div>
