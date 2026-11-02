@@ -18,7 +18,8 @@ import {
   Settings, 
   Send,
   ChevronRight,
-  Lightbulb
+  Lightbulb,
+  UploadCloud
 } from "lucide-react";
 
 interface ContactInquiry {
@@ -127,6 +128,7 @@ export default function ContactSettingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"inbox" | "settings">("inbox");
   const [loading, setLoading] = useState(true);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Inquiries State
   const [allInquiries, setAllInquiries] = useState<ContactInquiry[]>([]);
@@ -138,17 +140,22 @@ export default function ContactSettingsPage() {
   // Detailed Modal
   const [selectedItem, setSelectedItem] = useState<ContactInquiry | null>(null);
 
-  // Site Settings Form State
+  // Site Settings Form State (Original exact columns)
   const [settings, setSettings] = useState({
-    contact_phone: "",
-    contact_email: "",
-    contact_whatsapp: "",
+    email: "",
+    phone: "",
+    whatsapp: "",
     contact_address: "",
-    social_instagram: "",
-    social_linkedin: "",
-    social_twitter: "",
-    social_facebook: "",
-    social_telegram: "",
+    whatsapp_channel_url: "",
+    website_url: "", // Telegram Community URL
+    facebook: "",
+    twitter: "",
+    instagram: "",
+    linkedin: "",
+    logo_url: "",
+    about_us: "",
+    about_history: "",
+    about_mission: "",
   });
 
   useEffect(() => {
@@ -184,25 +191,62 @@ export default function ContactSettingsPage() {
         .from("site_settings")
         .select("*")
         .eq("id", "global")
-        .single();
+        .maybeSingle();
 
       if (data) {
         setSettings({
-          contact_phone: data.contact_phone || "",
-          contact_email: data.contact_email || "",
-          contact_whatsapp: data.contact_whatsapp || "",
+          email: data.email || "",
+          phone: data.phone || "",
+          whatsapp: data.whatsapp || "",
           contact_address: data.contact_address || "",
-          social_instagram: data.social_instagram || "",
-          social_linkedin: data.social_linkedin || "",
-          social_twitter: data.social_twitter || "",
-          social_facebook: data.social_facebook || "",
-          social_telegram: data.social_telegram || "",
+          whatsapp_channel_url: data.whatsapp_channel_url || "",
+          website_url: data.website_url || "",
+          facebook: data.facebook || "",
+          twitter: data.twitter || "",
+          instagram: data.instagram || "",
+          linkedin: data.linkedin || "",
+          logo_url: data.logo_url || "",
+          about_us: data.about_us || "",
+          about_history: data.about_history || "",
+          about_mission: data.about_mission || "",
         });
       }
     } catch (err: any) {
       console.error("Error fetching settings:", err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file (PNG, JPG, SVG, etc.)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert("File size should be less than 2MB");
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        const { error } = await supabase.from('site_settings').update({ logo_url: base64String }).eq('id', 'global');
+        if (error) {
+          alert("Failed to save logo automatically: " + error.message);
+        }
+        setSettings(prev => ({ ...prev, logo_url: base64String }));
+        setUploadingLogo(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      alert("Error uploading logo: " + error.message);
+      setUploadingLogo(false);
     }
   };
 
@@ -539,96 +583,62 @@ export default function ContactSettingsPage() {
           </div>
         )}
 
-        {/* TAB 2: CONTACT SETTINGS */}
+        {/* TAB 2: ORIGINAL COMPLETE CONTACT SETTINGS */}
         {activeTab === "settings" && (
           <div className="space-y-6">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-2xs space-y-6">
-              <div>
-                <h3 className="text-lg font-extrabold text-gray-900">Direct Contact Information</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  These details appear on your public contact page, footer, and inquiry responses.
-                </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
+              {/* DIRECT CONTACT */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs space-y-4">
+                <h3 className="font-extrabold text-base text-gray-900 border-b pb-2">Direct Contact Details</h3>
+                <LockedField label="Contact Email" type="email" fieldKey="email" value={settings.email} onChange={(val: string) => setSettings({...settings, email: val})} />
+                <LockedField label="Contact Phone" type="text" fieldKey="phone" value={settings.phone} onChange={(val: string) => setSettings({...settings, phone: val})} />
+                <LockedField label="Direct WhatsApp Number" type="text" fieldKey="whatsapp" value={settings.whatsapp} onChange={(val: string) => setSettings({...settings, whatsapp: val})} />
+                <LockedField label="Contact Address" isTextarea={true} fieldKey="contact_address" value={settings.contact_address} onChange={(val: string) => setSettings({...settings, contact_address: val})} />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <LockedField
-                  label="Official Support Email"
-                  subLabel="Primary administrative inquiry address"
-                  fieldKey="contact_email"
-                  type="email"
-                  value={settings.contact_email}
-                  onChange={(v: string) => setSettings({ ...settings, contact_email: v })}
-                />
-
-                <LockedField
-                  label="Telephone / Support Helpline"
-                  subLabel="Displayed for direct voice queries"
-                  fieldKey="contact_phone"
-                  value={settings.contact_phone}
-                  onChange={(v: string) => setSettings({ ...settings, contact_phone: v })}
-                />
-
-                <LockedField
-                  label="WhatsApp Helpline Number"
-                  subLabel="Enables 1-click WhatsApp messaging on public pages (include country code)"
-                  fieldKey="contact_whatsapp"
-                  value={settings.contact_whatsapp}
-                  onChange={(v: string) => setSettings({ ...settings, contact_whatsapp: v })}
-                />
-
-                <LockedField
-                  label="Headquarters / Studio Address"
-                  subLabel="Office location shown on contact page"
-                  fieldKey="contact_address"
-                  isTextarea={true}
-                  value={settings.contact_address}
-                  onChange={(v: string) => setSettings({ ...settings, contact_address: v })}
-                />
+              {/* SOCIAL / PUBLIC CHANNELS */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="font-extrabold text-base text-gray-900">Social Channels &amp; Community</h3>
+                </div>
+                <LockedField label="Telegram Channel URL" type="url" fieldKey="website_url" value={settings.website_url} onChange={(val: string) => setSettings({...settings, website_url: val})} />
+                <LockedField label="WhatsApp Channel URL" type="url" fieldKey="whatsapp_channel_url" value={settings.whatsapp_channel_url} onChange={(val: string) => setSettings({...settings, whatsapp_channel_url: val})} />
+                <LockedField label="Instagram URL" type="url" fieldKey="instagram" value={settings.instagram} onChange={(val: string) => setSettings({...settings, instagram: val})} />
+                <LockedField label="LinkedIn URL" type="url" fieldKey="linkedin" value={settings.linkedin} onChange={(val: string) => setSettings({...settings, linkedin: val})} />
+                <LockedField label="Twitter / X URL" type="url" fieldKey="twitter" value={settings.twitter} onChange={(val: string) => setSettings({...settings, twitter: val})} />
+                <LockedField label="Facebook URL" type="url" fieldKey="facebook" value={settings.facebook} onChange={(val: string) => setSettings({...settings, facebook: val})} />
               </div>
             </div>
 
-            {/* SOCIAL CHANNELS */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-2xs space-y-6">
-              <div>
-                <h3 className="text-lg font-extrabold text-gray-900">Official Social Channels</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Links displayed across the site footer and community hubs.
-                </p>
+            {/* LOGO */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs">
+              <h3 className="font-extrabold text-base text-gray-900 border-b pb-2 mb-4">Site Logo</h3>
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200 overflow-hidden relative group">
+                  {settings.logo_url ? (
+                    <img src={settings.logo_url} alt="Logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-xs text-gray-400">No Logo</span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="cursor-pointer inline-flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition shadow-xs">
+                    <UploadCloud size={16} />
+                    <span>{uploadingLogo ? "Uploading..." : "Upload Logo"}</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} />
+                  </label>
+                  <p className="text-xs text-gray-400">Max size 2MB. Recommended: PNG or SVG.</p>
+                </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <LockedField
-                  label="Instagram URL"
-                  fieldKey="social_instagram"
-                  type="url"
-                  value={settings.social_instagram}
-                  onChange={(v: string) => setSettings({ ...settings, social_instagram: v })}
-                />
-
-                <LockedField
-                  label="LinkedIn URL"
-                  fieldKey="social_linkedin"
-                  type="url"
-                  value={settings.social_linkedin}
-                  onChange={(v: string) => setSettings({ ...settings, social_linkedin: v })}
-                />
-
-                <LockedField
-                  label="X (Twitter) URL"
-                  fieldKey="social_twitter"
-                  type="url"
-                  value={settings.social_twitter}
-                  onChange={(v: string) => setSettings({ ...settings, social_twitter: v })}
-                />
-
-                <LockedField
-                  label="Telegram Community URL"
-                  fieldKey="social_telegram"
-                  type="url"
-                  value={settings.social_telegram}
-                  onChange={(v: string) => setSettings({ ...settings, social_telegram: v })}
-                />
-              </div>
+            {/* ABOUT US TEXT */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs space-y-4">
+              <h3 className="font-extrabold text-base text-gray-900 border-b pb-2">About &amp; Mission Statements</h3>
+              <LockedField label="About Ti2A" isTextarea={true} fieldKey="about_us" value={settings.about_us} onChange={(val: string) => setSettings({...settings, about_us: val})} />
+              <LockedField label="Our History" isTextarea={true} fieldKey="about_history" value={settings.about_history} onChange={(val: string) => setSettings({...settings, about_history: val})} />
+              <LockedField label="Our Mission" isTextarea={true} fieldKey="about_mission" value={settings.about_mission} onChange={(val: string) => setSettings({...settings, about_mission: val})} />
             </div>
           </div>
         )}
