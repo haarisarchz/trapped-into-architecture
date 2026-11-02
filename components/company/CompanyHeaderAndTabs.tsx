@@ -241,6 +241,21 @@ export default function CompanyHeaderAndTabs({
     };
     checkMobile();
     window.addEventListener("resize", checkMobile);
+
+    // Auto-trigger claim workflow if ?claim=true is in URL
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("claim") === "true") {
+        setTimeout(() => {
+          const userStr = localStorage.getItem("currentUser");
+          if (!userStr) {
+            setIsAuthChoiceModalOpen(true);
+          } else {
+            setIsClaimModalOpen(true);
+          }
+        }, 500);
+      }
+    }
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 

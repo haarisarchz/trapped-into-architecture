@@ -232,14 +232,32 @@ async function run() {
             ${positionsHtml}
           </div>
 
+          <!-- PROFILE COMPLETION & HIRING PRIVILEGES -->
+          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin: 22px 0;">
+            <div style="margin-bottom: 8px;">
+              <span style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
+                Studio Profile Completeness:
+              </span>
+              <span style="font-size: 12px; font-weight: 800; color: #2563eb; margin-left: 6px;">
+                ~40% Configured
+              </span>
+            </div>
+            <div style="background-color: #e2e8f0; border-radius: 9999px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 12px;">
+              <div style="background-color: #2563eb; width: 40%; height: 100%; border-radius: 9999px;"></div>
+            </div>
+            <p style="font-size: 13px; color: #475569; line-height: 1.6; margin: 0;">
+              ✨ <strong>Unlock Direct Job Posting:</strong> Your initial practice details have been configured. Claiming your studio and completing your profile to <strong>66%+</strong> (adding portfolio projects, leadership info, and office contacts) unlocks direct job &amp; internship publishing privileges for your firm!
+            </p>
+          </div>
+
           <!-- EDIT YOUR JOBS & CLAIM STUDIO INVITATION -->
           <div style="background: linear-gradient(135deg, #09090b 0%, #18181b 100%); border-radius: 18px; padding: 26px; color: #ffffff; margin: 26px 0;">
             <span style="display: inline-block; background-color: rgba(255,255,255,0.15); color: #ffffff; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 9999px; text-transform: uppercase; margin-bottom: 10px;">
-              Manage &amp; Edit Listings
+              Claim Practice &amp; Hiring Privileges
             </span>
             
             <h2 style="font-size: 18px; font-weight: 800; margin: 0 0 8px 0; color: #ffffff; line-height: 1.3;">
-              Want to edit your jobs or add more details? Claim your studio.
+              Want to edit your jobs or post new openings? Claim your studio.
             </h2>
             
             <p style="color: #a1a1aa; font-size: 13px; line-height: 1.6; margin: 0 0 18px 0;">
@@ -247,14 +265,15 @@ async function run() {
             </p>
 
             <ul style="color: #d4d4d8; font-size: 13px; line-height: 1.7; margin: 0 0 20px 0; padding-left: 20px;">
+              <li><strong>Direct Job Posting:</strong> Post future architect, interior designer, and intern vacancies</li>
               <li><strong>Edit Your Postings:</strong> Update job descriptions, salary brackets, and deadlines</li>
               <li><strong>Instant Future Uploads:</strong> Post new openings with 0ms AI extraction</li>
               <li><strong>Studio Showcase:</strong> Add your principal architects, awards, and portfolio</li>
-              <li><strong>Verified Badge:</strong> Establish trust with top design talent</li>
+              <li><strong>Verified Practice Badge:</strong> Establish trust with top design talent</li>
             </ul>
 
             <a href="${claimUrl}" style="display: block; text-align: center; background: #ffffff; color: #000000 !important; padding: 13px 20px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none;">
-              Claim ${firmName} &amp; Edit Your Jobs →
+              Claim ${firmName} &amp; Unlock Job Posting →
             </a>
           </div>
 

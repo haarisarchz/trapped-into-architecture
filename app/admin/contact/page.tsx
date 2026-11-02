@@ -122,6 +122,7 @@ export default function ContactSettingsPage() {
 
   // Detailed Reading Modal
   const [selectedItem, setSelectedItem] = useState<ContactInquiry | null>(null);
+  const [modalViewMode, setModalViewMode] = useState<"recipient" | "log">("recipient");
 
   // Compose Modal State
   const [showCompose, setShowCompose] = useState(false);
@@ -761,68 +762,275 @@ export default function ContactSettingsPage() {
       </div>
 
       {/* DETAILED MESSAGE READING MODAL (CLICKED FROM INBOX OR SENT) */}
-      {selectedItem && (
-        <div 
-          onClick={() => setSelectedItem(null)}
-          className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
-        >
+      {selectedItem && (() => {
+        const isOutreach = selectedItem.subject === "NOTIFIED_COMPANY_JOB_POSTING" || 
+          (selectedItem.subject === "COMPANY_JOB_EMAIL_SENT" && !selectedItem.message.toLowerCase().includes("verif")) ||
+          selectedItem.message.toLowerCase().includes("outreach notification") ||
+          selectedItem.message.toLowerCase().includes("claim your studio") ||
+          selectedItem.message.toLowerCase().includes("for 2 jobs") ||
+          selectedItem.message.toLowerCase().includes("for 1 job");
+
+        const isVerification = selectedItem.subject === "USER_VERIFICATION_SENT" ||
+          selectedItem.subject === "USER_VERIFIED" ||
+          selectedItem.message.toLowerCase().includes("verification code") ||
+          selectedItem.message.toLowerCase().includes("verified email");
+
+        const outreachData = isOutreach ? parseOutreachDetails(selectedItem) : null;
+        const verificationCode = isVerification ? (selectedItem.message.match(/\b\d{6}\b/)?.[0] || "••••••") : null;
+
+        return (
           <div 
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-xl p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-150"
+            onClick={() => setSelectedItem(null)}
+            className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
           >
-            {/* MODAL HEADER */}
-            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="text-xl font-extrabold text-gray-900">{selectedItem.name}</h3>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                    selectedItem.is_read ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"
-                  }`}>
-                    {selectedItem.is_read ? "Read" : "Unread"}
-                  </span>
+            <div 
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-2xl p-5 sm:p-7 space-y-4 animate-in fade-in zoom-in-95 duration-150 my-auto"
+            >
+              {/* MODAL HEADER */}
+              <div className="flex items-start justify-between border-b border-gray-100 pb-3">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-extrabold text-gray-900">{selectedItem.name}</h3>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                      selectedItem.is_read ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"
+                    }`}>
+                      {selectedItem.is_read ? "Read" : "Unread"}
+                    </span>
+                    {isOutreach && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-purple-100 text-purple-800">
+                        Studio Outreach
+                      </span>
+                    )}
+                    {isVerification && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-blue-100 text-blue-800">
+                        Verification
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 font-mono">&lt;{selectedItem.email}&gt;</p>
                 </div>
-                <p className="text-xs text-gray-500 font-mono">&lt;{selectedItem.email}&gt;</p>
+
+                <div className="flex items-center gap-2">
+                  {/* VIEW TOGGLE */}
+                  <div className="inline-flex rounded-xl p-0.5 bg-gray-100 border border-gray-200">
+                    <button
+                      onClick={() => setModalViewMode("recipient")}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                        modalViewMode === "recipient"
+                          ? "bg-white text-black shadow-2xs"
+                          : "text-gray-500 hover:text-black"
+                      }`}
+                    >
+                      ✉️ Recipient View
+                    </button>
+                    <button
+                      onClick={() => setModalViewMode("log")}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                        modalViewMode === "log"
+                          ? "bg-white text-black shadow-2xs"
+                          : "text-gray-500 hover:text-black"
+                      }`}
+                    >
+                      📋 Audit Log
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    className="text-gray-400 hover:text-black p-1 transition cursor-pointer ml-1"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
 
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="text-gray-400 hover:text-black p-1 transition cursor-pointer"
-              >
-                <X size={20} />
-              </button>
-            </div>
+              {/* VIEW 1: RECIPIENT EMAIL VIEW */}
+              {modalViewMode === "recipient" ? (
+                <div className="bg-[#f8fafc] border border-gray-200 rounded-2xl p-4 sm:p-5 max-h-[62vh] overflow-y-auto space-y-4">
+                  {/* OUTREACH EMAIL RECIPIENT VIEW */}
+                  {isOutreach && outreachData ? (
+                    <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-xs space-y-4 text-left">
+                      {/* EMAIL CLIENT HEADER */}
+                      <div className="border-b border-gray-100 pb-3 text-xs text-gray-500 space-y-1">
+                        <div><strong className="text-gray-900">From:</strong> Trapped Into Architecture &lt;notifications@trappedintoarchitecture.com&gt;</div>
+                        <div><strong className="text-gray-900">To:</strong> {selectedItem.name} &lt;{selectedItem.email}&gt;</div>
+                        <div><strong className="text-gray-900">Subject:</strong> [Live on Ti2A] {outreachData.jobs.length > 1 ? `${outreachData.jobs.length} Job Listings Published` : `Job Listing Published: ${outreachData.jobs[0]}`} for {selectedItem.name}</div>
+                      </div>
 
-            {/* METADATA */}
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-gray-500 uppercase tracking-wider">Subject:</span>
-                <span className="font-extrabold text-gray-900">{selectedItem.subject || "General Inquiry"}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-gray-500 uppercase tracking-wider">Date Sent:</span>
-                <span className="text-gray-700">
-                  {new Date(selectedItem.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST
-                </span>
-              </div>
-              {selectedItem.phone && (
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-gray-500 uppercase tracking-wider">Phone:</span>
-                  <a href={`tel:${selectedItem.phone}`} className="text-blue-600 font-bold hover:underline">
-                    {selectedItem.phone}
-                  </a>
+                      {/* BRAND HEADER */}
+                      <div className="text-lg font-black text-black">
+                        Trapped Into Architecture
+                      </div>
+
+                      {/* LIVE BADGE */}
+                      <div className="inline-block bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        ● {outreachData.jobs.length} {outreachData.jobs.length > 1 ? "Openings" : "Opening"} Live on Platform
+                      </div>
+
+                      <h4 className="text-lg sm:text-xl font-extrabold text-gray-900 leading-snug">
+                        {outreachData.jobs.length > 1 ? `${outreachData.jobs.length} job postings` : "Your job posting"} for {selectedItem.name} {outreachData.jobs.length > 1 ? "are" : "is"} now live!
+                      </h4>
+
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Greetings from <strong>Trapped Into Architecture</strong>. We have featured your firm's current architectural hiring opportunities across our platform and verified community channels:
+                      </p>
+
+                      {/* JOBS LIST */}
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                        {outreachData.jobs.map((job, idx) => (
+                          <div key={idx} className={`pb-2 ${idx < outreachData.jobs.length - 1 ? "border-b border-slate-200" : ""}`}>
+                            <div className="text-sm font-extrabold text-gray-900">
+                              {outreachData.jobs.length > 1 ? `${idx + 1}. ` : ""}{job}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              📍 Location: India
+                            </div>
+                            <a href="/jobs" target="_blank" rel="noreferrer" className="text-xs font-bold text-black underline mt-1 inline-block">
+                              View Listing →
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* STUDIO COMPLETENESS & HIRING PRIVILEGES */}
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                          <span className="font-bold text-gray-600 uppercase tracking-wider text-[11px]">Studio Profile Completeness:</span>
+                          <span className="font-extrabold text-blue-600">~40% Configured</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden mb-2.5">
+                          <div className="bg-blue-600 h-2 rounded-full w-[40%]"></div>
+                        </div>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          ✨ <strong>Unlock Direct Job Posting:</strong> Your initial practice details have been configured. Claiming your studio and completing your profile to <strong>66%+</strong> (adding portfolio projects, leadership info, and office contacts) unlocks direct job &amp; internship publishing privileges for your firm!
+                        </p>
+                      </div>
+
+                      {/* DARK CLAIM BOX */}
+                      <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-2xl p-5 text-white space-y-3">
+                        <span className="inline-block bg-white/20 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          Claim Practice &amp; Hiring Privileges
+                        </span>
+                        <h5 className="text-base font-extrabold leading-snug">
+                          Want to edit your jobs or post new openings? Claim your studio.
+                        </h5>
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          We published this listing so qualified architects across India can discover it right away. Claiming your official studio profile is completely free and unlocks:
+                        </p>
+                        <ul className="text-xs text-zinc-200 space-y-1 pl-4 list-disc">
+                          <li><strong>Direct Job Posting:</strong> Post future vacancies once at 66%+</li>
+                          <li><strong>Edit Postings:</strong> Update descriptions, salary, and deadlines</li>
+                          <li><strong>Studio Showcase:</strong> Add principals, awards, and portfolio</li>
+                          <li><strong>Verified Practice Badge:</strong> Establish trust with top design talent</li>
+                        </ul>
+                        <a
+                          href={outreachData.claimUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block text-center bg-white text-black font-extrabold text-xs py-2.5 px-4 rounded-xl hover:bg-gray-100 transition shadow-sm mt-3"
+                        >
+                          Claim {selectedItem.name} &amp; Unlock Job Posting →
+                        </a>
+                      </div>
+
+                      {/* FOOTER */}
+                      <div className="text-[11px] text-gray-400 text-center pt-3 border-t border-gray-100">
+                        &copy; {new Date().getFullYear()} Trapped Into Architecture • India's Dedicated Architecture Network
+                      </div>
+                    </div>
+                  ) : isVerification ? (
+                    /* VERIFICATION RECIPIENT VIEW */
+                    <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-xs space-y-4 text-left">
+                      <div className="border-b border-gray-100 pb-3 text-xs text-gray-500 space-y-1">
+                        <div><strong className="text-gray-900">From:</strong> Trapped Into Architecture &lt;notifications@trappedintoarchitecture.com&gt;</div>
+                        <div><strong className="text-gray-900">To:</strong> {selectedItem.name} &lt;{selectedItem.email}&gt;</div>
+                        <div><strong className="text-gray-900">Subject:</strong> Verify Your Email Address - Trapped Into Architecture</div>
+                      </div>
+
+                      <div className="text-lg font-black text-black">
+                        Trapped Into Architecture
+                      </div>
+
+                      <div className="inline-block bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        ✉️ Email Verification
+                      </div>
+
+                      <h4 className="text-lg font-extrabold text-gray-900 leading-snug">
+                        Verify your email to activate your account
+                      </h4>
+
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Welcome to <strong>Trapped Into Architecture</strong>! Confirm your email address to unlock verified architectural features, portfolio showcase, and studio claims.
+                      </p>
+
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center space-y-1">
+                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Your 6-Digit Code</div>
+                        <div className="text-2xl font-black font-mono tracking-widest text-black">
+                          {verificationCode}
+                        </div>
+                        <div className="text-[10px] text-gray-400">Expires in 15 minutes</div>
+                      </div>
+
+                      <div className="text-center">
+                        <a
+                          href={`/verify-email?email=${encodeURIComponent(selectedItem.email)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-block bg-black text-white text-xs font-bold py-2.5 px-5 rounded-xl hover:bg-gray-800 transition"
+                        >
+                          Verify Email Address (1-Click) →
+                        </a>
+                      </div>
+
+                      <div className="text-[11px] text-gray-400 text-center pt-3 border-t border-gray-100">
+                        &copy; {new Date().getFullYear()} Trapped Into Architecture • India's Dedicated Architecture Network
+                      </div>
+                    </div>
+                  ) : (
+                    /* STANDARD VISITOR INQUIRY */
+                    <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-xs space-y-3 text-left">
+                      <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">Visitor Message:</div>
+                      <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                        {selectedItem.message}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* VIEW 2: RAW AUDIT LOG */
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-gray-500 uppercase tracking-wider">Subject:</span>
+                      <span className="font-extrabold text-gray-900">{selectedItem.subject || "General Inquiry"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-gray-500 uppercase tracking-wider">Date Sent:</span>
+                      <span className="text-gray-700">
+                        {new Date(selectedItem.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST
+                      </span>
+                    </div>
+                    {selectedItem.phone && (
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-gray-500 uppercase tracking-wider">Phone:</span>
+                        <a href={`tel:${selectedItem.phone}`} className="text-blue-600 font-bold hover:underline">
+                          {selectedItem.phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Message Content / Log:</div>
+                    <div className="bg-white border border-gray-200 rounded-2xl p-4 text-xs font-mono text-gray-800 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto">
+                      {selectedItem.message}
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* FULL MESSAGE BODY */}
-            <div>
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Message Content:</div>
-              <div className="bg-white border border-gray-200 rounded-2xl p-4 text-sm text-gray-800 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
-                {selectedItem.message}
-              </div>
-            </div>
-
-            {/* ACTIONS */}
+              {/* ACTIONS */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
               <div className="flex items-center gap-2">
                 <button
@@ -868,7 +1076,8 @@ export default function ContactSettingsPage() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* GMAIL-STYLE COMPOSE MODAL */}
       {showCompose && (
