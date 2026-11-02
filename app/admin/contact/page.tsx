@@ -110,7 +110,7 @@ const LockedField = ({ label, value, onChange, fieldKey, type = "text", subLabel
 
 export default function ContactSettingsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"inbox" | "sent" | "campaign" | "settings">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "sent" | "settings">("inbox");
   const [loading, setLoading] = useState(true);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
@@ -501,23 +501,6 @@ export default function ContactSettingsPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("campaign")}
-            className={`pb-3 px-4 font-bold text-sm flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
-              activeTab === "campaign" 
-                ? "border-black text-black" 
-                : "border-transparent text-gray-400 hover:text-gray-700"
-            }`}
-          >
-            <Building2 size={16} />
-            <span>Company Outreach (10-15/day)</span>
-            {campaignStats && (
-              <span className="bg-emerald-100 text-emerald-800 text-[11px] px-2 py-0.2 rounded-full font-bold">
-                {campaignStats.alreadyNotifiedCount} / {campaignStats.totalWithValidEmail}
-              </span>
-            )}
-          </button>
-
-          <button
             onClick={() => setActiveTab("settings")}
             className={`pb-3 px-4 font-bold text-sm flex items-center gap-2 border-b-2 transition whitespace-nowrap cursor-pointer ${
               activeTab === "settings" 
@@ -666,9 +649,9 @@ export default function ContactSettingsPage() {
                     minute: "2-digit",
                   });
 
-                  const isCompany = item.subject === "NOTIFIED_COMPANY_JOB_POSTING" || item.subject === "COMPANY_JOB_EMAIL_SENT" || item.message.toLowerCase().includes("studio");
-                  const isVerification = item.message.toLowerCase().includes("verification") || item.message.toLowerCase().includes("verified");
-                  const isDirect = item.subject.startsWith("ADMIN_DIRECT_MAIL");
+                  const isVerification = item.subject?.includes("VERIF") || item.message.toLowerCase().includes("verification") || item.message.toLowerCase().includes("verified");
+                  const isCompany = !isVerification && (item.subject === "NOTIFIED_COMPANY_JOB_POSTING" || (item.subject === "COMPANY_JOB_EMAIL_SENT" && !item.message.toLowerCase().includes("verif")) || item.message.toLowerCase().includes("outreach notification") || item.message.toLowerCase().includes("claim your studio"));
+                  const isDirect = !isVerification && !isCompany && item.subject.startsWith("ADMIN_DIRECT_MAIL");
 
                   return (
                     <div
@@ -721,109 +704,7 @@ export default function ContactSettingsPage() {
           </div>
         )}
 
-        {/* TAB 3: COMPANY OUTREACH CAMPAIGN (10-15/DAY PLANNED SCHEDULE) */}
-        {activeTab === "campaign" && (
-          <div className="space-y-6">
-            
-            {/* STATS BANNER */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-5 mb-5">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full mb-1">
-                    <Flame size={13} className="text-emerald-600" />
-                    <span>Outreach Campaign Plan (10-15 / day)</span>
-                  </div>
-                  <h2 className="text-xl font-extrabold text-gray-900">
-                    Notifying Hiring Studios with Published Jobs
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Invites studios to claim their profile, edit job openings, and add studio details.
-                  </p>
-                </div>
-
-                <button
-                  onClick={handleDispatchBatch}
-                  disabled={dispatchingBatch || (campaignStats?.pendingCount || 0) === 0}
-                  className="bg-black hover:bg-gray-800 disabled:opacity-50 text-white px-5 py-3 rounded-xl font-bold text-xs transition flex items-center gap-2 shadow-sm cursor-pointer shrink-0"
-                >
-                  {dispatchingBatch ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin" />
-                      <span>Dispatching 15 Studios...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Send size={14} />
-                      <span>🚀 Dispatch Today's Batch (Next 15 Studios)</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* PROGRESS COUNTERS */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div className="text-2xl font-black text-gray-900">{campaignStats?.totalWithValidEmail || 86}</div>
-                  <div className="text-xs text-gray-500 font-medium mt-1">Total Studios with Jobs</div>
-                </div>
-
-                <div className="bg-emerald-50/70 p-4 rounded-xl border border-emerald-100">
-                  <div className="text-2xl font-black text-emerald-800">{campaignStats?.alreadyNotifiedCount || 0}</div>
-                  <div className="text-xs text-emerald-700 font-medium mt-1">Notified So Far</div>
-                </div>
-
-                <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-100">
-                  <div className="text-2xl font-black text-amber-800">{campaignStats?.pendingCount || 86}</div>
-                  <div className="text-xs text-amber-700 font-medium mt-1">Pending In Queue</div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div className="text-2xl font-black text-gray-900">{campaignStats?.estimatedDaysRemaining || 6} Days</div>
-                  <div className="text-xs text-gray-500 font-medium mt-1">Pacing (15 / day)</div>
-                </div>
-              </div>
-            </div>
-
-            {/* NEXT 15 STUDIOS IN QUEUE */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-xs">
-              <h3 className="text-base font-extrabold text-gray-900 mb-1">
-                Next Batch Preview (15 Studios Ready for Outreach)
-              </h3>
-              <p className="text-xs text-gray-500 mb-4">
-                These studios have active jobs and will receive their multi-job card + claim invitation in today's run.
-              </p>
-
-              {nextBatch.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  {loadingCampaign ? "Loading queue..." : "🎉 All studios have been notified!"}
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden">
-                  {nextBatch.map((item, idx) => (
-                    <div key={idx} className="p-3.5 flex items-center justify-between hover:bg-gray-50 text-xs">
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-gray-400 w-5">{idx + 1}.</span>
-                        <div>
-                          <span className="font-extrabold text-gray-900">{item.firmName}</span>
-                          <span className="text-gray-400 font-mono ml-2">&lt;{item.email}&gt;</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-full font-bold">
-                          {item.jobCount} Active Job{item.jobCount > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-          </div>
-        )}
-
-        {/* TAB 4: SITE SETTINGS */}
+        {/* TAB 3: SITE SETTINGS */}
         {activeTab === "settings" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

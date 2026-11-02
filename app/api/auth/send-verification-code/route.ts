@@ -155,7 +155,7 @@ export async function POST(req: Request) {
             {
               name: recipientName,
               email: cleanEmail,
-              subject: "COMPANY_JOB_EMAIL_SENT",
+              subject: "USER_VERIFICATION_SENT",
               message: `Verification link & code dispatched to: ${cleanEmail} (${recipientName})`,
               is_read: false,
             },

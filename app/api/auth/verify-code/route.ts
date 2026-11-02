@@ -177,7 +177,7 @@ export async function POST(req: Request) {
         {
           name: recipientName,
           email: userTargetEmail,
-          subject: "COMPANY_JOB_EMAIL_SENT",
+          subject: "USER_VERIFIED",
           message: `User completed verification successfully: ${userTargetEmail} (${profile.username || "user"})`,
           is_read: false,
         },
