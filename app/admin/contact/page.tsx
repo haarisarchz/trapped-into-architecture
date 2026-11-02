@@ -164,6 +164,15 @@ export default function ContactSettingsPage() {
       return;
     }
 
+    // Auto-redirect if accessed with ?tab=sent
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("tab") === "sent") {
+        router.replace("/admin/mails");
+        return;
+      }
+    }
+
     fetchSettings();
     fetchInquiries();
   }, [router]);
