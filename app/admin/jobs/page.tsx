@@ -221,6 +221,16 @@ const tabParam = searchParams.get("tab");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
+  const getFilterUrl = (newStatus?: string | null, newType?: string | null) => {
+    const s = newStatus !== undefined ? newStatus : statusFilter;
+    const t = newType !== undefined ? newType : typeFilter;
+    const params = new URLSearchParams();
+    if (s) params.set("status", s);
+    if (t) params.set("type", t);
+    const qs = params.toString();
+    return "/admin/jobs" + (qs ? `?${qs}` : "");
+  };
+
   useEffect(() => { setCurrentUser(JSON.parse(localStorage.getItem("currentUser") || "null")); }, []);
 
   useEffect(() => {
@@ -543,96 +553,125 @@ return (
 
     {/* FILTERS (Visible on Main Jobs tab) */}
 {activeMainTab === "main" && (
-<div className="flex flex-wrap gap-3 mt-4 mb-8">
+<div className="mt-4 mb-8 space-y-3">
+  {/* CATEGORY SWITCHER */}
+  <div className="flex flex-wrap items-center gap-2">
+    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">Category:</span>
+    <button
+      onClick={() => router.push(getFilterUrl(undefined, null))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        !typeFilter
+          ? "bg-black text-white border-black"
+          : "bg-white text-gray-700 border-gray-200 hover:border-black"
+      }`}
+    >
+      All Categories
+    </button>
+    <button
+      onClick={() => router.push(getFilterUrl(undefined, "job"))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+        typeFilter === "job"
+          ? "bg-black text-white border-black"
+          : "bg-white text-gray-700 border-gray-200 hover:border-black"
+      }`}
+    >
+      <Briefcase size={13} className={typeFilter === "job" ? "text-white" : "text-blue-600"} />
+      <span>Jobs Only</span>
+    </button>
+    <button
+      onClick={() => router.push(getFilterUrl(undefined, "internship"))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+        typeFilter === "internship"
+          ? "bg-violet-950 text-white border-violet-950"
+          : "bg-white text-gray-700 border-gray-200 hover:border-violet-600"
+      }`}
+    >
+      <Building2 size={13} className={typeFilter === "internship" ? "text-white" : "text-violet-600"} />
+      <span>Internships Only</span>
+    </button>
+  </div>
 
-  <button
-    onClick={() => router.push("/admin/jobs")}
-    className={`px-5 py-2 rounded-full border transition ${
-      !statusFilter
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    All Jobs
-  </button>
+  {/* STATUS FILTER PILLS */}
+  <div className="flex flex-wrap items-center gap-2 pt-1">
+    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">Status:</span>
+    <button
+      onClick={() => router.push(getFilterUrl(null, undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        !statusFilter
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      All
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=active")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "active"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Active
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("active", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "active"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Active
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=draft")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "draft"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Drafts
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("draft", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "draft"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Drafts
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=scheduled")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "scheduled"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Scheduled
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("scheduled", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "scheduled"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Scheduled
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=outdated")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "outdated"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Outdated
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("outdated", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "outdated"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Outdated
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=expired")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "expired"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Expired
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("expired", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "expired"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Expired
+    </button>
 
-  <button
-    onClick={() => router.push("/admin/jobs?status=trash")}
-    className={`px-5 py-2 rounded-full border transition flex items-center gap-1.5 cursor-pointer ${
-      statusFilter === "trash"
-        ? "bg-red-600 text-white border-red-600 font-bold shadow-xs"
-        : "bg-white hover:bg-red-50 text-red-600 border-red-200"
-    }`}
-  >
-    <Trash2 size={14} />
-    <span>Recycle Bin (Trash)</span>
-  </button>
-
+    <button
+      onClick={() => router.push(getFilterUrl("trash", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+        statusFilter === "trash"
+          ? "bg-red-600 text-white border-red-600 font-bold shadow-xs"
+          : "bg-white hover:bg-red-50 text-red-600 border-red-200"
+      }`}
+    >
+      <Trash2 size={13} />
+      <span>Recycle Bin (Trash)</span>
+    </button>
+  </div>
 </div>
 )}
 
