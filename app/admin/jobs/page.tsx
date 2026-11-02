@@ -160,6 +160,26 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
   );
 }
 
+
+export function getJobDraftSavedDate(job: any): string | null {
+  if (job.updated_at) return job.updated_at;
+  if (job.created_at) return job.created_at;
+
+  // Fallback: Check if image filename contains upload timestamp (e.g. smart-upload-1791726754536.jpg)
+  if (job.image && typeof job.image === 'string') {
+    const match = job.image.match(/(\d{13})/);
+    if (match) {
+      const ts = parseInt(match[1], 10);
+      if (!isNaN(ts) && ts > 1600000000000 && ts < 2200000000000) {
+        return new Date(ts).toISOString();
+      }
+    }
+  }
+
+  if (job.posted_date) return job.posted_date;
+  return null;
+}
+
 function AdminJobsContent() {
   const [highlightId, setHighlightId] = React.useState<string | null>(null);
 
@@ -244,10 +264,18 @@ const tabParam = searchParams.get("tab");
           valA = a.profiles?.display_name || a.profiles?.full_name || a.profiles?.username || "Unknown";
           valB = b.profiles?.display_name || b.profiles?.full_name || b.profiles?.username || "Unknown";
           break;
-        case "posted_date":
-          valA = a.posted_date ? new Date(a.posted_date).getTime() : 0;
-          valB = b.posted_date ? new Date(b.posted_date).getTime() : 0;
+        case "posted_date": {
+          const getJobDateVal = (j: any) => {
+            if (j.status === "draft") {
+              const d = getJobDraftSavedDate(j);
+              return d ? new Date(d).getTime() : 0;
+            }
+            return j.posted_date ? new Date(j.posted_date).getTime() : 0;
+          };
+          valA = getJobDateVal(a);
+          valB = getJobDateVal(b);
           break;
+        }
         case "status":
           valA = a.status || "";
           valB = b.status || "";
@@ -641,7 +669,7 @@ return (
       Posted By {sortField === 'posted_by' && (sortOrder === 'asc' ? '↑' : '↓')}
     </th>
     <th className="text-left px-6 py-5 cursor-pointer hover:bg-gray-50" onClick={() => handleSort('posted_date')}>
-      Posted On {sortField === 'posted_date' && (sortOrder === 'asc' ? '↑' : '↓')}
+      {statusFilter === 'draft' ? 'Draft Saved Date' : (!statusFilter ? 'Posted / Saved On' : (statusFilter === 'scheduled' ? 'Scheduled For' : 'Posted On'))} {sortField === 'posted_date' && (sortOrder === 'asc' ? '↑' : '↓')}
     </th>
     <th className="text-left px-6 py-5 cursor-pointer hover:bg-gray-50" onClick={() => handleSort('status')}>
       Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -709,10 +737,28 @@ return (
 })()}
                       </td>
 
-                      {/* POSTED ON */}
+                      {/* POSTED ON / DRAFT SAVED DATE */}
 
                       <td className="px-6 py-5">
-                        {job.posted_date ? formatDate(job.posted_date) : "-"}
+                        {(() => {
+                          if (job.status === "draft") {
+                            const savedDate = getJobDraftSavedDate(job);
+                            if (savedDate) {
+                              return (
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-gray-900" title={`Draft saved on ${formatDate(savedDate)}`}>
+                                    {formatDate(savedDate)}
+                                  </span>
+                                  {!statusFilter && (
+                                    <span className="text-[11px] text-amber-700 font-medium">Draft saved</span>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return <span className="text-gray-400">-</span>;
+                          }
+                          return job.posted_date ? formatDate(job.posted_date) : "-";
+                        })()}
                       </td>
 
                       {/* STATUS */}

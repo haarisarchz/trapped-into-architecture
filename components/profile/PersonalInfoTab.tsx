@@ -10,6 +10,11 @@ import {
   MessageSquare,
   Globe,
   EyeOff,
+  MessageCircle,
+  X,
+  ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
 import { LinkedInBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
@@ -61,6 +66,13 @@ export default function PersonalInfoTab({
   const [saving, setSaving] = useState(false);
   const [verifyingEmail, setVerifyingEmail] = useState(false);
   const [verifyingPhone, setVerifyingPhone] = useState(false);
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [inputPhoneCode, setInputPhoneCode] = useState("");
+  const [waMessageSent, setWaMessageSent] = useState(false);
+  const [phoneVerifyError, setPhoneVerifyError] = useState("");
+  const [phoneVerifySuccess, setPhoneVerifySuccess] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const handleVerifyEmail = async () => {
     if (!user.email) {
@@ -122,31 +134,86 @@ export default function PersonalInfoTab({
     }
   };
 
-  const handleVerifyPhone = async () => {
-    if (!user.phone) {
-      alert("Please enter and save your phone number first.");
+    const handleStartPhoneVerification = () => {
+    const targetPhone = (formData.phone || user.phone || "").trim();
+    if (!targetPhone) {
+      alert("Please enter and save your contact phone/WhatsApp number in your profile first.");
       return;
     }
-    const confirmed = confirm(
-      `Confirm Phone Verification:\n\nIs ${user.phone} your active mobile/WhatsApp contact number?\n\nClick OK to verify and add +5% to your profile completion score.`
-    );
-    if (!confirmed) return;
+    // Generate secure 6-digit code
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setPhoneCode(randomCode);
+    setInputPhoneCode("");
+    setWaMessageSent(false);
+    setPhoneVerifyError("");
+    setPhoneVerifySuccess(false);
+    setCodeCopied(false);
+    setPhoneModalOpen(true);
+  };
 
+  const handleCopyCode = () => {
+    if (phoneCode) {
+      navigator.clipboard.writeText(phoneCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    }
+  };
+
+  const handleConfirmPhoneVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneVerifyError("");
+
+    if (!inputPhoneCode.trim()) {
+      setPhoneVerifyError("Please enter the 6-digit verification code.");
+      return;
+    }
+
+    if (inputPhoneCode.trim() !== phoneCode) {
+      setPhoneVerifyError("Verification code does not match. Please enter the exact 6-digit code shown above.");
+      return;
+    }
+
+    const targetPhone = (formData.phone || user.phone || "").trim();
     setVerifyingPhone(true);
+
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ phone_verified: true })
+        .update({
+          phone_verified: true,
+          is_phone_verified: true,
+          phone: targetPhone,
+          whatsapp_number: formData.whatsapp_same_as_phone ? targetPhone : (formData.whatsapp_number || targetPhone),
+        })
         .eq("id", user.id);
 
       if (error) throw error;
 
+      setPhoneVerifySuccess(true);
+      const updatedUser = {
+        ...user,
+        phone_verified: true,
+        is_phone_verified: true,
+        phone: targetPhone,
+      };
+
+      setFormData((prev: any) => ({
+        ...prev,
+        phone_verified: true,
+        is_phone_verified: true,
+        phone: targetPhone,
+      }));
+
       if (onUserUpdate) {
-        onUserUpdate({ ...user, phone_verified: true });
+        onUserUpdate(updatedUser);
       }
-      alert(`Phone number ${user.phone} verified! +5% added to your profile completion score.`);
+
+      setTimeout(() => {
+        setPhoneModalOpen(false);
+        setPhoneVerifySuccess(false);
+      }, 2000);
     } catch (err: any) {
-      alert(err.message || "Could not verify phone. Please try again.");
+      setPhoneVerifyError(err.message || "Failed to verify phone. Please try again.");
     } finally {
       setVerifyingPhone(false);
     }
