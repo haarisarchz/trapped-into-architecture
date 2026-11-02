@@ -22,7 +22,7 @@ export async function GET() {
     // 2. Fetch all published jobs
     const { data: jobs, error: jobsErr } = await supabase
       .from("jobs")
-      .select("id, firm_name, position, city, state, experience, job_type, salary_range, email, company_id, posted_date, status")
+      .select("id, firm_name, position, city, state, experience, application_email, company_id, posted_date, status")
       .eq("status", "published");
 
     if (jobsErr) {
@@ -49,7 +49,7 @@ export async function GET() {
       if (!firmKey) return;
 
       const comp = companyMap.get(firmKey);
-      const email = comp?.email || job.email || null;
+      const email = comp?.email || job.application_email || null;
       const slug = comp?.slug || job.firm_name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const logoUrl = comp?.logo_url || null;
 
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
     // 2. Fetch published jobs
     const { data: jobs } = await supabase
       .from("jobs")
-      .select("id, firm_name, position, city, state, experience, job_type, salary_range, email, company_id")
+      .select("id, firm_name, position, city, state, experience, application_email, company_id")
       .eq("status", "published");
 
     const { data: companies } = await supabase
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
       const firmKey = (job.firm_name || "").trim().toLowerCase();
       if (!firmKey) return;
       const comp = companyMap.get(firmKey);
-      const email = comp?.email || job.email;
+      const email = comp?.email || job.application_email;
       if (!email || !email.includes("@")) return;
 
       const cleanEmail = email.trim().toLowerCase();
