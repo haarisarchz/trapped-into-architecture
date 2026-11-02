@@ -371,169 +371,169 @@ if (loading) {
         </div>
 
       {/* STATS */}
-<div className="space-y-6 mb-8">
+<div className="space-y-4 mb-6">
   {/* ARCHITECTURE JOBS SECTION */}
   <div>
-    <div className="flex items-center justify-between mb-2.5 px-1">
-      <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-black"></span>
+    <div className="flex items-center justify-between mb-1.5 px-0.5">
+      <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-black"></span>
         Architecture Jobs
       </h3>
-      <span className="text-[11px] text-gray-500 font-medium">Drafts &amp; Scheduled included in Total</span>
+      <span className="text-[10px] text-gray-400 font-medium">Drafts &amp; Scheduled in Total</span>
     </div>
 
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
       {/* ACTIVE JOBS */}
       <div
         onClick={() => router.push("/admin/jobs?status=active&type=job")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
-          Active Jobs
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Active
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-green-600">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-green-600 leading-none">
           {activeJobs}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">&lt; 30d, unexpired</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&lt; 30d</span>
       </div>
 
       {/* OUTDATED JOBS */}
       <div
         onClick={() => router.push("/admin/jobs?status=outdated&type=job")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
-          Outdated Jobs
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Outdated
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-orange-500">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-orange-500 leading-none">
           {outdatedJobs}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">&gt; 30d posted</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&gt; 30d</span>
       </div>
 
       {/* EXPIRED JOBS */}
       <div
         onClick={() => router.push("/admin/jobs?status=expired&type=job")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
-          Expired Jobs
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Expired
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-red-600">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-red-600 leading-none">
           {expiredJobs}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">Past deadline</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Deadline</span>
       </div>
 
       {/* DRAFT JOBS */}
       <div
         onClick={() => router.push("/admin/jobs?status=draft")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
-          Draft Jobs
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Drafts
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-amber-500">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-amber-500 leading-none">
           {draftJobs}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">Unpublished</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Saved</span>
       </div>
 
       {/* SCHEDULED JOBS */}
       <div
         onClick={() => router.push("/admin/jobs?status=scheduled")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
           Scheduled
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-blue-600">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-blue-600 leading-none">
           {scheduledJobs}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">Future drops</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Future</span>
       </div>
 
       {/* TOTAL JOBS */}
       <div
         onClick={() => router.push("/admin/jobs?type=job")}
-        className="bg-slate-900 text-white rounded-2xl p-3.5 sm:p-4 border border-slate-900 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center"
+        className="bg-slate-900 text-white rounded-xl p-2.5 sm:p-3 border border-slate-900 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center"
       >
-        <p className="text-gray-400 font-bold text-[11px] uppercase tracking-wider">
+        <p className="text-gray-400 font-semibold text-[10px] uppercase tracking-wider leading-none">
           Total Jobs
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-white leading-none">
           {totalJobs}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">All + drafts</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">All+Drafts</span>
       </div>
     </div>
   </div>
 
   {/* INTERNSHIPS SECTION */}
   <div>
-    <div className="flex items-center justify-between mb-2.5 px-1">
-      <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-violet-600"></span>
+    <div className="flex items-center justify-between mb-1.5 px-0.5">
+      <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-violet-600"></span>
         Architecture Internships
       </h3>
-      <span className="text-[11px] text-gray-500 font-medium">Clean counts without drafts/scheduled</span>
+      <span className="text-[10px] text-gray-400 font-medium">Without drafts/scheduled</span>
     </div>
 
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
       {/* ACTIVE INTERNSHIPS */}
       <div
         onClick={() => router.push("/admin/jobs?status=active&type=internship")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
-          Active Internships
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Active
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-green-600">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-green-600 leading-none">
           {activeInternships}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">&lt; 30d, unexpired</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&lt; 30d</span>
       </div>
 
       {/* OUTDATED INTERNSHIPS */}
       <div
         onClick={() => router.push("/admin/jobs?status=outdated&type=internship")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
-          Outdated Internships
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Outdated
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-orange-500">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-orange-500 leading-none">
           {outdatedInternships}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">&gt; 30d posted</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&gt; 30d</span>
       </div>
 
       {/* EXPIRED INTERNSHIPS */}
       <div
         onClick={() => router.push("/admin/jobs?status=expired&type=internship")}
-        className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center group"
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
       >
-        <p className="text-gray-500 font-bold text-[11px] uppercase tracking-wider group-hover:text-black">
-          Expired Internships
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Expired
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-red-600">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-red-600 leading-none">
           {expiredInternships}
         </h2>
-        <span className="text-[10px] text-gray-400 mt-0.5">Past deadline</span>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Deadline</span>
       </div>
 
       {/* TOTAL INTERNSHIPS */}
       <div
         onClick={() => router.push("/admin/jobs?type=internship")}
-        className="bg-violet-950 text-white rounded-2xl p-3.5 sm:p-4 border border-violet-950 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-200 flex flex-col items-center justify-center text-center"
+        className="bg-violet-950 text-white rounded-xl p-2.5 sm:p-3 border border-violet-950 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center"
       >
-        <p className="text-violet-300 font-bold text-[11px] uppercase tracking-wider">
-          Total Internships
+        <p className="text-violet-300 font-semibold text-[10px] uppercase tracking-wider leading-none">
+          Total Interns
         </p>
-        <h2 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white">
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-white leading-none">
           {totalInternships}
         </h2>
-        <span className="text-[10px] text-violet-300 mt-0.5">Active + Outdated + Expired</span>
+        <span className="text-[9px] text-violet-300 mt-1 leading-none">Active+Out+Exp</span>
       </div>
     </div>
   </div>
@@ -541,9 +541,9 @@ if (loading) {
 
 {/* RECENT JOBS */}
 
-<div className="bg-white rounded-3xl p-8 shadow">
+<div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-gray-100">
 
-  <div className="flex items-center justify-between mb-6">
+  <div className="flex items-center justify-between mb-3">
 
     <h2 className="text-2xl font-bold">
       Recent Jobs
