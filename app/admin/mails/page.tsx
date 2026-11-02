@@ -46,7 +46,11 @@ function parseOutreachDetails(item: ContactInquiry) {
   }
 
   const claimUrlMatch = msg.match(/Claim link:\s*(https?:\/\/[^\s]+)/i);
-  const claimUrl = claimUrlMatch ? claimUrlMatch[1] : `https://www.trappedintoarchitecture.com/companies?claim=true`;
+  let claimUrl = claimUrlMatch ? claimUrlMatch[1] : "";
+  if (!claimUrl) {
+    const slug = (item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    claimUrl = slug ? `/companies/${slug}?claim=true` : `/companies?claim=true`;
+  }
 
   return {
     jobs,
