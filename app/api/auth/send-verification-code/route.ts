@@ -65,6 +65,7 @@ export async function POST(req: Request) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
     const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
     const recipientName = resolvedName || "Architect";
+    const verifyLink = `${siteUrl}/verify-email?token=${code}&email=${encodeURIComponent(cleanEmail)}`;
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Ti2A Verification Code</title>
+        <title>Verify your Ti2A Email</title>
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; color: #0f172a;">
         <div style="max-width: 540px; margin: 0 auto; background: #ffffff; border-radius: 24px; padding: 36px; border: 1px solid #e2e8f0; box-shadow: 0 4px 24px rgba(0,0,0,0.04);">
@@ -90,37 +91,42 @@ export async function POST(req: Request) {
           </div>
 
           <h1 style="font-size: 24px; font-weight: 900; color: #0f172a; margin: 0 0 10px 0; line-height: 1.3; letter-spacing: -0.02em;">
-            Here is your verification code, ${recipientName}
+            Verify your email address, ${recipientName}
           </h1>
 
-          <p style="color: #475569; line-height: 1.6; font-size: 15px; margin: 0 0 24px 0;">
-            You requested an email verification code for your account on <strong>Trapped Into Architecture</strong>. Enter the 6-digit code below on the platform to verify your email and unlock your <strong>Verified Badge (+5% profile score)</strong>.
+          <p style="color: #475569; line-height: 1.6; font-size: 15px; margin: 0 0 20px 0;">
+            You requested to verify your email on <strong>Trapped Into Architecture</strong>. Verifying activates your <strong>Verified Badge (+5% profile score)</strong> and unlocks full platform access.
           </p>
 
-          <!-- VERIFICATION CODE BOX -->
-          <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 18px; padding: 26px; text-align: center; margin: 24px 0;">
-            <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">
-              6-Digit Verification Code
+          <!-- 1-CLICK VERIFY BUTTON (PRIMARY) -->
+          <div style="margin: 28px 0 20px 0;">
+            <a href="${verifyLink}" style="display: block; text-align: center; background: #000000; color: #ffffff !important; padding: 16px 24px; border-radius: 14px; font-weight: 800; font-size: 15px; text-decoration: none; box-shadow: 0 4px 14px rgba(0,0,0,0.15);">
+              👉 Click Here to Verify Your Email (1-Click) →
+            </a>
+          </div>
+
+          <div style="text-align: center; margin: 24px 0 16px 0; color: #94a3b8; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;">
+            — OR ENTER 6-DIGIT CODE MANUALLY —
+          </div>
+
+          <!-- VERIFICATION CODE BOX (SECONDARY) -->
+          <div style="background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; text-align: center; margin: 16px 0 24px 0;">
+            <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">
+              Manual 6-Digit Code
             </div>
             
-            <div style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #000000; font-family: ui-monospace, Menlo, Monaco, monospace; margin: 12px 0;">
+            <div style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #000000; font-family: ui-monospace, Menlo, Monaco, monospace; margin: 6px 0;">
               ${code}
             </div>
 
-            <div style="font-size: 12px; color: #64748b; margin-top: 8px;">
-              Valid for <strong>24 hours</strong>. Enter this code on the platform to complete verification.
+            <div style="font-size: 12px; color: #64748b; margin-top: 6px;">
+              Valid for <strong>24 hours</strong>. Enter this on your Ti2A profile to unlock +5% score.
             </div>
           </div>
 
           <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin: 16px 0 24px 0; text-align: center;">
-            If you did not request this verification code, please ignore this email. Your account remains safe.
+            If you did not request this email, please ignore this message. Your account remains safe.
           </p>
-
-          <div style="margin: 24px 0;">
-            <a href="${siteUrl}" style="display: block; text-align: center; background: #000000; color: #ffffff !important; padding: 13px 20px; border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none;">
-              Open Trapped Into Architecture →
-            </a>
-          </div>
 
           <!-- FOOTER -->
           <div style="padding-top: 20px; border-top: 1px solid #f1f5f9; font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.5;">
@@ -136,7 +142,7 @@ export async function POST(req: Request) {
       const sendResult = await resend.emails.send({
         from: fromEmail,
         to: cleanEmail,
-        subject: `Your Ti2A Verification Code: ${code}`,
+        subject: `Verify your Ti2A Email Address (Code: ${code})`,
         html: emailHtml,
       });
 
@@ -150,7 +156,7 @@ export async function POST(req: Request) {
               name: recipientName,
               email: cleanEmail,
               subject: "COMPANY_JOB_EMAIL_SENT",
-              message: `Verification code requested by user: ${cleanEmail} (${recipientName})`,
+              message: `Verification link & code dispatched to: ${cleanEmail} (${recipientName})`,
               is_read: false,
             },
           ]);
@@ -159,7 +165,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json({
         success: true,
-        message: `Verification code sent to ${cleanEmail}.`,
+        message: `Verification email sent to ${cleanEmail}.`,
         emailSent: !sendResult.error,
         code: process.env.NODE_ENV !== "production" ? code : undefined,
       });
