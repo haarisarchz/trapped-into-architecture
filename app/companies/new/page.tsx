@@ -184,6 +184,21 @@ export default function RegisterPracticePage() {
 
       setCreatedSlug(finalSlug);
       setSubmitted(true);
+
+      // Asynchronously dispatch company welcome notification
+      if (payload.email) {
+        fetch("/api/notify/company-registered", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyId: data?.id,
+            firmName: payload.firm_name,
+            email: payload.email,
+            slug: finalSlug,
+          }),
+        }).catch((e) => console.warn("Could not dispatch company welcome email:", e));
+      }
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       console.error("Error creating studio profile:", err);
