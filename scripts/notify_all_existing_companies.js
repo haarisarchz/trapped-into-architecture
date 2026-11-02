@@ -18,7 +18,9 @@ if (fs.existsSync(envPath)) {
     if (!trimmed || trimmed.startsWith("#")) return;
     const idx = trimmed.indexOf("=");
     if (idx !== -1) {
-      env[trimmed.substring(0, idx).trim()] = trimmed.substring(idx + 1).trim();
+      let val = trimmed.substring(idx + 1).trim();
+      val = val.replace(/^["']|["']$/g, "").trim();
+      env[trimmed.substring(0, idx).trim()] = val;
     }
   });
 }
@@ -27,7 +29,8 @@ const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPA
 const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const resendApiKey = env.RESEND_API_KEY || process.env.RESEND_API_KEY;
 const siteUrl = env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
-const fromEmail = env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
+const rawFrom = env.RESEND_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <notifications@trappedintoarchitecture.com>";
+const fromEmail = rawFrom.replace(/^["']|["']$/g, "").trim();
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
@@ -123,9 +126,11 @@ async function run() {
   // 5. Filter out already-notified firms & invalid emails
   let pendingFirms = [];
   for (const [_, item] of grouped.entries()) {
-    const cleanEmail = (item.email || "").trim().toLowerCase();
-    if (cleanEmail && cleanEmail.includes("@")) {
-      if (!notifiedSet.has(cleanEmail) || testEmail) {
+    const rawEmail = (item.email || "").trim().toLowerCase();
+    if (rawEmail && rawEmail.includes("@")) {
+      const emailParts = rawEmail.split(/[,;\s]+/).map(e => e.trim()).filter(e => e.includes("@"));
+      const isAlreadyNotified = emailParts.some(e => notifiedSet.has(e)) || notifiedSet.has(rawEmail);
+      if (!isAlreadyNotified || testEmail) {
         pendingFirms.push(item);
       }
     }
@@ -262,10 +267,14 @@ async function run() {
     `;
 
     try {
-      console.log(`[${i + 1}/${todaysBatch.length}] Sending to ${firmName} (${recipient})...`);
+      const recipientList = testEmail
+        ? [testEmail]
+        : (item.email || "").split(/[,;]+/).map((e) => e.trim().toLowerCase()).filter((e) => e.includes("@"));
+
+      console.log(`[${i + 1}/${todaysBatch.length}] Sending to ${firmName} (${recipientList.join(", ")})...`);
       const res = await resend.emails.send({
         from: fromEmail,
-        to: recipient,
+        to: recipientList.length === 1 ? recipientList[0] : recipientList,
         subject: subject,
         html: emailHtml,
       });
@@ -279,15 +288,26 @@ async function run() {
 
         // Record tracking in database so this firm is never emailed again in future runs
         if (!testEmail) {
-          await supabase.from("contact_inquiries").insert([
-            {
+          const insertRows = recipientList.map((addr) => ({
+            name: firmName,
+            email: addr,
+            subject: "NOTIFIED_COMPANY_JOB_POSTING",
+            message: `Outreach notification sent on ${new Date().toISOString()} for ${item.jobs.length} jobs: ${item.jobs.map((j) => j.position).join(", ")}`,
+            is_read: true,
+          }));
+
+          // Also include the raw combined email string if it had multiple
+          if (recipientList.length > 1) {
+            insertRows.push({
               name: firmName,
               email: item.email.trim().toLowerCase(),
               subject: "NOTIFIED_COMPANY_JOB_POSTING",
-              message: `Outreach notification sent on ${new Date().toISOString()} for ${item.jobs.length} jobs: ${item.jobs.map(j => j.position).join(", ")}`,
+              message: `Outreach notification sent on ${new Date().toISOString()} for ${item.jobs.length} jobs: ${item.jobs.map((j) => j.position).join(", ")}`,
               is_read: true,
-            },
-          ]);
+            });
+          }
+
+          await supabase.from("contact_inquiries").insert(insertRows);
         }
       }
     } catch (err) {
