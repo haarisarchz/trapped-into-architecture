@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     }
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <notifications@trappedintoarchitecture.com>";
     const recipientName = resolvedName || "Architect";
     const verifyLink = `${siteUrl}/verify-email?token=${code}&email=${encodeURIComponent(cleanEmail)}`;
 

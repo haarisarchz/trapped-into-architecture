@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     let emailErrorMsg = null;
     if (resend) {
       try {
-        const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
+        const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <notifications@trappedintoarchitecture.com>";
         const mailResult = await resend.emails.send({
           from: fromEmail,
           to: recipientEmail,

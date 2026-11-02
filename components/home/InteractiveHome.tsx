@@ -115,116 +115,116 @@ export default function InteractiveHome({
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
       
-      {/* 1. HERO SECTION (CLEAN MONOCHROME WITH COMPACT SEARCH) */}
-      <section className="bg-white py-8 md:py-10 px-4 sm:px-6 lg:px-12 text-center border-b border-gray-100">
+      {/* 1. HERO SECTION (LEGIBLE & BALANCED) */}
+      <section className="bg-white py-10 md:py-14 px-4 sm:px-6 lg:px-12 text-center border-b border-gray-100">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-3">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-4 leading-tight">
             Every Architect's Destination
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
             Trapped into Architecture helps in finding jobs, knowing companies, improving knowledge, and exploring architecture.
           </p>
 
-          {/* Compact Search Bar */}
-          <form onSubmit={handleSearchSubmit} className="bg-gray-50 p-1.5 rounded-2xl border border-gray-200 max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 shadow-xs mb-3">
-            <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-gray-200">
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="bg-gray-50 p-2 rounded-2xl border border-gray-200 max-w-2xl mx-auto flex flex-col sm:flex-row gap-2 shadow-xs mb-4">
+            <div className="flex-1 flex items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl border border-gray-200">
               <Search className="w-4 h-4 text-gray-400 shrink-0" />
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search role, firm, or skill (e.g. Junior Architect, Revit)..." 
-                className="w-full text-xs sm:text-sm bg-transparent outline-none text-gray-800 placeholder-gray-400"
+                className="w-full text-sm sm:text-base bg-transparent outline-none text-gray-800 placeholder-gray-400"
               />
             </div>
-            <div className="flex-1 sm:max-w-[190px] flex items-center gap-2 px-3 py-2 bg-white rounded-xl border border-gray-200">
+            <div className="flex-1 sm:max-w-[210px] flex items-center gap-2.5 px-3.5 py-2.5 bg-white rounded-xl border border-gray-200">
               <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
               <input 
                 type="text" 
                 value={cityQuery}
                 onChange={(e) => setCityQuery(e.target.value)}
                 placeholder="City (Mumbai, Bangalore)..." 
-                className="w-full text-xs sm:text-sm bg-transparent outline-none text-gray-800 placeholder-gray-400"
+                className="w-full text-sm sm:text-base bg-transparent outline-none text-gray-800 placeholder-gray-400"
               />
             </div>
             <button 
               type="submit" 
-              className="bg-black hover:bg-gray-800 text-white px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer"
+              className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl text-sm sm:text-base font-semibold transition cursor-pointer"
             >
               Search
             </button>
           </form>
 
           {/* Popular Tag Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs text-gray-500">
-            <span className="text-gray-400 text-[11px]">Popular:</span>
-            <Link href="/jobs?search=Junior%20Architect" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-0.5 rounded-md transition text-[11px]">Junior Architect</Link>
-            <Link href="/internships" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-0.5 rounded-md transition text-[11px]">Internships</Link>
-            <Link href="/jobs?search=Landscape" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-0.5 rounded-md transition text-[11px]">Landscape</Link>
-            <Link href="/jobs?city=Bengaluru" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-0.5 rounded-md transition text-[11px]">Bengaluru</Link>
-            <Link href="/jobs?city=Mumbai" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-0.5 rounded-md transition text-[11px]">Mumbai</Link>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm text-gray-500">
+            <span className="text-gray-400 font-medium">Popular:</span>
+            <Link href="/jobs?search=Junior%20Architect" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md transition font-medium">Junior Architect</Link>
+            <Link href="/internships" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md transition font-medium">Internships</Link>
+            <Link href="/jobs?search=Landscape" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md transition font-medium">Landscape</Link>
+            <Link href="/jobs?city=Bengaluru" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md transition font-medium">Bengaluru</Link>
+            <Link href="/jobs?city=Mumbai" className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md transition font-medium">Mumbai</Link>
           </div>
         </div>
       </section>
 
       {/* 2. PLATFORM STATISTICS (SLIM COMPACT STRIP) */}
-      <section className="py-4 px-4 sm:px-6 lg:px-12 bg-black text-white">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-2 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
+      <section className="py-5 px-4 sm:px-6 lg:px-12 bg-black text-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 text-center divide-y md:divide-y-0 md:divide-x divide-gray-800">
           <Link 
             href="/jobs" 
-            className="p-2 rounded-xl hover:bg-white/10 transition group block"
+            className="p-3 rounded-xl hover:bg-white/10 transition group block"
             title="Browse all Architecture Jobs"
           >
-            <div className="text-2xl md:text-3xl font-bold mb-0.5 group-hover:scale-105 transition-transform">{stats?.jobs || 0}</div>
-            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-xs">
+            <div className="text-3xl md:text-4xl font-extrabold mb-1 group-hover:scale-105 transition-transform">{stats?.jobs || 0}</div>
+            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-sm md:text-base">
               <span>Jobs Available</span>
-              <span className="text-xs">&rarr;</span>
+              <span className="text-sm">&rarr;</span>
             </div>
           </Link>
 
           <Link 
             href="/internships" 
-            className="p-2 rounded-xl hover:bg-white/10 transition group block"
+            className="p-3 rounded-xl hover:bg-white/10 transition group block"
             title="Explore Architectural Internships"
           >
-            <div className="text-2xl md:text-3xl font-bold mb-0.5 group-hover:scale-105 transition-transform">{stats?.internships || 0}</div>
-            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-xs">
+            <div className="text-3xl md:text-4xl font-extrabold mb-1 group-hover:scale-105 transition-transform">{stats?.internships || 0}</div>
+            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-sm md:text-base">
               <span>Internship Opportunities</span>
-              <span className="text-xs">&rarr;</span>
+              <span className="text-sm">&rarr;</span>
             </div>
           </Link>
 
           <Link 
             href="/companies" 
-            className="p-2 rounded-xl hover:bg-white/10 transition group block"
+            className="p-3 rounded-xl hover:bg-white/10 transition group block"
             title="Explore Architecture Studios"
           >
-            <div className="text-2xl md:text-3xl font-bold mb-0.5 group-hover:scale-105 transition-transform">{stats?.companies || 0}</div>
-            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-xs">
+            <div className="text-3xl md:text-4xl font-extrabold mb-1 group-hover:scale-105 transition-transform">{stats?.companies || 0}</div>
+            <div className="text-gray-400 group-hover:text-gray-200 font-medium flex items-center justify-center gap-1 text-sm md:text-base">
               <span>Companies Listed</span>
-              <span className="text-xs">&rarr;</span>
+              <span className="text-sm">&rarr;</span>
             </div>
           </Link>
 
-          <div className="p-2 select-none">
-            <div className="text-2xl md:text-3xl font-bold mb-0.5">{stats?.pageVisits ? stats.pageVisits.toLocaleString() : (stats?.users || 0)}</div>
-            <div className="text-gray-400 font-medium text-xs">Total Page Visits</div>
+          <div className="p-3 select-none">
+            <div className="text-3xl md:text-4xl font-extrabold mb-1">{stats?.pageVisits ? stats.pageVisits.toLocaleString() : (stats?.users || 0)}</div>
+            <div className="text-gray-400 font-medium text-sm md:text-base">Total Page Visits</div>
           </div>
         </div>
       </section>
 
       {/* 3. REVENUE SECTION: SUBSCRIBE FOR INSTANT WHATSAPP ALERTS */}
-      <section className="py-2.5 px-4 sm:px-6 lg:px-12 bg-white border-b border-gray-200">
+      <section className="py-4 px-4 sm:px-6 lg:px-12 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-gray-900 text-white rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border border-gray-800">
-            <div className="flex items-center gap-3">
-              <span className="text-base text-emerald-400">⚡</span>
+          <div className="bg-gray-900 text-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-gray-800">
+            <div className="flex items-center gap-3.5">
+              <span className="text-xl text-emerald-400 shrink-0">⚡</span>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-xs sm:text-sm text-white">Subscribe for Instant WhatsApp Job Alerts</h3>
-                  <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold px-1.5 py-0.5 rounded uppercase">Instant Drops</span>
+                  <h3 className="font-bold text-base sm:text-lg text-white">Subscribe for Instant WhatsApp Job Alerts</h3>
+                  <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold px-2 py-0.5 rounded-full uppercase">Instant Drops</span>
                 </div>
-                <p className="text-[11px] text-gray-300">
+                <p className="text-xs sm:text-sm text-gray-300 mt-0.5">
                   Top studios close applications quickly. Receive direct alerts on WhatsApp as soon as vacancies are published.
                 </p>
               </div>
@@ -232,7 +232,7 @@ export default function InteractiveHome({
 
             <Link 
               href="/subscriptions"
-              className="w-full sm:w-auto bg-white hover:bg-gray-100 text-black font-bold px-4 py-1.5 rounded-lg text-xs transition text-center shrink-0"
+              className="w-full sm:w-auto bg-white hover:bg-gray-100 text-black font-bold px-5 py-2.5 rounded-xl text-sm transition text-center shrink-0"
             >
               Subscribe for Alerts &rarr;
             </Link>
@@ -243,70 +243,75 @@ export default function InteractiveHome({
       {/* 4. THE TWIN GATEWAYS: EXPLORE JOBS & EXPLORE INTERNSHIPS */}
       {/* DESKTOP: Clean 50/50 Vertical Split */}
       {/* MOBILE: Clean Sibling Panels stacked without confusion */}
-      <section className="py-6 md:py-8 px-4 sm:px-6 lg:px-12 w-full bg-gray-50">
+      <section className="py-8 md:py-10 px-4 sm:px-6 lg:px-12 w-full bg-gray-50">
         <div className="max-w-7xl mx-auto">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {/* GATEWAY 1: EXPLORE JOBS (4 COMPACT CARDS IN REAL WEBSITE CARD STYLE) */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+            {/* GATEWAY 1: EXPLORE JOBS (CLEAR, HIGH-LEGIBILITY CARDS) */}
+            <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
               <div>
                 {/* Header */}
-                <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-black"></span>
-                    <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">Explore Jobs</h2>
+                <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-3 h-3 rounded-full bg-black"></span>
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">Explore Jobs</h2>
                   </div>
-                  <span className="text-[11px] text-gray-500 font-medium">
+                  <span className="text-xs sm:text-sm text-gray-500 font-semibold bg-gray-100 px-3 py-1 rounded-full">
                     {stats?.jobs || 0}+ Vacancies
                   </span>
                 </div>
 
-                {/* 4 Small Job Cards (Compact & Tight) */}
+                {/* 4 Job Cards (Larger Logo, Legible Typography, Proper Spacing) */}
                 {recentJobs.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-gray-400 border border-dashed border-gray-200 rounded-xl mb-3">
+                  <div className="p-8 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-2xl mb-4">
                     No active job vacancies found.
                   </div>
                 ) : (
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-3 mb-4">
                     {recentJobs.slice(0, 4).map((job) => (
                       <Link 
                         key={job.id}
                         href={`/jobs/${job.id}`}
-                        className="block bg-white p-2.5 rounded-xl border border-gray-200 hover:border-gray-400 hover:shadow-2xs transition group"
+                        className="block bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-xs transition group"
                       >
-                        <div className="flex items-start gap-2.5 mb-1.5">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
+                        <div className="flex items-start gap-3.5 mb-2.5">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 shadow-2xs">
                             {job.image ? (
                               <img src={job.image} alt={job.firm_name} className="w-full h-full object-cover" />
                             ) : (
-                              <Building2 className="w-4 h-4 text-gray-400" />
+                              <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-xs text-gray-900 group-hover:text-black transition truncate">
+                            <h3 className="font-bold text-sm sm:text-base text-gray-900 group-hover:text-black transition truncate leading-snug">
                               {job.position}
                             </h3>
-                            <p className="text-gray-500 text-[11px] truncate mt-0.5">
+                            <p className="text-xs sm:text-sm text-gray-500 truncate mt-0.5">
                               {job.firm_name}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-600">
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">
-                            📍 {job.city || "India"}
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-600 flex-wrap">
+                          <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 flex items-center gap-1 font-medium">
+                            <MapPin size={12} className="text-gray-400" />
+                            {job.city || "India"}
                           </span>
                           {job.workplace_type && (
-                            <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">
+                            <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 font-medium">
                               {job.workplace_type}
                             </span>
                           )}
                           {formatSalary(job.salary) ? (
-                            <span className="bg-gray-100 px-1.5 py-0.5 rounded font-semibold text-gray-900">
+                            <span className="bg-gray-100 px-2.5 py-1 rounded-md font-semibold text-gray-900">
                               {formatSalary(job.salary)}
                             </span>
-                          ) : null}
+                          ) : (
+                            <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-600">
+                              {job.employment_type || "Vacancy"}
+                            </span>
+                          )}
                         </div>
                       </Link>
                     ))}
@@ -317,67 +322,68 @@ export default function InteractiveHome({
               {/* Browse More Jobs Button */}
               <Link 
                 href="/jobs" 
-                className="w-full text-center bg-black hover:bg-gray-800 text-white text-xs font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-1"
+                className="w-full text-center bg-black hover:bg-gray-800 text-white text-sm font-semibold py-3 rounded-xl transition flex items-center justify-center gap-1.5"
               >
                 <span>Browse More Jobs</span>
                 <span>&rarr;</span>
               </Link>
             </div>
 
-            {/* GATEWAY 2: EXPLORE INTERNSHIPS (4 COMPACT CARDS) */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+            {/* GATEWAY 2: EXPLORE INTERNSHIPS (CLEAR, HIGH-LEGIBILITY CARDS) */}
+            <div className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
               <div>
                 {/* Header */}
-                <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-black"></span>
-                    <h2 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">Explore Internships</h2>
+                <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-3 h-3 rounded-full bg-black"></span>
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">Explore Internships</h2>
                   </div>
-                  <span className="text-[11px] text-gray-500 font-medium">
+                  <span className="text-xs sm:text-sm text-gray-500 font-semibold bg-gray-100 px-3 py-1 rounded-full">
                     {stats?.internships || 0}+ Opportunities
                   </span>
                 </div>
 
                 {/* 4 Small Internship Cards */}
                 {recentInternships.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-gray-400 border border-dashed border-gray-200 rounded-xl mb-3">
+                  <div className="p-8 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-2xl mb-4">
                     No active internship postings found.
                   </div>
                 ) : (
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-3 mb-4">
                     {recentInternships.slice(0, 4).map((internship) => (
                       <Link 
                         key={internship.id}
                         href={`/jobs/${internship.id}`}
-                        className="block bg-white p-2.5 rounded-xl border border-gray-200 hover:border-gray-400 hover:shadow-2xs transition group"
+                        className="block bg-white p-3.5 sm:p-4 rounded-2xl border border-gray-200 hover:border-gray-400 hover:shadow-xs transition group"
                       >
-                        <div className="flex items-start gap-2.5 mb-1.5">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200">
+                        <div className="flex items-start gap-3.5 mb-2.5">
+                          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden border border-gray-200 shadow-2xs">
                             {internship.image ? (
                               <img src={internship.image} alt={internship.firm_name} className="w-full h-full object-cover" />
                             ) : (
-                              <GraduationCap className="w-4 h-4 text-gray-600" />
+                              <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-xs text-gray-900 group-hover:text-black transition truncate">
+                            <h3 className="font-bold text-sm sm:text-base text-gray-900 group-hover:text-black transition truncate leading-snug">
                               {internship.position}
                             </h3>
-                            <p className="text-gray-500 text-[11px] truncate mt-0.5">
+                            <p className="text-xs sm:text-sm text-gray-500 truncate mt-0.5">
                               {internship.firm_name}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-600">
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">
-                            📍 {internship.city || "India"}
+                        <div className="flex items-center gap-2 text-xs font-medium text-gray-600 flex-wrap">
+                          <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 flex items-center gap-1 font-medium">
+                            <MapPin size={12} className="text-gray-400" />
+                            {internship.city || "India"}
                           </span>
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-700">
+                          <span className="bg-gray-100 px-2.5 py-1 rounded-md text-gray-700 font-medium">
                             Internship
                           </span>
                           {formatSalary(internship.salary) ? (
-                            <span className="bg-gray-100 px-1.5 py-0.5 rounded font-semibold text-gray-900">
+                            <span className="bg-gray-100 px-2.5 py-1 rounded-md font-semibold text-gray-900">
                               {formatSalary(internship.salary)}
                             </span>
                           ) : null}
@@ -391,7 +397,7 @@ export default function InteractiveHome({
               {/* Browse More Internships Button */}
               <Link 
                 href="/internships" 
-                className="w-full text-center bg-black hover:bg-gray-800 text-white text-xs font-semibold py-2.5 rounded-xl transition flex items-center justify-center gap-1"
+                className="w-full text-center bg-black hover:bg-gray-800 text-white text-sm font-semibold py-3 rounded-xl transition flex items-center justify-center gap-1.5"
               >
                 <span>Browse More Internships</span>
                 <span>&rarr;</span>
@@ -403,54 +409,54 @@ export default function InteractiveHome({
         </div>
       </section>
 
-      {/* 5. JOB POSTING & MONETIZATION (NO HEAVY SUBTEXT - JUST PUNCHY HEADINGS & BUTTONS) */}
-      <section className="py-6 md:py-8 px-4 sm:px-6 lg:px-12 bg-black text-white border-y border-gray-800">
-        <div className="max-w-7xl mx-auto space-y-4">
+      {/* 5. JOB POSTING & MONETIZATION (CLEAN & PUNCHY) */}
+      <section className="py-8 md:py-10 px-4 sm:px-6 lg:px-12 bg-black text-white border-y border-gray-800">
+        <div className="max-w-7xl mx-auto space-y-5">
           
-          <div className="flex items-center justify-between border-b border-gray-800 pb-2.5">
-            <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">For Recruiters &amp; Practices</h2>
-            <span className="text-[11px] text-gray-400 font-mono">Employer Suite</span>
+          <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">For Recruiters &amp; Practices</h2>
+            <span className="text-xs text-gray-400 font-mono">Employer Suite</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
             
             {/* Card 1: Do you have a job to post? */}
-            <div className="bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col justify-between hover:border-gray-700 transition">
-              <div className="mb-3">
-                <span className="text-[10px] bg-white text-black font-bold px-2 py-0.5 rounded uppercase">Post a Vacancy</span>
-                <h3 className="font-bold text-sm text-white mt-2 leading-snug">Do you have a job to post?</h3>
+            <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800 flex flex-col justify-between hover:border-gray-700 transition">
+              <div className="mb-4">
+                <span className="text-xs bg-white text-black font-bold px-2.5 py-0.5 rounded uppercase">Post a Vacancy</span>
+                <h3 className="font-bold text-base sm:text-lg text-white mt-2.5 leading-snug">Do you have a job to post?</h3>
               </div>
               <Link 
                 href="/post-job" 
-                className="block w-full text-center bg-white hover:bg-gray-200 text-black font-bold py-2 rounded-lg text-xs transition"
+                className="block w-full text-center bg-white hover:bg-gray-200 text-black font-bold py-2.5 rounded-xl text-sm transition"
               >
                 Post a Job &rarr;
               </Link>
             </div>
 
             {/* Card 2: Do you want your job featured? */}
-            <div className="bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col justify-between hover:border-gray-700 transition">
-              <div className="mb-3">
-                <span className="text-[10px] bg-white text-black font-bold px-2 py-0.5 rounded uppercase">5X Applicants</span>
-                <h3 className="font-bold text-sm text-white mt-2 leading-snug">Do you want your job to be featured?</h3>
+            <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800 flex flex-col justify-between hover:border-gray-700 transition">
+              <div className="mb-4">
+                <span className="text-xs bg-white text-black font-bold px-2.5 py-0.5 rounded uppercase">5X Applicants</span>
+                <h3 className="font-bold text-base sm:text-lg text-white mt-2.5 leading-snug">Do you want your job to be featured?</h3>
               </div>
               <Link 
                 href="/contact?service=feature-job" 
-                className="block w-full text-center bg-white hover:bg-gray-200 text-black font-bold py-2 rounded-lg text-xs transition"
+                className="block w-full text-center bg-white hover:bg-gray-200 text-black font-bold py-2.5 rounded-xl text-sm transition"
               >
                 Feature Your Job &rarr;
               </Link>
             </div>
 
             {/* Card 3: Do you want your company featured? */}
-            <div className="bg-gray-900 p-4 rounded-xl border border-gray-800 flex flex-col justify-between hover:border-gray-700 transition">
-              <div className="mb-3">
-                <span className="text-[10px] bg-gray-800 text-gray-200 font-bold px-2 py-0.5 rounded border border-gray-700 uppercase">Spotlight</span>
-                <h3 className="font-bold text-sm text-white mt-2 leading-snug">Do you want your company to be featured?</h3>
+            <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800 flex flex-col justify-between hover:border-gray-700 transition">
+              <div className="mb-4">
+                <span className="text-xs bg-gray-800 text-gray-200 font-bold px-2.5 py-0.5 rounded border border-gray-700 uppercase">Spotlight</span>
+                <h3 className="font-bold text-base sm:text-lg text-white mt-2.5 leading-snug">Do you want your company to be featured?</h3>
               </div>
               <Link 
                 href="/contact?service=feature-company" 
-                className="block w-full text-center bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 rounded-lg text-xs transition border border-gray-700"
+                className="block w-full text-center bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl text-sm transition border border-gray-700"
               >
                 Feature Your Studio &rarr;
               </Link>
@@ -462,25 +468,25 @@ export default function InteractiveHome({
       </section>
 
       {/* 6. EXPLORE ARCHITECTURE STUDIOS (VERTICALLY DIVIDED: STUDIOS ON LEFT, CLAIM/REGISTER ON RIGHT) */}
-      <section className="py-6 md:py-8 px-4 sm:px-6 lg:px-12 bg-[#EEF0F4] w-full text-black border-b border-gray-200">
-        <div className="max-w-7xl mx-auto space-y-4">
+      <section className="py-8 md:py-10 px-4 sm:px-6 lg:px-12 bg-[#EEF0F4] w-full text-black border-b border-gray-200">
+        <div className="max-w-7xl mx-auto space-y-5">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Explore Architecture Studios</h2>
-              <p className="text-xs text-gray-500">Discover leading design firms across India.</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">Explore Architecture Studios</h2>
+              <p className="text-sm text-gray-600 mt-1">Discover leading design firms and active vacancies across India.</p>
             </div>
             
             <div className="flex bg-white p-1 rounded-full w-fit border border-gray-200 shadow-2xs text-xs font-semibold">
               <button 
                 onClick={() => setCompanyTab("latest")} 
-                className={`px-3 py-1 rounded-full text-[11px] transition ${companyTab === "latest" ? "bg-black text-white shadow-xs" : "text-gray-500 hover:text-black"}`}
+                className={`px-4 py-1.5 rounded-full text-xs transition ${companyTab === "latest" ? "bg-black text-white shadow-xs" : "text-gray-500 hover:text-black"}`}
               >
                 Latest
               </button>
               <button 
                 onClick={() => setCompanyTab("most-jobs")} 
-                className={`px-3 py-1 rounded-full text-[11px] transition ${companyTab === "most-jobs" ? "bg-black text-white shadow-xs" : "text-gray-500 hover:text-black"}`}
+                className={`px-4 py-1.5 rounded-full text-xs transition ${companyTab === "most-jobs" ? "bg-black text-white shadow-xs" : "text-gray-500 hover:text-black"}`}
               >
                 Most Jobs
               </button>
@@ -488,34 +494,34 @@ export default function InteractiveHome({
           </div>
 
           {/* Vertical Division: 2 Columns (Studios List on Left, Claim/Register Box on Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
             
-            {/* LEFT PART (8 Cols): Compact Studio Grid */}
-            <div className="lg:col-span-8 bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between">
+            {/* LEFT PART (8 Cols): Studio Grid with Legible Typography */}
+            <div className="lg:col-span-8 bg-white p-5 rounded-3xl border border-gray-200 shadow-2xs flex flex-col justify-between">
               {displayCompanies.length === 0 ? (
-                <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 text-center text-xs text-gray-500 mb-3">
+                <div className="bg-gray-50 p-8 rounded-2xl border border-gray-200 text-center text-sm text-gray-500 mb-4">
                   No architecture studios listed yet.
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                   {displayCompanies.map((company) => (
                     <Link 
                       href={`/companies/${company.slug}`}
                       key={company.slug}
-                      className="bg-gray-50 hover:bg-gray-100 p-2.5 rounded-xl flex items-center gap-2.5 transition group border border-gray-100"
+                      className="bg-gray-50 hover:bg-gray-100 p-3 rounded-2xl flex items-center gap-3 transition group border border-gray-200"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden">
+                      <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shrink-0 border border-gray-200 overflow-hidden shadow-2xs">
                         {company.logo_url ? (
                           <img src={company.logo_url} alt={company.firm_name} className="w-full h-full object-cover" />
                         ) : (
-                          <Building2 className="text-gray-400 w-4 h-4" />
+                          <Building2 className="text-gray-400 w-5 h-5" />
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="font-bold text-xs text-gray-900 group-hover:text-black transition truncate">
+                        <h4 className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-black transition truncate">
                           {company.firm_name}
                         </h4>
-                        <p className="text-[10px] text-gray-500 truncate">
+                        <p className="text-xs text-gray-500 truncate mt-0.5">
                           {company.city || "Studio"} &bull; {company.job_count} {company.job_count === 1 ? 'Job' : 'Jobs'}
                         </p>
                       </div>
@@ -524,10 +530,10 @@ export default function InteractiveHome({
                 </div>
               )}
 
-              <div className="text-center pt-2 border-t border-gray-100">
+              <div className="text-center pt-3 border-t border-gray-100">
                 <Link 
                   href="/companies" 
-                  className="text-xs font-semibold text-black hover:underline inline-flex items-center gap-1"
+                  className="text-sm font-semibold text-black hover:underline inline-flex items-center gap-1.5"
                 >
                   <span>View All {stats?.companies || 0}+ Studios</span>
                   <span>&rarr;</span>
@@ -536,25 +542,25 @@ export default function InteractiveHome({
             </div>
 
             {/* RIGHT PART (4 Cols): Claim & Register Studio Box */}
-            <div className="lg:col-span-4 bg-black text-white p-4 sm:p-5 rounded-2xl flex flex-col justify-between">
+            <div className="lg:col-span-4 bg-black text-white p-5 sm:p-6 rounded-3xl flex flex-col justify-between shadow-xs">
               <div>
-                <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">Practice Directory</span>
-                <h3 className="text-base font-bold text-white mt-1 mb-2">Do you find your studio here?</h3>
-                <p className="text-gray-400 text-xs leading-relaxed mb-4">
+                <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">Practice Directory</span>
+                <h3 className="text-lg sm:text-xl font-bold text-white mt-1.5 mb-2.5">Do you find your studio here?</h3>
+                <p className="text-gray-300 text-xs sm:text-sm leading-relaxed mb-6">
                   {stats?.companies ? `Over ${stats.companies} architecture studios are listed. Claim ownership to manage your vacancies or register your new practice.` : 'Architecture studios across India are listed. Claim ownership to manage your vacancies or register your new practice.'}
                 </p>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <Link 
                   href="/companies" 
-                  className="block w-full text-center bg-white hover:bg-gray-200 text-black font-bold py-2 rounded-xl text-xs transition"
+                  className="block w-full text-center bg-white hover:bg-gray-200 text-black font-bold py-2.5 rounded-xl text-sm transition"
                 >
                   Claim Your Studio &rarr;
                 </Link>
                 <Link 
                   href="/contact?service=register-practice" 
-                  className="block w-full text-center border border-gray-700 hover:border-gray-500 text-gray-300 font-semibold py-2 rounded-xl text-xs transition"
+                  className="block w-full text-center border border-gray-700 hover:border-gray-500 text-gray-300 font-semibold py-2.5 rounded-xl text-sm transition"
                 >
                   Register Your Practice
                 </Link>
@@ -566,25 +572,28 @@ export default function InteractiveHome({
         </div>
       </section>
 
-      {/* 7. ARCHITECTURE SERVICES & TOOLS (COMPACT SHELF) */}
-      <section className="py-4 md:py-5 px-4 sm:px-6 lg:px-12 bg-white text-black w-full border-b border-gray-200">
-        <div className="max-w-7xl mx-auto space-y-2.5">
+      {/* 7. ARCHITECTURE SERVICES & TOOLS (LEGIBLE & BALANCED) */}
+      <section className="py-8 md:py-10 px-4 sm:px-6 lg:px-12 bg-white text-black w-full border-b border-gray-200">
+        <div className="max-w-7xl mx-auto space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">Architecture Services &amp; Tools</h2>
-            <span className="text-[11px] text-gray-400 font-mono">Specialized Shelf</span>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Architecture Services &amp; Tools</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Specialized resources, portfolio builders, and expert mentorship.</p>
+            </div>
+            <span className="text-xs text-gray-400 font-mono hidden sm:inline">Specialized Shelf</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             
             {/* Cosmofolio Portfolio Builder (Compact) */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-4 sm:p-5 rounded-2xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-sm">📐</span>
-                  <span className="text-[9px] font-bold bg-black text-white px-1.5 py-0.5 rounded">COSMOFOLIO</span>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-base">📐</span>
+                  <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded">COSMOFOLIO</span>
                 </div>
-                <h3 className="font-bold text-xs text-gray-900 mb-1">Portfolio Builder</h3>
-                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
+                <h3 className="font-bold text-sm sm:text-base text-gray-900 mb-1">Portfolio Builder</h3>
+                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
                   Build a professional architecture folio in seconds without code.
                 </p>
               </div>
@@ -592,59 +601,59 @@ export default function InteractiveHome({
                 href="https://thecosmofolio.com/" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-full text-center bg-black hover:bg-gray-800 text-white font-bold py-1.5 rounded-lg text-[11px] transition flex items-center justify-center gap-1"
+                className="w-full text-center bg-black hover:bg-gray-800 text-white font-bold py-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-1.5"
               >
                 <span>Build Portfolio</span>
-                <ExternalLink size={11} />
+                <ExternalLink size={13} />
               </a>
             </div>
 
             {/* Hire a Software Tutor */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-4 sm:p-5 rounded-2xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <div className="text-sm mb-1">💻</div>
-                <h3 className="font-bold text-xs text-gray-900 mb-1">Hire a Software Tutor</h3>
-                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
-                  Master Revit, Rhino, Grasshopper &amp; Enscape 1-on-1.
+                <div className="text-base mb-2">💻</div>
+                <h3 className="font-bold text-sm sm:text-base text-gray-900 mb-1">Hire a Software Tutor</h3>
+                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
+                  Master Revit, Rhino, Grasshopper &amp; Enscape 1-on-1 with industry experts.
                 </p>
               </div>
               <Link 
                 href="/contact?service=software-tutor" 
-                className="w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 font-semibold py-1.5 rounded-lg text-[11px] transition"
+                className="w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 font-semibold py-2 rounded-xl text-xs sm:text-sm transition"
               >
                 Find Tutor &rarr;
               </Link>
             </div>
 
             {/* Hire an Architect */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-4 sm:p-5 rounded-2xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <div className="text-sm mb-1">🏛️</div>
-                <h3 className="font-bold text-xs text-gray-900 mb-1">Hire an Architect</h3>
-                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
-                  Find vetted freelance architects for concept &amp; working drawings.
+                <div className="text-base mb-2">🏛️</div>
+                <h3 className="font-bold text-sm sm:text-base text-gray-900 mb-1">Hire an Architect</h3>
+                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
+                  Find vetted freelance architects for concept design &amp; working drawings.
                 </p>
               </div>
               <Link 
                 href="/contact?service=freelance-architect" 
-                className="w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 font-semibold py-1.5 rounded-lg text-[11px] transition"
+                className="w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 font-semibold py-2 rounded-xl text-xs sm:text-sm transition"
               >
                 Request Architect &rarr;
               </Link>
             </div>
 
             {/* Portfolio Review */}
-            <div className="bg-gray-50 hover:bg-gray-100 p-3 rounded-xl border border-gray-200 flex flex-col justify-between transition group">
+            <div className="bg-gray-50 hover:bg-gray-100 p-4 sm:p-5 rounded-2xl border border-gray-200 flex flex-col justify-between transition group">
               <div>
-                <div className="text-sm mb-1">🔍</div>
-                <h3 className="font-bold text-xs text-gray-900 mb-1">Portfolio &amp; Resume Review</h3>
-                <p className="text-gray-600 text-[11px] leading-snug mb-2 line-clamp-2">
-                  Get line-by-line critique before studio applications.
+                <div className="text-base mb-2">🔍</div>
+                <h3 className="font-bold text-sm sm:text-base text-gray-900 mb-1">Portfolio &amp; Resume Review</h3>
+                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
+                  Get line-by-line critique on your design sheets before studio applications.
                 </p>
               </div>
               <Link 
                 href="/contact?service=portfolio-review" 
-                className="w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 font-semibold py-1.5 rounded-lg text-[11px] transition"
+                className="w-full text-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-900 font-semibold py-2 rounded-xl text-xs sm:text-sm transition"
               >
                 Book Critique &rarr;
               </Link>
@@ -655,28 +664,28 @@ export default function InteractiveHome({
       </section>
 
       {/* 8. SUGGESTION BOX & MULTI-CHANNEL COMMUNITY */}
-      <section className="py-6 md:py-8 px-4 sm:px-6 lg:px-12 bg-gray-50 w-full">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+      <section className="py-8 md:py-10 px-4 sm:px-6 lg:px-12 bg-gray-50 w-full">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Suggestion Box Form */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 flex flex-col justify-between shadow-2xs">
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col justify-between shadow-2xs">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-100 text-gray-800 text-[10px] font-semibold mb-1.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 text-xs font-semibold mb-2">
                 💡 COMMUNITY VOICE
               </div>
-              <h3 className="font-bold text-sm text-gray-900 mb-0.5">Suggestion Box</h3>
-              <p className="text-[11px] text-gray-500 leading-relaxed mb-3">
+              <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1">Suggestion Box</h3>
+              <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-4">
                 Missing a studio? Want a new salary filter or feature? Tell us what you need.
               </p>
             </div>
 
-            <form onSubmit={handleSuggestionSubmit} className="space-y-2">
+            <form onSubmit={handleSuggestionSubmit} className="space-y-3">
               <input 
                 type="text"
                 value={suggestionSender}
                 onChange={(e) => setSuggestionSender(e.target.value)}
                 placeholder="Your name or studio (optional)..."
-                className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400"
+                className="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400"
               />
               <div>
                 <textarea 
@@ -686,15 +695,15 @@ export default function InteractiveHome({
                   onChange={(e) => setSuggestionText(e.target.value)}
                   required
                   placeholder="Type your suggestion here..."
-                  className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400 resize-none max-h-24 overflow-y-auto"
+                  className="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400 resize-none max-h-28 overflow-y-auto"
                 />
-                <div className="flex items-center justify-between text-[9px] text-gray-400 -mt-1 px-1">
+                <div className="flex items-center justify-between text-[11px] text-gray-400 mt-1 px-1">
                   <span>Scroll for more text</span>
                   <span>{suggestionText.length}/1000</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-gray-400">
+                <span className="text-xs text-gray-400">
                   {suggestionStatus === "success" ? (
                     <span className="text-emerald-600 font-semibold">✓ Suggestion received! Thank you.</span>
                   ) : suggestionStatus === "error" ? (
@@ -708,7 +717,7 @@ export default function InteractiveHome({
                 <button 
                   type="submit" 
                   disabled={suggestionStatus === "submitting"}
-                  className="bg-black hover:bg-gray-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
+                  className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition disabled:opacity-50 cursor-pointer"
                 >
                   {suggestionStatus === "submitting" ? "Sending..." : "Send Suggestion"}
                 </button>
@@ -717,30 +726,30 @@ export default function InteractiveHome({
           </div>
 
           {/* Followers & Community Channels (WhatsApp & Telegram Ecosystem) */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 flex flex-col justify-between shadow-2xs">
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col justify-between shadow-2xs">
             <div>
-              <h3 className="font-bold text-sm text-gray-900 mb-0.5">Follow &amp; Connect</h3>
-              <p className="text-[11px] text-gray-500 leading-relaxed mb-3">
+              <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1">Follow &amp; Connect</h3>
+              <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-4">
                 Join our expanding network of WhatsApp &amp; Telegram channels for city-wise job drops, portfolio reviews, and architecture discussions.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
               {siteSettings?.whatsapp_channel_url ? (
                 <a 
                   href={ensureHttp(siteSettings.whatsapp_channel_url)} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <MessageCircle size={15} /> WhatsApp
+                  <MessageCircle size={17} /> WhatsApp
                 </a>
               ) : (
                 <Link 
                   href="/unavailable?service=WhatsApp" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <MessageCircle size={15} /> WhatsApp
+                  <MessageCircle size={17} /> WhatsApp
                 </Link>
               )}
 
@@ -748,10 +757,10 @@ export default function InteractiveHome({
                 href={ensureHttp(siteSettings?.website_url || siteSettings?.telegram_channel_url || "https://t.me/ArchitectJobsTi2A")} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 title="Join All India Architecture Jobs on Telegram"
               >
-                <Send size={15} /> Telegram
+                <Send size={17} /> Telegram
               </a>
 
               {siteSettings?.instagram ? (
@@ -759,16 +768,16 @@ export default function InteractiveHome({
                   href={ensureHttp(siteSettings.instagram)} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <InstagramIcon size={15} /> Instagram
+                  <InstagramIcon size={17} /> Instagram
                 </a>
               ) : (
                 <Link 
                   href="/unavailable?service=Instagram" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <InstagramIcon size={15} /> Instagram
+                  <InstagramIcon size={17} /> Instagram
                 </Link>
               )}
 
@@ -777,16 +786,16 @@ export default function InteractiveHome({
                   href={ensureHttp(siteSettings.facebook)} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <FacebookIcon size={15} /> Facebook
+                  <FacebookIcon size={17} /> Facebook
                 </a>
               ) : (
                 <Link 
                   href="/unavailable?service=Facebook" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <FacebookIcon size={15} /> Facebook
+                  <FacebookIcon size={17} /> Facebook
                 </Link>
               )}
 
@@ -795,22 +804,22 @@ export default function InteractiveHome({
                   href={ensureHttp(siteSettings.twitter)} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <TwitterIcon size={15} /> X (Twitter)
+                  <TwitterIcon size={17} /> X (Twitter)
                 </a>
               ) : (
                 <Link 
                   href="/unavailable?service=X" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
                 >
-                  <TwitterIcon size={15} /> X (Twitter)
+                  <TwitterIcon size={17} /> X (Twitter)
                 </Link>
               )}
 
               <Link 
                 href="/quizzes" 
-                className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-xs"
+                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
               >
                 <span>🧠</span> Quizzes
               </Link>

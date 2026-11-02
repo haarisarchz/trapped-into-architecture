@@ -100,7 +100,7 @@ export async function POST(req: Request) {
     const recipientName = profile.full_name || profile.username || "Architect";
     const userTargetEmail = profile.email || cleanEmail;
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <notifications@trappedintoarchitecture.com>";
 
     // 7. Dispatch Official Confirmation & Thank You Email via Resend
     if (resend && userTargetEmail) {

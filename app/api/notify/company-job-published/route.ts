@@ -96,7 +96,7 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
     const jobUrl = `${siteUrl}/jobs/${job.id}`;
     const claimUrl = companySlug ? `${siteUrl}/companies/${companySlug}?claim=true` : `${siteUrl}/companies`;
-    const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
+    const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <notifications@trappedintoarchitecture.com>";
     const firmName = job.firm_name || "Architecture Practice";
     const positionTitle = job.position || "Architecture Role";
     const location = [job.city, job.state].filter(Boolean).join(", ") || "India";
