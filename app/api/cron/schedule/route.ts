@@ -78,6 +78,17 @@ export async function GET(req: Request) {
       } catch (fetchErr) {
         console.error(`Failed to trigger social publish for batch ${batchKey} (job ${triggerJobId}):`, fetchErr);
       }
+
+      // Trigger company email notification for the published batch
+      try {
+        await fetch(`${baseUrl}/api/notify/company-job-published`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: triggerJobId }),
+        });
+      } catch (notifyErr) {
+        console.error(`Failed to trigger company notification for job ${triggerJobId}:`, notifyErr);
+      }
     }
 
     return NextResponse.json({ 

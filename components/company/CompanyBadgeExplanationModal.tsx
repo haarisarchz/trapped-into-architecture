@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
+import Link from "next/link";
 import { Award, X, Sparkles, ShieldCheck, MailCheck, PhoneCall, Building2, CheckCircle2 } from "lucide-react";
 
 interface CompanyBadgeExplanationModalProps {
@@ -74,12 +75,12 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥉</span>
                 <div>
-                  <p className="font-bold text-amber-900">Bronze Level Studio</p>
-                  <p className="text-[11px] text-amber-700">Created from job listing (20% base)</p>
+                  <p className="font-bold text-amber-900">Bronze Level Studio / Institution</p>
+                  <p className="text-[11px] text-amber-700">Initial directory entry</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800 shrink-0">
-                20% – 49%
+                0% – 44%
               </span>
             </div>
 
@@ -88,12 +89,12 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥈</span>
                 <div>
-                  <p className="font-bold text-slate-800">Silver Level Studio</p>
-                  <p className="text-[11px] text-slate-600">Logo, bio, website & socials added</p>
+                  <p className="font-bold text-slate-800">Silver Level Studio / Institution</p>
+                  <p className="text-[11px] text-slate-600">Contact &amp; online presence added</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 shrink-0">
-                50% – 69%
+                45% – 65%
               </span>
             </div>
 
@@ -102,12 +103,12 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">🥇</span>
                 <div>
-                  <p className="font-bold text-yellow-900">Gold Level Studio</p>
-                  <p className="text-[11px] text-yellow-700">Claimed & contact verified</p>
+                  <p className="font-bold text-yellow-900">Gold Level Studio / Institution</p>
+                  <p className="text-[11px] text-yellow-700">Claimed profile strictly required (66%+)</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-yellow-300 text-yellow-900 shrink-0">
-                70% – 84%
+                66% – 80%
               </span>
             </div>
 
@@ -116,12 +117,12 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-lg">💎</span>
                 <div>
-                  <p className="font-bold text-cyan-900">Platinum Level Studio</p>
-                  <p className="text-[11px] text-cyan-700">Team linked & verified track record</p>
+                  <p className="font-bold text-cyan-900">Platinum Level Studio / Institution</p>
+                  <p className="text-[11px] text-cyan-700">Team linked &amp; verified track record</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2 py-1 rounded-lg bg-white border border-cyan-200 text-cyan-900 shrink-0">
-                85% – 94%
+                81% – 90%
               </span>
             </div>
 
@@ -130,12 +131,12 @@ export default function CompanyBadgeExplanationModal({
               <div className="flex items-center gap-2">
                 <span className="text-xl">👑</span>
                 <div>
-                  <p className="font-bold text-purple-900">Diamond Level Studio</p>
-                  <p className="text-[11px] text-purple-700">Full architectural dossier, portfolio showcase & top employer credibility</p>
+                  <p className="font-bold text-purple-900">Diamond Level Studio / Institution</p>
+                  <p className="text-[11px] text-purple-700">Full architectural dossier, portfolio showcase &amp; top credibility</p>
                 </div>
               </div>
               <span className="font-extrabold text-xs px-2.5 py-1 rounded-lg bg-white border border-purple-200 text-purple-900 shrink-0">
-                95% – 100%
+                91% – 100%
               </span>
             </div>
           </div>
@@ -176,69 +177,85 @@ export default function CompanyBadgeExplanationModal({
                 Studio office contact line is verified for applicant outreach.
               </p>
             </div>
+
+            {/* Academic Track Badge */}
+            <div className="p-3 rounded-2xl border border-purple-200 bg-purple-50/60 flex flex-col gap-1.5 sm:col-span-3">
+              <div className="flex items-center gap-2 font-bold text-purple-900">
+                <span className="text-base">🏛️</span>
+                <span>Academic Track (Colleges &amp; Universities)</span>
+              </div>
+              <p className="text-[11px] text-purple-800 leading-relaxed">
+                Colleges and universities rank as <strong>Bronze, Silver, Gold, Platinum, or Diamond Level Institution</strong>. Reaching Gold Level Institution strictly requires a claimed profile and 66%+ completeness.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* SECTION 3: POINTS DISTRIBUTION TABLE */}
+        {/* SECTION 3: EQUALLY BALANCED POINTS DISTRIBUTION TABLE */}
         <div>
           <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">
-            3. Points Distribution (Total: 100%)
+            3. Equally Balanced Points Distribution (100% Total)
           </h4>
 
           <div className="border border-gray-200 rounded-2xl overflow-hidden text-xs">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-100 text-gray-700 font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Category</th>
-                  <th className="py-2.5 px-3">Field / Requirement</th>
+                  <th className="py-2.5 px-3">#</th>
+                  <th className="py-2.5 px-3">Evaluation Component</th>
                   <th className="py-2.5 px-3 text-right">Points</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                <tr className="hover:bg-gray-50 bg-amber-50/20">
-                  <td className="py-2 px-3 font-semibold text-gray-900">Base Listing</td>
-                  <td className="py-2 px-3 text-gray-800">Firm Name, Organization Type, City & State</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">20%</td>
-                </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={2}>Branding & Bio</td>
-                  <td className="py-2 px-3 text-gray-700">Studio Logo / Brand Mark</td>
+                  <td className="py-2 px-3 font-bold text-gray-500">1</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Firm / Entity Name &amp; Practice Typology</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-700">Company Bio / Design Philosophy</td>
+                  <td className="py-2 px-3 font-bold text-gray-500">2</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Studio / Campus Logo Uploaded</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={2}>Web & Social</td>
-                  <td className="py-2 px-3 text-gray-700">Official Website URL</td>
+                  <td className="py-2 px-3 font-bold text-gray-500">3</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Studio Overview / About Description (&gt;25 chars)</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-700">Instagram & LinkedIn profiles</td>
+                  <td className="py-2 px-3 font-bold text-gray-500">4</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Complete City &amp; State Location</td>
                   <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 font-semibold text-gray-900" rowSpan={2}>Studio Info</td>
-                  <td className="py-2 px-3 text-gray-700">Principal Architect / Founders</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                  <td className="py-2 px-3 font-bold text-gray-500">5</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Direct Contact Coordinates (Email &amp; Phone)</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
                 <tr className="hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-700">Team Size & Founded Year</td>
-                  <td className="py-2 px-3 text-right font-bold text-gray-900">5%</td>
+                  <td className="py-2 px-3 font-bold text-gray-500">6</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Official Website URL</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
-                <tr className="hover:bg-gray-50 bg-blue-50/20">
-                  <td className="py-2 px-3 font-semibold text-blue-900" rowSpan={3}>Verification</td>
-                  <td className="py-2 px-3 text-blue-950 font-medium">Claimed Studio Profile</td>
-                  <td className="py-2 px-3 text-right font-bold text-blue-900">15%</td>
+                <tr className="hover:bg-gray-50">
+                  <td className="py-2 px-3 font-bold text-gray-500">7</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Social Media Outreach (Instagram / LinkedIn)</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
-                <tr className="hover:bg-gray-50 bg-emerald-50/20">
-                  <td className="py-2 px-3 text-emerald-950 font-medium">Email Verified</td>
-                  <td className="py-2 px-3 text-right font-bold text-emerald-900">10%</td>
+                <tr className="hover:bg-gray-50">
+                  <td className="py-2 px-3 font-bold text-gray-500">8</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Leadership &amp; Scale (Principal, Year or Team Size)</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
-                <tr className="hover:bg-gray-50 bg-indigo-50/20">
-                  <td className="py-2 px-3 text-indigo-950 font-medium">Phone Verified</td>
-                  <td className="py-2 px-3 text-right font-bold text-indigo-900">5%</td>
+                <tr className="hover:bg-gray-50">
+                  <td className="py-2 px-3 font-bold text-gray-500">9</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Claimed Studio Profile Ownership</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
+                </tr>
+                <tr className="hover:bg-gray-50">
+                  <td className="py-2 px-3 font-bold text-gray-500">10</td>
+                  <td className="py-2 px-3 font-semibold text-gray-900">Verified Trust Status (Email / Phone / Domain)</td>
+                  <td className="py-2 px-3 text-right font-bold text-gray-900">10%</td>
                 </tr>
               </tbody>
             </table>

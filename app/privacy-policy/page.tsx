@@ -22,7 +22,7 @@ export default function PrivacyPolicyPage() {
           <span className="text-xs uppercase tracking-widest font-bold text-gray-500">Legal & Transparency</span>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-2 tracking-tight">Privacy Policy</h1>
           <p className="text-sm text-gray-500 mt-2">
-            Last updated: October 17, 2026 • Effective Date: October 17, 2026
+            Last updated: October 29, 2026 • Effective Date: October 29, 2026
           </p>
 
           {/* AI Disclosure Notice Banner */}
@@ -66,7 +66,10 @@ export default function PrivacyPolicyPage() {
               <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
                 <h3 className="font-semibold text-gray-900 text-sm sm:text-base">B. User Account & Candidate Profile Details</h3>
                 <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                  When you register an account or create a candidate profile, we collect your full name, display name, unique username, email address, contact phone number, profession, educational background, years of experience, city, state, portfolio links, LinkedIn/social profiles, and uploaded resume files.
+                  When you register an account or build a candidate profile, we collect your full name, display name, unique username, email address, contact phone number, profession, educational degrees, work history, city, state, portfolio links, social/LinkedIn URLs, Council of Architecture (COA) registration details, and uploaded resumes.
+                </p>
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                  <strong>Profile Visibility Controls:</strong> You have autonomous control over whether your candidate profile is indexed in our public directory via the <em>&quot;List profile publicly in Professionals Directory&quot;</em> toggle in your profile settings. Unchecking this option keeps your dossier completely unlisted from public browse and search.
                 </p>
               </div>
 
@@ -78,7 +81,14 @@ export default function PrivacyPolicyPage() {
               </div>
 
               <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
-                <h3 className="font-semibold text-gray-900 text-sm sm:text-base">D. Technical, Device & Analytics Data</h3>
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base">D. Studio Claiming & Recruiter Verification Proofs</h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                  When an authorized representative applies to claim an existing studio or register a new architectural practice, we collect their official work email, contact telephone number, managerial designation (e.g., Principal Architect, Founder, HR Manager), and verification proof (such as a LinkedIn URL, firm website team roster, or Council of Architecture credentials).
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base">E. Technical, Device & Analytics Data</h3>
                 <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   We automatically gather standard technical log data, such as internet protocol (IP) addresses, device hardware identifiers, browser types, operating systems, referring URLs, pages viewed, and access timestamps.
                 </p>
@@ -129,10 +139,19 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 mb-3">5. Data Sharing & Confidentiality</h2>
             <p>
-              <strong>Public Job Listings:</strong> All information submitted specifically for public job advertisements (such as company name, office location, job flyer, application email, and contact number) is made publicly viewable on our website and searchable by search engines for hiring purposes.
+              <strong>Public Job Openings:</strong> All information submitted intentionally for published recruitment listings (including firm name, office location, employment specifications, application email, and contact telephone) is indexed publicly on our platform and discoverable by search engines to connect studios with applicants.
             </p>
             <p className="mt-3">
-              <strong>Candidate Privacy Guarantee:</strong> We do <strong>not</strong> sell, rent, lease, or monetize your personal details, resumes, or phone numbers to third-party data brokers, marketing agencies, or unsolicited telemarketers.
+              <strong>Candidate Privacy & Directory Opt-In:</strong> Candidate profiles are kept unlisted from public directory browse pages unless you proactively toggle <em>&quot;List profile publicly in Professionals Directory&quot;</em> in your account settings. Even when enabled, private contact coordinates (such as residential address and complete date of birth) remain hidden from public search.
+            </p>
+            <p className="mt-3">
+              <strong>Confidentiality of Studio Verification Proofs:</strong> Documents, work email addresses, and verification links provided during studio claims or practice registrations are treated as private internal records. They are reviewed exclusively by authorized administrators and are never published or shared with third parties.
+            </p>
+            <p className="mt-3">
+              <strong>Recruiter Transparency Badges:</strong> When an authorized user is confirmed as a studio manager or creator, a public trust badge (e.g., <em>&quot;Recruiter • [Firm Name]&quot;</em>) is shown on their profile to guarantee recruitment legitimacy.
+            </p>
+            <p className="mt-3">
+              <strong>Candidate Privacy Guarantee:</strong> We do <strong>not</strong> sell, rent, lease, or monetize your personal details, resumes, or contact numbers to third-party data brokers, marketing agencies, or unsolicited telemarketers.
             </p>
           </section>
 

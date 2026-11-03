@@ -7,21 +7,19 @@ import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { 
-  UploadCloud, 
   X, 
   Mail, 
   Phone, 
   MessageCircle, 
   Search, 
   RefreshCw, 
-  CheckCircle2, 
-  Clock, 
   Trash2, 
   Inbox, 
   Settings, 
-  ExternalLink,
-  Copy,
-  Check
+  Send,
+  ChevronRight,
+  Lightbulb,
+  UploadCloud
 } from "lucide-react";
 
 interface ContactInquiry {
@@ -75,7 +73,7 @@ const LockedField = ({ label, value, onChange, fieldKey, type = "text", subLabel
       <label className="block text-sm font-bold text-gray-700 mb-1 flex items-center justify-between">
         <span>{label}</span>
         {!isEditing && (
-          <button type="button" onClick={() => setIsEditing(true)} className="text-blue-500 hover:text-blue-700 text-xs font-semibold">
+          <button type="button" onClick={() => setIsEditing(true)} className="text-blue-500 hover:text-blue-700 text-xs font-semibold cursor-pointer">
              ✎ Edit
           </button>
         )}
@@ -83,19 +81,43 @@ const LockedField = ({ label, value, onChange, fieldKey, type = "text", subLabel
       {subLabel && <p className="text-xs text-gray-400 mb-2">{subLabel}</p>}
       
       {isEditing ? (
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="space-y-2 mt-1">
           {isTextarea ? (
-             <textarea value={localValue} onChange={e => setLocalValue(e.target.value)} className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black min-h-[100px]" />
+             <textarea 
+               rows={3} 
+               value={localValue || ''} 
+               onChange={(e) => setLocalValue(e.target.value)} 
+               className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-black outline-none bg-white text-black" 
+             />
           ) : (
-             <input type={type} value={localValue} onChange={e => setLocalValue(e.target.value)} className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black" />
+             <input 
+               type={type} 
+               value={localValue || ''} 
+               onChange={(e) => setLocalValue(e.target.value)} 
+               className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-black outline-none bg-white text-black" 
+             />
           )}
-          <button type="button" onClick={handleSave} disabled={saving} className="bg-black text-white px-6 py-2 sm:py-0 rounded-xl disabled:opacity-50 font-medium shrink-0 h-[46px] sm:self-start">
-            {saving ? '...' : 'Done'}
-          </button>
+          <div className="flex gap-2">
+            <button 
+              type="button" 
+              onClick={handleSave} 
+              disabled={saving}
+              className="px-4 py-1.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition disabled:opacity-50 cursor-pointer"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+            <button 
+              type="button" 
+              onClick={() => { setLocalValue(value); setIsEditing(false); }} 
+              className="px-3 py-1.5 border border-gray-200 text-gray-600 text-xs font-semibold rounded-lg hover:bg-gray-50 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       ) : (
-        <div className={`w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed select-none ${isTextarea ? 'whitespace-pre-wrap min-h-[100px]' : 'truncate'}`}>
-          {localValue || "Not Set"}
+        <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 break-all select-all">
+          {value || <span className="text-gray-400 italic font-normal">Not configured</span>}
         </div>
       )}
     </div>
@@ -106,146 +128,93 @@ export default function ContactSettingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"inbox" | "settings">("inbox");
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState("");
-  const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // Inquiries State
-  const [inquiries, setInquiries] = useState<ContactInquiry[]>([]);
+  const [allInquiries, setAllInquiries] = useState<ContactInquiry[]>([]);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "unread" | "read">("all");
-  const [setupRequired, setSetupRequired] = useState(false);
-  const [copiedSql, setCopiedSql] = useState(false);
-  
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "suggestions" | "general">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "unread" | "read">("all");
+
+  // Detailed Modal
+  const [selectedItem, setSelectedItem] = useState<ContactInquiry | null>(null);
+
+  // Site Settings Form State (Original exact columns)
   const [settings, setSettings] = useState({
-    // Left side
     email: "",
     phone: "",
     whatsapp: "",
     contact_address: "",
-    
-    // Right side
     whatsapp_channel_url: "",
+    website_url: "", // Telegram Community URL
     facebook: "",
     twitter: "",
     instagram: "",
     linkedin: "",
-    website_url: "",
-    
-    // Logo
     logo_url: "",
-    
-    // Organization
     about_us: "",
     about_history: "",
     about_mission: "",
   });
 
   useEffect(() => {
-    checkAccess();
-  }, []);
-
-  const checkAccess = async () => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!currentUser) {
-      router.push("/");
+    const userStr = localStorage.getItem("currentUser");
+    if (!userStr) {
+      router.push("/admin");
       return;
     }
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("username", currentUser.username)
-      .single();
-
-    const roleNormalized = (profile?.role || "").toLowerCase().replace(/[\s_]+/g, "");
-    setUserRole(roleNormalized);
-    const allowedRoles = ["ceo"];
-    if (error || !profile || !allowedRoles.includes(roleNormalized)) {
-      router.push("/");
+    const user = JSON.parse(userStr);
+    const role = (user.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    if (role !== "ceo" && role !== "superadmin" && role !== "admin") {
+      router.push("/admin");
       return;
+    }
+
+    // Auto-redirect if accessed with ?tab=sent
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("tab") === "sent") {
+        router.replace("/admin/mails");
+        return;
+      }
     }
 
     fetchSettings();
     fetchInquiries();
-  };
+  }, [router]);
 
   const fetchSettings = async () => {
     try {
-      const { data } = await supabase.from("site_settings").select("*").eq("id", "global").maybeSingle();
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("*")
+        .eq("id", "global")
+        .maybeSingle();
+
       if (data) {
         setSettings({
           email: data.email || "",
           phone: data.phone || "",
           whatsapp: data.whatsapp || "",
           contact_address: data.contact_address || "",
-          
           whatsapp_channel_url: data.whatsapp_channel_url || "",
+          website_url: data.website_url || "",
           facebook: data.facebook || "",
           twitter: data.twitter || "",
           instagram: data.instagram || "",
           linkedin: data.linkedin || "",
-          website_url: data.website_url || "",
-          
           logo_url: data.logo_url || "",
-          
           about_us: data.about_us || "",
           about_history: data.about_history || "",
           about_mission: data.about_mission || "",
         });
       }
-    } catch (error) {
-      console.error("Failed to load settings:", error);
+    } catch (err: any) {
+      console.error("Error fetching settings:", err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchInquiries = async () => {
-    setLoadingInquiries(true);
-    try {
-      const res = await fetch("/api/contact");
-      const data = await res.json();
-      if (data.setupRequired) {
-        setSetupRequired(true);
-        setInquiries([]);
-      } else if (data.inquiries) {
-        setSetupRequired(false);
-        setInquiries(data.inquiries);
-      }
-    } catch (err) {
-      console.error("Failed to fetch inquiries:", err);
-    } finally {
-      setLoadingInquiries(false);
-    }
-  };
-
-  const toggleReadStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      const res = await fetch("/api/contact", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, is_read: !currentStatus })
-      });
-      if (res.ok) {
-        setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, is_read: !currentStatus } : inq));
-      }
-    } catch (err) {
-      console.error("Failed to update status:", err);
-    }
-  };
-
-  const deleteInquiry = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this inquiry?")) return;
-    try {
-      const res = await fetch(`/api/contact?id=${id}`, {
-        method: "DELETE"
-      });
-      if (res.ok) {
-        setInquiries(prev => prev.filter(inq => inq.id !== id));
-      }
-    } catch (err) {
-      console.error("Failed to delete inquiry:", err);
     }
   };
 
@@ -281,91 +250,157 @@ export default function ContactSettingsPage() {
     }
   };
 
-  const sqlMigrationCode = `-- Run this in Supabase SQL Editor:
-CREATE TABLE IF NOT EXISTS public.contact_inquiries (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    phone TEXT,
-    subject TEXT,
-    message TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT false,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+  const fetchInquiries = async () => {
+    try {
+      setLoadingInquiries(true);
+      const { data, error } = await supabase
+        .from("contact_inquiries")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-CREATE INDEX IF NOT EXISTS idx_contact_inquiries_created_at ON public.contact_inquiries(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_contact_inquiries_is_read ON public.contact_inquiries(is_read);
-
-ALTER TABLE public.contact_inquiries ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow public insert on contact_inquiries" ON public.contact_inquiries;
-CREATE POLICY "Allow public insert on contact_inquiries" ON public.contact_inquiries FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public select on contact_inquiries" ON public.contact_inquiries;
-CREATE POLICY "Allow public select on contact_inquiries" ON public.contact_inquiries FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Allow public update on contact_inquiries" ON public.contact_inquiries;
-CREATE POLICY "Allow public update on contact_inquiries" ON public.contact_inquiries FOR UPDATE USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public delete on contact_inquiries" ON public.contact_inquiries;
-CREATE POLICY "Allow public delete on contact_inquiries" ON public.contact_inquiries FOR DELETE USING (true);`;
-
-  const copySql = () => {
-    navigator.clipboard.writeText(sqlMigrationCode);
-    setCopiedSql(true);
-    setTimeout(() => setCopiedSql(false), 2500);
+      if (error) throw error;
+      setAllInquiries(data || []);
+    } catch (err: any) {
+      console.error("Error fetching inquiries:", err.message);
+    } finally {
+      setLoadingInquiries(false);
+    }
   };
 
-  const unreadCount = inquiries.filter(i => !i.is_read).length;
+  const toggleReadStatus = async (id: string, currentStatus: boolean, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      const { error } = await supabase
+        .from("contact_inquiries")
+        .update({ is_read: !currentStatus })
+        .eq("id", id);
 
-  const filteredInquiries = inquiries.filter(i => {
-    if (filterStatus === "unread" && i.is_read) return false;
-    if (filterStatus === "read" && !i.is_read) return false;
+      if (error) throw error;
+      setAllInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, is_read: !currentStatus } : inq));
+      if (selectedItem?.id === id) {
+        setSelectedItem({ ...selectedItem, is_read: !currentStatus });
+      }
+    } catch (err: any) {
+      alert("Error updating status: " + err.message);
+    }
+  };
+
+  const deleteInquiry = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    try {
+      const { error } = await supabase
+        .from("contact_inquiries")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      setAllInquiries(prev => prev.filter(inq => inq.id !== id));
+      if (selectedItem?.id === id) setSelectedItem(null);
+    } catch (err: any) {
+      alert("Error deleting message: " + err.message);
+    }
+  };
+
+  // Filter out system emails (which belong to /admin/mails)
+  const visitorInquiries = allInquiries.filter(item => {
+    const subj = (item.subject || "").trim();
+    const msg = (item.message || "").toLowerCase();
+    const isSystemEmail =
+      subj === "NOTIFIED_COMPANY_JOB_POSTING" ||
+      subj === "COMPANY_JOB_EMAIL_SENT" ||
+      subj === "USER_VERIFICATION_SENT" ||
+      subj === "USER_VERIFIED" ||
+      subj === "ADMIN_DIRECT" ||
+      subj.startsWith("[Live on Ti2A]") ||
+      msg.includes("verification code dispatched") ||
+      msg.includes("outreach notification sent") ||
+      msg.includes("claim your studio") ||
+      msg.includes("dispatched email to");
+
+    return !isSystemEmail;
+  });
+
+  const filteredInquiries = visitorInquiries.filter(item => {
+    const isSuggestion =
+      (item.subject || "").includes("[Suggestion]") ||
+      (item.subject || "").toLowerCase().includes("suggestion");
+
+    if (categoryFilter === "suggestions" && !isSuggestion) return false;
+    if (categoryFilter === "general" && isSuggestion) return false;
+
+    if (statusFilter === "unread" && item.is_read) return false;
+    if (statusFilter === "read" && !item.is_read) return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchName = i.name.toLowerCase().includes(q);
-      const matchEmail = i.email.toLowerCase().includes(q);
-      const matchSubject = (i.subject || "").toLowerCase().includes(q);
-      const matchMessage = (i.message || "").toLowerCase().includes(q);
-      return matchName || matchEmail || matchSubject || matchMessage;
+      const matchName = (item.name || "").toLowerCase().includes(q);
+      const matchEmail = (item.email || "").toLowerCase().includes(q);
+      const matchSubj = (item.subject || "").toLowerCase().includes(q);
+      const matchMsg = (item.message || "").toLowerCase().includes(q);
+      if (!matchName && !matchEmail && !matchSubj && !matchMsg) return false;
     }
+
     return true;
   });
 
-  if (loading) return <div className="p-10 text-center font-bold">Loading...</div>;
+  const unreadCount = visitorInquiries.filter(inq => !inq.is_read).length;
+  const suggestionsCount = visitorInquiries.filter(inq => 
+    (inq.subject || "").includes("[Suggestion]") || (inq.subject || "").toLowerCase().includes("suggestion")
+  ).length;
 
   return (
-    <main className="min-h-screen bg-gray-50 text-black">
+    <main className="min-h-screen bg-gray-50 flex flex-col text-black">
       <Navbar />
-      <div className="max-w-6xl mx-auto py-12 px-6">
-        {/* TOP BAR */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div className="flex items-center gap-4">
+
+      <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8 md:py-10">
+        
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
             <AdminQuickMenu />
             <div>
-              <h1 className="text-3xl font-extrabold text-gray-900">Contact & Inquiries</h1>
-              <p className="text-sm text-gray-500">Manage user messages, contact inquiries, and public channels</p>
+              <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+                Contact &amp; Suggestions
+              </h1>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Manage visitor messages, community suggestion box, and site contact channels
+              </p>
             </div>
           </div>
-          <button onClick={() => router.push('/admin')} className="bg-white text-gray-800 px-5 py-2.5 rounded-xl border border-gray-200 hover:bg-gray-100 transition flex items-center gap-2 shrink-0 font-medium text-sm shadow-sm">
-            ← Back to Dashboard
-          </button>
+
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/admin/mails"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <Send size={13} />
+              <span>Go to Mail Center →</span>
+            </Link>
+
+            <button
+              onClick={() => router.push('/admin')}
+              className="bg-white text-gray-700 px-3.5 py-2 rounded-xl border border-gray-200 hover:bg-gray-100 transition font-medium text-xs cursor-pointer"
+            >
+              ← Dashboard
+            </button>
+          </div>
         </div>
 
-        {/* NAVIGATION TABS */}
-        <div className="flex items-center gap-2 border-b border-gray-200 mb-8">
+        {/* TABS */}
+        <div className="flex items-center gap-2 border-b border-gray-200 mb-6 pb-2">
           <button
             onClick={() => setActiveTab("inbox")}
-            className={`pb-3.5 px-4 font-bold text-sm flex items-center gap-2 border-b-2 transition ${
+            className={`px-4 py-2 font-bold text-xs rounded-xl flex items-center gap-2 transition cursor-pointer ${
               activeTab === "inbox" 
-                ? "border-black text-black" 
-                : "border-transparent text-gray-400 hover:text-gray-700"
+                ? "bg-black text-white shadow-xs" 
+                : "bg-white text-gray-600 hover:text-black border border-gray-200"
             }`}
           >
-            <Inbox size={18} />
-            <span>Inquiries Inbox</span>
+            <Inbox size={14} />
+            <span>Inquiries &amp; Suggestions</span>
             {unreadCount > 0 && (
-              <span className="bg-black text-white text-xs px-2 py-0.5 rounded-full font-extrabold animate-pulse">
+              <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black animate-pulse">
                 {unreadCount}
               </span>
             )}
@@ -373,340 +408,356 @@ CREATE POLICY "Allow public delete on contact_inquiries" ON public.contact_inqui
 
           <button
             onClick={() => setActiveTab("settings")}
-            className={`pb-3.5 px-4 font-bold text-sm flex items-center gap-2 border-b-2 transition ${
+            className={`px-4 py-2 font-bold text-xs rounded-xl flex items-center gap-2 transition cursor-pointer ${
               activeTab === "settings" 
-                ? "border-black text-black" 
-                : "border-transparent text-gray-400 hover:text-gray-700"
+                ? "bg-black text-white shadow-xs" 
+                : "bg-white text-gray-600 hover:text-black border border-gray-200"
             }`}
           >
-            <Settings size={18} />
-            <span>Site Info & Direct Contact Details</span>
+            <Settings size={14} />
+            <span>Public Contact Settings</span>
           </button>
         </div>
 
-        {/* TAB 1: INQUIRIES INBOX */}
+        {/* TAB 1: INQUIRIES & SUGGESTIONS */}
         {activeTab === "inbox" && (
-          <div className="space-y-6">
-            
-            {/* SETUP BANNER (IF TABLE NOT YET CREATED IN SUPABASE) */}
-            {setupRequired && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-bold text-amber-900 text-lg flex items-center gap-2">
-                      ⚠️ Database Table Setup Needed
-                    </h3>
-                    <p className="text-amber-800 text-sm mt-1">
-                      The <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono text-xs font-bold">contact_inquiries</code> table hasn&apos;t been created in Supabase yet. 
-                      Visitor emails are being delivered to your email (<span className="font-bold">admin.ti2a@gmail.com</span>), but storing them inside this dashboard requires running this one-time SQL script.
-                    </p>
-                  </div>
+          <div className="space-y-4">
+            {/* TOOLBAR */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-3.5 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="relative flex-1 w-full sm:max-w-xs">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search name, email, or message..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-black transition"
+                />
+              </div>
+
+              {/* CATEGORY & STATUS FILTERS */}
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-xs">
                   <button
-                    onClick={copySql}
-                    className="shrink-0 bg-amber-900 hover:bg-black text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                    onClick={() => setCategoryFilter("all")}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      categoryFilter === "all" ? "bg-white text-black shadow-2xs" : "text-gray-500 hover:text-black"
+                    }`}
                   >
-                    {copiedSql ? <Check size={14} /> : <Copy size={14} />}
-                    {copiedSql ? "Copied SQL!" : "Copy SQL Script"}
+                    All ({visitorInquiries.length})
+                  </button>
+                  <button
+                    onClick={() => setCategoryFilter("suggestions")}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1 cursor-pointer ${
+                      categoryFilter === "suggestions" ? "bg-amber-500 text-white shadow-2xs" : "text-amber-700 hover:bg-amber-50"
+                    }`}
+                  >
+                    <Lightbulb size={12} />
+                    <span>Suggestions ({suggestionsCount})</span>
+                  </button>
+                  <button
+                    onClick={() => setCategoryFilter("general")}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      categoryFilter === "general" ? "bg-white text-black shadow-2xs" : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    General
                   </button>
                 </div>
-                <div className="mt-4 bg-white/80 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
-                  <strong>Quick Instructions:</strong> Open your <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" className="underline font-bold">Supabase Dashboard</a> → Click <strong>SQL Editor</strong> on left menu → Click <strong>+ New Query</strong> → Paste the SQL script → Click <strong>Run</strong> → Then refresh this page.
-                </div>
-              </div>
-            )}
 
-            {/* CONTROLS HEADER */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <div className="relative flex-1 md:w-80">
-                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search by name, email, or message..."
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                  />
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-xs">
+                  <button
+                    onClick={() => setStatusFilter("all")}
+                    className={`px-2 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      statusFilter === "all" ? "bg-white text-black shadow-2xs" : "text-gray-500"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter("unread")}
+                    className={`px-2 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      statusFilter === "unread" ? "bg-white text-black shadow-2xs" : "text-gray-500"
+                    }`}
+                  >
+                    Unread ({unreadCount})
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter("read")}
+                    className={`px-2 py-1 rounded-lg font-bold transition cursor-pointer ${
+                      statusFilter === "read" ? "bg-white text-black shadow-2xs" : "text-gray-500"
+                    }`}
+                  >
+                    Read
+                  </button>
                 </div>
 
                 <button
                   onClick={fetchInquiries}
                   disabled={loadingInquiries}
-                  title="Refresh Inquiries"
-                  className="p-2.5 bg-gray-50 border border-gray-200 hover:bg-gray-100 rounded-xl text-gray-600 transition disabled:opacity-50 shrink-0"
+                  className="p-1.5 text-gray-500 hover:text-black border border-gray-200 rounded-xl hover:bg-gray-50 transition cursor-pointer"
+                  title="Refresh"
                 >
-                  <RefreshCw size={16} className={loadingInquiries ? "animate-spin" : ""} />
-                </button>
-              </div>
-
-              {/* Status Filters */}
-              <div className="flex items-center gap-1.5 w-full md:w-auto justify-end">
-                <button
-                  onClick={() => setFilterStatus("all")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                    filterStatus === "all" ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  All ({inquiries.length})
-                </button>
-                <button
-                  onClick={() => setFilterStatus("unread")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                    filterStatus === "unread" ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  Unread ({unreadCount})
-                </button>
-                <button
-                  onClick={() => setFilterStatus("read")}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                    filterStatus === "read" ? "bg-black text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  Read ({inquiries.length - unreadCount})
+                  <RefreshCw size={14} className={loadingInquiries ? "animate-spin" : ""} />
                 </button>
               </div>
             </div>
 
-            {/* INQUIRIES LIST */}
-            {loadingInquiries && inquiries.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center text-gray-400">
-                <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-black" />
-                <p className="font-medium text-sm">Loading inquiries...</p>
-              </div>
-            ) : filteredInquiries.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
-                <Inbox size={48} className="mx-auto mb-4 text-gray-300" />
-                <h3 className="font-bold text-gray-800 text-lg mb-1">No Inquiries Found</h3>
-                <p className="text-gray-500 text-sm max-w-md mx-auto">
-                  {searchQuery || filterStatus !== "all" 
-                    ? "No inquiries match your current search or filter."
-                    : "When visitors submit messages via the /contact page, they will appear here and trigger an instant email alert to admin.ti2a@gmail.com."}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredInquiries.map((inq) => {
-                  const phoneClean = inq.phone ? inq.phone.replace(/\D/g, '') : null;
-                  const formattedDate = new Date(inq.created_at).toLocaleString("en-IN", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                    timeZone: "Asia/Kolkata"
-                  });
+            {/* LIST */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
+              {filteredInquiries.length === 0 ? (
+                <div className="p-12 text-center text-gray-400">
+                  <Inbox size={36} className="mx-auto mb-2 text-gray-300" />
+                  <p className="font-bold text-gray-700 text-sm">No Messages Found</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {categoryFilter === "suggestions" 
+                      ? "No community suggestions received yet."
+                      : "Messages submitted via the public contact form appear here."}
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {filteredInquiries.map((inq) => {
+                    const isSuggestion = 
+                      (inq.subject || "").includes("[Suggestion]") || 
+                      (inq.subject || "").toLowerCase().includes("suggestion");
 
-                  return (
-                    <div 
-                      key={inq.id}
-                      className={`bg-white border rounded-2xl p-6 transition shadow-sm ${
-                        inq.is_read ? "border-gray-200" : "border-blue-400 ring-1 ring-blue-100"
-                      }`}
-                    >
-                      {/* CARD HEADER */}
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-100 pb-4 mb-4">
-                        <div className="flex items-center gap-3">
-                          <span className={`w-2.5 h-2.5 rounded-full ${inq.is_read ? "bg-gray-300" : "bg-blue-600 animate-pulse"}`}></span>
-                          <h3 className="font-bold text-lg text-gray-900">{inq.name}</h3>
-                          <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                            inq.is_read ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"
-                          }`}>
-                            {inq.is_read ? "Read" : "New"}
+                    const dateStr = new Date(inq.created_at).toLocaleDateString("en-IN", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+
+                    return (
+                      <div
+                        key={inq.id}
+                        onClick={() => setSelectedItem(inq)}
+                        className={`flex items-center justify-between p-3.5 sm:px-5 hover:bg-gray-50 transition cursor-pointer gap-3 text-xs ${
+                          inq.is_read ? "bg-white text-gray-600" : "bg-blue-50/40 text-gray-900 font-semibold"
+                        }`}
+                      >
+                        {/* LEFT: SENDER & STATUS */}
+                        <div className="flex items-center gap-3 min-w-0 sm:w-1/3 shrink-0">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${
+                            inq.is_read ? "bg-gray-300" : "bg-blue-600 animate-pulse"
+                          }`}></span>
+                          <div className="truncate">
+                            <span className="font-extrabold text-sm text-gray-900 block truncate">{inq.name}</span>
+                            <span className="text-xs text-gray-400 font-normal truncate block">{inq.email}</span>
+                          </div>
+                        </div>
+
+                        {/* MIDDLE: BADGE + SUBJECT & SNIPPET */}
+                        <div className="flex-1 min-w-0 flex items-center gap-2">
+                          {isSuggestion ? (
+                            <span className="shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+                              <Lightbulb size={10} />
+                              <span>Suggestion</span>
+                            </span>
+                          ) : (
+                            <span className="shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">
+                              Inquiry
+                            </span>
+                          )}
+
+                          <span className="truncate text-gray-800 font-bold mr-1">
+                            {inq.subject?.replace("[Suggestion]", "").trim() || "General"}
+                          </span>
+                          <span className="truncate text-gray-400 font-normal hidden md:inline">
+                            — {inq.message?.replace(/[\r\n]+/g, " ").slice(0, 70)}...
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <Clock size={14} />
-                          <span>{formattedDate} IST</span>
+
+                        {/* RIGHT: DATE & CHEVRON */}
+                        <div className="flex items-center gap-3 shrink-0 text-right">
+                          <span className="text-[11px] text-gray-400 whitespace-nowrap">{dateStr}</span>
+                          <ChevronRight size={14} className="text-gray-300" />
                         </div>
                       </div>
-
-                      {/* CONTACT BADGES */}
-                      <div className="flex flex-wrap items-center gap-2 mb-4">
-                        <a 
-                          href={`mailto:${inq.email}?subject=Re: ${encodeURIComponent(inq.subject || "Inquiry via Ti2A")}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 transition"
-                        >
-                          <Mail size={13} className="text-gray-500" />
-                          <span>{inq.email}</span>
-                        </a>
-
-                        {inq.phone && (
-                          <a 
-                            href={`tel:${inq.phone}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 transition"
-                          >
-                            <Phone size={13} className="text-gray-500" />
-                            <span>{inq.phone}</span>
-                          </a>
-                        )}
-
-                        {phoneClean && (
-                          <a 
-                            href={`https://wa.me/${phoneClean}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg text-xs font-semibold text-green-700 transition"
-                          >
-                            <MessageCircle size={13} />
-                            <span>WhatsApp</span>
-                          </a>
-                        )}
-                      </div>
-
-                      {/* SUBJECT & MESSAGE */}
-                      <div className="mb-5">
-                        <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">
-                          Subject: <span className="text-gray-800 normal-case font-semibold">{inq.subject || "General Inquiry"}</span>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-xl text-gray-800 text-sm whitespace-pre-wrap leading-relaxed border border-gray-100">
-                          {inq.message}
-                        </div>
-                      </div>
-
-                      {/* ACTIONS ROW */}
-                      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                        <div className="flex items-center gap-2">
-                          <a
-                            href={`mailto:${inq.email}?subject=Re: ${encodeURIComponent(inq.subject || "Inquiry via Ti2A")}`}
-                            className="inline-flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm"
-                          >
-                            <Mail size={14} />
-                            <span>Reply via Email</span>
-                          </a>
-
-                          {phoneClean && (
-                            <a
-                              href={`https://wa.me/${phoneClean}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm"
-                            >
-                              <MessageCircle size={14} />
-                              <span>WhatsApp</span>
-                            </a>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => toggleReadStatus(inq.id, inq.is_read)}
-                            className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-black border border-gray-200 hover:border-gray-300 rounded-lg transition"
-                          >
-                            {inq.is_read ? "Mark as Unread" : "Mark as Read"}
-                          </button>
-                          <button
-                            onClick={() => deleteInquiry(inq.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg transition"
-                            title="Delete inquiry"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* TAB 2: SITE INFO & DIRECT CONTACT SETTINGS */}
+        {/* TAB 2: ORIGINAL COMPLETE CONTACT SETTINGS */}
         {activeTab === "settings" && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* LEFT COLUMN: DIRECT CONTACT */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-                <h2 className="text-xl font-bold mb-6 text-gray-900 border-b pb-2">Direct Contact Details</h2>
-                <p className="text-sm text-gray-500 mb-6">These details are used when a user directly messages or contacts the organization.</p>
-                
-                <div className="space-y-5">
-                  <LockedField label="Contact Email" type="email" fieldKey="email" value={settings.email} onChange={(val: string) => setSettings({...settings, email: val})} />
-                  
-                  <LockedField label="Contact Phone" type="text" fieldKey="phone" value={settings.phone} onChange={(val: string) => setSettings({...settings, phone: val})} />
-
-                  <LockedField label="Direct WhatsApp Number" subLabel="Number used for direct WhatsApp chats (e.g. 918608609661)" type="text" fieldKey="whatsapp" value={settings.whatsapp} onChange={(val: string) => setSettings({...settings, whatsapp: val})} />
-
-                  <LockedField label="Contact Address" isTextarea={true} fieldKey="contact_address" value={settings.contact_address} onChange={(val: string) => setSettings({...settings, contact_address: val})} />
-                </div>
+              {/* DIRECT CONTACT */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs space-y-4">
+                <h3 className="font-extrabold text-base text-gray-900 border-b pb-2">Direct Contact Details</h3>
+                <LockedField label="Contact Email" type="email" fieldKey="email" value={settings.email} onChange={(val: string) => setSettings({...settings, email: val})} />
+                <LockedField label="Contact Phone" type="text" fieldKey="phone" value={settings.phone} onChange={(val: string) => setSettings({...settings, phone: val})} />
+                <LockedField label="Direct WhatsApp Number" type="text" fieldKey="whatsapp" value={settings.whatsapp} onChange={(val: string) => setSettings({...settings, whatsapp: val})} />
+                <LockedField label="Contact Address" isTextarea={true} fieldKey="contact_address" value={settings.contact_address} onChange={(val: string) => setSettings({...settings, contact_address: val})} />
               </div>
 
-              {/* RIGHT COLUMN: SOCIAL / PAGE */}
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-                <div className="flex items-center justify-between border-b pb-2 mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">Social & Public Channels</h2>
-                  <Link href="/admin/social-config" className="text-xs font-semibold text-blue-500 hover:underline">
-                    Social Configuration
-                  </Link>
+              {/* SOCIAL / PUBLIC CHANNELS */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs space-y-4">
+                <div className="flex items-center justify-between border-b pb-2">
+                  <h3 className="font-extrabold text-base text-gray-900">Social Channels &amp; Community</h3>
                 </div>
-                <p className="text-sm text-gray-500 mb-6">Links to official pages, channels, and social media profiles.</p>
-                
-                <div className="space-y-5">
-                  <LockedField label="WhatsApp Channel URL" subLabel="Public channel link (NOT your direct WhatsApp number)" type="url" fieldKey="whatsapp_channel_url" value={settings.whatsapp_channel_url} onChange={(val: string) => setSettings({...settings, whatsapp_channel_url: val})} />
-
-                  <LockedField label="Facebook Page URL" type="url" fieldKey="facebook" value={settings.facebook} onChange={(val: string) => setSettings({...settings, facebook: val})} />
-
-                  <LockedField label="X / Twitter URL" type="url" fieldKey="twitter" value={settings.twitter} onChange={(val: string) => setSettings({...settings, twitter: val})} />
-
-                  <LockedField label="Telegram Channel URL" type="url" fieldKey="website_url" value={settings.website_url} onChange={(val: string) => setSettings({...settings, website_url: val})} />
-                  <LockedField label="Instagram URL" type="url" fieldKey="instagram" value={settings.instagram} onChange={(val: string) => setSettings({...settings, instagram: val})} />
-
-                  <LockedField label="LinkedIn URL" type="url" fieldKey="linkedin" value={settings.linkedin} onChange={(val: string) => setSettings({...settings, linkedin: val})} />
-                </div>
+                <LockedField label="Telegram Channel URL" type="url" fieldKey="website_url" value={settings.website_url} onChange={(val: string) => setSettings({...settings, website_url: val})} />
+                <LockedField label="WhatsApp Channel URL" type="url" fieldKey="whatsapp_channel_url" value={settings.whatsapp_channel_url} onChange={(val: string) => setSettings({...settings, whatsapp_channel_url: val})} />
+                <LockedField label="Instagram URL" type="url" fieldKey="instagram" value={settings.instagram} onChange={(val: string) => setSettings({...settings, instagram: val})} />
+                <LockedField label="LinkedIn URL" type="url" fieldKey="linkedin" value={settings.linkedin} onChange={(val: string) => setSettings({...settings, linkedin: val})} />
+                <LockedField label="Twitter / X URL" type="url" fieldKey="twitter" value={settings.twitter} onChange={(val: string) => setSettings({...settings, twitter: val})} />
+                <LockedField label="Facebook URL" type="url" fieldKey="facebook" value={settings.facebook} onChange={(val: string) => setSettings({...settings, facebook: val})} />
               </div>
-
             </div>
 
-            {/* LOGO UPLOAD */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-              <h2 className="text-xl font-bold mb-6 text-gray-900 border-b pb-2">Website Logo</h2>
-              <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                <div className="w-32 h-32 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden border border-gray-200 shrink-0 relative group">
+            {/* LOGO */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs">
+              <h3 className="font-extrabold text-base text-gray-900 border-b pb-2 mb-4">Site Logo</h3>
+              <div className="flex items-center gap-6">
+                <div className="w-24 h-24 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200 overflow-hidden relative group">
                   {settings.logo_url ? (
-                    <>
-                      <img src={settings.logo_url} alt="Site Logo" className="w-full h-full object-contain" />
-                      <button type="button" onClick={() => setSettings({...settings, logo_url: ""})} className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md text-red-500 opacity-0 group-hover:opacity-100 transition">
-                        <X size={16} />
-                      </button>
-                    </>
+                    <img src={settings.logo_url} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
-                    <span className="text-gray-400 text-sm font-medium">No Logo</span>
+                    <span className="text-xs text-gray-400">No Logo</span>
                   )}
                 </div>
-                <div className="flex-1 space-y-3">
-                  <label className="cursor-pointer inline-flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-50 transition">
-                    <UploadCloud size={18} />
-                    {uploadingLogo ? "Uploading..." : "Upload New Logo"}
+                <div className="space-y-2">
+                  <label className="cursor-pointer inline-flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-50 transition shadow-xs">
+                    <UploadCloud size={16} />
+                    <span>{uploadingLogo ? "Uploading..." : "Upload Logo"}</span>
                     <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={uploadingLogo} />
                   </label>
-                  <p className="text-xs text-gray-500">Max size 2MB. Recommended formats: PNG, JPG, JPEG, or SVG.</p>
-                  <div className="w-full">
-                    <label className="block text-xs font-bold text-gray-600 mb-1">Or enter Logo URL directly:</label>
-                    <input type="url" value={settings.logo_url} onChange={e => setSettings({...settings, logo_url: e.target.value})} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-black" />
-                  </div>
+                  <p className="text-xs text-gray-400">Max size 2MB. Recommended: PNG or SVG.</p>
                 </div>
               </div>
             </div>
 
-            {/* ORGANIZATION CONTENT */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm space-y-8">
-              <h2 className="text-xl font-bold mb-2 text-gray-900 border-b pb-2">Organization Information</h2>
-              
-              <LockedField label="About Us" isTextarea={true} fieldKey="about_us" value={settings.about_us} onChange={(val: string) => setSettings({...settings, about_us: val})} />
-
-              <LockedField label="History" isTextarea={true} fieldKey="about_history" value={settings.about_history} onChange={(val: string) => setSettings({...settings, about_history: val})} />
-
-              <LockedField label="Mission" isTextarea={true} fieldKey="about_mission" value={settings.about_mission} onChange={(val: string) => setSettings({...settings, about_mission: val})} />
-            </div>
-
-            <div className="pt-4 flex justify-end">
-              <button disabled={saving} type="submit" className="bg-black text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 disabled:opacity-50 transition shadow-md">
-                {saving ? "Updating..." : "Update"}
-              </button>
+            {/* ABOUT US TEXT */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-2xs space-y-4">
+              <h3 className="font-extrabold text-base text-gray-900 border-b pb-2">About &amp; Mission Statements</h3>
+              <LockedField label="About Ti2A" isTextarea={true} fieldKey="about_us" value={settings.about_us} onChange={(val: string) => setSettings({...settings, about_us: val})} />
+              <LockedField label="Our History" isTextarea={true} fieldKey="about_history" value={settings.about_history} onChange={(val: string) => setSettings({...settings, about_history: val})} />
+              <LockedField label="Our Mission" isTextarea={true} fieldKey="about_mission" value={settings.about_mission} onChange={(val: string) => setSettings({...settings, about_mission: val})} />
             </div>
           </div>
         )}
 
       </div>
+
+      {/* READING MODAL */}
+      {selectedItem && (
+        <div 
+          onClick={() => setSelectedItem(null)}
+          className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-xl p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-150 my-auto"
+          >
+            {/* MODAL HEADER */}
+            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-xl font-extrabold text-gray-900">{selectedItem.name}</h3>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                    selectedItem.is_read ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-800"
+                  }`}>
+                    {selectedItem.is_read ? "Read" : "Unread"}
+                  </span>
+                  {(selectedItem.subject?.includes("[Suggestion]") || selectedItem.subject?.toLowerCase().includes("suggestion")) && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-100 text-amber-800 flex items-center gap-1">
+                      <Lightbulb size={10} />
+                      <span>Suggestion</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 font-mono">&lt;{selectedItem.email}&gt;</p>
+              </div>
+
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="text-gray-400 hover:text-black p-1 transition cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* METADATA */}
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-gray-500 uppercase tracking-wider">Subject:</span>
+                <span className="font-extrabold text-gray-900">{selectedItem.subject || "General Inquiry"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-gray-500 uppercase tracking-wider">Date Sent:</span>
+                <span className="text-gray-700">
+                  {new Date(selectedItem.created_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST
+                </span>
+              </div>
+              {selectedItem.phone && (
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-gray-500 uppercase tracking-wider">Phone:</span>
+                  <a href={`tel:${selectedItem.phone}`} className="text-blue-600 font-bold hover:underline">
+                    {selectedItem.phone}
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* FULL MESSAGE BODY */}
+            <div>
+              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Message Content:</div>
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 text-sm text-gray-800 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
+                {selectedItem.message}
+              </div>
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                <a
+                  href={`mailto:${selectedItem.email}?subject=Re: ${encodeURIComponent(selectedItem.subject || "Ti2A Inquiry")}`}
+                  className="bg-black hover:bg-gray-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Mail size={14} />
+                  <span>Reply via Email</span>
+                </a>
+
+                {selectedItem.phone && (
+                  <a
+                    href={`https://wa.me/${selectedItem.phone.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs"
+                  >
+                    <MessageCircle size={14} />
+                    <span>WhatsApp</span>
+                  </a>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => toggleReadStatus(selectedItem.id, selectedItem.is_read, e)}
+                  className="text-xs font-bold text-gray-600 hover:text-black border border-gray-200 px-3 py-2 rounded-xl transition cursor-pointer"
+                >
+                  {selectedItem.is_read ? "Mark Unread" : "Mark Read"}
+                </button>
+
+                <button
+                  onClick={(e) => deleteInquiry(selectedItem.id, e)}
+                  className="p-2 text-gray-400 hover:text-red-600 rounded-xl transition cursor-pointer"
+                  title="Delete message"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </main>
   );

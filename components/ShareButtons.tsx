@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Share, Copy, Check } from "lucide-react";
+import { Share, Copy, Check, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { formatWhatsAppPost } from "@/utils/socialFormats";
 
@@ -274,56 +274,107 @@ export default function ShareButtons({
     
     const menuContent = (
       <div 
-        ref={menuRef}
-        className={isMobile ? "fixed left-0 bottom-0 w-full bg-white border-t border-gray-100 rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] z-[999999] p-4 text-left pb-10" : "bg-white border border-gray-100 rounded-xl shadow-2xl p-2 text-left"}
-        style={isMobile ? {} : menuStyle}
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-[999999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        onClick={() => setIsOpen(false)}
       >
-        {isMobile && (
-          <div className="flex justify-between items-center mb-4 px-2">
-            <span className="font-bold text-lg">Share Job</span>
-            <button onClick={() => setIsOpen(false)} className="text-gray-500 text-xl font-bold p-2">&times;</button>
+        <div
+          ref={menuRef}
+          className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-gray-100 text-left relative max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-black text-white flex items-center justify-center">
+                <Share size={18} />
+              </div>
+              <div className="min-w-0 pr-2">
+                <h3 className="text-base font-bold text-gray-900 truncate">Share Job Opening</h3>
+                <p className="text-xs text-gray-500 truncate">{position} • {companyName}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="text-gray-400 hover:text-black p-1.5 rounded-lg hover:bg-gray-100 transition text-sm cursor-pointer shrink-0"
+            >
+              <X size={18} />
+            </button>
           </div>
-        )}
-        <button
-          onClick={copyLink}
-          className={`w-full flex items-center justify-between px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium`}
-        >
-          <span className="flex items-center gap-3">
-            {copied ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-            {copied ? "Copied Link!" : "Copy Link"}
-          </span>
-        </button>
-        <button
-          onClick={copyText}
-          className={`w-full flex items-center justify-between px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium`}
-        >
-          <span className="flex items-center gap-3">
-            {copiedText ? <Check size={18} className="text-green-500" /> : <Copy size={18} />}
-            {copiedText ? "Copied with Formatting!" : "Copy with Formatting"}
-          </span>
-        </button>
-        <div className="h-px bg-gray-100 my-1 mx-2" />
-        {shareLinks.map((link) => (
+
+          <p className="text-xs text-gray-600 mb-4">
+            Share this vacancy with architects, job seekers, and design networks.
+          </p>
+
+          {/* Primary: Direct WhatsApp Share */}
           <a
-            key={link.name}
-            href={link.href}
+            href={shareLinks.find(l => l.name === "WhatsApp")?.href || `https://api.whatsapp.com/send?text=${shareText}`}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={(e) => {
-              e.stopPropagation();
-              trackShare(link.name.toLowerCase());
+            onClick={() => {
+              trackShare("whatsapp");
               setIsOpen(false);
             }}
-            className={`flex items-center gap-3 px-3 ${isMobile ? 'py-4 text-base' : 'py-2 text-sm'} text-gray-700 hover:bg-gray-50 rounded-lg transition`}
+            className="w-full mb-3 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
           >
-            <span className="font-semibold">{link.name}</span>
+            <span className="text-base">📲</span>
+            <span>Share on WhatsApp</span>
           </a>
-        ))}
+
+          {/* Copy Options */}
+          <div className="space-y-2 mb-4">
+            <button
+              type="button"
+              onClick={copyLink}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition font-medium text-xs text-gray-800 cursor-pointer"
+            >
+              <span className="flex items-center gap-2.5">
+                {copied ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} className="text-gray-500" />}
+                <span>{copied ? "Link Copied to Clipboard!" : "Copy Job Link"}</span>
+              </span>
+              <span className="text-[11px] font-bold text-gray-400">URL</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={copyText}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition font-medium text-xs text-gray-800 cursor-pointer"
+            >
+              <span className="flex items-center gap-2.5">
+                {copiedText ? <Check size={15} className="text-emerald-600" /> : <Copy size={15} className="text-gray-500" />}
+                <span>{copiedText ? "Formatted Post Copied!" : "Copy with Formatting (WhatsApp text)"}</span>
+              </span>
+              <span className="text-[11px] font-bold text-gray-400">Text</span>
+            </button>
+          </div>
+
+          {/* Other Social Networks */}
+          <div className="pt-3 border-t border-gray-100">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2.5 block">
+              Share to Social Channels
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              {shareLinks.filter(l => l.name !== "WhatsApp").map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    trackShare(link.name.toLowerCase());
+                    setIsOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-xs transition cursor-pointer"
+                >
+                  <span>{link.name}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
     
-    // On mobile, render fixed at root. On desktop, render fixed at root (menuStyle has coordinates)
     return createPortal(menuContent, document.body);
   };
 

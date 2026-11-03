@@ -21,11 +21,12 @@ export function formatSalary(rawSalary?: string | null): string {
       "negotiable",
       "-",
       "null",
+      "undefined",
       "as per industry standards",
       "as per industry standard",
     ].includes(lower)
   ) {
-    return str;
+    return "";
   }
 
   // Match range formats: "X - Y", "X to Y", "X – Y", "X — Y"
@@ -66,7 +67,15 @@ function cleanSingleExp(str?: string | null): string {
   if (!str) return "";
   const s = String(str).trim();
   const lower = s.toLowerCase();
-  if (lower === "not disclosed" || lower === "not specified" || lower === "null") {
+  if (
+    lower === "not disclosed" ||
+    lower === "not specified" ||
+    lower === "null" ||
+    lower === "undefined" ||
+    lower === "-" ||
+    lower === "as per industry standards" ||
+    lower === "as per industry standard"
+  ) {
     return "";
   }
 

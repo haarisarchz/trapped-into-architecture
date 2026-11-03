@@ -1731,6 +1731,15 @@ const handleSchedule = async () => {
         }).catch(err => console.error("Social publish request failed", err));
       }
 
+      // Notify hiring company that listing is live
+      if (status === "published" && !wasAlreadyPublished) {
+        fetch("/api/notify/company-job-published", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: jobData.id })
+        }).catch(err => console.error("Company publish notification failed", err));
+      }
+
       if (status === "draft") {
         alert("Draft saved successfully.");
       } else if (status === "scheduled") {

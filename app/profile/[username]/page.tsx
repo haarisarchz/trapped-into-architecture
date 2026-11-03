@@ -99,6 +99,8 @@ export default function ProfilePage() {
           badge_tier: profile.badge_tier || "bronze",
           is_vip: profile.is_vip || false,
           likes_count: profile.likes_count || 0,
+          email_verified: Boolean(profile.email_verified || profile.is_email_verified),
+          phone_verified: Boolean(profile.phone_verified || profile.is_phone_verified),
         };
 
         setUser(formattedUser);
@@ -121,6 +123,10 @@ export default function ProfilePage() {
           const { data: authData } = await supabase.auth.getUser();
           if (authData?.user?.id === profile.id || authData?.user?.email === profile.email) {
             setIsOwner(true);
+            if (authData.user.email_confirmed_at && !profile.email_verified) {
+              formattedUser.email_verified = true;
+              supabase.from("profiles").update({ email_verified: true }).eq("id", profile.id).then();
+            }
           }
         }
 

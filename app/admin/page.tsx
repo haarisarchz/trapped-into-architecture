@@ -16,16 +16,21 @@ export default function AdminDashboard() {
 
   const [jobs, setJobs] = useState<any[]>([]);
 
-  const [activeJobs, setActiveJobs] = useState(0);
+    const [activeJobs, setActiveJobs] = useState(0);
+  const [activeInternships, setActiveInternships] = useState(0);
 
-const [expiredJobs, setExpiredJobs] = useState(0);
-const [outdatedJobs, setOutdatedJobs] = useState(0);
-const [draftJobs, setDraftJobs] = useState(0);
+  const [outdatedJobs, setOutdatedJobs] = useState(0);
+  const [outdatedInternships, setOutdatedInternships] = useState(0);
 
-const [scheduledJobs, setScheduledJobs] = useState(0);
+  const [expiredJobs, setExpiredJobs] = useState(0);
+  const [expiredInternships, setExpiredInternships] = useState(0);
 
-const [totalJobs, setTotalJobs] = useState(0);
-const [pendingClaimsCount, setPendingClaimsCount] = useState(0);
+  const [draftJobs, setDraftJobs] = useState(0);
+  const [scheduledJobs, setScheduledJobs] = useState(0);
+
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [totalInternships, setTotalInternships] = useState(0);
+  const [pendingClaimsCount, setPendingClaimsCount] = useState(0);
 
   useEffect(() => {
 
@@ -90,7 +95,7 @@ if (!error) {
 
     setJobs(data);
 
-setTotalJobs(data.length);
+// setTotalJobs set with drafts & scheduled below
 
 try {
   const { count } = await supabase
@@ -102,46 +107,58 @@ try {
   // table might be empty or migrating
 }
 
-const today =
-new Date().toISOString().split("T")[0];
-
+const today = new Date().toISOString().split("T")[0];
 const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-const active = data.filter(
-  (job) => {
-    if (job.status !== "published") return false;
-    const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < today;
-    const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
-    return !isExplicitlyExpired && !isOld;
-  }
+const isIntern = (job: any) =>
+  job.employment_type === 'Internship' || (job.position && job.position.toLowerCase().includes('intern'));
+
+const published = data.filter((job) => job.status === "published");
+const drafts = data.filter((job) => job.status === "draft");
+const scheduled = data.filter((job) => job.status === "scheduled");
+
+// Active (<30 days & unexpired)
+const activeJobsList = published.filter(
+  (job) => !isIntern(job) && (!job.post_expiry_date || job.post_expiry_date >= today) && (!job.posted_date || new Date(job.posted_date) >= thirtyDaysAgo)
+);
+const activeInternsList = published.filter(
+  (job) => isIntern(job) && (!job.post_expiry_date || job.post_expiry_date >= today) && (!job.posted_date || new Date(job.posted_date) >= thirtyDaysAgo)
 );
 
-const outdated = data.filter(
-  (job) => {
-    if (job.status !== "published") return false;
-    const isExplicitlyExpired = job.post_expiry_date && job.post_expiry_date < today;
-    const isOld = job.posted_date && new Date(job.posted_date) < thirtyDaysAgo;
-    return isOld && !isExplicitlyExpired;
-  }
+// Outdated (>30 days & unexpired)
+const outdatedJobsList = published.filter(
+  (job) => !isIntern(job) && (!job.post_expiry_date || job.post_expiry_date >= today) && job.posted_date && new Date(job.posted_date) < thirtyDaysAgo
+);
+const outdatedInternsList = published.filter(
+  (job) => isIntern(job) && (!job.post_expiry_date || job.post_expiry_date >= today) && job.posted_date && new Date(job.posted_date) < thirtyDaysAgo
 );
 
-const expired = data.filter(
-  (job) => job.status === "published" && job.post_expiry_date && job.post_expiry_date < today
+// Expired (post_expiry_date < today)
+const expiredJobsList = published.filter(
+  (job) => !isIntern(job) && job.post_expiry_date && job.post_expiry_date < today
+);
+const expiredInternsList = published.filter(
+  (job) => isIntern(job) && job.post_expiry_date && job.post_expiry_date < today
 );
 
-const drafts = data.filter(
-  (job) => job.status === "draft"
-);
+const publishedJobsCount = published.filter((job) => !isIntern(job)).length;
+const publishedInternshipsCount = published.filter((job) => isIntern(job)).length;
 
-const scheduled = data.filter(
-  (job) => job.status === "scheduled"
-);
+setActiveJobs(activeJobsList.length);
+setActiveInternships(activeInternsList.length);
 
-setActiveJobs(active.length);
-setOutdatedJobs(outdated.length);
-setExpiredJobs(expired.length);
+setOutdatedJobs(outdatedJobsList.length);
+setOutdatedInternships(outdatedInternsList.length);
+
+setExpiredJobs(expiredJobsList.length);
+setExpiredInternships(expiredInternsList.length);
+
 setDraftJobs(drafts.length);
 setScheduledJobs(scheduled.length);
+
+// Drafts and scheduled are added to Total Jobs, not to Internships
+setTotalJobs(publishedJobsCount + drafts.length + scheduled.length);
+setTotalInternships(publishedInternshipsCount);
 
     }
 
@@ -270,6 +287,13 @@ if (loading) {
             {/* STANDALONE MENUS */}
             <div className="space-y-1.5 pt-1">
               <button
+                onClick={() => router.push("/admin/news-feed")}
+                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-amber-400 flex items-center justify-between"
+              >
+                <span>News Feed & Approvals</span>
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-semibold">Feed</span>
+              </button>
+              <button
                 onClick={() => router.push("/admin/analytics")}
                 className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
               >
@@ -347,107 +371,179 @@ if (loading) {
         </div>
 
       {/* STATS */}
+<div className="space-y-4 mb-6">
+  {/* ARCHITECTURE JOBS SECTION */}
+  <div>
+    <div className="flex items-center justify-between mb-1.5 px-0.5">
+      <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-black"></span>
+        Architecture Jobs
+      </h3>
+      <span className="text-[10px] text-gray-400 font-medium">Drafts &amp; Scheduled in Total</span>
+    </div>
 
-<div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {/* ACTIVE JOBS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=active&type=job")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Active
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-green-600 leading-none">
+          {activeJobs}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&lt; 30d</span>
+      </div>
 
-  {/* ACTIVE JOBS */}
+      {/* OUTDATED JOBS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=outdated&type=job")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Outdated
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-orange-500 leading-none">
+          {outdatedJobs}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&gt; 30d</span>
+      </div>
 
-  <div
-    onClick={() => router.push("/admin/jobs?status=active")}
-    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
-  >
-    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
-      Active Jobs
-    </p>
+      {/* EXPIRED JOBS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=expired&type=job")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Expired
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-red-600 leading-none">
+          {expiredJobs}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Deadline</span>
+      </div>
 
-    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-green-600">
-      {activeJobs}
-    </h2>
+      {/* DRAFT JOBS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=draft")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Drafts
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-amber-500 leading-none">
+          {draftJobs}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Saved</span>
+      </div>
+
+      {/* SCHEDULED JOBS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=scheduled")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Scheduled
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-blue-600 leading-none">
+          {scheduledJobs}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Future</span>
+      </div>
+
+      {/* TOTAL JOBS */}
+      <div
+        onClick={() => router.push("/admin/jobs?type=job")}
+        className="bg-slate-900 text-white rounded-xl p-2.5 sm:p-3 border border-slate-900 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center"
+      >
+        <p className="text-gray-400 font-semibold text-[10px] uppercase tracking-wider leading-none">
+          Total Jobs
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-white leading-none">
+          {totalJobs}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">All+Drafts</span>
+      </div>
+    </div>
   </div>
 
-  {/* DRAFT JOBS */}
+  {/* INTERNSHIPS SECTION */}
+  <div>
+    <div className="flex items-center justify-between mb-1.5 px-0.5">
+      <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-violet-600"></span>
+        Architecture Internships
+      </h3>
+      <span className="text-[10px] text-gray-400 font-medium">Without drafts/scheduled</span>
+    </div>
 
-  <div
-    onClick={() => router.push("/admin/jobs?status=draft")}
-    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
-  >
-    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
-      Draft Jobs
-    </p>
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      {/* ACTIVE INTERNSHIPS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=active&type=internship")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Active
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-green-600 leading-none">
+          {activeInternships}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&lt; 30d</span>
+      </div>
 
-    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-yellow-500">
-      {draftJobs}
-    </h2>
+      {/* OUTDATED INTERNSHIPS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=outdated&type=internship")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Outdated
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-orange-500 leading-none">
+          {outdatedInternships}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">&gt; 30d</span>
+      </div>
+
+      {/* EXPIRED INTERNSHIPS */}
+      <div
+        onClick={() => router.push("/admin/jobs?status=expired&type=internship")}
+        className="bg-white rounded-xl p-2.5 sm:p-3 border border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center group"
+      >
+        <p className="text-gray-500 font-semibold text-[10px] uppercase tracking-wider group-hover:text-black leading-none">
+          Expired
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-red-600 leading-none">
+          {expiredInternships}
+        </h2>
+        <span className="text-[9px] text-gray-400 mt-1 leading-none">Deadline</span>
+      </div>
+
+      {/* TOTAL INTERNSHIPS */}
+      <div
+        onClick={() => router.push("/admin/jobs?type=internship")}
+        className="bg-violet-950 text-white rounded-xl p-2.5 sm:p-3 border border-violet-950 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition duration-150 flex flex-col items-center justify-center text-center"
+      >
+        <p className="text-violet-300 font-semibold text-[10px] uppercase tracking-wider leading-none">
+          Total Interns
+        </p>
+        <h2 className="text-lg sm:text-2xl font-black mt-1 text-white leading-none">
+          {totalInternships}
+        </h2>
+        <span className="text-[9px] text-violet-300 mt-1 leading-none">Active+Out+Exp</span>
+      </div>
+    </div>
   </div>
-
-  {/* SCHEDULED JOBS */}
-
-  <div
-    onClick={() => router.push("/admin/jobs?status=scheduled")}
-    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
-  >
-    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
-      Scheduled Jobs
-    </p>
-
-    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-blue-600">
-      {scheduledJobs}
-    </h2>
-  </div>
-
-  {/* OUTDATED JOBS */}
-
-  <div
-    onClick={() => router.push("/admin/jobs?status=outdated")}
-    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
-  >
-    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
-      Outdated Jobs
-    </p>
-
-    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-orange-500">
-      {outdatedJobs}
-    </h2>
-  </div>
-
-  {/* EXPIRED JOBS */}
-
-  <div
-    onClick={() => router.push("/admin/jobs?status=expired")}
-    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
-  >
-    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
-      Expired Jobs
-    </p>
-
-    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6 text-red-600">
-      {expiredJobs}
-    </h2>
-  </div>
-
-  {/* TOTAL JOBS */}
-
-  <div
-    onClick={() => router.push("/admin/jobs")}
-    className="bg-white rounded-3xl p-4 sm:p-6 shadow cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 flex flex-col items-center justify-center"
-  >
-    <p className="text-gray-600 font-semibold text-center text-sm sm:text-base">
-      Total Jobs
-    </p>
-
-    <h2 className="text-3xl sm:text-5xl font-bold text-center mt-2 sm:mt-6">
-      {totalJobs}
-    </h2>
-  </div>
-
 </div>
-
 
 {/* RECENT JOBS */}
 
-<div className="bg-white rounded-3xl p-8 shadow">
+<div className="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-gray-100">
 
-  <div className="flex items-center justify-between mb-6">
+  <div className="flex items-center justify-between mb-3">
 
     <h2 className="text-2xl font-bold">
       Recent Jobs

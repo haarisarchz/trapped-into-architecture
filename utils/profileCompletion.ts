@@ -50,7 +50,7 @@ export function calculateProfileCompletion(
   let score = 0;
   const missing: { label: string; points: number }[] = [];
 
-  // 1. Basic Identity & Registration (25% total)
+  // 1. Basic Identity & Registration (20% total)
   // 1.1 Full Name & Username (5%) - Required at registration
   if (user?.fullName && user?.username) {
     score += 5;
@@ -65,11 +65,11 @@ export function calculateProfileCompletion(
     missing.push({ label: "Email Address", points: 5 });
   }
 
-  // 1.3 Profile Picture (10%)
+  // 1.3 Profile Picture (5%)
   if (user?.profileImage || user?.avatar_url) {
-    score += 10;
+    score += 5;
   } else {
-    missing.push({ label: "Profile Picture / Avatar", points: 10 });
+    missing.push({ label: "Profile Picture / Avatar", points: 5 });
   }
 
   // 1.4 Tagline / Headline (5%)
@@ -79,15 +79,15 @@ export function calculateProfileCompletion(
     missing.push({ label: "Professional Tagline (headline)", points: 5 });
   }
 
-  // 2. High-Trust Contact & Social (15% total)
-  // 2.1 Phone Number (5%) - High trust
+  // 2. High-Trust Contact & Verifications (20% total)
+  // 2.1 Phone Number (5%)
   if (user?.phone && user.phone.trim().length > 5) {
     score += 5;
   } else {
     missing.push({ label: "Phone Number", points: 5 });
   }
 
-  // 2.2 WhatsApp Number or Same as Phone (5%) - High trust
+  // 2.2 WhatsApp Number (5%)
   if (
     user?.whatsapp_same_as_phone ||
     (user?.whatsapp_number && user.whatsapp_number.trim().length > 5)
@@ -97,15 +97,27 @@ export function calculateProfileCompletion(
     missing.push({ label: "WhatsApp Number (or Same as Phone)", points: 5 });
   }
 
-  // 2.3 Social / Portfolio / LinkedIn (5%)
-  if (
-    (user?.linkedin_url && user.linkedin_url.trim().length > 3) ||
-    (user?.portfolio_url && user.portfolio_url.trim().length > 3) ||
-    (user?.instagram_url && user.instagram_url.trim().length > 3)
-  ) {
+  // 2.3 Email Verification (5%) - Verification Requirement
+  const isEmailVerified = Boolean(
+    user?.email_verified ||
+    user?.is_email_verified ||
+    user?.email_confirmed_at
+  );
+  if (isEmailVerified) {
     score += 5;
   } else {
-    missing.push({ label: "LinkedIn or Portfolio / Social link", points: 5 });
+    missing.push({ label: "Verify Email Address", points: 5 });
+  }
+
+  // 2.4 Phone Verification (5%) - Verification Requirement
+  const isPhoneVerified = Boolean(
+    user?.phone_verified ||
+    user?.is_phone_verified
+  );
+  if (isPhoneVerified) {
+    score += 5;
+  } else {
+    missing.push({ label: "Verify Phone Number", points: 5 });
   }
 
   // 3. Professional & Council Credentials (25% total)
@@ -116,19 +128,30 @@ export function calculateProfileCompletion(
     missing.push({ label: "Profession Selection", points: 10 });
   }
 
-  // 3.2 COA Registration (15% - High trust for credibility, or Highest Qual for students)
+  // 3.2 COA Registration (10% - High trust for credibility, or Highest Qual for students)
   const isStudent =
     user?.profession?.toLowerCase().includes("student") || false;
   if (
     (user?.coa_number && user.coa_number.trim().length > 3) ||
     (isStudent && user?.highest_qualification)
   ) {
-    score += 15;
+    score += 10;
   } else {
     missing.push({
       label: isStudent ? "Highest Qualification" : "Council of Architecture (COA) Registration",
-      points: 15,
+      points: 10,
     });
+  }
+
+  // 3.3 Social / Portfolio / LinkedIn (5%)
+  if (
+    (user?.linkedin_url && user.linkedin_url.trim().length > 3) ||
+    (user?.portfolio_url && user.portfolio_url.trim().length > 3) ||
+    (user?.instagram_url && user.instagram_url.trim().length > 3)
+  ) {
+    score += 5;
+  } else {
+    missing.push({ label: "LinkedIn or Portfolio / Social link", points: 5 });
   }
 
   // 4. Bio & Personal Details (10% total)
@@ -165,13 +188,13 @@ export function calculateProfileCompletion(
 
   // Determine Badge Tier
   let badgeTier: BadgeTier = "bronze";
-  if (percentage >= 95) {
+  if (percentage >= 91) {
     badgeTier = "diamond";
-  } else if (percentage >= 85) {
+  } else if (percentage >= 81) {
     badgeTier = "platinum";
-  } else if (percentage >= 70) {
+  } else if (percentage >= 66) {
     badgeTier = "gold";
-  } else if (percentage >= 50) {
+  } else if (percentage >= 45) {
     badgeTier = "silver";
   }
 
@@ -290,11 +313,11 @@ export function getBadgeDetails(tier: BadgeTier, isVip = false) {
       icon: "💎",
     },
     diamond: {
-      title: isVip ? "Diamond Member (VIP)" : "Diamond Member",
+      title: "Diamond Member",
       color: "text-purple-800",
       bg: "bg-purple-100",
-      border: isVip ? "border-amber-400" : "border-purple-300",
-      icon: isVip ? "⭐" : "👑",
+      border: "border-purple-300",
+      icon: "👑",
     },
   };
 

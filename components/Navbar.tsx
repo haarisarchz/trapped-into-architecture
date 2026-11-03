@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Bell } from "lucide-react";
+import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, ShieldCheck, RefreshCw, AlertCircle } from "lucide-react";
+import { calculateProfileCompletion } from "@/utils/profileCompletion";
+import { calculateCompanyLevel } from "@/utils/companyLevel";
 
 export default function Navbar() {
   const router = useRouter();
@@ -29,16 +31,57 @@ const [showUserMenu, setShowUserMenu] =
 
     const [currentUser, setCurrentUser] =
   useState<any>(null);
+  const [showCompanyAdminModal, setShowCompanyAdminModal] = useState(false);
+  const [isCompanyAdmin, setIsCompanyAdmin] = useState(false);
+
+  const userRoleNormalized = (currentUser?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isInternalAdmin = ["superadmin", "admin", "ceo", "jobadmin"].includes(userRoleNormalized);
+  const [userTier, setUserTier] = useState<string>("bronze");
+
+  const getDisplayNameTierStyles = (tier: string) => {
+    switch (tier) {
+      case "diamond":
+        return "bg-gradient-to-r from-purple-700 via-fuchsia-600 to-indigo-700 text-white border border-purple-300 shadow-sm font-black";
+      case "platinum":
+        return "bg-gradient-to-r from-cyan-400 via-sky-300 to-teal-300 text-slate-950 border border-cyan-200 shadow-sm font-black";
+      case "gold":
+        return "bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-amber-950 border border-amber-300 shadow-sm font-black";
+      case "silver":
+        return "bg-gradient-to-r from-slate-200 via-gray-100 to-slate-200 text-slate-950 border border-slate-300 shadow-sm font-black";
+      case "bronze":
+        return "bg-gradient-to-r from-[#935624] to-[#713D14] text-white border border-[#AD6E35] shadow-sm font-bold";
+      default:
+        return "border border-white/80 bg-white/10 text-white hover:bg-white hover:text-black font-semibold";
+    }
+  };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && typeof window !== 'undefined') {
+      const hasSeen = localStorage.getItem('tia_has_seen_welcome');
+      if (!hasSeen) {
+        setShowWelcomeModal(true);
+      }
+    }
+  }, [currentUser]);
   const [settings, setSettings] = useState<any>(null);
 
-  const [authTab, setAuthTab] =
-    useState<"login" | "register" | "success">("login");
+    const [authTab, setAuthTab] =
+    useState<"login" | "register" | "verify" | "success">("login");
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationFullName, setVerificationFullName] = useState("");
+  const [verificationUserId, setVerificationUserId] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
+  const [verifyStatusMessage, setVerifyStatusMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [resendingCode, setResendingCode] = useState(false);
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotif, setShowNotif] = useState(false);
+  const [calloutDismissed, setCalloutDismissed] = useState(false);
   const [lastRead, setLastRead] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -62,9 +105,133 @@ const [showUserMenu, setShowUserMenu] =
 
   useEffect(() => {
     const fetchNotifs = async () => {
-      if (!currentUser?.role) return;
-      const role = currentUser.role.toLowerCase().replace(/[\s_]+/g, "");
+      if (!currentUser) return;
+      const role = (currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "");
       const notifs: any[] = [];
+
+      let userId = currentUser.id;
+      let userProf: any = null;
+      if (userId) {
+        const { data: pData } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+        userProf = pData;
+      }
+      if (!userProf && currentUser.username) {
+        const { data: pData } = await supabase.from("profiles").select("*").eq("username", currentUser.username).maybeSingle();
+        userProf = pData;
+        if (userProf) userId = userProf.id;
+      }
+      if (!userProf && currentUser.email) {
+        const { data: pData } = await supabase.from("profiles").select("*").eq("email", currentUser.email).maybeSingle();
+        userProf = pData;
+        if (userProf) userId = userProf.id;
+      }
+
+      // A. Member Milestone Level-Up Notifications (Silver 45%, Gold 66%, Platinum 81%, Diamond 91%)
+      if (userProf && userId) {
+        try {
+          const { data: edus } = await supabase.from("educations").select("*").eq("user_id", userId);
+          const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", userId);
+          const { percentage, badgeTier } = calculateProfileCompletion(userProf, edus || [], exps || []);
+          const profTime = userProf.updated_at || userProf.created_at || new Date().toISOString();
+          let calculatedTier = badgeTier || "bronze";
+          if (percentage >= 91) calculatedTier = "diamond";
+          else if (percentage >= 81) calculatedTier = "platinum";
+          else if (percentage >= 66) calculatedTier = "gold";
+          else if (percentage >= 45) calculatedTier = "silver";
+          else calculatedTier = "bronze";
+          setUserTier(calculatedTier);
+
+          if (percentage >= 91) {
+            notifs.push({
+              id: `member-tier-diamond-${userId}`,
+              message: `👑 Diamond Rank Unlocked (${percentage}%)! Your profile is among the top 1% of architecture professionals.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          } else if (percentage >= 81) {
+            notifs.push({
+              id: `member-tier-platinum-${userId}`,
+              message: `💎 Platinum Member Unlocked (${percentage}%)! You receive priority recommendations and exclusive alerts.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          } else if (percentage >= 66) {
+            notifs.push({
+              id: `member-tier-gold-${userId}`,
+              message: `🏆 Gold Member Unlocked (${percentage}%)! You can now publish job openings and feature your profile.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          } else if (percentage >= 45) {
+            notifs.push({
+              id: `member-tier-silver-${userId}`,
+              message: `🥈 Silver Member Unlocked (${percentage}%)! You can now claim existing studios or register a new practice.`,
+              time: profTime,
+              link: `/profile/${userProf.username || ""}`
+            });
+          }
+        } catch (e) {
+          console.warn("Could not calculate profile milestone notif:", e);
+        }
+      }
+
+      // B. Studio Milestone Level-Up Notifications (for companies owned or claimed by this user)
+      if (userId) {
+        try {
+          const { data: myComps } = await supabase
+            .from("companies")
+            .select("*")
+            .or(`created_by.eq.${userId},claimed_by.eq.${userId}`);
+
+          (myComps || []).forEach((c: any) => {
+            const compLvl = calculateCompanyLevel(c);
+            const compTime = c.updated_at || c.created_at || new Date().toISOString();
+            if (compLvl.score >= 45) {
+              notifs.push({
+                id: `comp-tier-${c.id}-${compLvl.tier}`,
+                message: `${compLvl.icon} ${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.tier === 'gold' || compLvl.tier === 'platinum' || compLvl.tier === 'diamond' ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
+                time: compTime,
+                link: `/companies/${c.slug}`
+              });
+            }
+          });
+        } catch (e) {
+          console.warn("Could not calculate studio milestone notif:", e);
+        }
+      }
+
+      // C. User's Submitted Jobs Review Notifications (Approved / Rejected)
+      if (userId) {
+        try {
+          const { data: userJobs } = await supabase
+            .from("jobs")
+            .select("id, firm_name, position, status, updated_at, posted_date")
+            .eq("author_id", userId)
+            .order("posted_date", { ascending: false })
+            .limit(5);
+
+          (userJobs || []).forEach((j: any) => {
+            const jTime = j.updated_at || j.posted_date || new Date().toISOString();
+            if (j.status === "published") {
+              notifs.push({
+                id: `job-pub-${j.id}`,
+                message: `✅ Your job listing for "${j.position}" at ${j.firm_name} has been approved and published!`,
+                time: jTime,
+                link: `/jobs`
+              });
+            } else if (j.status === "rejected") {
+              notifs.push({
+                id: `job-rej-${j.id}`,
+                message: `⚠️ Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
+                time: jTime,
+                link: `/post-job`
+              });
+            }
+          });
+        } catch (e) {
+          console.warn("Could not fetch user job status notif:", e);
+        }
+      }
       
       // 1. CEO Instagram Notifs
       if (role === "ceo") {
@@ -94,7 +261,7 @@ const [showUserMenu, setShowUserMenu] =
       }
       
       // 2. Admin/Superadmin/CEO/JobAdmin missing logo notifs
-      if (["superadmin", "admin", "ceo", "jobadmin"].includes(role)) {
+      if (["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes(role)) {
         let userId = currentUser.id;
         if (!userId && currentUser.username) {
           const { data: pData } = await supabase.from("profiles").select("id").eq("username", currentUser.username).maybeSingle();
@@ -225,6 +392,61 @@ const [showUserMenu, setShowUserMenu] =
         }
       }
       
+      // 3. User activities, Email dispatches & Studio requests for CEO & Admins
+      if (["ceo", "superadmin", "admin", "jobadmin"].includes(role)) {
+        try {
+          const { data: emailLogs } = await supabase
+            .from("contact_inquiries")
+            .select("id, name, email, subject, message, created_at")
+            .in("subject", [
+              "NOTIFIED_COMPANY_JOB_POSTING",
+              "COMPANY_JOB_EMAIL_SENT",
+              "COMPANY_JOB_EMAIL_PENDING",
+              "NEW_USER_REGISTERED",
+              "USER_VERIFIED",
+              "USER_PHONE_VERIFIED",
+              "STUDIO_CLAIM_REQUEST",
+              "NEW_STUDIO_REGISTERED",
+            ])
+            .order("created_at", { ascending: false })
+            .limit(30);
+
+          (emailLogs || []).forEach((log: any) => {
+            let icon = "✉️";
+            let link: string | null = `/admin/jobs`;
+
+            if (log.subject === "COMPANY_JOB_EMAIL_PENDING") {
+              icon = "⏳";
+              link = "/admin/jobs";
+            } else if (log.subject === "NEW_USER_REGISTERED") {
+              icon = "👤";
+              link = "/admin/users";
+            } else if (log.subject === "USER_VERIFIED") {
+              icon = "🔒";
+              link = "/admin/users";
+            } else if (log.subject === "USER_PHONE_VERIFIED") {
+              icon = "📱";
+              link = "/admin/users";
+            } else if (log.subject === "STUDIO_CLAIM_REQUEST") {
+              icon = "🏛️";
+              link = "/admin/claims";
+            } else if (log.subject === "NEW_STUDIO_REGISTERED") {
+              icon = "🏢";
+              link = "/admin/companies";
+            }
+
+            notifs.push({
+              id: `email-log-${log.id}`,
+              message: `${icon} ${log.message}`,
+              time: log.created_at,
+              link,
+            });
+          });
+        } catch (err) {
+          console.warn("Failed to fetch email logs for notifications:", err);
+        }
+      }
+
       setNotifications(notifs.sort((a,b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
     };
     
@@ -233,6 +455,7 @@ const [showUserMenu, setShowUserMenu] =
 
   const handleBellClick = () => {
     setShowNotif(!showNotif);
+    setCalloutDismissed(true);
     if (!showNotif) {
       const now = new Date();
       setLastRead(now);
@@ -240,7 +463,9 @@ const [showUserMenu, setShowUserMenu] =
     }
   };
 
-  const hasUnread = notifications.some(n => !lastRead || new Date(n.time) > lastRead);
+  const unreadNotifs = notifications.filter(n => !lastRead || new Date(n.time) > lastRead);
+  const hasUnread = unreadNotifs.length > 0;
+  const unreadCount = unreadNotifs.length;
 
   const timeAgo = (dateStr: string) => {
     if (!dateStr) return '';
@@ -270,6 +495,57 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+    let isMounted = true;
+    const checkCompanyAdminStatus = async () => {
+      if (!currentUser) {
+        setIsCompanyAdmin(false);
+        return;
+      }
+      const r = (currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      if (["superadmin", "admin", "ceo", "jobadmin"].includes(r)) {
+        return;
+      }
+      if (r === "companyadmin") {
+        if (isMounted) setIsCompanyAdmin(true);
+        return;
+      }
+      let uid = currentUser.id;
+      if (!uid && currentUser.username) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("id, role")
+          .eq("username", currentUser.username)
+          .maybeSingle();
+        if (prof) {
+          uid = prof.id;
+          const profRole = (prof.role || "").toLowerCase().replace(/[\s_]+/g, "");
+          if (profRole === "companyadmin") {
+            if (isMounted) setIsCompanyAdmin(true);
+            return;
+          }
+        }
+      }
+      if (uid) {
+        const { data: comps } = await supabase
+          .from("companies")
+          .select("id")
+          .or(`created_by.eq.${uid},claimed_by.eq.${uid}`)
+          .limit(1);
+        if (isMounted) {
+          setIsCompanyAdmin(!!(comps && comps.length > 0));
+        }
+      }
+    };
+    checkCompanyAdminStatus();
+    const handleOpenModal = () => setShowCompanyAdminModal(true);
+    window.addEventListener("openCompanyAdminModal", handleOpenModal);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("openCompanyAdminModal", handleOpenModal);
+    };
+  }, [currentUser]);
+
+useEffect(() => {
   const storedUser = localStorage.getItem("currentUser");
   if (storedUser) {
     const parsed = JSON.parse(storedUser);
@@ -287,6 +563,71 @@ useEffect(() => {
     }
   }
 }, []);
+
+
+  const handleVerifyOtp = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      setVerifyStatusMessage({ text: "Please enter the 6-digit code.", type: "error" });
+      return;
+    }
+    setIsVerifyingCode(true);
+    setVerifyStatusMessage(null);
+
+    try {
+      const res = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: verificationEmail,
+          userId: verificationUserId,
+          code: verificationCode.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerifyStatusMessage({
+          text: data.message || "Email verified successfully! You've unlocked your Verified Badge (+5%).",
+          type: "success",
+        });
+      } else {
+        setVerifyStatusMessage({
+          text: data.error || "Invalid verification code. Please try again.",
+          type: "error",
+        });
+      }
+    } catch (err: any) {
+      setVerifyStatusMessage({ text: "Network error. Please try again.", type: "error" });
+    } finally {
+      setIsVerifyingCode(false);
+    }
+  };
+
+  const handleResendVerificationCode = async () => {
+    if (!verificationEmail) return;
+    setResendingCode(true);
+    try {
+      const res = await fetch("/api/auth/send-verification-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: verificationEmail,
+          fullName: verificationFullName,
+          userId: verificationUserId,
+          isResend: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVerifyStatusMessage({ text: "A fresh 6-digit code has been sent to your email!", type: "success" });
+      } else {
+        setVerifyStatusMessage({ text: data.error || "Failed to resend code.", type: "error" });
+      }
+    } catch (e) {
+      setVerifyStatusMessage({ text: "Could not resend code. Please try again.", type: "error" });
+    } finally {
+      setResendingCode(false);
+    }
+  };
 
   return (
     <>
@@ -308,7 +649,7 @@ useEffect(() => {
         className="flex items-center gap-2 text-lg font-medium hover:text-gray-300 transition"
         aria-label="Open navigation menu"
       >
-        <span className="text-2xl">☰</span>
+        <Menu size={24} />
         <span>Menu</span>
       </button>
 
@@ -320,11 +661,12 @@ useEffect(() => {
             <div className="relative">
               <button 
                 onClick={() => setShowUserMenu(!showUserMenu)} 
-                className="font-semibold text-gray-200 hover:text-white transition flex items-center gap-1"
+                className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm transition flex items-center gap-1.5 ${getDisplayNameTierStyles(userTier)}`}
                 aria-label="Open account menu"
+                title={`${userTier.toUpperCase()} Member`}
               >
-                {currentUser.displayName || currentUser.username || "Profile"}
-                <span className="text-xs">▼</span>
+                <span>{currentUser.displayName || currentUser.username || "Profile"}</span>
+                <ChevronDown size={14} className="opacity-80" />
               </button>
               
     {showUserMenu && (
@@ -339,26 +681,63 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+        {/* Internal Admins (Super Admin, CEO, Job Admin) */}
+        {isInternalAdmin && (
           <>
+            <button
+              onClick={() => {
+                router.push("/admin/jobs/add");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
+            >
+              Add a Job
+            </button>
+            <button
+              onClick={() => {
+                router.push("/post-a-job?preview=true");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-purple-50 text-purple-700 border-b border-gray-100 font-medium flex items-center gap-1.5"
+            >
+              <span>🧪 Preview &quot;Post a Job&quot; (User View)</span>
+            </button>
             <button
               onClick={() => {
                 router.push("/admin");
                 setShowUserMenu(false);
               }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
-            >Admin Panel</button>
-
-            <button
-              onClick={() => {
-                router.push("/admin/add-job");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
             >
-              Add New Job
+              Admin Panel
             </button>
           </>
+        )}
+
+        {/* Company Admins (Client-side / Employer Admins) */}
+        {!isInternalAdmin && isCompanyAdmin && (
+          <button
+            onClick={() => {
+              router.push("/post-a-job");
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
+        )}
+
+        {/* Regular Users (Job Seekers / Unregistered / Non-admin) */}
+        {!isInternalAdmin && !isCompanyAdmin && (
+          <button
+            onClick={() => {
+              setShowCompanyAdminModal(true);
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
         )}
 
         <button
@@ -396,8 +775,37 @@ useEffect(() => {
           <div className="relative flex items-center ml-3 md:ml-4 notif-container">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
-              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+              {hasUnread && unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-black shadow">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
+            {/* FLOATING CALLOUT POPUP */}
+            {hasUnread && !calloutDismissed && unreadCount > 0 && !showNotif && (
+              <div className="absolute right-0 top-full mt-2.5 z-50 flex items-center bg-zinc-950 text-white text-xs font-semibold py-1.5 pl-3 pr-2 rounded-full shadow-2xl border border-zinc-700 whitespace-nowrap">
+                <div 
+                  onClick={handleBellClick} 
+                  className="cursor-pointer flex items-center gap-1.5 hover:text-gray-200 transition"
+                >
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  <span>{unreadCount} new notification{unreadCount !== 1 ? 's' : ''}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCalloutDismissed(true);
+                  }}
+                  className="ml-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+                  title="Dismiss"
+                  aria-label="Dismiss"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
             {showNotif && (
               <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
                 <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
@@ -448,6 +856,13 @@ useEffect(() => {
         Home
       </Link>
 
+      {/* NEWS FEED */}
+
+      <Link
+        href="/news-feed"
+        className="hover:text-gray-300 transition"
+      >Feed</Link>
+
       {/* JOBS */}
 
       <Link
@@ -475,8 +890,6 @@ useEffect(() => {
   Companies
 </Link>
 
-          
-
           {/* CONTACT */}
 
           <Link
@@ -493,15 +906,15 @@ useEffect(() => {
   <div className="relative">
     <button
       onClick={() => setShowUserMenu(!showUserMenu)}
-      className="border border-white px-5 py-2 rounded-xl hover:bg-white hover:text-black transition"
+      className={`px-4 py-2 rounded-xl transition flex items-center gap-2 cursor-pointer shadow-xs ${getDisplayNameTierStyles(userTier)}`}
+      title={`${userTier.toUpperCase()} Member`}
     >
-      <div className="flex items-center gap-2">
-        {currentUser.displayName}
-      </div>
+      <span>{currentUser.displayName || currentUser.username || "Profile"}</span>
+      <ChevronDown size={14} className="opacity-80" />
     </button>
 
     {showUserMenu && (
-      <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white text-black shadow-lg overflow-hidden z-50">
+      <div className="absolute right-0 mt-2 w-72 rounded-xl bg-white text-black shadow-lg overflow-hidden z-50">
 
         <button
           onClick={() => {
@@ -513,26 +926,63 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+        {/* Internal Admins (Super Admin, CEO, Job Admin) */}
+        {isInternalAdmin && (
           <>
+            <button
+              onClick={() => {
+                router.push("/admin/jobs/add");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
+            >
+              Add a Job
+            </button>
+            <button
+              onClick={() => {
+                router.push("/post-a-job?preview=true");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-3 hover:bg-purple-50 text-purple-700 border-b border-gray-100 font-medium flex items-center gap-1.5"
+            >
+              <span>🧪 Preview &quot;Post a Job&quot; (User View)</span>
+            </button>
             <button
               onClick={() => {
                 router.push("/admin");
                 setShowUserMenu(false);
               }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-100"
-            >Admin Panel</button>
-
-            <button
-              onClick={() => {
-                router.push("/admin/add-job");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-100"
+              className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
             >
-              Add New Job
+              Admin Panel
             </button>
           </>
+        )}
+
+        {/* Company Admins (Client-side / Employer Admins) */}
+        {!isInternalAdmin && isCompanyAdmin && (
+          <button
+            onClick={() => {
+              router.push("/post-a-job");
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
+        )}
+
+        {/* Regular Users (Job Seekers / Unregistered / Non-admin) */}
+        {!isInternalAdmin && !isCompanyAdmin && (
+          <button
+            onClick={() => {
+              setShowCompanyAdminModal(true);
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
         )}
 
         <button
@@ -561,8 +1011,37 @@ useEffect(() => {
           <div className="relative flex items-center ml-3 md:ml-4 notif-container">
             <button onClick={handleBellClick} className="text-white hover:text-gray-300 relative p-1 transition">
               <Bell size={24} />
-              {hasUnread && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-black"></span>}
+              {hasUnread && unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border-2 border-black shadow">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
+            {/* FLOATING CALLOUT POPUP */}
+            {hasUnread && !calloutDismissed && unreadCount > 0 && !showNotif && (
+              <div className="absolute right-0 top-full mt-2.5 z-50 flex items-center bg-zinc-950 text-white text-xs font-semibold py-1.5 pl-3 pr-2 rounded-full shadow-2xl border border-zinc-700 whitespace-nowrap">
+                <div 
+                  onClick={handleBellClick} 
+                  className="cursor-pointer flex items-center gap-1.5 hover:text-gray-200 transition"
+                >
+                  <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                  <span>{unreadCount} new notification{unreadCount !== 1 ? 's' : ''}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCalloutDismissed(true);
+                  }}
+                  className="ml-2 p-0.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+                  title="Dismiss"
+                  aria-label="Dismiss"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+
             {showNotif && (
               <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
                 <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
@@ -599,44 +1078,71 @@ useEffect(() => {
   {/* MOBILE MENU */}
 {mobileMenuOpen && (
   <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50 shadow-2xl flex flex-col">
-    <Link href="/" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-    <Link href="/jobs" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
-    <Link href="/companies" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
-    <Link href="/internships" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
-      <Link href="/contact" className="block px-6 py-4 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
-    
-    
-    
-    {!currentUser && (
-      <div className="flex bg-gray-900">
-        <button
-          onClick={() => {
-            setAuthTab("login");
-            setShowAuthPopup(true);
-            setMobileMenuOpen(false);
-          }}
-          className="flex-1 text-center px-6 py-4 font-bold hover:bg-gray-800 transition border-r border-gray-800"
-        >
-          Login
-        </button>
-        <button
-          onClick={() => {
-            setAuthTab("register");
-            setShowAuthPopup(true);
-            setMobileMenuOpen(false);
-          }}
-          className="flex-1 text-center px-6 py-4 font-bold hover:bg-gray-800 transition"
-        >
-          Register
-        </button>
-      </div>
-    )}
+    <Link href="/" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+    <Link href="/news-feed" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Feed</Link>
+    <Link href="/jobs" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
+    <Link href="/internships" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
+    <Link href="/companies" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
+    <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
   </div>
 )}
 </nav>
 
 
-{/* AUTH POPUP */}
+{/* COMPANY ADMIN ACCESS REQUIRED MODAL */}
+      {showCompanyAdminModal && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white text-black w-full max-w-md rounded-3xl p-6 sm:p-8 relative shadow-2xl border border-gray-100 text-center">
+            <button
+              type="button"
+              onClick={() => setShowCompanyAdminModal(false)}
+              className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:text-black hover:bg-gray-200 transition cursor-pointer"
+              aria-label="Close dialog"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-200">
+              <ShieldCheck size={28} />
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2">
+              Company Admin Access Required
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              You must own or be registered as a Company Admin to post a job.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCompanyAdminModal(false);
+                  router.push("/companies");
+                }}
+                className="bg-black hover:bg-gray-800 text-white font-bold py-3 px-5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              >
+                <span>Register / Claim Company</span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCompanyAdminModal(false)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-5 rounded-xl transition text-sm cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AUTH POPUP */}
 
       {showAuthPopup && (
 
@@ -651,8 +1157,8 @@ useEffect(() => {
                 setShowAuthPopup(false)
               }
               className="absolute top-3 right-3 w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-md text-3xl hover:bg-gray-100 transition z-50"
-            >
-              ×
+             aria-label="Close dialog">
+              <X size={20} />
             </button>
 
             {/* TABS */}
@@ -769,14 +1275,49 @@ useEffect(() => {
 
       <button
         type="button"
-        className="text-gray-500 hover:text-black transition"
+        onClick={async () => {
+          const email = prompt("Enter your registered email address to recover your username:");
+          if (!email) return;
+          try {
+            const res = await fetch("/api/auth/forgot-username", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email.trim() }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+              alert(data.message || "Your username has been emailed to you.");
+            } else {
+              alert(data.error || "Could not retrieve username. Please verify your email.");
+            }
+          } catch (e) {
+            alert("Error sending username reminder. Please try again.");
+          }
+        }}
+        className="text-gray-500 hover:text-black transition cursor-pointer"
       >
         Forgot Username?
       </button>
 
       <button
         type="button"
-        className="text-gray-500 hover:text-black transition"
+        onClick={async () => {
+          const email = prompt("Enter your registered email address to receive a password reset link:");
+          if (!email) return;
+          try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+              redirectTo: `${window.location.origin}/reset-password`,
+            });
+            if (error) {
+              alert(error.message);
+            } else {
+              alert("Password reset link has been sent to your email!");
+            }
+          } catch (e) {
+            alert("Failed to send reset link. Please try again.");
+          }
+        }}
+        className="text-gray-500 hover:text-black transition cursor-pointer"
       >
         Forgot Password?
       </button>
@@ -865,17 +1406,147 @@ window.location.reload();
 
 {/* SUCCESS */}
 
+{/* VERIFY CODE */}
+{authTab === "verify" && (
+  <div className="text-center space-y-5 py-3">
+    <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-inner border border-blue-100">
+      <Mail size={32} strokeWidth={2.2} />
+    </div>
+
+    <div className="space-y-1">
+      <h2 className="text-2xl font-extrabold text-gray-900">
+        Verify Your Email
+      </h2>
+      <p className="text-xs font-semibold text-blue-700 bg-blue-50 py-1 px-3 rounded-full inline-block border border-blue-200">
+        Verification Code Sent
+      </p>
+    </div>
+
+    <p className="text-gray-600 text-xs sm:text-sm max-w-sm mx-auto leading-relaxed">
+      We sent a 6-digit verification code to <strong className="text-gray-900">{verificationEmail || "your email"}</strong>. Enter it below to unlock your <strong className="text-emerald-700">Verified Badge (+5% score)</strong>.
+    </p>
+
+    {verifyStatusMessage && (
+      <div className={`p-3 rounded-xl text-xs font-medium flex items-center justify-center gap-2 ${
+        verifyStatusMessage.type === "success" 
+          ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
+          : "bg-red-50 text-red-700 border border-red-200"
+      }`}>
+        {verifyStatusMessage.type === "success" ? <Check size={14} /> : <AlertCircle size={14} />}
+        <span>{verifyStatusMessage.text}</span>
+      </div>
+    )}
+
+    {verifyStatusMessage?.type === "success" ? (
+      <button
+        type="button"
+        onClick={() => {
+          setAuthTab("login");
+          setVerifyStatusMessage(null);
+          setVerificationCode("");
+        }}
+        className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-2xl font-bold transition shadow-sm mt-2 cursor-pointer flex items-center justify-center gap-2"
+      >
+        <span>Proceed to Login</span>
+        <ArrowRight size={16} />
+      </button>
+    ) : (
+      <div className="space-y-3">
+        <div>
+          <input
+            type="text"
+            maxLength={6}
+            value={verificationCode}
+            onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="• • • • • •"
+            className="w-full text-center tracking-[12px] text-2xl font-mono font-bold py-3.5 px-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-black focus:bg-white focus:outline-none transition shadow-inner"
+          />
+        </div>
+
+        <button
+          type="button"
+          disabled={verificationCode.length !== 6 || isVerifyingCode}
+          onClick={handleVerifyOtp}
+          className="w-full bg-black hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3.5 rounded-2xl font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+        >
+          {isVerifyingCode ? (
+            <span>Verifying Code...</span>
+          ) : (
+            <>
+              <ShieldCheck size={18} />
+              <span>Verify Email (+5% Score)</span>
+            </>
+          )}
+        </button>
+
+        <div className="flex items-center justify-between text-xs text-gray-500 pt-2 px-1">
+          <button
+            type="button"
+            disabled={resendingCode}
+            onClick={handleResendVerificationCode}
+            className="hover:text-black font-semibold underline underline-offset-4 cursor-pointer disabled:opacity-50"
+          >
+            {resendingCode ? "Sending fresh code..." : "Resend Code"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAuthTab("login");
+              setVerifyStatusMessage(null);
+            }}
+            className="hover:text-gray-900 cursor-pointer text-gray-400"
+          >
+            Verify later & Log In →
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+)}
+
 {authTab === "success" && (
-  <div className="text-center space-y-6 py-8">
-    <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto text-4xl mb-4">✓</div>
-    <h2 className="text-3xl font-bold">Registration Successful</h2>
-    <p className="text-gray-600 text-lg">Your account has been created successfully. Login to continue.</p>
-    <button 
-      onClick={() => setAuthTab("login")} 
-      className="w-full bg-black text-white py-4 rounded-2xl font-semibold hover:opacity-90 transition mt-6"
-    >
-      Login
-    </button>
+  <div className="text-center space-y-5 py-6">
+    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
+      <Check size={44} strokeWidth={2.5} />
+    </div>
+    <div className="space-y-1">
+      <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+        Thanks for Registering with Us! 🎉
+      </h2>
+      <p className="text-xs sm:text-sm font-semibold text-emerald-700 bg-emerald-50 py-1 px-3 rounded-full inline-block border border-emerald-200 mt-1">
+        Welcome to Trapped Into Architecture
+      </p>
+    </div>
+    <p className="text-gray-600 text-sm max-w-sm mx-auto leading-relaxed">
+      Your account is ready. Log in now to build your architectural profile, explore studios, and connect with firms across India.
+    </p>
+
+    <div className="space-y-3 pt-2">
+      <button 
+        type="button"
+        onClick={() => setAuthTab("login")} 
+        className="w-full bg-black hover:bg-gray-800 text-white py-3.5 rounded-2xl font-bold transition shadow-sm cursor-pointer flex items-center justify-center gap-2"
+      >
+        <span>Proceed to Login</span>
+        <ArrowRight size={16} />
+      </button>
+
+      {verificationEmail && (
+        <button
+          type="button"
+          disabled={resendingCode}
+          onClick={async () => {
+            await handleResendVerificationCode();
+            setAuthTab("verify");
+          }}
+          className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 py-3 rounded-2xl font-bold transition cursor-pointer flex items-center justify-center gap-2 text-xs sm:text-sm"
+        >
+          <ShieldCheck size={16} />
+          <span>{resendingCode ? "Sending code..." : "Request Verification Code (+5% Score)"}</span>
+        </button>
+      )}
+    </div>
   </div>
 )}
 
@@ -936,11 +1607,11 @@ window.location.reload();
 
       <div className="absolute left-7 top-0 hidden group-hover:block bg-black text-white text-xs rounded-xl px-4 py-3 w-72 z-50 shadow-lg">
 
-        • Minimum 5 characters <br />
-        • Maximum 12 characters <br />
-        • Username is non-case sensitive <br />
-        • Only letters, numbers, dots and underscore allowed <br />
-        • No spaces allowed
+        &bull; Minimum 5 characters <br />
+        &bull; Maximum 12 characters <br />
+        &bull; Username is non-case sensitive <br />
+        &bull; Only letters, numbers, dots and underscore allowed <br />
+        &bull; No spaces allowed
 
       </div>
 
@@ -994,7 +1665,7 @@ window.location.reload();
               usernameMessage.innerHTML = "Username already taken";
               usernameMessage.className = "text-sm mt-2 text-red-500";
             } else {
-              usernameMessage.innerHTML = "Username available ✓";
+              usernameMessage.innerHTML = "Username available &#10003;";
               usernameMessage.className = "text-sm mt-2 text-green-600";
             }
           });
@@ -1109,7 +1780,7 @@ window.location.reload();
               emailMessage.innerHTML = "Email already registered";
               emailMessage.className = "text-sm mt-2 text-red-500";
             } else {
-              emailMessage.innerHTML = "Email available ✓";
+              emailMessage.innerHTML = "Email available &#10003;";
               emailMessage.className = "text-sm mt-2 text-green-600";
             }
           });
@@ -1194,7 +1865,7 @@ window.location.reload();
               phoneMessage.innerHTML = "Phone number already registered";
               phoneMessage.className = "text-sm mt-2 text-red-500";
             } else {
-              phoneMessage.innerHTML = "Phone available ✓";
+              phoneMessage.innerHTML = "Phone available &#10003;";
               phoneMessage.className = "text-sm mt-2 text-green-600";
             }
           });
@@ -1243,10 +1914,10 @@ window.location.reload();
 
       <div className="absolute left-7 top-0 hidden group-hover:block bg-black text-white text-xs rounded-xl px-4 py-3 w-64 z-50 shadow-lg">
 
-        • Minimum 8 characters <br />
-        • Maximum 16 characters <br />
-        • Must contain letters and numbers <br />
-        • Special characters allowed
+        &bull; Minimum 8 characters <br />
+        &bull; Maximum 16 characters <br />
+        &bull; Must contain letters and numbers <br />
+        &bull; Special characters allowed
 
       </div>
 
@@ -1311,7 +1982,7 @@ window.location.reload();
       } else {
 
         passwordMessage.innerHTML =
-          "Strong password ✓";
+          "Strong password &#10003;";
 
         passwordMessage.className =
           "text-sm mt-2 text-green-600";
@@ -1443,7 +2114,7 @@ window.location.reload();
 
         if (!usernameRegex.test(username)) {
           alert(
-            "Username must be 5–12 characters and only contain letters, numbers, dots, or underscores."
+            "Username must be 5 to 12 characters and only contain letters, numbers, dots, or underscores."
           );
           return;
         }
@@ -1454,7 +2125,7 @@ window.location.reload();
           /^[a-zA-Z0-9!@#$%^&*()_+={}:;"'<>,.?/-]{8,16}$/;
 
         if (!passwordRegex.test(password)) {
-          alert("Password must be 8–16 characters.");
+          alert("Password must be 8 to 16 characters.");
           return;
         }
 
@@ -1524,7 +2195,31 @@ window.location.reload();
 
           console.log("PROFILE CREATED SUCCESSFULLY");
 
+          // Dispatch CEO Alert for New User Registration
+          fetch("/api/notify/ceo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "USER_REGISTRATION",
+              data: {
+                userId: authData.user.id,
+                fullName,
+                username,
+                email,
+                phone: fullPhone || null,
+                profession,
+              },
+            }),
+          }).catch((err) => console.warn("Failed to notify CEO of new registration:", err));
+
           
+                    // Save registration details in case user requests verification
+          setVerificationEmail(email);
+          setVerificationFullName(fullName);
+          setVerificationUserId(authData.user.id);
+          setVerificationCode("");
+          setVerifyStatusMessage(null);
+
           await supabase.auth.signOut();
           setAuthTab("success");
         }
@@ -1541,6 +2236,138 @@ window.location.reload();
 </div>
 
 )}
-  </>
+  
+      {/* FIRST-TIME LOGIN WELCOME MODAL */}
+      {showWelcomeModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => {
+            localStorage.setItem("tia_has_seen_welcome", "true");
+            setShowWelcomeModal(false);
+          }}
+        >
+          <div
+            className="bg-[#FBF9F5] border border-[#E8E2D5] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-left relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Background architectural glow */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-amber-200/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4 relative z-10">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold uppercase tracking-wider mb-2">
+                  🏛️ Welcome to TIA
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                  Welcome, {currentUser?.displayName || currentUser?.username || "Architect"}!
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-600 mt-1 leading-relaxed">
+                  You are now part of India&apos;s premier platform dedicated exclusively to architecture, interior design, and studio careers.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="p-1.5 text-gray-400 hover:text-black rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                title="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* 3 Quick Action Steps */}
+            <div className="space-y-2.5 mb-6 relative z-10">
+              <Link
+                href={`/profile/${currentUser?.username || ""}?tab=details`}
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="flex items-center gap-3.5 p-3 rounded-2xl bg-white border border-gray-200 hover:border-black transition group cursor-pointer shadow-xs"
+              >
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
+                  1
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-bold text-gray-900 group-hover:text-black">
+                    Complete Your Profile
+                  </h4>
+                  <p className="text-[11px] text-gray-500 truncate">
+                    Reach Gold Tier (66%+) to post jobs and unlock verified perks.
+                  </p>
+                </div>
+                <ArrowRight size={14} className="text-gray-400 group-hover:text-black transition" />
+              </Link>
+
+              <Link
+                href="/companies"
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="flex items-center gap-3.5 p-3 rounded-2xl bg-white border border-gray-200 hover:border-black transition group cursor-pointer shadow-xs"
+              >
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-sm shrink-0">
+                  2
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-bold text-gray-900 group-hover:text-black">
+                    Claim or Register Your Studio
+                  </h4>
+                  <p className="text-[11px] text-gray-500 truncate">
+                    Manage your practice dossier, invite team, and publish openings.
+                  </p>
+                </div>
+                <ArrowRight size={14} className="text-gray-400 group-hover:text-black transition" />
+              </Link>
+
+              <div className="p-3 rounded-2xl bg-[#E8F8EE] border border-[#A7E8BD] flex items-center gap-3.5 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-[#25D366] text-white flex items-center justify-center text-lg shrink-0">
+                  📲
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xs font-bold text-gray-900">
+                    Invite Peers on WhatsApp
+                  </h4>
+                  <p className="text-[11px] text-gray-600">
+                    Help fellow architects, students, and studios discover the portal.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Buttons: Direct WhatsApp Invite + Get Started */}
+            <div className="flex flex-col sm:flex-row gap-2.5 relative z-10">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                  "Hey! I just joined Trapped Into Architecture — India's dedicated architectural job, studio directory & professional networking portal. Explore studios, jobs & perks: https://trappedintoarchitecture.com"
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-xs transition"
+              >
+                <span>📲</span>
+                <span>Invite Friends on WhatsApp</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem("tia_has_seen_welcome", "true");
+                  setShowWelcomeModal(false);
+                }}
+                className="py-3 px-5 rounded-xl bg-black hover:bg-gray-800 text-white font-bold text-xs sm:text-sm transition cursor-pointer"
+              >
+                Get Started
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+</>
 );
 }

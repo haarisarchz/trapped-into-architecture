@@ -4,6 +4,7 @@ import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatDate } from "@/utils/formatDate";
 import { generateJobUrl } from "@/utils/jobUrl";
@@ -12,7 +13,7 @@ import Footer from "@/components/Footer";
 import PaginationControls from "@/components/PaginationControls";
 
 
-import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight, RefreshCw } from "lucide-react";
+import { Share, Check, Copy, Settings, Eye, Edit2, Trash2, ChevronRight, RefreshCw, CheckCircle2, XCircle, Clock, Building2, User, ExternalLink, AlertCircle, Briefcase, FileText } from "lucide-react";
 import { formatWhatsAppPost } from "@/utils/socialFormats";
 
 function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) {
@@ -159,6 +160,26 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
   );
 }
 
+
+function getJobDraftSavedDate(job: any): string | null {
+  if (job.updated_at) return job.updated_at;
+  if (job.created_at) return job.created_at;
+
+  // Fallback: Check if image filename contains upload timestamp (e.g. smart-upload-1791726754536.jpg)
+  if (job.image && typeof job.image === 'string') {
+    const match = job.image.match(/(\d{13})/);
+    if (match) {
+      const ts = parseInt(match[1], 10);
+      if (!isNaN(ts) && ts > 1600000000000 && ts < 2200000000000) {
+        return new Date(ts).toISOString();
+      }
+    }
+  }
+
+  if (job.posted_date) return job.posted_date;
+  return null;
+}
+
 function AdminJobsContent() {
   const [highlightId, setHighlightId] = React.useState<string | null>(null);
 
@@ -182,6 +203,13 @@ function AdminJobsContent() {
 
 const statusFilter = searchParams.get("status");
 const typeFilter = searchParams.get("type");
+const tabParam = searchParams.get("tab");
+
+  const [activeMainTab, setActiveMainTab] = useState<"main" | "submissions">(
+    tabParam === "submissions" ? "submissions" : "main"
+  );
+  const [selectedFlyer, setSelectedFlyer] = useState<string | null>(null);
+  const [reviewModalJob, setReviewModalJob] = useState<any | null>(null);
 
     const [jobs, setJobs] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -192,6 +220,16 @@ const typeFilter = searchParams.get("type");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+
+  const getFilterUrl = (newStatus?: string | null, newType?: string | null) => {
+    const s = newStatus !== undefined ? newStatus : statusFilter;
+    const t = newType !== undefined ? newType : typeFilter;
+    const params = new URLSearchParams();
+    if (s) params.set("status", s);
+    if (t) params.set("type", t);
+    const qs = params.toString();
+    return "/admin/jobs" + (qs ? `?${qs}` : "");
+  };
 
   useEffect(() => { setCurrentUser(JSON.parse(localStorage.getItem("currentUser") || "null")); }, []);
 
@@ -236,10 +274,18 @@ const typeFilter = searchParams.get("type");
           valA = a.profiles?.display_name || a.profiles?.full_name || a.profiles?.username || "Unknown";
           valB = b.profiles?.display_name || b.profiles?.full_name || b.profiles?.username || "Unknown";
           break;
-        case "posted_date":
-          valA = a.posted_date ? new Date(a.posted_date).getTime() : 0;
-          valB = b.posted_date ? new Date(b.posted_date).getTime() : 0;
+        case "posted_date": {
+          const getJobDateVal = (j: any) => {
+            if (j.status === "draft") {
+              const d = getJobDraftSavedDate(j);
+              return d ? new Date(d).getTime() : 0;
+            }
+            return j.posted_date ? new Date(j.posted_date).getTime() : 0;
+          };
+          valA = getJobDateVal(a);
+          valB = getJobDateVal(b);
           break;
+        }
         case "status":
           valA = a.status || "";
           valB = b.status || "";
@@ -376,9 +422,71 @@ const fetchJobs = async () => {
     fetchJobs();
   };
 
+  const handleApproveJob = async (job: any) => {
+    if (!confirm(`Approve and publish opening for "${job.position || 'position'}" at "${job.firm_name}"?`)) return;
+    try {
+      let updatePayload: any = {
+        status: "published",
+        posted_date: new Date().toISOString(),
+        review_notes: null,
+      };
 
-  const sortedJobs = getSortedJobs(jobs);
-  const totalPages = Math.ceil(sortedJobs.length / itemsPerPage);
+      if (job.edit_request_payload && typeof job.edit_request_payload === "object") {
+        updatePayload = {
+          ...updatePayload,
+          ...job.edit_request_payload,
+          edit_request_payload: null,
+        };
+      }
+
+      const { error } = await supabase.from("jobs").update(updatePayload).eq("id", job.id);
+      if (error) throw error;
+      // Trigger social publishing and company notification for newly approved opening
+      fetch("/api/publish/social", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: job.id }),
+      }).catch(err => console.error("Social publish error:", err));
+
+      fetch("/api/notify/company-job-published", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: job.id }),
+      }).catch(err => console.error("Company notification error:", err));
+
+      alert(`Opening for "${job.position}" at "${job.firm_name}" is now live and published!`);
+      fetchJobs();
+    } catch (e: any) {
+      alert("Failed to approve job: " + e.message);
+    }
+  };
+
+  const handleRejectJob = async (job: any) => {
+    const reason = prompt(`Reason for rejecting "${job.position || 'this opening'}" at "${job.firm_name}" (optional):`);
+    if (reason === null) return;
+    try {
+      const { error } = await supabase.from("jobs").update({
+        status: "rejected",
+        review_notes: reason || "Rejected by editorial team",
+      }).eq("id", job.id);
+      if (error) throw error;
+      alert("Opening marked as rejected.");
+      fetchJobs();
+    } catch (e: any) {
+      alert("Failed to reject job: " + e.message);
+    }
+  };
+
+
+  const pendingReviewJobs = jobs.filter(
+    (j) => j.status === "pending_review" || (j.edit_request_payload && Object.keys(j.edit_request_payload).length > 0)
+  );
+
+  const mainPlatformJobs = jobs.filter((j) => j.status !== "pending_review");
+
+  const jobsToDisplay = activeMainTab === "submissions" ? pendingReviewJobs : mainPlatformJobs;
+  const sortedJobs = getSortedJobs(jobsToDisplay);
+  const totalPages = Math.max(1, Math.ceil(sortedJobs.length / itemsPerPage));
   const currentJobs = sortedJobs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 return (
@@ -399,102 +507,173 @@ return (
     </h1>
 
     <p className="text-gray-600 mt-2">
-      View and manage all Active jobs.
+      View, verify, and manage all architectural job listings and employer submissions.
     </p>
 
-    {/* FILTERS */}
+    {/* TWO PRIMARY SUB-TABS: Main Platform Jobs vs Submissions & Edit Requests */}
+    <div className="flex border-b border-gray-200 mt-8 mb-6 gap-8">
+      <button
+        onClick={() => {
+          setActiveMainTab("main");
+          router.push("/admin/jobs");
+        }}
+        className={`pb-3 text-base font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+          activeMainTab === "main"
+            ? "border-black text-black"
+            : "border-transparent text-gray-400 hover:text-black"
+        }`}
+      >
+        <Briefcase size={18} />
+        <span>Main Platform Jobs</span>
+        <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full font-semibold">
+          {jobs.filter((j) => j.status !== "pending_review").length}
+        </span>
+      </button>
 
-<div className="flex flex-wrap gap-3 mt-8 mb-8">
+      <button
+        onClick={() => {
+          setActiveMainTab("submissions");
+          router.push("/admin/jobs?tab=submissions");
+        }}
+        className={`pb-3 text-base font-bold flex items-center gap-2 border-b-2 transition cursor-pointer ${
+          activeMainTab === "submissions"
+            ? "border-black text-black"
+            : "border-transparent text-gray-400 hover:text-black"
+        }`}
+      >
+        <Clock size={18} />
+        <span>Submissions &amp; Review Requests</span>
+        {jobs.filter((j) => j.status === "pending_review" || j.edit_request_payload).length > 0 && (
+          <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">
+            {jobs.filter((j) => j.status === "pending_review" || j.edit_request_payload).length}
+          </span>
+        )}
+      </button>
+    </div>
 
-  <button
-    onClick={() => router.push("/admin/jobs")}
-    className={`px-5 py-2 rounded-full border transition ${
-      !statusFilter
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    All Jobs
-  </button>
+    {/* FILTERS (Visible on Main Jobs tab) */}
+{activeMainTab === "main" && (
+<div className="mt-4 mb-8 space-y-3">
+  {/* CATEGORY SWITCHER */}
+  <div className="flex flex-wrap items-center gap-2">
+    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">Category:</span>
+    <button
+      onClick={() => router.push(getFilterUrl(undefined, null))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        !typeFilter
+          ? "bg-black text-white border-black"
+          : "bg-white text-gray-700 border-gray-200 hover:border-black"
+      }`}
+    >
+      All Categories
+    </button>
+    <button
+      onClick={() => router.push(getFilterUrl(undefined, "job"))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+        typeFilter === "job"
+          ? "bg-black text-white border-black"
+          : "bg-white text-gray-700 border-gray-200 hover:border-black"
+      }`}
+    >
+      <Briefcase size={13} className={typeFilter === "job" ? "text-white" : "text-blue-600"} />
+      <span>Jobs Only</span>
+    </button>
+    <button
+      onClick={() => router.push(getFilterUrl(undefined, "internship"))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+        typeFilter === "internship"
+          ? "bg-violet-950 text-white border-violet-950"
+          : "bg-white text-gray-700 border-gray-200 hover:border-violet-600"
+      }`}
+    >
+      <Building2 size={13} className={typeFilter === "internship" ? "text-white" : "text-violet-600"} />
+      <span>Internships Only</span>
+    </button>
+  </div>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=active")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "active"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Active
-  </button>
+  {/* STATUS FILTER PILLS */}
+  <div className="flex flex-wrap items-center gap-2 pt-1">
+    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mr-1">Status:</span>
+    <button
+      onClick={() => router.push(getFilterUrl(null, undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        !statusFilter
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      All
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=draft")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "draft"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Drafts
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("active", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "active"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Active
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=scheduled")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "scheduled"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Scheduled
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("draft", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "draft"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Drafts
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=outdated")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "outdated"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Outdated
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("scheduled", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "scheduled"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Scheduled
+    </button>
 
-  <button
-    onClick={() =>
-      router.push("/admin/jobs?status=expired")
-    }
-    className={`px-5 py-2 rounded-full border transition ${
-      statusFilter === "expired"
-        ? "bg-black text-white border-black"
-        : "bg-white hover:bg-white"
-    }`}
-  >
-    Expired
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("outdated", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "outdated"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Outdated
+    </button>
 
-  <button
-    onClick={() => router.push("/admin/jobs?status=trash")}
-    className={`px-5 py-2 rounded-full border transition flex items-center gap-1.5 cursor-pointer ${
-      statusFilter === "trash"
-        ? "bg-red-600 text-white border-red-600 font-bold shadow-xs"
-        : "bg-white hover:bg-red-50 text-red-600 border-red-200"
-    }`}
-  >
-    <Trash2 size={14} />
-    <span>Recycle Bin (Trash)</span>
-  </button>
+    <button
+      onClick={() => router.push(getFilterUrl("expired", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition cursor-pointer ${
+        statusFilter === "expired"
+          ? "bg-black text-white border-black"
+          : "bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+      }`}
+    >
+      Expired
+    </button>
 
+    <button
+      onClick={() => router.push(getFilterUrl("trash", undefined))}
+      className={`px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 cursor-pointer ${
+        statusFilter === "trash"
+          ? "bg-red-600 text-white border-red-600 font-bold shadow-xs"
+          : "bg-white hover:bg-red-50 text-red-600 border-red-200"
+      }`}
+    >
+      <Trash2 size={13} />
+      <span>Recycle Bin (Trash)</span>
+    </button>
+  </div>
 </div>
+)}
 
   </div>
 
@@ -529,7 +708,7 @@ return (
       Posted By {sortField === 'posted_by' && (sortOrder === 'asc' ? '↑' : '↓')}
     </th>
     <th className="text-left px-6 py-5 cursor-pointer hover:bg-gray-50" onClick={() => handleSort('posted_date')}>
-      Posted On {sortField === 'posted_date' && (sortOrder === 'asc' ? '↑' : '↓')}
+      {statusFilter === 'draft' ? 'Draft Saved Date' : (!statusFilter ? 'Posted / Saved On' : (statusFilter === 'scheduled' ? 'Scheduled For' : 'Posted On'))} {sortField === 'posted_date' && (sortOrder === 'asc' ? '↑' : '↓')}
     </th>
     <th className="text-left px-6 py-5 cursor-pointer hover:bg-gray-50" onClick={() => handleSort('status')}>
       Status {sortField === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -597,10 +776,28 @@ return (
 })()}
                       </td>
 
-                      {/* POSTED ON */}
+                      {/* POSTED ON / DRAFT SAVED DATE */}
 
                       <td className="px-6 py-5">
-                        {job.posted_date ? formatDate(job.posted_date) : "-"}
+                        {(() => {
+                          if (job.status === "draft") {
+                            const savedDate = getJobDraftSavedDate(job);
+                            if (savedDate) {
+                              return (
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-gray-900" title={`Draft saved on ${formatDate(savedDate)}`}>
+                                    {formatDate(savedDate)}
+                                  </span>
+                                  {!statusFilter && (
+                                    <span className="text-[11px] text-amber-700 font-medium">Draft saved</span>
+                                  )}
+                                </div>
+                              );
+                            }
+                            return <span className="text-gray-400">-</span>;
+                          }
+                          return job.posted_date ? formatDate(job.posted_date) : "-";
+                        })()}
                       </td>
 
                       {/* STATUS */}
@@ -716,6 +913,31 @@ return (
               <button onClick={() => setJobToDelete(null)} className="px-5 py-3.5 border rounded-xl hover:bg-gray-50 mt-2 font-semibold transition text-gray-700">
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* FLYER PREVIEW MODAL */}
+      {selectedFlyer && (
+        <div
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setSelectedFlyer(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b mb-4">
+              <h3 className="font-bold text-lg text-gray-900">Hiring Flyer Preview</h3>
+              <button
+                onClick={() => setSelectedFlyer(null)}
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 cursor-pointer"
+              >
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div className="rounded-2xl overflow-hidden bg-gray-100 flex items-center justify-center">
+              <img src={selectedFlyer} alt="Flyer" className="max-h-[70vh] w-auto object-contain" />
             </div>
           </div>
         </div>

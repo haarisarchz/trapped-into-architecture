@@ -158,7 +158,8 @@ export default function JobCard({
         const showExperience = !isIntern && expStr && expStr !== "not disclosed" && expStr !== "not specified" && expStr !== "null";
       
       const salStr = salary ? String(salary).toLowerCase().trim() : "";
-      const showSalary = salStr && !["not disclosed", "not specified", "negotiable", "-", "null", "as per industry standards"].includes(salStr);
+      const formattedSal = formatSalary(salary);
+      const showSalary = salStr && !["not disclosed", "not specified", "negotiable", "-", "null", "undefined", "as per industry standards", "as per industry standard"].includes(salStr) && Boolean(formattedSal);
       
       return (
         <div 
@@ -207,7 +208,7 @@ export default function JobCard({
   
             <div className="mt-4 space-y-1 md:space-y-2">
               {showExperience && <p className="text-sm text-gray-700">Experience: {formattedExperience}</p>}
-              {showSalary && <p className="text-sm font-semibold">Salary: {formatSalary(salary)}</p>}
+              {showSalary && <p className="text-sm font-semibold">Salary: {formattedSal}</p>}
             </div>
           </div>
         </div>

@@ -4,10 +4,17 @@ import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
   Phone,
   MessageSquare,
   Globe,
   EyeOff,
+  MessageCircle,
+  X,
+  ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
 import { LinkedInBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
@@ -57,6 +64,177 @@ export default function PersonalInfoTab({
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...user });
   const [saving, setSaving] = useState(false);
+  const [verifyingEmail, setVerifyingEmail] = useState(false);
+  const [verifyingPhone, setVerifyingPhone] = useState(false);
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [phoneCode, setPhoneCode] = useState("");
+  const [inputPhoneCode, setInputPhoneCode] = useState("");
+  const [waMessageSent, setWaMessageSent] = useState(false);
+  const [phoneVerifyError, setPhoneVerifyError] = useState("");
+  const [phoneVerifySuccess, setPhoneVerifySuccess] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  const handleVerifyEmail = async () => {
+    if (!user.email) {
+      alert("Please enter and save your email address first.");
+      return;
+    }
+    setVerifyingEmail(true);
+    try {
+      const res = await fetch("/api/auth/send-verification-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          fullName: user.full_name || user.username,
+          userId: user.id,
+          isExistingUser: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to send verification code.");
+      }
+
+      const enteredCode = window.prompt(
+        `✉️ Verification code sent to ${user.email}!\n\nPlease enter the 6-digit verification code below to verify your email and unlock +5% profile completion score:`
+      );
+
+      if (!enteredCode || !enteredCode.trim()) {
+        setVerifyingEmail(false);
+        return;
+      }
+
+      const verifyRes = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: user.email,
+          userId: user.id,
+          code: enteredCode.trim(),
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (verifyRes.ok && verifyData.success) {
+        alert("🎉 Congratulations! Your email has been verified and your profile score increased by +5%.");
+        const updatedUser = { ...user, email_verified: true, verified: true };
+        setFormData((prev: any) => ({ ...prev, email_verified: true, verified: true }));
+        if (typeof onUserUpdate === "function") {
+          onUserUpdate(updatedUser);
+        } else {
+          window.location.reload();
+        }
+      } else {
+        alert(verifyData.error || "Incorrect or expired verification code. Please try again.");
+      }
+    } catch (e: any) {
+      alert(e.message || "Failed to process verification. Please try again.");
+    } finally {
+      setVerifyingEmail(false);
+    }
+  };
+
+    const handleStartPhoneVerification = () => {
+    const targetPhone = (formData.phone || user.phone || "").trim();
+    if (!targetPhone) {
+      alert("Please enter and save your contact phone/WhatsApp number in your profile first.");
+      return;
+    }
+    // Generate secure 6-digit code
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setPhoneCode(randomCode);
+    setInputPhoneCode("");
+    setWaMessageSent(false);
+    setPhoneVerifyError("");
+    setPhoneVerifySuccess(false);
+    setCodeCopied(false);
+    setPhoneModalOpen(true);
+  };
+
+  const handleCopyCode = () => {
+    if (phoneCode) {
+      navigator.clipboard.writeText(phoneCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    }
+  };
+
+  const handleConfirmPhoneVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneVerifyError("");
+
+    if (!inputPhoneCode.trim()) {
+      setPhoneVerifyError("Please enter the 6-digit verification code.");
+      return;
+    }
+
+    if (inputPhoneCode.trim() !== phoneCode) {
+      setPhoneVerifyError("Verification code does not match. Please enter the exact 6-digit code shown above.");
+      return;
+    }
+
+    const targetPhone = (formData.phone || user.phone || "").trim();
+    setVerifyingPhone(true);
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          phone_verified: true,
+          is_phone_verified: true,
+          phone: targetPhone,
+          whatsapp_number: formData.whatsapp_same_as_phone ? targetPhone : (formData.whatsapp_number || targetPhone),
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setPhoneVerifySuccess(true);
+
+      // Dispatch CEO notification for phone verification
+      fetch("/api/notify/ceo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "USER_PHONE_VERIFIED",
+          data: {
+            userId: user.id,
+            fullName: user.full_name || user.username || "Architect",
+            username: user.username,
+            email: user.email || "",
+            phone: targetPhone,
+          },
+        }),
+      }).catch((e) => console.warn("Failed to notify CEO of phone verification:", e));
+
+      const updatedUser = {
+        ...user,
+        phone_verified: true,
+        is_phone_verified: true,
+        phone: targetPhone,
+      };
+
+      setFormData((prev: any) => ({
+        ...prev,
+        phone_verified: true,
+        is_phone_verified: true,
+        phone: targetPhone,
+      }));
+
+      if (onUserUpdate) {
+        onUserUpdate(updatedUser);
+      }
+
+      setTimeout(() => {
+        setPhoneModalOpen(false);
+        setPhoneVerifySuccess(false);
+      }, 2000);
+    } catch (err: any) {
+      setPhoneVerifyError(err.message || "Failed to verify phone. Please try again.");
+    } finally {
+      setVerifyingPhone(false);
+    }
+  };
 
   const handlePhoneChange = (val: string) => {
     const updated: any = { ...formData, phone: val };
@@ -385,6 +563,29 @@ export default function PersonalInfoTab({
               {user.email || "Not added"}
             </p>
           )}
+          <div className="flex items-center justify-between mt-2 px-1">
+            {user.email_verified || user.is_email_verified ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md font-semibold border border-emerald-200">
+                <CheckCircle2 size={11} /> Email Verified (+5% earned)
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                  <AlertCircle size={11} /> Unverified (Verify for +5%)
+                </span>
+                {isOwner && user.email && (
+                  <button
+                    type="button"
+                    onClick={handleVerifyEmail}
+                    disabled={verifyingEmail}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer disabled:opacity-50"
+                  >
+                    {verifyingEmail ? "Sending..." : "Verify Email"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* PHONE NUMBER */}
@@ -416,6 +617,29 @@ export default function PersonalInfoTab({
               {user.phone || "Not added"}
             </p>
           )}
+          <div className="flex items-center justify-between mt-2 px-1">
+            {user.phone_verified || user.is_phone_verified ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md font-semibold border border-emerald-200">
+                <CheckCircle2 size={11} /> Phone Verified (+5% earned)
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold border border-amber-200">
+                  <AlertCircle size={11} /> Unverified (Verify for +5%)
+                </span>
+                {isOwner && user.phone && (
+                  <button
+                    type="button"
+                    onClick={handleStartPhoneVerification}
+                    disabled={verifyingPhone}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer disabled:opacity-50"
+                  >
+                    {verifyingPhone ? "Verifying..." : "Verify Phone (+5%)"}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* WHATSAPP NUMBER & "SAME AS PHONE NUMBER" */}

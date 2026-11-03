@@ -30,6 +30,7 @@ import {
   Filter,
   RefreshCw,
   Sparkles,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -425,6 +426,24 @@ function AdminCompaniesContent() {
     }
   };
 
+
+  // 1-Click WhatsApp Claim Invite for Studios
+  const handleInviteStudioWhatsApp = (company: any) => {
+    let phone = String(company.whatsapp || company.phone || "").replace(/\D/g, "");
+    if (!phone) {
+      const entered = window.prompt(`Enter WhatsApp contact number for "${company.firm_name}" (with or without +91):`);
+      if (!entered || !entered.trim()) return;
+      phone = entered.replace(/\D/g, "");
+    }
+    const fullPhone = phone.length === 10 ? `91${phone}` : phone;
+    const siteUrl = "https://trappedintoarchitecture.com";
+    const slug = company.slug || company.firm_name?.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const claimUrl = `${siteUrl}/companies/${slug}`;
+
+    const text = `Hello ${company.firm_name} Team! 👋\n\nYour studio directory listing is live on Trapped Into Architecture (Ti2A):\n👉 ${claimUrl}\n\nYou can claim your studio profile for free to publish vacancies, showcase your latest architectural projects, and hire verified architects directly.\n\nClaim your studio profile here:\n👉 ${claimUrl}\n\nWarm regards,\nTrapped Into Architecture Team`;
+
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(text)}`, "_blank");
+  };
   // Claims Approval
   const handleApproveClaim = async (claim: any) => {
     try {
@@ -1002,6 +1021,16 @@ function AdminCompaniesContent() {
                                   <ExternalLink size={15} />
                                 </Link>
                               )}
+                              {!c.is_claimed && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleInviteStudioWhatsApp(c)}
+                                  className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition cursor-pointer"
+                                  title="Invite Studio to Claim via WhatsApp"
+                                >
+                                  <MessageCircle size={15} />
+                                </button>
+                              )}
                               <Link
                                 href={`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name)}`}
                                 className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition"
@@ -1233,13 +1262,26 @@ function AdminCompaniesContent() {
                           </td>
 
                           <td className="px-6 py-4 text-right">
-                            <Link
-                              href={`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name)}`}
-                              className="text-xs font-bold text-gray-600 hover:text-black flex items-center justify-end gap-1 hover:underline"
-                            >
-                              <Edit size={13} />
-                              <span>Edit Studio</span>
-                            </Link>
+                            <div className="flex items-center justify-end gap-2">
+                              {!c.is_claimed && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleInviteStudioWhatsApp(c)}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer whitespace-nowrap"
+                                  title="Invite Studio to Claim via WhatsApp"
+                                >
+                                  <MessageCircle size={13} />
+                                  <span>Invite Studio</span>
+                                </button>
+                              )}
+                              <Link
+                                href={`/admin/companies/edit/${c.id || "new"}?name=${encodeURIComponent(c.firm_name)}`}
+                                className="text-xs font-bold text-gray-600 hover:text-black flex items-center justify-end gap-1 hover:underline whitespace-nowrap"
+                              >
+                                <Edit size={13} />
+                                <span>Edit Studio</span>
+                              </Link>
+                            </div>
                           </td>
                         </tr>
                       );

@@ -111,12 +111,14 @@ export default function AdminQuickMenu() {
             {navItem("/admin/quizzes", "Architecture Quizzes")}
           </>
         )}
+        {navItem("/admin/news-feed", "News Feed Management")}
         {navItem("/admin/analytics", "Analytics")}
         
         {userRole === "ceo" && (
           <>
             {navItem("/admin/users", "Users")}
-            {navItem("/admin/contact", "Contact")}
+            {navItem("/admin/contact", "Contact & Suggestions")}
+            {navItem("/admin/mails", "Mail Center")}
           </>
         )}
       </div>
