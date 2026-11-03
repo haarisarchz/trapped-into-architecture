@@ -31,6 +31,11 @@ const [showUserMenu, setShowUserMenu] =
 
     const [currentUser, setCurrentUser] =
   useState<any>(null);
+  const [showCompanyAdminModal, setShowCompanyAdminModal] = useState(false);
+  const [isCompanyAdmin, setIsCompanyAdmin] = useState(false);
+
+  const userRoleNormalized = (currentUser?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isInternalAdmin = ["superadmin", "admin", "ceo", "jobadmin"].includes(userRoleNormalized);
   const [userTier, setUserTier] = useState<string>("bronze");
 
   const getDisplayNameTierStyles = (tier: string) => {
@@ -416,6 +421,57 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+    let isMounted = true;
+    const checkCompanyAdminStatus = async () => {
+      if (!currentUser) {
+        setIsCompanyAdmin(false);
+        return;
+      }
+      const r = (currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      if (["superadmin", "admin", "ceo", "jobadmin"].includes(r)) {
+        return;
+      }
+      if (r === "companyadmin") {
+        if (isMounted) setIsCompanyAdmin(true);
+        return;
+      }
+      let uid = currentUser.id;
+      if (!uid && currentUser.username) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("id, role")
+          .eq("username", currentUser.username)
+          .maybeSingle();
+        if (prof) {
+          uid = prof.id;
+          const profRole = (prof.role || "").toLowerCase().replace(/[\s_]+/g, "");
+          if (profRole === "companyadmin") {
+            if (isMounted) setIsCompanyAdmin(true);
+            return;
+          }
+        }
+      }
+      if (uid) {
+        const { data: comps } = await supabase
+          .from("companies")
+          .select("id")
+          .or(`created_by.eq.${uid},claimed_by.eq.${uid}`)
+          .limit(1);
+        if (isMounted) {
+          setIsCompanyAdmin(!!(comps && comps.length > 0));
+        }
+      }
+    };
+    checkCompanyAdminStatus();
+    const handleOpenModal = () => setShowCompanyAdminModal(true);
+    window.addEventListener("openCompanyAdminModal", handleOpenModal);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("openCompanyAdminModal", handleOpenModal);
+    };
+  }, [currentUser]);
+
+useEffect(() => {
   const storedUser = localStorage.getItem("currentUser");
   if (storedUser) {
     const parsed = JSON.parse(storedUser);
@@ -551,27 +607,63 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+        {/* Internal Admins (Super Admin, CEO, Job Admin) */}
+        {isInternalAdmin && (
           <>
             <button
               onClick={() => {
-                router.push("/post-job");
+                router.push("/admin/jobs/add");
                 setShowUserMenu(false);
               }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
             >
-              Post a Job
+              Add a Job
+            </button>
+            <button
+              onClick={() => {
+                router.push("/post-a-job?preview=true");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-4 hover:bg-purple-50 text-purple-700 border-b border-gray-100 font-medium flex items-center gap-1.5"
+            >
+              <span>🧪 Preview &quot;Post a Job&quot; (User View)</span>
             </button>
             <button
               onClick={() => {
                 router.push("/admin");
                 setShowUserMenu(false);
               }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium"
+              className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
             >
               Admin Panel
             </button>
           </>
+        )}
+
+        {/* Company Admins (Client-side / Employer Admins) */}
+        {!isInternalAdmin && isCompanyAdmin && (
+          <button
+            onClick={() => {
+              router.push("/post-a-job");
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
+        )}
+
+        {/* Regular Users (Job Seekers / Unregistered / Non-admin) */}
+        {!isInternalAdmin && !isCompanyAdmin && (
+          <button
+            onClick={() => {
+              setShowCompanyAdminModal(true);
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
         )}
 
         <button
@@ -748,7 +840,7 @@ useEffect(() => {
     </button>
 
     {showUserMenu && (
-      <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white text-black shadow-lg overflow-hidden z-50">
+      <div className="absolute right-0 mt-2 w-72 rounded-xl bg-white text-black shadow-lg overflow-hidden z-50">
 
         <button
           onClick={() => {
@@ -760,27 +852,63 @@ useEffect(() => {
           My Profile
         </button>
 
-        {currentUser?.role && ["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes((currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "")) && (
+        {/* Internal Admins (Super Admin, CEO, Job Admin) */}
+        {isInternalAdmin && (
           <>
             <button
               onClick={() => {
-                router.push("/post-job");
+                router.push("/admin/jobs/add");
                 setShowUserMenu(false);
               }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-100 border-b border-gray-100 font-medium"
+              className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
             >
-              Post a Job
+              Add a Job
+            </button>
+            <button
+              onClick={() => {
+                router.push("/post-a-job?preview=true");
+                setShowUserMenu(false);
+              }}
+              className="w-full text-left px-5 py-3 hover:bg-purple-50 text-purple-700 border-b border-gray-100 font-medium flex items-center gap-1.5"
+            >
+              <span>🧪 Preview &quot;Post a Job&quot; (User View)</span>
             </button>
             <button
               onClick={() => {
                 router.push("/admin");
                 setShowUserMenu(false);
               }}
-              className="w-full text-left px-5 py-4 hover:bg-gray-100 border-b border-gray-100 font-medium"
+              className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
             >
               Admin Panel
             </button>
           </>
+        )}
+
+        {/* Company Admins (Client-side / Employer Admins) */}
+        {!isInternalAdmin && isCompanyAdmin && (
+          <button
+            onClick={() => {
+              router.push("/post-a-job");
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
+        )}
+
+        {/* Regular Users (Job Seekers / Unregistered / Non-admin) */}
+        {!isInternalAdmin && !isCompanyAdmin && (
+          <button
+            onClick={() => {
+              setShowCompanyAdminModal(true);
+              setShowUserMenu(false);
+            }}
+            className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
+          >
+            Post a Job
+          </button>
         )}
 
         <button
@@ -887,7 +1015,60 @@ useEffect(() => {
 </nav>
 
 
-{/* AUTH POPUP */}
+{/* COMPANY ADMIN ACCESS REQUIRED MODAL */}
+      {showCompanyAdminModal && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white text-black w-full max-w-md rounded-3xl p-6 sm:p-8 relative shadow-2xl border border-gray-100 text-center">
+            <button
+              type="button"
+              onClick={() => setShowCompanyAdminModal(false)}
+              className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:text-black hover:bg-gray-200 transition cursor-pointer"
+              aria-label="Close dialog"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 border border-amber-200">
+              <ShieldCheck size={28} />
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-2">
+              Company Admin Access Required
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              You must own or be registered as a Company Admin to post a job.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCompanyAdminModal(false);
+                  router.push("/companies");
+                }}
+                className="bg-black hover:bg-gray-800 text-white font-bold py-3 px-5 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              >
+                <span>Register / Claim Company</span>
+                <ArrowRight size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCompanyAdminModal(false)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-5 rounded-xl transition text-sm cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AUTH POPUP */}
 
       {showAuthPopup && (
 

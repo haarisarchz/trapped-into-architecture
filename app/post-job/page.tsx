@@ -82,6 +82,7 @@ function PostJobContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialCompanySlug = searchParams.get("company");
+  const isPreview = searchParams.get("preview") === "true";
 
   // Auth & State
   const [loading, setLoading] = useState(true);
@@ -179,6 +180,21 @@ function PostJobContent() {
       } else if (compList.length > 0) {
         setSelectedCompanyId(compList[0].id);
         applyCompanyDefaults(compList[0], prof);
+      } else if (compList.length === 0 && (isPlatformAdmin || isPreview)) {
+        // Fallback testing studio for Internal Admin preview
+        const previewPractice = {
+          id: "preview-studio",
+          firm_name: "Preview Architecture Studio",
+          slug: "preview-architecture-studio",
+          city: "New Delhi",
+          state: "Delhi",
+          email: prof?.email || "careers@previewstudio.com",
+          phone: "+91 98765 43210",
+          organization_type: "Architecture Firm",
+        };
+        setCompanies([previewPractice]);
+        setSelectedCompanyId(previewPractice.id);
+        applyCompanyDefaults(previewPractice, prof);
       }
     } catch (err) {
       console.error("Error initializing user for post-job:", err);
@@ -309,22 +325,21 @@ function PostJobContent() {
         posted_date: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase.from("jobs").insert([payload]).select().single();
-      if (error) throw error;
+      const res = await fetch("/api/jobs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          payload,
+          userId: userProfile?.id || currentUser?.id,
+        }),
+      });
 
-      // 2. Mark profile as recruiter if not already
-      if (userProfile?.id) {
-        try {
-          await supabase
-            .from("profiles")
-            .update({ is_recruiter: true, user_track: "recruiter" })
-            .eq("id", userProfile.id);
-        } catch (e) {
-          console.warn("Could not set is_recruiter on profile:", e);
-        }
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || "Failed to submit job. Please check all fields.");
       }
 
-      setSubmittedJob(data);
+      setSubmittedJob(resData.data);
     } catch (err: any) {
       console.error("Error submitting job:", err);
       setErrorMessage(err.message || "Failed to submit job. Please check all fields.");
@@ -447,16 +462,32 @@ function PostJobContent() {
             </div>
 
             <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-3 py-1 rounded-full mb-3 inline-block">
-              Company Admin Permission Required
+              Role Access Control
             </span>
 
-            <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 mb-4">
-              To Post a Job, Select or Register Your Studio
+            <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 mb-3">
+              Company Admin Access Required
             </h1>
 
-            <p className="text-gray-600 text-sm md:text-base mb-8 max-w-2xl mx-auto leading-relaxed">
-              To keep our platform 100% verified and protect candidates from fake vacancies, all architecture and design jobs must be posted by an authorized representative (Company Admin) of an architectural studio.
+            <p className="text-gray-600 text-sm md:text-base mb-6 max-w-xl mx-auto leading-relaxed">
+              You must own or be registered as a Company Admin to post a job.
             </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10 max-w-md mx-auto">
+              <Link
+                href="/companies"
+                className="bg-black hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm"
+              >
+                <span>Register / Claim Company</span>
+                <ArrowRight size={15} />
+              </Link>
+              <Link
+                href="/jobs"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl transition text-sm flex items-center justify-center"
+              >
+                Close
+              </Link>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto text-left mb-8">
               {/* Option 1: Claim Existing */}
@@ -579,6 +610,35 @@ function PostJobContent() {
       <Navbar />
 
       <div className="flex-1 max-w-4xl mx-auto px-6 py-10 w-full">
+        {/* Preview Banner for Internal Admins */}
+        {isPreview && (
+          <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-900 via-indigo-950 to-purple-950 text-white border border-purple-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-2xl shrink-0">
+                🧪
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-extrabold text-sm sm:text-base text-white">Preview &amp; Testing Mode</p>
+                  <span className="bg-purple-500/30 text-purple-200 border border-purple-400/40 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Employer View
+                  </span>
+                </div>
+                <p className="text-xs text-purple-200 mt-0.5 leading-relaxed">
+                  You are previewing &quot;Post a Job&quot; through the employer perspective as an Internal Admin.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/admin/jobs/add"
+              className="text-xs bg-white text-purple-950 font-bold px-4 py-2.5 rounded-xl hover:bg-purple-100 transition whitespace-nowrap self-end sm:self-auto shadow-sm flex items-center gap-1.5"
+            >
+              <span>Admin &quot;Add a Job&quot;</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+        )}
+
         {/* Header Title */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
