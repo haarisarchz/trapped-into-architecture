@@ -65,6 +65,9 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
       recipientEmail = testEmail.trim();
     }
 
+    const firmName = job.firm_name || "Architecture Practice";
+    const positionTitle = job.position || "Architecture Role";
+
     if (!recipientEmail || !recipientEmail.includes("@")) {
       console.log(`[Company Notification] Skipped for job ${job.id}: No valid company email found.`);
       try {
@@ -97,8 +100,6 @@ async function sendNotification({ jobId, testEmail }: { jobId: string | null; te
     const jobUrl = `${siteUrl}/jobs/${job.id}`;
     const claimUrl = companySlug ? `${siteUrl}/companies/${companySlug}?claim=true` : `${siteUrl}/companies`;
     const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <notifications@trappedintoarchitecture.com>";
-    const firmName = job.firm_name || "Architecture Practice";
-    const positionTitle = job.position || "Architecture Role";
     const location = [job.city, job.state].filter(Boolean).join(", ") || "India";
 
     const emailHtml = `

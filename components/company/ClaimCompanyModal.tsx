@@ -119,6 +119,26 @@ export default function ClaimCompanyModal({
       if (error) {
         console.warn("Could not save to company_claim_requests:", error.message);
       }
+      // Dispatch CEO notification for studio claim request
+      fetch("/api/notify/ceo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "STUDIO_CLAIM_REQUEST",
+          data: {
+            companyId: companyId || null,
+            studioSlug: companySlug,
+            studioName: companyName,
+            userId,
+            requesterName: fullName,
+            workEmail,
+            phoneNumber,
+            designation,
+            verificationNotes,
+          },
+        }),
+      }).catch((e) => console.warn("Failed to notify CEO of studio claim request:", e));
+
       setSubmitted(true);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to submit claim request.");

@@ -161,7 +161,7 @@ function AdminShareButton({ job, allJobs = [] }: { job: any, allJobs?: any[] }) 
 }
 
 
-export function getJobDraftSavedDate(job: any): string | null {
+function getJobDraftSavedDate(job: any): string | null {
   if (job.updated_at) return job.updated_at;
   if (job.created_at) return job.created_at;
 

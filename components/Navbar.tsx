@@ -313,7 +313,7 @@ const [showUserMenu, setShowUserMenu] =
         }
       }
       
-      // 3. Email dispatch & Job Posting activity logs for CEO & Admins
+      // 3. User activities, Email dispatches & Studio requests for CEO & Admins
       if (["ceo", "superadmin", "admin", "jobadmin"].includes(role)) {
         try {
           const { data: emailLogs } = await supabase
@@ -323,18 +323,44 @@ const [showUserMenu, setShowUserMenu] =
               "NOTIFIED_COMPANY_JOB_POSTING",
               "COMPANY_JOB_EMAIL_SENT",
               "COMPANY_JOB_EMAIL_PENDING",
+              "NEW_USER_REGISTERED",
+              "USER_VERIFIED",
+              "USER_PHONE_VERIFIED",
+              "STUDIO_CLAIM_REQUEST",
+              "NEW_STUDIO_REGISTERED",
             ])
             .order("created_at", { ascending: false })
             .limit(30);
 
           (emailLogs || []).forEach((log: any) => {
             let icon = "✉️";
-            if (log.subject === "COMPANY_JOB_EMAIL_PENDING") icon = "⏳";
+            let link: string | null = `/admin/jobs`;
+
+            if (log.subject === "COMPANY_JOB_EMAIL_PENDING") {
+              icon = "⏳";
+              link = "/admin/jobs";
+            } else if (log.subject === "NEW_USER_REGISTERED") {
+              icon = "👤";
+              link = "/admin/users";
+            } else if (log.subject === "USER_VERIFIED") {
+              icon = "🔒";
+              link = "/admin/users";
+            } else if (log.subject === "USER_PHONE_VERIFIED") {
+              icon = "📱";
+              link = "/admin/users";
+            } else if (log.subject === "STUDIO_CLAIM_REQUEST") {
+              icon = "🏛️";
+              link = "/admin/claims";
+            } else if (log.subject === "NEW_STUDIO_REGISTERED") {
+              icon = "🏢";
+              link = "/admin/companies";
+            }
+
             notifs.push({
               id: `email-log-${log.id}`,
               message: `${icon} ${log.message}`,
               time: log.created_at,
-              link: `/admin/jobs`
+              link,
             });
           });
         } catch (err) {
@@ -1913,6 +1939,23 @@ window.location.reload();
           }
 
           console.log("PROFILE CREATED SUCCESSFULLY");
+
+          // Dispatch CEO Alert for New User Registration
+          fetch("/api/notify/ceo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "USER_REGISTRATION",
+              data: {
+                userId: authData.user.id,
+                fullName,
+                username,
+                email,
+                phone: fullPhone || null,
+                profession,
+              },
+            }),
+          }).catch((err) => console.warn("Failed to notify CEO of new registration:", err));
 
           
                     // Save registration details in case user requests verification

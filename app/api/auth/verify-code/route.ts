@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { Resend } from "resend";
+import { notifyCeo } from "@/lib/notifyCeo";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -171,17 +172,17 @@ export async function POST(req: Request) {
       }
     }
 
-    // 8. Log notification for CEO audit feed
+    // 8. Dispatch notification & audit alert to CEO
     try {
-      await supabase.from("contact_inquiries").insert([
-        {
-          name: recipientName,
+      await notifyCeo({
+        type: "USER_VERIFIED",
+        data: {
+          fullName: recipientName,
+          username: profile.username || "",
           email: userTargetEmail,
-          subject: "USER_VERIFIED",
-          message: `User completed verification successfully: ${userTargetEmail} (${profile.username || "user"})`,
-          is_read: false,
+          userId: profile.id,
         },
-      ]);
+      });
     } catch (e) {
       // non-blocking
     }

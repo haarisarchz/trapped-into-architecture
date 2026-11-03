@@ -221,7 +221,7 @@ async function handleWeeklyDigest(req: Request) {
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>This Week on Ti2A</title>
+          <title>Ti2A Fortnightly Briefing</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 16px; color: #0f172a;">
           <div style="max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 28px 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 16px rgba(0,0,0,0.03);">
@@ -236,17 +236,17 @@ async function handleWeeklyDigest(req: Request) {
                 </td>
                 <td align="right">
                   <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
-                    Weekly Briefing
+                    Fortnightly Briefing
                   </span>
                 </td>
               </tr>
             </table>
 
             <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; letter-spacing: -0.02em;">
-              This Week's Top Openings &amp; Updates
+              Ti2A Fortnightly Briefing — Top Openings &amp; Updates
             </h1>
             <p style="color: #64748b; font-size: 13px; margin: 0 0 20px 0;">
-              A quick 2-minute overview of the top architectural demand and latest platform updates.
+              A quick 2-minute overview of the top architectural demand, hiring studios, and latest platform updates.
             </p>
 
             <!-- VERTICAL DIVIDED 2-COLUMN SECTION -->
@@ -289,7 +289,7 @@ async function handleWeeklyDigest(req: Request) {
                 ? `
               <div style="margin-bottom: 22px;">
                 <div style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">
-                  📰 Week's Feed &amp; Feature Drops
+                  📰 Fortnightly Feed &amp; Feature Drops
                 </div>
                 <div>
                   ${feedUpdatesColumns}
@@ -302,7 +302,7 @@ async function handleWeeklyDigest(req: Request) {
             <!-- COMPACT FOOTER WITH ONE-CLICK UNSUBSCRIBE -->
             <div style="padding-top: 16px; border-top: 1px solid #f1f5f9; font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.5;">
               &copy; ${new Date().getFullYear()} Trapped Into Architecture • India's Architecture Community<br>
-              <a href="${unsubUrl}" style="color: #64748b; text-decoration: underline; font-weight: 600;">Unsubscribe from this Weekly Digest</a>
+              <a href="${unsubUrl}" style="color: #64748b; text-decoration: underline; font-weight: 600;">Unsubscribe from this Fortnightly Briefing</a>
             </div>
           </div>
         </body>
@@ -313,7 +313,7 @@ async function handleWeeklyDigest(req: Request) {
         const sendResult = await resend.emails.send({
           from: fromEmail,
           to: recipient,
-          subject: `🏛️ Ti2A Weekly: Top 5 Openings, Studios & Latest Feed Updates`,
+          subject: `🏛️ Ti2A Fortnightly Briefing: Top Openings, Studios & Latest Architecture Updates`,
           html: fullEmailHtml,
           headers: {
             "List-Unsubscribe": `<${siteUrl}/api/unsubscribe?email=${encodeURIComponent(recipient)}>`,

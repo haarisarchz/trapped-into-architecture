@@ -195,6 +195,10 @@ export default function RegisterPracticePage() {
             firmName: payload.firm_name,
             email: payload.email,
             slug: finalSlug,
+            city: payload.city,
+            state: payload.state,
+            phone: payload.phone,
+            website: payload.website,
           }),
         }).catch((e) => console.warn("Could not dispatch company welcome email:", e));
       }

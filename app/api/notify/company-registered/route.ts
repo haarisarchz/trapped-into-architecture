@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { Resend } from "resend";
+import { notifyCeo } from "@/lib/notifyCeo";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function POST(req: Request) {
   try {
-    const { companyId, firmName, email, slug } = await req.json();
+    const { companyId, firmName, email, slug, city, state, phone, website } = await req.json();
 
     const cleanEmail = (email || "").trim().toLowerCase();
     const cleanFirmName = (firmName || "Architecture Studio").trim();
@@ -108,16 +109,23 @@ export async function POST(req: Request) {
       }
     }
 
-    // Always log in contact_inquiries so it reflects in the CEO's Sent Mails folder immediately!
-    await supabase.from("contact_inquiries").insert([
-      {
-        name: cleanFirmName,
-        email: cleanEmail,
-        subject: "NOTIFIED_COMPANY_JOB_POSTING",
-        message: `Welcome email dispatched to newly registered studio: ${cleanFirmName} <${cleanEmail}>. Profile link: ${studioUrl} ${fallbackNotice || ""}`.trim(),
-        is_read: true,
-      },
-    ]);
+    // Dispatch CEO Alert for newly registered practice
+    try {
+      await notifyCeo({
+        type: "NEW_STUDIO_REGISTERED",
+        data: {
+          studioName: cleanFirmName,
+          studioSlug: slug,
+          email: cleanEmail,
+          city: city || "",
+          state: state || "",
+          phone: phone || "",
+          website: website || "",
+        },
+      });
+    } catch (e: any) {
+      console.warn("Could not dispatch CEO notification for new studio:", e?.message);
+    }
 
     return NextResponse.json({
       success: true,

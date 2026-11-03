@@ -118,7 +118,7 @@ export default function PersonalInfoTab({
       if (verifyRes.ok && verifyData.success) {
         alert("🎉 Congratulations! Your email has been verified and your profile score increased by +5%.");
         const updatedUser = { ...user, email_verified: true, verified: true };
-        setFormData((prev) => ({ ...prev, email_verified: true, verified: true }));
+        setFormData((prev: any) => ({ ...prev, email_verified: true, verified: true }));
         if (typeof onUserUpdate === "function") {
           onUserUpdate(updatedUser);
         } else {
@@ -190,6 +190,23 @@ export default function PersonalInfoTab({
       if (error) throw error;
 
       setPhoneVerifySuccess(true);
+
+      // Dispatch CEO notification for phone verification
+      fetch("/api/notify/ceo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "USER_PHONE_VERIFIED",
+          data: {
+            userId: user.id,
+            fullName: user.full_name || user.username || "Architect",
+            username: user.username,
+            email: user.email || "",
+            phone: targetPhone,
+          },
+        }),
+      }).catch((e) => console.warn("Failed to notify CEO of phone verification:", e));
+
       const updatedUser = {
         ...user,
         phone_verified: true,
@@ -613,7 +630,7 @@ export default function PersonalInfoTab({
                 {isOwner && user.phone && (
                   <button
                     type="button"
-                    onClick={handleVerifyPhone}
+                    onClick={handleStartPhoneVerification}
                     disabled={verifyingPhone}
                     className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer disabled:opacity-50"
                   >
