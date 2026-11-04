@@ -702,7 +702,7 @@ useEffect(() => {
                 }}
                 className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900 flex items-center gap-1.5"
               >
-                <span>Preview &quot;Post a Job&quot; (User View)</span>
+                <span>Post a Job (User View)</span>
               </button>
             )}
             <button
@@ -949,7 +949,7 @@ useEffect(() => {
                 }}
                 className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900 flex items-center gap-1.5"
               >
-                <span>Preview &quot;Post a Job&quot; (User View)</span>
+                <span>Post a Job (User View)</span>
               </button>
             )}
             <button
