@@ -735,33 +735,21 @@ export default function InteractiveHome({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
-              {siteSettings?.whatsapp_channel_url ? (
-                <a 
-                  href={ensureHttp(siteSettings.whatsapp_channel_url)} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                >
-                  <MessageCircle size={17} /> WhatsApp
-                </a>
-              ) : (
-                <Link 
-                  href="/unavailable?service=WhatsApp" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                >
-                  <MessageCircle size={17} /> WhatsApp
-                </Link>
-              )}
-
-              <a 
-                href={ensureHttp(siteSettings?.website_url || siteSettings?.telegram_channel_url || "https://t.me/ArchitectJobsTi2A")} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <Link 
+                href="/contact?tab=connect&platform=whatsapp" 
                 className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                title="Join All India Architecture Jobs on Telegram"
+                title="View State & All-India WhatsApp Channels"
+              >
+                <MessageCircle size={17} /> WhatsApp
+              </Link>
+
+              <Link 
+                href="/contact?tab=connect&platform=telegram" 
+                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                title="View Regional Telegram Channels"
               >
                 <Send size={17} /> Telegram
-              </a>
+              </Link>
 
               {siteSettings?.instagram ? (
                 <a 

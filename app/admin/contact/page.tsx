@@ -19,8 +19,16 @@ import {
   Send,
   ChevronRight,
   Lightbulb,
-  UploadCloud
+  UploadCloud,
+  Plus
 } from "lucide-react";
+import { 
+  SocialChannel, 
+  parseChannels, 
+  serializeChannels, 
+  DEFAULT_TELEGRAM_CHANNELS, 
+  DEFAULT_WHATSAPP_CHANNELS 
+} from "@/lib/channels";
 
 interface ContactInquiry {
   id: string;
@@ -118,6 +126,183 @@ const LockedField = ({ label, value, onChange, fieldKey, type = "text", subLabel
       ) : (
         <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 break-all select-all">
           {value || <span className="text-gray-400 italic font-normal">Not configured</span>}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MultiChannelManager = ({
+  label,
+  fieldKey,
+  value,
+  defaultFallback,
+  onChange,
+  icon,
+  badgeText
+}: {
+  label: string;
+  fieldKey: string;
+  value: string;
+  defaultFallback: SocialChannel[];
+  onChange: (val: string) => void;
+  icon?: React.ReactNode;
+  badgeText?: string;
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [channels, setChannels] = useState<SocialChannel[]>(() => parseChannels(value, defaultFallback));
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setChannels(parseChannels(value, defaultFallback));
+  }, [value, defaultFallback]);
+
+  const handleChannelChange = (index: number, key: "name" | "url", val: string) => {
+    setChannels((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [key]: val };
+      return copy;
+    });
+  };
+
+  const handleAddChannel = () => {
+    setChannels((prev) => [...prev, { name: "", url: "" }]);
+  };
+
+  const handleRemoveChannel = (index: number) => {
+    setChannels((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSave = async (e: any) => {
+    e.preventDefault();
+    setSaving(true);
+    const cleaned = channels
+      .filter((c) => (c.name && c.name.trim()) || (c.url && c.url.trim()))
+      .map((c) => {
+        let u = (c.url || "").trim();
+        if (u && !/^https?:\/\//i.test(u)) {
+          u = "https://" + u;
+        }
+        return {
+          name: (c.name || "Channel").trim(),
+          url: u
+        };
+      });
+
+    const serialized = serializeChannels(cleaned);
+    const { error } = await supabase.from("site_settings").update({ [fieldKey]: serialized }).eq("id", "global");
+    setSaving(false);
+
+    if (error) {
+      alert("Failed to save channels: " + error.message);
+      return;
+    }
+
+    onChange(serialized);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-2xl p-4 bg-gray-50/50 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="font-bold text-sm text-gray-900">{label}</span>
+          {badgeText && (
+            <span className="text-[10px] bg-gray-200 text-gray-700 font-bold px-2 py-0.5 rounded-full">
+              {channels.length} {channels.length === 1 ? "Channel" : "Channels"}
+            </span>
+          )}
+        </div>
+        {!isEditing ? (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="text-blue-600 hover:text-blue-800 text-xs font-bold cursor-pointer"
+          >
+            ✎ Edit Channels
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="px-3 py-1 bg-black text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition disabled:opacity-50 cursor-pointer"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setChannels(parseChannels(value, defaultFallback));
+                setIsEditing(false);
+              }}
+              className="px-2.5 py-1 border border-gray-200 text-gray-600 text-xs font-semibold rounded-lg hover:bg-gray-100 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div className="space-y-2.5 pt-1">
+          {channels.map((ch, idx) => (
+            <div key={idx} className="flex items-center gap-2 bg-white p-2.5 rounded-xl border border-gray-200 shadow-2xs">
+              <input
+                type="text"
+                placeholder="Channel Name (e.g. Tamil Nadu & Puducherry)"
+                value={ch.name}
+                onChange={(e) => handleChannelChange(idx, "name", e.target.value)}
+                className="w-1/3 min-w-[130px] border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-1 focus:ring-black outline-none"
+              />
+              <input
+                type="url"
+                placeholder="https://whatsapp.com/channel/... or https://t.me/..."
+                value={ch.url}
+                onChange={(e) => handleChannelChange(idx, "url", e.target.value)}
+                className="flex-1 border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-black outline-none font-mono"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemoveChannel(idx)}
+                className="text-gray-400 hover:text-red-600 p-1.5 transition cursor-pointer"
+                title="Remove channel"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={handleAddChannel}
+            className="w-full py-2 border border-dashed border-gray-300 hover:border-gray-400 bg-white hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-700 flex items-center justify-center gap-1.5 transition cursor-pointer"
+          >
+            <Plus size={14} />
+            <span>Add Another Channel</span>
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-1.5 pt-1">
+          {channels.length === 0 ? (
+            <p className="text-xs text-gray-400 italic">No channels configured</p>
+          ) : (
+            channels.map((ch, idx) => (
+              <div key={idx} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-100 text-xs">
+                <span className="font-bold text-gray-800">{ch.name || `Channel #${idx + 1}`}</span>
+                <a
+                  href={ch.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline truncate max-w-[240px] font-mono text-[11px]"
+                >
+                  {ch.url}
+                </a>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>
@@ -602,8 +787,27 @@ export default function ContactSettingsPage() {
                 <div className="flex items-center justify-between border-b pb-2">
                   <h3 className="font-extrabold text-base text-gray-900">Social Channels &amp; Community</h3>
                 </div>
-                <LockedField label="Telegram Channel URL" type="url" fieldKey="website_url" value={settings.website_url} onChange={(val: string) => setSettings({...settings, website_url: val})} />
-                <LockedField label="WhatsApp Channel URL" type="url" fieldKey="whatsapp_channel_url" value={settings.whatsapp_channel_url} onChange={(val: string) => setSettings({...settings, whatsapp_channel_url: val})} />
+
+                <MultiChannelManager
+                  label="WhatsApp Channels"
+                  fieldKey="whatsapp_channel_url"
+                  value={settings.whatsapp_channel_url}
+                  defaultFallback={DEFAULT_WHATSAPP_CHANNELS}
+                  onChange={(val: string) => setSettings({ ...settings, whatsapp_channel_url: val })}
+                  badgeText="Channels"
+                  icon={<MessageCircle size={17} className="text-emerald-600" />}
+                />
+
+                <MultiChannelManager
+                  label="Telegram Channels"
+                  fieldKey="website_url"
+                  value={settings.website_url}
+                  defaultFallback={DEFAULT_TELEGRAM_CHANNELS}
+                  onChange={(val: string) => setSettings({ ...settings, website_url: val })}
+                  badgeText="Channels"
+                  icon={<Send size={17} className="text-blue-500" />}
+                />
+
                 <LockedField label="Instagram URL" type="url" fieldKey="instagram" value={settings.instagram} onChange={(val: string) => setSettings({...settings, instagram: val})} />
                 <LockedField label="LinkedIn URL" type="url" fieldKey="linkedin" value={settings.linkedin} onChange={(val: string) => setSettings({...settings, linkedin: val})} />
                 <LockedField label="Twitter / X URL" type="url" fieldKey="twitter" value={settings.twitter} onChange={(val: string) => setSettings({...settings, twitter: val})} />
