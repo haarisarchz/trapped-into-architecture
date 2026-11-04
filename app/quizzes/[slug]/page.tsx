@@ -68,6 +68,12 @@ export default function QuizPlayPage() {
   const [questionCountChoice, setQuestionCountChoice] = useState<number>(10);
   const [loading, setLoading] = useState(true);
 
+  // Sidebar: Leaderboard & other quizzes
+  const [leaderboardTab, setLeaderboardTab] = useState<"weekly" | "monthly" | "all">("weekly");
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
+  const [otherQuizzes, setOtherQuizzes] = useState<any[]>([]);
+
   // Pre-game config states
   const [gameStarted, setGameStarted] = useState(false);
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
