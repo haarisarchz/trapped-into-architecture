@@ -26,6 +26,15 @@ interface Question {
 type Difficulty = "easy" | "medium" | "hard";
 type FeedbackMode = "instant" | "end";
 
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function generateMissingLettersMask(text: string): string {
   if (!text) return "";
   let result = "";
@@ -54,7 +63,9 @@ export default function QuizPlayPage() {
   const challengerDiff = searchParams.get("difficulty");
 
   const [quiz, setQuiz] = useState<any>(null);
+  const [allQuestionsPool, setAllQuestionsPool] = useState<Question[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionCountChoice, setQuestionCountChoice] = useState<number>(10);
   const [loading, setLoading] = useState(true);
 
   // Pre-game config states
@@ -115,12 +126,14 @@ export default function QuizPlayPage() {
         .order("order_index", { ascending: true });
 
       if (quesData) {
-        setQuestions(quesData.map(q => ({
+        const formatted = quesData.map(q => ({
           ...q,
           question_type: (q.question_type as any) || "choose",
           options: Array.isArray(q.options) ? q.options : [],
           accepted_aliases: Array.isArray(q.accepted_aliases) ? q.accepted_aliases : []
-        })));
+        }));
+        setAllQuestionsPool(formatted);
+        setQuestions(formatted);
       }
     } catch (err) {
       console.warn("Error fetching quiz:", err);
@@ -152,6 +165,13 @@ export default function QuizPlayPage() {
   }, [gameStarted, isGameOver, isAnswerSubmitted, currentIndex, difficulty]);
 
   const handleStartGame = () => {
+    const pool = allQuestionsPool.length > 0 ? allQuestionsPool : questions;
+    const targetCount = questionCountChoice === 999 ? pool.length : Math.min(questionCountChoice, pool.length);
+    const sampled = shuffleArray(pool).slice(0, targetCount).map(q => ({
+      ...q,
+      options: shuffleArray(q.options || [])
+    }));
+    setQuestions(sampled);
     setGameStarted(true);
     setCurrentIndex(0);
     setUserAnswers({});
@@ -413,10 +433,40 @@ export default function QuizPlayPage() {
                 </div>
               </div>
 
-              {/* Step 2: Answer Review Style */}
+              {/* Step 1.5: Select Number of Questions */}
+              {allQuestionsPool.length > 10 && (
+                <div className="text-left mb-6">
+                  <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
+                    2. Round Length:
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { count: 10, label: "10 Questions", sub: "Quick 2 min blitz" },
+                      { count: 20, label: "20 Questions", sub: "Standard challenge" },
+                      { count: 999, label: "All Questions", sub: `Full ${allQuestionsPool.length} marathon` }
+                    ].map(opt => (
+                      <button
+                        key={opt.count}
+                        type="button"
+                        onClick={() => setQuestionCountChoice(opt.count)}
+                        className={`p-3 rounded-2xl border text-left transition ${
+                          questionCountChoice === opt.count
+                            ? "bg-purple-50 border-purple-500 shadow-xs"
+                            : "bg-white border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <p className="text-xs font-bold text-gray-900">{opt.label}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{opt.sub}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Answer Review Style */}
               <div className="text-left mb-8">
                 <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
-                  2. Answer Review Style:
+                  3. Answer Review Style:
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
@@ -450,7 +500,7 @@ export default function QuizPlayPage() {
                 onClick={handleStartGame}
                 className="w-full sm:w-auto px-8 py-3.5 bg-black hover:bg-gray-800 text-white text-sm font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2 mx-auto"
               >
-                <Play size={16} /> Start Quiz ({questions.length} Questions)
+                <Play size={16} /> Start Quiz ({questionCountChoice === 999 ? allQuestionsPool.length : Math.min(questionCountChoice, allQuestionsPool.length || questions.length)} Questions)
               </button>
             </div>
           ) : isGameOver ? (
