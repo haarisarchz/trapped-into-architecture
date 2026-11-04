@@ -3,6 +3,7 @@ import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getClubbedPositionInfo } from "@/utils/positionNormalize";
 
 const formatDuration = (seconds: any) => {
   const s = Number(seconds);
@@ -350,12 +351,25 @@ export default function AnalyticsPage() {
                     </div>
                   ) : (
                     <div className="space-y-2.5">
-                      {data.searches.topKeywords.map((k: any, i: number) => (
-                        <div key={i} className="flex justify-between items-center text-xs">
-                          <span className="font-semibold text-gray-800 capitalize truncate max-w-[180px]">{k.keyword}</span>
-                          <span className="bg-white px-2 py-0.5 rounded border border-gray-200 font-mono font-bold text-gray-700">{k.count}</span>
-                        </div>
-                      ))}
+                      {data.searches.topKeywords.map((k: any, i: number) => {
+                        const club = getClubbedPositionInfo(k.keyword);
+                        return (
+                          <div key={i} className="flex justify-between items-center text-xs gap-2">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className="font-semibold text-gray-800 capitalize truncate">{k.keyword}</span>
+                              {club && (
+                                <span 
+                                  className="text-[9px] bg-blue-50 text-blue-700 font-semibold px-1.5 py-0.5 rounded border border-blue-100 shrink-0" 
+                                  title={`Mapped to clubbed position: ${club.canonical} (includes ${club.synonyms.slice(0, 4).join(', ')})`}
+                                >
+                                  ↳ {club.canonical.replace("Architectural ", "")}
+                                </span>
+                              )}
+                            </div>
+                            <span className="bg-white px-2 py-0.5 rounded border border-gray-200 font-mono font-bold text-gray-700 shrink-0">{k.count}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
