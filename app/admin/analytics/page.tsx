@@ -34,6 +34,33 @@ export default function AnalyticsPage() {
   const [gscTab, setGscTab] = useState<"keywords" | "pages">("keywords");
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [activityMetricMode, setActivityMetricMode] = useState<"avg" | "total">("avg");
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showAiCard, setShowAiCard] = useState(false);
+
+  const fetchAiDemandAnalysis = async () => {
+    setShowAiCard(true);
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/analytics/ai-suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topKeywords: data?.searches?.topKeywords || [],
+          topCities: data?.searches?.topCities || [],
+          zeroResults: data?.searches?.zeroResults || [],
+        }),
+      });
+      const json = await res.json();
+      if (json.analysis) {
+        setAiAnalysis(json.analysis);
+      }
+    } catch (e) {
+      console.warn("AI analysis fetch error", e);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -328,12 +355,108 @@ export default function AnalyticsPage() {
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">Exact keywords, job roles, and locations searched by visitors on the jobs page</p>
                 </div>
-                {data.searches?.totalCount > 0 && (
-                  <span className="text-xs font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full w-fit">
-                    {data.searches.totalCount} searches recorded
-                  </span>
-                )}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={fetchAiDemandAnalysis}
+                    disabled={aiLoading}
+                    className="px-3 py-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-90 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer disabled:opacity-50"
+                  >
+                    <span>{aiLoading ? "⏳" : "✨"}</span>
+                    <span>{aiLoading ? "Analyzing..." : "Gemini AI Demand Intelligence"}</span>
+                  </button>
+                  {data.searches?.totalCount > 0 && (
+                    <span className="text-xs font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full w-fit">
+                      {data.searches.totalCount} searches recorded
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {/* GEMINI AI MARKET INTELLIGENCE CARD */}
+              {showAiCard && (
+                <div className="mb-6 p-5 bg-gradient-to-br from-indigo-50/90 via-blue-50/50 to-white rounded-2xl border border-indigo-200/80 shadow-sm animate-in fade-in duration-200">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                        ✨
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                          <span>Gemini AI Candidate Demand &amp; SEO Recommendations</span>
+                          <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">AI Insights</span>
+                        </h3>
+                        <p className="text-[11px] text-gray-500">Live recruitment &amp; search engine intelligence derived from on-site searches</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowAiCard(false)}
+                      className="text-gray-400 hover:text-gray-700 text-sm p-1 rounded-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {aiLoading ? (
+                    <div className="py-6 flex flex-col items-center justify-center text-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
+                      <p className="text-xs text-gray-500 font-medium">Consulting Gemini on candidate search trends &amp; market opportunities...</p>
+                    </div>
+                  ) : aiAnalysis ? (
+                    <div className="space-y-4 text-xs">
+                      {/* Summary */}
+                      <p className="text-gray-700 font-medium bg-white/80 p-3 rounded-xl border border-indigo-100">
+                        {aiAnalysis.summary}
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Urgent Roles */}
+                        {aiAnalysis.urgentRoles && aiAnalysis.urgentRoles.length > 0 && (
+                          <div className="bg-white/80 p-3.5 rounded-xl border border-indigo-100">
+                            <h5 className="font-bold text-indigo-950 uppercase tracking-wider text-[10px] mb-2">🔥 High Demand Roles</h5>
+                            <div className="flex flex-wrap gap-1.5">
+                              {aiAnalysis.urgentRoles.map((r: string, idx: number) => (
+                                <span key={idx} className="bg-indigo-50 text-indigo-800 px-2.5 py-1 rounded-lg font-semibold text-xs border border-indigo-100">
+                                  {r}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* High Demand Cities */}
+                        {aiAnalysis.highDemandLocations && aiAnalysis.highDemandLocations.length > 0 && (
+                          <div className="bg-white/80 p-3.5 rounded-xl border border-indigo-100">
+                            <h5 className="font-bold text-indigo-950 uppercase tracking-wider text-[10px] mb-2">📍 Target Locations (Zero Results / High Traffic)</h5>
+                            <div className="flex flex-wrap gap-1.5">
+                              {aiAnalysis.highDemandLocations.map((loc: string, idx: number) => (
+                                <span key={idx} className="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg font-semibold text-xs border border-emerald-100">
+                                  📍 {loc}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Strategic Recommendations */}
+                      {aiAnalysis.recommendations && (
+                        <div className="bg-white/90 p-3.5 rounded-xl border border-indigo-100 space-y-1.5">
+                          <h5 className="font-bold text-gray-900 uppercase tracking-wider text-[10px]">💡 Action Plan &amp; AI Discovery Tips</h5>
+                          <ul className="space-y-1 text-gray-600 list-disc list-inside">
+                            {aiAnalysis.recommendations.map((rec: string, idx: number) => (
+                              <li key={idx} className="leading-relaxed">
+                                {rec}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 

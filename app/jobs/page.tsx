@@ -91,7 +91,9 @@ function JobsPageContent() {
 
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("q") || searchParams.get("search") || ""
+  );
 
   const activeClubInfo = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length < 2) return null;
