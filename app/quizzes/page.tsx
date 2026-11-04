@@ -246,6 +246,83 @@ export default function QuizzesHubPage() {
                   })}
                 </div>
               )}
+
+              {/* EXPLORE THE PLATFORM: ECOSYSTEM LINKS */}
+              <div className="mt-10 bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 shadow-xs">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
+                      Explore Trapped Into Architecture
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Beyond quizzes — discover architecture jobs, firm directories, and curated catalogs.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
+                  <Link 
+                    href="/jobs" 
+                    className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold mb-2">
+                        💼
+                      </div>
+                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-blue-600 transition">
+                        Architecture Jobs
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Browse active openings for Junior, Senior & Intern Architects across India.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
+                      Explore Jobs →
+                    </span>
+                  </Link>
+
+                  <Link 
+                    href="/companies" 
+                    className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-sm font-bold mb-2">
+                        🏢
+                      </div>
+                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-purple-600 transition">
+                        Design Firms & Studios
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Discover top architectural practices, verified studios, and office cultures.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
+                      View Firms →
+                    </span>
+                  </Link>
+
+                  <Link 
+                    href="/catalog" 
+                    className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold mb-2">
+                        🏛️
+                      </div>
+                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-emerald-600 transition">
+                        Architecture Catalog
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        65+ iconic buildings with project details, architectural styles, and trivia.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
+                      Browse Catalog →
+                    </span>
+                  </Link>
+                </div>
+              </div>
+
             </div>
 
             {/* RIGHT SIDEBAR: LEADERBOARD WIDGET WITH BLURRED GUEST LOCK */}
