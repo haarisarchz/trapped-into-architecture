@@ -36,6 +36,7 @@ const [showUserMenu, setShowUserMenu] =
 
   const userRoleNormalized = (currentUser?.role || "").toLowerCase().replace(/[\s_]+/g, "");
   const isInternalAdmin = ["superadmin", "admin", "ceo", "jobadmin"].includes(userRoleNormalized);
+  const isSuperAdminOrCeo = ["superadmin", "ceo"].includes(userRoleNormalized);
   const [userTier, setUserTier] = useState<string>("bronze");
 
   const getDisplayNameTierStyles = (tier: string) => {
@@ -693,15 +694,17 @@ useEffect(() => {
             >
               Add a Job
             </button>
-            <button
-              onClick={() => {
-                router.push("/post-a-job?preview=true");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-4 hover:bg-purple-50 text-purple-700 border-b border-gray-100 font-medium flex items-center gap-1.5"
-            >
-              <span>🧪 Preview &quot;Post a Job&quot; (User View)</span>
-            </button>
+            {isSuperAdminOrCeo && (
+              <button
+                onClick={() => {
+                  router.push("/post-a-job?preview=true");
+                  setShowUserMenu(false);
+                }}
+                className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900 flex items-center gap-1.5"
+              >
+                <span>Preview &quot;Post a Job&quot; (User View)</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 router.push("/admin");
@@ -938,15 +941,17 @@ useEffect(() => {
             >
               Add a Job
             </button>
-            <button
-              onClick={() => {
-                router.push("/post-a-job?preview=true");
-                setShowUserMenu(false);
-              }}
-              className="w-full text-left px-5 py-3 hover:bg-purple-50 text-purple-700 border-b border-gray-100 font-medium flex items-center gap-1.5"
-            >
-              <span>🧪 Preview &quot;Post a Job&quot; (User View)</span>
-            </button>
+            {isSuperAdminOrCeo && (
+              <button
+                onClick={() => {
+                  router.push("/post-a-job?preview=true");
+                  setShowUserMenu(false);
+                }}
+                className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900 flex items-center gap-1.5"
+              >
+                <span>Preview &quot;Post a Job&quot; (User View)</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 router.push("/admin");

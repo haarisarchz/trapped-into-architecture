@@ -82,7 +82,10 @@ function PostJobContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialCompanySlug = searchParams.get("company");
-  const isPreview = searchParams.get("preview") === "true";
+  const isSuperAdminOrCeo = ["superadmin", "ceo"].includes(
+    (userProfile?.role || currentUser?.role || "").toLowerCase().replace(/[\s_]+/g, "")
+  );
+  const isPreview = searchParams.get("preview") === "true" && isSuperAdminOrCeo;
 
   // Auth & State
   const [loading, setLoading] = useState(true);
