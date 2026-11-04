@@ -7,7 +7,8 @@ import Footer from "@/components/Footer";
 import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase";
 import { EXPERIENCE_OPTIONS } from "@/app/constants/jobFilters";
-import { normalizePosition } from "@/utils/positionNormalize";
+import { normalizePosition, matchesPosition, getClubbedPositionInfo } from "@/utils/positionNormalize";
+import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 
 import {
   LayoutGrid,
@@ -91,6 +92,11 @@ function JobsPageContent() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   
   const [searchQuery, setSearchQuery] = useState("");
+
+  const activeClubInfo = useMemo(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) return null;
+    return getClubbedPositionInfo(searchQuery);
+  }, [searchQuery]);
 
  const [viewMode, setViewMode] = useState("visual");
 
@@ -631,6 +637,8 @@ const [showFilters, setShowFilters] = useState(false);
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
 
+      matchesPosition(job.position, searchQuery) ||
+
       job.city
         ?.toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
@@ -843,12 +851,12 @@ const [showFilters, setShowFilters] = useState(false);
 
   <div className="flex gap-2">
 
-    <input
-      type="text"
+    <SearchWithSuggestions
       placeholder="Search jobs..."
       value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="flex-1 border rounded-lg px-3 py-2 text-sm"
+      onChange={(val) => setSearchQuery(val)}
+      className="flex-1"
+      jobs={jobs}
     />
 
     <select
@@ -978,14 +986,12 @@ const [showFilters, setShowFilters] = useState(false);
 
   {/* SEARCH */}
 
-  <input
-    type="text"
-    placeholder="Search jobs..."
+  <SearchWithSuggestions
+    placeholder="Search jobs by position, company, or city..."
     value={searchQuery}
-    onChange={(e) =>
-      setSearchQuery(e.target.value)
-    }
-    className="flex-1 border border-gray-300 rounded-lg px-4 py-2"
+    onChange={(val) => setSearchQuery(val)}
+    className="flex-1"
+    jobs={jobs}
   />
 
   {/* SORT BY */}
@@ -1024,6 +1030,42 @@ const [showFilters, setShowFilters] = useState(false);
   </div>
 
 </div>
+{/* CLUBBED POSITION BANNER */}
+{activeClubInfo && (
+  <div className="mb-4 bg-gradient-to-r from-blue-50/90 via-indigo-50/40 to-white border border-blue-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
+    <div className="flex items-start sm:items-center gap-3">
+      <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+        ✨
+      </div>
+      <div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-bold text-gray-900 text-sm">{activeClubInfo.canonical}</span>
+          <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+            Clubbed Position
+          </span>
+          <span className="text-gray-500 font-medium">
+            ({filteredJobs.length} {filteredJobs.length === 1 ? "job" : "jobs"} found)
+          </span>
+        </div>
+        <p className="text-gray-600 mt-0.5">
+          Showing matching jobs for:{" "}
+          <span className="text-gray-800 font-semibold">
+            {activeClubInfo.synonyms.slice(0, 6).join(", ")}
+            {activeClubInfo.synonyms.length > 6 ? ` +${activeClubInfo.synonyms.length - 6} more` : ""}
+          </span>
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      onClick={() => setSearchQuery("")}
+      className="self-start sm:self-auto px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 text-gray-700 hover:text-black font-semibold rounded-lg transition text-xs shrink-0 shadow-2xs"
+    >
+      Clear Search
+    </button>
+  </div>
+)}
+
 {/* ALWAYS VISIBLE COUNT & ACTIVE FILTERS WRAPPER */}
 <div className="flex flex-wrap items-center gap-3 mb-4">
   <span className="text-sm font-semibold text-gray-600 shrink-0">Showing {filteredJobs.length} jobs</span>
