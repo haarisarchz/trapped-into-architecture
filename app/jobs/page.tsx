@@ -4,6 +4,7 @@
 import Navbar from "@/components/Navbar";
 import JobCard from "@/components/Jobcard";
 import Footer from "@/components/Footer";
+import FortnightlyBriefingBanner from "@/components/FortnightlyBriefingBanner";
 import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase";
 import { EXPERIENCE_OPTIONS } from "@/app/constants/jobFilters";
@@ -1347,6 +1348,7 @@ const [showFilters, setShowFilters] = useState(false);
 
 )}
 
+<FortnightlyBriefingBanner />
 <Footer />
 
 </main>

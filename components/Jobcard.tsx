@@ -4,7 +4,7 @@ import { generateJobUrl } from "@/utils/jobUrl";
 import { formatSalary, formatExperience } from "@/utils/formatJobDetails";
 import ShareButtons from "@/components/ShareButtons";
 import SaveButton from "@/components/SaveButton";
-import { Bookmark, BookmarkCheck } from "lucide-react";
+import { Bookmark, BookmarkCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -61,7 +61,15 @@ export default function JobCard({
   employment_type,
 }: JobCardProps) {
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
   const formattedExperience = formatExperience(experience);
+
+  const handleOpenJob = (e?: React.MouseEvent) => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+    const targetUrl = generateJobUrl({ id, firm_name, position });
+    router.push(targetUrl);
+  };
 
   
   
@@ -96,9 +104,17 @@ export default function JobCard({
   if (viewMode === "visual") {
     return (
       <div 
-        onClick={() => router.push(generateJobUrl({ id, firm_name, position }))}
-        className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition duration-300 border border-gray-200 cursor-pointer group"
+        onClick={() => handleOpenJob()}
+        className={`relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition duration-300 border border-gray-200 cursor-pointer group ${isNavigating ? "opacity-60 pointer-events-none" : ""}`}
       >
+      {isNavigating && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-[2px] transition-all">
+          <div className="flex items-center gap-2.5 rounded-full bg-black/90 px-4 py-2 text-xs md:text-sm font-semibold text-white shadow-xl ring-1 ring-white/20">
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
+            <span>Opening Job...</span>
+          </div>
+        </div>
+      )}
         <div className="overflow-hidden rounded-t-2xl">
           {image ? (
             <img src={image} alt={position} className="w-full aspect-[3/4] object-cover group-hover:scale-105 transition duration-500" />
@@ -163,9 +179,17 @@ export default function JobCard({
       
       return (
         <div 
-          onClick={() => router.push(generateJobUrl({ id, firm_name, position }))}
-          className="bg-white rounded-2xl shadow-md hover:shadow-xl transition border border-gray-200 flex flex-col md:flex-row h-auto md:h-[240px] cursor-pointer group"
+          onClick={() => handleOpenJob()}
+          className={`relative bg-white rounded-2xl shadow-md hover:shadow-xl transition border border-gray-200 flex flex-col md:flex-row h-auto md:h-[240px] cursor-pointer group ${isNavigating ? "opacity-60 pointer-events-none" : ""}`}
         >
+      {isNavigating && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-[2px] transition-all">
+          <div className="flex items-center gap-2.5 rounded-full bg-black/90 px-4 py-2 text-xs md:text-sm font-semibold text-white shadow-xl ring-1 ring-white/20">
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
+            <span>Opening Job...</span>
+          </div>
+        </div>
+      )}
           <img src={image || "/placeholder-job.jpg"} alt={position} className="w-full md:w-56 h-48 md:h-full object-cover" />
   
           <div className="p-5 md:p-6 flex flex-col justify-between flex-1">
@@ -220,9 +244,17 @@ export default function JobCard({
     ========================================= */
     return (
       <div 
-        onClick={() => router.push(generateJobUrl({ id, firm_name, position }))}
-        className="bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 px-3 md:px-4 py-3 flex items-center gap-3 cursor-pointer group"
+        onClick={() => handleOpenJob()}
+        className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition border border-gray-200 px-3 md:px-4 py-3 flex items-center gap-3 cursor-pointer group ${isNavigating ? "opacity-60 pointer-events-none" : ""}`}
       >
+      {isNavigating && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl bg-white/75 backdrop-blur-[2px] transition-all">
+          <div className="flex items-center gap-2.5 rounded-full bg-black/90 px-4 py-2 text-xs md:text-sm font-semibold text-white shadow-xl ring-1 ring-white/20">
+            <Loader2 className="h-4 w-4 animate-spin text-white" />
+            <span>Opening Job...</span>
+          </div>
+        </div>
+      )}
         <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg overflow-hidden bg-gray-100">
             {image ? (
