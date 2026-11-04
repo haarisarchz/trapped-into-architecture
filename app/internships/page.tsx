@@ -6,6 +6,8 @@ import JobCard from "@/components/Jobcard";
 import Footer from "@/components/Footer";
 import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase";
+import { matchesPosition } from "@/utils/positionNormalize";
+import SearchWithSuggestions from "@/components/SearchWithSuggestions";
 
 import {
   LayoutGrid,
@@ -180,6 +182,7 @@ function InternshipsPageContent() {
           searchQuery.trim() === "" ||
           (job.firm_name && job.firm_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (job.position && job.position.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          matchesPosition(job.position, searchQuery) ||
           (job.city && job.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
           (job.state && job.state.toLowerCase().includes(searchQuery.toLowerCase())) ||
           job.skills_required?.some((s: string) => s.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -500,16 +503,13 @@ function InternshipsPageContent() {
             {/* SEARCH & CONTROLS BAR */}
             <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
               {/* SEARCH INPUT */}
-              <div className="relative flex-1">
-                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search internships, studios, software, cities..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-black transition bg-gray-50/50"
-                />
-              </div>
+              <SearchWithSuggestions
+                placeholder="Search internships, studios, software, cities..."
+                value={searchQuery}
+                onChange={(val) => setSearchQuery(val)}
+                className="flex-1"
+                jobs={jobs}
+              />
 
               {/* CONTROLS (Sort & View) */}
               <div className="flex items-center gap-3 justify-between md:justify-end">
