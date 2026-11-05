@@ -34,6 +34,7 @@ export default function AnalyticsPage() {
   const [gscTab, setGscTab] = useState<"keywords" | "pages">("keywords");
   const [visibleGscKeywordsCount, setVisibleGscKeywordsCount] = useState(10);
   const [visibleGscPagesCount, setVisibleGscPagesCount] = useState(10);
+  const [firmLeaderboardMode, setFirmLeaderboardMode] = useState<"trending" | "overall">("trending");
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [activityMetricMode, setActivityMetricMode] = useState<"avg" | "total">("avg");
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
@@ -1075,56 +1076,107 @@ export default function AnalyticsPage() {
               {/* FIRMS DEMAND LEADERBOARD */}
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>🏢 Top Architecture Firms Leaderboard</span>
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Firms with highest candidate views, job shares, and engagement
+                        {firmLeaderboardMode === "trending"
+                          ? `Ranked by candidate activity in ${days === '1h' ? 'the last hour' : days === '1' ? 'the last 24 hours' : days === '7' ? 'the last 7 days' : days === '30' ? 'the last 30 days' : 'this period'}`
+                          : "All-time leaderboard based on total jobs posted and candidate engagement"}
                       </p>
                     </div>
-                    <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                      Top {data.topFirms ? data.topFirms.length : 0}
-                    </span>
+
+                    <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold shrink-0">
+                      <button 
+                        type="button"
+                        onClick={() => setFirmLeaderboardMode("trending")} 
+                        className={`px-3 py-1.5 rounded-lg transition ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🕒 Recent / Trending
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setFirmLeaderboardMode("overall")} 
+                        className={`px-3 py-1.5 rounded-lg transition ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🏆 Overall (All-Time)
+                      </button>
+                    </div>
                   </div>
 
-                  {(!data.topFirms || data.topFirms.length === 0) ? (
-                    <p className="text-xs text-gray-400 italic py-8 text-center">No firm data available for this period.</p>
-                  ) : (
-                    <div className="divide-y divide-gray-100">
-                      {data.topFirms.map((firm: any, i: number) => {
-                        const rankMedals = ["🥇", "🥈", "🥉"];
-                        return (
-                          <div key={i} className="py-3 flex items-center justify-between gap-3 group">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <span className="w-7 text-center font-bold text-sm shrink-0">
-                                {i < 3 ? rankMedals[i] : <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>}
-                              </span>
-                              <div className="min-w-0">
-                                <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition">
-                                  {firm.name}
-                                </p>
-                                <p className="text-[11px] text-gray-400 truncate">
-                                  📍 {firm.locations} {firm.positions && firm.positions.length > 0 ? `• ${firm.positions.join(", ")}` : ""}
-                                </p>
-                              </div>
-                            </div>
+                  {(() => {
+                    const displayedFirms = firmLeaderboardMode === "trending" 
+                      ? (data.topFirms || []) 
+                      : (data.overallTopFirms || data.topFirms || []);
 
-                            <div className="flex items-center gap-3 shrink-0 text-right">
-                              <div className="hidden sm:block">
-                                <p className="text-xs font-semibold text-gray-700">{firm.totalJobs} {firm.totalJobs === 1 ? 'job' : 'jobs'}</p>
-                                <p className="text-[10px] text-gray-400">{firm.totalShares + firm.totalSaves} interactions</p>
+                    if (!displayedFirms || displayedFirms.length === 0) {
+                      return <p className="text-xs text-gray-400 italic py-8 text-center">No firm data available for this period.</p>;
+                    }
+
+                    const hasPeriodInteractions = displayedFirms.some((f: any) => (f.periodInteractions || 0) > 0);
+
+                    return (
+                      <>
+                        <div className="divide-y divide-gray-100">
+                          {displayedFirms.map((firm: any, i: number) => {
+                            const rankMedals = ["🥇", "🥈", "🥉"];
+                            const isTrendingActive = firmLeaderboardMode === "trending" && (firm.periodInteractions || 0) > 0;
+
+                            return (
+                              <div key={i} className="py-3 flex items-center justify-between gap-3 group">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <span className="w-7 text-center font-bold text-sm shrink-0">
+                                    {i < 3 ? rankMedals[i] : <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition">
+                                      {firm.name}
+                                    </p>
+                                    <p className="text-[11px] text-gray-400 truncate">
+                                      📍 {firm.locations} {firm.positions && firm.positions.length > 0 ? `• ${firm.positions.join(", ")}` : ""}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 shrink-0 text-right">
+                                  <div className="hidden sm:block">
+                                    <p className="text-xs font-semibold text-gray-700">
+                                      {isTrendingActive ? (
+                                        <span className="text-emerald-700 font-bold">+{firm.periodInteractions} in period</span>
+                                      ) : (
+                                        <span>{firm.totalJobs} {firm.totalJobs === 1 ? 'job' : 'jobs'}</span>
+                                      )}
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">
+                                      {isTrendingActive 
+                                        ? `${firm.totalJobs} posted jobs` 
+                                        : `${(firm.totalShares || 0) + (firm.totalSaves || 0)} interactions`}
+                                    </p>
+                                  </div>
+                                  <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                    isTrendingActive 
+                                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
+                                      : "bg-blue-50 text-blue-700"
+                                  }`}>
+                                    {isTrendingActive && firm.periodScore > 0 ? `${firm.periodScore} pts` : `${firm.engagementScore} pts`}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold">
-                                {firm.engagementScore} pts
-                              </div>
-                            </div>
+                            );
+                          })}
+                        </div>
+
+                        {firmLeaderboardMode === "trending" && !hasPeriodInteractions && (
+                          <div className="mt-3 p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-[11px] text-gray-500 flex items-center justify-between">
+                            <span>💡 No new shares in this exact timeframe. Showing top hiring studios.</span>
+                            <button type="button" onClick={() => setFirmLeaderboardMode("overall")} className="text-blue-600 font-semibold hover:underline shrink-0">View All-Time ➔</button>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

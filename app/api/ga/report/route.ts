@@ -253,6 +253,7 @@ export async function GET(request: Request) {
     let zeroResultSearches: any[] = [];
     let totalSearchesCount = 0;
     let topFirms: any[] = [];
+    let overallTopFirms: any[] = [];
     let experienceGap: any[] = [];
     const jobInfoMap: Record<string, string> = {};
 
@@ -501,8 +502,13 @@ export async function GET(request: Request) {
             name: string;
             slug: string;
             totalJobs: number;
+            periodJobs: number;
             totalShares: number;
+            periodShares: number;
             totalSaves: number;
+            periodSaves: number;
+            periodInteractions: number;
+            latestActivity: string;
             locations: Set<string>;
             positions: string[];
           }> = {};
@@ -517,8 +523,13 @@ export async function GET(request: Request) {
                 name: firmRaw,
                 slug: firmRaw.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, ""),
                 totalJobs: 0,
+                periodJobs: 0,
                 totalShares: 0,
+                periodShares: 0,
                 totalSaves: 0,
+                periodSaves: 0,
+                periodInteractions: 0,
+                latestActivity: "",
                 locations: new Set<string>(),
                 positions: [],
               };
@@ -526,6 +537,20 @@ export async function GET(request: Request) {
 
             const f = firmMap[firmKey];
             f.totalJobs += 1;
+            if (sinceDate && j.posted_date && new Date(j.posted_date) >= new Date(sinceDate)) {
+              f.periodJobs += 1;
+            }
+
+            const act = jobActivityMap[j.id];
+            if (act) {
+              f.periodShares += (act.shares || 0);
+              f.periodSaves += (act.saves || 0);
+              f.periodInteractions += ((act.shares || 0) + (act.saves || 0));
+              if (act.latestActivity && (!f.latestActivity || new Date(act.latestActivity) > new Date(f.latestActivity))) {
+                f.latestActivity = act.latestActivity;
+              }
+            }
+
             f.totalShares += (j.share_count || 0);
             f.totalSaves += (j.save_count || 0);
             if (j.city) f.locations.add(j.city.trim());
@@ -534,17 +559,39 @@ export async function GET(request: Request) {
             }
           });
 
-          topFirms = Object.values(firmMap)
-            .map(f => ({
+          const allFirmsEnriched = Object.values(firmMap).map(f => {
+            const periodScore = (f.periodInteractions * 25) + (f.periodJobs * 10);
+            const overallScore = (f.totalJobs * 10) + (f.totalShares * 4) + (f.totalSaves * 3);
+            return {
               name: f.name,
               slug: f.slug,
               totalJobs: f.totalJobs,
+              periodJobs: f.periodJobs,
               totalShares: f.totalShares,
+              periodShares: f.periodShares,
               totalSaves: f.totalSaves,
-              engagementScore: (f.totalJobs * 10) + (f.totalShares * 4) + (f.totalSaves * 3),
+              periodSaves: f.periodSaves,
+              periodInteractions: f.periodInteractions,
+              periodScore,
+              engagementScore: overallScore,
               locations: Array.from(f.locations).slice(0, 2).join(", ") || "India",
               positions: f.positions,
-            }))
+              latestActivity: f.latestActivity,
+            };
+          });
+
+          // Recent / Trending Leaderboard (timeline sensitive - sorted by period interactions & score)
+          topFirms = [...allFirmsEnriched]
+            .sort((a, b) => 
+              (b.periodInteractions - a.periodInteractions) || 
+              (b.periodScore - a.periodScore) || 
+              (b.periodJobs - a.periodJobs) || 
+              (b.engagementScore - a.engagementScore)
+            )
+            .slice(0, 10);
+
+          // Overall All-Time Leaderboard
+          overallTopFirms = [...allFirmsEnriched]
             .sort((a, b) => b.engagementScore - a.engagementScore)
             .slice(0, 10);
 
@@ -1067,6 +1114,7 @@ export async function GET(request: Request) {
       peakTimes,
       funnel,
       topFirms,
+      overallTopFirms,
       experienceGap,
       countries: parseRows(countryRes, ["country"], ["users"]),
       browsers: parseRows(browserRes, ["browser"], ["users"]),
