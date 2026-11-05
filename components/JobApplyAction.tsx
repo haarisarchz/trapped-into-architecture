@@ -100,6 +100,12 @@ export default function JobApplyAction({
 
   const handleRegisterFromModal = () => {
     setShowLimitModal(false);
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "guest_register_click", {
+        source: "guest_apply_limit_modal",
+        category: "conversion",
+      });
+    }
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("openAuth", { detail: "register" }));
     }

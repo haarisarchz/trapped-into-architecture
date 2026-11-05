@@ -255,6 +255,7 @@ export async function GET(request: Request) {
     let topFirms: any[] = [];
     let overallTopFirms: any[] = [];
     let experienceGap: any[] = [];
+    let allJobsCount = 0;
     const jobInfoMap: Record<string, string> = {};
 
     if (supabaseUrl && supabaseAnonKey) {
@@ -412,6 +413,7 @@ export async function GET(request: Request) {
         }
 
         if (allJobsStats && allJobsStats.length > 0) {
+          allJobsCount = allJobsStats.length;
           allJobsStats.forEach((j: any) => {
             const parts = [
               j.position || "Architecture Job",
@@ -729,12 +731,17 @@ export async function GET(request: Request) {
       ? totalLifetimeSaves
       : (periodSaves > 0 ? periodSaves : (eventsMap["save_click"] || 0));
 
+    const guestRegisterClicks = eventsMap["guest_register_click"] || 0;
+    const guestPopupViews = eventsMap["guest_popup_view"] || 0;
+
     const conversions = {
       applyClicks: eventsMap["apply_click"] || 0,
       emailClicks: eventsMap["email_click"] || 0,
       contactClicks: eventsMap["contact_click"] || 0,
       shareClicks: finalShareCount,
       saveClicks: finalSaveCount,
+      guestRegisterClicks,
+      guestPopupViews,
       adminSharesCount: 0,
       candidateSharesCount,
       unregisteredSharesCount,
@@ -1105,6 +1112,8 @@ export async function GET(request: Request) {
         bounceRate: bouncePercent ? `${bouncePercent}%` : "0%",
         totalApplications,
         conversionRate,
+        totalJobsCount: allJobsCount,
+        totalSearchesCount,
       },
       conversions: {
         ...conversions,

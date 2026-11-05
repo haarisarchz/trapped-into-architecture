@@ -28,6 +28,9 @@ export default function GuestEngagementSlider() {
       const timer = setTimeout(() => {
         timerFired = true;
         setVisible(true);
+        if (typeof window !== "undefined" && (window as any).gtag) {
+          (window as any).gtag("event", "guest_popup_view", { source: "slider_timer" });
+        }
       }, delayMs);
 
       // 4. Scroll depth trigger (scrolled 50% down page)
@@ -38,6 +41,9 @@ export default function GuestEngagementSlider() {
         if (totalHeight > 0 && scrollPosition / totalHeight >= 0.5) {
           clearTimeout(timer);
           setVisible(true);
+          if (typeof window !== "undefined" && (window as any).gtag) {
+            (window as any).gtag("event", "guest_popup_view", { source: "slider_scroll" });
+          }
           window.removeEventListener("scroll", handleScroll);
         }
       };
@@ -62,6 +68,12 @@ export default function GuestEngagementSlider() {
 
   const handleRegisterClick = () => {
     handleDismiss();
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "guest_register_click", {
+        source: "guest_slider_popup",
+        category: "conversion",
+      });
+    }
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("openAuth", { detail: "register" }));
     }
