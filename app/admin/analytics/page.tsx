@@ -112,28 +112,68 @@ export default function AnalyticsPage() {
       <Navbar />
       <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-10">
         
-        {/* HEADER & CONTROLS */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div>
-            <div className="flex items-center gap-4">
-<AdminQuickMenu />
-<h1 className="text-3xl font-bold tracking-tight text-gray-900">Analytics</h1>
-</div>
-            <p className="text-gray-500 mt-1">Real-time traffic and user insights</p>
+        {/* STICKY HEADER & TIMELINE CONTROLS */}
+        <div className="sticky top-0 z-40 bg-gray-50/95 backdrop-blur-md py-3.5 mb-8 -mx-6 px-6 lg:-mx-8 lg:px-8 border-b border-gray-200/80 shadow-xs transition-all">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-3">
+              <AdminQuickMenu />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Analytics</h1>
+                  {data?.overview?.realtimeUsers !== undefined && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full border border-emerald-200/70">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>{data.overview.realtimeUsers} Live</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 hidden sm:block">Real-time candidate traffic &amp; platform insights</p>
+              </div>
+            </div>
+
+            {/* TIMELINE CONTROLS: QUICK BUTTONS + DROPDOWN */}
+            <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto justify-between sm:justify-end">
+              <div className="hidden lg:flex bg-white/90 p-1 rounded-xl border border-gray-200 text-xs font-semibold shadow-xs">
+                {[
+                  { label: "1h", value: "1h" },
+                  { label: "24h", value: "1" },
+                  { label: "7d", value: "7" },
+                  { label: "30d", value: "30" },
+                  { label: "90d", value: "90" },
+                  { label: "1y", value: "365" },
+                  { label: "All", value: "lifetime" },
+                ].map(p => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => setDays(p.value)}
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                      days === p.value
+                        ? "bg-black text-white shadow-xs font-bold"
+                        : "text-gray-600 hover:text-black hover:bg-gray-100"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <select 
+                value={days} 
+                onChange={(e) => setDays(e.target.value)}
+                aria-label="Select analytics timeframe"
+                className="bg-white border border-gray-300 text-gray-900 text-xs sm:text-sm rounded-xl focus:ring-black focus:border-black block p-2 sm:p-2.5 shadow-xs font-bold cursor-pointer hover:border-gray-400 transition"
+              >
+                <option value="1h">⏱️ Last 1 Hour</option>
+                <option value="1">📅 Last 24 Hours</option>
+                <option value="7">🗓️ Last 7 Days</option>
+                <option value="30">📊 Last 30 Days</option>
+                <option value="90">📈 Last 90 Days</option>
+                <option value="365">📆 Last 365 Days</option>
+                <option value="lifetime">🌐 Lifetime (All Time)</option>
+              </select>
+            </div>
           </div>
-          <select 
-              value={days} 
-              onChange={(e) => setDays(e.target.value)}
-              className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-black focus:border-black block p-2.5 shadow-sm font-medium"
-            >
-              <option value="1h">Last 1 Hour</option>
-              <option value="1">Last 24 Hours</option>
-              <option value="7">Last 7 Days</option>
-              <option value="30">Last 30 Days</option>
-              <option value="90">Last 90 Days</option>
-              <option value="365">Last 365 Days</option>
-              <option value="lifetime">Lifetime</option>
-            </select>
         </div>
 
         {loading ? (
