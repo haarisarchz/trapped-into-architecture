@@ -423,7 +423,7 @@ export async function GET(request: Request) {
           totalLifetimeSaves = allJobsStats.reduce((sum, j) => sum + (j.save_count || 0), 0);
 
           // If topSharedJobs has 0 entries (e.g. before any new shares were logged in the new table), fallback to historical shared jobs
-          if (days === 'lifetime' || days === 'all' || topSharedJobs.length === 0) {
+          if ((days === 'lifetime' || days === 'all') && topSharedJobs.length === 0) {
             const fallbackJobs = allJobsStats
               .filter(j => (j.share_count || 0) > 0 || (j.save_count || 0) > 0)
               .map(j => ({

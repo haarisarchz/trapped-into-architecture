@@ -25,13 +25,15 @@ export default function AnalyticsPage() {
   const [error, setError] = useState("");
   const [days, setDays] = useState("1");
   const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("all");
-  const [listingMode, setListingMode] = useState<"top" | "recent">("top");
+  const [listingMode, setListingMode] = useState<"top" | "recent">("recent");
   const [filterAdminShares, setFilterAdminShares] = useState(false);
   const [trafficTab, setTrafficTab] = useState<"outside" | "inside">("outside");
   const [pageMode, setPageMode] = useState<"views" | "landing">("views");
   const [gscData, setGscData] = useState<any>(null);
   const [gscLoading, setGscLoading] = useState(false);
   const [gscTab, setGscTab] = useState<"keywords" | "pages">("keywords");
+  const [visibleGscKeywordsCount, setVisibleGscKeywordsCount] = useState(10);
+  const [visibleGscPagesCount, setVisibleGscPagesCount] = useState(10);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [activityMetricMode, setActivityMetricMode] = useState<"avg" | "total">("avg");
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
@@ -294,7 +296,10 @@ export default function AnalyticsPage() {
                     </div>
 
                     {displayedJobs.length === 0 ? (
-                      <p className="text-gray-400 text-xs italic py-4">No job engagement recorded in this time period yet.</p>
+                      <div className="py-6 text-center bg-gray-50/70 rounded-xl border border-dashed border-gray-200">
+                        <p className="text-gray-500 text-xs font-semibold">No job shares or saves recorded in this time period.</p>
+                        <p className="text-gray-400 text-[11px] mt-1">Switch the timeframe to <strong>Last 7 Days</strong> or <strong>Lifetime</strong> to view historical engagement.</p>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {displayedJobs.slice(0, 8).map((j: any) => (
@@ -626,7 +631,7 @@ export default function AnalyticsPage() {
                             <td colSpan={5} className="py-8 text-center text-gray-400 italic">No Google search query data recorded in this period.</td>
                           </tr>
                         ) : (
-                          gscData.keywords.map((k: any, i: number) => {
+                          gscData.keywords.slice(0, visibleGscKeywordsCount).map((k: any, i: number) => {
                             const rank = k.position;
                             const rankBadgeColor = rank <= 3 
                               ? "bg-green-100 text-green-800 border-green-200" 
@@ -653,6 +658,19 @@ export default function AnalyticsPage() {
                         )}
                       </tbody>
                     </table>
+                    {gscData.keywords && visibleGscKeywordsCount < gscData.keywords.length && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                        <span>Showing 1 to {Math.min(visibleGscKeywordsCount, gscData.keywords.length)} of {gscData.keywords.length} keywords</span>
+                        <button
+                          type="button"
+                          onClick={() => setVisibleGscKeywordsCount(prev => prev + 10)}
+                          className="px-4 py-2 bg-gray-900 hover:bg-black text-white font-medium rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span>See More (10 more)</span>
+                          <span>⬇️</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -672,8 +690,8 @@ export default function AnalyticsPage() {
                             <td colSpan={5} className="py-8 text-center text-gray-400 italic">No ranking pages recorded in this period.</td>
                           </tr>
                         ) : (
-                          gscData.pages.map((p: any, i: number) => {
-                            let path = p.page;
+                          gscData.pages.slice(0, visibleGscPagesCount).map((p: any, i: number) => {
+                            let path = p.path || p.page;
                             try {
                               const u = new URL(p.page);
                               path = u.pathname;
@@ -681,10 +699,21 @@ export default function AnalyticsPage() {
 
                             return (
                               <tr key={i} className="hover:bg-gray-50/70 transition">
-                                <td className="py-3 pl-1 max-w-[320px] truncate">
-                                  <a href={p.page} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
-                                    {path || p.page}
-                                  </a>
+                                <td className="py-3 pl-1 max-w-[380px]">
+                                  <div className="flex flex-col">
+                                    <a 
+                                      href={p.page} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="font-semibold text-gray-900 hover:text-blue-600 transition truncate block max-w-[360px]"
+                                      title={p.title || path || p.page}
+                                    >
+                                      {p.title || path || p.page}
+                                    </a>
+                                    <span className="text-[11px] text-gray-400 font-mono truncate max-w-[360px] block mt-0.5">
+                                      {path || p.page}
+                                    </span>
+                                  </div>
                                 </td>
                                 <td className="py-3 text-right font-mono font-bold text-gray-800">{p.clicks}</td>
                                 <td className="py-3 text-right font-mono text-gray-500">{p.impressions}</td>
@@ -696,6 +725,19 @@ export default function AnalyticsPage() {
                         )}
                       </tbody>
                     </table>
+                    {gscData.pages && visibleGscPagesCount < gscData.pages.length && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                        <span>Showing 1 to {Math.min(visibleGscPagesCount, gscData.pages.length)} of {gscData.pages.length} pages</span>
+                        <button
+                          type="button"
+                          onClick={() => setVisibleGscPagesCount(prev => prev + 10)}
+                          className="px-4 py-2 bg-gray-900 hover:bg-black text-white font-medium rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span>See More (10 more)</span>
+                          <span>⬇️</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
