@@ -147,16 +147,13 @@ export default function AnalyticsPage() {
                   type="button"
                   title={p.full}
                   onClick={() => setDays(p.value)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${
                     days === p.value
                       ? "bg-black text-white shadow-xs"
                       : "text-gray-600 hover:text-black hover:bg-gray-100"
                   }`}
                 >
-                  {days === p.value && loading && (
-                    <div className="animate-spin rounded-full h-2.5 w-2.5 border-2 border-white border-t-transparent"></div>
-                  )}
-                  <span>{p.label}</span>
+                  {p.label}
                 </button>
               ))}
             </div>
@@ -174,15 +171,11 @@ export default function AnalyticsPage() {
           </div>
         ) : data ? (
           <div className="relative">
-            {/* Floating modern loader when switching timelines so page never goes blank */}
+            {/* Simple loading circle in front while dimmer analytics update in background */}
             {loading && (
               <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-                <div className="bg-white/95 backdrop-blur-md border border-gray-200/90 shadow-2xl px-6 py-4 rounded-2xl flex items-center gap-3.5 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-black border-t-transparent shrink-0"></div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-gray-900 tracking-tight">Updating analytics...</span>
-                    <span className="text-[11px] text-gray-500 font-medium">Loading data for selected timeframe</span>
-                  </div>
+                <div className="p-3.5 bg-white/90 backdrop-blur-xs rounded-full shadow-md border border-gray-100">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-black border-t-transparent"></div>
                 </div>
               </div>
             )}
@@ -193,7 +186,7 @@ export default function AnalyticsPage() {
               </div>
             )}
 
-            <div className={`space-y-6 transition-all duration-300 ${loading ? "opacity-35 grayscale-[25%] pointer-events-none select-none" : "opacity-100"}`}>
+            <div className={`space-y-6 transition-opacity duration-300 ${loading ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
             
             {/* OVERVIEW METRICS */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 lg:gap-6">
