@@ -633,10 +633,10 @@ function PostJobContent() {
               </div>
             </div>
             <Link
-              href="/admin/add-job"
+              href="/admin/jobs/add"
               className="text-xs bg-white text-purple-950 font-bold px-4 py-2.5 rounded-xl hover:bg-purple-100 transition whitespace-nowrap self-end sm:self-auto shadow-sm flex items-center gap-1.5"
             >
-              <span>Admin &quot;Add New Job&quot;</span>
+              <span>Admin &quot;Add a Job&quot;</span>
               <ArrowRight size={13} />
             </Link>
           </div>
