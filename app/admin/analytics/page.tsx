@@ -24,7 +24,7 @@ function VerticalBarChart({
   items,
   dataKey,
   colorClass,
-  height = "h-44 sm:h-52",
+  height = "h-28 sm:h-32",
   isPercentage = false,
   isDuration = false,
   showAxis = true,
@@ -134,6 +134,98 @@ function MiniSparkBars({
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Comparison Bar Chart (Current Period vs. Preceding 5 Periods purely from Live Data)
+function ComparisonBarChart({
+  items,
+  dataKey,
+  colorClass,
+  height = "h-28 sm:h-32",
+  isPercentage = false,
+  isDuration = false,
+}: {
+  items: any[];
+  dataKey: string;
+  colorClass: string;
+  height?: string;
+  isPercentage?: boolean;
+  isDuration?: boolean;
+}) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="h-28 flex items-center justify-center text-xs text-gray-400">
+        No live comparison data available
+      </div>
+    );
+  }
+
+  const values = items.map(item => Number(item[dataKey]) || 0);
+  const max = Math.max(...values, 1);
+  const allZero = values.every(v => v === 0);
+
+  if (allZero) {
+    return (
+      <div className="h-28 flex flex-col items-center justify-center text-center text-xs text-gray-400 p-2">
+        <span>No historical data recorded for this range</span>
+        <span className="text-[10px] text-gray-300 mt-0.5">Live tracking active for current periods</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      <div className={`${height} flex items-end justify-between gap-2.5 sm:gap-3 px-2 py-1`}>
+        {items.map((item, idx) => {
+          const val = Number(item[dataKey]) || 0;
+          const isCur = Boolean(item.isCurrent);
+          const heightPct = Math.max(val > 0 ? 10 : 3, Math.round((val / max) * 100));
+          const formattedVal = isDuration
+            ? formatDuration(val)
+            : isPercentage
+            ? `${val}%`
+            : val.toLocaleString();
+
+          return (
+            <div
+              key={idx}
+              className="flex-1 h-full flex flex-col justify-end items-center relative group min-w-[22px] cursor-pointer"
+            >
+              {/* Tooltip on hover */}
+              <div className="absolute -top-9 bg-gray-900 text-white text-[10px] font-mono px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-xl z-30 whitespace-nowrap -translate-y-1 group-hover:translate-y-0">
+                <span className="font-bold">{formattedVal}</span>
+                <span className="text-gray-300 ml-1">({item.fullLabel || item.label})</span>
+              </div>
+              {/* Value indicator on top of bar on hover */}
+              <span className="text-[10px] font-bold text-gray-700 mb-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {formattedVal}
+              </span>
+              {/* Comparison Bar */}
+              <div
+                className={`w-full rounded-t-md transition-all duration-300 ${
+                  isCur ? `${colorClass} ring-1 ring-black/10 shadow-xs` : "bg-gray-300 hover:bg-gray-400"
+                }`}
+                style={{ height: `${heightPct}%` }}
+              ></div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between text-[11px] text-gray-500 pt-1.5 border-t border-gray-100 font-mono mt-1 px-1">
+        {items.map((item, idx) => (
+          <span
+            key={idx}
+            className={`text-center truncate ${
+              item.isCurrent ? "font-bold text-gray-900" : "text-gray-500"
+            }`}
+          >
+            {item.label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -452,82 +544,164 @@ export default function AnalyticsPage() {
 
               </div>
 
-              {/* EXPANDED DETAILED VERTICAL BAR CHART */}
+              {/* EXPANDED SPLIT-SCREEN CHARTS: BREAKDOWN (LEFT) vs COMPARISON (RIGHT) */}
               {data.chartSeries?.items && data.chartSeries.items.length > 0 && (
-                <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-xs">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  
+                  {/* LEFT: Detailed Breakdown (7 Cols) */}
+                  <div className="lg:col-span-7 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-sm sm:text-base text-gray-900">
-                          {selectedOverviewMetric === "activeUsers"
-                            ? "Active Users Vertical Bar Chart"
-                            : selectedOverviewMetric === "sessions"
-                            ? "Total Sessions Vertical Bar Chart"
-                            : selectedOverviewMetric === "pageViews"
-                            ? "Page Views Vertical Bar Chart"
-                            : selectedOverviewMetric === "avgSessionDuration"
-                            ? "Avg Session Duration Vertical Bar Chart"
-                            : selectedOverviewMetric === "bounceRate"
-                            ? "Bounce Rate Vertical Bar Chart"
-                            : "Total Candidate Actions Vertical Bar Chart"}
-                        </h3>
-                        <span className="text-xs bg-black text-white px-2.5 py-0.5 rounded-full font-semibold">
-                          {days === "last_month" ? "Last Month" : days === "this_month" ? "This Month" : days === "1h" ? "1 Hour" : days === "1" ? "24 Hours" : days === "7" ? "7 Days" : days === "30" ? "30 Days" : days === "90" ? "90 Days" : days === "365" ? "1 Year" : "All Time"}
-                        </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full ${
+                              selectedOverviewMetric === "activeUsers"
+                                ? "bg-blue-600"
+                                : selectedOverviewMetric === "sessions"
+                                ? "bg-indigo-600"
+                                : selectedOverviewMetric === "pageViews"
+                                ? "bg-purple-600"
+                                : selectedOverviewMetric === "avgSessionDuration"
+                                ? "bg-amber-500"
+                                : selectedOverviewMetric === "bounceRate"
+                                ? "bg-rose-500"
+                                : "bg-emerald-600"
+                            }`}
+                          ></span>
+                          <h3 className="font-bold text-sm sm:text-base text-gray-900">
+                            {selectedOverviewMetric === "activeUsers"
+                              ? "Active Users Breakdown"
+                              : selectedOverviewMetric === "sessions"
+                              ? "Sessions Breakdown"
+                              : selectedOverviewMetric === "pageViews"
+                              ? "Page Views Breakdown"
+                              : selectedOverviewMetric === "avgSessionDuration"
+                              ? "Avg Duration Breakdown"
+                              : selectedOverviewMetric === "bounceRate"
+                              ? "Bounce Rate Breakdown"
+                              : "Actions Breakdown"}
+                          </h3>
+                          <span className="text-[11px] bg-black text-white px-2 py-0.5 rounded-full font-semibold">
+                            {days === "last_month" ? "Last Month" : days === "this_month" ? "This Month" : days === "1h" ? "1 Hour" : days === "1" ? "24 Hours" : days === "7" ? "7 Days" : days === "30" ? "30 Days" : days === "90" ? "90 Days" : days === "365" ? "1 Year" : "All Time"}
+                          </span>
+                        </div>
+
+                        {/* Metric Selector Tabs */}
+                        <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg text-xs font-semibold overflow-x-auto max-w-full">
+                          {[
+                            { key: "activeUsers", label: "Users" },
+                            { key: "sessions", label: "Sessions" },
+                            { key: "pageViews", label: "Views" },
+                            { key: "avgSessionDuration", label: "Duration" },
+                            { key: "bounceRate", label: "Bounce" },
+                            { key: "totalActions", label: "Actions" },
+                          ].map(m => (
+                            <button
+                              key={m.key}
+                              type="button"
+                              onClick={() => setSelectedOverviewMetric(m.key as any)}
+                              className={`px-2 py-1 rounded-md transition whitespace-nowrap cursor-pointer text-xs ${
+                                selectedOverviewMetric === m.key
+                                  ? "bg-white text-gray-900 shadow-xs font-bold"
+                                  : "text-gray-600 hover:text-black"
+                              }`}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Vertical bar distribution for every time interval. Hover over any bar to view exact counts.
+
+                      <p className="text-[11px] text-gray-400 mt-1.5">
+                        Granular interval distribution across the selected timeframe.
                       </p>
                     </div>
 
-                    {/* Quick Metric Selector Tabs */}
-                    <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto max-w-full">
-                      {[
-                        { key: "activeUsers", label: "Users" },
-                        { key: "sessions", label: "Sessions" },
-                        { key: "pageViews", label: "Views" },
-                        { key: "avgSessionDuration", label: "Duration" },
-                        { key: "bounceRate", label: "Bounce" },
-                        { key: "totalActions", label: "Actions" },
-                      ].map(m => (
-                        <button
-                          key={m.key}
-                          type="button"
-                          onClick={() => setSelectedOverviewMetric(m.key as any)}
-                          className={`px-2.5 py-1 rounded-lg transition whitespace-nowrap cursor-pointer ${
-                            selectedOverviewMetric === m.key
-                              ? "bg-white text-gray-900 shadow-xs font-bold"
-                              : "text-gray-600 hover:text-black"
-                          }`}
-                        >
-                          {m.label}
-                        </button>
-                      ))}
+                    <div className="pt-3 pb-1">
+                      <VerticalBarChart
+                        items={data.chartSeries.items}
+                        dataKey={selectedOverviewMetric}
+                        colorClass={
+                          selectedOverviewMetric === "activeUsers"
+                            ? "bg-blue-600"
+                            : selectedOverviewMetric === "sessions"
+                            ? "bg-indigo-600"
+                            : selectedOverviewMetric === "pageViews"
+                            ? "bg-purple-600"
+                            : selectedOverviewMetric === "avgSessionDuration"
+                            ? "bg-amber-500"
+                            : selectedOverviewMetric === "bounceRate"
+                            ? "bg-rose-500"
+                            : "bg-emerald-600"
+                        }
+                        isPercentage={selectedOverviewMetric === "bounceRate"}
+                        isDuration={selectedOverviewMetric === "avgSessionDuration"}
+                        height="h-28 sm:h-32"
+                      />
                     </div>
                   </div>
 
-                  <div className="pt-6 pb-2">
-                    <VerticalBarChart
-                      items={data.chartSeries.items}
-                      dataKey={selectedOverviewMetric}
-                      colorClass={
-                        selectedOverviewMetric === "activeUsers"
-                          ? "bg-blue-600"
-                          : selectedOverviewMetric === "sessions"
-                          ? "bg-indigo-600"
-                          : selectedOverviewMetric === "pageViews"
-                          ? "bg-purple-600"
-                          : selectedOverviewMetric === "avgSessionDuration"
-                          ? "bg-amber-500"
-                          : selectedOverviewMetric === "bounceRate"
-                          ? "bg-rose-500"
-                          : "bg-emerald-600"
-                      }
-                      isPercentage={selectedOverviewMetric === "bounceRate"}
-                      isDuration={selectedOverviewMetric === "avgSessionDuration"}
-                      height="h-44 sm:h-52"
-                    />
+                  {/* RIGHT: Period-over-Period Comparison (5 Cols) */}
+                  <div className="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between bg-gradient-to-b from-white to-gray-50/40">
+                    <div>
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Comparison</span>
+                            {(() => {
+                              const compItems = data.chartSeries?.comparison || [];
+                              const cur = Number(compItems[compItems.length - 1]?.[selectedOverviewMetric] || 0);
+                              const prev = Number(compItems[compItems.length - 2]?.[selectedOverviewMetric] || 0);
+                              if (prev > 0) {
+                                const diff = (((cur - prev) / prev) * 100).toFixed(1);
+                                const isPos = Number(diff) >= 0;
+                                return (
+                                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${isPos ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                                    {isPos ? `+${diff}% ▲` : `${diff}% ▼`} vs prev
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          <h3 className="font-bold text-sm sm:text-base text-gray-900 mt-0.5">
+                            Current vs Previous Periods
+                          </h3>
+                        </div>
+                        <span className="text-[10px] font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                          Live GA4
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-gray-400 mt-1.5">
+                        Historical trend comparison against preceding consecutive periods.
+                      </p>
+                    </div>
+
+                    <div className="pt-3 pb-1">
+                      <ComparisonBarChart
+                        items={data.chartSeries?.comparison || []}
+                        dataKey={selectedOverviewMetric}
+                        colorClass={
+                          selectedOverviewMetric === "activeUsers"
+                            ? "bg-blue-600"
+                            : selectedOverviewMetric === "sessions"
+                            ? "bg-indigo-600"
+                            : selectedOverviewMetric === "pageViews"
+                            ? "bg-purple-600"
+                            : selectedOverviewMetric === "avgSessionDuration"
+                            ? "bg-amber-500"
+                            : selectedOverviewMetric === "bounceRate"
+                            ? "bg-rose-500"
+                            : "bg-emerald-600"
+                        }
+                        isPercentage={selectedOverviewMetric === "bounceRate"}
+                        isDuration={selectedOverviewMetric === "avgSessionDuration"}
+                        height="h-28 sm:h-32"
+                      />
+                    </div>
                   </div>
+
                 </div>
               )}
             </div>

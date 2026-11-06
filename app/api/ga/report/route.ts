@@ -237,10 +237,10 @@ export async function GET(request: Request) {
       return [{ rows: [] }];
     });
 
-    // 9E. Daily Activity (Date YYYYMMDD) for multi-day timeframes
+    // 9E. Daily Activity (Date YYYYMMDD) - 180 days historical for real live period comparisons
     const dailyReq = analyticsDataClient.runReport({
       property,
-      dateRanges,
+      dateRanges: [{ startDate: "180daysAgo", endDate: "today" }],
       dimensions: [{ name: "date" }],
       metrics: [
         { name: "activeUsers" },
@@ -1516,10 +1516,216 @@ export async function GET(request: Request) {
       }
     }
 
+    // Compute 5 Real Period-over-Period Comparison Points purely from Live GA4 & Supabase Data
+    let comparisonItems: Array<{
+      label: string;
+      fullLabel: string;
+      isCurrent: boolean;
+      activeUsers: number;
+      sessions: number;
+      pageViews: number;
+      avgSessionDuration: number;
+      bounceRate: number;
+      totalActions: number;
+      applyClicks: number;
+      emailClicks: number;
+      contactClicks: number;
+      shareClicks: number;
+      saveClicks: number;
+    }> = [];
+
+    const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Helper to aggregate a list of YYYYMMDD dates from rawDaily and events
+    const aggregateDates = (dateList: string[], lbl: string, fullLbl: string, isCur: boolean) => {
+      let u = 0, s = 0, p = 0, durSum = 0, bSum = 0, countWithData = 0;
+      let app = 0, em = 0, con = 0, sh = 0, sa = 0;
+
+      dateList.forEach(ymd => {
+        const row = rawDaily.find((r: any) => r.date === ymd);
+        if (row) {
+          u += Number(row.activeUsers || 0);
+          s += Number(row.sessions || 0);
+          p += Number(row.screenPageViews || 0);
+          durSum += Number(row.averageSessionDuration || 0);
+          bSum += Number(row.bounceRate || 0);
+          countWithData++;
+        }
+        const ev = eventsSeriesMap[ymd];
+        if (ev) {
+          app += ev["apply_click"] || 0;
+          em += ev["email_click"] || 0;
+          con += ev["contact_click"] || 0;
+          sh += ev["share_click"] || 0;
+          sa += ev["save_click"] || 0;
+        }
+        sh += sbSharesByDate[ymd] || 0;
+        sa += sbSavesByDate[ymd] || 0;
+      });
+
+      const avgDur = countWithData > 0 ? Math.round(durSum / countWithData) : 0;
+      const avgBounce = countWithData > 0 ? Math.round((bSum / countWithData) * 100) : 0;
+
+      return {
+        label: lbl,
+        fullLabel: fullLbl,
+        isCurrent: isCur,
+        activeUsers: u,
+        sessions: s,
+        pageViews: p,
+        avgSessionDuration: avgDur,
+        bounceRate: avgBounce,
+        totalActions: app + em + con + sh + sa,
+        applyClicks: app,
+        emailClicks: em,
+        contactClicks: con,
+        shareClicks: sh,
+        saveClicks: sa,
+      };
+    };
+
+    if (days === "1h") {
+      // Compare 5 recent 1-hour slots today
+      const currentHour = now.getHours();
+      for (let offset = 4; offset >= 0; offset--) {
+        const targetH = (currentHour - offset + 24) % 24;
+        const padded = targetH.toString().padStart(2, "0");
+        const h12 = targetH === 0 ? 12 : targetH > 12 ? targetH - 12 : targetH;
+        const ampm = targetH >= 12 ? "PM" : "AM";
+        const hourlyRow = hourlyDataMap[targetH] || {};
+
+        const ev = eventsSeriesMap[padded] || {};
+        const apply = ev["apply_click"] || 0;
+        const email = ev["email_click"] || 0;
+        const contact = ev["contact_click"] || 0;
+        const shares = Math.max(ev["share_click"] || 0, sbSharesByHour[targetH] || 0);
+        const saves = Math.max(ev["save_click"] || 0, sbSavesByHour[targetH] || 0);
+
+        comparisonItems.push({
+          label: offset === 0 ? "Current 1h" : offset === 1 ? "Prev 1h" : `-${offset}h`,
+          fullLabel: `${h12}:00 ${ampm}`,
+          isCurrent: offset === 0,
+          activeUsers: Number(hourlyRow.activeUsers || 0),
+          sessions: Number(hourlyRow.sessions || 0),
+          pageViews: Number(hourlyRow.screenPageViews || 0),
+          avgSessionDuration: Number(hourlyRow.averageSessionDuration || 0),
+          bounceRate: Math.round(Number(hourlyRow.bounceRate || 0) * 100),
+          totalActions: apply + email + contact + shares + saves,
+          applyClicks: apply,
+          emailClicks: email,
+          contactClicks: contact,
+          shareClicks: shares,
+          saveClicks: saves,
+        });
+      }
+    } else if (days === "1") {
+      // 24 Hours: Compare 5 recent days (Day -4, Day -3, Day -2, Yesterday, Today)
+      for (let offset = 4; offset >= 0; offset--) {
+        const targetDate = new Date(now.getTime() - offset * 24 * 60 * 60 * 1000);
+        const ymd = `${targetDate.getFullYear()}${String(targetDate.getMonth() + 1).padStart(2, "0")}${String(targetDate.getDate()).padStart(2, "0")}`;
+        const lbl = offset === 0 ? "Today" : offset === 1 ? "Yesterday" : `-${offset}d ago`;
+        const fullLbl = targetDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+        comparisonItems.push(aggregateDates([ymd], lbl, fullLbl, offset === 0));
+      }
+    } else if (days === "7") {
+      // 7 Days: Compare 5 consecutive 7-day periods
+      for (let p = 4; p >= 0; p--) {
+        const datesInPeriod: string[] = [];
+        for (let d = 6; d >= 0; d--) {
+          const tDate = new Date(now.getTime() - (p * 7 + d) * 24 * 60 * 60 * 1000);
+          datesInPeriod.push(`${tDate.getFullYear()}${String(tDate.getMonth() + 1).padStart(2, "0")}${String(tDate.getDate()).padStart(2, "0")}`);
+        }
+        const lbl = p === 0 ? "Current 7d" : p === 1 ? "Prev 7d" : `-${p} wks`;
+        const fullLbl = `7-day block (${p === 0 ? "current" : `-${p * 7}d`})`;
+        comparisonItems.push(aggregateDates(datesInPeriod, lbl, fullLbl, p === 0));
+      }
+    } else if (days === "this_month") {
+      // This Month: Compare current month MTD vs 4 previous calendar months
+      for (let mOffset = 4; mOffset >= 0; mOffset--) {
+        const targetMonthDate = new Date(now.getFullYear(), now.getMonth() - mOffset, 1);
+        const y = targetMonthDate.getFullYear();
+        const m = targetMonthDate.getMonth();
+        const mStr = String(m + 1).padStart(2, "0");
+        const mName = monthNamesShort[m];
+
+        const datesInMonth: string[] = [];
+        if (mOffset === 0) {
+          // Current month up to today
+          for (let d = 1; d <= now.getDate(); d++) {
+            datesInMonth.push(`${y}${mStr}${String(d).padStart(2, "0")}`);
+          }
+        } else {
+          // Full previous calendar month
+          const lastDayOfM = new Date(y, m + 1, 0).getDate();
+          for (let d = 1; d <= lastDayOfM; d++) {
+            datesInMonth.push(`${y}${mStr}${String(d).padStart(2, "0")}`);
+          }
+        }
+        const lbl = mOffset === 0 ? `${mName} (MTD)` : mName;
+        const fullLbl = `${mName} ${y}`;
+        comparisonItems.push(aggregateDates(datesInMonth, lbl, fullLbl, mOffset === 0));
+      }
+    } else if (days === "last_month") {
+      // Last Month: Compare Last Month vs 4 preceding calendar months
+      const prevMonthBase = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      for (let mOffset = 4; mOffset >= 0; mOffset--) {
+        const targetMonthDate = new Date(prevMonthBase.getFullYear(), prevMonthBase.getMonth() - mOffset, 1);
+        const y = targetMonthDate.getFullYear();
+        const m = targetMonthDate.getMonth();
+        const mStr = String(m + 1).padStart(2, "0");
+        const mName = monthNamesShort[m];
+
+        const datesInMonth: string[] = [];
+        const lastDayOfM = new Date(y, m + 1, 0).getDate();
+        for (let d = 1; d <= lastDayOfM; d++) {
+          datesInMonth.push(`${y}${mStr}${String(d).padStart(2, "0")}`);
+        }
+        const lbl = mOffset === 0 ? `${mName} (Last)` : mName;
+        const fullLbl = `${mName} ${y}`;
+        comparisonItems.push(aggregateDates(datesInMonth, lbl, fullLbl, mOffset === 0));
+      }
+    } else if (days === "30") {
+      // 30 Days: Compare 5 consecutive 30-day blocks
+      for (let p = 4; p >= 0; p--) {
+        const datesInPeriod: string[] = [];
+        for (let d = 29; d >= 0; d--) {
+          const tDate = new Date(now.getTime() - (p * 30 + d) * 24 * 60 * 60 * 1000);
+          datesInPeriod.push(`${tDate.getFullYear()}${String(tDate.getMonth() + 1).padStart(2, "0")}${String(tDate.getDate()).padStart(2, "0")}`);
+        }
+        const lbl = p === 0 ? "Current 30d" : p === 1 ? "Prev 30d" : `-${p} periods`;
+        const fullLbl = `30-day block (${p === 0 ? "current" : `-${p * 30}d`})`;
+        comparisonItems.push(aggregateDates(datesInPeriod, lbl, fullLbl, p === 0));
+      }
+    } else if (days === "90") {
+      // 90 Days: Compare 4 consecutive 90-day blocks
+      for (let p = 3; p >= 0; p--) {
+        const datesInPeriod: string[] = [];
+        for (let d = 89; d >= 0; d--) {
+          const tDate = new Date(now.getTime() - (p * 90 + d) * 24 * 60 * 60 * 1000);
+          datesInPeriod.push(`${tDate.getFullYear()}${String(tDate.getMonth() + 1).padStart(2, "0")}${String(tDate.getDate()).padStart(2, "0")}`);
+        }
+        const lbl = p === 0 ? "Current 90d" : p === 1 ? "Prev 90d" : `-${p} qtrs`;
+        const fullLbl = `90-day block`;
+        comparisonItems.push(aggregateDates(datesInPeriod, lbl, fullLbl, p === 0));
+      }
+    } else {
+      // 1 Year / Lifetime: Compare last 5 calendar years or months
+      for (let yOffset = 4; yOffset >= 0; yOffset--) {
+        const targetYear = now.getFullYear() - yOffset;
+        const yearPrefix = targetYear.toString();
+        const datesInYear: string[] = [];
+        rawDaily.forEach((r: any) => {
+          if (r.date && r.date.startsWith(yearPrefix)) datesInYear.push(r.date);
+        });
+        comparisonItems.push(aggregateDates(datesInYear, targetYear.toString(), `Year ${targetYear}`, yOffset === 0));
+      }
+    }
+
     const chartSeries = {
       timeframe: days,
       intervalType: chartIntervalType,
       items: chartItems,
+      comparison: comparisonItems,
     };
 
     // Parse Day of Week (Monday to Sunday in standard sequence)
