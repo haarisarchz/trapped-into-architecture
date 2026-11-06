@@ -19,6 +19,48 @@ const ProgressBar = ({ value, max }: { value: number, max: number }) => (
   </div>
 );
 
+// Reusable Information Tooltip Component with Clean Hover Explanations
+function InfoTooltip({
+  text,
+  position = "top",
+}: {
+  text: string;
+  position?: "top" | "bottom" | "left" | "right";
+}) {
+  return (
+    <span className="relative inline-flex items-center group/tip cursor-help ml-1.5 align-middle select-none">
+      <span className="w-3.5 h-3.5 rounded-full bg-gray-200/90 text-gray-500 flex items-center justify-center text-[9px] font-bold transition-colors group-hover/tip:bg-black group-hover/tip:text-white">
+        ?
+      </span>
+      <span
+        role="tooltip"
+        className={`absolute pointer-events-none hidden group-hover/tip:block z-50 w-52 sm:w-64 p-2.5 bg-gray-900/95 text-white text-[11px] font-normal rounded-xl shadow-2xl backdrop-blur-xs text-left leading-relaxed transition-all duration-150 animate-in fade-in zoom-in-95 ${
+          position === "bottom"
+            ? "top-full mt-2 left-1/2 -translate-x-1/2"
+            : position === "right"
+            ? "left-full ml-2 top-1/2 -translate-y-1/2"
+            : position === "left"
+            ? "right-full mr-2 top-1/2 -translate-y-1/2"
+            : "bottom-full mb-2 left-1/2 -translate-x-1/2"
+        }`}
+      >
+        {text}
+        <span
+          className={`absolute border-4 border-transparent ${
+            position === "bottom"
+              ? "bottom-full left-1/2 -translate-x-1/2 border-b-gray-900/95"
+              : position === "right"
+              ? "right-full top-1/2 -translate-y-1/2 border-r-gray-900/95"
+              : position === "left"
+              ? "left-full top-1/2 -translate-y-1/2 border-l-gray-900/95"
+              : "top-full left-1/2 -translate-x-1/2 border-t-gray-900/95"
+          }`}
+        />
+      </span>
+    </span>
+  );
+}
+
 // Reusable Vertical Bar Chart Component with Hover Tooltips & Responsive Axis
 function VerticalBarChart({
   items,
@@ -247,40 +289,13 @@ export default function AnalyticsPage() {
   const [visibleGscPagesCount, setVisibleGscPagesCount] = useState(10);
   const [firmLeaderboardMode, setFirmLeaderboardMode] = useState<"trending" | "overall">("trending");
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [activityMetricMode, setActivityMetricMode] = useState<"avg" | "total">("avg");
+  const [geoTab, setGeoTab] = useState<"countries" | "cities">("countries");
   const [selectedOverviewMetric, setSelectedOverviewMetric] = useState<
     "activeUsers" | "sessions" | "pageViews" | "avgSessionDuration" | "bounceRate" | "totalActions"
   >("activeUsers");
   const [selectedConversionMetric, setSelectedConversionMetric] = useState<
     "applyClicks" | "emailClicks" | "contactClicks" | "shareClicks" | "saveClicks"
   >("applyClicks");
-  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [showAiCard, setShowAiCard] = useState(false);
-
-  const fetchAiDemandAnalysis = async () => {
-    setShowAiCard(true);
-    setAiLoading(true);
-    try {
-      const res = await fetch("/api/analytics/ai-suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topKeywords: data?.searches?.topKeywords || [],
-          topCities: data?.searches?.topCities || [],
-          zeroResults: data?.searches?.zeroResults || [],
-        }),
-      });
-      const json = await res.json();
-      if (json.analysis) {
-        setAiAnalysis(json.analysis);
-      }
-    } catch (e) {
-      console.warn("AI analysis fetch error", e);
-    } finally {
-      setAiLoading(false);
-    }
-  };
 
   useEffect(() => {
     async function fetchData() {
@@ -412,18 +427,21 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
                 
                 {/* Realtime (Live) */}
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs relative flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Realtime</h3>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Realtime
+                        <InfoTooltip text="Active candidates and visitors currently browsing the platform in real-time." position="bottom" />
+                      </h3>
                     </div>
                     <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.realtimeUsers}</p>
                   </div>
                   <div className="mt-2 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded w-fit">
                     Active now
                   </div>
-                  <div className="absolute bottom-0 left-0 w-full h-1 bg-green-500"></div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-green-500 rounded-b-2xl"></div>
                 </div>
 
                 {/* Active Users */}
@@ -437,7 +455,10 @@ export default function AnalyticsPage() {
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active Users</h3>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Active Users
+                        <InfoTooltip text="Unique visitors who actively browsed or interacted with the site during the selected timeframe." position="bottom" />
+                      </h3>
                       <span className="w-2 h-2 rounded-full bg-blue-600"></span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.activeUsers}</p>
@@ -456,7 +477,10 @@ export default function AnalyticsPage() {
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sessions</h3>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Sessions
+                        <InfoTooltip text="Total browsing sessions initiated by visitors. A session expires after 30 minutes of inactivity." position="bottom" />
+                      </h3>
                       <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.sessions}</p>
@@ -475,7 +499,10 @@ export default function AnalyticsPage() {
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Page Views</h3>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Page Views
+                        <InfoTooltip text="Total number of web pages viewed across Trapped Into Architecture in this timeframe." position="bottom" />
+                      </h3>
                       <span className="w-2 h-2 rounded-full bg-purple-600"></span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.pageViews}</p>
@@ -494,7 +521,10 @@ export default function AnalyticsPage() {
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Session</h3>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Avg Session
+                        <InfoTooltip text="Average amount of time visitors spend exploring pages, jobs, and studios per session." position="bottom" />
+                      </h3>
                       <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{formatDuration(data.overview.avgSessionDuration)}</p>
@@ -513,7 +543,10 @@ export default function AnalyticsPage() {
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Bounce Rate</h3>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Bounce Rate
+                        <InfoTooltip text="Percentage of visitors who left after viewing only a single page without further interaction." position="bottom" />
+                      </h3>
                       <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.bounceRate || "0%"}</p>
@@ -532,7 +565,10 @@ export default function AnalyticsPage() {
                 >
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Total Actions</h3>
+                      <h3 className="text-xs font-semibold text-orange-600 uppercase tracking-wider flex items-center">
+                        Total Actions
+                        <InfoTooltip text="Combined count of all candidate engagement actions: applies, emails, WhatsApp calls, shares, and bookmarks." position="bottom" />
+                      </h3>
                       <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
                     </div>
                     <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">
@@ -568,18 +604,21 @@ export default function AnalyticsPage() {
                                 : "bg-emerald-600"
                             }`}
                           ></span>
-                          <h3 className="font-bold text-sm sm:text-base text-gray-900">
-                            {selectedOverviewMetric === "activeUsers"
-                              ? "Active Users Breakdown"
-                              : selectedOverviewMetric === "sessions"
-                              ? "Sessions Breakdown"
-                              : selectedOverviewMetric === "pageViews"
-                              ? "Page Views Breakdown"
-                              : selectedOverviewMetric === "avgSessionDuration"
-                              ? "Avg Duration Breakdown"
-                              : selectedOverviewMetric === "bounceRate"
-                              ? "Bounce Rate Breakdown"
-                              : "Actions Breakdown"}
+                          <h3 className="font-bold text-sm sm:text-base text-gray-900 flex items-center">
+                            <span>
+                              {selectedOverviewMetric === "activeUsers"
+                                ? "Active Users Breakdown"
+                                : selectedOverviewMetric === "sessions"
+                                ? "Sessions Breakdown"
+                                : selectedOverviewMetric === "pageViews"
+                                ? "Page Views Breakdown"
+                                : selectedOverviewMetric === "avgSessionDuration"
+                                ? "Avg Duration Breakdown"
+                                : selectedOverviewMetric === "bounceRate"
+                                ? "Bounce Rate Breakdown"
+                                : "Actions Breakdown"}
+                            </span>
+                            <InfoTooltip text="Granular breakdown of the selected metric across consecutive intervals (e.g., minute-by-minute, hour-by-hour, day-by-day)." />
                           </h3>
                           <span className="text-[11px] bg-black text-white px-2 py-0.5 rounded-full font-semibold">
                             {days === "last_month" ? "Last Month" : days === "this_month" ? "This Month" : days === "1h" ? "1 Hour" : days === "1" ? "24 Hours" : days === "7" ? "7 Days" : days === "30" ? "30 Days" : days === "90" ? "90 Days" : days === "365" ? "1 Year" : "All Time"}
@@ -587,7 +626,7 @@ export default function AnalyticsPage() {
                         </div>
 
                         {/* Metric Selector Tabs */}
-                        <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg text-xs font-semibold overflow-x-auto max-w-full">
+                        <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg text-xs font-semibold overflow-x-auto max-w-full [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                           {[
                             { key: "activeUsers", label: "Users" },
                             { key: "sessions", label: "Sessions" },
@@ -600,7 +639,7 @@ export default function AnalyticsPage() {
                               key={m.key}
                               type="button"
                               onClick={() => setSelectedOverviewMetric(m.key as any)}
-                              className={`px-2 py-1 rounded-md transition whitespace-nowrap cursor-pointer text-xs ${
+                              className={`px-2 py-1 sm:px-2.5 rounded-md transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs ${
                                 selectedOverviewMetric === m.key
                                   ? "bg-white text-gray-900 shadow-xs font-bold"
                                   : "text-gray-600 hover:text-black"
@@ -664,8 +703,9 @@ export default function AnalyticsPage() {
                               return null;
                             })()}
                           </div>
-                          <h3 className="font-bold text-sm sm:text-base text-gray-900 mt-0.5">
-                            Current vs Previous Periods
+                          <h3 className="font-bold text-sm sm:text-base text-gray-900 mt-0.5 flex items-center">
+                            <span>Current vs Previous Periods</span>
+                            <InfoTooltip text="Historical benchmark comparing the current period against preceding consecutive periods of equal length." />
                           </h3>
                         </div>
                         <span className="text-[10px] font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
@@ -712,6 +752,7 @@ export default function AnalyticsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>⚡ Candidate Conversions &amp; Actions</span>
+                    <InfoTooltip text="High-intent hiring actions taken by candidates on job listings during this timeframe." />
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">Direct candidate interactions within the selected time period</p>
                 </div>
@@ -722,26 +763,38 @@ export default function AnalyticsPage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Apply Clicks</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    Apply Clicks
+                    <InfoTooltip text="Number of times candidates clicked to apply directly on an external employer portal or company career site." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.applyClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">External link applications</p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Email Now</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    Email Now
+                    <InfoTooltip text="Direct email inquiries initiated by candidates to employers using the built-in email application button." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.emailClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">Direct email inquiries</p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">WhatsApp / Call</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    WhatsApp / Call
+                    <InfoTooltip text="Direct contact actions where candidates opened WhatsApp or called hiring studios directly." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.contactClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">Direct studio inquiries</p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Job Shares</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                      Job Shares
+                      <InfoTooltip text="Number of times candidates shared job listing links with colleagues, friends, or across social platforms." />
+                    </span>
                     {(data.conversions?.candidateSharesCount > 0 || data.conversions?.unregisteredSharesCount > 0) && (
                       <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded" title="Candidate vs Unregistered Breakdown">
                         {data.conversions.candidateSharesCount || 0} user · {data.conversions.unregisteredSharesCount || 0} unregistered
@@ -757,7 +810,10 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Saved Jobs</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    Saved Jobs
+                    <InfoTooltip text="Bookmarks saved by candidates to their personal profile to track or apply later." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.saveClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">
                     {days === 'lifetime' || days === 'all' 
@@ -768,7 +824,10 @@ export default function AnalyticsPage() {
 
                 <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100/90 flex flex-col justify-between">
                   <div>
-                    <span className="text-xs font-bold text-purple-900 uppercase tracking-wider block mb-1">Guest Register Prompt</span>
+                    <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center mb-1">
+                      Guest Register Prompt
+                      <InfoTooltip text="Unregistered visitors who clicked to register for an account after encountering job interaction prompts." />
+                    </span>
                     <div className="flex items-baseline gap-1.5">
                       <p className="text-2xl font-black text-purple-950">{data.conversions?.guestRegisterClicks || 0}</p>
                       <span className="text-xs font-bold text-purple-700">clicked</span>
@@ -895,118 +954,26 @@ export default function AnalyticsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>🔍 Candidate Search Demand &amp; Missing Jobs</span>
+                    <InfoTooltip text="Live search logs capturing the exact job roles, software, and locations candidates are looking for on the jobs board." />
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">Exact keywords, job roles, and locations searched by visitors on the jobs page</p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={fetchAiDemandAnalysis}
-                    disabled={aiLoading}
-                    className="px-3 py-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-90 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer disabled:opacity-50"
-                  >
-                    <span>{aiLoading ? "⏳" : "✨"}</span>
-                    <span>{aiLoading ? "Analyzing..." : "Gemini AI Demand Intelligence"}</span>
-                  </button>
-                  {data.searches?.totalCount > 0 && (
-                    <span className="text-xs font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full w-fit">
-                      {data.searches.totalCount} searches recorded
-                    </span>
-                  )}
-                </div>
+                {data.searches?.totalCount > 0 && (
+                  <span className="text-xs font-semibold px-3 py-1 bg-blue-100 text-blue-800 rounded-full w-fit">
+                    {data.searches.totalCount} searches recorded
+                  </span>
+                )}
               </div>
-
-              {/* GEMINI AI MARKET INTELLIGENCE CARD */}
-              {showAiCard && (
-                <div className="mb-6 p-5 bg-gradient-to-br from-indigo-50/90 via-blue-50/50 to-white rounded-2xl border border-indigo-200/80 shadow-sm animate-in fade-in duration-200">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                        ✨
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                          <span>Gemini AI Candidate Demand &amp; SEO Recommendations</span>
-                          <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full">AI Insights</span>
-                        </h3>
-                        <p className="text-[11px] text-gray-500">Live recruitment &amp; search engine intelligence derived from on-site searches</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowAiCard(false)}
-                      className="text-gray-400 hover:text-gray-700 text-sm p-1 rounded-lg"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  {aiLoading ? (
-                    <div className="py-6 flex flex-col items-center justify-center text-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
-                      <p className="text-xs text-gray-500 font-medium">Consulting Gemini on candidate search trends &amp; market opportunities...</p>
-                    </div>
-                  ) : aiAnalysis ? (
-                    <div className="space-y-4 text-xs">
-                      {/* Summary */}
-                      <p className="text-gray-700 font-medium bg-white/80 p-3 rounded-xl border border-indigo-100">
-                        {aiAnalysis.summary}
-                      </p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Urgent Roles */}
-                        {aiAnalysis.urgentRoles && aiAnalysis.urgentRoles.length > 0 && (
-                          <div className="bg-white/80 p-3.5 rounded-xl border border-indigo-100">
-                            <h5 className="font-bold text-indigo-950 uppercase tracking-wider text-[10px] mb-2">🔥 High Demand Roles</h5>
-                            <div className="flex flex-wrap gap-1.5">
-                              {aiAnalysis.urgentRoles.map((r: string, idx: number) => (
-                                <span key={idx} className="bg-indigo-50 text-indigo-800 px-2.5 py-1 rounded-lg font-semibold text-xs border border-indigo-100">
-                                  {r}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* High Demand Cities */}
-                        {aiAnalysis.highDemandLocations && aiAnalysis.highDemandLocations.length > 0 && (
-                          <div className="bg-white/80 p-3.5 rounded-xl border border-indigo-100">
-                            <h5 className="font-bold text-indigo-950 uppercase tracking-wider text-[10px] mb-2">📍 Target Locations (Zero Results / High Traffic)</h5>
-                            <div className="flex flex-wrap gap-1.5">
-                              {aiAnalysis.highDemandLocations.map((loc: string, idx: number) => (
-                                <span key={idx} className="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg font-semibold text-xs border border-emerald-100">
-                                  📍 {loc}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Strategic Recommendations */}
-                      {aiAnalysis.recommendations && (
-                        <div className="bg-white/90 p-3.5 rounded-xl border border-indigo-100 space-y-1.5">
-                          <h5 className="font-bold text-gray-900 uppercase tracking-wider text-[10px]">💡 Action Plan &amp; AI Discovery Tips</h5>
-                          <ul className="space-y-1 text-gray-600 list-disc list-inside">
-                            {aiAnalysis.recommendations.map((rec: string, idx: number) => (
-                              <li key={idx} className="leading-relaxed">
-                                {rec}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* Top Search Keywords */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
-                    <span>Top Keywords Searched</span>
+                    <span className="flex items-center">
+                      Top Keywords Searched
+                      <InfoTooltip text="Most frequent job positions, architectural roles, and software skills typed into the search bar." />
+                    </span>
                     <span className="text-[10px] text-gray-400 font-normal">Hits</span>
                   </h4>
                   <p className="text-[10px] text-gray-500 mb-3">Job titles &amp; software searched on the jobs page</p>
@@ -1043,7 +1010,10 @@ export default function AnalyticsPage() {
                 {/* Top Searched Cities */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
-                    <span>Top Locations Filtered</span>
+                    <span className="flex items-center">
+                      Top Locations Filtered
+                      <InfoTooltip text="Cities candidates filtered for on the jobs board to find local architecture openings." />
+                    </span>
                     <span className="text-[10px] text-gray-400 font-normal">Filters</span>
                   </h4>
                   <p className="text-[10px] text-gray-500 mb-3">Cities candidates filtered by on the jobs page</p>
@@ -1067,7 +1037,10 @@ export default function AnalyticsPage() {
                 {/* Unmet Demand (Zero Result Searches) */}
                 <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200/90">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-1 flex items-center justify-between">
-                    <span>⚠️ Missing Jobs (0 Results Found)</span>
+                    <span className="flex items-center">
+                      <span>⚠️ Missing Jobs (0 Results Found)</span>
+                      <InfoTooltip text="Searches performed where 0 jobs currently matched. Highlights urgent hiring demand to source vacancies for!" />
+                    </span>
                     <span className="text-[10px] bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded font-bold">Market Demand</span>
                   </h4>
                   <p className="text-[10px] text-amber-700 mb-3">Roles candidates searched for where NO jobs were found. Post these next!</p>
@@ -1104,6 +1077,7 @@ export default function AnalyticsPage() {
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                       <span>🔎 Google Search Console (SEO Keywords &amp; Google Rankings)</span>
+                      <InfoTooltip text="Search engine performance on Google Search: impressions, clicks, CTR, and search ranking." />
                       <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full">Connected</span>
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
@@ -1369,173 +1343,6 @@ export default function AnalyticsPage() {
               </div>
             ) : null}
 
-            {/* HOURLY & DAY-OF-WEEK CANDIDATE TRAFFIC (COMPACT SIDE-BY-SIDE) */}
-            {data.peakTimes && (
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <span>⏱️ Candidate Activity Patterns</span>
-                    </h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Hourly 24-hour distribution and 7-day weekly visitor volume
-                    </p>
-                  </div>
-
-                  {/* Average / Day vs Total Volume Toggle */}
-                  <div className="flex items-center bg-gray-100 p-1 rounded-xl text-xs shrink-0 self-start sm:self-auto">
-                    <button
-                      onClick={() => setActivityMetricMode("avg")}
-                      className={`px-3 py-1.5 rounded-lg font-medium transition ${
-                        activityMetricMode === "avg"
-                          ? "bg-white text-gray-900 shadow-sm font-semibold"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
-                    >
-                      Average / Day
-                    </button>
-                    <button
-                      onClick={() => setActivityMetricMode("total")}
-                      className={`px-3 py-1.5 rounded-lg font-medium transition ${
-                        activityMetricMode === "total"
-                          ? "bg-white text-gray-900 shadow-sm font-semibold"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
-                    >
-                      Total Volume
-                    </button>
-                  </div>
-                </div>
-
-                {/* SIDE BY SIDE 2-COLUMN GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* LEFT: 24-HOUR ACTIVITY BAR CHART */}
-                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 flex flex-col justify-between">
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800">24-Hour Distribution</h4>
-                        <p className="text-[11px] text-gray-400">12:00 AM (00) to 11:00 PM (23)</p>
-                      </div>
-                      <span className="text-[11px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
-                        {activityMetricMode === "avg" ? "Avg Users / Hour" : "Total Users"}
-                      </span>
-                    </div>
-
-                    {(!data.peakTimes.hourly || data.peakTimes.hourly.length === 0) ? (
-                      <p className="text-xs text-gray-400 italic py-10 text-center">Hourly activity data is aggregating...</p>
-                    ) : (
-                      (() => {
-                        const numDays = days === "1h" || days === "1" ? 1 : days === "7" ? 7 : days === "30" ? 30 : days === "90" ? 90 : days === "365" ? 365 : 30;
-                        const hourValues = data.peakTimes.hourly.map((h: any) => {
-                          const raw = Number(h.users) || 0;
-                          const val = activityMetricMode === "avg" && numDays > 1 ? Number((raw / numDays).toFixed(1)) : raw;
-                          return { ...h, displayVal: val, rawVal: raw };
-                        });
-                        const maxVal = Math.max(...hourValues.map((h: any) => h.displayVal), 0.1);
-
-                        return (
-                          <div className="grid grid-cols-12 md:grid-cols-24 gap-1 items-end h-36 pt-4">
-                            {hourValues.map((h: any, i: number) => {
-                              const isPeak = h.displayVal === maxVal && h.displayVal > 0;
-                              const heightPct = Math.max(6, Math.round((h.displayVal / maxVal) * 100));
-
-                              return (
-                                <div key={i} className="flex flex-col items-center group relative h-full justify-end">
-                                  {/* Tooltip */}
-                                  <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
-                                    <div className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
-                                      {h.label || `${h.hour}:00`}: {h.displayVal} {activityMetricMode === "avg" && numDays > 1 ? "avg/day" : "users"}
-                                    </div>
-                                  </div>
-                                  <div 
-                                    className={`w-full rounded-t transition-all ${
-                                      isPeak 
-                                        ? 'bg-blue-600 shadow-sm shadow-blue-200' 
-                                        : h.displayVal > 0 
-                                        ? 'bg-blue-300 hover:bg-blue-400' 
-                                        : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                                    style={{ height: `${heightPct}%` }}
-                                  />
-                                  <span className="text-[9px] text-gray-400 mt-1.5 font-mono">{h.hour}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()
-                    )}
-                  </div>
-
-                  {/* RIGHT: 7-DAY WEEK ACTIVITY BAR CHART */}
-                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 flex flex-col justify-between">
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800">Day-of-Week Distribution</h4>
-                        <p className="text-[11px] text-gray-400">Monday through Sunday</p>
-                      </div>
-                      <span className="text-[11px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
-                        {activityMetricMode === "avg" ? "Avg Users / Day" : "Total Users"}
-                      </span>
-                    </div>
-
-                    {(!data.peakTimes.days || data.peakTimes.days.length === 0) ? (
-                      <p className="text-xs text-gray-400 italic py-10 text-center">Day-of-week data is aggregating...</p>
-                    ) : (
-                      (() => {
-                        const numDays = days === "1h" || days === "1" ? 1 : days === "7" ? 7 : days === "30" ? 30 : days === "90" ? 90 : days === "365" ? 365 : 30;
-                        const weekDivisor = numDays > 7 ? numDays / 7 : 1;
-                        const dayValues = data.peakTimes.days.map((d: any) => {
-                          const raw = Number(d.users) || 0;
-                          const val = activityMetricMode === "avg" && numDays > 7 ? Number((raw / weekDivisor).toFixed(1)) : raw;
-                          return { ...d, displayVal: val, rawVal: raw };
-                        });
-                        const maxDayVal = Math.max(...dayValues.map((d: any) => d.displayVal), 0.1);
-
-                        return (
-                          <div className="grid grid-cols-7 gap-2.5 items-end h-36 pt-4">
-                            {dayValues.map((d: any, i: number) => {
-                              const isPeak = d.displayVal === maxDayVal && d.displayVal > 0;
-                              const heightPct = Math.max(8, Math.round((d.displayVal / maxDayVal) * 100));
-
-                              return (
-                                <div key={i} className="flex flex-col items-center group relative h-full justify-end">
-                                  {/* Tooltip */}
-                                  <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
-                                    <div className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
-                                      {d.day}: {d.displayVal} {activityMetricMode === "avg" && numDays > 7 ? "avg/day" : "visitors"}
-                                    </div>
-                                  </div>
-                                  <div 
-                                    className={`w-full rounded-t transition-all ${
-                                      isPeak 
-                                        ? 'bg-blue-600 shadow-md shadow-blue-200' 
-                                        : d.displayVal > 0 
-                                        ? 'bg-blue-300 hover:bg-blue-400' 
-                                        : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                                    style={{ height: `${heightPct}%` }}
-                                  />
-                                  <span className={`text-[11px] mt-2 font-medium truncate ${isPeak ? 'text-blue-700 font-bold' : 'text-gray-500'}`}>
-                                    {d.short || d.day.slice(0, 3)}
-                                  </span>
-                                  <span className="text-[10px] text-gray-400 font-mono">
-                                    {d.displayVal}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()
-                    )}
-                  </div>
-
-                </div>
-              </div>
-            )}
-
             {/* CANDIDATE APPLICATION & CONVERSION FUNNEL */}
             {data.funnel && (
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
@@ -1611,12 +1418,13 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* FIRMS DEMAND LEADERBOARD */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
                 <div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>🏢 Top Architecture Firms Leaderboard</span>
+                        <InfoTooltip text="Architectural practices ranked by candidate engagement, job views, shares, and saved listings." />
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {firmLeaderboardMode === "trending"
@@ -1665,7 +1473,7 @@ export default function AnalyticsPage() {
                     }
 
                     return (
-                      <div className="divide-y divide-gray-100">
+                      <div className="divide-y divide-gray-100 overflow-y-auto pr-1 max-h-[350px]">
                         {displayedFirms.map((firm: any, i: number) => {
                           const rankMedals = ["🥇", "🥈", "🥉"];
                           const isTrendingActive = firmLeaderboardMode === "trending";
@@ -1719,12 +1527,13 @@ export default function AnalyticsPage() {
               </div>
 
               {/* EXPERIENCE LEVEL DEMAND VS SUPPLY RADAR */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>⚖️ Experience Level Demand vs. Supply</span>
+                        <InfoTooltip text="Compares candidate search volume (demand) against available posted vacancies (supply) across career seniority tiers." />
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5">
                         Candidate search interest compared to actual posted job inventory
@@ -1735,17 +1544,17 @@ export default function AnalyticsPage() {
                   {(!data.experienceGap || data.experienceGap.length === 0) ? (
                     <p className="text-xs text-gray-400 italic py-8 text-center">No experience data available for this period.</p>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-2.5 overflow-y-auto pr-1 max-h-[350px]">
                       {data.experienceGap.map((tier: any, i: number) => {
                         const isShortage = tier.statusColor === "amber";
                         const isSurplus = tier.statusColor === "blue";
 
                         return (
-                          <div key={i} className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50">
-                            <div className="flex justify-between items-start mb-2">
+                          <div key={i} className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
+                            <div className="flex justify-between items-start mb-1.5">
                               <div>
                                 <h4 className="font-bold text-gray-900 text-sm">{tier.tier}</h4>
-                                <p className="text-[11px] text-gray-400">{tier.subtitle}</p>
+                                <p className="text-[10px] text-gray-400">{tier.subtitle}</p>
                               </div>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 isShortage ? "bg-amber-100 text-amber-800" : isSurplus ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"
@@ -1755,9 +1564,9 @@ export default function AnalyticsPage() {
                             </div>
 
                             {/* Comparison Bars */}
-                            <div className="space-y-1.5 mt-3">
+                            <div className="space-y-1.5 mt-2">
                               <div>
-                                <div className="flex justify-between text-[11px] mb-0.5">
+                                <div className="flex justify-between text-[10px] mb-0.5">
                                   <span className="text-gray-500 font-medium">Candidate Search Demand</span>
                                   <span className="font-bold text-gray-800">{tier.demandPct}% ({tier.demandCount} searches)</span>
                                 </div>
@@ -1767,7 +1576,7 @@ export default function AnalyticsPage() {
                               </div>
 
                               <div>
-                                <div className="flex justify-between text-[11px] mb-0.5">
+                                <div className="flex justify-between text-[10px] mb-0.5">
                                   <span className="text-gray-500 font-medium">Posted Job Supply</span>
                                   <span className="font-bold text-gray-800">{tier.supplyPct}% ({tier.supplyCount} jobs)</span>
                                 </div>
@@ -1798,6 +1607,7 @@ export default function AnalyticsPage() {
                     >
                       <span>📄</span>
                       <span>Top Pages (Views)</span>
+                      <InfoTooltip text="Most viewed web pages across Trapped Into Architecture in this timeframe." />
                     </button>
                     <button 
                       onClick={() => setPageMode("landing")} 
@@ -1805,6 +1615,7 @@ export default function AnalyticsPage() {
                     >
                       <span>🚪</span>
                       <span>Entry Doors (First Visited)</span>
+                      <InfoTooltip text="Initial landing pages where visitors first arrived at the website." />
                     </button>
                   </div>
                   {pageMode === "views" && (
@@ -1925,7 +1736,10 @@ export default function AnalyticsPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div>
-                    <h3 className="text-lg font-bold">Inbound Traffic &amp; Referrals</h3>
+                    <h3 className="text-lg font-bold flex items-center">
+                    <span>Inbound Traffic &amp; Referrals</span>
+                    <InfoTooltip text="External channels, apps, and websites driving candidate traffic to Trapped Into Architecture." />
+                  </h3>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {trafficTab === "outside" 
                         ? "External apps & websites bringing visitors (WhatsApp, Instagram, etc.)" 
@@ -2097,112 +1911,165 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* ACQUISITION CHANNELS */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 className="text-lg font-bold">Acquisition Channels</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">High-level audience discovery mix</p>
+              {/* ACQUISITION CHANNELS (LEVELED WITH COUNTRIES) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>Acquisition Channels</span>
+                        <InfoTooltip text="High-level marketing channel breakdown (Organic Search, Direct, Social Media, Referrals)." />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">High-level audience discovery mix</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[270px]">
+                    {(!data.channels || data.channels.length === 0) && <p className="text-gray-400 text-sm">No channel data available.</p>}
+                    {data.channels && (() => {
+                      const maxCh = Math.max(...data.channels.map((c: any) => Number(c.sessions) || 0));
+                      return data.channels.map((item: any, i: number) => {
+                        const ch = (item.channel || "").toLowerCase();
+                        let label = item.channel;
+                        let icon = "🌐";
+                        if (ch.includes("social")) { label = "Organic Social (WhatsApp, FB, Insta, LinkedIn)"; icon = "📱"; }
+                        else if (ch.includes("direct")) { label = "Direct (Typing URL, Bookmarks)"; icon = "🔗"; }
+                        else if (ch.includes("search")) { label = "Organic Search (Google, Bing)"; icon = "🔍"; }
+                        else if (ch.includes("referral")) { label = "Referrals (Partner websites)"; icon = "🌐"; }
+
+                        const val = Number(item.sessions) || 0;
+
+                        return (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium flex items-center gap-1.5 truncate max-w-[75%]">
+                                <span>{icon}</span>
+                                <span className="truncate">{label}</span>
+                              </span>
+                              <span className="font-semibold text-gray-700">{val} {val === 1 ? 'session' : 'sessions'}</span>
+                            </div>
+                            <ProgressBar value={val} max={maxCh || 1} />
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
-                <div className="space-y-4">
-                  {(!data.channels || data.channels.length === 0) && <p className="text-gray-400 text-sm">No channel data available.</p>}
-                  {data.channels && (() => {
-                    const maxCh = Math.max(...data.channels.map((c: any) => Number(c.sessions) || 0));
-                    return data.channels.map((item: any, i: number) => {
-                      const ch = (item.channel || "").toLowerCase();
-                      let label = item.channel;
-                      let icon = "🌐";
-                      if (ch.includes("social")) { label = "Organic Social (WhatsApp, FB, Insta, LinkedIn)"; icon = "📱"; }
-                      else if (ch.includes("direct")) { label = "Direct (Typing URL, Bookmarks)"; icon = "🔗"; }
-                      else if (ch.includes("search")) { label = "Organic Search (Google, Bing)"; icon = "🔍"; }
-                      else if (ch.includes("referral")) { label = "Referrals (Partner websites)"; icon = "🌐"; }
+              </div>
 
-                      const val = Number(item.sessions) || 0;
+              {/* COUNTRIES & CITIES (LEVELED WITH ACQUISITION CHANNELS & SCROLLABLE) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>{geoTab === "countries" ? "Countries" : "Top Cities"}</span>
+                        <InfoTooltip text={geoTab === "countries" ? "Geographic countries where candidate traffic originates based on visitor IP." : "Specific cities where visitor traffic originates."} />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {geoTab === "countries" ? "Candidate visitor distribution by country" : "Top visitor cities across the globe"}
+                      </p>
+                    </div>
+                    <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setGeoTab("countries")}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "countries" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🌍 Countries
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGeoTab("cities")}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "cities" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🏙️ Cities
+                      </button>
+                    </div>
+                  </div>
 
-                      return (
-                        <div key={i} className="text-sm">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-medium flex items-center gap-1.5 truncate max-w-[75%]">
-                              <span>{icon}</span>
-                              <span>{label}</span>
-                            </span>
-                            <span className="font-semibold text-gray-700">{val} {val === 1 ? 'session' : 'sessions'}</span>
+                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[270px]">
+                    {geoTab === "countries" ? (
+                      <>
+                        {(!data.countries || data.countries.length === 0) && <p className="text-gray-400 text-sm">No country data available.</p>}
+                        {data.countries && data.countries.map((item: any, i: number) => (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium truncate">{item.country}</span>
+                              <span className="font-semibold text-gray-700">{item.users}</span>
+                            </div>
+                            <ProgressBar value={item.users} max={Math.max(...data.countries.map((p: any) => p.users), 1)} />
                           </div>
-                          <ProgressBar value={val} max={maxCh || 1} />
+                        ))}
+                      </>
+                    ) : (
+                      <>
+                        {(!data.cities || data.cities.length === 0) && <p className="text-gray-400 text-sm">No city data available.</p>}
+                        {data.cities && data.cities.map((item: any, i: number) => (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium truncate">{item.city}</span>
+                              <span className="font-semibold text-gray-700">{item.users}</span>
+                            </div>
+                            <ProgressBar value={item.users} max={Math.max(...data.cities.map((p: any) => p.users), 1)} />
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* DEVICES (LEVELED WITH BROWSERS) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>Devices</span>
+                        <InfoTooltip text="Device hardware used by visitors (Desktop computers, Mobile smartphones, Tablets)." />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">Visitor platform breakdown</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[230px]">
+                    {!data.devices || data.devices.length === 0 ? <p className="text-gray-400 text-sm">No device data available.</p> : null}
+                    {data.devices && data.devices.map((item: any, i: number) => (
+                      <div key={i} className="text-sm">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium capitalize">{item.deviceCategory}</span>
+                          <span className="font-semibold text-gray-700">{item.users}</span>
                         </div>
-                      );
-                    });
-                  })()}
+                        <ProgressBar value={item.users} max={Math.max(...data.devices.map((p: any) => p.users), 1)} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* COUNTRIES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Countries</h3>
-                <div className="space-y-4">
-                  {data.countries.length === 0 && <p className="text-gray-400 text-sm">No data available.</p>}
-                  {data.countries.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">{item.country}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
-                      </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.countries.map((p: any) => p.users))} />
+              {/* BROWSERS (LEVELED WITH DEVICES & SCROLLABLE) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>Browsers</span>
+                        <InfoTooltip text="Web browsers used by visitors to access the website (Chrome, Safari, Edge, Firefox, etc.)." />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">Browser client distribution</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* BROWSERS */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Browsers</h3>
-                <div className="space-y-4">
-                  {data.browsers.length === 0 && <p className="text-gray-400 text-sm">No data available.</p>}
-                  {data.browsers.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">{item.browser}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
+                  </div>
+                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[230px]">
+                    {(!data.browsers || data.browsers.length === 0) && <p className="text-gray-400 text-sm">No browser data available.</p>}
+                    {data.browsers && data.browsers.map((item: any, i: number) => (
+                      <div key={i} className="text-sm">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium truncate">{item.browser}</span>
+                          <span className="font-semibold text-gray-700">{item.users}</span>
+                        </div>
+                        <ProgressBar value={item.users} max={Math.max(...data.browsers.map((p: any) => p.users), 1)} />
                       </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.browsers.map((p: any) => p.users))} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-           
-              {/* DEVICES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Devices</h3>
-                <div className="space-y-4">
-                  {!data.devices || data.devices.length === 0 ? <p className="text-gray-400 text-sm">No data available.</p> : null}
-                  {data.devices && data.devices.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium capitalize">{item.deviceCategory}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
-                      </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.devices.map((p: any) => p.users))} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* CITIES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Top Cities</h3>
-                <div className="space-y-4">
-                  {!data.cities || data.cities.length === 0 ? <p className="text-gray-400 text-sm">No data available.</p> : null}
-                  {data.cities && data.cities.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">{item.city}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
-                      </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.cities.map((p: any) => p.users))} />
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
  </div>
