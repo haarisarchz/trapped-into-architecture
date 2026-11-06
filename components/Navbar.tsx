@@ -613,12 +613,12 @@ useEffect(() => {
           <>
             <button
               onClick={() => {
-                router.push("/admin/jobs/add");
+                router.push("/admin/add-job");
                 setShowUserMenu(false);
               }}
               className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
             >
-              Add a Job
+              Add New Job
             </button>
             {isSuperAdminOrCeo && (
               <button
@@ -860,12 +860,12 @@ useEffect(() => {
           <>
             <button
               onClick={() => {
-                router.push("/admin/jobs/add");
+                router.push("/admin/add-job");
                 setShowUserMenu(false);
               }}
               className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
             >
-              Add a Job
+              Add New Job
             </button>
             {isSuperAdminOrCeo && (
               <button
