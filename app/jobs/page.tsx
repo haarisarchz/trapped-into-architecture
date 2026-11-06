@@ -106,6 +106,7 @@ function JobsPageContent() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
+  const [isJobsLoaded, setIsJobsLoaded] = useState(false);
  const [datePosted, setDatePosted] = useState("");
   const [excludeExpired, setExcludeExpired] =
   useState(false);
@@ -208,9 +209,8 @@ const [showFilters, setShowFilters] = useState(false);
           share_count: job.share_count || 0,
         }))
       );
-
     }
-
+    setIsJobsLoaded(true);
   };
 
   fetchJobs();
@@ -738,6 +738,7 @@ const [showFilters, setShowFilters] = useState(false);
 
   // Track on-site candidate searches with debouncing (1.5s after user finishes typing/filtering)
   useEffect(() => {
+    if (!isJobsLoaded) return;
     const q = searchQuery.trim();
     const city = selectedCities[0] || null;
     const state = selectedStates[0] || null;
@@ -769,7 +770,7 @@ const [showFilters, setShowFilters] = useState(false);
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCities, selectedStates, selectedPositions, filteredJobs.length]);
+  }, [isJobsLoaded, searchQuery, selectedCities, selectedStates, selectedPositions, filteredJobs.length]);
 
   return (
     <main className="min-h-screen bg-gray-100 text-black">

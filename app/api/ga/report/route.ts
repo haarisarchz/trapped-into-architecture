@@ -555,10 +555,39 @@ export async function GET(request: Request) {
               cityMap[c] = (cityMap[c] || 0) + 1;
             }
 
+            // Only consider genuinely "Missing Jobs" if:
+            // 1. results_count recorded as 0
+            // 2. AND there are genuinely NO matching published jobs currently in allJobsStats
             if ((row.results_count || 0) === 0 && (kw || c)) {
-              const zeroKey = `${kw}__${c}`;
+              const rawRole = (row.search_query || row.position || "").trim();
+              const roleLower = rawRole.toLowerCase();
+
+              const matchingJobsExist = (allJobsStats || []).some((j: any) => {
+                const jCity = (j.city || "").toLowerCase().trim();
+                const jPos = (j.position || "").toLowerCase().trim();
+
+                // If city is specified, job must match city
+                if (c && !jCity.includes(c.toLowerCase()) && !c.toLowerCase().includes(jCity)) {
+                  return false;
+                }
+
+                // If role/query is specified, job must match position
+                if (roleLower) {
+                  const matchPos = jPos.includes(roleLower) || roleLower.includes(jPos);
+                  if (!matchPos) return false;
+                }
+
+                return true;
+              });
+
+              // If matching published jobs exist on the platform, do NOT display as missing!
+              if (matchingJobsExist) return;
+
+              const displayQuery = rawRole || "Any Role";
+              const displayCity = row.city || "All Cities";
+              const zeroKey = `${displayQuery.toLowerCase()}__${displayCity.toLowerCase()}`;
               if (!zeroMap[zeroKey]) {
-                zeroMap[zeroKey] = { query: row.search_query || "Any Role", city: row.city || "All Cities", count: 0, date: row.created_at };
+                zeroMap[zeroKey] = { query: displayQuery, city: displayCity, count: 0, date: row.created_at };
               }
               zeroMap[zeroKey].count++;
             }
