@@ -39,15 +39,26 @@ export async function GET(request: Request) {
 
     // Search Console has an official 2-3 day data indexing lag
     const now = new Date();
-    const endDateObj = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-    const endDate = endDateObj.toISOString().split("T")[0];
+    const lagEndDateObj = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+    let endDate = lagEndDateObj.toISOString().split("T")[0];
+    let startDate = "";
 
-    let numDays = parseInt(daysParam, 10);
-    if (isNaN(numDays) || numDays <= 0 || daysParam === "lifetime" || daysParam === "all") {
-      numDays = 90;
+    if (daysParam === "this_month") {
+      startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      if (startDate > endDate) endDate = startDate;
+    } else if (daysParam === "last_month") {
+      const prevMonthFirst = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const prevMonthLast = new Date(now.getFullYear(), now.getMonth(), 0);
+      startDate = `${prevMonthFirst.getFullYear()}-${String(prevMonthFirst.getMonth() + 1).padStart(2, "0")}-01`;
+      endDate = `${prevMonthFirst.getFullYear()}-${String(prevMonthFirst.getMonth() + 1).padStart(2, "0")}-${String(prevMonthLast.getDate()).padStart(2, "0")}`;
+    } else {
+      let numDays = parseInt(daysParam, 10);
+      if (isNaN(numDays) || numDays <= 0 || daysParam === "lifetime" || daysParam === "all") {
+        numDays = 90;
+      }
+      const startDateObj = new Date(lagEndDateObj.getTime() - numDays * 24 * 60 * 60 * 1000);
+      startDate = startDateObj.toISOString().split("T")[0];
     }
-    const startDateObj = new Date(endDateObj.getTime() - numDays * 24 * 60 * 60 * 1000);
-    const startDate = startDateObj.toISOString().split("T")[0];
 
     const auth = new GoogleAuth({
       credentials,

@@ -19,6 +19,125 @@ const ProgressBar = ({ value, max }: { value: number, max: number }) => (
   </div>
 );
 
+// Reusable Vertical Bar Chart Component with Hover Tooltips & Responsive Axis
+function VerticalBarChart({
+  items,
+  dataKey,
+  colorClass,
+  height = "h-44 sm:h-52",
+  isPercentage = false,
+  isDuration = false,
+  showAxis = true,
+}: {
+  items: any[];
+  dataKey: string;
+  colorClass: string;
+  height?: string;
+  isPercentage?: boolean;
+  isDuration?: boolean;
+  showAxis?: boolean;
+}) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="h-32 flex items-center justify-center text-xs text-gray-400">
+        No breakdown data available for this timeframe
+      </div>
+    );
+  }
+
+  const values = items.map(item => Number(item[dataKey]) || 0);
+  const max = Math.max(...values, 1);
+
+  return (
+    <div className="w-full">
+      <div className={`${height} flex items-end gap-1 sm:gap-1.5 px-1 py-1`}>
+        {items.map((item, idx) => {
+          const val = Number(item[dataKey]) || 0;
+          const heightPct = Math.max(val > 0 ? 8 : 2, Math.round((val / max) * 100));
+          const formattedVal = isDuration
+            ? formatDuration(val)
+            : isPercentage
+            ? `${val}%`
+            : val.toLocaleString();
+
+          return (
+            <div
+              key={idx}
+              className="flex-1 h-full flex flex-col justify-end items-center relative group min-w-[3px] cursor-pointer"
+            >
+              {/* Tooltip on hover */}
+              <div className="absolute -top-9 bg-gray-900 text-white text-[10px] font-mono px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-xl z-30 whitespace-nowrap -translate-y-1 group-hover:translate-y-0">
+                <span className="font-bold">{formattedVal}</span>
+                <span className="text-gray-300 ml-1">({item.fullLabel || item.label})</span>
+              </div>
+              {/* Vertical Bar */}
+              <div
+                className={`w-full rounded-t-sm transition-all duration-300 ${colorClass} group-hover:opacity-80`}
+                style={{ height: `${heightPct}%` }}
+              ></div>
+            </div>
+          );
+        })}
+      </div>
+
+      {showAxis && (
+        <div className="flex justify-between text-[11px] text-gray-500 pt-2 border-t border-gray-100 font-mono mt-1 px-1">
+          {items.length <= 14 ? (
+            items.map((item, i) => (
+              <span key={i} className="truncate text-center">
+                {item.label}
+              </span>
+            ))
+          ) : (
+            <>
+              <span>{items[0]?.label}</span>
+              <span>{items[Math.floor(items.length * 0.25)]?.label}</span>
+              <span>{items[Math.floor(items.length * 0.5)]?.label}</span>
+              <span>{items[Math.floor(items.length * 0.75)]?.label}</span>
+              <span>{items[items.length - 1]?.label}</span>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniSparkBars({
+  items,
+  dataKey,
+  colorClass,
+}: {
+  items: any[];
+  dataKey: string;
+  colorClass: string;
+}) {
+  if (!items || items.length === 0) return null;
+  const values = items.map(item => Number(item[dataKey]) || 0);
+  const max = Math.max(...values, 1);
+
+  return (
+    <div className="h-7 flex items-end gap-0.5 w-full mt-2.5 pt-1 border-t border-gray-100">
+      {items.map((item, idx) => {
+        const val = Number(item[dataKey]) || 0;
+        const heightPct = Math.max(val > 0 ? 14 : 4, Math.round((val / max) * 100));
+        return (
+          <div
+            key={idx}
+            title={`${item.fullLabel || item.label}: ${val}`}
+            className="flex-1 h-full flex flex-col justify-end items-center group relative min-w-[2px]"
+          >
+            <div
+              className={`w-full rounded-t-xs ${colorClass} opacity-75 group-hover:opacity-100 transition-all`}
+              style={{ height: `${heightPct}%` }}
+            ></div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +156,12 @@ export default function AnalyticsPage() {
   const [firmLeaderboardMode, setFirmLeaderboardMode] = useState<"trending" | "overall">("trending");
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [activityMetricMode, setActivityMetricMode] = useState<"avg" | "total">("avg");
+  const [selectedOverviewMetric, setSelectedOverviewMetric] = useState<
+    "activeUsers" | "sessions" | "pageViews" | "avgSessionDuration" | "bounceRate" | "totalActions"
+  >("activeUsers");
+  const [selectedConversionMetric, setSelectedConversionMetric] = useState<
+    "applyClicks" | "emailClicks" | "contactClicks" | "shareClicks" | "saveClicks"
+  >("applyClicks");
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [showAiCard, setShowAiCard] = useState(false);
@@ -134,6 +259,8 @@ export default function AnalyticsPage() {
             {/* TIMELINE CONTROLS: CLEAN PILL BUTTONS ONLY */}
             <div className="flex items-center gap-1.5 bg-white/90 p-1 rounded-xl border border-gray-200/90 text-xs font-semibold shadow-xs overflow-x-auto max-w-full">
               {[
+                { label: "Last Month", full: "Previous Month (Full English Calendar Month)", value: "last_month" },
+                { label: "This Month", full: "This Month (1st till today)", value: "this_month" },
                 { label: "1h", full: "Last 1 Hour", value: "1h" },
                 { label: "24h", full: "Last 24 Hours", value: "1" },
                 { label: "7d", full: "Last 7 Days", value: "7" },
@@ -188,43 +315,221 @@ export default function AnalyticsPage() {
 
             <div className={`space-y-6 transition-opacity duration-300 ${loading ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
             
-            {/* OVERVIEW METRICS */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 lg:gap-6">
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                  <h3 className="text-sm font-medium text-gray-500">Realtime (Live)</h3>
+            {/* OVERVIEW METRICS WITH VERTICAL BAR SPARKLINES & INTERACTIVE CHART */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+                
+                {/* Realtime (Live) */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Realtime</h3>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.realtimeUsers}</p>
+                  </div>
+                  <div className="mt-2 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded w-fit">
+                    Active now
+                  </div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-green-500"></div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.realtimeUsers}</p>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-green-500"></div>
+
+                {/* Active Users */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("activeUsers")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "activeUsers"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active Users</h3>
+                      <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.activeUsers}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="activeUsers" colorClass="bg-blue-600" />
+                </div>
+
+                {/* Total Sessions */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("sessions")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "sessions"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Sessions</h3>
+                      <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.sessions}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="sessions" colorClass="bg-indigo-600" />
+                </div>
+
+                {/* Page Views */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("pageViews")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "pageViews"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Page Views</h3>
+                      <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.pageViews}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="pageViews" colorClass="bg-purple-600" />
+                </div>
+
+                {/* Avg Session */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("avgSessionDuration")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "avgSessionDuration"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Avg Session</h3>
+                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{formatDuration(data.overview.avgSessionDuration)}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="avgSessionDuration" colorClass="bg-amber-500" />
+                </div>
+
+                {/* Bounce Rate */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("bounceRate")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "bounceRate"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Bounce Rate</h3>
+                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.bounceRate || "0%"}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="bounceRate" colorClass="bg-rose-500" />
+                </div>
+
+                {/* Total Actions */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("totalActions")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-orange-50/40 ${
+                    selectedOverviewMetric === "totalActions"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-orange-600 uppercase tracking-wider">Total Actions</h3>
+                      <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                      {((data.conversions?.applyClicks || 0) + (data.conversions?.emailClicks || 0) + (data.conversions?.contactClicks || 0) + (data.conversions?.shareClicks || 0) + (data.conversions?.saveClicks || 0) + (data.conversions?.guestRegisterClicks || 0))}
+                    </p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="totalActions" colorClass="bg-emerald-600" />
+                </div>
+
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Active Users</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.activeUsers}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Total Sessions</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.sessions}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Page Views</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.pageViews}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Avg Session</h3>
-                <p className="text-3xl font-bold text-gray-900">{formatDuration(data.overview.avgSessionDuration)}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Bounce Rate</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.bounceRate || "0%"}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm bg-gradient-to-br from-white to-orange-50/40">
-                <h3 className="text-sm font-medium text-orange-600 mb-1">Total Actions</h3>
-                <p className="text-3xl font-bold text-gray-900">
-                  {((data.conversions?.applyClicks || 0) + (data.conversions?.emailClicks || 0) + (data.conversions?.contactClicks || 0) + (data.conversions?.shareClicks || 0) + (data.conversions?.saveClicks || 0) + (data.conversions?.guestRegisterClicks || 0))}
-                </p>
-                <p className="text-[11px] text-gray-400 mt-1">In selected time period</p>
-              </div>
+
+              {/* EXPANDED DETAILED VERTICAL BAR CHART */}
+              {data.chartSeries?.items && data.chartSeries.items.length > 0 && (
+                <div className="bg-white p-5 sm:p-6 rounded-2xl border border-gray-200 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-sm sm:text-base text-gray-900">
+                          {selectedOverviewMetric === "activeUsers"
+                            ? "Active Users Vertical Bar Chart"
+                            : selectedOverviewMetric === "sessions"
+                            ? "Total Sessions Vertical Bar Chart"
+                            : selectedOverviewMetric === "pageViews"
+                            ? "Page Views Vertical Bar Chart"
+                            : selectedOverviewMetric === "avgSessionDuration"
+                            ? "Avg Session Duration Vertical Bar Chart"
+                            : selectedOverviewMetric === "bounceRate"
+                            ? "Bounce Rate Vertical Bar Chart"
+                            : "Total Candidate Actions Vertical Bar Chart"}
+                        </h3>
+                        <span className="text-xs bg-black text-white px-2.5 py-0.5 rounded-full font-semibold">
+                          {days === "last_month" ? "Last Month" : days === "this_month" ? "This Month" : days === "1h" ? "1 Hour" : days === "1" ? "24 Hours" : days === "7" ? "7 Days" : days === "30" ? "30 Days" : days === "90" ? "90 Days" : days === "365" ? "1 Year" : "All Time"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Vertical bar distribution for every time interval. Hover over any bar to view exact counts.
+                      </p>
+                    </div>
+
+                    {/* Quick Metric Selector Tabs */}
+                    <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto max-w-full">
+                      {[
+                        { key: "activeUsers", label: "Users" },
+                        { key: "sessions", label: "Sessions" },
+                        { key: "pageViews", label: "Views" },
+                        { key: "avgSessionDuration", label: "Duration" },
+                        { key: "bounceRate", label: "Bounce" },
+                        { key: "totalActions", label: "Actions" },
+                      ].map(m => (
+                        <button
+                          key={m.key}
+                          type="button"
+                          onClick={() => setSelectedOverviewMetric(m.key as any)}
+                          className={`px-2.5 py-1 rounded-lg transition whitespace-nowrap cursor-pointer ${
+                            selectedOverviewMetric === m.key
+                              ? "bg-white text-gray-900 shadow-xs font-bold"
+                              : "text-gray-600 hover:text-black"
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-6 pb-2">
+                    <VerticalBarChart
+                      items={data.chartSeries.items}
+                      dataKey={selectedOverviewMetric}
+                      colorClass={
+                        selectedOverviewMetric === "activeUsers"
+                          ? "bg-blue-600"
+                          : selectedOverviewMetric === "sessions"
+                          ? "bg-indigo-600"
+                          : selectedOverviewMetric === "pageViews"
+                          ? "bg-purple-600"
+                          : selectedOverviewMetric === "avgSessionDuration"
+                          ? "bg-amber-500"
+                          : selectedOverviewMetric === "bounceRate"
+                          ? "bg-rose-500"
+                          : "bg-emerald-600"
+                      }
+                      isPercentage={selectedOverviewMetric === "bounceRate"}
+                      isDuration={selectedOverviewMetric === "avgSessionDuration"}
+                      height="h-44 sm:h-52"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* CANDIDATE CONVERSIONS & ACTIONS */}
