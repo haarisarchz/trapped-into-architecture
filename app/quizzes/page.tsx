@@ -35,15 +35,24 @@ export default function QuizzesHubPage() {
     fetchLeaderboard();
   }, [leaderboardTab]);
 
+  const [catalogItems, setCatalogItems] = useState<any[]>([]);
+
   const fetchQuizzes = async () => {
     try {
-      const { data, error } = await supabase
-        .from("quizzes")
-        .select("*, quiz_questions(count), quiz_scores(count)")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false });
+      const [{ data: qData }, { data: catData }] = await Promise.all([
+        supabase
+          .from("quizzes")
+          .select("*, quiz_questions(count), quiz_scores(count)")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("architecture_catalog")
+          .select("data")
+          .limit(20)
+      ]);
 
-      if (data) setQuizzes(data);
+      if (qData) setQuizzes(qData);
+      if (catData) setCatalogItems(catData.map(c => c.data).filter(Boolean));
     } catch (err) {
       console.warn("Error fetching quizzes:", err);
     } finally {
@@ -100,39 +109,123 @@ export default function QuizzesHubPage() {
       <Navbar />
       <div className="min-h-screen bg-gray-50/70 pt-[80px] pb-20">
         
-        {/* HERO BANNER */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white rounded-full text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
-                <Sparkles size={13} className="text-amber-400" /> Architecture Quiz Zone
-              </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight">
-                Test your knowledge. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                  Climb the architecture leaderboard.
-                </span>
-              </h1>
-              <p className="mt-3 text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl">
-                Fast-paced quizzes on Indian and global architecture, master designers, structural trivia, and software speedruns. Play free, earn points, and challenge your friends.
-              </p>
+        {/* WIDE DYNAMIC HERO WITH LIVE QUIZ PREVIEW */}
+        <div className="bg-white border-b border-gray-200 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              
+              {/* Left Column (7 cols): Full-spread Heading & Value Props */}
+              <div className="lg:col-span-7">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-black text-white rounded-full text-xs font-bold uppercase tracking-wider mb-5 shadow-xs">
+                  <Sparkles size={13} className="text-amber-400" /> Architecture Arena
+                </div>
 
-              {/* Search & Category Chips */}
-              <div className="mt-6 flex flex-wrap items-center gap-2">
-                {categories.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => setActiveCategory(c.id)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
-                      activeCategory === c.id 
-                        ? "bg-black text-white shadow-xs" 
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {c.label}
-                  </button>
-                ))}
+                <h1 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight">
+                  Recognize the Masters. <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+                    Rule the Architecture Leaderboard.
+                  </span>
+                </h1>
+
+                <p className="mt-3 text-base text-gray-600 leading-relaxed max-w-2xl">
+                  65+ iconic world projects, legendary studios, and tectonic trivia. Challenge fellow architects, beat the clock in rapid fire, and claim your place in the rankings.
+                </p>
+
+                {/* Quick Feature Badges */}
+                <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-bold text-gray-700">
+                  <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
+                    <span className="text-base">📸</span> 65+ High-Res Photos
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
+                    <span className="text-base">⚡</span> 12s Rapid Fire Mode
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
+                    <span className="text-base">🏆</span> Weekly Leaderboard XP
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div className="mt-8 flex flex-wrap items-center gap-2">
+                  {categories.map(c => (
+                    <button
+                      key={c.id}
+                      onClick={() => setActiveCategory(c.id)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow-xs ${
+                        activeCategory === c.id 
+                          ? "bg-black text-white shadow-md scale-105" 
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Right Column (5 cols): Live Interactive Question Preview Card */}
+              <div className="lg:col-span-5">
+                <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-black p-5 sm:p-6 rounded-3xl text-white shadow-2xl border border-gray-800 relative group overflow-hidden">
+                  
+                  {/* Glowing subtle background */}
+                  <div className="absolute -top-16 -right-16 w-44 h-44 bg-blue-600/30 rounded-full blur-3xl pointer-events-none" />
+                  <div className="absolute -bottom-16 -left-16 w-44 h-44 bg-purple-600/30 rounded-full blur-3xl pointer-events-none" />
+
+                  {/* Top Bar of Preview */}
+                  <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-[11px] font-extrabold uppercase tracking-widest text-gray-400">
+                        Live Preview Demo
+                      </span>
+                    </div>
+                    <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded-full font-mono font-bold text-amber-300">
+                      Sample Question
+                    </span>
+                  </div>
+
+                  {/* Sample Photo */}
+                  <div className="relative rounded-2xl overflow-hidden h-40 bg-gray-800 mb-4 border border-white/10">
+                    <img 
+                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Fallingwater_Wright_2007.jpg/1280px-Fallingwater_Wright_2007.jpg" 
+                      alt="Sample Project" 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white border border-white/20">
+                      📍 Mill Run, Pennsylvania
+                    </div>
+                  </div>
+
+                  {/* Sample Prompt */}
+                  <p className="text-xs font-bold text-gray-200 mb-3">
+                    Which master architect designed the cantilevered terraces of &quot;Fallingwater&quot;?
+                  </p>
+
+                  {/* Sample Options */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-300 text-xs font-bold flex items-center justify-between">
+                      <span>Frank Lloyd Wright</span>
+                      <span>✓</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-xs font-medium">
+                      Le Corbusier
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-xs font-medium">
+                      Mies van der Rohe
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-xs font-medium">
+                      Louis Kahn
+                    </div>
+                  </div>
+
+                  <Link 
+                    href="/quizzes/iconic-world-landmarks-guess-the-building"
+                    className="w-full py-2.5 bg-white text-black hover:bg-gray-100 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition shadow-sm"
+                  >
+                    Play Full Quiz Now (65 Projects) <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -186,58 +279,92 @@ export default function QuizzesHubPage() {
                   {filteredQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 0;
                     const playsCount = quiz.quiz_scores?.[0]?.count || 0;
+                    const isArchitectQuiz = quiz.slug.includes("architect");
+
+                    // 4 Collage images showing projects and master architects
+                    const collageImages = isArchitectQuiz
+                      ? [
+                          { img: catalogItems[0]?.architect_photo || catalogItems[0]?.building_photo, label: catalogItems[0]?.architect },
+                          { img: catalogItems[0]?.building_photo, label: catalogItems[0]?.building_name },
+                          { img: catalogItems[1]?.architect_photo || catalogItems[1]?.building_photo, label: catalogItems[1]?.architect },
+                          { img: catalogItems[1]?.building_photo, label: catalogItems[1]?.building_name }
+                        ]
+                      : [
+                          { img: catalogItems[0]?.building_photo, label: catalogItems[0]?.building_name },
+                          { img: catalogItems[1]?.building_photo, label: catalogItems[1]?.building_name },
+                          { img: catalogItems[2]?.building_photo, label: catalogItems[2]?.building_name },
+                          { img: catalogItems[3]?.building_photo, label: catalogItems[3]?.building_name }
+                        ];
 
                     return (
                       <Link 
                         key={quiz.id}
                         href={`/quizzes/${quiz.slug}`}
-                        className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg hover:border-black/50 transition duration-200 flex flex-col group"
+                        className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col group"
                       >
-                        {/* Cover Image */}
-                        <div className="h-44 bg-gray-900 relative overflow-hidden">
-                          {quiz.cover_image ? (
-                            <img 
-                              src={quiz.cover_image} 
-                              alt={quiz.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300 opacity-90 group-hover:opacity-100" 
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-white/40">
-                              <span className="text-4xl mb-1">🏛️</span>
-                              <span className="text-xs font-semibold uppercase tracking-wider">Architecture Quiz</span>
+                        {/* 4-PHOTO ARCHITECTURAL COLLAGE HEADER */}
+                        <div className="h-52 bg-black relative overflow-hidden grid grid-cols-2 grid-rows-2 gap-1 p-1">
+                          {collageImages.map((c, cIdx) => (
+                            <div key={cIdx} className="relative overflow-hidden group-hover:opacity-95 transition bg-gray-900">
+                              {c.img ? (
+                                <img 
+                                  src={c.img} 
+                                  alt={c.label || "Architecture preview"} 
+                                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gray-800 flex items-center justify-center text-xs text-white/40">
+                                  🏛️
+                                </div>
+                              )}
+                              {c.label && (
+                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-1.5">
+                                  <p className="text-[9px] font-bold text-white truncate drop-shadow-xs">
+                                    {c.label}
+                                  </p>
+                                </div>
+                              )}
                             </div>
-                          )}
+                          ))}
 
-                          <div className="absolute top-3 right-3">
-                            <span className="bg-black/75 backdrop-blur-xs text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-white/20">
+                          {/* Category Badge Floating Top Left */}
+                          <div className="absolute top-3 left-3 z-10">
+                            <span className="bg-black/85 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
                               {quiz.category}
+                            </span>
+                          </div>
+
+                          {/* Preview Tag Floating Top Right */}
+                          <div className="absolute top-3 right-3 z-10">
+                            <span className="bg-white text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md">
+                              {isArchitectQuiz ? "Architects + Works" : "Photo Identification"}
                             </span>
                           </div>
                         </div>
 
                         {/* Card Content */}
-                        <div className="p-5 flex-1 flex flex-col justify-between">
+                        <div className="p-6 flex-1 flex flex-col justify-between">
                           <div>
-                            <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition line-clamp-1 mb-1">
+                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition mb-1 leading-snug">
                               {quiz.title}
                             </h3>
                             <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-4">
-                              {quiz.description || "Test your architectural identification skills."}
+                              {quiz.description || "Test your architectural knowledge."}
                             </p>
                           </div>
 
-                          <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
-                            <div className="flex items-center gap-3 text-[11px] text-gray-500 font-medium">
-                              <span className="flex items-center gap-1">
-                                <HelpCircle size={12} className="text-blue-600" /> {questionCount} Qs
+                          <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3 text-xs text-gray-500 font-bold">
+                              <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200">
+                                <HelpCircle size={13} className="text-blue-600" /> {questionCount} Questions
                               </span>
-                              <span className="flex items-center gap-1">
-                                <Flame size={12} className="text-amber-500" /> {playsCount} Plays
+                              <span className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200">
+                                <Flame size={13} className="text-amber-500" /> {playsCount} Plays
                               </span>
                             </div>
 
-                            <span className="text-xs font-bold text-black flex items-center gap-1 group-hover:translate-x-1 transition">
-                              Play <ArrowRight size={13} />
+                            <span className="px-4 py-2 bg-black group-hover:bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition shadow-xs">
+                              Start <ArrowRight size={13} />
                             </span>
                           </div>
                         </div>
