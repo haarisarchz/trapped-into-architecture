@@ -53,6 +53,9 @@ export default function JobApplyAction({
       // If user has already used 2 clicks today, show limit modal!
       if (meter.count >= 2) {
         setShowLimitModal(true);
+        if (typeof window !== "undefined" && (window as any).gtag) {
+          (window as any).gtag("event", "guest_popup_view", { source: "apply_limit_modal" });
+        }
         return false;
       }
 

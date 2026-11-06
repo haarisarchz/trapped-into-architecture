@@ -131,47 +131,31 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            {/* TIMELINE CONTROLS: QUICK BUTTONS + DROPDOWN */}
-            <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto justify-between sm:justify-end">
-              <div className="hidden lg:flex bg-white/90 p-1 rounded-xl border border-gray-200 text-xs font-semibold shadow-xs">
-                {[
-                  { label: "1h", value: "1h" },
-                  { label: "24h", value: "1" },
-                  { label: "7d", value: "7" },
-                  { label: "30d", value: "30" },
-                  { label: "90d", value: "90" },
-                  { label: "1y", value: "365" },
-                  { label: "All", value: "lifetime" },
-                ].map(p => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => setDays(p.value)}
-                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                      days === p.value
-                        ? "bg-black text-white shadow-xs font-bold"
-                        : "text-gray-600 hover:text-black hover:bg-gray-100"
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-
-              <select 
-                value={days} 
-                onChange={(e) => setDays(e.target.value)}
-                aria-label="Select analytics timeframe"
-                className="bg-white border border-gray-300 text-gray-900 text-xs sm:text-sm rounded-xl focus:ring-black focus:border-black block p-2 sm:p-2.5 shadow-xs font-bold cursor-pointer hover:border-gray-400 transition"
-              >
-                <option value="1h">⏱️ Last 1 Hour</option>
-                <option value="1">📅 Last 24 Hours</option>
-                <option value="7">🗓️ Last 7 Days</option>
-                <option value="30">📊 Last 30 Days</option>
-                <option value="90">📈 Last 90 Days</option>
-                <option value="365">📆 Last 365 Days</option>
-                <option value="lifetime">🌐 Lifetime (All Time)</option>
-              </select>
+            {/* TIMELINE CONTROLS: CLEAN PILL BUTTONS ONLY */}
+            <div className="flex items-center gap-1.5 bg-white/90 p-1 rounded-xl border border-gray-200/90 text-xs font-semibold shadow-xs overflow-x-auto max-w-full">
+              {[
+                { label: "1h", full: "Last 1 Hour", value: "1h" },
+                { label: "24h", full: "Last 24 Hours", value: "1" },
+                { label: "7d", full: "Last 7 Days", value: "7" },
+                { label: "30d", full: "Last 30 Days", value: "30" },
+                { label: "90d", full: "Last 90 Days", value: "90" },
+                { label: "1y", full: "Last 365 Days", value: "365" },
+                { label: "All", full: "All Time", value: "lifetime" },
+              ].map(p => (
+                <button
+                  key={p.value}
+                  type="button"
+                  title={p.full}
+                  onClick={() => setDays(p.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                    days === p.value
+                      ? "bg-black text-white shadow-xs"
+                      : "text-gray-600 hover:text-black hover:bg-gray-100"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -224,57 +208,6 @@ export default function AnalyticsPage() {
                   {((data.conversions?.applyClicks || 0) + (data.conversions?.emailClicks || 0) + (data.conversions?.contactClicks || 0) + (data.conversions?.shareClicks || 0) + (data.conversions?.saveClicks || 0) + (data.conversions?.guestRegisterClicks || 0))}
                 </p>
                 <p className="text-[11px] text-gray-400 mt-1">In selected time period</p>
-              </div>
-            </div>
-
-            {/* PLATFORM SUMMARY STRIP */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">Candidate Action Rate</span>
-                  <p className="text-xl font-extrabold text-emerald-600 mt-0.5">
-                    {data.overview.sessions > 0 
-                      ? `${(((Number(data.overview.totalApplications) || 0) + (data.conversions?.shareClicks || 0) + (data.conversions?.saveClicks || 0) + (data.conversions?.guestRegisterClicks || 0)) / data.overview.sessions * 100).toFixed(1)}%`
-                      : '0.0%'}
-                  </p>
-                  <p className="text-[10px] text-gray-400">Sessions taking high-intent action</p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-base shrink-0">
-                  ⚡
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">Live Job Inventory</span>
-                  <p className="text-xl font-extrabold text-gray-900 mt-0.5">{data.overview.totalJobsCount || 236} Jobs</p>
-                  <p className="text-[10px] text-gray-400">Published openings across India</p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-base shrink-0">
-                  📋
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">Hiring Studios</span>
-                  <p className="text-xl font-extrabold text-gray-900 mt-0.5">{data.topFirms?.length ? '100+' : '100+'} Studios</p>
-                  <p className="text-[10px] text-gray-400">Practices with listed openings</p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-base shrink-0">
-                  🏛️
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block">Candidate Searches</span>
-                  <p className="text-xl font-extrabold text-purple-700 mt-0.5">{data.searches?.totalCount || 0} Searches</p>
-                  <p className="text-[10px] text-gray-400">Keywords &amp; city filters in period</p>
-                </div>
-                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold text-base shrink-0">
-                  🔍
-                </div>
               </div>
             </div>
 
@@ -338,14 +271,22 @@ export default function AnalyticsPage() {
                   </p>
                 </div>
 
-                <div className="bg-purple-50/50 p-4 rounded-xl border border-purple-100">
-                  <span className="text-xs font-semibold text-purple-900 uppercase tracking-wider block mb-1">Guest Sign-ups</span>
-                  <p className="text-2xl font-bold text-purple-900">{data.conversions?.guestRegisterClicks || 0}</p>
-                  <p className="text-[11px] text-purple-600/80 mt-1">
-                    {days === 'lifetime' || days === 'all' 
-                      ? 'All-time popup register clicks' 
-                      : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · popup &amp; modal`}
-                  </p>
+                <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100/90 flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-purple-900 uppercase tracking-wider block mb-1">Guest Register Prompt</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-2xl font-black text-purple-950">{data.conversions?.guestRegisterClicks || 0}</p>
+                      <span className="text-xs font-bold text-purple-700">clicked</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-purple-200/50 text-[11px] text-purple-900/80 flex items-center justify-between">
+                    <span>{data.conversions?.guestPopupViews || 0} shown</span>
+                    <span className="font-bold font-mono">
+                      {((data.conversions?.guestPopupViews || 0) > 0 
+                        ? (((data.conversions?.guestRegisterClicks || 0) / (data.conversions?.guestPopupViews || 1)) * 100).toFixed(1) 
+                        : '0.0')}% conversion
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1184,8 +1125,8 @@ export default function AnalyticsPage() {
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {firmLeaderboardMode === "trending"
-                          ? `Ranked by candidate activity in ${days === '1h' ? 'the last hour' : days === '1' ? 'the last 24 hours' : days === '7' ? 'the last 7 days' : days === '30' ? 'the last 30 days' : 'this period'}`
-                          : "All-time leaderboard based on total jobs posted and candidate engagement"}
+                          ? `Ranked 100% by candidate shares & saves in ${days === '1h' ? 'the last hour' : days === '1' ? 'the last 24 hours' : days === '7' ? 'the last 7 days' : days === '30' ? 'the last 30 days' : 'this period'}`
+                          : "All-time leaderboard ranked 100% by candidate shares and saves"}
                       </p>
                     </div>
 
@@ -1193,14 +1134,14 @@ export default function AnalyticsPage() {
                       <button 
                         type="button"
                         onClick={() => setFirmLeaderboardMode("trending")} 
-                        className={`px-3 py-1.5 rounded-lg transition ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
                         🕒 Recent / Trending
                       </button>
                       <button 
                         type="button"
                         onClick={() => setFirmLeaderboardMode("overall")} 
-                        className={`px-3 py-1.5 rounded-lg transition ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
                         🏆 Overall (All-Time)
                       </button>
@@ -1213,69 +1154,70 @@ export default function AnalyticsPage() {
                       : (data.overallTopFirms || data.topFirms || []);
 
                     if (!displayedFirms || displayedFirms.length === 0) {
-                      return <p className="text-xs text-gray-400 italic py-8 text-center">No firm data available for this period.</p>;
+                      return (
+                        <div className="py-10 text-center bg-gray-50/60 rounded-xl border border-dashed border-gray-200 my-4">
+                          <p className="text-gray-600 text-xs font-semibold">No candidate shares or saves recorded for firms in this timeframe.</p>
+                          <p className="text-gray-400 text-[11px] mt-1">Switch to <strong>Overall (All-Time)</strong> to see which firms candidates engaged with most.</p>
+                          <button 
+                            type="button" 
+                            onClick={() => setFirmLeaderboardMode("overall")} 
+                            className="mt-3 px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-black transition cursor-pointer"
+                          >
+                            View All-Time Leaderboard ➔
+                          </button>
+                        </div>
+                      );
                     }
 
-                    const hasPeriodInteractions = displayedFirms.some((f: any) => (f.periodInteractions || 0) > 0);
-
                     return (
-                      <>
-                        <div className="divide-y divide-gray-100">
-                          {displayedFirms.map((firm: any, i: number) => {
-                            const rankMedals = ["🥇", "🥈", "🥉"];
-                            const isTrendingActive = firmLeaderboardMode === "trending" && (firm.periodInteractions || 0) > 0;
+                      <div className="divide-y divide-gray-100">
+                        {displayedFirms.map((firm: any, i: number) => {
+                          const rankMedals = ["🥇", "🥈", "🥉"];
+                          const isTrendingActive = firmLeaderboardMode === "trending";
 
-                            return (
-                              <div key={i} className="py-3 flex items-center justify-between gap-3 group">
-                                <div className="flex items-center gap-3 min-w-0">
-                                  <span className="w-7 text-center font-bold text-sm shrink-0">
-                                    {i < 3 ? rankMedals[i] : <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>}
-                                  </span>
-                                  <div className="min-w-0">
-                                    <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition">
-                                      {firm.name}
-                                    </p>
-                                    <p className="text-[11px] text-gray-400 truncate">
-                                      📍 {firm.locations} {firm.positions && firm.positions.length > 0 ? `• ${firm.positions.join(", ")}` : ""}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-3 shrink-0 text-right">
-                                  <div className="hidden sm:block">
-                                    <p className="text-xs font-semibold text-gray-700">
-                                      {isTrendingActive ? (
-                                        <span className="text-emerald-700 font-bold">+{firm.periodInteractions} in period</span>
-                                      ) : (
-                                        <span>{firm.totalJobs} {firm.totalJobs === 1 ? 'job' : 'jobs'}</span>
-                                      )}
-                                    </p>
-                                    <p className="text-[10px] text-gray-400">
-                                      {isTrendingActive 
-                                        ? `${firm.totalJobs} posted jobs` 
-                                        : `${(firm.totalShares || 0) + (firm.totalSaves || 0)} interactions`}
-                                    </p>
-                                  </div>
-                                  <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                                    isTrendingActive 
-                                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
-                                      : "bg-blue-50 text-blue-700"
-                                  }`}>
-                                    {isTrendingActive && firm.periodScore > 0 ? `${firm.periodScore} pts` : `${firm.engagementScore} pts`}
-                                  </div>
+                          return (
+                            <div key={i} className="py-3 flex items-center justify-between gap-3 group">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="w-7 text-center font-bold text-sm shrink-0">
+                                  {i < 3 ? rankMedals[i] : <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>}
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition">
+                                    {firm.name}
+                                  </p>
+                                  <p className="text-[11px] text-gray-400 truncate">
+                                    📍 {firm.locations} {firm.positions && firm.positions.length > 0 ? `• ${firm.positions.join(", ")}` : ""}
+                                  </p>
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
 
-                        {firmLeaderboardMode === "trending" && !hasPeriodInteractions && (
-                          <div className="mt-3 p-2.5 bg-gray-50 rounded-xl border border-gray-100 text-[11px] text-gray-500 flex items-center justify-between">
-                            <span>💡 No new shares in this exact timeframe. Showing top hiring studios.</span>
-                            <button type="button" onClick={() => setFirmLeaderboardMode("overall")} className="text-blue-600 font-semibold hover:underline shrink-0">View All-Time ➔</button>
-                          </div>
-                        )}
-                      </>
+                              <div className="flex items-center gap-3 shrink-0 text-right">
+                                <div className="hidden sm:block">
+                                  <p className="text-xs font-semibold text-gray-700">
+                                    {isTrendingActive ? (
+                                      <span className="text-emerald-700 font-bold">+{firm.periodInteractions} interaction${firm.periodInteractions !== 1 ? 's' : ''}</span>
+                                    ) : (
+                                      <span className="text-gray-900 font-bold">{firm.totalInteractions} interaction${firm.totalInteractions !== 1 ? 's' : ''}</span>
+                                    )}
+                                  </p>
+                                  <p className="text-[10px] text-gray-400">
+                                    {isTrendingActive 
+                                      ? `${firm.periodShares || 0} shares · ${firm.periodSaves || 0} saves` 
+                                      : `${firm.totalShares || 0} shares · ${firm.totalSaves || 0} saves`}
+                                  </p>
+                                </div>
+                                <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                  isTrendingActive 
+                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
+                                    : "bg-blue-50 text-blue-700"
+                                }`}>
+                                  {isTrendingActive ? `${firm.periodScore} pts` : `${firm.engagementScore} pts`}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     );
                   })()}
                 </div>
