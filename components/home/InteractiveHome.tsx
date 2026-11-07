@@ -16,8 +16,11 @@ import {
   Smartphone, 
   Send,
   ExternalLink,
-  GraduationCap
+  GraduationCap,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
+import { parseChannels, DEFAULT_WHATSAPP_CHANNELS, DEFAULT_TELEGRAM_CHANNELS } from "@/lib/channels";
 import { InstagramIcon, FacebookIcon, TwitterIcon } from "@/components/icons/SocialIcons";
 
 const ensureHttp = (url?: string) => {
@@ -68,6 +71,10 @@ export default function InteractiveHome({
   const [suggestionText, setSuggestionText] = useState("");
   const [suggestionSender, setSuggestionSender] = useState("");
   const [suggestionStatus, setSuggestionStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [expandedSocial, setExpandedSocial] = useState<"whatsapp" | "telegram" | null>(null);
+
+  const whatsappChannels = parseChannels(siteSettings?.whatsapp_channel_url, DEFAULT_WHATSAPP_CHANNELS);
+  const telegramChannels = parseChannels(siteSettings?.website_url, DEFAULT_TELEGRAM_CHANNELS);
 
   const handleSuggestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -734,83 +741,175 @@ export default function InteractiveHome({
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
-              <Link 
-                href="/contact?tab=connect&platform=whatsapp" 
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                title="View State & All-India WhatsApp Channels"
-              >
-                <MessageCircle size={17} /> WhatsApp
-              </Link>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
+                {/* WhatsApp Button */}
+                {whatsappChannels.length > 1 ? (
+                  <button 
+                    type="button"
+                    onClick={() => setExpandedSocial(expandedSocial === "whatsapp" ? null : "whatsapp")}
+                    className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border transition cursor-pointer font-medium ${
+                      expandedSocial === "whatsapp" 
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-500 font-bold shadow-2xs" 
+                        : "border-gray-200 hover:border-black text-gray-700 bg-gray-50 hover:bg-white"
+                    }`}
+                    title="View all available WhatsApp groups & channels"
+                  >
+                    <MessageCircle size={17} className={expandedSocial === "whatsapp" ? "text-emerald-600" : ""} />
+                    <span>WhatsApp</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-bold">
+                      {whatsappChannels.length}
+                    </span>
+                    {expandedSocial === "whatsapp" ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+                ) : (
+                  <a 
+                    href={ensureHttp(whatsappChannels[0]?.url || siteSettings?.whatsapp_channel_url || "https://whatsapp.com/channel/0029Vaz1p0kCRs1uBTCWpJ2X")} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                    title="Join WhatsApp Channel"
+                  >
+                    <MessageCircle size={17} /> WhatsApp
+                  </a>
+                )}
 
-              <Link 
-                href="/contact?tab=connect&platform=telegram" 
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                title="View Regional Telegram Channels"
-              >
-                <Send size={17} /> Telegram
-              </Link>
+                {/* Telegram Button */}
+                {telegramChannels.length > 1 ? (
+                  <button 
+                    type="button"
+                    onClick={() => setExpandedSocial(expandedSocial === "telegram" ? null : "telegram")}
+                    className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border transition cursor-pointer font-medium ${
+                      expandedSocial === "telegram" 
+                        ? "bg-sky-50 text-[#1d8bc0] border-sky-400 font-bold shadow-2xs" 
+                        : "border-gray-200 hover:border-black text-gray-700 bg-gray-50 hover:bg-white"
+                    }`}
+                    title="View regional Telegram channels & groups"
+                  >
+                    <Send size={17} className={expandedSocial === "telegram" ? "text-[#229ED9]" : ""} />
+                    <span>Telegram</span>
+                    <span className="text-[10px] bg-sky-100 text-[#1d8bc0] px-1.5 py-0.2 rounded-full font-bold">
+                      {telegramChannels.length}
+                    </span>
+                    {expandedSocial === "telegram" ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+                ) : (
+                  <a 
+                    href={ensureHttp(telegramChannels[0]?.url || siteSettings?.website_url || "https://t.me/ArchitectJobsTi2A")} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                    title="Join Telegram Channel"
+                  >
+                    <Send size={17} /> Telegram
+                  </a>
+                )}
 
-              {siteSettings?.instagram ? (
+                {/* Instagram Direct Link */}
                 <a 
-                  href={ensureHttp(siteSettings.instagram)} 
+                  href={ensureHttp(siteSettings?.instagram || "https://www.instagram.com/trappedintoarchitecture/")} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                  title="Follow on Instagram"
                 >
                   <InstagramIcon size={17} /> Instagram
                 </a>
-              ) : (
-                <Link 
-                  href="/unavailable?service=Instagram" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                >
-                  <InstagramIcon size={17} /> Instagram
-                </Link>
-              )}
 
-              {siteSettings?.facebook ? (
+                {/* Facebook Direct Link */}
                 <a 
-                  href={ensureHttp(siteSettings.facebook)} 
+                  href={ensureHttp(siteSettings?.facebook || "https://www.facebook.com/trappedintoarchitecture")} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                  title="Visit Facebook Page"
                 >
                   <FacebookIcon size={17} /> Facebook
                 </a>
-              ) : (
-                <Link 
-                  href="/unavailable?service=Facebook" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                >
-                  <FacebookIcon size={17} /> Facebook
-                </Link>
-              )}
 
-              {siteSettings?.twitter ? (
+                {/* X (Twitter) Direct Link */}
                 <a 
-                  href={ensureHttp(siteSettings.twitter)} 
+                  href={ensureHttp(siteSettings?.twitter || "https://x.com/trappedin2archz")} 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                  title="Follow on X (Twitter)"
                 >
                   <TwitterIcon size={17} /> X (Twitter)
                 </a>
-              ) : (
-                <Link 
-                  href="/unavailable?service=X" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                >
-                  <TwitterIcon size={17} /> X (Twitter)
-                </Link>
-              )}
 
-              <Link 
-                href="/quizzes" 
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-              >
-                <span>🧠</span> Quizzes
-              </Link>
+                {/* Quizzes Direct Link */}
+                <Link 
+                  href="/quizzes" 
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                  title="Practice Architectural Quizzes"
+                >
+                  <span>🧠</span> Quizzes
+                </Link>
+              </div>
+
+              {/* EXPANDED CHANNELS LIST (Shows available groups/channels below) */}
+              {expandedSocial && (
+                <div className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <div className="flex items-center gap-1.5">
+                      {expandedSocial === "whatsapp" ? (
+                        <MessageCircle size={15} className="text-emerald-600" />
+                      ) : (
+                        <Send size={15} className="text-[#229ED9]" />
+                      )}
+                      <span className="text-xs font-bold text-gray-900">
+                        Available {expandedSocial === "whatsapp" ? "WhatsApp" : "Telegram"} Channels ({expandedSocial === "whatsapp" ? whatsappChannels.length : telegramChannels.length})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSocial(null)}
+                      className="text-gray-400 hover:text-black text-xs font-semibold px-2 py-0.5 rounded-md hover:bg-gray-100 transition cursor-pointer"
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                    {(expandedSocial === "whatsapp" ? whatsappChannels : telegramChannels).map((ch, idx) => (
+                      <a
+                        key={idx}
+                        href={ensureHttp(ch.url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-2.5 rounded-xl border border-gray-200 hover:border-black bg-gray-50/60 hover:bg-white transition group shadow-2xs"
+                      >
+                        <div className="min-w-0 pr-2">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-xs font-bold text-gray-900 group-hover:text-black truncate">
+                              {ch.name}
+                            </p>
+                            {ch.badge && (
+                              <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold shrink-0">
+                                {ch.badge}
+                              </span>
+                            )}
+                          </div>
+                          {ch.description && (
+                            <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                              {ch.description}
+                            </p>
+                          )}
+                        </div>
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shrink-0 text-white transition ${
+                          expandedSocial === "whatsapp"
+                            ? "bg-emerald-600 group-hover:bg-emerald-700"
+                            : "bg-[#229ED9] group-hover:bg-[#1d8bc0]"
+                        }`}>
+                          <span>Join</span>
+                          <ExternalLink size={10} />
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
