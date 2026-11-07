@@ -286,9 +286,6 @@ function ContactContent() {
           }`}
         >
           <span>🚀</span> Follow &amp; Connect
-          <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-            State Channels
-          </span>
         </button>
       </div>
 
@@ -403,7 +400,7 @@ function ContactContent() {
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <TelegramBrandIcon size={16} /> Telegram (Regional)
+              <TelegramBrandIcon size={16} /> Telegram
             </button>
 
             <button
@@ -454,85 +451,38 @@ function ContactContent() {
           {/* 1. WHATSAPP CHANNELS VIEW */}
           {activePlatform === "whatsapp" && (
             <div className="space-y-4">
-              {/* Featured Main All-India Hub */}
-              {mainWhatsappHub && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                        MAIN HUB
-                      </span>
-                      <h3 className="font-extrabold text-gray-900 text-base">{mainWhatsappHub.name}</h3>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {mainWhatsappHub.description || "1,000+ followers. Curated daily top jobs, platform features & weekly architectural digests."}
-                    </p>
-                  </div>
-                  <a
-                    href={ensureHttp(mainWhatsappHub.url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl whitespace-nowrap transition shadow-xs flex items-center gap-1.5"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {whatsappChannels.map((ch, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-gray-200 rounded-2xl p-4 hover:border-emerald-200 transition bg-white flex items-center justify-between shadow-2xs"
                   >
-                    <span>Join Main Hub</span>
-                    <ExternalLink size={14} />
-                  </a>
-                </div>
-              )}
-
-              {/* State-wise channels list */}
-              {stateWhatsappChannels.length > 0 ? (
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 pt-2">
-                    State &amp; City-Specific Job Alert Channels
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                    {stateWhatsappChannels.map((ch, idx) => (
-                      <div
-                        key={idx}
-                        className="border border-gray-200 rounded-2xl p-4 hover:border-gray-300 transition bg-white flex items-center justify-between shadow-2xs"
-                      >
-                        <div>
-                          <p className="text-sm font-bold text-gray-900">{ch.name}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{ch.description || "Instant local vacancy drops & studio calls"}</p>
-                        </div>
-                        <a
-                          href={ensureHttp(ch.url)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-black hover:bg-gray-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5"
-                        >
-                          <span>Join</span>
-                          <ExternalLink size={13} />
-                        </a>
-                      </div>
-                    ))}
+                    <p className="text-sm font-bold text-gray-900">{ch.name}</p>
+                    <a
+                      href={ensureHttp(ch.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center gap-1.5"
+                    >
+                      <span>Join</span>
+                      <ExternalLink size={13} />
+                    </a>
                   </div>
-                </div>
-              ) : (
-                <div className="text-xs text-gray-500 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  State-specific WhatsApp channels are being added. Check back soon or join our Main Hub above!
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           )}
 
           {/* 2. TELEGRAM CHANNELS VIEW */}
           {activePlatform === "telegram" && (
             <div className="space-y-4">
-              <p className="text-xs text-gray-600">
-                Join our regional Telegram channels for instant high-resolution job flyers, portfolio drops, and regional architectural hiring.
-              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {telegramChannels.map((ch, idx) => (
                   <div
                     key={idx}
                     className="border border-gray-200 rounded-2xl p-4 hover:border-blue-200 transition bg-white flex items-center justify-between shadow-2xs"
                   >
-                    <div>
-                      <p className="text-sm font-bold text-gray-900">{ch.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{ch.description || "Job flyers & studio portfolio drops"}</p>
-                    </div>
+                    <p className="text-sm font-bold text-gray-900">{ch.name}</p>
                     <a
                       href={ensureHttp(ch.url)}
                       target="_blank"
