@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { Phone, Mail, MapPin, Send, MessageCircle, ExternalLink } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle, ExternalLink } from "lucide-react";
 import { 
   FacebookBrandIcon, 
   LinkedInBrandIcon, 
@@ -206,7 +206,6 @@ function ContactContent() {
   const searchParams = useSearchParams();
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"contact" | "connect">("contact");
   const [activePlatform, setActivePlatform] = useState<"whatsapp" | "telegram" | "instagram" | "facebook" | "linkedin" | "x">("whatsapp");
 
   useEffect(() => {
@@ -225,14 +224,16 @@ function ContactContent() {
 
   useEffect(() => {
     if (!searchParams) return;
-    const tabParam = searchParams.get("tab");
-    if (tabParam === "connect" || searchParams.has("connect")) {
-      setActiveTab("connect");
-    }
     const platParam = searchParams.get("platform")?.toLowerCase();
     if (platParam && ["whatsapp", "telegram", "instagram", "facebook", "linkedin", "x"].includes(platParam)) {
       setActivePlatform(platParam as any);
-      setActiveTab("connect");
+      setTimeout(() => {
+        document.getElementById("connect")?.scrollIntoView({ behavior: "smooth" });
+      }, 150);
+    } else if (searchParams.get("tab") === "connect" || searchParams.has("connect")) {
+      setTimeout(() => {
+        document.getElementById("connect")?.scrollIntoView({ behavior: "smooth" });
+      }, 150);
     }
   }, [searchParams]);
 
@@ -247,51 +248,21 @@ function ContactContent() {
   const whatsappChannels: SocialChannel[] = parseChannels(settings?.whatsapp_channel_url, DEFAULT_WHATSAPP_CHANNELS);
   const telegramChannels: SocialChannel[] = parseChannels(settings?.website_url, DEFAULT_TELEGRAM_CHANNELS);
 
-  // Separate main WhatsApp hub from state channels if multiple exist
-  const mainWhatsappHub = whatsappChannels[0];
-  const stateWhatsappChannels = whatsappChannels.length > 1 ? whatsappChannels.slice(1) : [];
-
   return (
-    <div className="max-w-6xl mx-auto py-10 md:py-14 px-6 space-y-8">
-      {/* Page Title */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-          {activeTab === "contact" ? "Contact Us" : "Follow & Connect"}
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
-          {activeTab === "contact"
-            ? "Have questions about posting a vacancy, suggestions for the platform, or studio partnerships? We would love to hear from you."
-            : "Subscribe to our instant city-wise vacancy alerts, portfolio discussions, and daily architectural design news."}
-        </p>
-      </div>
+    <div className="max-w-6xl mx-auto py-10 md:py-14 px-6 space-y-12">
+      
+      {/* 1. CONTACT US SECTION */}
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+            Contact Us
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
+            Have questions about posting a vacancy, suggestions for the platform, or studio partnerships? We would love to hear from you.
+          </p>
+        </div>
 
-      {/* Dual Tab Switcher */}
-      <div className="flex justify-center border-b border-gray-200 gap-8 text-sm">
-        <button
-          onClick={() => setActiveTab("contact")}
-          className={`pb-3 font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === "contact"
-              ? "border-b-2 border-black text-black"
-              : "text-gray-400 hover:text-black border-b-2 border-transparent"
-          }`}
-        >
-          <span>✉️</span> Contact Us
-        </button>
-        <button
-          onClick={() => setActiveTab("connect")}
-          className={`pb-3 font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-            activeTab === "connect"
-              ? "border-b-2 border-black text-black"
-              : "text-gray-400 hover:text-black border-b-2 border-transparent"
-          }`}
-        >
-          <span>🚀</span> Follow &amp; Connect
-        </button>
-      </div>
-
-      {/* TAB 1: CONTACT US */}
-      {activeTab === "contact" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 animate-fadeIn">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-10 bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100">
           {/* Left Column: Direct Contacts */}
           <div className="flex flex-col justify-between space-y-6">
             <div>
@@ -355,17 +326,12 @@ function ContactContent() {
               </div>
             </div>
 
-            {/* Quick Redirect Link to Follow & Connect Tab */}
             <div className="pt-4 border-t border-gray-100 text-xs text-gray-500">
-              Looking for our city-wise channels? Switch to the{" "}
-              <button 
-                type="button" 
-                onClick={() => setActiveTab("connect")} 
-                className="text-emerald-700 font-bold hover:underline cursor-pointer"
-              >
+              Want to join our broadcast channels? Scroll below to explore our{" "}
+              <a href="#connect" className="text-emerald-700 font-bold hover:underline">
                 Follow &amp; Connect
-              </button>{" "}
-              tab above.
+              </a>{" "}
+              directory.
             </div>
           </div>
 
@@ -374,11 +340,20 @@ function ContactContent() {
             <ContactFormInner settings={settings} />
           </div>
         </div>
-      )}
+      </div>
 
-      {/* TAB 2: FOLLOW & CONNECT (Multi-Platform Directory) */}
-      {activeTab === "connect" && (
-        <div className="bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 space-y-6 animate-fadeIn">
+      {/* 2. FOLLOW & CONNECT SECTION (ON THE SAME PAGE BELOW) */}
+      <div id="connect" className="pt-6 space-y-6 scroll-mt-20">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+            Follow &amp; Connect
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
+            Subscribe to our instant vacancy alert channels, portfolio discussions, and daily architectural design news.
+          </p>
+        </div>
+
+        <div className="bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-sm border border-gray-100 space-y-6">
           {/* Platform Pills */}
           <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-4">
             <button
@@ -587,7 +562,7 @@ function ContactContent() {
           )}
 
         </div>
-      )}
+      </div>
 
     </div>
   );
