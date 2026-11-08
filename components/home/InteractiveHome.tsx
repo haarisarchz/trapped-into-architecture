@@ -743,7 +743,7 @@ export default function InteractiveHome({
 
             <div className="space-y-3">
               {/* PRIMARY TOP ROW: WhatsApp & Telegram */}
-              <div className="grid grid-cols-2 gap-2.5 text-xs sm:text-sm">
+              <div className="grid grid-cols-2 gap-2.5">
                 {/* WhatsApp Button */}
                 {whatsappChannels.length > 1 ? (
                   <button 
@@ -872,17 +872,18 @@ export default function InteractiveHome({
                 </div>
               )}
 
-              {/* SECONDARY QUICK LINKS: Instagram, Facebook, X, Quizzes */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+              {/* SECONDARY SOCIAL PROFILES: Instagram, Facebook, X (Twitter) */}
+              <div className="grid grid-cols-3 gap-2.5">
                 {/* Instagram Direct Link */}
                 <a 
                   href={ensureHttp(siteSettings?.instagram || "https://www.instagram.com/trappedintoarchitecture/")} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-semibold text-sm text-gray-800 bg-gray-50 hover:bg-white transition"
                   title="Follow on Instagram"
                 >
-                  <InstagramIcon size={15} /> Instagram
+                  <InstagramIcon size={17} />
+                  <span>Instagram</span>
                 </a>
 
                 {/* Facebook Direct Link */}
@@ -890,10 +891,11 @@ export default function InteractiveHome({
                   href={ensureHttp(siteSettings?.facebook || "https://www.facebook.com/trappedintoarchitecture")} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-semibold text-sm text-gray-800 bg-gray-50 hover:bg-white transition"
                   title="Visit Facebook Page"
                 >
-                  <FacebookIcon size={15} /> Facebook
+                  <FacebookIcon size={17} />
+                  <span>Facebook</span>
                 </a>
 
                 {/* X (Twitter) Direct Link */}
@@ -901,20 +903,12 @@ export default function InteractiveHome({
                   href={ensureHttp(siteSettings?.twitter || "https://x.com/trappedin2archz")} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-semibold text-sm text-gray-800 bg-gray-50 hover:bg-white transition"
                   title="Follow on X (Twitter)"
                 >
-                  <TwitterIcon size={15} /> X (Twitter)
+                  <TwitterIcon size={17} />
+                  <span>X (Twitter)</span>
                 </a>
-
-                {/* Quizzes Direct Link */}
-                <Link 
-                  href="/quizzes" 
-                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
-                  title="Practice Architectural Quizzes"
-                >
-                  <span>🧠</span> Quizzes
-                </Link>
               </div>
             </div>
           </div>
