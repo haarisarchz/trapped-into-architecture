@@ -48,7 +48,7 @@ export default function QuizzesHubPage() {
         supabase
           .from("architecture_catalog")
           .select("data")
-          .limit(20)
+          .limit(65)
       ]);
 
       if (qData) setQuizzes(qData);
@@ -282,19 +282,26 @@ export default function QuizzesHubPage() {
                     const isArchitectQuiz = quiz.slug.includes("architect");
 
                     // 4 Collage images showing projects and master architects
-                    const collageImages = isArchitectQuiz
-                      ? [
-                          { img: catalogItems[0]?.architect_photo || catalogItems[0]?.building_photo, label: catalogItems[0]?.architect },
-                          { img: catalogItems[0]?.building_photo, label: catalogItems[0]?.building_name },
-                          { img: catalogItems[1]?.architect_photo || catalogItems[1]?.building_photo, label: catalogItems[1]?.architect },
-                          { img: catalogItems[1]?.building_photo, label: catalogItems[1]?.building_name }
-                        ]
-                      : [
-                          { img: catalogItems[0]?.building_photo, label: catalogItems[0]?.building_name },
-                          { img: catalogItems[1]?.building_photo, label: catalogItems[1]?.building_name },
-                          { img: catalogItems[2]?.building_photo, label: catalogItems[2]?.building_name },
-                          { img: catalogItems[3]?.building_photo, label: catalogItems[3]?.building_name }
-                        ];
+                    let collageImages: { img: string; label: string }[] = [];
+                    if (isArchitectQuiz) {
+                      const masters = catalogItems.filter(c => c?.architect && c?.architect_photo?.includes("ik.imagekit.io"));
+                      const works = catalogItems.filter(c => c?.building_name && c?.building_photo?.includes("ik.imagekit.io"));
+                      
+                      collageImages = [
+                        { img: masters[0]?.architect_photo || "https://ik.imagekit.io/ti2a/quizzes/frank-lloyd-wright-architect.jpg", label: masters[0]?.architect || "Frank Lloyd Wright" },
+                        { img: works[0]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/fallingwater-kaufmann-residence-building.jpg", label: works[0]?.building_name || "Fallingwater (Kaufmann Residence)" },
+                        { img: masters[1]?.architect_photo || "https://ik.imagekit.io/ti2a/quizzes/zaha-hadid-architect.jpg", label: masters[1]?.architect || "Zaha Hadid" },
+                        { img: works[1]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/heydar-aliyev-center-building.jpg", label: works[1]?.building_name || "Heydar Aliyev Center" }
+                      ];
+                    } else {
+                      const works = catalogItems.filter(c => c?.building_name && c?.building_photo?.includes("ik.imagekit.io"));
+                      collageImages = [
+                        { img: works[0]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/fallingwater-kaufmann-residence-building.jpg", label: works[0]?.building_name || "Fallingwater" },
+                        { img: works[1]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/sydney-opera-house-building.jpg", label: works[1]?.building_name || "Sydney Opera House" },
+                        { img: works[2]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/salk-institute-for-biological-studies-building.jpg", label: works[2]?.building_name || "Salk Institute" },
+                        { img: works[3]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/cathedral-of-bras-lia-catedral-metropolitana-building.jpg", label: works[3]?.building_name || "Cathedral of Brasília" }
+                      ];
+                    }
 
                     return (
                       <Link 
@@ -311,6 +318,9 @@ export default function QuizzesHubPage() {
                                   src={c.img} 
                                   alt={c.label || "Architecture preview"} 
                                   className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
                                 />
                               ) : (
                                 <div className="w-full h-full bg-gray-800 flex items-center justify-center text-xs text-white/40">

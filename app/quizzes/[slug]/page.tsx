@@ -375,7 +375,8 @@ export default function QuizPlayPage() {
                 <img referrerPolicy="no-referrer" crossOrigin="anonymous" 
                   src={quiz.cover_image} 
                   alt={quiz.title} 
-                  className="w-full h-44 object-cover rounded-2xl mb-6 shadow-xs border border-gray-100" 
+                  className="w-full h-44 object-cover rounded-2xl mb-6 shadow-xs border border-gray-100"
+                  onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
                 />
               )}
 
