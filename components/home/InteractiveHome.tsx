@@ -672,10 +672,10 @@ export default function InteractiveHome({
 
       {/* 8. SUGGESTION BOX & MULTI-CHANNEL COMMUNITY */}
       <section className="py-8 md:py-10 px-4 sm:px-6 lg:px-12 bg-gray-50 w-full">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           
           {/* Suggestion Box Form */}
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col justify-between shadow-2xs">
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col shadow-2xs">
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 text-xs font-semibold mb-2">
                 💡 COMMUNITY VOICE
@@ -709,7 +709,7 @@ export default function InteractiveHome({
                   <span>{suggestionText.length}/1000</span>
                 </div>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pt-1">
                 <span className="text-xs text-gray-400">
                   {suggestionStatus === "success" ? (
                     <span className="text-emerald-600 font-semibold">✓ Suggestion received! Thank you.</span>
@@ -733,7 +733,7 @@ export default function InteractiveHome({
           </div>
 
           {/* Followers & Community Channels (WhatsApp & Telegram Ecosystem) */}
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col justify-between shadow-2xs">
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col shadow-2xs">
             <div>
               <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1">Follow &amp; Connect</h3>
               <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-4">
@@ -742,35 +742,37 @@ export default function InteractiveHome({
             </div>
 
             <div className="space-y-3">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
+              {/* PRIMARY TOP ROW: WhatsApp & Telegram */}
+              <div className="grid grid-cols-2 gap-2.5 text-xs sm:text-sm">
                 {/* WhatsApp Button */}
                 {whatsappChannels.length > 1 ? (
                   <button 
                     type="button"
                     onClick={() => setExpandedSocial(expandedSocial === "whatsapp" ? null : "whatsapp")}
-                    className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border transition cursor-pointer font-medium ${
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition cursor-pointer font-semibold ${
                       expandedSocial === "whatsapp" 
-                        ? "bg-emerald-50 text-emerald-800 border-emerald-500 font-bold shadow-2xs" 
-                        : "border-gray-200 hover:border-black text-gray-700 bg-gray-50 hover:bg-white"
+                        ? "bg-emerald-50 text-emerald-800 border-emerald-500 shadow-2xs" 
+                        : "border-gray-200 hover:border-black text-gray-800 bg-gray-50 hover:bg-white"
                     }`}
                     title="View all available WhatsApp groups & channels"
                   >
-                    <MessageCircle size={17} className={expandedSocial === "whatsapp" ? "text-emerald-600" : ""} />
+                    <MessageCircle size={18} className="text-emerald-600" />
                     <span>WhatsApp</span>
                     <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-bold">
                       {whatsappChannels.length}
                     </span>
-                    {expandedSocial === "whatsapp" ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    {expandedSocial === "whatsapp" ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                 ) : (
                   <a 
                     href={ensureHttp(whatsappChannels[0]?.url || siteSettings?.whatsapp_channel_url || "https://whatsapp.com/channel/0029Vaz1p0kCRs1uBTCWpJ2X")} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-semibold text-gray-800 bg-gray-50 hover:bg-white transition"
                     title="Join WhatsApp Channel"
                   >
-                    <MessageCircle size={17} /> WhatsApp
+                    <MessageCircle size={18} className="text-emerald-600" />
+                    <span>WhatsApp</span>
                   </a>
                 )}
 
@@ -779,78 +781,37 @@ export default function InteractiveHome({
                   <button 
                     type="button"
                     onClick={() => setExpandedSocial(expandedSocial === "telegram" ? null : "telegram")}
-                    className={`flex items-center justify-center gap-1.5 p-3 rounded-xl border transition cursor-pointer font-medium ${
+                    className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition cursor-pointer font-semibold ${
                       expandedSocial === "telegram" 
-                        ? "bg-sky-50 text-[#1d8bc0] border-sky-400 font-bold shadow-2xs" 
-                        : "border-gray-200 hover:border-black text-gray-700 bg-gray-50 hover:bg-white"
+                        ? "bg-sky-50 text-[#1d8bc0] border-sky-400 shadow-2xs" 
+                        : "border-gray-200 hover:border-black text-gray-800 bg-gray-50 hover:bg-white"
                     }`}
                     title="View regional Telegram channels & groups"
                   >
-                    <Send size={17} className={expandedSocial === "telegram" ? "text-[#229ED9]" : ""} />
+                    <Send size={18} className="text-[#229ED9]" />
                     <span>Telegram</span>
                     <span className="text-[10px] bg-sky-100 text-[#1d8bc0] px-1.5 py-0.2 rounded-full font-bold">
                       {telegramChannels.length}
                     </span>
-                    {expandedSocial === "telegram" ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    {expandedSocial === "telegram" ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                 ) : (
                   <a 
                     href={ensureHttp(telegramChannels[0]?.url || siteSettings?.website_url || "https://t.me/ArchitectJobsTi2A")} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-semibold text-gray-800 bg-gray-50 hover:bg-white transition"
                     title="Join Telegram Channel"
                   >
-                    <Send size={17} /> Telegram
+                    <Send size={18} className="text-[#229ED9]" />
+                    <span>Telegram</span>
                   </a>
                 )}
-
-                {/* Instagram Direct Link */}
-                <a 
-                  href={ensureHttp(siteSettings?.instagram || "https://www.instagram.com/trappedintoarchitecture/")} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                  title="Follow on Instagram"
-                >
-                  <InstagramIcon size={17} /> Instagram
-                </a>
-
-                {/* Facebook Direct Link */}
-                <a 
-                  href={ensureHttp(siteSettings?.facebook || "https://www.facebook.com/trappedintoarchitecture")} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                  title="Visit Facebook Page"
-                >
-                  <FacebookIcon size={17} /> Facebook
-                </a>
-
-                {/* X (Twitter) Direct Link */}
-                <a 
-                  href={ensureHttp(siteSettings?.twitter || "https://x.com/trappedin2archz")} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                  title="Follow on X (Twitter)"
-                >
-                  <TwitterIcon size={17} /> X (Twitter)
-                </a>
-
-                {/* Quizzes Direct Link */}
-                <Link 
-                  href="/quizzes" 
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition"
-                  title="Practice Architectural Quizzes"
-                >
-                  <span>🧠</span> Quizzes
-                </Link>
               </div>
 
-              {/* EXPANDED CHANNELS LIST (Shows available groups/channels below) */}
+              {/* EXPANDED CHANNELS LIST (Revealed immediately below WhatsApp & Telegram) */}
               {expandedSocial && (
-                <div className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in duration-200">
+                <div className="pt-2 pb-1 border-t border-b border-gray-100 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between mb-2 px-1">
                     <div className="flex items-center gap-1.5">
                       {expandedSocial === "whatsapp" ? (
@@ -910,6 +871,51 @@ export default function InteractiveHome({
                   </div>
                 </div>
               )}
+
+              {/* SECONDARY QUICK LINKS: Instagram, Facebook, X, Quizzes */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                {/* Instagram Direct Link */}
+                <a 
+                  href={ensureHttp(siteSettings?.instagram || "https://www.instagram.com/trappedintoarchitecture/")} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
+                  title="Follow on Instagram"
+                >
+                  <InstagramIcon size={15} /> Instagram
+                </a>
+
+                {/* Facebook Direct Link */}
+                <a 
+                  href={ensureHttp(siteSettings?.facebook || "https://www.facebook.com/trappedintoarchitecture")} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
+                  title="Visit Facebook Page"
+                >
+                  <FacebookIcon size={15} /> Facebook
+                </a>
+
+                {/* X (Twitter) Direct Link */}
+                <a 
+                  href={ensureHttp(siteSettings?.twitter || "https://x.com/trappedin2archz")} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
+                  title="Follow on X (Twitter)"
+                >
+                  <TwitterIcon size={15} /> X (Twitter)
+                </a>
+
+                {/* Quizzes Direct Link */}
+                <Link 
+                  href="/quizzes" 
+                  className="flex items-center justify-center gap-1.5 p-2.5 rounded-xl border border-gray-200 hover:border-black font-medium text-gray-700 bg-gray-50 hover:bg-white transition text-center"
+                  title="Practice Architectural Quizzes"
+                >
+                  <span>🧠</span> Quizzes
+                </Link>
+              </div>
             </div>
           </div>
 
