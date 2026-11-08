@@ -239,7 +239,17 @@ export default function AdminMailsPage() {
     );
   });
 
-  const inboxRecords = allRecords.filter((item) => !sentRecords.includes(item));
+  const inboxRecords = allRecords.filter((item) => {
+    if (sentRecords.includes(item)) return false;
+    const subj = (item.subject || "").trim();
+    // Exclude public visitor contact queries & suggestions (they belong to /admin/contact)
+    const isVisitorInquiry =
+      subj === "General Inquiry" ||
+      subj.startsWith("[Suggestion]") ||
+      subj.toLowerCase().includes("suggestion") ||
+      subj === "System Email Verification Test";
+    return !isVisitorInquiry;
+  });
 
   // Filter sent records
   const filteredSent = sentRecords.filter((item) => {
@@ -363,7 +373,7 @@ export default function AdminMailsPage() {
               }`}
             >
               <Mail size={13} />
-              <span>Inbound Replies</span>
+              <span>System & Inbound Alerts</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${activeTab === "inbox" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"}`}>
                 {inboxRecords.length}
               </span>

@@ -494,14 +494,23 @@ export default function ContactSettingsPage() {
     const isSystemEmail =
       subj === "NOTIFIED_COMPANY_JOB_POSTING" ||
       subj === "COMPANY_JOB_EMAIL_SENT" ||
+      subj === "COMPANY_JOB_EMAIL_PENDING" ||
       subj === "USER_VERIFICATION_SENT" ||
       subj === "USER_VERIFIED" ||
       subj === "ADMIN_DIRECT" ||
+      subj === "NEW_USER_REGISTERED" ||
+      subj.startsWith("USER_") ||
+      subj.startsWith("COMPANY_") ||
+      subj.startsWith("NOTIFIED_") ||
+      subj.startsWith("NEW_") ||
       subj.startsWith("[Live on Ti2A]") ||
-      msg.includes("verification code dispatched") ||
-      msg.includes("outreach notification sent") ||
+      subj.startsWith("[Ti2A Alert]") ||
+      msg.includes("verification code") ||
+      msg.includes("outreach notification") ||
       msg.includes("claim your studio") ||
-      msg.includes("dispatched email to");
+      msg.includes("dispatched email to") ||
+      msg.includes("new user registered:") ||
+      msg.includes("job posted — no company email");
 
     return !isSystemEmail;
   });
