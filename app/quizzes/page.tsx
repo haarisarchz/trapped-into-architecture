@@ -185,8 +185,8 @@ export default function QuizzesHubPage() {
 
                   {/* Sample Photo */}
                   <div className="relative rounded-2xl overflow-hidden h-40 bg-gray-800 mb-4 border border-white/10">
-                    <img 
-                      src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Fallingwater_Wright_2007.jpg/1280px-Fallingwater_Wright_2007.jpg" 
+                    <img referrerPolicy="no-referrer" crossOrigin="anonymous" 
+                      src="https://ik.imagekit.io/ti2a/quizzes/fallingwater-kaufmann-residence-building.jpg" 
                       alt="Sample Project" 
                       className="w-full h-full object-cover"
                     />
@@ -307,7 +307,7 @@ export default function QuizzesHubPage() {
                           {collageImages.map((c, cIdx) => (
                             <div key={cIdx} className="relative overflow-hidden group-hover:opacity-95 transition bg-gray-900">
                               {c.img ? (
-                                <img 
+                                <img referrerPolicy="no-referrer" crossOrigin="anonymous" 
                                   src={c.img} 
                                   alt={c.label || "Architecture preview"} 
                                   className="w-full h-full object-cover group-hover:scale-110 transition duration-500"

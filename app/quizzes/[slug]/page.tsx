@@ -372,7 +372,7 @@ export default function QuizPlayPage() {
               )}
 
               {quiz.cover_image && (
-                <img 
+                <img referrerPolicy="no-referrer" crossOrigin="anonymous" 
                   src={quiz.cover_image} 
                   alt={quiz.title} 
                   className="w-full h-44 object-cover rounded-2xl mb-6 shadow-xs border border-gray-100" 
@@ -691,7 +691,7 @@ export default function QuizPlayPage() {
                 {/* Question Image Clue */}
                 {currentQ.media_url && (
                   <div className="mb-4 rounded-2xl overflow-hidden max-h-64 bg-gray-900 border border-gray-200 flex items-center justify-center shadow-xs">
-                    <img 
+                    <img referrerPolicy="no-referrer" crossOrigin="anonymous" 
                       src={currentQ.media_url} 
                       alt="Question photo" 
                       className="w-full h-full object-contain max-h-64"
