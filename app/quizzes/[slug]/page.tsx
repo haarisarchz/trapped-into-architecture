@@ -74,6 +74,7 @@ export default function QuizPlayPage() {
   const [loading, setLoading] = useState(true);
 
   // Sidebar: Leaderboard & other quizzes
+  const [leaderboardScope, setLeaderboardScope] = useState<"quiz" | "overall">("quiz");
   const [leaderboardTab, setLeaderboardTab] = useState<"weekly" | "monthly" | "all">("weekly");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
@@ -123,7 +124,7 @@ export default function QuizPlayPage() {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [leaderboardTab]);
+  }, [leaderboardTab, leaderboardScope, quiz?.id]);
 
   const fetchQuizData = async () => {
     try {
@@ -176,9 +177,13 @@ export default function QuizPlayPage() {
     try {
       let query = supabase
         .from("quiz_scores")
-        .select("display_name, points, score, total_questions, difficulty, created_at, user_id")
+        .select("display_name, points, score, total_questions, difficulty, created_at, user_id, quiz_id")
         .order("points", { ascending: false })
         .limit(10);
+
+      if (leaderboardScope === "quiz" && quiz?.id) {
+        query = query.eq("quiz_id", quiz.id);
+      }
 
       const now = new Date();
       if (leaderboardTab === "weekly") {
@@ -280,20 +285,12 @@ export default function QuizPlayPage() {
     return false;
   };
 
-  const calculatePointsForQuestion = (isCorrect: boolean, timeRemaining: number) => {
+  const calculatePointsForQuestion = (isCorrect: boolean, qDiff: Difficulty) => {
     if (!isCorrect) return 0;
-
-    let base = difficulty === "easy" ? 10 : difficulty === "medium" ? 20 : 30;
-    
-    let speedBonus = 0;
-    if (difficulty === "medium" && timeRemaining > 15) speedBonus = 5;
-    else if (difficulty === "hard" && timeRemaining > 7) speedBonus = 10;
-
-    let multiplier = 1;
-    if (streak >= 4) multiplier = 1.5;
-    else if (streak >= 2) multiplier = 1.2;
-
-    return Math.round((base + speedBonus) * multiplier);
+    if (qDiff === "easy") return 1;
+    if (qDiff === "medium") return 2;
+    if (qDiff === "hard") return 5;
+    return 1;
   };
 
   const handleSelectAnswer = (selected: string) => {
@@ -306,7 +303,8 @@ export default function QuizPlayPage() {
     setStreak(newStreak);
     if (newStreak > maxStreak) setMaxStreak(newStreak);
 
-    const pts = calculatePointsForQuestion(correct, timerSeconds);
+    const currentQuestionDiff = (getQuestionDifficulty(currentQ.correct_answer || currentQ.question_text || "") || difficulty) as Difficulty;
+    const pts = calculatePointsForQuestion(correct, currentQuestionDiff);
     setTotalPoints(prev => prev + pts);
 
     setUserAnswers(prev => ({ ...prev, [currentIndex]: selected }));
@@ -340,12 +338,6 @@ export default function QuizPlayPage() {
       if (isAnswerCorrect(q, userAnswers[idx])) correctCount++;
     });
 
-    let finalXP = totalPoints;
-    if (correctCount === questions.length) {
-      finalXP += 50;
-      setTotalPoints(finalXP);
-    }
-
     try {
       const displayName = currentUser?.name || currentUser?.username || `Architect_#${guestId.slice(-4)}`;
       await supabase.from("quiz_scores").insert([{
@@ -355,7 +347,7 @@ export default function QuizPlayPage() {
         display_name: displayName,
         score: correctCount,
         total_questions: questions.length,
-        points: finalXP,
+        points: totalPoints,
         difficulty,
         time_taken_seconds: totalTimeElapsed
       }]);
@@ -380,7 +372,7 @@ export default function QuizPlayPage() {
   const getWhatsAppShareLink = () => {
     const url = getShareUrl();
     const correctCount = questions.filter((q, idx) => isAnswerCorrect(q, userAnswers[idx])).length;
-    const text = `🏛️ I scored *${totalPoints} XP* (${correctCount}/${questions.length} correct in ${formatTime(totalTimeElapsed)}) in the *${quiz?.title || "Architecture Quiz"}* on ${difficulty.toUpperCase()} mode! ⚡\n\nCan you beat my score? Accept my challenge here:\n${url}`;
+    const text = `🏛️ I scored *${totalPoints} Points* (${correctCount}/${questions.length} correct in ${formatTime(totalTimeElapsed)}) in the *${quiz?.title || "Architecture Quiz"}* on ${difficulty.toUpperCase()} mode! ⚡\n\nCan you beat my score? Accept my challenge here:\n${url}`;
     return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
   };
 
@@ -453,10 +445,10 @@ export default function QuizPlayPage() {
                 <span>🏢</span> Design Firms
               </Link>
               <Link 
-                href="/catalog" 
+                href="/internships" 
                 className="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded-full border border-gray-200 shadow-2xs transition flex items-center gap-1.5"
               >
-                <span>🏛️</span> Catalog
+                <span>🎓</span> Internships
               </Link>
               <Link 
                 href="/practice-exams" 
@@ -486,7 +478,7 @@ export default function QuizPlayPage() {
                         </p>
                         <p className="text-sm font-bold text-gray-900">
                           <span className="text-blue-600 underline font-black">{challengerName}</span> scored{" "}
-                          <span className="font-mono text-amber-700 font-extrabold">{challengerScore} XP</span> on {challengerDiff || "medium"} mode!
+                          <span className="font-mono text-amber-700 font-extrabold">{challengerScore} Points</span> on {challengerDiff || "medium"} mode!
                         </p>
                         <p className="text-xs text-gray-500">Can you outscore them and win this challenge?</p>
                       </div>
@@ -530,7 +522,7 @@ export default function QuizPlayPage() {
                           🟢 Easy Mode
                         </p>
                         <p className="text-[11px] font-bold text-gray-800 mt-1">Famous & Viral Landmarks</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Recognizable icons from reels, social media & foundational history (Sydney Opera, Fallingwater, Louvre Pyramid). 1x XP.</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Recognizable icons from reels, social media & foundational history (Sydney Opera, Fallingwater, Louvre Pyramid). 1 Point per question.</p>
                       </button>
 
                       <button
@@ -545,7 +537,7 @@ export default function QuizPlayPage() {
                           🟡 Medium Mode
                         </p>
                         <p className="text-[11px] font-bold text-gray-800 mt-1">Syllabus Classics & Milestones</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Core architecture degree syllabus icons (Salk Institute, Capitol Complex, Church of the Light). 25s rapid timer. 2x XP.</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Core architecture degree syllabus icons (Salk Institute, Capitol Complex, Church of the Light). 25s timer. 2 Points per question.</p>
                       </button>
 
                       <button
@@ -560,7 +552,7 @@ export default function QuizPlayPage() {
                           🔴 Hard Mode
                         </p>
                         <p className="text-[11px] font-bold text-gray-800 mt-1">Advanced Tectonic Masterpieces</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Challenging structural feats, monographs & niche Pritzker works (Braga Quarry, UTEC Lima, Ningbo). 12s blitz. 3x XP.</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Challenging structural feats, monographs & niche Pritzker works (Braga Quarry, UTEC Lima, Ningbo). 12s blitz. 5 Points per question.</p>
                       </button>
                     </div>
                   </div>
@@ -650,8 +642,8 @@ export default function QuizPlayPage() {
                   {/* Score Display */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-6">
                     <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total XP</p>
-                      <p className="text-2xl font-black text-blue-600 mt-1">{totalPoints}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total Points</p>
+                      <p className="text-2xl font-black text-blue-600 mt-1">{totalPoints} PTS</p>
                     </div>
                     <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Score</p>
@@ -677,7 +669,7 @@ export default function QuizPlayPage() {
                           <Sparkles size={14} className="text-amber-500" /> Playing as Anonymous Guest
                         </p>
                         <p className="text-[11px] text-blue-700 mt-0.5">
-                          Create a free account or log in now to claim your <strong>{totalPoints} XP</strong> to your official profile and lock your rank on the leaderboard!
+                          Create a free account or log in now to claim your <strong>{totalPoints} Points</strong> to your official profile and lock your rank on the leaderboard!
                         </p>
                       </div>
                       <button 
@@ -787,7 +779,7 @@ export default function QuizPlayPage() {
                         )}
 
                         <div className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
-                          {totalPoints} XP
+                          {totalPoints} PTS
                         </div>
                       </div>
                     </div>
@@ -898,7 +890,7 @@ export default function QuizPlayPage() {
                       }`}>
                         <p className="font-bold flex items-center gap-1.5 mb-1">
                           {isAnswerCorrect(currentQ, userAnswers[currentIndex]) ? (
-                            <>🎉 Correct!</>
+                            <>🎉 Correct! (+{qDiff === "easy" ? 1 : qDiff === "medium" ? 2 : 5} {qDiff === "easy" ? "Point" : "Points"})</>
                           ) : (
                             <>❌ Incorrect. The answer is: <strong>{currentQ.correct_answer}</strong></>
                           )}
@@ -939,7 +931,7 @@ export default function QuizPlayPage() {
                   <span className="text-xs text-gray-400 font-medium">Careers & Portals</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                   <Link 
                     href="/jobs" 
                     className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
@@ -952,11 +944,31 @@ export default function QuizPlayPage() {
                         Architecture Jobs
                       </h4>
                       <p className="text-[11px] text-gray-500 mt-1 leading-normal">
-                        Browse active openings for Junior, Senior & Intern Architects across India.
+                        Browse active openings for Junior, Senior & Project Architects across India.
                       </p>
                     </div>
                     <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
                       Explore Jobs →
+                    </span>
+                  </Link>
+
+                  <Link 
+                    href="/internships" 
+                    className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold mb-2">
+                        🎓
+                      </div>
+                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-emerald-600 transition">
+                        Architecture Internships
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Find verified architecture student internships, traineeships & practical training.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
+                      View Internships →
                     </span>
                   </Link>
 
@@ -981,22 +993,22 @@ export default function QuizPlayPage() {
                   </Link>
 
                   <Link 
-                    href="/catalog" 
+                    href="/practice-exams" 
                     className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
                   >
                     <div>
-                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold mb-2">
-                        🏛️
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold mb-2">
+                        📝
                       </div>
-                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-emerald-600 transition">
-                        Architecture Catalog
+                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-amber-600 transition">
+                        Practice Exams & More
                       </h4>
                       <p className="text-[11px] text-gray-500 mt-1 leading-normal">
-                        45+ iconic buildings with project details, architectural styles, and trivia.
+                        GATE Architecture mock tests, study materials, and many new portals to come.
                       </p>
                     </div>
                     <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
-                      Browse Catalog →
+                      Start Prep →
                     </span>
                   </Link>
                 </div>
@@ -1050,15 +1062,35 @@ export default function QuizPlayPage() {
                 </div>
               )}
 
-              {/* LIVE XP LEADERBOARD */}
+              {/* LIVE POINTS LEADERBOARD */}
               <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                     <Trophy size={18} className="text-amber-500" /> Leaderboard
                   </h3>
                   <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
-                    Live XP
+                    Live Points
                   </span>
+                </div>
+
+                {/* Scope selector: This Quiz vs Overall Quizzes */}
+                <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-xl mb-3">
+                  <button
+                    onClick={() => setLeaderboardScope("quiz")}
+                    className={`py-1.5 text-xs font-bold rounded-lg transition ${
+                      leaderboardScope === "quiz" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    🎯 This Quiz
+                  </button>
+                  <button
+                    onClick={() => setLeaderboardScope("overall")}
+                    className={`py-1.5 text-xs font-bold rounded-lg transition ${
+                      leaderboardScope === "overall" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    🌐 Overall Quizzes
+                  </button>
                 </div>
 
                 {/* Tabs */}
@@ -1123,7 +1155,7 @@ export default function QuizPlayPage() {
                           </div>
                         </div>
                         <span className="text-xs font-mono font-extrabold text-blue-600 shrink-0">
-                          {entry.points} XP
+                          {entry.points} PTS
                         </span>
                       </div>
                     ))}

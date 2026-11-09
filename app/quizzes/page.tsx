@@ -19,6 +19,7 @@ export default function QuizzesHubPage() {
 
   // Leaderboard state
   const [leaderboardTab, setLeaderboardTab] = useState<"weekly" | "monthly" | "all">("weekly");
+  const [leaderboardQuizFilter, setLeaderboardQuizFilter] = useState<string>("all");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
 
@@ -33,7 +34,7 @@ export default function QuizzesHubPage() {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [leaderboardTab]);
+  }, [leaderboardTab, leaderboardQuizFilter]);
 
   const [catalogItems, setCatalogItems] = useState<any[]>([]);
 
@@ -65,9 +66,13 @@ export default function QuizzesHubPage() {
     try {
       let query = supabase
         .from("quiz_scores")
-        .select("display_name, points, score, total_questions, difficulty, created_at, user_id")
+        .select("display_name, points, score, total_questions, difficulty, created_at, user_id, quiz_id")
         .order("points", { ascending: false })
         .limit(10);
+
+      if (leaderboardQuizFilter !== "all") {
+        query = query.eq("quiz_id", leaderboardQuizFilter);
+      }
 
       const now = new Date();
       if (leaderboardTab === "weekly") {
@@ -140,7 +145,7 @@ export default function QuizzesHubPage() {
                     <span className="text-base">⚡</span> 12s Rapid Fire Mode
                   </div>
                   <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
-                    <span className="text-base">🏆</span> Weekly Leaderboard XP
+                    <span className="text-base">🏆</span> Weekly Leaderboard Points
                   </div>
                 </div>
 
@@ -392,12 +397,12 @@ export default function QuizzesHubPage() {
                       Explore Trapped Into Architecture
                     </h3>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Beyond quizzes — discover architecture jobs, firm directories, and curated catalogs.
+                      Beyond quizzes — discover architecture jobs, internship openings, and top design studios.
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-4">
                   <Link 
                     href="/jobs" 
                     className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
@@ -410,11 +415,31 @@ export default function QuizzesHubPage() {
                         Architecture Jobs
                       </h4>
                       <p className="text-[11px] text-gray-500 mt-1 leading-normal">
-                        Browse active openings for Junior, Senior & Intern Architects across India.
+                        Browse active openings for Junior, Senior & Project Architects across India.
                       </p>
                     </div>
                     <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
                       Explore Jobs →
+                    </span>
+                  </Link>
+
+                  <Link 
+                    href="/internships" 
+                    className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold mb-2">
+                        🎓
+                      </div>
+                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-emerald-600 transition">
+                        Architecture Internships
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Find verified architecture student internships, traineeships & practical training.
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
+                      View Internships →
                     </span>
                   </Link>
 
@@ -439,22 +464,22 @@ export default function QuizzesHubPage() {
                   </Link>
 
                   <Link 
-                    href="/catalog" 
+                    href="/practice-exams" 
                     className="p-4 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50/70 transition group flex flex-col justify-between"
                   >
                     <div>
-                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold mb-2">
-                        🏛️
+                      <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold mb-2">
+                        📝
                       </div>
-                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-emerald-600 transition">
-                        Architecture Catalog
+                      <h4 className="text-xs font-bold text-gray-900 group-hover:text-amber-600 transition">
+                        Practice Exams & More
                       </h4>
                       <p className="text-[11px] text-gray-500 mt-1 leading-normal">
-                        65+ iconic buildings with project details, architectural styles, and trivia.
+                        GATE Architecture mock tests, study materials, and many new portals to come.
                       </p>
                     </div>
                     <span className="text-[11px] font-bold text-black mt-3 flex items-center gap-1 group-hover:translate-x-1 transition">
-                      Browse Catalog →
+                      Start Prep →
                     </span>
                   </Link>
                 </div>
@@ -470,8 +495,24 @@ export default function QuizzesHubPage() {
                     <Trophy size={18} className="text-amber-500" /> Leaderboard
                   </h3>
                   <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
-                    Live XP
+                    Live Points
                   </span>
+                </div>
+
+                {/* Quiz Selector: Overall Quizzes vs Particular Quiz */}
+                <div className="mb-3">
+                  <select
+                    value={leaderboardQuizFilter}
+                    onChange={(e) => setLeaderboardQuizFilter(e.target.value)}
+                    className="w-full text-xs font-bold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black transition"
+                  >
+                    <option value="all">🌐 Overall Quizzes (All Challenges)</option>
+                    {quizzes.map(q => (
+                      <option key={q.id} value={q.id}>
+                        🎯 {q.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Tabs: Weekly / Monthly / All-Time */}
@@ -557,7 +598,7 @@ export default function QuizzesHubPage() {
                               <span className="text-xs font-black text-blue-600 font-mono">
                                 {shouldBlur ? "•••" : (item.points || 0)}
                               </span>
-                              <span className="text-[10px] text-gray-400 block font-bold">XP</span>
+                              <span className="text-[10px] text-gray-400 block font-bold">PTS</span>
                             </div>
                           </div>
                         );
@@ -595,7 +636,7 @@ export default function QuizzesHubPage() {
                 <div className="mt-6 pt-4 border-t border-gray-100 text-center">
                   <p className="text-[11px] text-gray-500 leading-normal">
                     {currentUser 
-                      ? "Play quizzes in Hard Mode to maximize your XP and climb into the Top 3!"
+                      ? "Play quizzes in Hard Mode to maximize your points (5 pts/question) and climb into the Top 3!"
                       : "Scores are updated live. Register to compete for the #1 spot."}
                   </p>
                 </div>
