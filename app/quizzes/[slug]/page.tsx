@@ -10,6 +10,10 @@ import {
   RotateCcw, Sparkles, Award, ShieldAlert, Flame, Zap,
   ChevronRight, Building2, Briefcase, BookOpen, GraduationCap
 } from "lucide-react";
+import { 
+  getQuestionsForGameDifficulty, 
+  getQuestionDifficulty 
+} from "@/lib/quizDifficulty";
 
 interface Question {
   id: string;
@@ -234,8 +238,8 @@ export default function QuizPlayPage() {
 
   const handleStartGame = () => {
     const pool = allQuestionsPool.length > 0 ? allQuestionsPool : questions;
-    const targetCount = questionCountChoice === 999 ? pool.length : Math.min(questionCountChoice, pool.length);
-    const sampled = shuffleArray(pool).slice(0, targetCount).map(q => ({
+    const targeted = getQuestionsForGameDifficulty(pool, difficulty, questionCountChoice);
+    const sampled = shuffleArray(targeted).map(q => ({
       ...q,
       options: shuffleArray(q.options || [])
     }));
@@ -413,6 +417,7 @@ export default function QuizPlayPage() {
   }
 
   const currentQ = questions[currentIndex];
+  const qDiff = currentQ ? getQuestionDifficulty(currentQ.correct_answer || currentQ.question_text || "") : "medium";
   const correctCount = questions.filter((q, idx) => isAnswerCorrect(q, userAnswers[idx])).length;
 
   return (
@@ -517,42 +522,45 @@ export default function QuizPlayPage() {
                         onClick={() => setDifficulty("easy")}
                         className={`p-3.5 rounded-2xl border text-left transition ${
                           difficulty === "easy" 
-                            ? "bg-emerald-50 border-emerald-500 shadow-xs" 
+                            ? "bg-emerald-50 border-emerald-500 shadow-xs ring-1 ring-emerald-500" 
                             : "bg-white border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                           🟢 Easy Mode
                         </p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">Live timer. Relaxed pace. 1x XP.</p>
+                        <p className="text-[11px] font-bold text-gray-800 mt-1">Famous & Viral Landmarks</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Recognizable icons from reels, social media & foundational history (Sydney Opera, Fallingwater, Louvre Pyramid). 1x XP.</p>
                       </button>
 
                       <button
                         onClick={() => setDifficulty("medium")}
                         className={`p-3.5 rounded-2xl border text-left transition ${
                           difficulty === "medium" 
-                            ? "bg-amber-50 border-amber-500 shadow-xs" 
+                            ? "bg-amber-50 border-amber-500 shadow-xs ring-1 ring-amber-500" 
                             : "bg-white border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
                           🟡 Medium Mode
                         </p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">25s countdown. Speed bonuses. 2x XP.</p>
+                        <p className="text-[11px] font-bold text-gray-800 mt-1">Syllabus Classics & Milestones</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Core architecture degree syllabus icons (Salk Institute, Capitol Complex, Church of the Light). 25s rapid timer. 2x XP.</p>
                       </button>
 
                       <button
                         onClick={() => setDifficulty("hard")}
                         className={`p-3.5 rounded-2xl border text-left transition ${
                           difficulty === "hard" 
-                            ? "bg-red-50 border-red-500 shadow-xs" 
+                            ? "bg-red-50 border-red-500 shadow-xs ring-1 ring-red-500" 
                             : "bg-white border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <p className="text-xs font-bold text-red-800 flex items-center gap-1.5">
                           🔴 Hard Mode
                         </p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">12s rapid-fire timer. 3x XP.</p>
+                        <p className="text-[11px] font-bold text-gray-800 mt-1">Advanced Tectonic Masterpieces</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Challenging structural feats, monographs & niche Pritzker works (Braga Quarry, UTEC Lima, Ningbo). 12s blitz. 3x XP.</p>
                       </button>
                     </div>
                   </div>
@@ -731,10 +739,23 @@ export default function QuizPlayPage() {
                   <div>
                     {/* QUESTION HEADER WITH LIVE STOPWATCH & BONUS COUNTDOWN */}
                     <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100 flex-wrap">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs font-bold text-gray-500">
                           Question {currentIndex + 1} of {questions.length}
                         </span>
+                        {qDiff === "easy" ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 flex items-center gap-1 border border-emerald-200">
+                            🟢 Famous Landmark
+                          </span>
+                        ) : qDiff === "hard" ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 flex items-center gap-1 border border-red-200">
+                            🔴 Advanced Tectonic
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 flex items-center gap-1 border border-amber-200">
+                            🟡 Syllabus Classic
+                          </span>
+                        )}
                         {streak >= 2 && (
                           <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-extrabold flex items-center gap-1">
                             <Flame size={12} className="text-amber-500" /> {streak} Streak!
