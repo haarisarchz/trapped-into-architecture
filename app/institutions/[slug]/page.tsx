@@ -146,7 +146,15 @@ export default async function InstitutionProfilePage({
     .eq("institution_id", inst.id)
     .order("academic_year", { ascending: false });
 
-  const records = recordsData || [];
+  const records = (recordsData || []).sort((a: any, b: any) => {
+    const yrCmp = (b.academic_year || "").localeCompare(a.academic_year || "");
+    if (yrCmp !== 0) return yrCmp;
+    const isABArch = (a.course_name || "B.Arch") === "B.Arch";
+    const isBBArch = (b.course_name || "B.Arch") === "B.Arch";
+    if (isABArch && !isBBArch) return -1;
+    if (!isABArch && isBBArch) return 1;
+    return (a.course_name || "").localeCompare(b.course_name || "");
+  });
   const latestRecord = records[0] || null;
 
   // 3. Fetch NIRF rankings if available
@@ -392,7 +400,11 @@ export default async function InstitutionProfilePage({
                     </thead>
                     <tbody className="divide-y divide-gray-100 font-medium">
                       {records.map((rec: any, idx: number) => {
-                        const prevRec = records[idx + 1];
+                        // Compare trend with previous record for the SAME course
+                        const prevRec = records
+                          .slice(idx + 1)
+                          .find((r: any) => (r.course_name || "B.Arch") === (rec.course_name || "B.Arch"));
+
                         let trendIcon = <Minus size={13} className="text-gray-300" />;
                         let trendText = "Unchanged";
 
@@ -407,6 +419,8 @@ export default async function InstitutionProfilePage({
                         }
 
                         const isLatest = idx === 0;
+                        const isPG = rec.course_name && (rec.course_name.startsWith("M.Arch") || rec.course_name.includes("Master"));
+                        const isDiploma = rec.course_name && rec.course_name.includes("Diploma");
 
                         return (
                           <tr
@@ -423,8 +437,23 @@ export default async function InstitutionProfilePage({
                                 </span>
                               )}
                             </td>
-                            <td className="py-3.5 px-3 text-gray-700 whitespace-nowrap">
-                              {rec.course_name || "B.Arch"}
+                            <td className="py-3.5 px-3 whitespace-nowrap">
+                              {isPG ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-800 border border-purple-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0"></span>
+                                  {rec.course_name}
+                                </span>
+                              ) : isDiploma ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0"></span>
+                                  {rec.course_name}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"></span>
+                                  {rec.course_name || "B.Arch"}
+                                </span>
+                              )}
                             </td>
                             <td className="py-3.5 px-3 whitespace-nowrap">
                               <span className="text-base font-extrabold text-gray-900">

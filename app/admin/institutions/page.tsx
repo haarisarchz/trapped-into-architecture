@@ -60,6 +60,14 @@ type SortField =
 
 type SortDirection = "asc" | "desc";
 
+// Helper: get course category (B.Arch, M.Arch, Diploma)
+function getCourseCategory(courseName: string | null | undefined): "B.Arch" | "M.Arch" | "Diploma" {
+  if (!courseName) return "B.Arch";
+  if (courseName.startsWith("M.Arch") || courseName.includes("Master")) return "M.Arch";
+  if (courseName.includes("Diploma")) return "Diploma";
+  return "B.Arch";
+}
+
 // Helper: parse multi-value strings and format with comma
 function formatSeparatedValues(val: string | null | undefined): string {
   if (!val) return "";
@@ -477,15 +485,16 @@ export default function AdminInstitutionsPage() {
     list.sort((a, b) => {
       let comparison = 0;
 
-      // Handle Year & Course-Specific Intake Sort (e.g. "intake_B.Arch__2024-2025")
+      // Handle Year & Course-Specific Intake Sort (e.g. "intake_B.Arch__2024-2025" or "intake_M.Arch__2025-2026")
       if (sortField.startsWith("intake_")) {
         const key = sortField.replace("intake_", "");
         const [targetCourse, targetYear] = key.includes("__") ? key.split("__") : ["B.Arch", key];
         const getSeats = (item: any) => {
-          const rec = (item.institution_annual_records || []).find(
-            (r: any) => (r.course_name || "B.Arch") === targetCourse && r.academic_year === targetYear
+          const matching = (item.institution_annual_records || []).filter(
+            (r: any) => getCourseCategory(r.course_name) === targetCourse && r.academic_year === targetYear
           );
-          return rec ? rec.approved_intake : -1;
+          if (matching.length === 0) return -1;
+          return matching.reduce((sum: number, r: any) => sum + (r.approved_intake || 0), 0);
         };
         comparison = getSeats(a) - getSeats(b);
         return sortDirection === "asc" ? comparison : -comparison;
@@ -1231,12 +1240,15 @@ export default function AdminInstitutionsPage() {
                       paginatedInstitutions.map((inst) => {
                         const closure = getClosureInfo(inst);
 
-                        // Build Map of `${course}__${academic_year}` -> record for fast lookup
-                        const courseYearRecordMap = new Map();
+                        // Build Map of `${category}__${academic_year}` -> array of records
+                        const courseYearRecordsMap = new Map<string, any[]>();
                         (inst.institution_annual_records || []).forEach((r: any) => {
                           if (r.academic_year) {
-                            const c = r.course_name || "B.Arch";
-                            courseYearRecordMap.set(`${c}__${r.academic_year.trim()}`, r);
+                            const cat = getCourseCategory(r.course_name);
+                            const k = `${cat}__${r.academic_year.trim()}`;
+                            const list = courseYearRecordsMap.get(k) || [];
+                            list.push(r);
+                            courseYearRecordsMap.set(k, list);
                           }
                         });
 
@@ -1313,36 +1325,96 @@ export default function AdminInstitutionsPage() {
 
                             {/* SEPARATE INDIVIDUAL INTAKE COLUMNS (B.Arch, M.Arch, Diploma) */}
                             {activeIntakeColumns.map((col) => {
-                              const rec = courseYearRecordMap.get(col.key);
-                              if (!rec) {
+                              const matchingRecs = courseYearRecordsMap.get(col.key) || [];
+                              if (matchingRecs.length === 0) {
                                 return (
                                   <td key={col.key} className="p-3 text-center text-gray-300 font-mono text-[11px]">
                                     —
                                   </td>
                                 );
                               }
-                              const seats = rec.approved_intake;
-                              const isZero =
-                                seats === 0 ||
-                                /zero|discontinued|withdrawn/i.test(rec.approval_status || "");
+
+                              // Single record (typical case for B.Arch, Diploma, or single M.Arch specialization)
+                              if (matchingRecs.length === 1) {
+                                const rec = matchingRecs[0];
+                                const seats = rec.approved_intake;
+                                const isZero =
+                                  seats === 0 ||
+                                  /zero|discontinued|withdrawn|progressive/i.test(rec.approval_status || "");
+
+                                const isSpec = rec.course_name && rec.course_name !== "M.Arch" && rec.course_name !== "B.Arch";
+                                const specLabel = isSpec
+                                  ? rec.course_name.replace(/^(M\.Arch|Bachelor of Architecture)\s*\(/i, "").replace(/\)$/, "")
+                                  : null;
+
+                                return (
+                                  <td key={col.key} className="p-3 text-center whitespace-nowrap">
+                                    {isZero ? (
+                                      <span
+                                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200"
+                                        title={`${rec.course_name} ${col.year}: Zero Intake / Discontinued`}
+                                      >
+                                        0
+                                      </span>
+                                    ) : (
+                                      <div className="flex flex-col items-center gap-0.5">
+                                        <span
+                                          className="font-extrabold text-gray-900 font-mono text-xs"
+                                          title={`${rec.course_name} (${col.year}): ${seats} approved seats`}
+                                        >
+                                          {seats}
+                                        </span>
+                                        {specLabel && (
+                                          <span
+                                            className="text-[9px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 px-1 py-0.2 rounded max-w-[95px] truncate"
+                                            title={rec.course_name}
+                                          >
+                                            {specLabel}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </td>
+                                );
+                              }
+
+                              // Multiple records (e.g. 2+ PG courses in the same year)
+                              const totalSeats = matchingRecs.reduce(
+                                (sum: number, r: any) => sum + (r.approved_intake || 0),
+                                0
+                              );
+                              const fullTooltip = matchingRecs
+                                .map((r: any) => `${r.course_name}: ${r.approved_intake} seats (${r.approval_status || 'Approved'})`)
+                                .join("\n");
 
                               return (
                                 <td key={col.key} className="p-3 text-center whitespace-nowrap">
-                                  {isZero ? (
-                                    <span
-                                      className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200"
-                                      title={`${col.course} ${col.year}: Zero Intake`}
-                                    >
-                                      0
-                                    </span>
-                                  ) : (
-                                    <span
-                                      className="font-extrabold text-gray-900 font-mono text-xs"
-                                      title={`${col.course} ${col.year}: ${seats} approved seats`}
-                                    >
-                                      {seats}
-                                    </span>
-                                  )}
+                                  <div className="flex flex-col items-center gap-1" title={fullTooltip}>
+                                    <div className="flex items-center gap-1">
+                                      <span className="font-extrabold text-purple-900 font-mono text-xs">
+                                        {totalSeats}
+                                      </span>
+                                      <span className="text-[9px] font-bold text-purple-600 bg-purple-100 border border-purple-200 px-1 rounded-full">
+                                        {matchingRecs.length}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 justify-center max-w-[130px]">
+                                      {matchingRecs.map((r: any, rIdx: number) => {
+                                        const specName = r.course_name
+                                          .replace(/^M\.Arch\s*\(/i, "")
+                                          .replace(/\)$/, "");
+                                        return (
+                                          <span
+                                            key={r.id || rIdx}
+                                            className="text-[8px] font-mono font-bold px-1 py-0.5 rounded bg-purple-50 text-purple-800 border border-purple-200 whitespace-nowrap"
+                                            title={`${r.course_name}: ${r.approved_intake} seats`}
+                                          >
+                                            {specName}: {r.approved_intake}
+                                          </span>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
                                 </td>
                               );
                             })}
