@@ -273,8 +273,16 @@ export default function AdminInstitutionsPage() {
     const set = new Set<string>();
     liveInstitutions.forEach((i) => {
       if (liveStateFilter === "ALL" || (i.state && i.state.toLowerCase() === liveStateFilter.toLowerCase())) {
-        const c = i.city || i.district;
-        if (c) set.add(c.trim());
+        let c = (i.city || i.district || "").trim();
+        // Remove state name if attached
+        if (i.state) {
+          const reg = new RegExp(`\\b${i.state.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, "gi");
+          c = c.replace(reg, "").trim();
+        }
+        c = c.replace(/[-–_,.:;]+/g, " ").replace(/\s+/g, " ").trim();
+        if (c && c.length > 1) {
+          set.add(c);
+        }
       }
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));

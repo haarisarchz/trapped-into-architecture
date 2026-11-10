@@ -134,8 +134,15 @@ function InstitutionsContent() {
     const set = new Set<string>();
     institutions.forEach((i) => {
       if (selectedState === "All India" || i.state?.toLowerCase() === selectedState.toLowerCase()) {
-        if (i.city) set.add(i.city.trim());
-        else if (i.district) set.add(i.district.trim());
+        let c = (i.city || i.district || "").trim();
+        if (i.state) {
+          const reg = new RegExp(`\\b${i.state.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}\\b`, "gi");
+          c = c.replace(reg, "").trim();
+        }
+        c = c.replace(/[-–_,.:;]+/g, " ").replace(/\s+/g, " ").trim();
+        if (c && c.length > 1) {
+          set.add(c);
+        }
       }
     });
     return Array.from(set).sort();
