@@ -25,6 +25,7 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
+  ShieldCheck,
 } from "lucide-react";
 
 export async function generateMetadata({
@@ -175,6 +176,46 @@ export default async function InstitutionProfilePage({
   const closureYearMatch = inst.institution_type ? inst.institution_type.match(/(\d{4}[-–_]\d{4}|\b20\d\d\b)/) : null;
   const closureSession = closureYearMatch ? closureYearMatch[1] : null;
 
+  // 4. Multi-Year Approval Evaluation (Advance statutory sanction beyond current session)
+  const validFutureRecs = records.filter(
+    (r: any) =>
+      r.academic_year &&
+      r.academic_year >= "2027-2028" &&
+      r.approved_intake > 0 &&
+      !/closure|discontinued|withdrawn/i.test(r.approval_status || "")
+  );
+
+  let multiYearInfo: {
+    maxYear: string;
+    durationYears: number;
+    courseName: string;
+    approvedIntake: number;
+    allFutureCourses: any[];
+  } | null = null;
+
+  if (validFutureRecs.length > 0) {
+    const sortedYears = Array.from(new Set(validFutureRecs.map((r: any) => r.academic_year))).sort();
+    const maxYear = sortedYears[sortedYears.length - 1];
+    const maxYearRecs = validFutureRecs.filter((r: any) => r.academic_year === maxYear);
+    const ugRec = maxYearRecs.find((r: any) => (r.course_name || "B.Arch") === "B.Arch");
+    const primary = ugRec || maxYearRecs[0];
+    const endMatch = maxYear.match(/[-–_](\d{4})/);
+    const endYearNum = endMatch ? parseInt(endMatch[1], 10) : 2028;
+    const durationYears = Math.max(2, endYearNum - 2026);
+
+    multiYearInfo = {
+      maxYear,
+      durationYears,
+      courseName: primary.course_name || "B.Arch",
+      approvedIntake: primary.approved_intake,
+      allFutureCourses: maxYearRecs.map((r: any) => ({
+        courseName: r.course_name,
+        approvedIntake: r.approved_intake,
+        academicYear: r.academic_year,
+      })),
+    };
+  }
+
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
       <Navbar />
@@ -224,6 +265,12 @@ export default async function InstitutionProfilePage({
                       NIRF Ranked #{rankings[0].rank_number} ({rankings[0].ranking_year})
                     </span>
                   )}
+                  {multiYearInfo && !isClosed && (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-md shadow-2xs">
+                      <ShieldCheck size={13} className="text-emerald-700" />
+                      Approved Through {multiYearInfo.maxYear}
+                    </span>
+                  )}
                 </div>
 
                 {/* Institution Title */}
@@ -254,16 +301,23 @@ export default async function InstitutionProfilePage({
 
               {/* LATEST APPROVED INTAKE HERO CARD */}
               <div
-                className={`border rounded-2xl p-5 shrink-0 min-w-[240px] text-left ${
+                className={`border rounded-2xl p-5 shrink-0 min-w-[250px] text-left transition-all ${
                   isClosed
                     ? "bg-red-50/60 border-red-200"
                     : isProgressive
                     ? "bg-amber-50/60 border-amber-200"
+                    : multiYearInfo
+                    ? "bg-emerald-50/40 border-emerald-300 ring-1 ring-emerald-200"
                     : "bg-gray-50 border-gray-200"
                 }`}
               >
-                <div className="text-[11px] uppercase tracking-wider font-bold text-gray-400">
-                  {isClosed ? "Admissions Status" : isProgressive ? "Admissions Status" : "Latest Approved Intake"}
+                <div className="text-[11px] uppercase tracking-wider font-bold text-gray-400 flex items-center justify-between">
+                  <span>{isClosed ? "Admissions Status" : isProgressive ? "Admissions Status" : "Regulatory Sanction"}</span>
+                  {multiYearInfo && !isClosed && (
+                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Multi-Year
+                    </span>
+                  )}
                 </div>
                 {isClosed ? (
                   <>
@@ -303,21 +357,27 @@ export default async function InstitutionProfilePage({
                   <>
                     <div className="mt-1 flex items-baseline gap-2">
                       <span className="text-3xl font-extrabold text-gray-900">
-                        {latestRecord.approved_intake}
+                        {multiYearInfo ? multiYearInfo.approvedIntake : latestRecord.approved_intake}
                       </span>
                       <span className="text-sm font-semibold text-gray-500">
                         seats / year
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 font-medium mt-1">
-                      Course: <strong>{latestRecord.course_name || "B.Arch"}</strong>
+                    <div className="text-xs text-gray-600 font-medium mt-1">
+                      Course: <strong>{multiYearInfo ? multiYearInfo.courseName : (latestRecord.course_name || "B.Arch")}</strong>
                     </div>
-                    <div className="text-[11px] text-gray-400 mt-0.5">
-                      Academic Year: {latestRecord.academic_year}
+                    <div className="text-[11px] text-gray-500 mt-0.5">
+                      {multiYearInfo ? (
+                        <span className="text-emerald-800 font-semibold">
+                          Advance Approved through {multiYearInfo.maxYear} ({multiYearInfo.durationYears} Years)
+                        </span>
+                      ) : (
+                        `Academic Year: ${latestRecord.academic_year}`
+                      )}
                     </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-1.5 text-xs text-green-700 font-bold">
-                      <CheckCircle2 size={14} />
-                      {latestRecord.approval_status || "COA Approved"}
+                    <div className="mt-3 pt-3 border-t border-gray-200 flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
+                      <CheckCircle2 size={14} className="text-emerald-600" />
+                      {multiYearInfo ? `COA Sanctioned through ${multiYearInfo.maxYear}` : (latestRecord.approval_status || "COA Approved")}
                     </div>
                   </>
                 ) : (
@@ -358,6 +418,43 @@ export default async function InstitutionProfilePage({
                 <p className="text-xs sm:text-sm text-amber-800 mt-1 leading-relaxed">
                   The Council of Architecture has approved this institution for <strong>Progressive Closure</strong> starting from the <strong>{closureSession || "2026-2027"}</strong> academic session. Under statutory regulations, no new first-year students will be admitted, while currently enrolled batches continue their regular studies through graduation.
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MULTI-YEAR STATUTORY ADVANCE APPROVAL ACCOLADE BANNER */}
+        {multiYearInfo && !isClosed && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-6">
+            <div className="bg-emerald-50/80 border border-emerald-200 rounded-3xl p-5 sm:p-6 flex items-start gap-4 shadow-2xs">
+              <div className="p-2.5 bg-emerald-100 text-emerald-800 rounded-2xl shrink-0 mt-0.5 border border-emerald-300/60">
+                <ShieldCheck size={26} className="text-emerald-700" />
+              </div>
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-extrabold text-emerald-950">
+                    Official Regulatory Accolade: Advance Multi-Year Approval Through {multiYearInfo.maxYear}
+                  </h3>
+                  <span className="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-200/80 text-emerald-900 border border-emerald-300">
+                    {multiYearInfo.durationYears}-Year Advance Sanction
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed">
+                  The Council of Architecture has granted <strong>advance multi-year statutory approval</strong> for this institution, sanctioning an approved annual intake of <strong>{multiYearInfo.approvedIntake} seats</strong> in <strong>{multiYearInfo.courseName}</strong> valid through academic session <strong>{multiYearInfo.maxYear}</strong>. Extended multi-year sanctioning is a distinguished institutional plus point awarded by the Council for consistent infrastructure compliance, accredited faculty standards, and sustained academic governance.
+                </p>
+                {multiYearInfo.allFutureCourses.length > 1 && (
+                  <div className="pt-2 flex flex-wrap gap-2 items-center">
+                    <span className="text-xs font-bold text-emerald-900">Sanctioned programs:</span>
+                    {multiYearInfo.allFutureCourses.map((fc: any, fcIdx: number) => (
+                      <span
+                        key={fcIdx}
+                        className="text-[11px] font-mono font-bold px-2 py-0.5 bg-white text-emerald-900 border border-emerald-200 rounded-md shadow-2xs"
+                      >
+                        {fc.courseName}: {fc.approvedIntake} seats ({fc.academicYear})
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

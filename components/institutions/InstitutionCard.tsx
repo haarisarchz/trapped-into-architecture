@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { MapPin, Building2, ExternalLink, ArrowRight, Check, Plus, Award } from "lucide-react";
+import { MapPin, Building2, ExternalLink, ArrowRight, Check, Plus, Award, ShieldCheck } from "lucide-react";
 
 interface InstitutionCardProps {
   institution: any;
@@ -29,6 +29,29 @@ export default function InstitutionCard({
     .filter(Boolean)
     .join(", ");
 
+  const multiYearApproval = React.useMemo(() => {
+    const recs = institution.annual_records || [];
+    const validFuture = recs.filter(
+      (r: any) =>
+        r.academic_year &&
+        r.academic_year >= "2027-2028" &&
+        r.approved_intake > 0 &&
+        !/closure|discontinued|withdrawn/i.test(r.approval_status || "")
+    );
+    if (validFuture.length === 0) return null;
+    const sorted = Array.from(new Set(validFuture.map((r: any) => r.academic_year))).sort();
+    const maxYear = sorted[sorted.length - 1];
+    const shortMaxYr = maxYear.replace(/^20/, "").replace(/[-–_]20/, "-");
+    const ugRec = validFuture.find((r: any) => (r.course_name || "B.Arch") === "B.Arch");
+    const primary = ugRec || validFuture[0];
+    return {
+      maxYear,
+      shortMaxYr,
+      approvedIntake: primary.approved_intake,
+      courseName: primary.course_name || "B.Arch",
+    };
+  }, [institution.annual_records]);
+
   return (
     <div className="group bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-200 flex flex-col justify-between">
       <div>
@@ -52,6 +75,12 @@ export default function InstitutionCard({
                 Prog. Closure (26-27)
               </span>
             ) : null}
+            {multiYearApproval && !isClosed && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-md">
+                <ShieldCheck size={12} className="text-emerald-700" />
+                Approved thru {multiYearApproval.shortMaxYr}
+              </span>
+            )}
             {bestRank && (
               <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-md">
                 <Award size={12} className="text-amber-600" />
@@ -119,6 +148,8 @@ export default function InstitutionCard({
               ? "Admissions Status"
               : isProgressive
               ? "Admissions Status"
+              : multiYearApproval
+              ? `Approved Thru Session ${multiYearApproval.maxYear}`
               : latestRecord
               ? `Approved Intake (${latestRecord.academic_year})`
               : "Approved Intake"}
@@ -131,6 +162,10 @@ export default function InstitutionCard({
             ) : isProgressive ? (
               <span className="text-xs font-bold text-amber-700">
                 0 Fresh Seats (Progressive Closure)
+              </span>
+            ) : multiYearApproval ? (
+              <span className="text-emerald-950">
+                {multiYearApproval.approvedIntake} <span className="text-xs font-normal text-gray-500">seats ({multiYearApproval.courseName})</span>
               </span>
             ) : latestRecord ? (
               <span className="text-gray-900">

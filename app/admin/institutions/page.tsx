@@ -1240,6 +1240,12 @@ export default function AdminInstitutionsPage() {
                       paginatedInstitutions.map((inst) => {
                         const closure = getClosureInfo(inst);
 
+                        // Check advance multi-year statutory approval
+                        const futureYears = (inst.institution_annual_records || [])
+                          .filter((r: any) => r.academic_year && r.academic_year >= "2027-2028" && r.approved_intake > 0)
+                          .map((r: any) => r.academic_year);
+                        const multiYearMaxYear = futureYears.length > 0 ? Array.from(new Set(futureYears)).sort().pop() : null;
+
                         // Build Map of `${category}__${academic_year}` -> array of records
                         const courseYearRecordsMap = new Map<string, any[]>();
                         (inst.institution_annual_records || []).forEach((r: any) => {
@@ -1315,6 +1321,13 @@ export default function AdminInstitutionsPage() {
                                   title="Progressive Closure: No fresh admissions from this academic year; existing batches continue to complete degree."
                                 >
                                   {closure.label}
+                                </span>
+                              ) : multiYearMaxYear ? (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300"
+                                  title={`Council of Architecture advance multi-year statutory approval sanctioned through ${multiYearMaxYear}`}
+                                >
+                                  Sanctioned: {multiYearMaxYear.replace(/^20/, "").replace(/[-–_]20/, "-")}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
