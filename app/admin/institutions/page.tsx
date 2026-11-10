@@ -328,8 +328,8 @@ export default function AdminInstitutionsPage() {
         if (r.academic_year) set.add(r.academic_year.trim());
       });
     });
-    // Ensure the 5 latest standard academic years are always present
-    ["2024-2025", "2023-2024", "2022-2023", "2021-2022", "2020-2021"].forEach((y) => set.add(y));
+    // Ensure the standard academic sessions are always present
+    ["2026-2027", "2025-2026", "2024-2025", "2023-2024", "2022-2023", "2021-2022", "2020-2021"].forEach((y) => set.add(y));
     return Array.from(set).sort((a, b) => b.localeCompare(a));
   }, [liveInstitutions]);
 
