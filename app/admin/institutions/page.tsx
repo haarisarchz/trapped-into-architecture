@@ -115,7 +115,7 @@ export default function AdminInstitutionsPage() {
   const [liveSearchQuery, setLiveSearchQuery] = useState("");
   const [liveStateFilter, setLiveStateFilter] = useState("ALL");
   const [liveCityFilter, setLiveCityFilter] = useState("ALL");
-  const [liveStatusFilter, setLiveStatusFilter] = useState<"ALL" | "ACTIVE" | "CLOSED">("ALL");
+  const [liveStatusFilter, setLiveStatusFilter] = useState<"ALL" | "ACTIVE" | "CLOSED" | "PROGRESSIVE">("ALL");
 
   // Sorting
   const [sortField, setSortField] = useState<SortField>("coa_code");
@@ -246,18 +246,44 @@ export default function AdminInstitutionsPage() {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  // Helper: Detect closure/termination information
+  // Helper: Detect closure/termination & progressive closure information
   const getClosureInfo = (inst: any) => {
-    if (inst.institution_type && /closed|terminated|discontinued/i.test(inst.institution_type)) {
-      const yrMatch = inst.institution_type.match(/\b(19\d\d|20\d\d)\b/);
+    // 1. Check for Progressive Closure
+    if (inst.institution_type && /progressive closure/i.test(inst.institution_type)) {
+      const yrMatch = inst.institution_type.match(/(\d{4}[-–_]\d{4}|\b20\d\d\b)/);
+      const shortYr = yrMatch ? yrMatch[1].replace(/^20/, "").replace(/[-–_]20/, "-") : "26-27";
       return {
-        isClosed: true,
-        year: yrMatch ? yrMatch[1] : null,
-        label: yrMatch ? `Closed (${yrMatch[1]})` : "Closed / Terminated",
+        isClosed: false,
+        isProgressive: true,
+        year: shortYr,
+        label: `Prog. Closure (${shortYr})`,
       };
     }
 
+    // 2. Check records for Progressive Closure
     const records = inst.institution_annual_records || [];
+    const hasProgressiveRec = records.some((r: any) => /progressive closure/i.test(r.approval_status || ""));
+    if (hasProgressiveRec) {
+      return {
+        isClosed: false,
+        isProgressive: true,
+        year: "26-27",
+        label: "Prog. Closure (26-27)",
+      };
+    }
+
+    // 3. Full Closure
+    if (inst.institution_type && /closed|terminated|discontinued/i.test(inst.institution_type)) {
+      const yrMatch = inst.institution_type.match(/(\d{4}[-–_]\d{4}|\b\d{4}\b)/);
+      const labelYr = yrMatch ? yrMatch[1].replace(/^20/, "").replace(/[-–_]20/, "-") : null;
+      return {
+        isClosed: true,
+        isProgressive: false,
+        year: yrMatch ? yrMatch[1] : null,
+        label: labelYr ? `Closed (${labelYr})` : "Closed / Terminated",
+      };
+    }
+
     if (records.length > 0) {
       const sorted = [...records].sort((a: any, b: any) => b.academic_year.localeCompare(a.academic_year));
       const latest = sorted[0];
@@ -265,11 +291,11 @@ export default function AdminInstitutionsPage() {
         latest.approved_intake === 0 ||
         /zero|discontinued|withdrawn/i.test(latest.approval_status || "");
 
-      // If latest is 0 or if all records are 0
       if (isLatestZero) {
         const shortYr = (latest.academic_year || "").replace(/^20/, "").replace(/[-–_]20/, "-");
         return {
           isClosed: true,
+          isProgressive: false,
           year: latest.academic_year,
           label: `Zero Intake (${shortYr})`,
         };
@@ -278,6 +304,7 @@ export default function AdminInstitutionsPage() {
 
     return {
       isClosed: false,
+      isProgressive: false,
       year: null,
       label: "Active",
     };
@@ -412,7 +439,8 @@ export default function AdminInstitutionsPage() {
       // Status Filter
       if (liveStatusFilter !== "ALL") {
         const closure = getClosureInfo(inst);
-        if (liveStatusFilter === "ACTIVE" && closure.isClosed) return false;
+        if (liveStatusFilter === "ACTIVE" && (closure.isClosed || closure.isProgressive)) return false;
+        if (liveStatusFilter === "PROGRESSIVE" && !closure.isProgressive) return false;
         if (liveStatusFilter === "CLOSED" && !closure.isClosed) return false;
       }
 
@@ -941,6 +969,7 @@ export default function AdminInstitutionsPage() {
                     >
                       <option value="ALL">All Statuses</option>
                       <option value="ACTIVE">Active Only</option>
+                      <option value="PROGRESSIVE">Progressive Closure Only</option>
                       <option value="CLOSED">Closed / Zero Intake Only</option>
                     </select>
                   </div>
@@ -1266,6 +1295,13 @@ export default function AdminInstitutionsPage() {
                             <td className="p-3 text-center whitespace-nowrap">
                               {closure.isClosed ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-200">
+                                  {closure.label}
+                                </span>
+                              ) : closure.isProgressive ? (
+                                <span
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200"
+                                  title="Progressive Closure: No fresh admissions from this academic year; existing batches continue to complete degree."
+                                >
                                   {closure.label}
                                 </span>
                               ) : (
