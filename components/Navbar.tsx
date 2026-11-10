@@ -818,12 +818,6 @@ useEffect(() => {
 >
   Companies
 </Link>
-<Link
-  href="/institutions"
-  className="hover:text-gray-300 transition"
->
-  Institutions
-</Link>
 
           {/* CONTACT */}
 
@@ -1020,8 +1014,7 @@ useEffect(() => {
     <Link href="/jobs" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
     <Link href="/internships" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
     <Link href="/companies" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
-    <Link href="/institutions" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Institutions</Link>
-    <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+        <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
   </div>
 )}
 </nav>
