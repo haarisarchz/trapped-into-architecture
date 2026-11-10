@@ -162,6 +162,11 @@ export default async function InstitutionProfilePage({
     .filter(Boolean)
     .join(", ");
 
+  const isClosed = inst.institution_type && /closed/i.test(inst.institution_type);
+  const isProgressive = inst.institution_type && /progressive closure/i.test(inst.institution_type);
+  const closureYearMatch = inst.institution_type ? inst.institution_type.match(/(\d{4}[-–_]\d{4}|\b20\d\d\b)/) : null;
+  const closureSession = closureYearMatch ? closureYearMatch[1] : null;
+
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
       <Navbar />
@@ -192,11 +197,19 @@ export default async function InstitutionProfilePage({
                   <span className="text-xs font-bold px-3 py-1 bg-gray-100 text-gray-800 rounded-md">
                     {inst.state}
                   </span>
-                  {inst.institution_type && (
+                  {isClosed ? (
+                    <span className="text-xs font-bold px-3 py-1 bg-red-100 text-red-800 border border-red-200 rounded-md">
+                      Closed w.e.f. {closureSession || "COA Gazette"}
+                    </span>
+                  ) : isProgressive ? (
+                    <span className="text-xs font-bold px-3 py-1 bg-amber-100 text-amber-800 border border-amber-200 rounded-md">
+                      Progressive Closure ({closureSession || "2026-2027"})
+                    </span>
+                  ) : inst.institution_type ? (
                     <span className="text-xs font-semibold px-3 py-1 bg-blue-50 text-blue-700 rounded-md">
                       {inst.institution_type}
                     </span>
-                  )}
+                  ) : null}
                   {rankings.length > 0 && (
                     <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-md">
                       <Award size={13} className="text-amber-600" />
@@ -232,11 +245,53 @@ export default async function InstitutionProfilePage({
               </div>
 
               {/* LATEST APPROVED INTAKE HERO CARD */}
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shrink-0 min-w-[240px] text-left">
+              <div
+                className={`border rounded-2xl p-5 shrink-0 min-w-[240px] text-left ${
+                  isClosed
+                    ? "bg-red-50/60 border-red-200"
+                    : isProgressive
+                    ? "bg-amber-50/60 border-amber-200"
+                    : "bg-gray-50 border-gray-200"
+                }`}
+              >
                 <div className="text-[11px] uppercase tracking-wider font-bold text-gray-400">
-                  Latest Approved Intake
+                  {isClosed ? "Admissions Status" : isProgressive ? "Admissions Status" : "Latest Approved Intake"}
                 </div>
-                {latestRecord ? (
+                {isClosed ? (
+                  <>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="text-3xl font-extrabold text-red-600">0</span>
+                      <span className="text-sm font-semibold text-red-500">seats (Closed)</span>
+                    </div>
+                    <div className="text-xs text-gray-600 font-medium mt-1">
+                      Course: <strong>B.Arch</strong>
+                    </div>
+                    <div className="text-[11px] text-gray-500 mt-0.5">
+                      Closed w.e.f. Academic Session {closureSession || "COA Gazette"}
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-red-200 flex items-center gap-1.5 text-xs text-red-700 font-bold">
+                      <AlertCircle size={14} />
+                      Discontinued by COA
+                    </div>
+                  </>
+                ) : isProgressive ? (
+                  <>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="text-3xl font-extrabold text-amber-700">0</span>
+                      <span className="text-sm font-semibold text-amber-600">fresh seats</span>
+                    </div>
+                    <div className="text-xs text-gray-600 font-medium mt-1">
+                      Status: <strong>Progressive Closure</strong>
+                    </div>
+                    <div className="text-[11px] text-gray-500 mt-0.5">
+                      Effective Session {closureSession || "2026-2027"}
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-amber-200 flex items-center gap-1.5 text-xs text-amber-800 font-bold">
+                      <Info size={14} />
+                      Existing batches continuing
+                    </div>
+                  </>
+                ) : latestRecord ? (
                   <>
                     <div className="mt-1 flex items-baseline gap-2">
                       <span className="text-3xl font-extrabold text-gray-900">
@@ -266,6 +321,39 @@ export default async function InstitutionProfilePage({
             </div>
           </div>
         </section>
+
+        {/* CLOSURE / STATUS ADVISORY BANNER */}
+        {isClosed && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-5 sm:p-6 flex items-start gap-3.5 shadow-2xs">
+              <AlertCircle size={22} className="text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-red-950">
+                  Regulatory Notice: B.Arch Program Closed by Council of Architecture
+                </h3>
+                <p className="text-xs sm:text-sm text-red-800 mt-1 leading-relaxed">
+                  This institution was formally processed for closure of its Bachelor of Architecture (B.Arch) program effective from academic session <strong>{closureSession || "COA Gazette"}</strong>. Fresh admissions are discontinued. Complete historical approval records, past intake sanctions, and alumni affiliation history are preserved below for academic verification.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isProgressive && (
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-6">
+            <div className="bg-amber-50 border border-amber-200 rounded-3xl p-5 sm:p-6 flex items-start gap-3.5 shadow-2xs">
+              <Info size={22} className="text-amber-700 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-amber-950">
+                  Regulatory Notice: Progressive Closure Status ({closureSession || "2026-2027"})
+                </h3>
+                <p className="text-xs sm:text-sm text-amber-800 mt-1 leading-relaxed">
+                  The Council of Architecture has approved this institution for <strong>Progressive Closure</strong> starting from the <strong>{closureSession || "2026-2027"}</strong> academic session. Under statutory regulations, no new first-year students will be admitted, while currently enrolled batches continue their regular studies through graduation.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* DETAILS GRID: 2 COLUMNS */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -351,9 +439,19 @@ export default async function InstitutionProfilePage({
                               </div>
                             </td>
                             <td className="py-3.5 px-3 whitespace-nowrap">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                                {rec.approval_status || "Approved"}
-                              </span>
+                              {/closed|discontinued/i.test(rec.approval_status || "") ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                  {rec.approval_status}
+                                </span>
+                              ) : /progressive/i.test(rec.approval_status || "") ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                  {rec.approval_status}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                  {rec.approval_status || "Approved"}
+                                </span>
+                              )}
                             </td>
                             <td className="py-3.5 px-3 text-xs text-gray-500 whitespace-nowrap">
                               {rec.source_documents?.document_title || "COA Gazette Record"}
