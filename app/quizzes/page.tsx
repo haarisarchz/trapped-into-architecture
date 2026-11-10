@@ -18,7 +18,7 @@ export default function QuizzesHubPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Leaderboard state
-  const [leaderboardTab, setLeaderboardTab] = useState<"weekly" | "monthly" | "all">("weekly");
+  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [leaderboardQuizFilter, setLeaderboardQuizFilter] = useState<string>("all");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
@@ -34,7 +34,7 @@ export default function QuizzesHubPage() {
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [leaderboardTab, leaderboardQuizFilter]);
+  }, [leaderboardDifficulty, leaderboardQuizFilter]);
 
   const [catalogItems, setCatalogItems] = useState<any[]>([]);
 
@@ -66,25 +66,28 @@ export default function QuizzesHubPage() {
     try {
       let query = supabase
         .from("quiz_scores")
-        .select("display_name, points, score, total_questions, difficulty, created_at, user_id, quiz_id")
-        .order("points", { ascending: false })
-        .limit(10);
+        .select("display_name, points, score, total_questions, difficulty, time_taken_seconds, created_at, user_id, quiz_id")
+        .eq("difficulty", leaderboardDifficulty);
 
       if (leaderboardQuizFilter !== "all") {
         query = query.eq("quiz_id", leaderboardQuizFilter);
       }
 
-      const now = new Date();
-      if (leaderboardTab === "weekly") {
-        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        query = query.gte("created_at", lastWeek);
-      } else if (leaderboardTab === "monthly") {
-        const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        query = query.gte("created_at", lastMonth);
-      }
+      const { data, error } = await query.limit(40);
+      if (error) throw error;
 
-      const { data } = await query;
-      if (data) setLeaderboard(data);
+      if (data) {
+        const ranked = [...data].sort((a, b) => {
+          const accA = (a.score / (a.total_questions || 10)) * 100;
+          const accB = (b.score / (b.total_questions || 10)) * 100;
+          if (accB !== accA) return accB - accA;
+          if ((b.total_questions || 0) !== (a.total_questions || 0)) {
+            return (b.total_questions || 0) - (a.total_questions || 0);
+          }
+          return (a.time_taken_seconds || 9999) - (b.time_taken_seconds || 9999);
+        });
+        setLeaderboard(ranked);
+      }
     } catch (err) {
       console.warn("Error fetching leaderboard:", err);
     } finally {
@@ -389,6 +392,104 @@ export default function QuizzesHubPage() {
                 </div>
               )}
 
+              {/* UPCOMING QUIZZES (COMING SOON) */}
+              <div className="mt-10">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                    <span>✨</span> Upcoming Quizzes & Challenges
+                  </h3>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+                    In Development
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-white/80 rounded-3xl border border-dashed border-gray-300 p-5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xl">🏛️</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-gray-900">
+                        Guess the Architect
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Identify visionary Pritzker laureates, master sketches, and distinctive design philosophies.
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 font-bold">
+                      <span>40 Questions</span>
+                      <span className="text-gray-400">Launching Soon</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/80 rounded-3xl border border-dashed border-gray-300 p-5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xl">📍</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-800 px-2 py-0.5 rounded-full border border-blue-200">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-gray-900">
+                        Guess the Building Location
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Recognize world architectural capitals, skylines, and climatic contextual responses.
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 font-bold">
+                      <span>40 Questions</span>
+                      <span className="text-gray-400">Launching Soon</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/80 rounded-3xl border border-dashed border-gray-300 p-5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xl">🏺</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider bg-purple-50 text-purple-800 px-2 py-0.5 rounded-full border border-purple-200">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-gray-900">
+                        Architecture History & Theory
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        From Classical Orders and Bauhaus to Metabolism, Postmodernism & Deconstructivism.
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 font-bold">
+                      <span>40 Questions</span>
+                      <span className="text-gray-400">Launching Soon</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/80 rounded-3xl border border-dashed border-gray-300 p-5 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xl">🎓</span>
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-bold text-gray-900">
+                        GATE Architecture & NATA Mock Prep
+                      </h4>
+                      <p className="text-[11px] text-gray-500 mt-1 leading-normal">
+                        Structures, planning norms, building codes, and architectural aptitude exam drill.
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400 font-bold">
+                      <span>50 Questions</span>
+                      <span className="text-gray-400">Launching Soon</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* EXPLORE THE PLATFORM: ECOSYSTEM LINKS */}
               <div className="mt-10 bg-white rounded-3xl border border-gray-200 p-6 sm:p-8 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
@@ -515,31 +616,31 @@ export default function QuizzesHubPage() {
                   </select>
                 </div>
 
-                {/* Tabs: Weekly / Monthly / All-Time */}
+                {/* 3 Difficulty Tabs: Easy / Medium / Hard */}
                 <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-4">
                   <button
-                    onClick={() => setLeaderboardTab("weekly")}
+                    onClick={() => setLeaderboardDifficulty("easy")}
                     className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardTab === "weekly" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
+                      leaderboardDifficulty === "easy" ? "bg-white text-emerald-800 shadow-xs" : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    Weekly
+                    🟢 Easy
                   </button>
                   <button
-                    onClick={() => setLeaderboardTab("monthly")}
+                    onClick={() => setLeaderboardDifficulty("medium")}
                     className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardTab === "monthly" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
+                      leaderboardDifficulty === "medium" ? "bg-white text-amber-800 shadow-xs" : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    Monthly
+                    🟡 Medium
                   </button>
                   <button
-                    onClick={() => setLeaderboardTab("all")}
+                    onClick={() => setLeaderboardDifficulty("hard")}
                     className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardTab === "all" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
+                      leaderboardDifficulty === "hard" ? "bg-white text-red-800 shadow-xs" : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    All-Time
+                    🔴 Hard
                   </button>
                 </div>
 
@@ -550,8 +651,7 @@ export default function QuizzesHubPage() {
                   </div>
                 ) : leaderboard.length === 0 ? (
                   <div className="p-8 text-center text-gray-400 text-xs">
-                    No scores recorded yet this period.<br />
-                    Be the first to claim #1 on the leaderboard!
+                    Be among the first to enter the TI2A Quiz leaderboard!
                   </div>
                 ) : (
                   <div className="relative">
@@ -564,6 +664,10 @@ export default function QuizzesHubPage() {
                           "bg-slate-300 text-slate-900", // #2 Silver
                           "bg-amber-700 text-amber-50"   // #3 Bronze
                         ];
+
+                        const acc = (item.total_questions || 10) > 0 
+                          ? Math.round((item.score / (item.total_questions || 10)) * 100) 
+                          : 0;
 
                         // If user is guest, blur rows 2+
                         const shouldBlur = !currentUser && rank > 1;
@@ -589,7 +693,7 @@ export default function QuizzesHubPage() {
                                   {displayName}
                                 </p>
                                 <p className="text-[10px] text-gray-400 uppercase tracking-wider font-mono">
-                                  {item.difficulty} mode • {item.score}/{item.total_questions} correct
+                                  {item.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{acc}% Acc</span>
                                 </p>
                               </div>
                             </div>

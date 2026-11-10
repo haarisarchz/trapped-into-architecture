@@ -110,7 +110,7 @@ export function getQuestionsForGameDifficulty<T extends { correct_answer?: strin
     // Easy mode: strictly prioritize Easy (famous / viral / syllabus basics)
     // If user requested more than available easy, supplement with lighter medium
     targetedPool = [...easyQuestions, ...mediumQuestions, ...hardQuestions];
-    return targetedPool.slice(0, requestedCount === 999 ? targetedPool.length : Math.min(requestedCount, easyQuestions.length || targetedPool.length));
+    return targetedPool.slice(0, requestedCount === 999 ? targetedPool.length : Math.min(requestedCount, targetedPool.length));
   } else if (chosenDifficulty === "medium") {
     // Medium mode: balanced blend of Medium + Easy
     targetedPool = [...mediumQuestions, ...easyQuestions, ...hardQuestions];
