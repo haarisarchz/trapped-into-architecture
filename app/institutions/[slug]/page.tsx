@@ -35,11 +35,24 @@ export async function generateMetadata({
   try {
     const { slug } = await params;
 
-    const { data: inst } = await supabase
+    let { data: inst } = await supabase
       .from("institutions")
-      .select("institution_name, coa_code, city, district, state, affiliated_university")
+      .select("institution_name, coa_code, city, district, state, affiliated_university, slug")
       .eq("slug", slug)
       .maybeSingle();
+
+    // Fallback: If not found by slug, check if the requested slug had an old COA code suffix or is a COA code
+    if (!inst) {
+      const codeMatch = slug.match(/([a-z]{2}\d{2,3})$/i);
+      if (codeMatch) {
+        const { data: fallbackInst } = await supabase
+          .from("institutions")
+          .select("institution_name, coa_code, city, district, state, affiliated_university, slug")
+          .eq("coa_code", codeMatch[1].toUpperCase())
+          .maybeSingle();
+        if (fallbackInst) inst = fallbackInst;
+      }
+    }
 
     if (!inst) {
       return { title: "Institution Not Found | Trapped Into Architecture" };
@@ -49,7 +62,7 @@ export async function generateMetadata({
     const codeStr = inst.coa_code ? ` (${inst.coa_code})` : "";
     const title = `${inst.institution_name}${codeStr} - Architecture College in ${loc} | TI2A`;
     const description = `Explore official Council of Architecture (COA) approval status, approved B.Arch intake history, university affiliation, and contact details for ${inst.institution_name}${loc ? ` in ${loc}` : ""}.`;
-    const url = `https://trappedintoarchitecture.com/institutions/${slug}`;
+    const url = `https://trappedintoarchitecture.com/institutions/${inst.slug || slug}`;
 
     return {
       title,
@@ -82,11 +95,27 @@ export default async function InstitutionProfilePage({
   const { slug } = await params;
 
   // 1. Fetch institution master record
-  const { data: inst, error: instError } = await supabase
+  let { data: inst, error: instError } = await supabase
     .from("institutions")
     .select("*")
     .eq("slug", slug)
     .maybeSingle();
+
+  // Smart fallback for old bookmarked links or direct code visits:
+  if (!inst) {
+    const codeMatch = slug.match(/([a-z]{2}\d{2,3})$/i);
+    if (codeMatch) {
+      const { data: fallbackInst } = await supabase
+        .from("institutions")
+        .select("*")
+        .eq("coa_code", codeMatch[1].toUpperCase())
+        .maybeSingle();
+      if (fallbackInst) {
+        inst = fallbackInst;
+        instError = null;
+      }
+    }
+  }
 
   if (instError || !inst) {
     return (

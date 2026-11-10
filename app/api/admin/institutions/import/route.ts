@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
       // If not exists, insert new institution
       if (!institutionId) {
-        let baseSlug = generateInstitutionSlug(name, coaCode || undefined);
+        let baseSlug = generateInstitutionSlug(name, item.city || item.district || undefined);
 
         // Ensure unique slug
         const { data: slugMatch } = await supabase
