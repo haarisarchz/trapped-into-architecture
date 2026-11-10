@@ -150,7 +150,7 @@ export default function AdminInstitutionsPage() {
     const { data: insts, error } = await supabase
       .from("institutions")
       .select("*, institution_annual_records(id, academic_year, course_name, approved_intake, approval_status)")
-      .order("coa_code", { ascending: true })
+      .order("coa_code", { ascending: true, nullsFirst: false })
       .range(0, 999);
 
     if (error) {
@@ -278,6 +278,8 @@ export default function AdminInstitutionsPage() {
           comparison = (a._originalIndex || 0) - (b._originalIndex || 0);
           break;
         case "coa_code":
+          if (!a.coa_code) return 1;
+          if (!b.coa_code) return -1;
           comparison = (a.coa_code || "").localeCompare(b.coa_code || "", undefined, { numeric: true });
           break;
         case "institution_name":
@@ -910,14 +912,14 @@ export default function AdminInstitutionsPage() {
                                 })()
                               ) : sortedRecords.length > 0 ? (
                                 <div className="flex flex-wrap items-center gap-1 max-w-[240px]">
-                                  {sortedRecords.slice(0, 4).map((rec: any) => {
-                                    const shortYr = rec.academic_year.replace("20", "").replace("-20", "-");
+                                  {sortedRecords.map((rec: any) => {
+                                    const shortYr = (rec.academic_year || "").replace(/^20/, "").replace(/[-–_]20/, "-");
                                     return (
                                       <span
                                         key={rec.id || rec.academic_year}
                                         className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${
                                           rec.approved_intake > 0
-                                            ? "bg-gray-50 text-gray-800 border-gray-200"
+                                            ? "bg-gray-50 text-gray-800 border-gray-200 hover:border-black"
                                             : "bg-red-50 text-red-700 border-red-200"
                                         }`}
                                         title={`${rec.academic_year}: ${rec.approved_intake} seats (${rec.approval_status})`}
@@ -926,14 +928,9 @@ export default function AdminInstitutionsPage() {
                                       </span>
                                     );
                                   })}
-                                  {sortedRecords.length > 4 && (
-                                    <span className="text-[10px] text-gray-400 font-bold">
-                                      +{sortedRecords.length - 4} more
-                                    </span>
-                                  )}
                                 </div>
                               ) : (
-                                <span className="text-gray-400">—</span>
+                                <span className="text-gray-400 font-mono text-[11px]">—</span>
                               )}
                             </td>
 
