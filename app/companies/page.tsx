@@ -117,27 +117,30 @@ function CompaniesPageContent() {
     const grouped: any = {};
     const idToName: any = {};
 
-    // 1. Add all REAL companies
+    // 1. Add all REAL companies (excluding educational institutions which have their own directory)
     realCompanies.forEach((comp) => {
       if (!comp.firm_name) return;
+      const orgType = normalizeOrganizationType(comp.organization_type);
+      if (orgType === "Institution / Academic") return;
+
       grouped[comp.firm_name] = {
         company: comp.firm_name,
         slug: comp.slug || generateCompanySlug(comp.firm_name),
         city: comp.city || "",
         state: comp.state || "",
-        organizationType: normalizeOrganizationType(comp.organization_type),
+        organizationType: orgType,
         logo: comp.logo_url || "",
-          totalJobs: 0,
-          created_at: comp.created_at || null,
-          founded_year: comp.founded_year || null,
-          favoriteCount: favoritesCount[comp.slug || generateCompanySlug(comp.firm_name)] || 0,
+        totalJobs: 0,
+        created_at: comp.created_at || null,
+        founded_year: comp.founded_year || null,
+        favoriteCount: favoritesCount[comp.slug || generateCompanySlug(comp.firm_name)] || 0,
       };
       if (comp.id) {
         idToName[comp.id] = comp.firm_name;
       }
     });
 
-    // 2. Add jobs (increment count and fallback company creation)
+    // 2. Add jobs (increment count and fallback company creation, excluding institutions)
     jobs.forEach((job) => {
       let name = job.firm_name;
       
@@ -147,6 +150,8 @@ function CompaniesPageContent() {
       }
 
       if (!name) return; // Skip if somehow completely missing
+      const jobOrgType = normalizeOrganizationType(job.organization_type);
+      if (jobOrgType === "Institution / Academic") return;
 
       if (!grouped[name]) {
         grouped[name] = {
@@ -154,12 +159,12 @@ function CompaniesPageContent() {
           slug: generateCompanySlug(name),
           city: job.city || "",
           state: job.state || "",
-          organizationType: normalizeOrganizationType(job.organization_type),
+          organizationType: jobOrgType,
           logo: "",
-            totalJobs: 0,
-            created_at: job.posted_date || null,
-            founded_year: null,
-            favoriteCount: favoritesCount[generateCompanySlug(name)] || 0,
+          totalJobs: 0,
+          created_at: job.posted_date || null,
+          founded_year: null,
+          favoriteCount: favoritesCount[generateCompanySlug(name)] || 0,
         };
       }
       

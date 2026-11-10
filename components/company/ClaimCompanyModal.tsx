@@ -166,7 +166,7 @@ export default function ClaimCompanyModal({
                 Claim {companyName}
               </h3>
               <p className="text-xs text-gray-500">
-                Verify studio leadership to manage jobs, portfolio & team
+                {/university|college|institute|academic|school/i.test(companyName) ? "Verify institutional administration to manage academic profile & updates" : "Verify studio leadership to manage jobs, portfolio & team"}
               </p>
             </div>
           </div>

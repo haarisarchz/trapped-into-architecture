@@ -1,0 +1,695 @@
+"use client";
+
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { supabase } from "@/lib/supabase";
+import InstitutionCard from "@/components/institutions/InstitutionCard";
+import CollegeCompareModal from "@/components/institutions/CollegeCompareModal";
+import PaginationControls from "@/components/PaginationControls";
+import {
+  Search,
+  MapPin,
+  Building2,
+  SlidersHorizontal,
+  X,
+  GraduationCap,
+  Sparkles,
+  Info,
+  Calendar,
+  Layers,
+  ArrowUpDown,
+  Filter,
+} from "lucide-react";
+
+const MAJOR_STATES = [
+  "All India",
+  "Tamil Nadu",
+  "Karnataka",
+  "Kerala",
+  "Maharashtra",
+  "Delhi",
+  "Gujarat",
+  "Telangana",
+  "Andhra Pradesh",
+  "Uttar Pradesh",
+];
+
+const INTAKE_RANGES = [
+  { label: "All Intake Sizes", value: "all" },
+  { label: "Up to 40 seats", value: "0-40" },
+  { label: "41 to 80 seats", value: "41-80" },
+  { label: "81 to 120 seats", value: "81-120" },
+  { label: "120+ seats", value: "121-500" },
+];
+
+function InstitutionsContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // State from URL
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [selectedState, setSelectedState] = useState(searchParams.get("state") || "All India");
+  const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || "");
+  const [selectedUniversity, setSelectedUniversity] = useState(searchParams.get("university") || "");
+  const [selectedIntakeRange, setSelectedIntakeRange] = useState(searchParams.get("intake") || "all");
+  const [selectedYear, setSelectedYear] = useState(searchParams.get("year") || "latest");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name_asc");
+
+  // Data
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [annualRecords, setAnnualRecords] = useState<any[]>([]);
+  const [rankings, setRankings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Comparison State
+  const [comparedInstitutions, setComparedInstitutions] = useState<any[]>([]);
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 18;
+
+  // Fetch Data on mount
+  useEffect(() => {
+    fetchInstitutionsData();
+  }, []);
+
+  const fetchInstitutionsData = async () => {
+    try {
+      setLoading(true);
+
+      // 1. Fetch institutions
+      const { data: instData, error: instError } = await supabase
+        .from("institutions")
+        .select("*")
+        .eq("is_active", true)
+        .order("institution_name", { ascending: true });
+
+      if (instError) throw instError;
+
+      // 2. Fetch annual intake records
+      const { data: recData, error: recError } = await supabase
+        .from("institution_annual_records")
+        .select("*")
+        .order("academic_year", { ascending: false });
+
+      if (recError) console.warn("Annual records error:", recError.message);
+
+      // 3. Fetch rankings (NIRF)
+      const { data: rankData } = await supabase
+        .from("institution_rankings")
+        .select("*")
+        .order("ranking_year", { ascending: false });
+
+      setInstitutions(instData || []);
+      setAnnualRecords(recData || []);
+      setRankings(rankData || []);
+    } catch (err: any) {
+      console.error("Error fetching institutions:", err?.message || err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Sync URL params
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("search", searchQuery.trim());
+    if (selectedState && selectedState !== "All India") params.set("state", selectedState);
+    if (selectedCity) params.set("city", selectedCity);
+    if (selectedUniversity) params.set("university", selectedUniversity);
+    if (selectedIntakeRange !== "all") params.set("intake", selectedIntakeRange);
+    if (selectedYear !== "latest") params.set("year", selectedYear);
+    if (sortBy !== "name_asc") params.set("sort", sortBy);
+
+    const newUrl = params.toString() ? `/institutions?${params.toString()}` : "/institutions";
+    router.replace(newUrl, { scroll: false });
+  }, [searchQuery, selectedState, selectedCity, selectedUniversity, selectedIntakeRange, selectedYear, sortBy, router]);
+
+  // Derived filter options
+  const uniqueCities = useMemo(() => {
+    const set = new Set<string>();
+    institutions.forEach((i) => {
+      if (selectedState === "All India" || i.state?.toLowerCase() === selectedState.toLowerCase()) {
+        if (i.city) set.add(i.city.trim());
+        else if (i.district) set.add(i.district.trim());
+      }
+    });
+    return Array.from(set).sort();
+  }, [institutions, selectedState]);
+
+  const uniqueUniversities = useMemo(() => {
+    const set = new Set<string>();
+    institutions.forEach((i) => {
+      if (selectedState === "All India" || i.state?.toLowerCase() === selectedState.toLowerCase()) {
+        if (i.affiliated_university) set.add(i.affiliated_university.trim());
+      }
+    });
+    return Array.from(set).sort();
+  }, [institutions, selectedState]);
+
+  const uniqueAcademicYears = useMemo(() => {
+    const set = new Set<string>();
+    annualRecords.forEach((r) => {
+      if (r.academic_year) set.add(r.academic_year);
+    });
+    return Array.from(set).sort().reverse();
+  }, [annualRecords]);
+
+  const latestAcademicYear = uniqueAcademicYears[0] || "2024-2025";
+
+  // Build institution view models with attached latest record, all records, and best rank
+  const enrichedInstitutions = useMemo(() => {
+    const recordsByInst: Record<string, any[]> = {};
+    annualRecords.forEach((r) => {
+      if (!recordsByInst[r.institution_id]) recordsByInst[r.institution_id] = [];
+      recordsByInst[r.institution_id].push(r);
+    });
+
+    const ranksByInst: Record<string, any[]> = {};
+    rankings.forEach((rk) => {
+      if (!ranksByInst[rk.institution_id]) ranksByInst[rk.institution_id] = [];
+      ranksByInst[rk.institution_id].push(rk);
+    });
+
+    return institutions.map((inst) => {
+      const records = recordsByInst[inst.id] || [];
+      const instRanks = ranksByInst[inst.id] || [];
+      const latest = records[0] || null;
+      const bestRank = instRanks.length > 0 ? instRanks[0] : null;
+
+      return {
+        ...inst,
+        annual_records: records,
+        latest_record: latest,
+        best_rank: bestRank,
+      };
+    });
+  }, [institutions, annualRecords, rankings]);
+
+  // Filtering
+  const filteredInstitutions = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+
+    return enrichedInstitutions.filter((inst) => {
+      // 1. Text Search across Name, COA Code, City, District, State, Affiliated University
+      if (q) {
+        const matchesName = inst.institution_name?.toLowerCase().includes(q);
+        const matchesCode = inst.coa_code?.toLowerCase().includes(q);
+        const matchesCity = inst.city?.toLowerCase().includes(q);
+        const matchesDistrict = inst.district?.toLowerCase().includes(q);
+        const matchesState = inst.state?.toLowerCase().includes(q);
+        const matchesUniv = inst.affiliated_university?.toLowerCase().includes(q);
+        const matchesLocality = inst.locality?.toLowerCase().includes(q);
+
+        if (!matchesName && !matchesCode && !matchesCity && !matchesDistrict && !matchesState && !matchesUniv && !matchesLocality) {
+          return false;
+        }
+      }
+
+      // 2. State
+      if (selectedState !== "All India" && inst.state?.toLowerCase() !== selectedState.toLowerCase()) {
+        return false;
+      }
+
+      // 3. City / District
+      if (selectedCity) {
+        const c = inst.city?.toLowerCase();
+        const d = inst.district?.toLowerCase();
+        const target = selectedCity.toLowerCase();
+        if (c !== target && d !== target) return false;
+      }
+
+      // 4. University
+      if (selectedUniversity && inst.affiliated_university?.toLowerCase() !== selectedUniversity.toLowerCase()) {
+        return false;
+      }
+
+      // 5. Intake Range
+      if (selectedIntakeRange !== "all") {
+        const intake = inst.latest_record?.approved_intake ?? 0;
+        const [minStr, maxStr] = selectedIntakeRange.split("-");
+        const min = parseInt(minStr, 10);
+        const max = parseInt(maxStr, 10);
+        if (intake < min || intake > max) return false;
+      }
+
+      // 6. Year specific intake presence
+      if (selectedYear !== "latest") {
+        const hasYear = inst.annual_records?.some((r: any) => r.academic_year === selectedYear);
+        if (!hasYear) return false;
+      }
+
+      return true;
+    });
+  }, [enrichedInstitutions, searchQuery, selectedState, selectedCity, selectedUniversity, selectedIntakeRange, selectedYear]);
+
+  // Sorting
+  const sortedInstitutions = useMemo(() => {
+    return [...filteredInstitutions].sort((a, b) => {
+      if (sortBy === "name_asc") return a.institution_name.localeCompare(b.institution_name);
+      if (sortBy === "name_desc") return b.institution_name.localeCompare(a.institution_name);
+      if (sortBy === "intake_desc") {
+        const intA = a.latest_record?.approved_intake || 0;
+        const intB = b.latest_record?.approved_intake || 0;
+        return intB - intA;
+      }
+      if (sortBy === "intake_asc") {
+        const intA = a.latest_record?.approved_intake || 0;
+        const intB = b.latest_record?.approved_intake || 0;
+        return intA - intB;
+      }
+      if (sortBy === "code_asc") {
+        return (a.coa_code || "").localeCompare(b.coa_code || "");
+      }
+      return 0;
+    });
+  }, [filteredInstitutions, sortBy]);
+
+  // Paginated Slicing
+  const totalItems = sortedInstitutions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const paginatedInstitutions = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return sortedInstitutions.slice(start, start + itemsPerPage);
+  }, [sortedInstitutions, currentPage, itemsPerPage]);
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedState("All India");
+    setSelectedCity("");
+    setSelectedUniversity("");
+    setSelectedIntakeRange("all");
+    setSelectedYear("latest");
+    setSortBy("name_asc");
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters =
+    searchQuery ||
+    selectedState !== "All India" ||
+    selectedCity ||
+    selectedUniversity ||
+    selectedIntakeRange !== "all" ||
+    selectedYear !== "latest";
+
+  // Comparison toggle handlers
+  const handleToggleCompare = (inst: any) => {
+    const isAlready = comparedInstitutions.some((c) => c.id === inst.id);
+    if (isAlready) {
+      setComparedInstitutions(comparedInstitutions.filter((c) => c.id !== inst.id));
+    } else {
+      if (comparedInstitutions.length >= 3) return;
+      setComparedInstitutions([...comparedInstitutions, inst]);
+    }
+  };
+
+  const handleRemoveCompare = (id: string) => {
+    setComparedInstitutions(comparedInstitutions.filter((c) => c.id !== id));
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fafafa] flex flex-col">
+      <Navbar />
+
+      <main className="flex-1 pb-16">
+        {/* HERO / INTRO SECTION */}
+        <section className="bg-black text-white pt-12 pb-14 px-4 sm:px-6 border-b border-gray-800">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-gray-300 rounded-full text-xs font-semibold uppercase tracking-wider mb-3">
+                  <GraduationCap size={14} className="text-white" />
+                  National Directory
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
+                  Architecture Institutions in India
+                </h1>
+                <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
+                  Discover, explore, and compare official Council of Architecture (COA) recognized institutions across India.
+                  Access validated annual approved intake figures, university affiliations, and regulatory approval records.
+                </p>
+              </div>
+
+              {/* Latest Record Badge */}
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 shrink-0 self-start md:self-auto">
+                <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">
+                  Reporting Year Data
+                </div>
+                <div className="text-2xl font-extrabold text-white flex items-center gap-2">
+                  <span>{latestAcademicYear}</span>
+                </div>
+                <div className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
+                  <Info size={12} /> Source: Official Council of Architecture
+                </div>
+              </div>
+            </div>
+
+            {/* SEARCH BAR */}
+            <div className="mt-8 bg-white rounded-2xl p-2 sm:p-2.5 shadow-xl flex flex-col sm:flex-row items-stretch gap-2">
+              <div className="relative flex-1 flex items-center">
+                <Search size={20} className="absolute left-4 text-gray-400 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Search by college name, COA code (e.g. TN01), city, district, or university..."
+                  className="w-full pl-11 pr-10 py-3 text-sm sm:text-base text-gray-900 bg-transparent focus:outline-none placeholder:text-gray-400"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 p-1 text-gray-400 hover:text-black transition"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="md:hidden flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-800 rounded-xl font-bold text-sm hover:bg-gray-200 transition"
+                >
+                  <SlidersHorizontal size={16} /> Filters
+                  {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
+                </button>
+              </div>
+            </div>
+
+            {/* STATE PILLS CAROUSEL / SHORTCUTS */}
+            <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+              <span className="text-gray-400 font-medium shrink-0 mr-1">Explore States:</span>
+              {MAJOR_STATES.map((st) => {
+                const active = selectedState === st;
+                return (
+                  <button
+                    key={st}
+                    onClick={() => {
+                      setSelectedState(st);
+                      setSelectedCity("");
+                      setCurrentPage(1);
+                    }}
+                    className={`px-3.5 py-1.5 rounded-full font-semibold transition shrink-0 whitespace-nowrap ${
+                      active
+                        ? "bg-white text-black shadow-sm"
+                        : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white"
+                    }`}
+                  >
+                    {st}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* MAIN DIRECTORY VIEW */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* SIDEBAR FILTERS (DESKTOP) */}
+            <aside className={`md:block ${showMobileFilters ? "block" : "hidden"} md:col-span-1 space-y-6`}>
+              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs sticky top-24">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                  <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
+                    <Filter size={16} /> Filter Institutions
+                  </div>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-xs text-blue-600 hover:underline font-semibold"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+
+                {/* State Filter */}
+                <div className="space-y-1.5 mb-4">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">State</label>
+                  <select
+                    value={selectedState}
+                    onChange={(e) => {
+                      setSelectedState(e.target.value);
+                      setSelectedCity("");
+                      setCurrentPage(1);
+                    }}
+                    className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                  >
+                    {MAJOR_STATES.map((st) => (
+                      <option key={st} value={st}>
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* City / District Filter */}
+                {uniqueCities.length > 0 && (
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">City / District</label>
+                    <select
+                      value={selectedCity}
+                      onChange={(e) => {
+                        setSelectedCity(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                    >
+                      <option value="">All Cities & Districts</option>
+                      {uniqueCities.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Affiliated University */}
+                {uniqueUniversities.length > 0 && (
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                      Affiliated University
+                    </label>
+                    <select
+                      value={selectedUniversity}
+                      onChange={(e) => {
+                        setSelectedUniversity(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                    >
+                      <option value="">All Universities</option>
+                      {uniqueUniversities.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Approved Intake Range */}
+                <div className="space-y-1.5 mb-4">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Approved Seats</label>
+                  <select
+                    value={selectedIntakeRange}
+                    onChange={(e) => {
+                      setSelectedIntakeRange(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                  >
+                    {INTAKE_RANGES.map((r) => (
+                      <option key={r.value} value={r.value}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Academic Reporting Year Filter */}
+                {uniqueAcademicYears.length > 1 && (
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Reporting Year</label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => {
+                        setSelectedYear(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                    >
+                      <option value="latest">Latest Year ({latestAcademicYear})</option>
+                      {uniqueAcademicYears.map((yr) => (
+                        <option key={yr} value={yr}>
+                          {yr}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Disclaimer note */}
+                <div className="pt-3 border-t border-gray-100 text-[11px] text-gray-400 leading-normal">
+                  All listings are based on published Council of Architecture records.
+                </div>
+              </div>
+            </aside>
+
+            {/* RESULTS CONTENT */}
+            <div className="md:col-span-3">
+              {/* Results Top Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 bg-white p-4 rounded-2xl border border-gray-200">
+                <div className="text-sm font-bold text-gray-900">
+                  Showing <span className="text-black">{filteredInstitutions.length}</span> institutions
+                  {selectedState !== "All India" && <span className="text-gray-500 font-normal"> in {selectedState}</span>}
+                </div>
+
+                {/* Sort selector */}
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown size={14} className="text-gray-400" />
+                  <span className="text-xs text-gray-500 font-medium">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="text-xs font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-black"
+                  >
+                    <option value="name_asc">Institution Name (A-Z)</option>
+                    <option value="name_desc">Institution Name (Z-A)</option>
+                    <option value="intake_desc">Intake: High to Low</option>
+                    <option value="intake_asc">Intake: Low to High</option>
+                    <option value="code_asc">COA Code</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Loading State */}
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse space-y-4">
+                      <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                      <div className="h-10 bg-gray-100 rounded-xl mt-4"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : paginatedInstitutions.length === 0 ? (
+                /* Empty State */
+                <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-xl mx-auto my-8">
+                  <GraduationCap size={48} className="mx-auto text-gray-300 mb-3" />
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">No institutions found</h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    {hasActiveFilters
+                      ? "No institutions matched your current search or filter criteria. Try adjusting or clearing your filters."
+                      : "Institution records are currently being imported from official COA sources. Check back shortly!"}
+                  </p>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition"
+                    >
+                      Clear All Filters
+                    </button>
+                  )}
+                </div>
+              ) : (
+                /* Cards Grid */
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {paginatedInstitutions.map((inst) => (
+                      <InstitutionCard
+                        key={inst.id}
+                        institution={inst}
+                        isCompared={comparedInstitutions.some((c) => c.id === inst.id)}
+                        onToggleCompare={handleToggleCompare}
+                        canCompare={comparedInstitutions.length < 3}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="mt-8 flex justify-center">
+                      <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        itemsPerPage={itemsPerPage}
+                        totalItems={totalItems}
+                        onPageChange={(p) => {
+                          setCurrentPage(p);
+                          window.scrollTo({ top: 380, behavior: "smooth" });
+                        }}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* FLOATING COMPARE BAR */}
+        {comparedInstitutions.length > 0 && (
+          <aside aria-label="Institution Comparison Bar" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-black text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-4 max-w-lg w-[92vw] border border-gray-700">
+            <div className="flex-1 truncate">
+              <div className="text-xs text-gray-400 font-semibold uppercase">Comparison ({comparedInstitutions.length}/3)</div>
+              <div className="text-xs font-bold text-white truncate">
+                {comparedInstitutions.map((c) => c.coa_code || c.institution_name).join(", ")}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsCompareModalOpen(true)}
+                className="bg-white text-black px-4 py-2 rounded-xl text-xs font-extrabold hover:bg-gray-100 transition shadow-sm"
+              >
+                Compare Now
+              </button>
+              <button
+                onClick={() => setComparedInstitutions([])}
+                className="p-2 text-gray-400 hover:text-white transition"
+                title="Clear comparison"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </aside>
+        )}
+
+        {/* COMPARE MODAL */}
+        <CollegeCompareModal
+          isOpen={isCompareModalOpen}
+          onClose={() => setIsCompareModalOpen(false)}
+          institutions={comparedInstitutions}
+          onRemove={handleRemoveCompare}
+        />
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
+
+export default function InstitutionsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-sm font-semibold text-gray-500">Loading Institutions Directory...</div>
+        </div>
+      }
+    >
+      <InstitutionsContent />
+    </Suspense>
+  );
+}

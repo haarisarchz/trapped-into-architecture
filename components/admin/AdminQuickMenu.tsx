@@ -105,9 +105,10 @@ export default function AdminQuickMenu() {
         {navItem("/admin/add-job", "Add New Job")}
         {navItem("/admin/companies", "Manage Companies")}
         
-        {userRole === "ceo" && (
+        {(userRole === "ceo" || userRole === "superadmin") && (
           <>
             {navItem("/admin/catalog", "Database Catalog")}
+            {navItem("/admin/institutions", "Institutions")}
             {navItem("/admin/quizzes", "Architecture Quizzes")}
           </>
         )}
