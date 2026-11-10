@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import Navbar from "@/components/Navbar";
@@ -40,6 +40,8 @@ import {
   Plus,
   AlertCircle,
   Copy,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 type SortField =
@@ -138,9 +140,43 @@ export default function AdminInstitutionsPage() {
     state: "",
   });
   const [modalIntakeList, setModalIntakeList] = useState<any[]>([]);
+  const [newCourseInput, setNewCourseInput] = useState<"B.Arch" | "M.Arch" | "Diploma">("B.Arch");
   const [newYearInput, setNewYearInput] = useState("");
   const [newSeatsInput, setNewSeatsInput] = useState<number | "">("");
   const [isSavingModal, setIsSavingModal] = useState(false);
+
+  // Course Column Visibility Filter: ALL, B.Arch, M.Arch, Diploma
+  const [courseColumnFilter, setCourseColumnFilter] = useState<"ALL" | "B.Arch" | "M.Arch" | "Diploma">("ALL");
+
+  // Synchronized Table Horizontal Scrollbar Refs
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(2600);
+
+  const handleTableScroll = () => {
+    if (tableScrollRef.current && topScrollRef.current) {
+      topScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+    }
+  };
+
+  const handleTopScroll = () => {
+    if (tableScrollRef.current && topScrollRef.current) {
+      tableScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    }
+  };
+
+  const scrollTableBy = (delta: number) => {
+    if (tableScrollRef.current) {
+      tableScrollRef.current.scrollBy({ left: delta, behavior: "smooth" });
+    }
+  };
+
+  // Dynamically update scrollable width
+  useEffect(() => {
+    if (tableScrollRef.current) {
+      setTableScrollWidth(tableScrollRef.current.scrollWidth || 2600);
+    }
+  }, [liveInstitutions, courseColumnFilter, pageSize]);
 
   // --- TAB 3 (AUDIT HISTORY) STATE ---
   const [auditDocs, setAuditDocs] = useState<any[]>([]);
@@ -247,6 +283,16 @@ export default function AdminInstitutionsPage() {
     };
   };
 
+  // Recognized COA Courses: B.Arch (UG), M.Arch (PG/Masters), Diploma
+  const COA_COURSES = useMemo(
+    () => [
+      { id: "B.Arch", label: "B.Arch", tag: "UG", badge: "bg-blue-50 text-blue-700 border-blue-200" },
+      { id: "M.Arch", label: "M.Arch", tag: "PG", badge: "bg-purple-50 text-purple-700 border-purple-200" },
+      { id: "Diploma", label: "Diploma", tag: "Dip", badge: "bg-amber-50 text-amber-700 border-amber-200" },
+    ],
+    []
+  );
+
   // --- DERIVED INTAKE YEARS LIST (SEPARATE COLUMNS) ---
   const allDistinctIntakeYears = useMemo(() => {
     const set = new Set<string>();
@@ -255,9 +301,42 @@ export default function AdminInstitutionsPage() {
         if (r.academic_year) set.add(r.academic_year.trim());
       });
     });
-    // Sort descending: e.g. "2024-2025", "2023-2024", "2022-2023", "2021-2022", "2020-2021"
+    // Ensure the 5 latest standard academic years are always present
+    ["2024-2025", "2023-2024", "2022-2023", "2021-2022", "2020-2021"].forEach((y) => set.add(y));
     return Array.from(set).sort((a, b) => b.localeCompare(a));
   }, [liveInstitutions]);
+
+  // Derived Active Intake Columns for Table
+  const activeIntakeColumns = useMemo(() => {
+    const cols: {
+      course: string;
+      courseLabel: string;
+      tag: string;
+      badge: string;
+      year: string;
+      shortYear: string;
+      key: string;
+    }[] = [];
+
+    COA_COURSES.forEach((c) => {
+      if (courseColumnFilter === "ALL" || courseColumnFilter === c.id) {
+        allDistinctIntakeYears.forEach((yr) => {
+          const shortYear = yr.replace(/^20/, "").replace(/[-–_]20/, "-");
+          cols.push({
+            course: c.id,
+            courseLabel: c.label,
+            tag: c.tag,
+            badge: c.badge,
+            year: yr,
+            shortYear,
+            key: `${c.id}__${yr}`,
+          });
+        });
+      }
+    });
+
+    return cols;
+  }, [COA_COURSES, allDistinctIntakeYears, courseColumnFilter]);
 
   // Derived filter options: Unique States
   const availableStates = useMemo(() => {
@@ -370,12 +449,13 @@ export default function AdminInstitutionsPage() {
     list.sort((a, b) => {
       let comparison = 0;
 
-      // Handle Year-Specific Intake Sort (e.g. "intake_2024-2025")
+      // Handle Year & Course-Specific Intake Sort (e.g. "intake_B.Arch__2024-2025")
       if (sortField.startsWith("intake_")) {
-        const targetYear = sortField.replace("intake_", "");
+        const key = sortField.replace("intake_", "");
+        const [targetCourse, targetYear] = key.includes("__") ? key.split("__") : ["B.Arch", key];
         const getSeats = (item: any) => {
           const rec = (item.institution_annual_records || []).find(
-            (r: any) => r.academic_year === targetYear
+            (r: any) => (r.course_name || "B.Arch") === targetCourse && r.academic_year === targetYear
           );
           return rec ? rec.approved_intake : -1;
         };
@@ -482,17 +562,19 @@ export default function AdminInstitutionsPage() {
     }
     const seats = typeof newSeatsInput === "number" ? newSeatsInput : 0;
     const exists = modalIntakeList.some(
-      (r) => r.academic_year.toLowerCase() === newYearInput.trim().toLowerCase()
+      (r) =>
+        (r.course_name || "B.Arch").toLowerCase() === newCourseInput.toLowerCase() &&
+        r.academic_year.toLowerCase() === newYearInput.trim().toLowerCase()
     );
     if (exists) {
-      showToast("error", `Academic year ${newYearInput} is already present.`);
+      showToast("error", `${newCourseInput} for academic year ${newYearInput} is already mapped.`);
       return;
     }
 
     setModalIntakeList((prev) => [
       {
         academic_year: newYearInput.trim(),
-        course_name: "B.Arch",
+        course_name: newCourseInput,
         approved_intake: seats,
         approval_status: seats > 0 ? "Approved" : "Zero Intake / Discontinued",
       },
@@ -884,8 +966,83 @@ export default function AdminInstitutionsPage() {
                 </div>
               </div>
 
+              {/* HORIZONTAL CONTROLS & COURSE COLUMN FILTER TOOLBAR */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50/90 p-2.5 px-3 rounded-2xl border border-gray-200 text-xs">
+                {/* Course Intake Visibility Pills */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mr-1">
+                    Intake Columns:
+                  </span>
+                  {(["ALL", "B.Arch", "M.Arch", "Diploma"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setCourseColumnFilter(mode)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                        courseColumnFilter === mode
+                          ? "bg-black text-white shadow-xs"
+                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+                      }`}
+                    >
+                      {mode === "ALL"
+                        ? `All Courses (${activeIntakeColumns.length})`
+                        : mode === "B.Arch"
+                        ? "B.Arch (UG)"
+                        : mode === "M.Arch"
+                        ? "M.Arch (Masters)"
+                        : "Diploma"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Horizontal Scroll Navigation Buttons */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-gray-500 font-medium hidden md:inline">
+                    Horizontal Scroll:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => scrollTableBy(-400)}
+                    className="px-2.5 py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-bold flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                    title="Scroll columns left"
+                  >
+                    <ChevronLeft size={14} />
+                    <span>Left</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollTableBy(400)}
+                    className="px-2.5 py-1 bg-white hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-700 font-bold flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                    title="Scroll columns right"
+                  >
+                    <span>Right</span>
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* SYNCHRONIZED TOP HORIZONTAL SCROLLBAR */}
+              <div
+                ref={topScrollRef}
+                onScroll={handleTopScroll}
+                className="overflow-x-auto overflow-y-hidden border border-gray-200 rounded-t-xl bg-gray-100/70 custom-table-scrollbar"
+                style={{
+                  scrollbarWidth: "auto",
+                  scrollbarColor: "#64748b #f1f5f9",
+                }}
+              >
+                <div style={{ width: `${tableScrollWidth}px`, height: "8px" }} />
+              </div>
+
               {/* TABLE CONTAINER */}
-              <div className="overflow-x-auto border border-gray-200 rounded-2xl shadow-2xs">
+              <div
+                ref={tableScrollRef}
+                onScroll={handleTableScroll}
+                className="overflow-x-auto border border-t-0 border-gray-200 rounded-b-2xl shadow-2xs custom-table-scrollbar"
+                style={{
+                  scrollbarWidth: "auto",
+                  scrollbarColor: "#64748b #f1f5f9",
+                }}
+              >
                 <table className="w-full text-left text-xs border-collapse">
                   <thead className="bg-gray-50 border-b border-gray-200 font-bold uppercase tracking-wider text-gray-500">
                     <tr>
@@ -977,22 +1134,22 @@ export default function AdminInstitutionsPage() {
                         </div>
                       </th>
 
-                      {/* SEPARATE YEARLY INTAKE COLUMNS */}
-                      {allDistinctIntakeYears.map((yr) => {
-                        const shortHeader = yr.replace(/^20/, "").replace(/[-–_]20/, "-");
-                        return (
-                          <th
-                            key={yr}
-                            onClick={() => handleSort(`intake_${yr}`)}
-                            className="p-3 text-center whitespace-nowrap cursor-pointer select-none hover:bg-gray-100 group transition bg-gray-50/80"
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              <span>{shortHeader} Intake</span>
-                              {renderSortIndicator(`intake_${yr}`)}
-                            </div>
-                          </th>
-                        );
-                      })}
+                      {/* SEPARATE INDIVIDUAL INTAKE COLUMNS (B.Arch, M.Arch, Diploma) */}
+                      {activeIntakeColumns.map((col) => (
+                        <th
+                          key={col.key}
+                          onClick={() => handleSort(`intake_${col.key}`)}
+                          className="p-3 text-center whitespace-nowrap cursor-pointer select-none hover:bg-gray-100 group transition bg-gray-50/80"
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${col.badge}`}>
+                              {col.course}
+                            </span>
+                            <span>{col.shortYear}</span>
+                            {renderSortIndicator(`intake_${col.key}`)}
+                          </div>
+                        </th>
+                      ))}
 
                       {/* Email Column */}
                       <th
@@ -1035,7 +1192,7 @@ export default function AdminInstitutionsPage() {
                     {paginatedInstitutions.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={12 + allDistinctIntakeYears.length}
+                          colSpan={12 + activeIntakeColumns.length}
                           className="p-8 text-center text-gray-400"
                         >
                           No institutions match your search and filter criteria.
@@ -1045,10 +1202,13 @@ export default function AdminInstitutionsPage() {
                       paginatedInstitutions.map((inst) => {
                         const closure = getClosureInfo(inst);
 
-                        // Build Map of academic_year -> record for fast lookup
-                        const yearRecordMap = new Map();
+                        // Build Map of `${course}__${academic_year}` -> record for fast lookup
+                        const courseYearRecordMap = new Map();
                         (inst.institution_annual_records || []).forEach((r: any) => {
-                          if (r.academic_year) yearRecordMap.set(r.academic_year.trim(), r);
+                          if (r.academic_year) {
+                            const c = r.course_name || "B.Arch";
+                            courseYearRecordMap.set(`${c}__${r.academic_year.trim()}`, r);
+                          }
                         });
 
                         const formattedEmails = formatSeparatedValues(inst.official_email);
@@ -1115,12 +1275,12 @@ export default function AdminInstitutionsPage() {
                               )}
                             </td>
 
-                            {/* SEPARATE INDIVIDUAL INTAKE COLUMNS */}
-                            {allDistinctIntakeYears.map((yr) => {
-                              const rec = yearRecordMap.get(yr);
+                            {/* SEPARATE INDIVIDUAL INTAKE COLUMNS (B.Arch, M.Arch, Diploma) */}
+                            {activeIntakeColumns.map((col) => {
+                              const rec = courseYearRecordMap.get(col.key);
                               if (!rec) {
                                 return (
-                                  <td key={yr} className="p-3 text-center text-gray-300 font-mono text-[11px]">
+                                  <td key={col.key} className="p-3 text-center text-gray-300 font-mono text-[11px]">
                                     —
                                   </td>
                                 );
@@ -1131,18 +1291,18 @@ export default function AdminInstitutionsPage() {
                                 /zero|discontinued|withdrawn/i.test(rec.approval_status || "");
 
                               return (
-                                <td key={yr} className="p-3 text-center whitespace-nowrap">
+                                <td key={col.key} className="p-3 text-center whitespace-nowrap">
                                   {isZero ? (
                                     <span
                                       className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 border border-red-200"
-                                      title={`${yr}: Zero Intake`}
+                                      title={`${col.course} ${col.year}: Zero Intake`}
                                     >
                                       0
                                     </span>
                                   ) : (
                                     <span
                                       className="font-extrabold text-gray-900 font-mono text-xs"
-                                      title={`${yr}: ${seats} approved seats`}
+                                      title={`${col.course} ${col.year}: ${seats} approved seats`}
                                     >
                                       {seats}
                                     </span>
@@ -1406,9 +1566,18 @@ export default function AdminInstitutionsPage() {
                 {/* ADD NEW YEAR INTAKE ROW */}
                 <div className="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-2">
                   <div className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1">
-                    <Plus size={12} /> Map Additional Intake Year (Future or Past)
+                    <Plus size={12} /> Map Additional Course & Intake Year
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
+                    <select
+                      value={newCourseInput}
+                      onChange={(e) => setNewCourseInput(e.target.value as any)}
+                      className="px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-xl font-bold cursor-pointer"
+                    >
+                      <option value="B.Arch">B.Arch (UG)</option>
+                      <option value="M.Arch">M.Arch (Masters)</option>
+                      <option value="Diploma">Diploma (D.Arch)</option>
+                    </select>
                     <input
                       type="text"
                       placeholder="Academic Year (e.g. 2025-2026)"
@@ -1427,9 +1596,9 @@ export default function AdminInstitutionsPage() {
                     />
                     <button
                       onClick={handleAddNewYearToIntakeModal}
-                      className="px-3.5 py-1.5 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition"
+                      className="px-3.5 py-1.5 bg-black text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition cursor-pointer"
                     >
-                      Add Year
+                      Add Intake
                     </button>
                   </div>
                 </div>
@@ -1442,25 +1611,40 @@ export default function AdminInstitutionsPage() {
                   {modalIntakeList.length === 0 ? (
                     <div className="text-xs text-gray-400 italic py-2">No intakes mapped yet.</div>
                   ) : (
-                    modalIntakeList.map((rec, i) => (
-                      <div
-                        key={rec.academic_year}
-                        className="flex items-center justify-between p-2.5 bg-white border border-gray-200 rounded-xl text-xs"
-                      >
-                        <div className="font-mono font-bold text-gray-900">{rec.academic_year}</div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-500 text-[11px]">Approved Seats:</span>
-                          <input
-                            type="number"
-                            value={rec.approved_intake ?? 0}
-                            onChange={(e) =>
-                              handleUpdateModalIntakeSeat(i, parseInt(e.target.value, 10) || 0)
-                            }
-                            className="w-20 px-2 py-1 border border-gray-200 rounded-lg text-xs font-bold text-right"
-                          />
+                    modalIntakeList.map((rec, i) => {
+                      const course = rec.course_name || "B.Arch";
+                      const badgeClass =
+                        course === "M.Arch"
+                          ? "bg-purple-50 text-purple-700 border-purple-200"
+                          : course === "Diploma"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200";
+
+                      return (
+                        <div
+                          key={`${course}_${rec.academic_year}`}
+                          className="flex items-center justify-between p-2.5 bg-white border border-gray-200 rounded-xl text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${badgeClass}`}>
+                              {course}
+                            </span>
+                            <span className="font-mono font-bold text-gray-900">{rec.academic_year}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-500 text-[11px]">Approved Seats:</span>
+                            <input
+                              type="number"
+                              value={rec.approved_intake ?? 0}
+                              onChange={(e) =>
+                                handleUpdateModalIntakeSeat(i, parseInt(e.target.value, 10) || 0)
+                              }
+                              className="w-20 px-2 py-1 border border-gray-200 rounded-lg text-xs font-bold text-right"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
 
@@ -1914,6 +2098,25 @@ export default function AdminInstitutionsPage() {
           )}
         </div>
       </main>
+
+      {/* Global CSS for always-visible high-contrast table horizontal scrollbars */}
+      <style jsx global>{`
+        .custom-table-scrollbar::-webkit-scrollbar {
+          height: 12px;
+        }
+        .custom-table-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 6px;
+        }
+        .custom-table-scrollbar::-webkit-scrollbar-thumb {
+          background: #94a3b8;
+          border-radius: 6px;
+          border: 2px solid #f1f5f9;
+        }
+        .custom-table-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #475569;
+        }
+      `}</style>
 
       <Footer />
     </div>
