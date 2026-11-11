@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import InstitutionCard from "@/components/institutions/InstitutionCard";
 import CollegeCompareModal from "@/components/institutions/CollegeCompareModal";
 import PaginationControls from "@/components/PaginationControls";
+import dynamic from "next/dynamic";
 import {
   Search,
   MapPin,
@@ -25,7 +26,22 @@ import {
   ShieldCheck,
   BookOpen,
   Check,
+  LayoutGrid,
+  Map as MapIcon,
 } from "lucide-react";
+
+const InstitutionsMapView = dynamic(
+  () => import("@/components/institutions/InstitutionsMapView"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[750px] w-full rounded-3xl bg-gray-100 animate-pulse flex flex-col items-center justify-center text-gray-400 gap-3 border border-gray-200">
+        <div className="w-10 h-10 rounded-full border-2 border-black border-t-transparent animate-spin" />
+        <span className="text-sm font-semibold text-gray-600">Loading Interactive India Architecture Map...</span>
+      </div>
+    ),
+  }
+);
 
 const MAJOR_STATES = [
   "All India",
@@ -67,6 +83,9 @@ function InstitutionsContent() {
   const [filterMultiYear, setFilterMultiYear] = useState(searchParams.get("multiYear") === "true");
   const [filterNirf, setFilterNirf] = useState(searchParams.get("nirf") === "true");
   const [filterActiveOnly, setFilterActiveOnly] = useState(searchParams.get("activeOnly") === "true");
+  const [viewMode, setViewMode] = useState<"grid" | "map">(
+    (searchParams.get("view") as any) === "map" ? "map" : "grid"
+  );
 
   // Data
   const [institutions, setInstitutions] = useState<any[]>([]);
@@ -153,6 +172,7 @@ function InstitutionsContent() {
     if (filterMultiYear) params.set("multiYear", "true");
     if (filterNirf) params.set("nirf", "true");
     if (filterActiveOnly) params.set("activeOnly", "true");
+    if (viewMode === "map") params.set("view", "map");
 
     const newUrl = params.toString() ? `/institutions?${params.toString()}` : "/institutions";
     router.replace(newUrl, { scroll: false });
@@ -169,6 +189,7 @@ function InstitutionsContent() {
     filterMultiYear,
     filterNirf,
     filterActiveOnly,
+    viewMode,
     router,
   ]);
 
@@ -959,22 +980,54 @@ function InstitutionsContent() {
                   {selectedState !== "All India" && <span className="text-gray-500 font-normal"> in {selectedState}</span>}
                 </div>
 
-                {/* Sort selector */}
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown size={14} className="text-gray-400" />
-                  <span className="text-xs text-gray-500 font-medium">Sort by:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="text-xs font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-black"
-                  >
-                    <option value="name_asc">Institution Name (A-Z)</option>
-                    <option value="nirf_asc">NIRF Rank: Top First</option>
-                    <option value="name_desc">Institution Name (Z-A)</option>
-                    <option value="intake_desc">Intake: High to Low</option>
-                    <option value="intake_asc">Intake: Low to High</option>
-                    <option value="code_asc">COA Code</option>
-                  </select>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* View Mode Switcher */}
+                  <div className="flex items-center p-1 bg-gray-100 rounded-xl border border-gray-200">
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        viewMode === "grid"
+                          ? "bg-white text-black shadow-2xs"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                      title="Grid Cards View"
+                    >
+                      <LayoutGrid size={13} />
+                      <span>Grid</span>
+                    </button>
+                    <button
+                      onClick={() => setViewMode("map")}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                        viewMode === "map"
+                          ? "bg-black text-white shadow-2xs"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                      title="Interactive Map View"
+                    >
+                      <MapIcon size={13} />
+                      <span>Interactive Map</span>
+                    </button>
+                  </div>
+
+                  {/* Sort selector */}
+                  {viewMode === "grid" && (
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown size={14} className="text-gray-400" />
+                      <span className="text-xs text-gray-500 font-medium">Sort:</span>
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="text-xs font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-black"
+                      >
+                        <option value="name_asc">Institution Name (A-Z)</option>
+                        <option value="nirf_asc">NIRF Rank: Top First</option>
+                        <option value="name_desc">Institution Name (Z-A)</option>
+                        <option value="intake_desc">Intake: High to Low</option>
+                        <option value="intake_asc">Intake: Low to High</option>
+                        <option value="code_asc">COA Code</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1009,6 +1062,12 @@ function InstitutionsContent() {
                     </button>
                   )}
                 </div>
+              ) : viewMode === "map" ? (
+                /* Interactive India Map View */
+                <InstitutionsMapView
+                  institutions={sortedInstitutions}
+                  selectedProgram={selectedProgram}
+                />
               ) : (
                 /* Cards Grid */
                 <>

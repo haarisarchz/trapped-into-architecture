@@ -14,6 +14,8 @@ export const metadata: Metadata = {
     "NATA JEE Paper 2 colleges",
     "NIRF architecture rankings",
     "Architecture institution directory",
+    "Interactive architecture map India",
+    "B.Arch colleges locator map",
   ],
   openGraph: {
     title: "Council of Architecture (COA) National Directory | Trapped Into Architecture",
