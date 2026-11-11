@@ -491,6 +491,7 @@ export default async function InstitutionProfilePage({
                         <th className="py-3 px-3">Course</th>
                         <th className="py-3 px-3">Approved Seats</th>
                         <th className="py-3 px-3">Trend</th>
+                        <th className="py-3 px-3">Official In-Charge</th>
                         <th className="py-3 px-3">Status</th>
                         <th className="py-3 px-3 rounded-r-lg">Source Document</th>
                       </tr>
@@ -518,6 +519,18 @@ export default async function InstitutionProfilePage({
                         const isLatest = idx === 0;
                         const isPG = rec.course_name && (rec.course_name.startsWith("M.Arch") || rec.course_name.includes("Master"));
                         const isDiploma = rec.course_name && rec.course_name.includes("Diploma");
+
+                        let leaderTitle: string | null = null;
+                        let customSource: string | null = null;
+                        if (rec.source_reference) {
+                          try {
+                            const parsed = JSON.parse(rec.source_reference);
+                            leaderTitle = parsed.head || null;
+                            customSource = parsed.source || null;
+                          } catch {
+                            leaderTitle = typeof rec.source_reference === "string" ? rec.source_reference : null;
+                          }
+                        }
 
                         return (
                           <tr
@@ -565,6 +578,16 @@ export default async function InstitutionProfilePage({
                               </div>
                             </td>
                             <td className="py-3.5 px-3 whitespace-nowrap">
+                              {leaderTitle ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                                  <User size={11} className="text-gray-500 shrink-0" />
+                                  {leaderTitle}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-300 font-mono">—</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-3 whitespace-nowrap">
                               {/closed|discontinued/i.test(rec.approval_status || "") ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
                                   {rec.approval_status}
@@ -580,7 +603,7 @@ export default async function InstitutionProfilePage({
                               )}
                             </td>
                             <td className="py-3.5 px-3 text-xs text-gray-500 whitespace-nowrap">
-                              {rec.source_documents?.document_title || "COA Gazette Record"}
+                              {customSource || rec.source_documents?.document_title || "COA Gazette Record"}
                             </td>
                           </tr>
                         );
@@ -650,6 +673,9 @@ export default async function InstitutionProfilePage({
                   <div className="text-xs text-gray-900 font-bold">
                     {inst.head_of_institution}
                   </div>
+                  <p className="text-[10px] text-gray-400 leading-tight">
+                    Session-specific leadership designations (HOD / Principal / Dean) are preserved in the annual intake history table.
+                  </p>
                 </div>
               )}
 

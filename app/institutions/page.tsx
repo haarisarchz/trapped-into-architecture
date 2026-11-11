@@ -90,13 +90,26 @@ function InstitutionsContent() {
 
       if (instError) throw instError;
 
-      // 2. Fetch annual intake records
-      const { data: recData, error: recError } = await supabase
-        .from("institution_annual_records")
-        .select("*")
-        .order("academic_year", { ascending: false });
+      // 2. Fetch annual intake records with pagination to load complete history (>3,000 records)
+      let allAnnualRecords: any[] = [];
+      let annPage = 0;
+      const pageSize = 1000;
+      while (true) {
+        const { data: chunk, error: chunkErr } = await supabase
+          .from("institution_annual_records")
+          .select("*")
+          .order("academic_year", { ascending: false })
+          .range(annPage * pageSize, (annPage + 1) * pageSize - 1);
 
-      if (recError) console.warn("Annual records error:", recError.message);
+        if (chunkErr) {
+          console.warn("Annual records error:", chunkErr.message);
+          break;
+        }
+        if (!chunk || chunk.length === 0) break;
+        allAnnualRecords = allAnnualRecords.concat(chunk);
+        if (chunk.length < pageSize) break;
+        annPage++;
+      }
 
       // 3. Fetch rankings (NIRF)
       const { data: rankData } = await supabase
@@ -105,7 +118,7 @@ function InstitutionsContent() {
         .order("ranking_year", { ascending: false });
 
       setInstitutions(instData || []);
-      setAnnualRecords(recData || []);
+      setAnnualRecords(allAnnualRecords || []);
       setRankings(rankData || []);
     } catch (err: any) {
       console.error("Error fetching institutions:", err?.message || err);

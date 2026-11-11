@@ -66,6 +66,11 @@ export default function InstitutionCard({
             <span className="text-xs font-semibold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">
               {institution.state}
             </span>
+            {institution.institution_type === 'Polytechnic / Diploma Institution' ? (
+              <span className="text-xs font-semibold px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-md">
+                Polytechnic
+              </span>
+            ) : null}
             {isClosed ? (
               <span className="text-xs font-bold px-2.5 py-1 bg-red-100 text-red-800 border border-red-200 rounded-md">
                 Closed ({shortClosureYr || "COA"})
