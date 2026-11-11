@@ -12,12 +12,12 @@ import { calculateCompanyLevel } from "@/utils/companyLevel";
 export default function Navbar() {
   const router = useRouter();
 
-    const [showProfileMenu, setShowProfileMenu] =
-  useState(false);
+  const [showVacanciesMenu, setShowVacanciesMenu] = useState(false);
+  const [showProfilesMenu, setShowProfilesMenu] = useState(false);
+  const [mobileVacanciesOpen, setMobileVacanciesOpen] = useState(false);
+  const [mobileProfilesOpen, setMobileProfilesOpen] = useState(false);
 
-
-const [showUserMenu, setShowUserMenu] =
-  useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const [showAuthPopup, setShowAuthPopup] =
     useState(false);
@@ -89,6 +89,15 @@ const [showUserMenu, setShowUserMenu] =
     const handleClickOutside = (event: any) => {
       if (!(event.target).closest('.notif-container')) {
         setShowNotif(false);
+      }
+      if (!(event.target).closest('.vacancies-menu-container')) {
+        setShowVacanciesMenu(false);
+      }
+      if (!(event.target).closest('.profiles-menu-container')) {
+        setShowProfilesMenu(false);
+      }
+      if (!(event.target).closest('.user-menu-container')) {
+        setShowUserMenu(false);
       }
     };
     if (showNotif) {
@@ -774,65 +783,113 @@ useEffect(() => {
         <span>Trapped Into Architecture</span>
       </Link>
 
-    <div className="flex items-center gap-8">
+    <div className="flex items-center gap-7 lg:gap-8">
 
       {/* HOME */}
-
       <Link
         href="/"
-        className="hover:text-gray-300 transition"
+        className="hover:text-gray-300 transition font-medium"
       >
         Home
       </Link>
 
-      {/* NEWS FEED */}
-
+      {/* FEED */}
       <Link
         href="/news-feed"
-        className="hover:text-gray-300 transition"
-      >Feed</Link>
-
-      {/* JOBS */}
-
-      <Link
-        href="/jobs"
-        className="hover:text-gray-300 transition"
+        className="hover:text-gray-300 transition font-medium"
       >
-        Jobs
+        Feed
       </Link>
 
-      {/* INTERNSHIPS */}
+      {/* VACANCIES (DROPDOWN: JOBS & INTERNSHIP) */}
+      <div className="relative vacancies-menu-container">
+        <button
+          onClick={() => {
+            setShowVacanciesMenu(!showVacanciesMenu);
+            setShowProfilesMenu(false);
+          }}
+          className="hover:text-gray-300 transition flex items-center gap-1 cursor-pointer font-medium py-1"
+          aria-expanded={showVacanciesMenu}
+        >
+          <span>Vacancies</span>
+          <ChevronDown size={14} className={`transition-transform duration-200 opacity-80 ${showVacanciesMenu ? 'rotate-180' : ''}`} />
+        </button>
 
+        {showVacanciesMenu && (
+          <div className="absolute left-0 mt-2 w-44 rounded-xl bg-white text-black shadow-xl overflow-hidden z-50 border border-gray-100 py-1.5 animate-in fade-in zoom-in-95 duration-100">
+            <Link
+              href="/jobs"
+              onClick={() => setShowVacanciesMenu(false)}
+              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+            >
+              Jobs
+            </Link>
+            <Link
+              href="/internships"
+              onClick={() => setShowVacanciesMenu(false)}
+              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+            >
+              Internship
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* PROFILES (DROPDOWN: COMPANIES & INSTITUTIONS) */}
+      <div className="relative profiles-menu-container">
+        <button
+          onClick={() => {
+            setShowProfilesMenu(!showProfilesMenu);
+            setShowVacanciesMenu(false);
+          }}
+          className="hover:text-gray-300 transition flex items-center gap-1 cursor-pointer font-medium py-1"
+          aria-expanded={showProfilesMenu}
+        >
+          <span>Profiles</span>
+          <ChevronDown size={14} className={`transition-transform duration-200 opacity-80 ${showProfilesMenu ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showProfilesMenu && (
+          <div className="absolute left-0 mt-2 w-44 rounded-xl bg-white text-black shadow-xl overflow-hidden z-50 border border-gray-100 py-1.5 animate-in fade-in zoom-in-95 duration-100">
+            <Link
+              href="/companies"
+              onClick={() => setShowProfilesMenu(false)}
+              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+            >
+              Companies
+            </Link>
+            <Link
+              href="/institutions"
+              onClick={() => setShowProfilesMenu(false)}
+              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+            >
+              Institutions
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* QUIZZES */}
       <Link
-        href="/internships"
-        className="hover:text-gray-300 transition"
+        href="/quizzes"
+        className="hover:text-gray-300 transition font-medium"
       >
-        Internships
+        Quizzes
       </Link>
 
-     {/* COMPANIES */}
-
-<Link
-  href="/companies"
-  className="hover:text-gray-300 transition"
->
-  Companies
-</Link>
-
-          {/* CONTACT */}
-
-          <Link
-            href="/contact"
-            className="hover:text-gray-300 transition"
-          >
-            Contact
-          </Link>
+      {/* CONTACTS */}
+      <Link
+        href="/contact"
+        className="hover:text-gray-300 transition font-medium"
+      >
+        Contacts
+      </Link>
 
           {/* LOGIN REGISTER BUTTON */}
 
 
   {currentUser ? (
-  <div className="relative">
+  <div className="relative user-menu-container">
     <button
       onClick={() => setShowUserMenu(!showUserMenu)}
       className={`px-4 py-2 rounded-xl transition flex items-center gap-2 cursor-pointer shadow-xs ${getDisplayNameTierStyles(userTier)}`}
@@ -1011,10 +1068,43 @@ useEffect(() => {
   <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50 shadow-2xl flex flex-col">
     <Link href="/" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
     <Link href="/news-feed" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Feed</Link>
-    <Link href="/jobs" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
-    <Link href="/internships" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
-    <Link href="/companies" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
-        <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+    
+    {/* MOBILE VACANCIES DROPDOWN */}
+    <div className="border-b border-gray-800">
+      <button
+        onClick={() => setMobileVacanciesOpen(!mobileVacanciesOpen)}
+        className="w-full flex items-center justify-between px-6 py-2.5 text-lg hover:bg-gray-900 transition text-left cursor-pointer"
+      >
+        <span>Vacancies</span>
+        <ChevronDown size={18} className={`transition-transform duration-200 opacity-80 ${mobileVacanciesOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {mobileVacanciesOpen && (
+        <div className="bg-gray-900/90 pl-10 pr-6 py-1.5 space-y-1">
+          <Link href="/jobs" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
+          <Link href="/internships" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Internship</Link>
+        </div>
+      )}
+    </div>
+
+    {/* MOBILE PROFILES DROPDOWN */}
+    <div className="border-b border-gray-800">
+      <button
+        onClick={() => setMobileProfilesOpen(!mobileProfilesOpen)}
+        className="w-full flex items-center justify-between px-6 py-2.5 text-lg hover:bg-gray-900 transition text-left cursor-pointer"
+      >
+        <span>Profiles</span>
+        <ChevronDown size={18} className={`transition-transform duration-200 opacity-80 ${mobileProfilesOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {mobileProfilesOpen && (
+        <div className="bg-gray-900/90 pl-10 pr-6 py-1.5 space-y-1">
+          <Link href="/companies" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
+          <Link href="/institutions" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Institutions</Link>
+        </div>
+      )}
+    </div>
+
+    <Link href="/quizzes" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Quizzes</Link>
+    <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contacts</Link>
   </div>
 )}
 </nav>

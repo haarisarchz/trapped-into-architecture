@@ -41,7 +41,7 @@ export default function InstitutionCard({
     if (validFuture.length === 0) return null;
     const sorted = Array.from(new Set(validFuture.map((r: any) => r.academic_year))).sort();
     const maxYear = sorted[sorted.length - 1];
-    const shortMaxYr = maxYear.replace(/^20/, "").replace(/[-–_]20/, "-");
+    const shortMaxYr = String(maxYear || "").replace(/^20/, "").replace(/[-–_]20/, "-");
     const ugRec = validFuture.find((r: any) => (r.course_name || "B.Arch") === "B.Arch");
     const primary = ugRec || validFuture[0];
     return {

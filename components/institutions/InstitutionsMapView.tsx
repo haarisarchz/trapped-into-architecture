@@ -18,7 +18,7 @@ import {
 import institutionsCoordinates from "@/lib/data/institutionsCoordinates.json";
 import "leaflet/dist/leaflet.css";
 
-const coordsMap = institutionsCoordinates as Record<string, [number, number]>;
+const coordsMap = (institutionsCoordinates as unknown) as Record<string, [number, number]>;
 
 // Famous Architectural Hubs for quick one-click camera pan
 const ARCHITECTURE_HUBS = [

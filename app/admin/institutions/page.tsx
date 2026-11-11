@@ -1429,7 +1429,7 @@ export default function AdminInstitutionsPage() {
                                   className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300"
                                   title={`Council of Architecture advance multi-year statutory approval sanctioned through ${multiYearMaxYear}`}
                                 >
-                                  Sanctioned: {multiYearMaxYear.replace(/^20/, "").replace(/[-–_]20/, "-")}
+                                  Sanctioned: {String(multiYearMaxYear || "").replace(/^20/, "").replace(/[-–_]20/, "-")}
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
