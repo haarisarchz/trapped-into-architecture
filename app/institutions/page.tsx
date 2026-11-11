@@ -21,6 +21,10 @@ import {
   Layers,
   ArrowUpDown,
   Filter,
+  Award,
+  ShieldCheck,
+  BookOpen,
+  Check,
 } from "lucide-react";
 
 const MAJOR_STATES = [
@@ -56,6 +60,13 @@ function InstitutionsContent() {
   const [selectedIntakeRange, setSelectedIntakeRange] = useState(searchParams.get("intake") || "all");
   const [selectedYear, setSelectedYear] = useState(searchParams.get("year") || "latest");
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name_asc");
+  const [selectedProgram, setSelectedProgram] = useState<"all" | "ug" | "pg" | "diploma">(
+    (searchParams.get("program") as any) || "all"
+  );
+  const [selectedSpecialization, setSelectedSpecialization] = useState(searchParams.get("specialization") || "");
+  const [filterMultiYear, setFilterMultiYear] = useState(searchParams.get("multiYear") === "true");
+  const [filterNirf, setFilterNirf] = useState(searchParams.get("nirf") === "true");
+  const [filterActiveOnly, setFilterActiveOnly] = useState(searchParams.get("activeOnly") === "true");
 
   // Data
   const [institutions, setInstitutions] = useState<any[]>([]);
@@ -137,10 +148,29 @@ function InstitutionsContent() {
     if (selectedIntakeRange !== "all") params.set("intake", selectedIntakeRange);
     if (selectedYear !== "latest") params.set("year", selectedYear);
     if (sortBy !== "name_asc") params.set("sort", sortBy);
+    if (selectedProgram !== "all") params.set("program", selectedProgram);
+    if (selectedSpecialization) params.set("specialization", selectedSpecialization);
+    if (filterMultiYear) params.set("multiYear", "true");
+    if (filterNirf) params.set("nirf", "true");
+    if (filterActiveOnly) params.set("activeOnly", "true");
 
     const newUrl = params.toString() ? `/institutions?${params.toString()}` : "/institutions";
     router.replace(newUrl, { scroll: false });
-  }, [searchQuery, selectedState, selectedCity, selectedUniversity, selectedIntakeRange, selectedYear, sortBy, router]);
+  }, [
+    searchQuery,
+    selectedState,
+    selectedCity,
+    selectedUniversity,
+    selectedIntakeRange,
+    selectedYear,
+    sortBy,
+    selectedProgram,
+    selectedSpecialization,
+    filterMultiYear,
+    filterNirf,
+    filterActiveOnly,
+    router,
+  ]);
 
   // Derived filter options
   const uniqueCities = useMemo(() => {
@@ -210,11 +240,83 @@ function InstitutionsContent() {
     });
   }, [institutions, annualRecords, rankings]);
 
+  // Program Counts across catalog
+  const programCounts = useMemo(() => {
+    let ug = 0;
+    let pg = 0;
+    let diploma = 0;
+    enrichedInstitutions.forEach((inst) => {
+      const recs = inst.annual_records || [];
+      const hasUG = recs.some((r: any) => (r.course_name || "B.Arch") === "B.Arch" || r.course_name?.includes("Bachelor"));
+      const hasPG = recs.some((r: any) => r.course_name && (r.course_name.startsWith("M.Arch") || r.course_name.includes("Master")));
+      const hasDiploma = recs.some((r: any) => r.course_name && r.course_name.includes("Diploma")) || inst.institution_type === "Polytechnic / Diploma Institution";
+      if (hasUG) ug++;
+      if (hasPG) pg++;
+      if (hasDiploma) diploma++;
+    });
+    return {
+      all: enrichedInstitutions.length,
+      ug,
+      pg,
+      diploma,
+    };
+  }, [enrichedInstitutions]);
+
+  // Available specializations for dropdown when on PG or Diploma
+  const availableSpecializations = useMemo(() => {
+    const set = new Set<string>();
+    annualRecords.forEach((r) => {
+      const c = (r.course_name || "").trim();
+      if (!c) return;
+      if (selectedProgram === "pg" && (c.startsWith("M.Arch") || c.includes("Master"))) {
+        set.add(c);
+      } else if (selectedProgram === "diploma" && c.includes("Diploma")) {
+        set.add(c);
+      }
+    });
+    return Array.from(set).sort();
+  }, [annualRecords, selectedProgram]);
+
   // Filtering
   const filteredInstitutions = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
     return enrichedInstitutions.filter((inst) => {
+      // 0. Program Level Tab Filter
+      if (selectedProgram === "ug") {
+        const hasUG = inst.annual_records?.some((r: any) => (r.course_name || "B.Arch") === "B.Arch" || r.course_name?.includes("Bachelor"));
+        if (!hasUG) return false;
+      } else if (selectedProgram === "pg") {
+        const hasPG = inst.annual_records?.some((r: any) => r.course_name && (r.course_name.startsWith("M.Arch") || r.course_name.includes("Master")));
+        if (!hasPG) return false;
+      } else if (selectedProgram === "diploma") {
+        const hasDiploma = inst.annual_records?.some((r: any) => r.course_name && r.course_name.includes("Diploma")) || inst.institution_type === "Polytechnic / Diploma Institution";
+        if (!hasDiploma) return false;
+      }
+
+      // 0.1 Specialization Filter
+      if (selectedSpecialization) {
+        const hasSpec = inst.annual_records?.some((r: any) => (r.course_name || "") === selectedSpecialization);
+        if (!hasSpec) return false;
+      }
+
+      // 0.2 Quick Chips: Multi-Year Statutory Approval
+      if (filterMultiYear) {
+        const hasMulti = inst.annual_records?.some((r: any) => r.academic_year && r.academic_year >= "2027-2028" && r.approved_intake > 0 && !/closure|discontinued/i.test(r.approval_status || ""));
+        if (!hasMulti) return false;
+      }
+
+      // 0.3 Quick Chips: NIRF Ranked
+      if (filterNirf) {
+        if (!inst.best_rank) return false;
+      }
+
+      // 0.4 Quick Chips: Active Admissions Only
+      if (filterActiveOnly) {
+        if (inst.institution_type && /closed|terminated|discontinued|progressive/i.test(inst.institution_type)) {
+          return false;
+        }
+      }
       // 1. Text Search across Name, COA Code, City, District, State, Affiliated University
       if (q) {
         const matchesName = inst.institution_name?.toLowerCase().includes(q);
@@ -265,7 +367,20 @@ function InstitutionsContent() {
 
       return true;
     });
-  }, [enrichedInstitutions, searchQuery, selectedState, selectedCity, selectedUniversity, selectedIntakeRange, selectedYear]);
+  }, [
+    enrichedInstitutions,
+    searchQuery,
+    selectedState,
+    selectedCity,
+    selectedUniversity,
+    selectedIntakeRange,
+    selectedYear,
+    selectedProgram,
+    selectedSpecialization,
+    filterMultiYear,
+    filterNirf,
+    filterActiveOnly,
+  ]);
 
   // Sorting
   const sortedInstitutions = useMemo(() => {
@@ -305,16 +420,26 @@ function InstitutionsContent() {
     setSelectedIntakeRange("all");
     setSelectedYear("latest");
     setSortBy("name_asc");
+    setSelectedProgram("all");
+    setSelectedSpecialization("");
+    setFilterMultiYear(false);
+    setFilterNirf(false);
+    setFilterActiveOnly(false);
     setCurrentPage(1);
   };
 
   const hasActiveFilters =
-    searchQuery ||
-    selectedState !== "All India" ||
-    selectedCity ||
-    selectedUniversity ||
+    Boolean(searchQuery.trim()) ||
+    (selectedState && selectedState !== "All India") ||
+    Boolean(selectedCity) ||
+    Boolean(selectedUniversity) ||
     selectedIntakeRange !== "all" ||
-    selectedYear !== "latest";
+    selectedYear !== "latest" ||
+    selectedProgram !== "all" ||
+    Boolean(selectedSpecialization) ||
+    filterMultiYear ||
+    filterNirf ||
+    filterActiveOnly;
 
   // Comparison toggle handlers
   const handleToggleCompare = (inst: any) => {
@@ -432,6 +557,199 @@ function InstitutionsContent() {
 
         {/* MAIN DIRECTORY VIEW */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+          {/* CATALOG METRICS SUMMARY */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Accredited Institutions</div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">583</div>
+              <div className="text-[11px] text-gray-500 mt-0.5">COA Recognized Nationwide</div>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Verified Annual Intakes</div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-blue-600 mt-1">3,014</div>
+              <div className="text-[11px] text-gray-500 mt-0.5">Historical Session Logs</div>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Postgraduate Programs</div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-purple-600 mt-1">38+</div>
+              <div className="text-[11px] text-gray-500 mt-0.5">M.Arch Specializations</div>
+            </div>
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Statutory Session</div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">2026–27</div>
+              <div className="text-[11px] text-gray-500 mt-0.5">Official COA Gazettes Live</div>
+            </div>
+          </div>
+
+          {/* PROGRAM SWITCHER TABS */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-1.5 shadow-2xs mb-4 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => {
+                setSelectedProgram("all");
+                setSelectedSpecialization("");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
+                selectedProgram === "all"
+                  ? "bg-black text-white shadow-xs"
+                  : "text-gray-600 hover:text-black hover:bg-gray-50"
+              }`}
+            >
+              <span>All Institutions</span>
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
+                  selectedProgram === "all" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {programCounts.all}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedProgram("ug");
+                setSelectedSpecialization("");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
+                selectedProgram === "ug"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-gray-600 hover:text-blue-600 hover:bg-blue-50/50"
+              }`}
+            >
+              <GraduationCap size={16} />
+              <span>B.Arch (UG)</span>
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
+                  selectedProgram === "ug" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-700"
+                }`}
+              >
+                {programCounts.ug}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedProgram("pg");
+                setSelectedSpecialization("");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
+                selectedProgram === "pg"
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : "text-gray-600 hover:text-purple-600 hover:bg-purple-50/50"
+              }`}
+            >
+              <BookOpen size={16} />
+              <span>M.Arch (PG Specializations)</span>
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
+                  selectedProgram === "pg" ? "bg-white/20 text-white" : "bg-purple-50 text-purple-700"
+                }`}
+              >
+                {programCounts.pg}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setSelectedProgram("diploma");
+                setSelectedSpecialization("");
+                setCurrentPage(1);
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
+                selectedProgram === "diploma"
+                  ? "bg-emerald-700 text-white shadow-xs"
+                  : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50/50"
+              }`}
+            >
+              <Building2 size={16} />
+              <span>Diploma & Polytechnics</span>
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
+                  selectedProgram === "diploma" ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-800"
+                }`}
+              >
+                {programCounts.diploma}
+              </span>
+            </button>
+          </div>
+
+          {/* QUICK FILTER CHIPS & SPECIALIZATION BAR */}
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <button
+              onClick={() => {
+                setFilterMultiYear(!filterMultiYear);
+                setCurrentPage(1);
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition border ${
+                filterMultiYear
+                  ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <ShieldCheck size={14} className={filterMultiYear ? "text-white" : "text-emerald-600"} />
+              <span>Multi-Year Advance Sanction</span>
+              {filterMultiYear && <Check size={12} className="ml-0.5" />}
+            </button>
+
+            <button
+              onClick={() => {
+                setFilterNirf(!filterNirf);
+                setCurrentPage(1);
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition border ${
+                filterNirf
+                  ? "bg-amber-500 text-white border-amber-500 shadow-2xs"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <Award size={14} className={filterNirf ? "text-white" : "text-amber-500"} />
+              <span>NIRF Ranked Architecture Colleges</span>
+              {filterNirf && <Check size={12} className="ml-0.5" />}
+            </button>
+
+            <button
+              onClick={() => {
+                setFilterActiveOnly(!filterActiveOnly);
+                setCurrentPage(1);
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition border ${
+                filterActiveOnly
+                  ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${filterActiveOnly ? "bg-white" : "bg-green-500"}`}></span>
+              <span>Active Admissions Only</span>
+              {filterActiveOnly && <Check size={12} className="ml-0.5" />}
+            </button>
+
+            {/* Dynamic Specialization Dropdown if PG or Diploma or available */}
+            {availableSpecializations.length > 0 && (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-500 hidden sm:inline">Specialization:</span>
+                <select
+                  value={selectedSpecialization}
+                  onChange={(e) => {
+                    setSelectedSpecialization(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="text-xs font-semibold bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-gray-800 focus:outline-none focus:border-black max-w-[260px] truncate"
+                >
+                  <option value="">
+                    {selectedProgram === "pg" ? "All M.Arch Specializations (38+)" : "All Diploma Courses"}
+                  </option>
+                  {availableSpecializations.map((spec) => (
+                    <option key={spec} value={spec}>
+                      {spec}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* SIDEBAR FILTERS (DESKTOP) */}
             <aside className={`md:block ${showMobileFilters ? "block" : "hidden"} md:col-span-1 space-y-6`}>
@@ -448,6 +766,25 @@ function InstitutionsContent() {
                       Clear All
                     </button>
                   )}
+                </div>
+
+                {/* Program Level Filter */}
+                <div className="space-y-1.5 mb-4">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Program Level</label>
+                  <select
+                    value={selectedProgram}
+                    onChange={(e) => {
+                      setSelectedProgram(e.target.value as any);
+                      setSelectedSpecialization("");
+                      setCurrentPage(1);
+                    }}
+                    className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                  >
+                    <option value="all">All Programs ({programCounts.all})</option>
+                    <option value="ug">B.Arch / UG ({programCounts.ug})</option>
+                    <option value="pg">M.Arch / PG ({programCounts.pg})</option>
+                    <option value="diploma">Diploma / Polytechnics ({programCounts.diploma})</option>
+                  </select>
                 </div>
 
                 {/* State Filter */}
@@ -556,6 +893,49 @@ function InstitutionsContent() {
                     </select>
                   </div>
                 )}
+
+                {/* Statutory & Accolade Toggles */}
+                <div className="pt-3 border-t border-gray-100 space-y-2 mb-4">
+                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">
+                    Accreditation & Quality
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filterMultiYear}
+                      onChange={(e) => {
+                        setFilterMultiYear(e.target.checked);
+                        setCurrentPage(1);
+                      }}
+                      className="rounded border-gray-300 text-black focus:ring-black"
+                    />
+                    <span>Multi-Year Advance Sanction</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filterNirf}
+                      onChange={(e) => {
+                        setFilterNirf(e.target.checked);
+                        setCurrentPage(1);
+                      }}
+                      className="rounded border-gray-300 text-black focus:ring-black"
+                    />
+                    <span>NIRF Ranked Architecture</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={filterActiveOnly}
+                      onChange={(e) => {
+                        setFilterActiveOnly(e.target.checked);
+                        setCurrentPage(1);
+                      }}
+                      className="rounded border-gray-300 text-black focus:ring-black"
+                    />
+                    <span>Hide Closed Programs</span>
+                  </label>
+                </div>
 
                 {/* Disclaimer note */}
                 <div className="pt-3 border-t border-gray-100 text-[11px] text-gray-400 leading-normal">

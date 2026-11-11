@@ -52,6 +52,23 @@ export default function InstitutionCard({
     };
   }, [institution.annual_records]);
 
+  const offerings = React.useMemo(() => {
+    const recs = institution.annual_records || [];
+    const hasUG = recs.some((r: any) => (r.course_name || "B.Arch") === "B.Arch" || r.course_name?.includes("Bachelor"));
+    const pgSet = new Set<string>();
+    const dipSet = new Set<string>();
+    recs.forEach((r: any) => {
+      const c = r.course_name || "";
+      if (c.startsWith("M.Arch") || c.includes("Master")) pgSet.add(c);
+      if (c.includes("Diploma")) dipSet.add(c);
+    });
+    return {
+      hasUG,
+      pgCount: pgSet.size,
+      diplomaCount: dipSet.size,
+    };
+  }, [institution.annual_records]);
+
   return (
     <div className="group bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-200 flex flex-col justify-between">
       <div>
@@ -131,7 +148,7 @@ export default function InstitutionCard({
         </h3>
 
         {/* Location & Affiliation */}
-        <div className="space-y-1.5 text-xs text-gray-600 mb-4">
+        <div className="space-y-1.5 text-xs text-gray-600 mb-3">
           <div className="flex items-center gap-1.5">
             <MapPin size={14} className="text-gray-400 shrink-0" />
             <span className="truncate">{locationString || "Location details pending"}</span>
@@ -141,6 +158,25 @@ export default function InstitutionCard({
               <Building2 size={14} className="text-gray-400 shrink-0" />
               <span className="truncate">{institution.affiliated_university}</span>
             </div>
+          )}
+        </div>
+
+        {/* Academic Offerings Badges */}
+        <div className="flex items-center gap-1.5 flex-wrap mb-4">
+          {offerings.hasUG && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
+              B.Arch
+            </span>
+          )}
+          {offerings.pgCount > 0 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-800 border border-purple-200">
+              M.Arch ({offerings.pgCount} {offerings.pgCount === 1 ? "course" : "courses"})
+            </span>
+          )}
+          {offerings.diplomaCount > 0 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+              Diploma ({offerings.diplomaCount} {offerings.diplomaCount === 1 ? "stream" : "streams"})
+            </span>
           )}
         </div>
       </div>

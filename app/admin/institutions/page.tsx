@@ -42,6 +42,7 @@ import {
   Copy,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 
 type SortField =
@@ -123,6 +124,7 @@ export default function AdminInstitutionsPage() {
   const [liveSearchQuery, setLiveSearchQuery] = useState("");
   const [liveStateFilter, setLiveStateFilter] = useState("ALL");
   const [liveCityFilter, setLiveCityFilter] = useState("ALL");
+  const [liveProgramFilter, setLiveProgramFilter] = useState("ALL");
   const [liveStatusFilter, setLiveStatusFilter] = useState<"ALL" | "ACTIVE" | "CLOSED" | "PROGRESSIVE">("ALL");
 
   // Sorting
@@ -230,7 +232,7 @@ export default function AdminInstitutionsPage() {
     // Load live institutions with all annual records
     const { data: insts, error } = await supabase
       .from("institutions")
-      .select("*, institution_annual_records(id, academic_year, course_name, approved_intake, approval_status)")
+      .select("*, institution_annual_records(id, academic_year, course_name, approved_intake, approval_status, source_reference)")
       .order("coa_code", { ascending: true, nullsFirst: false })
       .range(0, 999);
 
@@ -452,6 +454,23 @@ export default function AdminInstitutionsPage() {
         if (liveStatusFilter === "CLOSED" && !closure.isClosed) return false;
       }
 
+      // Program Filter
+      if (liveProgramFilter !== "ALL") {
+        const recs = inst.institution_annual_records || [];
+        if (liveProgramFilter === "UG") {
+          const hasUG = recs.some((r: any) => getCourseCategory(r.course_name) === "B.Arch");
+          if (!hasUG) return false;
+        } else if (liveProgramFilter === "PG") {
+          const hasPG = recs.some((r: any) => getCourseCategory(r.course_name) === "M.Arch");
+          if (!hasPG) return false;
+        } else if (liveProgramFilter === "DIPLOMA") {
+          const hasDiploma = recs.some((r: any) => getCourseCategory(r.course_name) === "Diploma");
+          if (!hasDiploma) return false;
+        } else if (liveProgramFilter === "POLYTECHNIC") {
+          if (inst.institution_type !== "Polytechnic / Diploma Institution") return false;
+        }
+      }
+
       // Search Query
       if (q) {
         const matchName = inst.institution_name?.toLowerCase().includes(q);
@@ -550,7 +569,7 @@ export default function AdminInstitutionsPage() {
     });
 
     return list;
-  }, [liveInstitutions, liveSearchQuery, liveStateFilter, liveCityFilter, liveStatusFilter, sortField, sortDirection]);
+  }, [liveInstitutions, liveSearchQuery, liveStateFilter, liveCityFilter, liveProgramFilter, liveStatusFilter, sortField, sortDirection]);
 
   // Paginated View
   const paginatedInstitutions = useMemo(() => {
@@ -559,6 +578,52 @@ export default function AdminInstitutionsPage() {
   }, [processedLiveInstitutions, currentPage, pageSize]);
 
   const totalPages = Math.ceil(processedLiveInstitutions.length / pageSize) || 1;
+
+  const handleExportCSV = () => {
+    if (processedLiveInstitutions.length === 0) {
+      showToast("error", "No institutions to export.");
+      return;
+    }
+
+    const headers = [
+      "COA Code",
+      "Institution Name",
+      "City",
+      "State",
+      "Type",
+      "Affiliated University",
+      "Establishment Year",
+      "Head / Principal",
+      "Email",
+      "Phone",
+      "Website",
+    ];
+
+    const rows = processedLiveInstitutions.map((inst) => [
+      `"${inst.coa_code || ""}"`,
+      `"${(inst.institution_name || "").replace(/"/g, '""')}"`,
+      `"${inst.city || inst.district || ""}"`,
+      `"${inst.state || ""}"`,
+      `"${inst.institution_type || "Degree College"}"`,
+      `"${(inst.affiliated_university || "").replace(/"/g, '""')}"`,
+      inst.establishment_year || "",
+      `"${(inst.head_of_institution || "").replace(/"/g, '""')}"`,
+      `"${inst.official_email || ""}"`,
+      `"${inst.official_phone || ""}"`,
+      `"${inst.website || ""}"`,
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `coa_institutions_directory_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("success", `Exported ${processedLiveInstitutions.length} institutions to CSV.`);
+  };
 
   // --- MODAL: OPEN EDIT & INTAKES ---
   const handleOpenEditModal = (inst: any) => {
@@ -894,34 +959,64 @@ export default function AdminInstitutionsPage() {
                     </p>
                   </div>
 
-                  {/* Search Bar */}
-                  <div className="relative w-full sm:w-80">
-                    <Search size={14} className="absolute left-3 top-3 text-gray-400" />
-                    <input
-                      type="text"
-                      value={liveSearchQuery}
-                      onChange={(e) => {
-                        setLiveSearchQuery(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      placeholder="Search name, code, city, email, phone..."
-                      className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-black shadow-2xs"
-                    />
-                    {liveSearchQuery && (
-                      <button
-                        onClick={() => setLiveSearchQuery("")}
-                        className="absolute right-2.5 top-2.5 text-gray-400 hover:text-black"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
+                  {/* Controls: Search & Export */}
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-80">
+                      <Search size={14} className="absolute left-3 top-3 text-gray-400" />
+                      <input
+                        type="text"
+                        value={liveSearchQuery}
+                        onChange={(e) => {
+                          setLiveSearchQuery(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        placeholder="Search name, code, city, email, phone..."
+                        className="w-full pl-9 pr-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:border-black shadow-2xs"
+                      />
+                      {liveSearchQuery && (
+                        <button
+                          onClick={() => setLiveSearchQuery("")}
+                          className="absolute right-2.5 top-2.5 text-gray-400 hover:text-black"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={handleExportCSV}
+                      title="Export filtered directory to CSV"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-black text-white hover:bg-gray-800 rounded-xl text-xs font-bold transition shrink-0 shadow-2xs cursor-pointer"
+                    >
+                      <Download size={14} />
+                      <span className="hidden sm:inline">Export CSV</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* FILTERS BAR: State, City, Status */}
+                {/* FILTERS BAR: Program, State, City, Status */}
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500">
                     <Filter size={14} /> Filter By:
+                  </div>
+
+                  {/* Program Level Filter */}
+                  <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5">
+                    <span className="text-[11px] font-semibold text-gray-400">Program:</span>
+                    <select
+                      value={liveProgramFilter}
+                      onChange={(e) => {
+                        setLiveProgramFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="text-xs font-bold bg-transparent text-gray-800 focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Programs</option>
+                      <option value="UG">B.Arch Only</option>
+                      <option value="PG">M.Arch Only</option>
+                      <option value="DIPLOMA">Diploma Streams</option>
+                      <option value="POLYTECHNIC">Polytechnics Only</option>
+                    </select>
                   </div>
 
                   {/* State Filter */}
