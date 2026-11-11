@@ -783,7 +783,7 @@ useEffect(() => {
         <span>Trapped Into Architecture</span>
       </Link>
 
-    <div className="flex items-center gap-7 lg:gap-8">
+    <div className="flex items-center gap-6 lg:gap-7">
 
       {/* HOME */}
       <Link
@@ -835,7 +835,7 @@ useEffect(() => {
         )}
       </div>
 
-      {/* PROFILES (DROPDOWN: COMPANIES & INSTITUTIONS) */}
+      {/* PROFILES (DROPDOWN: COMPANIES & PROFESSIONALS) */}
       <div className="relative profiles-menu-container">
         <button
           onClick={() => {
@@ -859,15 +859,23 @@ useEffect(() => {
               Companies
             </Link>
             <Link
-              href="/institutions"
+              href="/individuals"
               onClick={() => setShowProfilesMenu(false)}
               className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
             >
-              Institutions
+              Professionals
             </Link>
           </div>
         )}
       </div>
+
+      {/* INSTITUTIONS */}
+      <Link
+        href="/institutions"
+        className="hover:text-gray-300 transition font-medium"
+      >
+        Institutions
+      </Link>
 
       {/* QUIZZES */}
       <Link
@@ -1098,11 +1106,12 @@ useEffect(() => {
       {mobileProfilesOpen && (
         <div className="bg-gray-900/90 pl-10 pr-6 py-1.5 space-y-1">
           <Link href="/companies" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
-          <Link href="/institutions" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Institutions</Link>
+          <Link href="/individuals" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Professionals</Link>
         </div>
       )}
     </div>
 
+    <Link href="/institutions" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Institutions</Link>
     <Link href="/quizzes" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Quizzes</Link>
     <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contacts</Link>
   </div>
