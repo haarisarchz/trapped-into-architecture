@@ -385,6 +385,12 @@ function InstitutionsContent() {
   // Sorting
   const sortedInstitutions = useMemo(() => {
     return [...filteredInstitutions].sort((a, b) => {
+      if (sortBy === "nirf_asc") {
+        const rankA = a.best_rank ? a.best_rank.rank_number : 9999;
+        const rankB = b.best_rank ? b.best_rank.rank_number : 9999;
+        if (rankA !== rankB) return rankA - rankB;
+        return a.institution_name.localeCompare(b.institution_name);
+      }
       if (sortBy === "name_asc") return a.institution_name.localeCompare(b.institution_name);
       if (sortBy === "name_desc") return b.institution_name.localeCompare(a.institution_name);
       if (sortBy === "intake_desc") {
@@ -963,6 +969,7 @@ function InstitutionsContent() {
                     className="text-xs font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-black"
                   >
                     <option value="name_asc">Institution Name (A-Z)</option>
+                    <option value="nirf_asc">NIRF Rank: Top First</option>
                     <option value="name_desc">Institution Name (Z-A)</option>
                     <option value="intake_desc">Intake: High to Low</option>
                     <option value="intake_asc">Intake: Low to High</option>

@@ -129,6 +129,26 @@ export default function CollegeCompareModal({
                 })}
               </tr>
 
+              {/* NIRF Architecture Ranking */}
+              <tr>
+                <td className="p-3 font-semibold text-gray-500 bg-gray-50/50">NIRF Ranking</td>
+                {institutions.map((inst) => {
+                  const rank = inst.best_rank;
+                  return (
+                    <td key={inst.id} className="p-3">
+                      {rank ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          <Award size={13} className="text-amber-600" />
+                          #{rank.rank_number} ({rank.ranking_year})
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 text-xs">—</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+
               {/* Status */}
               <tr>
                 <td className="p-3 font-semibold text-gray-500 bg-gray-50/50">Status</td>

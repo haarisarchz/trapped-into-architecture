@@ -106,7 +106,7 @@ export default function InstitutionCard({
             {bestRank && (
               <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-md">
                 <Award size={12} className="text-amber-600" />
-                NIRF #{bestRank.rank_number}
+                NIRF #{bestRank.rank_number} ({bestRank.ranking_year})
               </span>
             )}
           </div>

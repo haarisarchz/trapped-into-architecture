@@ -229,10 +229,10 @@ export default function AdminInstitutionsPage() {
   };
 
   const loadInitialData = async () => {
-    // Load live institutions with all annual records
+    // Load live institutions with all annual records and NIRF rankings
     const { data: insts, error } = await supabase
       .from("institutions")
-      .select("*, institution_annual_records(id, academic_year, course_name, approved_intake, approval_status, source_reference)")
+      .select("*, institution_annual_records(id, academic_year, course_name, approved_intake, approval_status, source_reference), institution_rankings(ranking_year, rank_number, ranking_body)")
       .order("coa_code", { ascending: true, nullsFirst: false })
       .range(0, 999);
 
@@ -591,6 +591,7 @@ export default function AdminInstitutionsPage() {
       "City",
       "State",
       "Type",
+      "Latest NIRF Rank",
       "Affiliated University",
       "Establishment Year",
       "Head / Principal",
@@ -599,19 +600,25 @@ export default function AdminInstitutionsPage() {
       "Website",
     ];
 
-    const rows = processedLiveInstitutions.map((inst) => [
-      `"${inst.coa_code || ""}"`,
-      `"${(inst.institution_name || "").replace(/"/g, '""')}"`,
-      `"${inst.city || inst.district || ""}"`,
-      `"${inst.state || ""}"`,
-      `"${inst.institution_type || "Degree College"}"`,
-      `"${(inst.affiliated_university || "").replace(/"/g, '""')}"`,
-      inst.establishment_year || "",
-      `"${(inst.head_of_institution || "").replace(/"/g, '""')}"`,
-      `"${inst.official_email || ""}"`,
-      `"${inst.official_phone || ""}"`,
-      `"${inst.website || ""}"`,
-    ]);
+    const rows = processedLiveInstitutions.map((inst) => {
+      const nirfRanks = (inst.institution_rankings || []).sort((a: any, b: any) => b.ranking_year - a.ranking_year);
+      const latestNirf = nirfRanks.length > 0 ? `#${nirfRanks[0].rank_number} (${nirfRanks[0].ranking_year})` : "";
+
+      return [
+        `"${inst.coa_code || ""}"`,
+        `"${(inst.institution_name || "").replace(/"/g, '""')}"`,
+        `"${inst.city || inst.district || ""}"`,
+        `"${inst.state || ""}"`,
+        `"${inst.institution_type || "Degree College"}"`,
+        `"${latestNirf}"`,
+        `"${(inst.affiliated_university || "").replace(/"/g, '""')}"`,
+        inst.establishment_year || "",
+        `"${(inst.head_of_institution || "").replace(/"/g, '""')}"`,
+        `"${inst.official_email || ""}"`,
+        `"${inst.official_phone || ""}"`,
+        `"${inst.website || ""}"`,
+      ];
+    });
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });

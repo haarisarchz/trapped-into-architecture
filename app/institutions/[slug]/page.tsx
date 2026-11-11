@@ -38,7 +38,7 @@ export async function generateMetadata({
 
     let { data: inst } = await supabase
       .from("institutions")
-      .select("institution_name, coa_code, city, district, state, affiliated_university, slug")
+      .select("id, institution_name, coa_code, city, district, state, affiliated_university, slug")
       .eq("slug", slug)
       .maybeSingle();
 
@@ -48,7 +48,7 @@ export async function generateMetadata({
       if (codeMatch) {
         const { data: fallbackInst } = await supabase
           .from("institutions")
-          .select("institution_name, coa_code, city, district, state, affiliated_university, slug")
+          .select("id, institution_name, coa_code, city, district, state, affiliated_university, slug")
           .eq("coa_code", codeMatch[1].toUpperCase())
           .maybeSingle();
         if (fallbackInst) inst = fallbackInst;
@@ -59,10 +59,20 @@ export async function generateMetadata({
       return { title: "Institution Not Found | Trapped Into Architecture" };
     }
 
+    // Fetch latest NIRF ranking for SEO metadata
+    const { data: topRank } = await supabase
+      .from("institution_rankings")
+      .select("rank_number, ranking_year")
+      .eq("institution_id", (inst as any).id)
+      .order("ranking_year", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     const loc = [inst.city || inst.district, inst.state].filter(Boolean).join(", ");
     const codeStr = inst.coa_code ? ` (${inst.coa_code})` : "";
+    const rankPrefix = topRank ? `NIRF Ranked #${topRank.rank_number} (${topRank.ranking_year}). ` : "";
     const title = `${inst.institution_name}${codeStr} - Architecture College in ${loc} | TI2A`;
-    const description = `Explore official Council of Architecture (COA) approval status, approved B.Arch intake history, university affiliation, and contact details for ${inst.institution_name}${loc ? ` in ${loc}` : ""}.`;
+    const description = `${rankPrefix}Explore official Council of Architecture (COA) approval status, approved B.Arch intake history, NIRF rankings, university affiliation, and contact details for ${inst.institution_name}${loc ? ` in ${loc}` : ""}.`;
     const url = `https://trappedintoarchitecture.com/institutions/${inst.slug || slug}`;
 
     return {
@@ -624,23 +634,77 @@ export default async function InstitutionProfilePage({
 
             {/* SECTION: NIRF RANKINGS (IF AVAILABLE) */}
             {rankings.length > 0 && (
-              <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-7 shadow-xs">
-                <div className="flex items-center gap-2 mb-4">
-                  <Award size={20} className="text-amber-500" />
-                  <h2 className="text-lg font-bold text-gray-900">National Institutional Ranking Framework (NIRF)</h2>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {rankings.map((rk: any, i: number) => (
-                    <div key={i} className="bg-amber-50/50 border border-amber-200/70 rounded-2xl p-3.5 text-center">
-                      <div className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
-                        NIRF {rk.ranking_year}
-                      </div>
-                      <div className="text-2xl font-black text-amber-950 mt-1">
-                        #{rk.rank_number}
-                      </div>
-                      <div className="text-[10px] text-amber-700 mt-0.5">Architecture</div>
+              <div className="bg-white rounded-3xl border border-amber-200/80 p-6 sm:p-7 shadow-xs bg-gradient-to-br from-white via-white to-amber-50/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 border-b border-gray-100 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
+                      <Award size={20} className="text-amber-600" />
                     </div>
-                  ))}
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900 leading-tight">
+                        NIRF Architecture Rankings History
+                      </h2>
+                      <p className="text-xs text-gray-500">
+                        Ministry of Education, Government of India • Architecture Category
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold px-3 py-1 bg-amber-500 text-white rounded-full shadow-2xs">
+                      Latest: #{rankings[0].rank_number} ({rankings[0].ranking_year})
+                    </span>
+                    <span className="text-xs font-semibold px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full">
+                      {rankings.length} {rankings.length === 1 ? "Edition" : "Editions"} Ranked
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 gap-3">
+                  {rankings.map((rk: any, i: number) => {
+                    const isTop5 = rk.rank_number <= 5;
+                    const isTop10 = rk.rank_number <= 10;
+                    return (
+                      <div
+                        key={i}
+                        className={`rounded-2xl p-4 text-center border transition-all ${
+                          isTop5
+                            ? "bg-amber-50/80 border-amber-300 shadow-2xs"
+                            : isTop10
+                            ? "bg-amber-50/40 border-amber-200/80"
+                            : "bg-gray-50/70 border-gray-200/80"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-1 text-[11px] font-bold uppercase tracking-wider text-amber-900/80">
+                          <span>NIRF</span>
+                          <span className="font-mono">{rk.ranking_year}</span>
+                        </div>
+                        <div
+                          className={`text-3xl font-black mt-1 ${
+                            isTop5 ? "text-amber-900" : isTop10 ? "text-amber-950" : "text-gray-900"
+                          }`}
+                        >
+                          #{rk.rank_number}
+                        </div>
+                        <div className="text-[10px] font-semibold text-gray-500 mt-1 uppercase tracking-wider">
+                          All India Rank
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-gray-500 gap-2">
+                  <span>
+                    Official annual statutory assessment evaluated on TLR (Teaching & Learning), RPC (Research & Professional Practice), GO (Graduation Outcomes), OI (Outreach & Inclusivity), and PR (Perception).
+                  </span>
+                  <a
+                    href="https://www.nirfindia.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-bold text-amber-800 hover:text-amber-950 underline underline-offset-2 shrink-0"
+                  >
+                    NIRF India Portal <ExternalLink size={11} />
+                  </a>
                 </div>
               </div>
             )}
