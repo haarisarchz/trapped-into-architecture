@@ -783,12 +783,12 @@ useEffect(() => {
         <span>Trapped Into Architecture</span>
       </Link>
 
-    <div className="flex items-center gap-6 lg:gap-7">
+    <div className="flex items-center gap-4 lg:gap-5">
 
       {/* HOME */}
       <Link
         href="/"
-        className="hover:text-gray-300 transition font-medium"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
         Home
       </Link>
@@ -796,7 +796,7 @@ useEffect(() => {
       {/* FEED */}
       <Link
         href="/news-feed"
-        className="hover:text-gray-300 transition font-medium"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
         Feed
       </Link>
@@ -808,7 +808,7 @@ useEffect(() => {
             setShowVacanciesMenu(!showVacanciesMenu);
             setShowProfilesMenu(false);
           }}
-          className="hover:text-gray-300 transition flex items-center gap-1 cursor-pointer font-medium py-1"
+          className="text-sm font-semibold text-gray-200 hover:text-white transition flex items-center gap-1 cursor-pointer whitespace-nowrap py-1"
           aria-expanded={showVacanciesMenu}
         >
           <span>Vacancies</span>
@@ -816,20 +816,22 @@ useEffect(() => {
         </button>
 
         {showVacanciesMenu && (
-          <div className="absolute left-0 mt-2 w-44 rounded-xl bg-white text-black shadow-xl overflow-hidden z-50 border border-gray-100 py-1.5 animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute left-0 mt-2.5 w-52 rounded-2xl bg-white text-black shadow-2xl overflow-hidden z-50 border border-gray-200 animate-in fade-in zoom-in-95 duration-100 divide-y divide-gray-200">
             <Link
               href="/jobs"
               onClick={() => setShowVacanciesMenu(false)}
-              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
             >
-              Jobs
+              <span>Jobs</span>
+              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
             </Link>
             <Link
               href="/internships"
               onClick={() => setShowVacanciesMenu(false)}
-              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
             >
-              Internship
+              <span>Internship</span>
+              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
             </Link>
           </div>
         )}
@@ -842,7 +844,7 @@ useEffect(() => {
             setShowProfilesMenu(!showProfilesMenu);
             setShowVacanciesMenu(false);
           }}
-          className="hover:text-gray-300 transition flex items-center gap-1 cursor-pointer font-medium py-1"
+          className="text-sm font-semibold text-gray-200 hover:text-white transition flex items-center gap-1 cursor-pointer whitespace-nowrap py-1"
           aria-expanded={showProfilesMenu}
         >
           <span>Profiles</span>
@@ -850,20 +852,22 @@ useEffect(() => {
         </button>
 
         {showProfilesMenu && (
-          <div className="absolute left-0 mt-2 w-44 rounded-xl bg-white text-black shadow-xl overflow-hidden z-50 border border-gray-100 py-1.5 animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute left-0 mt-2.5 w-52 rounded-2xl bg-white text-black shadow-2xl overflow-hidden z-50 border border-gray-200 animate-in fade-in zoom-in-95 duration-100 divide-y divide-gray-200">
             <Link
               href="/companies"
               onClick={() => setShowProfilesMenu(false)}
-              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
             >
-              Companies
+              <span>Companies</span>
+              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
             </Link>
             <Link
               href="/individuals"
               onClick={() => setShowProfilesMenu(false)}
-              className="block px-4 py-2 text-sm font-medium hover:bg-gray-100 transition text-gray-900"
+              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
             >
-              Professionals
+              <span>Professionals</span>
+              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
             </Link>
           </div>
         )}
@@ -872,7 +876,7 @@ useEffect(() => {
       {/* INSTITUTIONS */}
       <Link
         href="/institutions"
-        className="hover:text-gray-300 transition font-medium"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
         Institutions
       </Link>
@@ -880,7 +884,7 @@ useEffect(() => {
       {/* QUIZZES */}
       <Link
         href="/quizzes"
-        className="hover:text-gray-300 transition font-medium"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
         Quizzes
       </Link>
@@ -888,7 +892,7 @@ useEffect(() => {
       {/* CONTACTS */}
       <Link
         href="/contact"
-        className="hover:text-gray-300 transition font-medium"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
         Contacts
       </Link>
@@ -1087,9 +1091,9 @@ useEffect(() => {
         <ChevronDown size={18} className={`transition-transform duration-200 opacity-80 ${mobileVacanciesOpen ? 'rotate-180' : ''}`} />
       </button>
       {mobileVacanciesOpen && (
-        <div className="bg-gray-900/90 pl-10 pr-6 py-1.5 space-y-1">
-          <Link href="/jobs" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
-          <Link href="/internships" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Internship</Link>
+        <div className="bg-gray-900 pl-10 pr-6 py-1 divide-y divide-gray-800">
+          <Link href="/jobs" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
+          <Link href="/internships" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Internship</Link>
         </div>
       )}
     </div>
@@ -1104,9 +1108,9 @@ useEffect(() => {
         <ChevronDown size={18} className={`transition-transform duration-200 opacity-80 ${mobileProfilesOpen ? 'rotate-180' : ''}`} />
       </button>
       {mobileProfilesOpen && (
-        <div className="bg-gray-900/90 pl-10 pr-6 py-1.5 space-y-1">
-          <Link href="/companies" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
-          <Link href="/individuals" className="block py-2 text-base text-gray-300 hover:text-white transition" onClick={() => setMobileMenuOpen(false)}>Professionals</Link>
+        <div className="bg-gray-900 pl-10 pr-6 py-1 divide-y divide-gray-800">
+          <Link href="/companies" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
+          <Link href="/individuals" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Professionals</Link>
         </div>
       )}
     </div>
