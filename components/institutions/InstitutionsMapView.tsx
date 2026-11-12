@@ -38,6 +38,8 @@ interface InstitutionsMapViewProps {
   institutions: any[];
   selectedProgram?: string;
   sortBy?: string;
+  selectedCity?: string;
+  onSelectCity?: (city: string) => void;
   onSortChange?: (sort: string) => void;
   onSelectInstitution?: (inst: any) => void;
 }
@@ -46,6 +48,8 @@ export default function InstitutionsMapView({
   institutions,
   selectedProgram = "all",
   sortBy = "nirf_asc",
+  selectedCity = "",
+  onSelectCity,
   onSortChange,
   onSelectInstitution,
 }: InstitutionsMapViewProps) {
@@ -54,7 +58,9 @@ export default function InstitutionsMapView({
   const markersLayerRef = useRef<any>(null);
   const markersMapRef = useRef<Record<string, any>>({});
   const [selectedInst, setSelectedInst] = useState<any | null>(null);
-  const [activeHub, setActiveHub] = useState<string>("All India");
+  const [activeHub, setActiveHub] = useState<string>(
+    selectedCity && selectedCity.toLowerCase() === "chennai" ? "Chennai" : "All India"
+  );
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // Filter institutions that have valid coordinates
@@ -337,11 +343,49 @@ export default function InstitutionsMapView({
     updateMarkers();
   }, [mappedInstitutions, isMapLoaded]);
 
-  // Handle Hub Jump
+  // Synchronize Hub selection when selectedCity prop updates
+  useEffect(() => {
+    if (selectedCity) {
+      const cityLower = selectedCity.toLowerCase().trim();
+      if (cityLower === "chennai" || cityLower.includes("chennai")) {
+        setActiveHub("Chennai");
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([13.04, 80.18], 11, { animate: true, duration: 1.2 });
+        }
+      } else {
+        const match = ARCHITECTURE_HUBS.find(h => h.name.toLowerCase() === cityLower);
+        if (match) {
+          setActiveHub(match.name);
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.setView(match.coords, match.zoom, { animate: true, duration: 1.2 });
+          }
+        }
+      }
+    } else {
+      setActiveHub("All India");
+    }
+  }, [selectedCity]);
+
+  // Handle Hub Jump - Synchronizes Map pan AND text list filtering
   const handleHubClick = (hub: (typeof ARCHITECTURE_HUBS)[0]) => {
     setActiveHub(hub.name);
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setView(hub.coords, hub.zoom, { animate: true, duration: 1.2 });
+    }
+    if (hub.name === "All India") {
+      onSelectCity?.("");
+    } else if (hub.name === "Chennai") {
+      onSelectCity?.("Chennai");
+    } else if (hub.name === "Bengaluru") {
+      onSelectCity?.("Bengaluru");
+    } else if (hub.name === "Delhi-NCR") {
+      onSelectCity?.("Delhi");
+    } else if (hub.name === "Ahmedabad") {
+      onSelectCity?.("Ahmedabad");
+    } else if (hub.name === "Hyderabad") {
+      onSelectCity?.("Hyderabad");
+    } else if (hub.name === "Kolkata") {
+      onSelectCity?.("Kolkata");
     }
   };
 

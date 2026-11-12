@@ -88,12 +88,21 @@ export default function RegisterPracticePage() {
             .maybeSingle();
 
           if (prof) {
-            const { data: edus } = await supabase.from("educations").select("*").eq("user_id", prof.id);
-            const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", prof.id);
+            const { data: edus } = await supabase.from("profile_educations").select("*").eq("user_id", prof.id);
+            const { data: exps } = await supabase.from("profile_experiences").select("*").eq("user_id", prof.id);
             const res = calculateProfileCompletion(prof, edus || [], exps || []);
-            setProfileScore(res.percentage);
+            const calculatedPercentage = res.percentage || 0;
+            const storedPercentage = prof.completion_percentage || 0;
+            const effectiveScore = Math.max(calculatedPercentage, storedPercentage);
+            
+            // Check tier directly from profile or user
+            const tier = (prof.badge_tier || user.badge_tier || user.badgeTier || "").toLowerCase();
+            const isHighTier = ["silver", "gold", "platinum", "diamond"].includes(tier);
+            setProfileScore(isHighTier ? Math.max(effectiveScore, 75) : effectiveScore);
           } else {
-            setProfileScore(20);
+            const tier = (user.badge_tier || user.badgeTier || "").toLowerCase();
+            const isHighTier = ["silver", "gold", "platinum", "diamond"].includes(tier);
+            setProfileScore(isHighTier ? 75 : 20);
           }
         }
       } catch (e) {

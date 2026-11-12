@@ -9,7 +9,7 @@ import {
   CheckCircle2, XCircle, Share2, MessageCircle, Copy, 
   RotateCcw, Sparkles, Award, ShieldAlert, Flame, Zap,
   ChevronRight, Building2, Briefcase, BookOpen, GraduationCap,
-  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp
+  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp, SlidersHorizontal
 } from "lucide-react";
 import { 
   getQuestionsForGameDifficulty, 
@@ -64,6 +64,7 @@ export default function QuizPlayPage() {
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [gameStarted, setGameStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [showCustomOptions, setShowCustomOptions] = useState(false);
 
   // Sidebar: Leaderboard & other quizzes
   const [leaderboardScope, setLeaderboardScope] = useState<"quiz" | "overall">("quiz");
@@ -759,156 +760,200 @@ export default function QuizPlayPage() {
                   <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mt-2 mb-2">
                     {quiz.title}
                   </h1>
-                  <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto leading-relaxed mb-8">
+                  <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto leading-relaxed mb-6">
                     {quiz.description || "Test your architectural visual recall, beat the continuous countdown timer, and claim your spot on the official leaderboard."}
                   </p>
 
-                  {/* Step 1: Select Game Mode (Challenge vs Practice) */}
-                  <div className="text-left mb-6">
-                    <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
-                      1. Select Gameplay Mode:
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <button
-                        onClick={() => setGameMode("challenge")}
-                        className={`p-4 rounded-2xl border text-left transition ${
-                          gameMode === "challenge" 
-                            ? "bg-amber-50/70 border-amber-500 shadow-xs ring-1 ring-amber-500" 
-                            : "bg-white border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
-                            🏆 Challenge Mode
-                          </p>
-                          <span className="text-[10px] font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full uppercase">
-                            Official Leaderboard
-                          </span>
+                  {/* PROMINENT QUICK START SECTION (Item 12: Sensible Defaults: Challenge Mode, Medium, 10 Questions) */}
+                  <div className="bg-gradient-to-b from-amber-50/90 to-orange-50/40 border-2 border-amber-400 rounded-3xl p-6 sm:p-8 mb-6 text-center shadow-xs">
+                    <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
+                      <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-black text-white rounded-full">
+                        ⚡ Quick Start Recommended
+                      </span>
+                      <span className="text-xs font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full">
+                        10 Questions &bull; Challenge Mode &bull; Medium Difficulty &bull; 3 Min Timer
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-5 max-w-md mx-auto">
+                      Jump straight into the quiz challenge with standard tournament settings and earn your spot on the leaderboard.
+                    </p>
+                    <button
+                      onClick={handleStartGame}
+                      className="w-full sm:w-auto px-10 py-4 bg-black hover:bg-gray-800 text-white text-base font-extrabold rounded-2xl transition shadow-lg flex items-center justify-center gap-2.5 mx-auto cursor-pointer"
+                    >
+                      <Play size={18} fill="currentColor" />
+                      <span>Quick Start Quiz</span>
+                    </button>
+                  </div>
+
+                  {/* ADVANCED CUSTOMIZATION TOGGLE */}
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden mb-6 text-left">
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomOptions(!showCustomOptions)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition text-xs font-bold text-gray-700 cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <SlidersHorizontal size={14} className="text-gray-500" />
+                        <span>Customize Game Options (Mode, Difficulty, Question Count)</span>
+                      </span>
+                      <ChevronDown size={16} className={`transition-transform duration-200 ${showCustomOptions ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {showCustomOptions && (
+                      <div className="p-5 border-t border-gray-200 bg-white space-y-6 animate-in fade-in duration-150">
+                        {/* Step 1: Select Game Mode (Challenge vs Practice) */}
+                        <div>
+                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
+                            1. Select Gameplay Mode:
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setGameMode("challenge")}
+                              className={`p-4 rounded-2xl border text-left transition ${
+                                gameMode === "challenge" 
+                                  ? "bg-amber-50/70 border-amber-500 shadow-xs ring-1 ring-amber-500" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+                                  🏆 Challenge Mode
+                                </p>
+                                <span className="text-[10px] font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full uppercase">
+                                  Official Leaderboard
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1.5">Continuous Countdown & Speed Bonus</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Total session countdown timer, no answers revealed during gameplay. Full scorecard & speed bonuses awarded upon submission.
+                              </p>
+                            </button>
+
+                            <button
+                              onClick={() => setGameMode("practice")}
+                              className={`p-4 rounded-2xl border text-left transition ${
+                                gameMode === "practice" 
+                                  ? "bg-blue-50/70 border-blue-500 shadow-xs ring-1 ring-blue-500" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-extrabold text-blue-900 flex items-center gap-1.5">
+                                  💡 Practice & Study Mode
+                                </p>
+                                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full uppercase">
+                                  Untimed Learning
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1.5">Immediate Trivia & Clues</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                No timer pressure. Reveals correct answers and architectural clues immediately after each selection.
+                              </p>
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-[11px] font-bold text-gray-800 mt-1.5">Continuous Countdown & Speed Bonus</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                          Total session countdown timer, no answers revealed during gameplay. Full scorecard & speed bonuses awarded upon submission.
-                        </p>
-                      </button>
 
-                      <button
-                        onClick={() => setGameMode("practice")}
-                        className={`p-4 rounded-2xl border text-left transition ${
-                          gameMode === "practice" 
-                            ? "bg-blue-50/70 border-blue-500 shadow-xs ring-1 ring-blue-500" 
-                            : "bg-white border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-extrabold text-blue-900 flex items-center gap-1.5">
-                            💡 Practice & Study Mode
-                          </p>
-                          <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full uppercase">
-                            Untimed Learning
-                          </span>
+                        {/* Step 2: Select Difficulty Mode */}
+                        <div>
+                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
+                            2. Select Difficulty Mode:
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <button
+                              onClick={() => setDifficulty("easy")}
+                              className={`p-3.5 rounded-2xl border text-left transition ${
+                                difficulty === "easy" 
+                                  ? "bg-emerald-50 border-emerald-500 shadow-xs ring-1 ring-emerald-500" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+                                🟢 Easy Mode
+                              </p>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">Famous & Viral Landmarks</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Recognizable icons (Sydney Opera, Fallingwater). 1 Pt/Q • 30s pace.
+                              </p>
+                            </button>
+
+                            <button
+                              onClick={() => setDifficulty("medium")}
+                              className={`p-3.5 rounded-2xl border text-left transition ${
+                                difficulty === "medium" 
+                                  ? "bg-amber-50 border-amber-500 shadow-xs ring-1 ring-amber-500" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
+                                🟡 Medium Mode
+                              </p>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">Syllabus Classics & Milestones</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Core architecture syllabus icons (Salk Institute). 2 Pts/Q • 18s pace.
+                              </p>
+                            </button>
+
+                            <button
+                              onClick={() => setDifficulty("hard")}
+                              className={`p-3.5 rounded-2xl border text-left transition ${
+                                difficulty === "hard" 
+                                  ? "bg-red-50 border-red-500 shadow-xs ring-1 ring-red-500" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <p className="text-xs font-bold text-red-800 flex items-center gap-1.5">
+                                🔴 Hard Mode
+                              </p>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">Advanced Tectonic Masterpieces</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Challenging structural feats & niche works. 5 Pts/Q • 12s pace.
+                              </p>
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-[11px] font-bold text-gray-800 mt-1.5">Immediate Trivia & Clues</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                          No timer pressure. Reveals correct answers and architectural clues immediately after each selection.
-                        </p>
-                      </button>
-                    </div>
+
+                        {/* Step 3: Select Round Length */}
+                        <div>
+                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
+                            3. Round Length (Questions):
+                          </label>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[
+                              { count: 10, label: "10 Questions", time: difficulty === "easy" ? "5m" : difficulty === "medium" ? "3m" : "2m" },
+                              { count: 20, label: "20 Questions", time: difficulty === "easy" ? "10m" : difficulty === "medium" ? "6m" : "4m" },
+                              { count: 40, label: "40 Questions", time: difficulty === "easy" ? "20m" : difficulty === "medium" ? "12m" : "8m" }
+                            ].map(item => (
+                              <button
+                                key={item.count}
+                                onClick={() => setQuestionCountChoice(item.count)}
+                                className={`p-3 rounded-2xl border text-center transition ${
+                                  questionCountChoice === item.count
+                                    ? "bg-black text-white border-black shadow-xs"
+                                    : "bg-white text-gray-800 border-gray-200 hover:border-gray-300"
+                                }`}
+                              >
+                                <p className="text-xs font-bold">{item.label}</p>
+                                <p className={`text-[10px] mt-0.5 ${questionCountChoice === item.count ? "text-gray-300" : "text-gray-400"}`}>
+                                  {gameMode === "challenge" ? `Time: ${item.time}` : "Untimed"}
+                                </p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 text-center">
+                          <button
+                            onClick={handleStartGame}
+                            className="w-full sm:w-auto px-8 py-3 bg-black hover:bg-gray-800 text-white text-sm font-extrabold rounded-2xl transition shadow-md flex items-center justify-center gap-2 mx-auto cursor-pointer"
+                          >
+                            <Play size={15} fill="currentColor" />
+                            <span>Start with Custom Settings</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  {/* Step 2: Select Difficulty Mode */}
-                  <div className="text-left mb-6">
-                    <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
-                      2. Select Difficulty Mode:
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <button
-                        onClick={() => setDifficulty("easy")}
-                        className={`p-3.5 rounded-2xl border text-left transition ${
-                          difficulty === "easy" 
-                            ? "bg-emerald-50 border-emerald-500 shadow-xs ring-1 ring-emerald-500" 
-                            : "bg-white border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                          🟢 Easy Mode
-                        </p>
-                        <p className="text-[11px] font-bold text-gray-800 mt-1">Famous & Viral Landmarks</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                          Recognizable icons from reels, social media & foundational history (Sydney Opera, Fallingwater). 1 Point/Q • 30s pace.
-                        </p>
-                      </button>
-
-                      <button
-                        onClick={() => setDifficulty("medium")}
-                        className={`p-3.5 rounded-2xl border text-left transition ${
-                          difficulty === "medium" 
-                            ? "bg-amber-50 border-amber-500 shadow-xs ring-1 ring-amber-500" 
-                            : "bg-white border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
-                          🟡 Medium Mode
-                        </p>
-                        <p className="text-[11px] font-bold text-gray-800 mt-1">Syllabus Classics & Milestones</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                          Core architecture syllabus icons (Salk Institute, Capitol Complex). 2 Points/Q • 18s pace.
-                        </p>
-                      </button>
-
-                      <button
-                        onClick={() => setDifficulty("hard")}
-                        className={`p-3.5 rounded-2xl border text-left transition ${
-                          difficulty === "hard" 
-                            ? "bg-red-50 border-red-500 shadow-xs ring-1 ring-red-500" 
-                            : "bg-white border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        <p className="text-xs font-bold text-red-800 flex items-center gap-1.5">
-                          🔴 Hard Mode
-                        </p>
-                        <p className="text-[11px] font-bold text-gray-800 mt-1">Advanced Tectonic Masterpieces</p>
-                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                          Challenging structural feats & niche Pritzker works (Braga Quarry, UTEC Lima). 5 Points/Q • 12s pace.
-                        </p>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Step 3: Select Round Length (10, 20, 40 Questions) */}
-                  <div className="text-left mb-8">
-                    <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
-                      3. Round Length (Questions):
-                    </label>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { count: 10, label: "10 Questions", time: difficulty === "easy" ? "5m" : difficulty === "medium" ? "3m" : "2m" },
-                        { count: 20, label: "20 Questions", time: difficulty === "easy" ? "10m" : difficulty === "medium" ? "6m" : "4m" },
-                        { count: 40, label: "40 Questions", time: difficulty === "easy" ? "20m" : difficulty === "medium" ? "12m" : "8m" }
-                      ].map(item => (
-                        <button
-                          key={item.count}
-                          onClick={() => setQuestionCountChoice(item.count)}
-                          className={`p-3 rounded-2xl border text-center transition ${
-                            questionCountChoice === item.count
-                              ? "bg-black text-white border-black shadow-xs"
-                              : "bg-white text-gray-800 border-gray-200 hover:border-gray-300"
-                          }`}
-                        >
-                          <p className="text-xs font-bold">{item.label}</p>
-                          <p className={`text-[10px] mt-0.5 ${questionCountChoice === item.count ? "text-gray-300" : "text-gray-400"}`}>
-                            {gameMode === "challenge" ? `Total Time: ${item.time}` : "Untimed"}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleStartGame}
-                    className="w-full sm:w-auto px-10 py-3.5 bg-black hover:bg-gray-800 text-white text-sm font-extrabold rounded-2xl transition shadow-md flex items-center justify-center gap-2 mx-auto"
-                  >
-                    <Play size={16} fill="currentColor" /> Start Quiz Challenge
-                  </button>
                 </div>
               ) : isGameOver && resultsSummary ? (
 
@@ -951,26 +996,47 @@ export default function QuizPlayPage() {
                     </div>
                   </div>
 
-                  {/* GUEST PARTICIPATION BRIDGE (No Mandatory Login) */}
+                  {/* GUEST PARTICIPATION BRIDGE (Item 13: Full Results Visible + Clear Call to Action) */}
                   {!currentUser && (
-                    <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border border-blue-200 rounded-2xl p-5 text-left mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
-                      <div>
-                        <p className="text-xs font-black text-blue-900 flex items-center gap-1.5">
-                          <Sparkles size={15} className="text-amber-500" /> Playing as Anonymous Guest
-                        </p>
-                        <p className="text-xs text-blue-800 mt-1 leading-relaxed">
-                          Your score of <strong>{resultsSummary.totalPoints} PTS ({resultsSummary.accuracyPercentage}% Accuracy)</strong> has been recorded! Create a free account or log in to preserve it permanently to your official profile and rank on the public leaderboard.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button 
-                          onClick={() => {
-                            window.dispatchEvent(new CustomEvent('openAuth', { detail: 'register' }));
-                          }}
-                          className="px-4 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-xs whitespace-nowrap"
-                        >
-                          Create Free Account & Save
-                        </button>
+                    <div className="bg-gradient-to-r from-amber-50/80 via-orange-50/60 to-indigo-50/60 border-2 border-amber-300 rounded-3xl p-6 text-left mb-8 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
+                              ⚠️ Unverified Guest Score
+                            </span>
+                            <span className="text-xs font-bold text-gray-700">
+                              Earned: {resultsSummary.totalPoints} PTS ({resultsSummary.accuracyPercentage}% Accuracy)
+                            </span>
+                          </div>
+                          <h3 className="text-base sm:text-lg font-black text-gray-950">
+                            Your quiz is complete! Your score is ready. Register or log in to save your result and join the TI2A leaderboard.
+                          </h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            Your attempt has been securely saved in this browser session. Creating a free account or logging in will automatically transfer your score onto your permanent profile and rank you on the official All-India Leaderboard.
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0 self-stretch sm:self-center">
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('openAuth', { detail: 'register' }));
+                            }}
+                            className="px-5 py-3 bg-black hover:bg-gray-800 text-white text-xs font-extrabold rounded-xl transition shadow-md text-center cursor-pointer"
+                          >
+                            Register and Save My Score
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('openAuth', { detail: 'login' }));
+                            }}
+                            className="px-4 py-3 bg-white hover:bg-gray-100 text-gray-900 border border-gray-300 text-xs font-extrabold rounded-xl transition shadow-2xs text-center cursor-pointer"
+                          >
+                            Login and Save My Score
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

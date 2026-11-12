@@ -108,8 +108,8 @@ export default function SubscriptionsPage() {
             if (prof.email) setEmail(prof.email);
 
             const [{ data: edus }, { data: exps }, { data: comps }] = await Promise.all([
-              supabase.from("educations").select("*").eq("user_id", currentUser.id),
-              supabase.from("experiences").select("*").eq("user_id", currentUser.id),
+              supabase.from('profile_educations').select("*").eq("user_id", currentUser.id),
+              supabase.from('profile_experiences').select("*").eq("user_id", currentUser.id),
               supabase.from("companies").select("id").or(`claimed_by.eq.${currentUser.id},created_by.eq.${currentUser.id}`).limit(1)
             ]);
 

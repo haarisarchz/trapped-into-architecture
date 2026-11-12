@@ -64,6 +64,62 @@ const INTAKE_RANGES = [
   { label: "120+ seats", value: "121-500" },
 ];
 
+export function isChennaiMetropolitan(inst: any): boolean {
+  if (!inst) return false;
+  const state = (inst.state || "").toLowerCase().trim();
+  if (state !== "tamil nadu") return false;
+
+  const city = (inst.city || "").toLowerCase().trim();
+  const dist = (inst.district || "").toLowerCase().trim();
+  const loc = (inst.locality || "").toLowerCase().trim();
+  const addr = (inst.address || "").toLowerCase().trim();
+
+  // Non-CMA districts to exclude
+  const distantDistricts = [
+    "salem", "coimbatore", "madurai", "tiruchirappalli", "trichy", "tirunelveli",
+    "erode", "vellore", "thanjavur", "dindigul", "the nilgiris", "nilgiris",
+    "kanyakumari", "namakkal", "dharmapuri", "theni", "virudhunagar",
+    "sivaganga", "ramanathapuram", "perambalur", "pudukkottai", "tiruvarur",
+    "nagapattinam", "karur", "ariyalur", "krishnagiri", "tiruppur", "tenkasi",
+    "ranipet", "tirupathur", "kallakurichi", "mayiladuthurai", "cuddalore", "villupuram"
+  ];
+  if (distantDistricts.includes(dist) || (distantDistricts.includes(city) && city !== "chennai")) {
+    return false;
+  }
+
+  // 1. Direct Chennai city / district
+  if (city === "chennai" || dist === "chennai") return true;
+
+  // 2. Contiguous CMA districts: Chengalpattu, Kanchipuram, Thiruvallur
+  const cmaDistricts = ["chengalpattu", "chengalpet", "kanchipuram", "kancheepuram", "thiruvallur", "tiruvallur"];
+  const inCmaDistrict = cmaDistricts.includes(dist) || cmaDistricts.includes(city);
+
+  if (inCmaDistrict) {
+    const cmaKeywords = [
+      "vandalur", "kattankulathur", "kattangulathur", "kelambakkam", "padur",
+      "kazhipattur", "egattur", "siruseri", "avadi", "poonamallee", "chembarambakkam",
+      "kundrathur", "thandalam", "sriperumbudur", "kannigaiper", "paiyanur",
+      "maduravoyal", "porur", "ramapuram", "tambaram", "selaiyur", "chromepet"
+    ];
+    if (cmaKeywords.some(kw => loc.includes(kw) || addr.includes(kw) || city.includes(kw))) {
+      return true;
+    }
+  }
+
+  // 3. Known CMA institutions by COA code
+  const cmaCodes = [
+    "TN01", "TN05", "TN07", "TN08", "TN10", "TN13", "TN18", "TN26", "TN28",
+    "TN29", "TN34", "TN35", "TN37", "TN39", "TN41", "TN45", "TN48", "TN49",
+    "TN55", "TN56", "TN66", "TN72", "TN79", "TN81", "TN90", "TN96", "TN97",
+    "TN98", "TND01"
+  ];
+  if (cmaCodes.includes(inst.coa_code)) {
+    return true;
+  }
+
+  return false;
+}
+
 function InstitutionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -205,7 +261,7 @@ function InstitutionsContent() {
         // Format to clean title case if all uppercase
         const isUpper = s === s.toUpperCase() && s.length > 3;
         const cleanName = isUpper
-          ? s.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")
+          ? s.split(" ").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")
           : s;
         map.set(lower, cleanName);
       }
@@ -216,6 +272,9 @@ function InstitutionsContent() {
 
   const uniqueCities = useMemo(() => {
     const set = new Set<string>();
+    if (selectedState === "All India" || selectedState.toLowerCase() === "tamil nadu") {
+      set.add("Chennai");
+    }
     institutions.forEach((i) => {
       if (selectedState === "All India" || i.state?.toLowerCase() === selectedState.toLowerCase()) {
         let c = (i.city || i.district || "").trim();
@@ -378,12 +437,16 @@ function InstitutionsContent() {
         return false;
       }
 
-      // 3. City / District
+      // 3. City / District (with Chennai Metropolitan Area grouping)
       if (selectedCity) {
-        const c = inst.city?.toLowerCase();
-        const d = inst.district?.toLowerCase();
-        const target = selectedCity.toLowerCase();
-        if (c !== target && d !== target) return false;
+        const target = selectedCity.toLowerCase().trim();
+        if (target === "chennai" || target === "chennai (cma)" || target === "chennai metropolitan area") {
+          if (!isChennaiMetropolitan(inst)) return false;
+        } else {
+          const c = inst.city?.toLowerCase()?.trim();
+          const d = inst.district?.toLowerCase()?.trim();
+          if (c !== target && d !== target) return false;
+        }
       }
 
       // 4. University
@@ -838,6 +901,14 @@ function InstitutionsContent() {
                   institutions={sortedInstitutions}
                   selectedProgram={selectedProgram}
                   sortBy={sortBy}
+                  selectedCity={selectedCity}
+                  onSelectCity={(city) => {
+                    setSelectedCity(city);
+                    if (city && city.toLowerCase() === "chennai") {
+                      setSelectedState("Tamil Nadu");
+                    }
+                    setCurrentPage(1);
+                  }}
                   onSortChange={(s) => {
                     setSortBy(s);
                     setCurrentPage(1);
@@ -1056,7 +1127,7 @@ function InstitutionsContent() {
                       <button
                         onClick={() => setViewMode("split")}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                          viewMode === "split"
+                          (viewMode as string) === "split"
                             ? "bg-black text-white shadow-2xs"
                             : "text-gray-600 hover:text-gray-900"
                         }`}
@@ -1068,7 +1139,7 @@ function InstitutionsContent() {
                       <button
                         onClick={() => setViewMode("grid")}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                          viewMode === "grid"
+                          (viewMode as string) === "grid"
                             ? "bg-black text-white shadow-2xs"
                             : "text-gray-600 hover:text-gray-900"
                         }`}

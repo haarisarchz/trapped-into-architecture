@@ -139,8 +139,8 @@ export default function Navbar() {
       // A. Member Milestone Level-Up Notifications (Silver 45%, Gold 66%, Platinum 81%, Diamond 91%)
       if (userProf && userId) {
         try {
-          const { data: edus } = await supabase.from("educations").select("*").eq("user_id", userId);
-          const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", userId);
+          const { data: edus } = await supabase.from('profile_educations').select("*").eq("user_id", userId);
+          const { data: exps } = await supabase.from('profile_experiences').select("*").eq("user_id", userId);
           const { percentage, badgeTier } = calculateProfileCompletion(userProf, edus || [], exps || []);
           const profTime = userProf.updated_at || userProf.created_at || new Date().toISOString();
           let calculatedTier = badgeTier || "bronze";
@@ -837,49 +837,13 @@ useEffect(() => {
         )}
       </div>
 
-      {/* PROFILES (DROPDOWN: COMPANIES & PROFESSIONALS) */}
-      <div className="relative profiles-menu-container">
-        <button
-          onClick={() => {
-            setShowProfilesMenu(!showProfilesMenu);
-            setShowVacanciesMenu(false);
-          }}
-          className="text-sm font-semibold text-gray-200 hover:text-white transition flex items-center gap-1 cursor-pointer whitespace-nowrap py-1"
-          aria-expanded={showProfilesMenu}
-        >
-          <span>Profiles</span>
-          <ChevronDown size={14} className={`transition-transform duration-200 opacity-80 ${showProfilesMenu ? 'rotate-180' : ''}`} />
-        </button>
-
-        {showProfilesMenu && (
-          <div className="absolute left-0 mt-2.5 w-56 rounded-2xl bg-white text-black shadow-2xl overflow-hidden z-50 border border-gray-200 animate-in fade-in zoom-in-95 duration-100 divide-y divide-gray-200">
-            <Link
-              href="/companies"
-              onClick={() => setShowProfilesMenu(false)}
-              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
-            >
-              <span>Companies & Firms</span>
-              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
-            </Link>
-            <Link
-              href="/institutions"
-              onClick={() => setShowProfilesMenu(false)}
-              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
-            >
-              <span>Institutions & Colleges</span>
-              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
-            </Link>
-            <Link
-              href="/individuals"
-              onClick={() => setShowProfilesMenu(false)}
-              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
-            >
-              <span>Professionals</span>
-              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
-            </Link>
-          </div>
-        )}
-      </div>
+      {/* COMPANIES */}
+      <Link
+        href="/companies"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
+      >
+        Companies
+      </Link>
 
       {/* INSTITUTIONS */}
       <Link
@@ -1106,23 +1070,8 @@ useEffect(() => {
       )}
     </div>
 
-    {/* MOBILE PROFILES DROPDOWN */}
-    <div className="border-b border-gray-800">
-      <button
-        onClick={() => setMobileProfilesOpen(!mobileProfilesOpen)}
-        className="w-full flex items-center justify-between px-6 py-2.5 text-lg hover:bg-gray-900 transition text-left cursor-pointer"
-      >
-        <span>Profiles</span>
-        <ChevronDown size={18} className={`transition-transform duration-200 opacity-80 ${mobileProfilesOpen ? 'rotate-180' : ''}`} />
-      </button>
-      {mobileProfilesOpen && (
-        <div className="bg-gray-900 pl-10 pr-6 py-1 divide-y divide-gray-800">
-          <Link href="/companies" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Companies & Firms</Link>
-          <Link href="/institutions" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Institutions & Colleges</Link>
-          <Link href="/individuals" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Professionals</Link>
-        </div>
-      )}
-    </div>
+    {/* MOBILE COMPANIES */}
+    <Link href="/companies" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
 
     <Link href="/institutions" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Institutions</Link>
     <Link href="/quizzes" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Quizzes</Link>
