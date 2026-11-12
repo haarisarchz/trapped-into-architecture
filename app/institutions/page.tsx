@@ -120,6 +120,115 @@ export function isChennaiMetropolitan(inst: any): boolean {
   return false;
 }
 
+export function isBangaloreMetropolitan(inst: any): boolean {
+  if (!inst) return false;
+  if ((inst.state || "").toLowerCase().trim() !== "karnataka") return false;
+  const dist = (inst.district || "").toLowerCase().trim();
+  const city = (inst.city || "").toLowerCase().trim();
+  const loc = (inst.locality || "").toLowerCase().trim();
+  const addr = (inst.address || "").toLowerCase().trim();
+  const name = (inst.institution_name || "").toLowerCase().trim();
+  const text = `${name} ${loc} ${city} ${dist} ${addr}`;
+
+  if (city.includes("bangalore") || city.includes("bengaluru") || dist.includes("bangalore") || dist.includes("bengaluru")) {
+    return true;
+  }
+
+  const bmrKeywords = [
+    "yelahanka", "jayanagar", "kengeri", "chikkabanavara", "hesaraghatta", "hoskote",
+    "nelamangala", "devanahalli", "anekal", "bidadi", "ramanagara", "kanakapura",
+    "doddaballapur", "whitefield", "sarjapur", "bannerghatta", "kumbalgodu", "kodigehalli"
+  ];
+  return bmrKeywords.some(kw => text.includes(kw));
+}
+
+export function isDelhiNcrMetropolitan(inst: any): boolean {
+  if (!inst) return false;
+  const state = (inst.state || "").toLowerCase().trim();
+  if (!["delhi", "haryana", "uttar pradesh"].includes(state)) return false;
+
+  const dist = (inst.district || "").toLowerCase().trim();
+  const city = (inst.city || "").toLowerCase().trim();
+  const loc = (inst.locality || "").toLowerCase().trim();
+  const addr = (inst.address || "").toLowerCase().trim();
+  const name = (inst.institution_name || "").toLowerCase().trim();
+  const text = `${name} ${loc} ${city} ${dist} ${addr}`;
+
+  if (state === "delhi" || city === "delhi" || city === "new delhi" || dist === "delhi" || dist === "new delhi") {
+    return true;
+  }
+
+  const ncrKeywords = [
+    "ncr", "noida", "greater noida", "gurgaon", "gurugram", "faridabad",
+    "ghaziabad", "sonipat", "sonepat", "jhajjar", "bahadurgarh"
+  ];
+  return ncrKeywords.some(kw => text.includes(kw));
+}
+
+export function isMumbaiMetropolitan(inst: any): boolean {
+  if (!inst) return false;
+  if ((inst.state || "").toLowerCase().trim() !== "maharashtra") return false;
+  const dist = (inst.district || "").toLowerCase().trim();
+  const city = (inst.city || "").toLowerCase().trim();
+  const loc = (inst.locality || "").toLowerCase().trim();
+  const addr = (inst.address || "").toLowerCase().trim();
+  const name = (inst.institution_name || "").toLowerCase().trim();
+  const text = `${name} ${loc} ${city} ${dist} ${addr}`;
+
+  // Exclude Pune
+  if (dist === "pune" || city === "pune") return false;
+
+  const mmrDirect = [
+    "mumbai", "mumbai suburban", "mumbai city", "bombay", "navi mumbai",
+    "thane", "palghar", "panvel", "kalyan", "dombivli", "mira", "bhayandar",
+    "vasai", "virar"
+  ];
+  if (mmrDirect.some(d => city.includes(d) || dist.includes(d))) return true;
+
+  // Raigad institutions within MMR
+  if (dist.includes("raigad") || dist.includes("raigarh")) {
+    const mmrRaigad = ["panvel", "karjat", "rasayani", "alibag", "pen", "khopoli", "amity", "pillai", "vishwaniketan", "wilfred"];
+    return mmrRaigad.some(kw => text.includes(kw));
+  }
+
+  return false;
+}
+
+export function isPuneMetropolitan(inst: any): boolean {
+  if (!inst) return false;
+  if ((inst.state || "").toLowerCase().trim() !== "maharashtra") return false;
+  const dist = (inst.district || "").toLowerCase().trim();
+  const city = (inst.city || "").toLowerCase().trim();
+  const loc = (inst.locality || "").toLowerCase().trim();
+  const addr = (inst.address || "").toLowerCase().trim();
+  const name = (inst.institution_name || "").toLowerCase().trim();
+  const text = `${name} ${loc} ${city} ${dist} ${addr}`;
+
+  if (city === "pune" || dist === "pune") return true;
+
+  const pmrKeywords = ["pimpri", "chinchwad", "talegaon", "lonavala", "lonavla", "shirur", "baramati", "chakan", "lavasa", "bhor"];
+  return pmrKeywords.some(kw => text.includes(kw));
+}
+
+export function isKolkataMetropolitan(inst: any): boolean {
+  if (!inst) return false;
+  if ((inst.state || "").toLowerCase().trim() !== "west bengal") return false;
+  const dist = (inst.district || "").toLowerCase().trim();
+  const city = (inst.city || "").toLowerCase().trim();
+  const loc = (inst.locality || "").toLowerCase().trim();
+  const addr = (inst.address || "").toLowerCase().trim();
+  const name = (inst.institution_name || "").toLowerCase().trim();
+  const text = `${name} ${loc} ${city} ${dist} ${addr}`;
+
+  if (city === "kolkata" || city === "calcutta" || dist === "kolkata" || dist === "calcutta") return true;
+
+  const kmaKeywords = [
+    "howrah", "hooghly", "24 parganas", "kalyani", "shibpur", "jadavpur",
+    "behala", "salt lake", "bidhannagar", "new town", "rajarhat", "barasat"
+  ];
+  return kmaKeywords.some(kw => text.includes(kw));
+}
+
 function InstitutionsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -272,9 +381,8 @@ function InstitutionsContent() {
 
   const uniqueCities = useMemo(() => {
     const set = new Set<string>();
-    if (selectedState === "All India" || selectedState.toLowerCase() === "tamil nadu") {
-      set.add("Chennai");
-    }
+    const METRO_PRIORITY = ["Bengaluru", "Chennai", "Delhi-NCR", "Kolkata", "Mumbai", "Pune"];
+
     institutions.forEach((i) => {
       if (selectedState === "All India" || i.state?.toLowerCase() === selectedState.toLowerCase()) {
         let c = (i.city || i.district || "").trim();
@@ -288,7 +396,26 @@ function InstitutionsContent() {
         }
       }
     });
-    return Array.from(set).sort();
+
+    const normalList = Array.from(set).sort();
+    const filteredNormal = normalList.filter(
+      (c) => !METRO_PRIORITY.some((m) => m.toLowerCase() === c.toLowerCase() || (m === "Delhi-NCR" && (c.toLowerCase() === "delhi" || c.toLowerCase() === "new delhi")))
+    );
+
+    if (selectedState === "All India") {
+      return [...METRO_PRIORITY, ...filteredNormal];
+    } else if (selectedState.toLowerCase() === "tamil nadu") {
+      return ["Chennai", ...filteredNormal.filter(c => c.toLowerCase() !== "chennai")];
+    } else if (selectedState.toLowerCase() === "karnataka") {
+      return ["Bengaluru", ...filteredNormal.filter(c => !c.toLowerCase().includes("bangalore") && !c.toLowerCase().includes("bengaluru"))];
+    } else if (selectedState.toLowerCase() === "maharashtra") {
+      return ["Mumbai", "Pune", ...filteredNormal.filter(c => c.toLowerCase() !== "mumbai" && c.toLowerCase() !== "pune")];
+    } else if (selectedState.toLowerCase() === "west bengal") {
+      return ["Kolkata", ...filteredNormal.filter(c => c.toLowerCase() !== "kolkata" && c.toLowerCase() !== "calcutta")];
+    } else if (selectedState.toLowerCase() === "delhi") {
+      return ["Delhi-NCR", ...filteredNormal.filter(c => !c.toLowerCase().includes("delhi"))];
+    }
+    return normalList;
   }, [institutions, selectedState]);
 
   const uniqueUniversities = useMemo(() => {
@@ -437,11 +564,21 @@ function InstitutionsContent() {
         return false;
       }
 
-      // 3. City / District (with Chennai Metropolitan Area grouping)
+      // 3. City / District (with Metropolitan Area grouping for Bangalore, Chennai, Delhi-NCR, Kolkata, Mumbai, Pune)
       if (selectedCity) {
         const target = selectedCity.toLowerCase().trim();
         if (target === "chennai" || target === "chennai (cma)" || target === "chennai metropolitan area") {
           if (!isChennaiMetropolitan(inst)) return false;
+        } else if (target === "bengaluru" || target === "bangalore" || target === "bangalore metropolitan area") {
+          if (!isBangaloreMetropolitan(inst)) return false;
+        } else if (target === "delhi" || target === "delhi-ncr" || target === "new delhi" || target === "delhi ncr") {
+          if (!isDelhiNcrMetropolitan(inst)) return false;
+        } else if (target === "mumbai" || target === "mumbai mmr" || target === "bombay") {
+          if (!isMumbaiMetropolitan(inst)) return false;
+        } else if (target === "pune" || target === "pune pmr" || target === "poona") {
+          if (!isPuneMetropolitan(inst)) return false;
+        } else if (target === "kolkata" || target === "calcutta" || target === "kolkata kma") {
+          if (!isKolkataMetropolitan(inst)) return false;
         } else {
           const c = inst.city?.toLowerCase()?.trim();
           const d = inst.district?.toLowerCase()?.trim();
@@ -904,8 +1041,17 @@ function InstitutionsContent() {
                   selectedCity={selectedCity}
                   onSelectCity={(city) => {
                     setSelectedCity(city);
-                    if (city && city.toLowerCase() === "chennai") {
-                      setSelectedState("Tamil Nadu");
+                    if (city) {
+                      const cLow = city.toLowerCase();
+                      if (cLow === "chennai") setSelectedState("Tamil Nadu");
+                      else if (cLow === "bengaluru" || cLow === "bangalore") setSelectedState("Karnataka");
+                      else if (cLow.includes("delhi")) setSelectedState("All India"); // NCR spans Delhi, Haryana, and UP!
+                      else if (cLow === "mumbai" || cLow === "pune") setSelectedState("Maharashtra");
+                      else if (cLow.includes("kolkata") || cLow.includes("calcutta")) setSelectedState("West Bengal");
+                      else if (cLow === "ahmedabad") setSelectedState("Gujarat");
+                      else if (cLow === "hyderabad") setSelectedState("Telangana");
+                    } else {
+                      setSelectedState("All India");
                     }
                     setCurrentPage(1);
                   }}

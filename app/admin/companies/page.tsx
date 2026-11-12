@@ -146,7 +146,7 @@ function AdminCompaniesContent() {
       // 3. Fetch profiles
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("id, display_name, full_name, username, role");
+        .select("id, display_name, full_name, username, role, email");
 
       const profilesMap: Record<string, any> = {};
       if (profilesData) {
@@ -557,7 +557,9 @@ function AdminCompaniesContent() {
   }, [claims]);
 
   const pendingSubmissions = useMemo(() => {
-    return companies.filter((c) => c.status === "pending_verification");
+    return companies.filter(
+      (c) => c.status === "pending_verification" || (c.is_verified === false && c.is_active === false && c.status !== "trash" && c.status !== "rejected")
+    );
   }, [companies]);
 
   const myMissingLogosCount = useMemo(() => {
@@ -1525,7 +1527,30 @@ function AdminCompaniesContent() {
                         </div>
 
                         <div className="text-xs text-gray-500 pt-1 flex flex-wrap gap-4">
-                          <span>Submitter Email: <strong className="text-gray-800">{comp.email || comp.contact_email || "—"}</strong></span>
+                          <span>
+                            Submitted By:{" "}
+                            <strong className="text-gray-800">
+                              {comp.creatorProfile?.full_name || comp.creatorProfile?.display_name || comp.creatorProfile?.username || "Community User"}
+                            </strong>
+                          </span>
+                          <span>
+                            Submitter Email:{" "}
+                            <strong className="text-gray-800">
+                              {comp.creatorProfile?.email || comp.email || comp.contact_email || "—"}
+                            </strong>
+                          </span>
+                          {comp.created_at && (
+                            <span>
+                              Submitted:{" "}
+                              <strong className="text-gray-800">
+                                {new Date(comp.created_at).toLocaleDateString("en-IN", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </strong>
+                            </span>
+                          )}
                           {comp.phone && <span>Phone: <strong className="text-gray-800">{comp.phone}</strong></span>}
                           {comp.principal_architect && <span>Principal: <strong className="text-gray-800">{comp.principal_architect}</strong></span>}
                         </div>
