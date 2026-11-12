@@ -484,7 +484,7 @@ function InstitutionsContent() {
         return a.institution_name.localeCompare(b.institution_name);
       }
       if (sortBy === "code_asc") {
-        return (a.coa_code || "").localeCompare(b.coa_code || "");
+        return (a.coa_code || "").localeCompare(b.coa_code || "", undefined, { numeric: true });
       }
       return a.institution_name.localeCompare(b.institution_name);
     });
@@ -757,37 +757,66 @@ function InstitutionsContent() {
                 </div>
               </div>
 
-              {/* Right Group: View Switcher */}
-              <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
-                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1 shrink-0 mr-0.5">
-                  <Layers size={13} className="text-gray-500" />
-                  <span>View:</span>
-                </span>
-                <div className="flex items-center p-0.5 bg-gray-100 rounded-lg border border-gray-200">
-                  <button
-                    onClick={() => setViewMode("split")}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition ${
-                      viewMode === "split"
-                        ? "bg-black text-white shadow-2xs font-extrabold"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                    title="Split Explorer: Directory List + Live Interactive Map"
-                  >
-                    <MapIcon size={12} />
-                    <span>Split Explorer</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition ${
-                      viewMode === "grid"
-                        ? "bg-black text-white shadow-2xs font-extrabold"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                    title="Classic Grid Directory Cards"
-                  >
-                    <LayoutGrid size={12} />
-                    <span>Grid</span>
-                  </button>
+              {/* Right Group: Sort By & View Switcher */}
+              <div className="flex items-center gap-3 ml-auto sm:ml-0 flex-wrap">
+                {/* Zone 3: Sort By */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1 shrink-0 mr-0.5">
+                    <ArrowUpDown size={13} className="text-gray-500" />
+                    <span>Sort:</span>
+                  </span>
+                  <div className="flex items-center bg-gray-100 hover:bg-gray-200/80 rounded-lg border border-gray-200 px-2 py-0.5 transition shadow-2xs">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => {
+                        setSortBy(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="bg-transparent text-gray-900 font-bold text-xs py-1 pr-1 focus:outline-none cursor-pointer"
+                    >
+                      <option value="nirf_asc">⭐ NIRF Rank (Top First)</option>
+                      <option value="code_asc">🏷️ COA Code (A-Z)</option>
+                      <option value="name_asc">🔤 Alphabet (A-Z)</option>
+                      <option value="intake_desc">🎓 Intake (High to Low)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="h-4 w-px bg-gray-200 hidden sm:block" />
+
+                {/* Zone 4: View Switcher */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1 shrink-0 mr-0.5">
+                    <Layers size={13} className="text-gray-500" />
+                    <span>View:</span>
+                  </span>
+                  <div className="flex items-center p-0.5 bg-gray-100 rounded-lg border border-gray-200">
+                    <button
+                      onClick={() => setViewMode("split")}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition ${
+                        viewMode === "split"
+                          ? "bg-black text-white shadow-2xs font-extrabold"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                      title="Split Explorer: Directory List + Live Interactive Map"
+                    >
+                      <MapIcon size={12} />
+                      <span>Split Explorer</span>
+                    </button>
+                    <button
+                      onClick={() => setViewMode("grid")}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition ${
+                        viewMode === "grid"
+                          ? "bg-black text-white shadow-2xs font-extrabold"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                      title="Classic Grid Directory Cards"
+                    >
+                      <LayoutGrid size={12} />
+                      <span>Grid</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -808,6 +837,11 @@ function InstitutionsContent() {
                 <InstitutionsMapView
                   institutions={sortedInstitutions}
                   selectedProgram={selectedProgram}
+                  sortBy={sortBy}
+                  onSortChange={(s) => {
+                    setSortBy(s);
+                    setCurrentPage(1);
+                  }}
                 />
               )}
             </div>
@@ -1052,14 +1086,12 @@ function InstitutionsContent() {
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        className="text-xs font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-black"
+                        className="text-xs font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-black cursor-pointer"
                       >
-                        <option value="nirf_asc">NIRF Rank: Top First</option>
-                        <option value="name_asc">Institution Name (A-Z)</option>
-                        <option value="name_desc">Institution Name (Z-A)</option>
-                        <option value="intake_desc">Intake: High to Low</option>
-                        <option value="intake_asc">Intake: Low to High</option>
-                        <option value="code_asc">COA Code</option>
+                        <option value="nirf_asc">⭐ NIRF Rank (Top First)</option>
+                        <option value="code_asc">🏷️ COA Code (A-Z)</option>
+                        <option value="name_asc">🔤 Alphabet (A-Z)</option>
+                        <option value="intake_desc">🎓 Intake (High to Low)</option>
                       </select>
                     </div>
                   </div>

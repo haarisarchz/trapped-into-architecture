@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Layers,
   Sparkles,
+  ArrowUpDown,
 } from "lucide-react";
 import institutionsCoordinates from "@/lib/data/institutionsCoordinates.json";
 import "leaflet/dist/leaflet.css";
@@ -36,12 +37,16 @@ const ARCHITECTURE_HUBS = [
 interface InstitutionsMapViewProps {
   institutions: any[];
   selectedProgram?: string;
+  sortBy?: string;
+  onSortChange?: (sort: string) => void;
   onSelectInstitution?: (inst: any) => void;
 }
 
 export default function InstitutionsMapView({
   institutions,
   selectedProgram = "all",
+  sortBy = "nirf_asc",
+  onSortChange,
   onSelectInstitution,
 }: InstitutionsMapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -346,14 +351,32 @@ export default function InstitutionsMapView({
       <div className="order-2 lg:order-1 lg:col-span-3 flex flex-col h-[560px] lg:h-full bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs">
         {/* Hubs Selector Header */}
         <div className="p-4 border-b border-gray-100 bg-gray-50/80">
-          <div className="flex items-center justify-between mb-2.5">
+          <div className="flex items-center justify-between mb-2.5 gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-500">
               <Compass size={14} className="text-black" />
               <span>Architectural Hubs</span>
             </div>
-            <span className="text-xs font-bold text-gray-700 bg-white px-2 py-0.5 rounded-full border border-gray-200">
-              {mappedInstitutions.length} Mapped
-            </span>
+            <div className="flex items-center gap-2">
+              {onSortChange && (
+                <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2 py-0.5 shadow-2xs">
+                  <ArrowUpDown size={11} className="text-gray-500" />
+                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Sort:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => onSortChange(e.target.value)}
+                    className="bg-transparent text-[11px] font-bold text-gray-900 focus:outline-none cursor-pointer"
+                  >
+                    <option value="nirf_asc">NIRF Rank</option>
+                    <option value="code_asc">COA Code</option>
+                    <option value="name_asc">Alphabet (A-Z)</option>
+                    <option value="intake_desc">Intake (High-Low)</option>
+                  </select>
+                </div>
+              )}
+              <span className="text-xs font-bold text-gray-700 bg-white px-2 py-0.5 rounded-full border border-gray-200">
+                {mappedInstitutions.length} Mapped
+              </span>
+            </div>
           </div>
 
           {/* Hub Pills */}
