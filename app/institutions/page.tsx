@@ -508,28 +508,28 @@ function InstitutionsContent() {
       <Navbar />
 
       <main className="flex-1 pb-16">
-        {/* HYBRID A: COMPACT ARCHITECTURAL COMMAND BAR (~125px) */}
-        <section className="bg-zinc-950 text-white border-b border-zinc-800 shadow-md">
+        {/* HYBRID A: COMPACT ARCHITECTURAL COMMAND BAR (~120px) - CRISP LIGHT SURFACE */}
+        <section className="bg-white text-gray-900 border-b border-gray-200 shadow-2xs">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 space-y-3">
             {/* ROW 1: Branding/Title + Compact Search + State Dropdown */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-base shrink-0 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-xl shrink-0 shadow-2xs">
                   🏛️
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-tight">
+                    <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-gray-950 leading-tight">
                       Architecture Institutions in India
                     </h1>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-gray-300 border border-white/10 shrink-0">
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200 shrink-0">
                       COA National Directory
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 truncate mt-0.5">
-                    <span className="text-amber-400 font-bold">{institutions.length || 583}</span> Accredited Colleges &bull;{" "}
-                    <span className="text-white font-medium">3,014</span> Verified Annual Logs &bull;{" "}
-                    <span className="text-emerald-400 font-medium">{latestAcademicYear} Statutory Session</span>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                    <span className="text-amber-600 font-bold">{institutions.length || 583}</span> Accredited Colleges &bull;{" "}
+                    <span className="text-gray-900 font-semibold">3,014</span> Verified Annual Logs &bull;{" "}
+                    <span className="text-emerald-700 font-semibold">{latestAcademicYear} Statutory Session</span>
                   </p>
                 </div>
               </div>
@@ -546,178 +546,203 @@ function InstitutionsContent() {
                       setCurrentPage(1);
                     }}
                     placeholder="Search college, COA code, city..."
-                    className="w-full bg-zinc-900 text-white placeholder-gray-400 text-xs sm:text-sm pl-9 pr-8 py-2 rounded-xl border border-zinc-700/80 focus:outline-none focus:border-amber-400 transition"
+                    className="w-full bg-gray-50 hover:bg-white text-gray-900 placeholder-gray-400 text-xs sm:text-sm pl-9 pr-8 py-2 rounded-xl border border-gray-300 focus:bg-white focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition shadow-2xs"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-white transition"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-700 transition"
                     >
                       <X size={14} />
                     </button>
                   )}
                 </div>
 
-                <select
-                  value={selectedState}
-                  onChange={(e) => {
-                    setSelectedState(e.target.value);
-                    setSelectedCity("");
-                    setCurrentPage(1);
-                  }}
-                  className="bg-zinc-900 text-white text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700/80 focus:outline-none focus:border-amber-400 font-medium shrink-0 cursor-pointer max-w-[160px] truncate"
-                >
-                  {allStatesList.map((st) => (
-                    <option key={st} value={st} className="bg-zinc-900 text-white">
-                      {st}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-300 hover:border-gray-400 rounded-xl px-2.5 py-1.5 focus-within:border-black focus-within:bg-white focus-within:ring-1 focus-within:ring-black transition shadow-2xs">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-500 shrink-0">
+                    State:
+                  </span>
+                  <select
+                    value={selectedState}
+                    onChange={(e) => {
+                      setSelectedState(e.target.value);
+                      setSelectedCity("");
+                      setCurrentPage(1);
+                    }}
+                    className="bg-transparent text-gray-900 text-xs sm:text-sm font-semibold focus:outline-none cursor-pointer max-w-[145px] truncate"
+                  >
+                    {allStatesList.map((st) => (
+                      <option key={st} value={st} className="bg-white text-gray-900">
+                        {st}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* ROW 2: Program Level Tabs + Accolade Chips + View Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1.5 border-t border-zinc-800/80 text-xs">
-              {/* Program Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                <button
-                  onClick={() => {
-                    setSelectedProgram("all");
-                    setSelectedSpecialization("");
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
-                    selectedProgram === "all"
-                      ? "bg-white text-black shadow-xs"
-                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
-                  }`}
-                >
-                  <span>All</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    selectedProgram === "all" ? "bg-black/10 text-black font-bold" : "bg-zinc-800 text-gray-400"
-                  }`}>
-                    {programCounts.all}
+            {/* ROW 2: Explicitly Labeled Functional Controls (Programs | Filters | View) */}
+            <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-4 pt-2.5 border-t border-gray-200 text-xs">
+              {/* Left Group: Program Selector + Filters */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                {/* Zone 1: Program Degree Level */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1 shrink-0 mr-0.5">
+                    <GraduationCap size={13} className="text-gray-500" />
+                    <span>Program:</span>
                   </span>
-                </button>
+                  <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg border border-gray-200/80">
+                    <button
+                      onClick={() => {
+                        setSelectedProgram("all");
+                        setSelectedSpecialization("");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-md font-bold text-xs transition shrink-0 flex items-center gap-1.5 ${
+                        selectedProgram === "all"
+                          ? "bg-black text-white shadow-2xs"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
+                      }`}
+                    >
+                      <span>All</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        selectedProgram === "all" ? "bg-white/20 text-white font-bold" : "bg-gray-200 text-gray-600"
+                      }`}>
+                        {programCounts.all}
+                      </span>
+                    </button>
 
-                <button
-                  onClick={() => {
-                    setSelectedProgram("ug");
-                    setSelectedSpecialization("");
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
-                    selectedProgram === "ug"
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
-                  }`}
-                >
-                  <GraduationCap size={13} />
-                  <span>B.Arch (UG)</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    selectedProgram === "ug" ? "bg-white/20 text-white font-bold" : "bg-zinc-800 text-gray-400"
-                  }`}>
-                    {programCounts.ug}
-                  </span>
-                </button>
+                    <button
+                      onClick={() => {
+                        setSelectedProgram("ug");
+                        setSelectedSpecialization("");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-md font-bold text-xs transition shrink-0 flex items-center gap-1.5 ${
+                        selectedProgram === "ug"
+                          ? "bg-blue-600 text-white shadow-2xs"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
+                      }`}
+                    >
+                      <span>B.Arch (UG)</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        selectedProgram === "ug" ? "bg-white/25 text-white font-bold" : "bg-gray-200 text-gray-600"
+                      }`}>
+                        {programCounts.ug}
+                      </span>
+                    </button>
 
-                <button
-                  onClick={() => {
-                    setSelectedProgram("pg");
-                    setSelectedSpecialization("");
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
-                    selectedProgram === "pg"
-                      ? "bg-purple-600 text-white shadow-xs"
-                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
-                  }`}
-                >
-                  <BookOpen size={13} />
-                  <span>M.Arch (PG)</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    selectedProgram === "pg" ? "bg-white/20 text-white font-bold" : "bg-zinc-800 text-gray-400"
-                  }`}>
-                    {programCounts.pg}
-                  </span>
-                </button>
+                    <button
+                      onClick={() => {
+                        setSelectedProgram("pg");
+                        setSelectedSpecialization("");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-md font-bold text-xs transition shrink-0 flex items-center gap-1.5 ${
+                        selectedProgram === "pg"
+                          ? "bg-purple-600 text-white shadow-2xs"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
+                      }`}
+                    >
+                      <span>M.Arch (PG)</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        selectedProgram === "pg" ? "bg-white/25 text-white font-bold" : "bg-gray-200 text-gray-600"
+                      }`}>
+                        {programCounts.pg}
+                      </span>
+                    </button>
 
-                <button
-                  onClick={() => {
-                    setSelectedProgram("diploma");
-                    setSelectedSpecialization("");
-                    setCurrentPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
-                    selectedProgram === "diploma"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
-                  }`}
-                >
-                  <Building2 size={13} />
-                  <span>Diploma</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    selectedProgram === "diploma" ? "bg-white/20 text-white font-bold" : "bg-zinc-800 text-gray-400"
-                  }`}>
-                    {programCounts.diploma}
+                    <button
+                      onClick={() => {
+                        setSelectedProgram("diploma");
+                        setSelectedSpecialization("");
+                        setCurrentPage(1);
+                      }}
+                      className={`px-2.5 py-1 rounded-md font-bold text-xs transition shrink-0 flex items-center gap-1.5 ${
+                        selectedProgram === "diploma"
+                          ? "bg-emerald-600 text-white shadow-2xs"
+                          : "text-gray-600 hover:text-gray-900 hover:bg-white/60"
+                      }`}
+                    >
+                      <span>Diploma</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        selectedProgram === "diploma" ? "bg-white/25 text-white font-bold" : "bg-gray-200 text-gray-600"
+                      }`}>
+                        {programCounts.diploma}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="h-4 w-px bg-gray-200 hidden md:block" />
+
+                {/* Zone 2: Accolade / Sanction Filters */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1 shrink-0 mr-0.5">
+                    <SlidersHorizontal size={13} className="text-gray-500" />
+                    <span>Filters:</span>
                   </span>
-                </button>
+
+                  {/* NIRF Chip */}
+                  <button
+                    onClick={() => {
+                      setFilterNirf(!filterNirf);
+                      setCurrentPage(1);
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
+                      filterNirf
+                        ? "bg-amber-100 text-amber-950 border-amber-400 shadow-2xs font-extrabold"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <Award size={13} className={filterNirf ? "text-amber-700" : "text-amber-500"} />
+                    <span>NIRF Ranked (46)</span>
+                  </button>
+
+                  {/* Multi-Year Sanction */}
+                  <button
+                    onClick={() => {
+                      setFilterMultiYear(!filterMultiYear);
+                      setCurrentPage(1);
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
+                      filterMultiYear
+                        ? "bg-emerald-100 text-emerald-950 border-emerald-400 shadow-2xs font-extrabold"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <ShieldCheck size={13} className={filterMultiYear ? "text-emerald-700" : "text-emerald-500"} />
+                    <span>Multi-Year</span>
+                  </button>
+                </div>
               </div>
 
-              {/* Accolade Chips & View Switcher */}
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none justify-between sm:justify-end">
-                {/* NIRF Chip */}
-                <button
-                  onClick={() => {
-                    setFilterNirf(!filterNirf);
-                    setCurrentPage(1);
-                  }}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
-                    filterNirf
-                      ? "bg-amber-400 text-black border-amber-300 shadow-xs font-black"
-                      : "bg-zinc-900 text-gray-300 border-zinc-700/80 hover:bg-zinc-800"
-                  }`}
-                >
-                  <Award size={13} className={filterNirf ? "text-black" : "text-amber-400"} />
-                  <span>NIRF Ranked (46)</span>
-                </button>
-
-                {/* Multi-Year Sanction */}
-                <button
-                  onClick={() => {
-                    setFilterMultiYear(!filterMultiYear);
-                    setCurrentPage(1);
-                  }}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
-                    filterMultiYear
-                      ? "bg-emerald-600 text-white border-emerald-500 shadow-xs font-black"
-                      : "bg-zinc-900 text-gray-300 border-zinc-700/80 hover:bg-zinc-800"
-                  }`}
-                >
-                  <ShieldCheck size={13} className={filterMultiYear ? "text-white" : "text-emerald-400"} />
-                  <span>Multi-Year</span>
-                </button>
-
-                {/* View Switcher: Split Explorer vs Grid */}
-                <div className="flex items-center p-0.5 bg-zinc-900 rounded-lg border border-zinc-700/80 shrink-0 ml-1">
+              {/* Right Group: View Switcher */}
+              <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1 shrink-0 mr-0.5">
+                  <Layers size={13} className="text-gray-500" />
+                  <span>View:</span>
+                </span>
+                <div className="flex items-center p-0.5 bg-gray-100 rounded-lg border border-gray-200">
                   <button
                     onClick={() => setViewMode("split")}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition ${
                       viewMode === "split"
-                        ? "bg-amber-400 text-black shadow-xs font-extrabold"
-                        : "text-gray-300 hover:text-white"
+                        ? "bg-black text-white shadow-2xs font-extrabold"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
-                    title="Split-Screen Explorer: Colleges List + Live India Map"
+                    title="Split Explorer: Directory List + Live Interactive Map"
                   >
                     <MapIcon size={12} />
                     <span>Split Explorer</span>
                   </button>
                   <button
                     onClick={() => setViewMode("grid")}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition ${
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold transition ${
                       viewMode === "grid"
-                        ? "bg-white text-black shadow-xs font-extrabold"
-                        : "text-gray-300 hover:text-white"
+                        ? "bg-black text-white shadow-2xs font-extrabold"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                     title="Classic Grid Directory Cards"
                   >
