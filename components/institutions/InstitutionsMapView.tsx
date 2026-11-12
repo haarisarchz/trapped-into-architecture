@@ -346,9 +346,9 @@ export default function InstitutionsMapView({
   };
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-5 h-[calc(100vh-220px)] min-h-[650px] max-h-[850px]">
-      {/* LEFT COLUMN: SCROLLABLE COLLEGE CARDS (5 COLS ON DESKTOP) */}
-      <div className="lg:col-span-5 flex flex-col h-full bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs">
+    <div className="flex flex-col lg:grid lg:grid-cols-5 gap-5 h-[calc(100vh-210px)] min-h-[650px] max-h-[850px]">
+      {/* LEFT COLUMN: SCROLLABLE COLLEGE CARDS (60% WIDTH ON DESKTOP) */}
+      <div className="lg:col-span-3 flex flex-col h-full bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs">
         {/* Hubs Selector Header */}
         <div className="p-4 border-b border-gray-100 bg-gray-50/80">
           <div className="flex items-center justify-between mb-2.5">
@@ -417,8 +417,8 @@ export default function InstitutionsMapView({
           </div>
         )}
 
-        {/* Scrollable list of matched colleges */}
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-100 p-2 space-y-1">
+        {/* Scrollable list of matched colleges in a clean 2-column grid */}
+        <div className="flex-1 overflow-y-auto p-3 grid grid-cols-1 md:grid-cols-2 gap-3 content-start">
           {mappedInstitutions.map((inst) => {
             const isSelected = selectedInst?.id === inst.id;
             const latest = inst.latest_record;
@@ -435,10 +435,10 @@ export default function InstitutionsMapView({
                     }
                   }
                 }}
-                className={`p-3.5 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-2 ${
+                className={`p-3.5 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-2.5 ${
                   isSelected
-                    ? "bg-amber-50/80 border border-amber-300 shadow-xs"
-                    : "hover:bg-gray-50 border border-transparent"
+                    ? "bg-amber-50/90 border-2 border-amber-400 shadow-xs"
+                    : "bg-white border border-gray-200/90 hover:border-gray-300 hover:shadow-xs"
                 }`}
               >
                 <div>
@@ -458,7 +458,7 @@ export default function InstitutionsMapView({
                       <span className="text-[11px] font-semibold text-gray-500">{inst.state}</span>
                     </div>
                     {latest && (
-                      <span className="text-[11px] font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded shrink-0">
                         {latest.approved_intake} seats
                       </span>
                     )}
@@ -467,14 +467,14 @@ export default function InstitutionsMapView({
                   <h4 className="text-sm font-bold text-gray-900 leading-snug break-words">
                     {inst.institution_name}
                   </h4>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 mt-1.5">
                     <MapPin size={12} className="text-gray-400 shrink-0" />
                     <span className="truncate">{inst.city || inst.district || inst.state}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-[11px]">
-                  <span className="text-gray-400 font-mono">
+                  <span className="text-gray-400 font-mono text-[10px]">
                     {inst.lat.toFixed(2)}° N, {inst.lng.toFixed(2)}° E
                   </span>
                   <Link
@@ -491,8 +491,8 @@ export default function InstitutionsMapView({
         </div>
       </div>
 
-      {/* RIGHT COLUMN: INTERACTIVE LEAFLET MAP (7 COLS ON DESKTOP) */}
-      <div className="lg:col-span-7 h-[500px] lg:h-full relative rounded-3xl border border-gray-200 overflow-hidden shadow-xs bg-gray-100">
+      {/* RIGHT COLUMN: INTERACTIVE LEAFLET MAP (40% WIDTH = 2/5 COLS ON DESKTOP) */}
+      <div className="lg:col-span-2 h-[500px] lg:h-full relative rounded-3xl border border-gray-200 overflow-hidden shadow-xs bg-gray-100">
         {/* Map Container */}
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
