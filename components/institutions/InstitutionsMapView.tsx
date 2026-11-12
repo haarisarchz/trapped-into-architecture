@@ -417,6 +417,11 @@ export default function InstitutionsMapView({
           {mappedInstitutions.map((inst) => {
             const isSelected = selectedInst?.id === inst.id;
             const latest = inst.latest_record;
+            const isClosed =
+              !latest ||
+              latest.approved_intake <= 0 ||
+              (inst.institution_type && /closed|closure|discontinued/i.test(inst.institution_type)) ||
+              (latest?.approval_status && /closed|closure|discontinued/i.test(latest.approval_status));
             return (
               <div
                 key={inst.id}
