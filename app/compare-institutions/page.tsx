@@ -308,14 +308,38 @@ function CompareInstitutionsContent() {
     sessionStorage.removeItem("ti2a_home_location");
   };
 
-  // Copy Shareable Link
-  const handleShareLink = () => {
+  // Copy or Share Link
+  const handleShareLink = async () => {
     if (institutions.length === 0) return;
     const ids = institutions.map((i) => i.id).join(",");
     const url = `${window.location.origin}/compare-institutions?ids=${ids}`;
-    navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
+    const collegeNames = institutions.map((i) => i.coa_code || i.institution_name).join(", ");
+    const shareTitle = "Compare Architecture Institutions - Trapped Into Architecture";
+    const shareText = `Check out this architecture college comparison on TI2A: ${collegeNames}`;
+
+    // On mobile devices with native share sheet (WhatsApp, Telegram, etc.)
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: url,
+        });
+        return;
+      } catch (err: any) {
+        // User cancelled or share dismissed, fallback to copy
+        if (err.name === "AbortError") return;
+      }
+    }
+
+    // Fallback: Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    } catch (e) {
+      prompt("Copy this link to share your comparison:", url);
+    }
   };
 
   // Trigger registration modal
