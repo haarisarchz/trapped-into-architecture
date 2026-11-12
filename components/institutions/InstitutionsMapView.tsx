@@ -24,13 +24,14 @@ const coordsMap = (institutionsCoordinates as unknown) as Record<string, [number
 // Famous Architectural Hubs for quick one-click camera pan
 const ARCHITECTURE_HUBS = [
   { name: "All India", coords: [22.5937, 78.9629], zoom: 5 },
-  { name: "Delhi-NCR", coords: [28.6139, 77.2090], zoom: 10 },
   { name: "Bengaluru", coords: [12.9716, 77.5946], zoom: 11 },
-  { name: "Chennai", coords: [13.0827, 80.2707], zoom: 11 },
-  { name: "Mumbai-Pune", coords: [18.7800, 73.3500], zoom: 9 },
+  { name: "Chennai", coords: [13.0400, 80.1800], zoom: 11 },
+  { name: "Delhi-NCR", coords: [28.6139, 77.2090], zoom: 10 },
+  { name: "Kolkata", coords: [22.5726, 88.3639], zoom: 11 },
+  { name: "Mumbai", coords: [19.0760, 72.8777], zoom: 11 },
+  { name: "Pune", coords: [18.5204, 73.8567], zoom: 11 },
   { name: "Ahmedabad", coords: [23.0225, 72.5714], zoom: 11 },
   { name: "Hyderabad", coords: [17.3850, 78.4867], zoom: 11 },
-  { name: "Kolkata", coords: [22.5726, 88.3639], zoom: 11 },
   { name: "Kerala Hub", coords: [10.2000, 76.3500], zoom: 8 },
 ];
 
@@ -352,6 +353,31 @@ export default function InstitutionsMapView({
         if (mapInstanceRef.current) {
           mapInstanceRef.current.setView([13.04, 80.18], 11, { animate: true, duration: 1.2 });
         }
+      } else if (cityLower.includes("bangalore") || cityLower.includes("bengaluru")) {
+        setActiveHub("Bengaluru");
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([12.9716, 77.5946], 11, { animate: true, duration: 1.2 });
+        }
+      } else if (cityLower.includes("delhi")) {
+        setActiveHub("Delhi-NCR");
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([28.6139, 77.2090], 10, { animate: true, duration: 1.2 });
+        }
+      } else if (cityLower === "mumbai") {
+        setActiveHub("Mumbai");
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([19.0760, 72.8777], 11, { animate: true, duration: 1.2 });
+        }
+      } else if (cityLower === "pune") {
+        setActiveHub("Pune");
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([18.5204, 73.8567], 11, { animate: true, duration: 1.2 });
+        }
+      } else if (cityLower.includes("kolkata") || cityLower.includes("calcutta")) {
+        setActiveHub("Kolkata");
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.setView([22.5726, 88.3639], 11, { animate: true, duration: 1.2 });
+        }
       } else {
         const match = ARCHITECTURE_HUBS.find(h => h.name.toLowerCase() === cityLower);
         if (match) {
@@ -379,13 +405,19 @@ export default function InstitutionsMapView({
     } else if (hub.name === "Bengaluru") {
       onSelectCity?.("Bengaluru");
     } else if (hub.name === "Delhi-NCR") {
-      onSelectCity?.("Delhi");
+      onSelectCity?.("Delhi-NCR");
+    } else if (hub.name === "Mumbai") {
+      onSelectCity?.("Mumbai");
+    } else if (hub.name === "Pune") {
+      onSelectCity?.("Pune");
+    } else if (hub.name === "Kolkata") {
+      onSelectCity?.("Kolkata");
     } else if (hub.name === "Ahmedabad") {
       onSelectCity?.("Ahmedabad");
     } else if (hub.name === "Hyderabad") {
       onSelectCity?.("Hyderabad");
-    } else if (hub.name === "Kolkata") {
-      onSelectCity?.("Kolkata");
+    } else if (hub.name === "Kerala Hub") {
+      onSelectCity?.("Kerala");
     }
   };
 

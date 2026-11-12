@@ -21,6 +21,7 @@ interface OrgSuggestion {
   state?: string;
   website?: string;
   source: "company" | "institution";
+  university?: string;
 }
 
 export default function ExperienceSection({
@@ -94,19 +95,23 @@ export default function ExperienceSection({
     setSearchingOrg(true);
     setShowOrgDropdown(true);
 
+    const clean = trimmed;
+    const noDots = clean.replace(/\./g, "").trim();
+    const withDots = clean.replace(/[^a-zA-Z]/g, "").split("").join(".") + ".";
+
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         const [compRes, instRes] = await Promise.all([
           supabase
             .from("companies")
             .select("id, firm_name, organization_type, city, state, website")
-            .ilike("firm_name", `%${trimmed}%`)
-            .limit(5),
+            .or(`firm_name.ilike.%${clean}%,firm_name.ilike.%${noDots}%`)
+            .limit(6),
           supabase
             .from("institutions")
-            .select("id, institution_name, city, state")
-            .ilike("institution_name", `%${trimmed}%`)
-            .limit(3),
+            .select("id, coa_code, institution_name, affiliated_university, locality, city, state")
+            .or(`institution_name.ilike.%${clean}%,affiliated_university.ilike.%${clean}%,locality.ilike.%${clean}%,coa_code.ilike.%${clean}%,institution_name.ilike.%${noDots}%,affiliated_university.ilike.%${noDots}%,affiliated_university.ilike.%${withDots}%`)
+            .limit(6),
         ]);
 
         const suggestions: OrgSuggestion[] = [];
@@ -130,6 +135,7 @@ export default function ExperienceSection({
             suggestions.push({
               id: i.id,
               name: i.institution_name,
+              university: i.affiliated_university,
               type: "Academic / College Institution",
               city: i.city,
               state: i.state,
@@ -187,6 +193,7 @@ export default function ExperienceSection({
           state: newOrgState.trim() || null,
           country: "India",
           website: newOrgWebsite.trim() || null,
+          status: "pending_verification",
           is_active: false,
           is_verified: false,
           created_by: userId || null,
@@ -531,6 +538,11 @@ export default function ExperienceSection({
                               <p className="text-sm font-bold text-gray-900 group-hover:text-black truncate">
                                 {org.name}
                               </p>
+                              {org.university && (
+                                <p className="text-xs text-amber-800 font-medium truncate mt-0.5">
+                                  Affiliated: {org.university}
+                                </p>
+                              )}
                               <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
                                 <span className="font-medium text-gray-700">{org.type}</span>
                                 {org.city && <span>&bull; {org.city}{org.state ? `, ${org.state}` : ""}</span>}

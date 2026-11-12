@@ -287,14 +287,21 @@ export default function PersonalInfoTab({
         highest_qualification: formData.highest_qualification || null,
         user_track: formData.user_track || "job_seeker",
         coa_number: formData.coa_number || null,
-        coa_registration_date: formData.coa_registration_date || null,
+        coa_valid_until: formData.coa_valid_until || null,
         coa_is_active: Boolean(formData.coa_is_active),
       };
 
-      const { error } = await supabase
+      let dbPayload = { ...payload };
+      let { error } = await supabase
         .from("profiles")
-        .update(payload)
+        .update(dbPayload)
         .eq("id", user.id);
+
+      if (error && error.message?.includes("coa_valid_until")) {
+        delete dbPayload.coa_valid_until;
+        const retry = await supabase.from("profiles").update(dbPayload).eq("id", user.id);
+        error = retry.error;
+      }
 
       if (error) {
         alert(error.message);
@@ -818,7 +825,7 @@ export default function PersonalInfoTab({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-gray-600 block">
@@ -851,39 +858,18 @@ export default function PersonalInfoTab({
 
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5 block">
-                Registration Date / Year <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                Validity Until / Expiry Date <span className="text-gray-400 font-normal lowercase">(optional)</span>
               </label>
               {isEditing ? (
                 <input
                   type="date"
-                  value={formData.coa_registration_date || ""}
-                  onChange={(e) => setFormData({ ...formData, coa_registration_date: e.target.value })}
+                  value={formData.coa_valid_until || ""}
+                  onChange={(e) => setFormData({ ...formData, coa_valid_until: e.target.value })}
                   className="w-full border border-gray-300 rounded-xl px-4 py-2.5 bg-white text-sm"
                 />
               ) : (
                 <p className="text-sm font-semibold text-gray-900 bg-white p-2.5 rounded-xl border border-blue-100">
-                  {user.coa_registration_date || "Not added"}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5 block">
-                COA Active Status
-              </label>
-              {isEditing ? (
-                <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.coa_is_active ?? true}
-                    onChange={(e) => setFormData({ ...formData, coa_is_active: e.target.checked })}
-                    className="w-4 h-4 text-black rounded"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Registration is Active</span>
-                </label>
-              ) : (
-                <p className="text-sm font-semibold text-gray-900 bg-white p-2.5 rounded-xl border border-blue-100">
-                  {user.coa_number ? (user.coa_is_active ? "Active ✅" : "Inactive ⚠️") : "N/A"}
+                  {user.coa_valid_until || "Not added"}
                 </p>
               )}
             </div>
