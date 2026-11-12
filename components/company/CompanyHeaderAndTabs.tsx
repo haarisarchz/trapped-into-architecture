@@ -272,6 +272,7 @@ export default function CompanyHeaderAndTabs({
   const tier = levelInfo.tier;
   const completionPercentage = levelInfo.score;
   const isClaimed = Boolean(company.is_claimed);
+  const isVerified = Boolean(company.is_verified);
   const isEmailVerified = Boolean(company.email_verified || company.is_verified);
   const isPhoneVerified = Boolean(company.phone_verified);
 
@@ -363,6 +364,14 @@ export default function CompanyHeaderAndTabs({
                     <HelpCircle size={14} />
                   </button>
                 </div>
+
+                {/* DUAL PILL: TRUST STATUS (SHOWN WHEN CLAIMED & VERIFIED) */}
+                {isClaimed && isVerified && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-800 border-emerald-300">
+                    <ShieldCheck size={13} className="text-emerald-600" />
+                    <span>{levelInfo.isInstitution ? "Verified Academic Campus" : "Verified Practice"}</span>
+                  </div>
+                )}
               </div>
 
               {/* SPECIFIC TYPOLOGY + PRIMARY ACTION (ADMIN EDIT OR USER CLAIM) + VERIFICATION BADGES */}
@@ -371,21 +380,21 @@ export default function CompanyHeaderAndTabs({
                   {formattedTypology}
                 </span>
 
-                {/* 1. CLAIM BUTTON: Available to anyone (including admins) if the studio is NOT yet claimed */}
+                {/* 1. CLAIM BUTTON: Available if NOT yet claimed */}
                 {!isClaimed ? (
                   <button
                     onClick={handleClaimClick}
                     className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-xs hover:shadow-md transition cursor-pointer"
                   >
                     <Building2 size={13} />
-                    <span>Claim this Studio</span>
+                    <span>{levelInfo.isInstitution ? "Claim this Institution" : "Claim this Studio"}</span>
                   </button>
-                ) : (
+                ) : !isVerified ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold rounded-lg">
                     <ShieldCheck size={13} className="text-blue-600" />
-                    <span>{isCompanyOwner ? "Verified Studio Owner" : "Claimed Studio"}</span>
+                    <span>{isCompanyOwner ? (levelInfo.isInstitution ? "Verified Institution Owner" : "Verified Studio Owner") : (levelInfo.isInstitution ? "Claimed Institution" : "Claimed Practice")}</span>
                   </span>
-                )}
+                ) : null}
 
                 {/* 2. EDIT / ADD DETAILS BUTTON: Available to Admins (Superadmin, Admin, CEO, Jobadmin) or Verified Owner */}
                 {canEditCompany && (
@@ -574,7 +583,7 @@ export default function CompanyHeaderAndTabs({
             ) : (
               <div className="p-6 md:p-8 rounded-2xl bg-gray-50 border border-gray-150 text-center flex flex-col items-center justify-center">
                 <p className="text-base font-extrabold text-gray-900 mb-3">
-                  Do you represent this studio or firm?
+                  {levelInfo.isInstitution ? "Do you represent this institution or university?" : "Do you represent this studio or firm?"}
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2.5">
                   {!isClaimed && (
@@ -583,7 +592,7 @@ export default function CompanyHeaderAndTabs({
                       className="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-xs cursor-pointer"
                     >
                       <Building2 size={14} />
-                      <span>Claim this Studio</span>
+                    <span>{levelInfo.isInstitution ? "Claim this Institution" : "Claim this Studio"}</span>
                     </button>
                   )}
                   {isAdmin && (
@@ -930,7 +939,7 @@ export default function CompanyHeaderAndTabs({
               onClick={handleClaimClick}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow-md transition cursor-pointer"
             >
-              Claim this Studio to Add Projects
+              {levelInfo.isInstitution ? "Claim this Institution to Add Campus Info" : "Claim this Studio to Add Projects"}
             </button>
           )}
         </div>

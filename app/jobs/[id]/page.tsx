@@ -10,6 +10,7 @@ import ShareButtons from "@/components/ShareButtons";
 import SaveButton from "@/components/SaveButton";
 import JobContactLinks from "@/components/JobContactLinks";
 import JobApplyAction from "@/components/JobApplyAction";
+import FortnightlyBriefingBanner from "@/components/FortnightlyBriefingBanner";
 import { generateJobPostingSchema, generateJobBreadcrumbs } from "@/utils/seoJobPosting";
 import { formatSalary, formatExperience } from "@/utils/formatJobDetails";
 
@@ -516,6 +517,7 @@ export default async function JobDetailsPage({
 
       </section>
 
+      <FortnightlyBriefingBanner />
       <Footer />
     </main>
   );

@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Info,
 } from "lucide-react";
 import { LinkedInBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
@@ -533,6 +534,10 @@ export default function PersonalInfoTab({
               {user.dob || "Not added"}
             </p>
           )}
+          <p className="text-[11px] text-gray-500 mt-1.5 flex items-center gap-1">
+            <Info size={12} className="text-gray-400 shrink-0" />
+            <span>Privacy: You can manage the visibility of this information in Settings.</span>
+          </p>
         </div>
 
         {/* EMAIL */}
@@ -563,6 +568,10 @@ export default function PersonalInfoTab({
               {user.email || "Not added"}
             </p>
           )}
+          <p className="text-[11px] text-gray-500 mt-1.5 flex items-center gap-1">
+            <Info size={12} className="text-gray-400 shrink-0" />
+            <span>Privacy: You can manage the visibility of this information in Settings.</span>
+          </p>
           <div className="flex items-center justify-between mt-2 px-1">
             {user.email_verified || user.is_email_verified ? (
               <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md font-semibold border border-emerald-200">
@@ -617,6 +626,10 @@ export default function PersonalInfoTab({
               {user.phone || "Not added"}
             </p>
           )}
+          <p className="text-[11px] text-gray-500 mt-1.5 flex items-center gap-1">
+            <Info size={12} className="text-gray-400 shrink-0" />
+            <span>Privacy: You can manage the visibility of this information in Settings.</span>
+          </p>
           <div className="flex items-center justify-between mt-2 px-1">
             {user.phone_verified || user.is_phone_verified ? (
               <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md font-semibold border border-emerald-200">
@@ -685,6 +698,10 @@ export default function PersonalInfoTab({
                 : user.whatsapp_number || "Not added"}
             </p>
           )}
+          <p className="text-[11px] text-gray-500 mt-1.5 flex items-center gap-1">
+            <Info size={12} className="text-gray-400 shrink-0" />
+            <span>Privacy: You can manage the visibility of this information in Settings.</span>
+          </p>
         </div>
 
         {/* SOCIAL & PORTFOLIO LINKS SECTION */}
@@ -834,7 +851,7 @@ export default function PersonalInfoTab({
 
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-gray-600 mb-1.5 block">
-                Registration Date / Year
+                Registration Date / Year <span className="text-gray-400 font-normal lowercase">(optional)</span>
               </label>
               {isEditing ? (
                 <input
@@ -871,6 +888,10 @@ export default function PersonalInfoTab({
               )}
             </div>
           </div>
+          <p className="text-[11px] text-gray-500 mt-3 flex items-center gap-1">
+            <Info size={12} className="text-gray-400 shrink-0" />
+            <span>Privacy: You can manage the visibility of this information in Settings.</span>
+          </p>
         </div>
 
         {/* BIO / ABOUT */}

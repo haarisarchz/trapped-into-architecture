@@ -82,7 +82,7 @@ async function handleWeeklyDigest(req: Request) {
     const { data: unsubList } = await supabase
       .from("contact_inquiries")
       .select("email")
-      .eq("subject", "UNSUBSCRIBE_WEEKLY_DIGEST");
+      .in("subject", ["UNSUBSCRIBE_WEEKLY_DIGEST", "UNSUBSCRIBE_FORTNIGHTLY_BRIEFING"]);
 
     const unsubscribedSet = new Set(
       (unsubList || []).map((u) => (u.email || "").trim().toLowerCase()).filter(Boolean)
@@ -112,6 +112,25 @@ async function handleWeeklyDigest(req: Request) {
             uniqueEmails.add(em);
           }
         }
+        // Also include guest subscribers who opted in via the Fortnightly Briefing banner
+        const { data: guestSubs } = await supabase
+          .from("contact_inquiries")
+          .select("email")
+          .eq("subject", "SUBSCRIBE_FORTNIGHTLY_BRIEFING");
+
+        for (const g of guestSubs || []) {
+          const em = (g.email || "").trim().toLowerCase();
+          if (
+            em &&
+            em.includes("@") &&
+            !em.endsWith(".invalid") &&
+            !em.endsWith(".local") &&
+            !unsubscribedSet.has(em)
+          ) {
+            uniqueEmails.add(em);
+          }
+        }
+
         recipients = Array.from(uniqueEmails);
       }
     }

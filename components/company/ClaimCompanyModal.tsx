@@ -56,8 +56,8 @@ export default function ClaimCompanyModal({
             .then(async ({ data: prof }) => {
               if (prof) {
                 if (prof.username) setUserUsername(prof.username);
-                const { data: edus } = await supabase.from("educations").select("*").eq("user_id", prof.id);
-                const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", prof.id);
+                const { data: edus } = await supabase.from('profile_educations').select("*").eq("user_id", prof.id);
+                const { data: exps } = await supabase.from('profile_experiences').select("*").eq("user_id", prof.id);
                 const res = calculateProfileCompletion(prof, edus || [], exps || []);
                 setUserCompletion(res.percentage);
               } else {
@@ -166,7 +166,7 @@ export default function ClaimCompanyModal({
                 Claim {companyName}
               </h3>
               <p className="text-xs text-gray-500">
-                Verify studio leadership to manage jobs, portfolio & team
+                {/university|college|institute|academic|school/i.test(companyName) ? "Verify institutional administration to manage academic profile & updates" : "Verify studio leadership to manage jobs, portfolio & team"}
               </p>
             </div>
           </div>

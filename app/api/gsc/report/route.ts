@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleAuth } from "google-auth-library";
+import { createClient } from "@supabase/supabase-js";
+import { decodeUuid } from "@/utils/jobUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -37,15 +39,26 @@ export async function GET(request: Request) {
 
     // Search Console has an official 2-3 day data indexing lag
     const now = new Date();
-    const endDateObj = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
-    const endDate = endDateObj.toISOString().split("T")[0];
+    const lagEndDateObj = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+    let endDate = lagEndDateObj.toISOString().split("T")[0];
+    let startDate = "";
 
-    let numDays = parseInt(daysParam, 10);
-    if (isNaN(numDays) || numDays <= 0 || daysParam === "lifetime" || daysParam === "all") {
-      numDays = 90;
+    if (daysParam === "this_month") {
+      startDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      if (startDate > endDate) endDate = startDate;
+    } else if (daysParam === "last_month") {
+      const prevMonthFirst = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const prevMonthLast = new Date(now.getFullYear(), now.getMonth(), 0);
+      startDate = `${prevMonthFirst.getFullYear()}-${String(prevMonthFirst.getMonth() + 1).padStart(2, "0")}-01`;
+      endDate = `${prevMonthFirst.getFullYear()}-${String(prevMonthFirst.getMonth() + 1).padStart(2, "0")}-${String(prevMonthLast.getDate()).padStart(2, "0")}`;
+    } else {
+      let numDays = parseInt(daysParam, 10);
+      if (isNaN(numDays) || numDays <= 0 || daysParam === "lifetime" || daysParam === "all") {
+        numDays = 90;
+      }
+      const startDateObj = new Date(lagEndDateObj.getTime() - numDays * 24 * 60 * 60 * 1000);
+      startDate = startDateObj.toISOString().split("T")[0];
     }
-    const startDateObj = new Date(endDateObj.getTime() - numDays * 24 * 60 * 60 * 1000);
-    const startDate = startDateObj.toISOString().split("T")[0];
 
     const auth = new GoogleAuth({
       credentials,
@@ -78,7 +91,7 @@ export async function GET(request: Request) {
             startDate,
             endDate,
             dimensions: ["query"],
-            rowLimit: 50,
+            rowLimit: 100,
             searchType: "web"
           }
         });
@@ -124,12 +137,103 @@ export async function GET(request: Request) {
           startDate,
           endDate,
           dimensions: ["page"],
-          rowLimit: 25,
+          rowLimit: 100,
           searchType: "web"
         }
       });
       pageRes = res.data;
     } catch (e) {}
+
+    // Query Supabase for human-readable Job & Company titles
+    const jobLookup = new Map<string, string>();
+    const companyLookup = new Map<string, string>();
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://bcifyymjfktabtsmocnc.supabase.co";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjaWZ5eW1qZmt0YWJ0c21vY25jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMzU2MDYsImV4cCI6MjA5NDcxMTYwNn0.FNk_rSL4FDQL0puOyc_0-xGXgEmqieZ-cmc6yYLNa2Y";
+
+    if (supabaseUrl && supabaseAnonKey) {
+      try {
+        const sb = createClient(supabaseUrl, supabaseAnonKey);
+        const [jobsRes, companiesRes] = await Promise.all([
+          sb.from("jobs").select("id, position, firm_name, city").limit(1000),
+          sb.from("companies").select("slug, firm_name").limit(500),
+        ]);
+
+        if (jobsRes.data) {
+          jobsRes.data.forEach((j: any) => {
+            const title = [
+              j.position || "Architecture Role",
+              j.firm_name ? `at ${j.firm_name}` : "",
+              j.city ? `(${j.city})` : ""
+            ].filter(Boolean).join(" ");
+            jobLookup.set(j.id, title);
+          });
+        }
+
+        if (companiesRes.data) {
+          companiesRes.data.forEach((c: any) => {
+            if (c.slug) {
+              const name = c.firm_name || c.slug.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+              companyLookup.set(c.slug.toLowerCase(), `${name} (Company Profile)`);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn("Supabase lookup error in GSC route:", err);
+      }
+    }
+
+    const resolvePageTitle = (rawUrl: string): string => {
+      let path = rawUrl;
+      try {
+        const u = new URL(rawUrl);
+        path = u.pathname;
+      } catch (_) {}
+
+      const cleanPath = (path || "").replace(/\/+$/, "") || "/";
+
+      if (cleanPath === "/" || cleanPath === "") {
+        return "Home Page (trappedintoarchitecture.com)";
+      }
+      if (cleanPath === "/jobs") {
+        return "Jobs Board (All Architecture Jobs)";
+      }
+      if (cleanPath === "/internships") {
+        return "Internships Board (Architecture Internships)";
+      }
+      if (cleanPath === "/post-job") {
+        return "Post a Job";
+      }
+      if (cleanPath.startsWith("/admin")) {
+        return "Admin Portal";
+      }
+
+      // Check /jobs/[id]
+      if (cleanPath.startsWith("/jobs/")) {
+        const seg = cleanPath.replace("/jobs/", "").split("/")[0].split("?")[0];
+        const uuid = decodeUuid(seg) || seg;
+        if (jobLookup.has(uuid)) {
+          return jobLookup.get(uuid)!;
+        }
+        if (jobLookup.has(seg)) {
+          return jobLookup.get(seg)!;
+        }
+        return `Job Post (${seg.length > 12 ? seg.slice(0, 10) + '…' : seg})`;
+      }
+
+      // Check /companies/[slug]
+      if (cleanPath.startsWith("/companies/")) {
+        const slug = cleanPath.replace("/companies/", "").split("/")[0].split("?")[0].toLowerCase();
+        if (companyLookup.has(slug)) {
+          return companyLookup.get(slug)!;
+        }
+        const formatted = slug.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+        return `${formatted} (Company Profile)`;
+      }
+
+      const formatted = cleanPath.replace(/^\//, "").split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+      return formatted || rawUrl;
+    };
 
     // Format keywords
     const keywords = (queryRes.rows || []).map((row: any) => ({
@@ -140,14 +244,25 @@ export async function GET(request: Request) {
       position: Math.round((row.position || 0) * 10) / 10,
     }));
 
-    // Format pages
-    const pages = (pageRes?.rows || []).map((row: any) => ({
-      page: row.keys?.[0] || "",
-      clicks: row.clicks || 0,
-      impressions: row.impressions || 0,
-      ctr: Math.round((row.ctr || 0) * 1000) / 10,
-      position: Math.round((row.position || 0) * 10) / 10,
-    }));
+    // Format pages with resolved titles and paths
+    const pages = (pageRes?.rows || []).map((row: any) => {
+      const pageUrl = row.keys?.[0] || "";
+      let path = pageUrl;
+      try {
+        const u = new URL(pageUrl);
+        path = u.pathname;
+      } catch (_) {}
+
+      return {
+        page: pageUrl,
+        path: path || pageUrl,
+        title: resolvePageTitle(pageUrl),
+        clicks: row.clicks || 0,
+        impressions: row.impressions || 0,
+        ctr: Math.round((row.ctr || 0) * 1000) / 10,
+        position: Math.round((row.position || 0) * 10) / 10,
+      };
+    });
 
     // Totals
     const totalClicks = keywords.reduce((sum: number, k: any) => sum + k.clicks, 0);

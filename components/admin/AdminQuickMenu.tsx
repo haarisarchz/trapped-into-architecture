@@ -16,14 +16,40 @@ export default function AdminQuickMenu() {
 
   useEffect(() => {
     const checkAccess = async () => {
+      // 1. Check Supabase auth session
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .single();
-      if (profile) setUserRole((profile.role || "").toLowerCase().replace(/[\s_]+/g, ""));
+      if (session?.user?.id) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+        if (profile?.role) {
+          setUserRole((profile.role || "").toLowerCase().replace(/[\s_]+/g, ""));
+          return;
+        }
+      }
+
+      // 2. Check localStorage currentUser (TI2A admin pattern)
+      try {
+        const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+        if (currentUser?.role) {
+          setUserRole(currentUser.role.toLowerCase().replace(/[\s_]+/g, ""));
+          return;
+        }
+        if (currentUser?.username) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("username", currentUser.username)
+            .single();
+          if (profile?.role) {
+            setUserRole((profile.role || "").toLowerCase().replace(/[\s_]+/g, ""));
+          }
+        }
+      } catch (err) {
+        console.error("Quick menu auth check error:", err);
+      }
     };
     checkAccess();
   }, []);
@@ -105,9 +131,10 @@ export default function AdminQuickMenu() {
         {navItem("/admin/add-job", "Add New Job")}
         {navItem("/admin/companies", "Manage Companies")}
         
-        {userRole === "ceo" && (
+        {(userRole === "ceo" || userRole === "superadmin") && (
           <>
             {navItem("/admin/catalog", "Database Catalog")}
+            {navItem("/admin/institutions", "Institutions")}
             {navItem("/admin/quizzes", "Architecture Quizzes")}
           </>
         )}

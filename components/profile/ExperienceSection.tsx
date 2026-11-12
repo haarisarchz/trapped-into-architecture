@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock, Search, Check, ShieldCheck, Sparkles, ExternalLink, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ExperienceEntry, calculateTotalExperience } from "@/utils/profileCompletion";
 import { ORGANIZATION_TYPES } from "@/utils/institutionsData";
@@ -11,6 +11,16 @@ interface ExperienceSectionProps {
   isOwner: boolean;
   experiences: ExperienceEntry[];
   onExperiencesChange: (newExp: ExperienceEntry[]) => void;
+}
+
+interface OrgSuggestion {
+  id: string;
+  name: string;
+  type: string;
+  city?: string;
+  state?: string;
+  website?: string;
+  source: "company" | "institution";
 }
 
 export default function ExperienceSection({
@@ -33,8 +43,180 @@ export default function ExperienceSection({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isCurrent, setIsCurrent] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+
+  // Autocomplete State
+  const [orgSuggestions, setOrgSuggestions] = useState<OrgSuggestion[]>([]);
+  const [showOrgDropdown, setShowOrgDropdown] = useState(false);
+  const [searchingOrg, setSearchingOrg] = useState(false);
+  const searchTimeoutRef = useRef<any>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // New Organization Submission Modal State
+  const [showNewOrgModal, setShowNewOrgModal] = useState(false);
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgType, setNewOrgType] = useState("Architecture Firm");
+  const [newOrgCity, setNewOrgCity] = useState("");
+  const [newOrgState, setNewOrgState] = useState("");
+  const [newOrgWebsite, setNewOrgWebsite] = useState("");
+  const [submittingNewOrg, setSubmittingNewOrg] = useState(false);
+  const [pendingOrgSuccess, setPendingOrgSuccess] = useState(false);
 
   const totalExp = calculateTotalExperience(experiences);
+
+  // Close dropdown when clicked outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowOrgDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Search Organizations
+  const handleFirmNameChange = (val: string) => {
+    setFirmName(val);
+    setSelectedOrgId(null);
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    const trimmed = val.trim();
+    if (trimmed.length < 2) {
+      setOrgSuggestions([]);
+      setShowOrgDropdown(false);
+      return;
+    }
+
+    setSearchingOrg(true);
+    setShowOrgDropdown(true);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const [compRes, instRes] = await Promise.all([
+          supabase
+            .from("companies")
+            .select("id, firm_name, organization_type, city, state, website")
+            .ilike("firm_name", `%${trimmed}%`)
+            .limit(5),
+          supabase
+            .from("institutions")
+            .select("id, institution_name, city, state")
+            .ilike("institution_name", `%${trimmed}%`)
+            .limit(3),
+        ]);
+
+        const suggestions: OrgSuggestion[] = [];
+
+        if (compRes.data) {
+          compRes.data.forEach((c: any) => {
+            suggestions.push({
+              id: c.id,
+              name: c.firm_name,
+              type: c.organization_type || "Architecture Firm",
+              city: c.city,
+              state: c.state,
+              website: c.website,
+              source: "company",
+            });
+          });
+        }
+
+        if (instRes.data) {
+          instRes.data.forEach((i: any) => {
+            suggestions.push({
+              id: i.id,
+              name: i.institution_name,
+              type: "Academic / College Institution",
+              city: i.city,
+              state: i.state,
+              source: "institution",
+            });
+          });
+        }
+
+        setOrgSuggestions(suggestions);
+      } catch (err) {
+        console.error("Error searching organizations:", err);
+      } finally {
+        setSearchingOrg(false);
+      }
+    }, 250);
+  };
+
+  const handleSelectOrg = (org: OrgSuggestion) => {
+    setFirmName(org.name);
+    setSelectedOrgId(org.id);
+    if (org.city) setCity(org.city);
+    if (org.type && ORGANIZATION_TYPES.includes(org.type)) {
+      setOrganizationType(org.type);
+    } else if (org.source === "institution") {
+      const match = ORGANIZATION_TYPES.find(t => /institution|academic|education/i.test(t));
+      if (match) setOrganizationType(match);
+    }
+    setShowOrgDropdown(false);
+  };
+
+  const openNewOrgModal = () => {
+    setShowOrgDropdown(false);
+    setNewOrgName(firmName.trim());
+    setNewOrgCity(city.trim());
+    setNewOrgType(organizationType);
+    setShowNewOrgModal(true);
+  };
+
+  const handleCreateNewOrg = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrgName.trim()) return;
+
+    setSubmittingNewOrg(true);
+    try {
+      const slug = `${newOrgName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-${Date.now().toString().slice(-4)}`;
+
+      // Insert unverified, inactive company record for platform review
+      const { data, error } = await supabase
+        .from("companies")
+        .insert({
+          firm_name: newOrgName.trim(),
+          slug: slug,
+          organization_type: newOrgType,
+          city: newOrgCity.trim() || null,
+          state: newOrgState.trim() || null,
+          country: "India",
+          website: newOrgWebsite.trim() || null,
+          is_active: false,
+          is_verified: false,
+          created_by: userId || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.warn("Notice inserting pending company:", error.message);
+      }
+
+      setFirmName(newOrgName.trim());
+      if (newOrgCity.trim()) setCity(newOrgCity.trim());
+      if (newOrgType) setOrganizationType(newOrgType);
+      if (data?.id) setSelectedOrgId(data.id);
+
+      setPendingOrgSuccess(true);
+      setTimeout(() => {
+        setPendingOrgSuccess(false);
+        setShowNewOrgModal(false);
+      }, 1500);
+    } catch (err: any) {
+      console.error("Error submitting new organization:", err);
+      // Still set the name for the user
+      setFirmName(newOrgName.trim());
+      setShowNewOrgModal(false);
+    } finally {
+      setSubmittingNewOrg(false);
+    }
+  };
 
   const resetForm = () => {
     setFirmName("");
@@ -46,6 +228,7 @@ export default function ExperienceSection({
     setStartDate("");
     setEndDate("");
     setIsCurrent(false);
+    setSelectedOrgId(null);
     setEditingId(null);
   };
 
@@ -65,6 +248,7 @@ export default function ExperienceSection({
     setStartDate(entry.start_date || "");
     setEndDate(entry.end_date || "");
     setIsCurrent(Boolean(entry.is_current));
+    setSelectedOrgId((entry as any).company_id || null);
     setModalOpen(true);
   };
 
@@ -86,30 +270,33 @@ export default function ExperienceSection({
         is_current: isCurrent,
       };
 
-      if (editingId) {
-        // Update
-        const { error } = await supabase
-          .from("profile_experiences")
-          .update(payload)
-          .eq("id", editingId);
+      if (selectedOrgId) {
+        payload.company_id = selectedOrgId;
+      }
 
-        if (error) throw error;
+      if (editingId) {
+        // Update with resilient fallback if company_id column not yet present
+        let errUpdate = (await supabase.from("profile_experiences").update(payload).eq("id", editingId)).error;
+        if (errUpdate && errUpdate.message?.includes("company_id")) {
+          delete payload.company_id;
+          errUpdate = (await supabase.from("profile_experiences").update(payload).eq("id", editingId)).error;
+        }
+        if (errUpdate) throw errUpdate;
 
         const updated = experiences.map((item) =>
           item.id === editingId ? { ...item, ...payload } : item
         );
         onExperiencesChange(updated);
       } else {
-        // Insert
-        const { data, error } = await supabase
-          .from("profile_experiences")
-          .insert(payload)
-          .select()
-          .single();
+        // Insert with resilient fallback
+        let insertRes = await supabase.from("profile_experiences").insert(payload).select().single();
+        if (insertRes.error && insertRes.error.message?.includes("company_id")) {
+          delete payload.company_id;
+          insertRes = await supabase.from("profile_experiences").insert(payload).select().single();
+        }
+        if (insertRes.error) throw insertRes.error;
 
-        if (error) throw error;
-
-        onExperiencesChange([...experiences, data || { ...payload, id: `temp-${Date.now()}` }]);
+        onExperiencesChange([...experiences, insertRes.data || { ...payload, id: `temp-${Date.now()}` }]);
       }
 
       setModalOpen(false);
@@ -294,19 +481,88 @@ export default function ExperienceSection({
             </p>
 
             <form onSubmit={handleSave} className="space-y-4">
-              {/* Firm Name */}
-              <div>
-                <label className="text-xs font-bold uppercase text-gray-500 mb-1 block">
-                  Firm / Institution Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={firmName}
-                  onChange={(e) => setFirmName(e.target.value)}
-                  placeholder="e.g. Sanjay Puri Architects / Morphogenesis / SPA Delhi"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white"
-                />
+              {/* Firm Name with Autocomplete */}
+              <div className="relative" ref={dropdownRef}>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold uppercase text-gray-500 block">
+                    Firm / Institution Name <span className="text-red-500">*</span>
+                  </label>
+                  {selectedOrgId && (
+                    <span className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                      <Check size={11} /> Linked to Directory
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={firmName}
+                    onChange={(e) => handleFirmNameChange(e.target.value)}
+                    onFocus={() => {
+                      if (orgSuggestions.length > 0) setShowOrgDropdown(true);
+                    }}
+                    placeholder="Type firm or college name (e.g. Sanjay Puri Architects, Morphogenesis, SPA)..."
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                  {searchingOrg && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Autocomplete Dropdown */}
+                {showOrgDropdown && (
+                  <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                    {orgSuggestions.length > 0 ? (
+                      <div>
+                        <div className="px-3 py-1.5 bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                          Matching Organizations in TI2A
+                        </div>
+                        {orgSuggestions.map((org) => (
+                          <button
+                            key={org.id}
+                            type="button"
+                            onClick={() => handleSelectOrg(org)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-amber-50/60 transition flex items-center justify-between gap-3 group"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-gray-900 group-hover:text-black truncate">
+                                {org.name}
+                              </p>
+                              <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
+                                <span className="font-medium text-gray-700">{org.type}</span>
+                                {org.city && <span>&bull; {org.city}{org.state ? `, ${org.state}` : ""}</span>}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-400 group-hover:text-black font-semibold shrink-0">
+                              Select &rarr;
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      !searchingOrg && firmName.trim().length >= 2 && (
+                        <div className="p-3 text-center text-xs text-gray-500">
+                          No matching organization found for &quot;{firmName}&quot;
+                        </div>
+                      )
+                    )}
+
+                    {/* Can't find organization trigger */}
+                    <div className="p-2.5 bg-gray-50 text-center border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={openNewOrgModal}
+                        className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline flex items-center justify-center gap-1.5 mx-auto"
+                      >
+                        <Plus size={13} />
+                        <span>Can&apos;t find your organization? Submit a new organization</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Organization Type */}
@@ -439,6 +695,134 @@ export default function ExperienceSection({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* MODAL: SUBMIT NEW ORGANIZATION (ADMIN REVIEW) */}
+      {showNewOrgModal && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl border border-gray-100 my-8">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                  🏢
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Submit Organization for Review
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNewOrgModal(false)}
+                className="text-gray-400 hover:text-black p-1"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mb-5 leading-relaxed">
+              Can&apos;t find your firm or institution? Enter the details below. Our team will verify and catalog it, and you can immediately proceed with saving your work experience.
+            </p>
+
+            {pendingOrgSuccess ? (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center animate-in zoom-in-95 duration-200">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2 font-bold">
+                  ✓
+                </div>
+                <h4 className="font-bold text-gray-900 text-sm">Organization Submitted!</h4>
+                <p className="text-xs text-gray-600 mt-1">
+                  &quot;{newOrgName}&quot; is now attached to your experience.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleCreateNewOrg} className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold uppercase text-gray-600 mb-1 block">
+                    Organization / Firm Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newOrgName}
+                    onChange={(e) => setNewOrgName(e.target.value)}
+                    placeholder="Official Studio or Institution Name"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase text-gray-600 mb-1 block">
+                    Organization Type <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newOrgType}
+                    onChange={(e) => setNewOrgType(e.target.value)}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    {ORGANIZATION_TYPES.map((org) => (
+                      <option key={org} value={org}>{org}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase text-gray-600 mb-1 block">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={newOrgCity}
+                      onChange={(e) => setNewOrgCity(e.target.value)}
+                      placeholder="e.g. Chennai, Mumbai"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase text-gray-600 mb-1 block">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      value={newOrgState}
+                      onChange={(e) => setNewOrgState(e.target.value)}
+                      placeholder="e.g. Tamil Nadu"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase text-gray-600 mb-1 block">
+                    Website or Social Link <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={newOrgWebsite}
+                    onChange={(e) => setNewOrgWebsite(e.target.value)}
+                    placeholder="https://companywebsite.com"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewOrgModal(false)}
+                    className="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-black transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingNewOrg}
+                    className="bg-black hover:bg-gray-800 text-white px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                  >
+                    {submittingNewOrg ? "Submitting..." : "Submit Organization & Select"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

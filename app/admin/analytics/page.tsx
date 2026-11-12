@@ -1,8 +1,9 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getClubbedPositionInfo } from "@/utils/positionNormalize";
 
 const formatDuration = (seconds: any) => {
   const s = Number(seconds);
@@ -18,21 +19,371 @@ const ProgressBar = ({ value, max }: { value: number, max: number }) => (
   </div>
 );
 
+// Reusable Information Tooltip Component with Mobile Tap / Desktop Hover Explanations
+function InfoTooltip({
+  text,
+  position = "top",
+}: {
+  text: string;
+  position?: "top" | "bottom" | "left" | "right";
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const [shiftX, setShiftX] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShiftX(0);
+      return;
+    }
+
+    // Auto-clamp inside viewport on mobile so tooltip never clips outside screen edges
+    if (tooltipRef.current) {
+      const rect = tooltipRef.current.getBoundingClientRect();
+      const padding = 12;
+      const vw = typeof window !== "undefined" ? window.innerWidth : 360;
+      if (rect.left < padding) {
+        setShiftX(padding - rect.left);
+      } else if (rect.right > vw - padding) {
+        setShiftX(vw - padding - rect.right);
+      } else {
+        setShiftX(0);
+      }
+    }
+
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const isVertical = position === "top" || position === "bottom";
+
+  return (
+    <span
+      ref={containerRef}
+      className="relative inline-flex items-center group/tip select-none ml-1.5 align-middle"
+    >
+      <button
+        type="button"
+        aria-label="More information"
+        aria-expanded={isOpen}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setIsOpen((prev) => !prev);
+        }}
+        className={`w-4 h-4 sm:w-3.5 sm:h-3.5 rounded-full flex items-center justify-center text-[10px] sm:text-[9px] font-bold transition-all cursor-pointer ${
+          isOpen
+            ? "bg-black text-white ring-2 ring-black/20"
+            : "bg-gray-200/90 text-gray-500 hover:bg-black hover:text-white active:scale-95"
+        }`}
+      >
+        ?
+      </button>
+
+      <span
+        ref={tooltipRef}
+        role="tooltip"
+        onClick={(e) => e.stopPropagation()}
+        style={
+          isVertical && shiftX !== 0
+            ? { transform: `translate(calc(-50% + ${shiftX}px), 0)` }
+            : undefined
+        }
+        className={`absolute z-50 w-52 sm:w-64 max-w-[85vw] p-2.5 bg-gray-900/95 text-white text-[11px] font-normal rounded-xl shadow-2xl backdrop-blur-xs text-left leading-relaxed transition-all duration-150 animate-in fade-in zoom-in-95 ${
+          isOpen
+            ? "block pointer-events-auto"
+            : "hidden group-hover/tip:block pointer-events-none"
+        } ${
+          position === "bottom"
+            ? "top-full mt-2 left-1/2 -translate-x-1/2"
+            : position === "right"
+            ? "left-full ml-2 top-1/2 -translate-y-1/2"
+            : position === "left"
+            ? "right-full mr-2 top-1/2 -translate-y-1/2"
+            : "bottom-full mb-2 left-1/2 -translate-x-1/2"
+        }`}
+      >
+        <span className="block pr-3">{text}</span>
+        {isOpen && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
+            className="absolute top-1.5 right-1.5 text-gray-400 hover:text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10 sm:hidden cursor-pointer"
+            aria-label="Close tooltip"
+          >
+            ✕
+          </button>
+        )}
+        <span
+          style={
+            isVertical && shiftX !== 0
+              ? { left: `calc(50% - ${shiftX}px)` }
+              : undefined
+          }
+          className={`absolute border-4 border-transparent ${
+            position === "bottom"
+              ? "bottom-full left-1/2 -translate-x-1/2 border-b-gray-900/95"
+              : position === "right"
+              ? "right-full top-1/2 -translate-y-1/2 border-r-gray-900/95"
+              : position === "left"
+              ? "left-full top-1/2 -translate-y-1/2 border-l-gray-900/95"
+              : "top-full left-1/2 -translate-x-1/2 border-t-gray-900/95"
+          }`}
+        />
+      </span>
+    </span>
+  );
+}
+
+// Reusable Vertical Bar Chart Component with Hover Tooltips & Responsive Axis
+function VerticalBarChart({
+  items,
+  dataKey,
+  colorClass,
+  height = "h-28 sm:h-32",
+  isPercentage = false,
+  isDuration = false,
+  showAxis = true,
+}: {
+  items: any[];
+  dataKey: string;
+  colorClass: string;
+  height?: string;
+  isPercentage?: boolean;
+  isDuration?: boolean;
+  showAxis?: boolean;
+}) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="h-32 flex items-center justify-center text-xs text-gray-400">
+        No breakdown data available for this timeframe
+      </div>
+    );
+  }
+
+  const values = items.map(item => Number(item[dataKey]) || 0);
+  const max = Math.max(...values, 1);
+
+  return (
+    <div className="w-full">
+      <div className={`${height} flex items-end gap-1 sm:gap-1.5 px-1 py-1`}>
+        {items.map((item, idx) => {
+          const val = Number(item[dataKey]) || 0;
+          const heightPct = Math.max(val > 0 ? 8 : 2, Math.round((val / max) * 100));
+          const formattedVal = isDuration
+            ? formatDuration(val)
+            : isPercentage
+            ? `${val}%`
+            : val.toLocaleString();
+
+          return (
+            <div
+              key={idx}
+              className="flex-1 h-full flex flex-col justify-end items-center relative group min-w-[3px] cursor-pointer"
+            >
+              {/* Tooltip on hover */}
+              <div className="absolute -top-9 bg-gray-900 text-white text-[10px] font-mono px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-xl z-30 whitespace-nowrap -translate-y-1 group-hover:translate-y-0">
+                <span className="font-bold">{formattedVal}</span>
+                <span className="text-gray-300 ml-1">({item.fullLabel || item.label})</span>
+              </div>
+              {/* Vertical Bar */}
+              <div
+                className={`w-full rounded-t-sm transition-all duration-300 ${colorClass} group-hover:opacity-80`}
+                style={{ height: `${heightPct}%` }}
+              ></div>
+            </div>
+          );
+        })}
+      </div>
+
+      {showAxis && (
+        <div className="flex justify-between text-[11px] text-gray-500 pt-2 border-t border-gray-100 font-mono mt-1 px-1">
+          {items.length <= 14 ? (
+            items.map((item, i) => (
+              <span key={i} className="truncate text-center">
+                {item.label}
+              </span>
+            ))
+          ) : (
+            <>
+              <span>{items[0]?.label}</span>
+              <span>{items[Math.floor(items.length * 0.25)]?.label}</span>
+              <span>{items[Math.floor(items.length * 0.5)]?.label}</span>
+              <span>{items[Math.floor(items.length * 0.75)]?.label}</span>
+              <span>{items[items.length - 1]?.label}</span>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniSparkBars({
+  items,
+  dataKey,
+  colorClass,
+}: {
+  items: any[];
+  dataKey: string;
+  colorClass: string;
+}) {
+  if (!items || items.length === 0) return null;
+  const values = items.map(item => Number(item[dataKey]) || 0);
+  const max = Math.max(...values, 1);
+
+  return (
+    <div className="h-7 flex items-end gap-0.5 w-full mt-2.5 pt-1 border-t border-gray-100">
+      {items.map((item, idx) => {
+        const val = Number(item[dataKey]) || 0;
+        const heightPct = Math.max(val > 0 ? 14 : 4, Math.round((val / max) * 100));
+        return (
+          <div
+            key={idx}
+            title={`${item.fullLabel || item.label}: ${val}`}
+            className="flex-1 h-full flex flex-col justify-end items-center group relative min-w-[2px]"
+          >
+            <div
+              className={`w-full rounded-t-xs ${colorClass} opacity-75 group-hover:opacity-100 transition-all`}
+              style={{ height: `${heightPct}%` }}
+            ></div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Comparison Bar Chart (Current Period vs. Preceding 5 Periods purely from Live Data)
+function ComparisonBarChart({
+  items,
+  dataKey,
+  colorClass,
+  height = "h-28 sm:h-32",
+  isPercentage = false,
+  isDuration = false,
+}: {
+  items: any[];
+  dataKey: string;
+  colorClass: string;
+  height?: string;
+  isPercentage?: boolean;
+  isDuration?: boolean;
+}) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="h-28 flex items-center justify-center text-xs text-gray-400">
+        No live comparison data available
+      </div>
+    );
+  }
+
+  const values = items.map(item => Number(item[dataKey]) || 0);
+  const max = Math.max(...values, 1);
+  const allZero = values.every(v => v === 0);
+
+  if (allZero) {
+    return (
+      <div className="h-28 flex flex-col items-center justify-center text-center text-xs text-gray-400 p-2">
+        <span>No historical data recorded for this range</span>
+        <span className="text-[10px] text-gray-300 mt-0.5">Live tracking active for current periods</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      <div className={`${height} flex items-end justify-between gap-2.5 sm:gap-3 px-2 py-1`}>
+        {items.map((item, idx) => {
+          const val = Number(item[dataKey]) || 0;
+          const isCur = Boolean(item.isCurrent);
+          const heightPct = Math.max(val > 0 ? 10 : 3, Math.round((val / max) * 100));
+          const formattedVal = isDuration
+            ? formatDuration(val)
+            : isPercentage
+            ? `${val}%`
+            : val.toLocaleString();
+
+          return (
+            <div
+              key={idx}
+              className="flex-1 h-full flex flex-col justify-end items-center relative group min-w-[22px] cursor-pointer"
+            >
+              {/* Tooltip on hover */}
+              <div className="absolute -top-9 bg-gray-900 text-white text-[10px] font-mono px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-all pointer-events-none shadow-xl z-30 whitespace-nowrap -translate-y-1 group-hover:translate-y-0">
+                <span className="font-bold">{formattedVal}</span>
+                <span className="text-gray-300 ml-1">({item.fullLabel || item.label})</span>
+              </div>
+              {/* Value indicator on top of bar on hover */}
+              <span className="text-[10px] font-bold text-gray-700 mb-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {formattedVal}
+              </span>
+              {/* Comparison Bar */}
+              <div
+                className={`w-full rounded-t-md transition-all duration-300 ${
+                  isCur ? `${colorClass} ring-1 ring-black/10 shadow-xs` : "bg-gray-300 hover:bg-gray-400"
+                }`}
+                style={{ height: `${heightPct}%` }}
+              ></div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between text-[11px] text-gray-500 pt-1.5 border-t border-gray-100 font-mono mt-1 px-1">
+        {items.map((item, idx) => (
+          <span
+            key={idx}
+            className={`text-center truncate ${
+              item.isCurrent ? "font-bold text-gray-900" : "text-gray-500"
+            }`}
+          >
+            {item.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [days, setDays] = useState("1");
   const [pageTab, setPageTab] = useState<"all" | "main" | "jobs" | "companies">("all");
-  const [listingMode, setListingMode] = useState<"top" | "recent">("top");
+  const [listingMode, setListingMode] = useState<"top" | "recent">("recent");
   const [filterAdminShares, setFilterAdminShares] = useState(false);
   const [trafficTab, setTrafficTab] = useState<"outside" | "inside">("outside");
   const [pageMode, setPageMode] = useState<"views" | "landing">("views");
   const [gscData, setGscData] = useState<any>(null);
   const [gscLoading, setGscLoading] = useState(false);
   const [gscTab, setGscTab] = useState<"keywords" | "pages">("keywords");
+  const [visibleGscKeywordsCount, setVisibleGscKeywordsCount] = useState(10);
+  const [visibleGscPagesCount, setVisibleGscPagesCount] = useState(10);
+  const [firmLeaderboardMode, setFirmLeaderboardMode] = useState<"trending" | "overall">("trending");
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [activityMetricMode, setActivityMetricMode] = useState<"avg" | "total">("avg");
+  const [geoTab, setGeoTab] = useState<"countries" | "cities">("countries");
+  const [selectedOverviewMetric, setSelectedOverviewMetric] = useState<
+    "activeUsers" | "sessions" | "pageViews" | "avgSessionDuration" | "bounceRate" | "totalActions"
+  >("activeUsers");
+  const [selectedConversionMetric, setSelectedConversionMetric] = useState<
+    "applyClicks" | "emailClicks" | "contactClicks" | "shareClicks" | "saveClicks"
+  >("applyClicks");
 
   useEffect(() => {
     async function fetchData() {
@@ -81,79 +432,406 @@ export default function AnalyticsPage() {
       <Navbar />
       <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-10">
         
-        {/* HEADER & CONTROLS */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div>
-            <div className="flex items-center gap-4">
-<AdminQuickMenu />
-<h1 className="text-3xl font-bold tracking-tight text-gray-900">Analytics</h1>
-</div>
-            <p className="text-gray-500 mt-1">Real-time traffic and user insights</p>
+        {/* STICKY HEADER & TIMELINE CONTROLS */}
+        <div className="sticky top-0 z-40 bg-gray-50/95 backdrop-blur-md py-3.5 mb-8 -mx-6 px-6 lg:-mx-8 lg:px-8 border-b border-gray-200/80 shadow-xs transition-all">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div className="flex items-center gap-3">
+              <AdminQuickMenu />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Analytics</h1>
+                  {data?.overview?.realtimeUsers !== undefined && (
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full border border-emerald-200/70">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>{data.overview.realtimeUsers} Live</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 hidden sm:block">Real-time candidate traffic &amp; platform insights</p>
+              </div>
+            </div>
+
+            {/* TIMELINE CONTROLS: CLEAN PILL BUTTONS ONLY */}
+            <div className="flex items-center gap-1.5 bg-white/90 p-1 rounded-xl border border-gray-200/90 text-xs font-semibold shadow-xs overflow-x-auto max-w-full">
+              {[
+                { label: "Last Month", full: "Previous Month (Full English Calendar Month)", value: "last_month" },
+                { label: "This Month", full: "This Month (1st till today)", value: "this_month" },
+                { label: "1h", full: "Last 1 Hour", value: "1h" },
+                { label: "24h", full: "Last 24 Hours", value: "1" },
+                { label: "7d", full: "Last 7 Days", value: "7" },
+                { label: "30d", full: "Last 30 Days", value: "30" },
+                { label: "90d", full: "Last 90 Days", value: "90" },
+                { label: "1y", full: "Last 365 Days", value: "365" },
+                { label: "All", full: "All Time", value: "lifetime" },
+              ].map(p => (
+                <button
+                  key={p.value}
+                  type="button"
+                  title={p.full}
+                  onClick={() => setDays(p.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${
+                    days === p.value
+                      ? "bg-black text-white shadow-xs"
+                      : "text-gray-600 hover:text-black hover:bg-gray-100"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <select 
-              value={days} 
-              onChange={(e) => setDays(e.target.value)}
-              className="bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-black focus:border-black block p-2.5 shadow-sm font-medium"
-            >
-              <option value="1h">Last 1 Hour</option>
-              <option value="1">Last 24 Hours</option>
-              <option value="7">Last 7 Days</option>
-              <option value="30">Last 30 Days</option>
-              <option value="90">Last 90 Days</option>
-              <option value="365">Last 365 Days</option>
-              <option value="lifetime">Lifetime</option>
-            </select>
         </div>
 
-        {loading ? (
+        {loading && !data ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
           </div>
-        ) : error ? (
+        ) : error && !data ? (
           <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl shadow-sm">
             <h3 className="font-bold mb-2">Failed to load analytics</h3>
             <p className="text-sm">{error}</p>
           </div>
         ) : data ? (
-          <div className="space-y-6">
-            
-            {/* OVERVIEW METRICS */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 lg:gap-6">
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                  <h3 className="text-sm font-medium text-gray-500">Realtime (Live)</h3>
+          <div className="relative">
+            {/* Simple loading circle in front while dimmer analytics update in background */}
+            {loading && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+                <div className="p-3.5 bg-white/90 backdrop-blur-xs rounded-full shadow-md border border-gray-100">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-black border-t-transparent"></div>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.realtimeUsers}</p>
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-green-500"></div>
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Active Users</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.activeUsers}</p>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs font-semibold mb-4">
+                Failed to refresh: {error}
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Total Sessions</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.sessions}</p>
+            )}
+
+            <div className={`space-y-6 transition-opacity duration-300 ${loading ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
+            
+            {/* OVERVIEW METRICS WITH VERTICAL BAR SPARKLINES & INTERACTIVE CHART */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+                
+                {/* Realtime (Live) */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs relative flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Realtime
+                        <InfoTooltip text="Active candidates and visitors currently browsing the platform in real-time." position="bottom" />
+                      </h3>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.realtimeUsers}</p>
+                  </div>
+                  <div className="mt-2 text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded w-fit">
+                    Active now
+                  </div>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-green-500 rounded-b-2xl"></div>
+                </div>
+
+                {/* Active Users */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("activeUsers")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "activeUsers"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Active Users
+                        <InfoTooltip text="Unique visitors who actively browsed or interacted with the site during the selected timeframe." position="bottom" />
+                      </h3>
+                      <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.activeUsers}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="activeUsers" colorClass="bg-blue-600" />
+                </div>
+
+                {/* Total Sessions */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("sessions")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "sessions"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Sessions
+                        <InfoTooltip text="Total browsing sessions initiated by visitors. A session expires after 30 minutes of inactivity." position="bottom" />
+                      </h3>
+                      <span className="w-2 h-2 rounded-full bg-indigo-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.sessions}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="sessions" colorClass="bg-indigo-600" />
+                </div>
+
+                {/* Page Views */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("pageViews")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "pageViews"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Page Views
+                        <InfoTooltip text="Total number of web pages viewed across Trapped Into Architecture in this timeframe." position="bottom" />
+                      </h3>
+                      <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.pageViews}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="pageViews" colorClass="bg-purple-600" />
+                </div>
+
+                {/* Avg Session */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("avgSessionDuration")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "avgSessionDuration"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Avg Session
+                        <InfoTooltip text="Average amount of time visitors spend exploring pages, jobs, and studios per session." position="bottom" />
+                      </h3>
+                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{formatDuration(data.overview.avgSessionDuration)}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="avgSessionDuration" colorClass="bg-amber-500" />
+                </div>
+
+                {/* Bounce Rate */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("bounceRate")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between ${
+                    selectedOverviewMetric === "bounceRate"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Bounce Rate
+                        <InfoTooltip text="Percentage of visitors who left after viewing only a single page without further interaction." position="bottom" />
+                      </h3>
+                      <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">{data.overview.bounceRate || "0%"}</p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="bounceRate" colorClass="bg-rose-500" />
+                </div>
+
+                {/* Total Actions */}
+                <div
+                  onClick={() => setSelectedOverviewMetric("totalActions")}
+                  className={`cursor-pointer bg-white p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-orange-50/40 ${
+                    selectedOverviewMetric === "totalActions"
+                      ? "border-black ring-2 ring-black/10 shadow-xs"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-orange-600 uppercase tracking-wider flex items-center">
+                        Total Actions
+                        <InfoTooltip text="Combined count of all candidate engagement actions: applies, emails, WhatsApp calls, shares, and bookmarks." position="bottom" />
+                      </h3>
+                      <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                      {((data.conversions?.applyClicks || 0) + (data.conversions?.emailClicks || 0) + (data.conversions?.contactClicks || 0) + (data.conversions?.shareClicks || 0) + (data.conversions?.saveClicks || 0) + (data.conversions?.guestRegisterClicks || 0))}
+                    </p>
+                  </div>
+                  <MiniSparkBars items={data.chartSeries?.items} dataKey="totalActions" colorClass="bg-emerald-600" />
+                </div>
+
               </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Page Views</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.pageViews}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Avg Session</h3>
-                <p className="text-3xl font-bold text-gray-900">{formatDuration(data.overview.avgSessionDuration)}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Bounce Rate</h3>
-                <p className="text-3xl font-bold text-gray-900">{data.overview.bounceRate || "0%"}</p>
-              </div>
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm bg-gradient-to-br from-white to-orange-50/40">
-                <h3 className="text-sm font-medium text-orange-600 mb-1">Total Actions</h3>
-                <p className="text-3xl font-bold text-gray-900">
-                  {((data.conversions?.applyClicks || 0) + (data.conversions?.emailClicks || 0) + (data.conversions?.contactClicks || 0) + (data.conversions?.shareClicks || 0) + (data.conversions?.saveClicks || 0))}
-                </p>
-                <p className="text-[11px] text-gray-400 mt-1">In selected time period</p>
-              </div>
+
+              {/* EXPANDED SPLIT-SCREEN CHARTS: BREAKDOWN (LEFT) vs COMPARISON (RIGHT) */}
+              {data.chartSeries?.items && data.chartSeries.items.length > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                  
+                  {/* LEFT: Detailed Breakdown (7 Cols) */}
+                  <div className="lg:col-span-7 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-100 gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full ${
+                              selectedOverviewMetric === "activeUsers"
+                                ? "bg-blue-600"
+                                : selectedOverviewMetric === "sessions"
+                                ? "bg-indigo-600"
+                                : selectedOverviewMetric === "pageViews"
+                                ? "bg-purple-600"
+                                : selectedOverviewMetric === "avgSessionDuration"
+                                ? "bg-amber-500"
+                                : selectedOverviewMetric === "bounceRate"
+                                ? "bg-rose-500"
+                                : "bg-emerald-600"
+                            }`}
+                          ></span>
+                          <h3 className="font-bold text-sm sm:text-base text-gray-900 flex items-center">
+                            <span>
+                              {selectedOverviewMetric === "activeUsers"
+                                ? "Active Users Breakdown"
+                                : selectedOverviewMetric === "sessions"
+                                ? "Sessions Breakdown"
+                                : selectedOverviewMetric === "pageViews"
+                                ? "Page Views Breakdown"
+                                : selectedOverviewMetric === "avgSessionDuration"
+                                ? "Avg Duration Breakdown"
+                                : selectedOverviewMetric === "bounceRate"
+                                ? "Bounce Rate Breakdown"
+                                : "Actions Breakdown"}
+                            </span>
+                            <InfoTooltip text="Granular breakdown of the selected metric across consecutive intervals (e.g., minute-by-minute, hour-by-hour, day-by-day)." />
+                          </h3>
+                          <span className="text-[11px] bg-black text-white px-2 py-0.5 rounded-full font-semibold">
+                            {days === "last_month" ? "Last Month" : days === "this_month" ? "This Month" : days === "1h" ? "1 Hour" : days === "1" ? "24 Hours" : days === "7" ? "7 Days" : days === "30" ? "30 Days" : days === "90" ? "90 Days" : days === "365" ? "1 Year" : "All Time"}
+                          </span>
+                        </div>
+
+                        {/* Metric Selector Tabs */}
+                        <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg text-xs font-semibold overflow-x-auto max-w-full [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                          {[
+                            { key: "activeUsers", label: "Users" },
+                            { key: "sessions", label: "Sessions" },
+                            { key: "pageViews", label: "Views" },
+                            { key: "avgSessionDuration", label: "Duration" },
+                            { key: "bounceRate", label: "Bounce" },
+                            { key: "totalActions", label: "Actions" },
+                          ].map(m => (
+                            <button
+                              key={m.key}
+                              type="button"
+                              onClick={() => setSelectedOverviewMetric(m.key as any)}
+                              className={`px-2 py-1 sm:px-2.5 rounded-md transition whitespace-nowrap cursor-pointer text-[11px] sm:text-xs ${
+                                selectedOverviewMetric === m.key
+                                  ? "bg-white text-gray-900 shadow-xs font-bold"
+                                  : "text-gray-600 hover:text-black"
+                              }`}
+                            >
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-gray-400 mt-1.5">
+                        Granular interval distribution across the selected timeframe.
+                      </p>
+                    </div>
+
+                    <div className="pt-3 pb-1">
+                      <VerticalBarChart
+                        items={data.chartSeries.items}
+                        dataKey={selectedOverviewMetric}
+                        colorClass={
+                          selectedOverviewMetric === "activeUsers"
+                            ? "bg-blue-600"
+                            : selectedOverviewMetric === "sessions"
+                            ? "bg-indigo-600"
+                            : selectedOverviewMetric === "pageViews"
+                            ? "bg-purple-600"
+                            : selectedOverviewMetric === "avgSessionDuration"
+                            ? "bg-amber-500"
+                            : selectedOverviewMetric === "bounceRate"
+                            ? "bg-rose-500"
+                            : "bg-emerald-600"
+                        }
+                        isPercentage={selectedOverviewMetric === "bounceRate"}
+                        isDuration={selectedOverviewMetric === "avgSessionDuration"}
+                        height="h-28 sm:h-32"
+                      />
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Period-over-Period Comparison (5 Cols) */}
+                  <div className="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between bg-gradient-to-b from-white to-gray-50/40">
+                    <div>
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Comparison</span>
+                            {(() => {
+                              const compItems = data.chartSeries?.comparison || [];
+                              const cur = Number(compItems[compItems.length - 1]?.[selectedOverviewMetric] || 0);
+                              const prev = Number(compItems[compItems.length - 2]?.[selectedOverviewMetric] || 0);
+                              if (prev > 0) {
+                                const diff = (((cur - prev) / prev) * 100).toFixed(1);
+                                const isPos = Number(diff) >= 0;
+                                return (
+                                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${isPos ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                                    {isPos ? `+${diff}% ▲` : `${diff}% ▼`} vs prev
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
+                          <h3 className="font-bold text-sm sm:text-base text-gray-900 mt-0.5 flex items-center">
+                            <span>Current vs Previous Periods</span>
+                            <InfoTooltip text="Historical benchmark comparing the current period against preceding consecutive periods of equal length." />
+                          </h3>
+                        </div>
+                        <span className="text-[10px] font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                          Live GA4
+                        </span>
+                      </div>
+
+                      <p className="text-[11px] text-gray-400 mt-1.5">
+                        Historical trend comparison against preceding consecutive periods.
+                      </p>
+                    </div>
+
+                    <div className="pt-3 pb-1">
+                      <ComparisonBarChart
+                        items={data.chartSeries?.comparison || []}
+                        dataKey={selectedOverviewMetric}
+                        colorClass={
+                          selectedOverviewMetric === "activeUsers"
+                            ? "bg-blue-600"
+                            : selectedOverviewMetric === "sessions"
+                            ? "bg-indigo-600"
+                            : selectedOverviewMetric === "pageViews"
+                            ? "bg-purple-600"
+                            : selectedOverviewMetric === "avgSessionDuration"
+                            ? "bg-amber-500"
+                            : selectedOverviewMetric === "bounceRate"
+                            ? "bg-rose-500"
+                            : "bg-emerald-600"
+                        }
+                        isPercentage={selectedOverviewMetric === "bounceRate"}
+                        isDuration={selectedOverviewMetric === "avgSessionDuration"}
+                        height="h-28 sm:h-32"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              )}
             </div>
 
             {/* CANDIDATE CONVERSIONS & ACTIONS */}
@@ -162,6 +840,7 @@ export default function AnalyticsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>⚡ Candidate Conversions &amp; Actions</span>
+                    <InfoTooltip text="High-intent hiring actions taken by candidates on job listings during this timeframe." />
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">Direct candidate interactions within the selected time period</p>
                 </div>
@@ -170,28 +849,40 @@ export default function AnalyticsPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Apply Clicks</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    Apply Clicks
+                    <InfoTooltip text="Number of times candidates clicked to apply directly on an external employer portal or company career site." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.applyClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">External link applications</p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Email Now</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    Email Now
+                    <InfoTooltip text="Direct email inquiries initiated by candidates to employers using the built-in email application button." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.emailClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">Direct email inquiries</p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">WhatsApp / Call</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    WhatsApp / Call
+                    <InfoTooltip text="Direct contact actions where candidates opened WhatsApp or called hiring studios directly." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.contactClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">Direct studio inquiries</p>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Job Shares</span>
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                      Job Shares
+                      <InfoTooltip text="Number of times candidates shared job listing links with colleagues, friends, or across social platforms." />
+                    </span>
                     {(data.conversions?.candidateSharesCount > 0 || data.conversions?.unregisteredSharesCount > 0) && (
                       <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded" title="Candidate vs Unregistered Breakdown">
                         {data.conversions.candidateSharesCount || 0} user · {data.conversions.unregisteredSharesCount || 0} unregistered
@@ -207,13 +898,37 @@ export default function AnalyticsPage() {
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Saved Jobs</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                    Saved Jobs
+                    <InfoTooltip text="Bookmarks saved by candidates to their personal profile to track or apply later." />
+                  </span>
                   <p className="text-2xl font-bold text-gray-900">{data.conversions?.saveClicks || 0}</p>
                   <p className="text-[11px] text-gray-400 mt-1">
                     {days === 'lifetime' || days === 'all' 
                       ? 'All-time lifetime bookmarks' 
                       : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · ${data.conversions?.totalLifetimeSaves || 0} all-time`}
                   </p>
+                </div>
+
+                <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100/90 flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center mb-1">
+                      Guest Register Prompt
+                      <InfoTooltip text="Unregistered visitors who clicked to register for an account after encountering job interaction prompts." />
+                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-2xl font-black text-purple-950">{data.conversions?.guestRegisterClicks || 0}</p>
+                      <span className="text-xs font-bold text-purple-700">clicked</span>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-purple-200/50 text-[11px] text-purple-900/80 flex items-center justify-between">
+                    <span>{data.conversions?.guestPopupViews || 0} shown</span>
+                    <span className="font-bold font-mono">
+                      {((data.conversions?.guestPopupViews || 0) > 0 
+                        ? (((data.conversions?.guestRegisterClicks || 0) / (data.conversions?.guestPopupViews || 1)) * 100).toFixed(1) 
+                        : '0.0')}% conversion
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -266,7 +981,10 @@ export default function AnalyticsPage() {
                     </div>
 
                     {displayedJobs.length === 0 ? (
-                      <p className="text-gray-400 text-xs italic py-4">No job engagement recorded in this time period yet.</p>
+                      <div className="py-6 text-center bg-gray-50/70 rounded-xl border border-dashed border-gray-200">
+                        <p className="text-gray-500 text-xs font-semibold">No job shares or saves recorded in this time period.</p>
+                        <p className="text-gray-400 text-[11px] mt-1">Switch the timeframe to <strong>Last 7 Days</strong> or <strong>Lifetime</strong> to view historical engagement.</p>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {displayedJobs.slice(0, 8).map((j: any) => (
@@ -324,6 +1042,7 @@ export default function AnalyticsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>🔍 Candidate Search Demand &amp; Missing Jobs</span>
+                    <InfoTooltip text="Live search logs capturing the exact job roles, software, and locations candidates are looking for on the jobs board." />
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">Exact keywords, job roles, and locations searched by visitors on the jobs page</p>
                 </div>
@@ -339,7 +1058,10 @@ export default function AnalyticsPage() {
                 {/* Top Search Keywords */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
-                    <span>Top Keywords Searched</span>
+                    <span className="flex items-center">
+                      Top Keywords Searched
+                      <InfoTooltip text="Most frequent job positions, architectural roles, and software skills typed into the search bar." />
+                    </span>
                     <span className="text-[10px] text-gray-400 font-normal">Hits</span>
                   </h4>
                   <p className="text-[10px] text-gray-500 mb-3">Job titles &amp; software searched on the jobs page</p>
@@ -350,12 +1072,25 @@ export default function AnalyticsPage() {
                     </div>
                   ) : (
                     <div className="space-y-2.5">
-                      {data.searches.topKeywords.map((k: any, i: number) => (
-                        <div key={i} className="flex justify-between items-center text-xs">
-                          <span className="font-semibold text-gray-800 capitalize truncate max-w-[180px]">{k.keyword}</span>
-                          <span className="bg-white px-2 py-0.5 rounded border border-gray-200 font-mono font-bold text-gray-700">{k.count}</span>
-                        </div>
-                      ))}
+                      {data.searches.topKeywords.map((k: any, i: number) => {
+                        const club = getClubbedPositionInfo(k.keyword);
+                        return (
+                          <div key={i} className="flex justify-between items-center text-xs gap-2">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <span className="font-semibold text-gray-800 capitalize truncate">{k.keyword}</span>
+                              {club && (
+                                <span 
+                                  className="text-[9px] bg-blue-50 text-blue-700 font-semibold px-1.5 py-0.5 rounded border border-blue-100 shrink-0" 
+                                  title={`Mapped to clubbed position: ${club.canonical} (includes ${club.synonyms.slice(0, 4).join(', ')})`}
+                                >
+                                  ↳ {club.canonical.replace("Architectural ", "")}
+                                </span>
+                              )}
+                            </div>
+                            <span className="bg-white px-2 py-0.5 rounded border border-gray-200 font-mono font-bold text-gray-700 shrink-0">{k.count}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -363,7 +1098,10 @@ export default function AnalyticsPage() {
                 {/* Top Searched Cities */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
-                    <span>Top Locations Filtered</span>
+                    <span className="flex items-center">
+                      Top Locations Filtered
+                      <InfoTooltip text="Cities candidates filtered for on the jobs board to find local architecture openings." />
+                    </span>
                     <span className="text-[10px] text-gray-400 font-normal">Filters</span>
                   </h4>
                   <p className="text-[10px] text-gray-500 mb-3">Cities candidates filtered by on the jobs page</p>
@@ -387,7 +1125,10 @@ export default function AnalyticsPage() {
                 {/* Unmet Demand (Zero Result Searches) */}
                 <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200/90">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-1 flex items-center justify-between">
-                    <span>⚠️ Missing Jobs (0 Results Found)</span>
+                    <span className="flex items-center">
+                      <span>⚠️ Missing Jobs (0 Results Found)</span>
+                      <InfoTooltip text="Searches performed where 0 jobs currently matched. Highlights urgent hiring demand to source vacancies for!" />
+                    </span>
                     <span className="text-[10px] bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded font-bold">Market Demand</span>
                   </h4>
                   <p className="text-[10px] text-amber-700 mb-3">Roles candidates searched for where NO jobs were found. Post these next!</p>
@@ -424,6 +1165,7 @@ export default function AnalyticsPage() {
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                       <span>🔎 Google Search Console (SEO Keywords &amp; Google Rankings)</span>
+                      <InfoTooltip text="Search engine performance on Google Search: impressions, clicks, CTR, and search ranking." />
                       <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full">Connected</span>
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
@@ -489,7 +1231,7 @@ export default function AnalyticsPage() {
                             <td colSpan={5} className="py-8 text-center text-gray-400 italic">No Google search query data recorded in this period.</td>
                           </tr>
                         ) : (
-                          gscData.keywords.map((k: any, i: number) => {
+                          gscData.keywords.slice(0, visibleGscKeywordsCount).map((k: any, i: number) => {
                             const rank = k.position;
                             const rankBadgeColor = rank <= 3 
                               ? "bg-green-100 text-green-800 border-green-200" 
@@ -516,6 +1258,19 @@ export default function AnalyticsPage() {
                         )}
                       </tbody>
                     </table>
+                    {gscData.keywords && visibleGscKeywordsCount < gscData.keywords.length && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                        <span>Showing 1 to {Math.min(visibleGscKeywordsCount, gscData.keywords.length)} of {gscData.keywords.length} keywords</span>
+                        <button
+                          type="button"
+                          onClick={() => setVisibleGscKeywordsCount(prev => prev + 10)}
+                          className="px-4 py-2 bg-gray-900 hover:bg-black text-white font-medium rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span>See More (10 more)</span>
+                          <span>⬇️</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -535,8 +1290,8 @@ export default function AnalyticsPage() {
                             <td colSpan={5} className="py-8 text-center text-gray-400 italic">No ranking pages recorded in this period.</td>
                           </tr>
                         ) : (
-                          gscData.pages.map((p: any, i: number) => {
-                            let path = p.page;
+                          gscData.pages.slice(0, visibleGscPagesCount).map((p: any, i: number) => {
+                            let path = p.path || p.page;
                             try {
                               const u = new URL(p.page);
                               path = u.pathname;
@@ -544,10 +1299,21 @@ export default function AnalyticsPage() {
 
                             return (
                               <tr key={i} className="hover:bg-gray-50/70 transition">
-                                <td className="py-3 pl-1 max-w-[320px] truncate">
-                                  <a href={p.page} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:underline">
-                                    {path || p.page}
-                                  </a>
+                                <td className="py-3 pl-1 max-w-[380px]">
+                                  <div className="flex flex-col">
+                                    <a 
+                                      href={p.page} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="font-semibold text-gray-900 hover:text-blue-600 transition truncate block max-w-[360px]"
+                                      title={p.title || path || p.page}
+                                    >
+                                      {p.title || path || p.page}
+                                    </a>
+                                    <span className="text-[11px] text-gray-400 font-mono truncate max-w-[360px] block mt-0.5">
+                                      {path || p.page}
+                                    </span>
+                                  </div>
                                 </td>
                                 <td className="py-3 text-right font-mono font-bold text-gray-800">{p.clicks}</td>
                                 <td className="py-3 text-right font-mono text-gray-500">{p.impressions}</td>
@@ -559,6 +1325,19 @@ export default function AnalyticsPage() {
                         )}
                       </tbody>
                     </table>
+                    {gscData.pages && visibleGscPagesCount < gscData.pages.length && (
+                      <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                        <span>Showing 1 to {Math.min(visibleGscPagesCount, gscData.pages.length)} of {gscData.pages.length} pages</span>
+                        <button
+                          type="button"
+                          onClick={() => setVisibleGscPagesCount(prev => prev + 10)}
+                          className="px-4 py-2 bg-gray-900 hover:bg-black text-white font-medium rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm"
+                        >
+                          <span>See More (10 more)</span>
+                          <span>⬇️</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -652,173 +1431,6 @@ export default function AnalyticsPage() {
               </div>
             ) : null}
 
-            {/* HOURLY & DAY-OF-WEEK CANDIDATE TRAFFIC (COMPACT SIDE-BY-SIDE) */}
-            {data.peakTimes && (
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <span>⏱️ Candidate Activity Patterns</span>
-                    </h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Hourly 24-hour distribution and 7-day weekly visitor volume
-                    </p>
-                  </div>
-
-                  {/* Average / Day vs Total Volume Toggle */}
-                  <div className="flex items-center bg-gray-100 p-1 rounded-xl text-xs shrink-0 self-start sm:self-auto">
-                    <button
-                      onClick={() => setActivityMetricMode("avg")}
-                      className={`px-3 py-1.5 rounded-lg font-medium transition ${
-                        activityMetricMode === "avg"
-                          ? "bg-white text-gray-900 shadow-sm font-semibold"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
-                    >
-                      Average / Day
-                    </button>
-                    <button
-                      onClick={() => setActivityMetricMode("total")}
-                      className={`px-3 py-1.5 rounded-lg font-medium transition ${
-                        activityMetricMode === "total"
-                          ? "bg-white text-gray-900 shadow-sm font-semibold"
-                          : "text-gray-500 hover:text-gray-900"
-                      }`}
-                    >
-                      Total Volume
-                    </button>
-                  </div>
-                </div>
-
-                {/* SIDE BY SIDE 2-COLUMN GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* LEFT: 24-HOUR ACTIVITY BAR CHART */}
-                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 flex flex-col justify-between">
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800">24-Hour Distribution</h4>
-                        <p className="text-[11px] text-gray-400">12:00 AM (00) to 11:00 PM (23)</p>
-                      </div>
-                      <span className="text-[11px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
-                        {activityMetricMode === "avg" ? "Avg Users / Hour" : "Total Users"}
-                      </span>
-                    </div>
-
-                    {(!data.peakTimes.hourly || data.peakTimes.hourly.length === 0) ? (
-                      <p className="text-xs text-gray-400 italic py-10 text-center">Hourly activity data is aggregating...</p>
-                    ) : (
-                      (() => {
-                        const numDays = days === "1h" || days === "1" ? 1 : days === "7" ? 7 : days === "30" ? 30 : days === "90" ? 90 : days === "365" ? 365 : 30;
-                        const hourValues = data.peakTimes.hourly.map((h: any) => {
-                          const raw = Number(h.users) || 0;
-                          const val = activityMetricMode === "avg" && numDays > 1 ? Number((raw / numDays).toFixed(1)) : raw;
-                          return { ...h, displayVal: val, rawVal: raw };
-                        });
-                        const maxVal = Math.max(...hourValues.map((h: any) => h.displayVal), 0.1);
-
-                        return (
-                          <div className="grid grid-cols-12 md:grid-cols-24 gap-1 items-end h-36 pt-4">
-                            {hourValues.map((h: any, i: number) => {
-                              const isPeak = h.displayVal === maxVal && h.displayVal > 0;
-                              const heightPct = Math.max(6, Math.round((h.displayVal / maxVal) * 100));
-
-                              return (
-                                <div key={i} className="flex flex-col items-center group relative h-full justify-end">
-                                  {/* Tooltip */}
-                                  <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
-                                    <div className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
-                                      {h.label || `${h.hour}:00`}: {h.displayVal} {activityMetricMode === "avg" && numDays > 1 ? "avg/day" : "users"}
-                                    </div>
-                                  </div>
-                                  <div 
-                                    className={`w-full rounded-t transition-all ${
-                                      isPeak 
-                                        ? 'bg-blue-600 shadow-sm shadow-blue-200' 
-                                        : h.displayVal > 0 
-                                        ? 'bg-blue-300 hover:bg-blue-400' 
-                                        : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                                    style={{ height: `${heightPct}%` }}
-                                  />
-                                  <span className="text-[9px] text-gray-400 mt-1.5 font-mono">{h.hour}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()
-                    )}
-                  </div>
-
-                  {/* RIGHT: 7-DAY WEEK ACTIVITY BAR CHART */}
-                  <div className="p-4 rounded-xl border border-gray-100 bg-gray-50/60 flex flex-col justify-between">
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-800">Day-of-Week Distribution</h4>
-                        <p className="text-[11px] text-gray-400">Monday through Sunday</p>
-                      </div>
-                      <span className="text-[11px] font-medium text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">
-                        {activityMetricMode === "avg" ? "Avg Users / Day" : "Total Users"}
-                      </span>
-                    </div>
-
-                    {(!data.peakTimes.days || data.peakTimes.days.length === 0) ? (
-                      <p className="text-xs text-gray-400 italic py-10 text-center">Day-of-week data is aggregating...</p>
-                    ) : (
-                      (() => {
-                        const numDays = days === "1h" || days === "1" ? 1 : days === "7" ? 7 : days === "30" ? 30 : days === "90" ? 90 : days === "365" ? 365 : 30;
-                        const weekDivisor = numDays > 7 ? numDays / 7 : 1;
-                        const dayValues = data.peakTimes.days.map((d: any) => {
-                          const raw = Number(d.users) || 0;
-                          const val = activityMetricMode === "avg" && numDays > 7 ? Number((raw / weekDivisor).toFixed(1)) : raw;
-                          return { ...d, displayVal: val, rawVal: raw };
-                        });
-                        const maxDayVal = Math.max(...dayValues.map((d: any) => d.displayVal), 0.1);
-
-                        return (
-                          <div className="grid grid-cols-7 gap-2.5 items-end h-36 pt-4">
-                            {dayValues.map((d: any, i: number) => {
-                              const isPeak = d.displayVal === maxDayVal && d.displayVal > 0;
-                              const heightPct = Math.max(8, Math.round((d.displayVal / maxDayVal) * 100));
-
-                              return (
-                                <div key={i} className="flex flex-col items-center group relative h-full justify-end">
-                                  {/* Tooltip */}
-                                  <div className="absolute -top-8 hidden group-hover:flex flex-col items-center z-20 pointer-events-none">
-                                    <div className="bg-gray-900 text-white text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
-                                      {d.day}: {d.displayVal} {activityMetricMode === "avg" && numDays > 7 ? "avg/day" : "visitors"}
-                                    </div>
-                                  </div>
-                                  <div 
-                                    className={`w-full rounded-t transition-all ${
-                                      isPeak 
-                                        ? 'bg-blue-600 shadow-md shadow-blue-200' 
-                                        : d.displayVal > 0 
-                                        ? 'bg-blue-300 hover:bg-blue-400' 
-                                        : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                                    style={{ height: `${heightPct}%` }}
-                                  />
-                                  <span className={`text-[11px] mt-2 font-medium truncate ${isPeak ? 'text-blue-700 font-bold' : 'text-gray-500'}`}>
-                                    {d.short || d.day.slice(0, 3)}
-                                  </span>
-                                  <span className="text-[10px] text-gray-400 font-mono">
-                                    {d.displayVal}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()
-                    )}
-                  </div>
-
-                </div>
-              </div>
-            )}
-
             {/* CANDIDATE APPLICATION & CONVERSION FUNNEL */}
             {data.funnel && (
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
@@ -894,68 +1506,122 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* FIRMS DEMAND LEADERBOARD */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>🏢 Top Architecture Firms Leaderboard</span>
+                        <InfoTooltip text="Architectural practices ranked by candidate engagement, job views, shares, and saved listings." />
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Firms with highest candidate views, job shares, and engagement
+                        {firmLeaderboardMode === "trending"
+                          ? `Ranked 100% by candidate shares & saves in ${days === '1h' ? 'the last hour' : days === '1' ? 'the last 24 hours' : days === '7' ? 'the last 7 days' : days === '30' ? 'the last 30 days' : 'this period'}`
+                          : "All-time leaderboard ranked 100% by candidate shares and saves"}
                       </p>
                     </div>
-                    <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
-                      Top {data.topFirms ? data.topFirms.length : 0}
-                    </span>
+
+                    <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold shrink-0">
+                      <button 
+                        type="button"
+                        onClick={() => setFirmLeaderboardMode("trending")} 
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🕒 Recent / Trending
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setFirmLeaderboardMode("overall")} 
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🏆 Overall (All-Time)
+                      </button>
+                    </div>
                   </div>
 
-                  {(!data.topFirms || data.topFirms.length === 0) ? (
-                    <p className="text-xs text-gray-400 italic py-8 text-center">No firm data available for this period.</p>
-                  ) : (
-                    <div className="divide-y divide-gray-100">
-                      {data.topFirms.map((firm: any, i: number) => {
-                        const rankMedals = ["🥇", "🥈", "🥉"];
-                        return (
-                          <div key={i} className="py-3 flex items-center justify-between gap-3 group">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <span className="w-7 text-center font-bold text-sm shrink-0">
-                                {i < 3 ? rankMedals[i] : <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>}
-                              </span>
-                              <div className="min-w-0">
-                                <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition">
-                                  {firm.name}
-                                </p>
-                                <p className="text-[11px] text-gray-400 truncate">
-                                  📍 {firm.locations} {firm.positions && firm.positions.length > 0 ? `• ${firm.positions.join(", ")}` : ""}
-                                </p>
-                              </div>
-                            </div>
+                  {(() => {
+                    const displayedFirms = firmLeaderboardMode === "trending" 
+                      ? (data.topFirms || []) 
+                      : (data.overallTopFirms || data.topFirms || []);
 
-                            <div className="flex items-center gap-3 shrink-0 text-right">
-                              <div className="hidden sm:block">
-                                <p className="text-xs font-semibold text-gray-700">{firm.totalJobs} {firm.totalJobs === 1 ? 'job' : 'jobs'}</p>
-                                <p className="text-[10px] text-gray-400">{firm.totalShares + firm.totalSaves} interactions</p>
+                    if (!displayedFirms || displayedFirms.length === 0) {
+                      return (
+                        <div className="py-10 text-center bg-gray-50/60 rounded-xl border border-dashed border-gray-200 my-4">
+                          <p className="text-gray-600 text-xs font-semibold">No candidate shares or saves recorded for firms in this timeframe.</p>
+                          <p className="text-gray-400 text-[11px] mt-1">Switch to <strong>Overall (All-Time)</strong> to see which firms candidates engaged with most.</p>
+                          <button 
+                            type="button" 
+                            onClick={() => setFirmLeaderboardMode("overall")} 
+                            className="mt-3 px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-bold hover:bg-black transition cursor-pointer"
+                          >
+                            View All-Time Leaderboard ➔
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="divide-y divide-gray-100 overflow-y-auto pr-1 max-h-[350px]">
+                        {displayedFirms.map((firm: any, i: number) => {
+                          const rankMedals = ["🥇", "🥈", "🥉"];
+                          const isTrendingActive = firmLeaderboardMode === "trending";
+
+                          return (
+                            <div key={i} className="py-3 flex items-center justify-between gap-3 group">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="w-7 text-center font-bold text-sm shrink-0">
+                                  {i < 3 ? rankMedals[i] : <span className="text-xs text-gray-400 font-mono">#{i + 1}</span>}
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-gray-900 text-sm truncate group-hover:text-blue-600 transition">
+                                    {firm.name}
+                                  </p>
+                                  <p className="text-[11px] text-gray-400 truncate">
+                                    📍 {firm.locations} {firm.positions && firm.positions.length > 0 ? `• ${firm.positions.join(", ")}` : ""}
+                                  </p>
+                                </div>
                               </div>
-                              <div className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-bold">
-                                {firm.engagementScore} pts
+
+                              <div className="flex items-center gap-3 shrink-0 text-right">
+                                <div className="hidden sm:block">
+                                  <p className="text-xs font-semibold text-gray-700">
+                                    {isTrendingActive ? (
+                                      <span className="text-emerald-700 font-bold">+{firm.periodInteractions} interaction${firm.periodInteractions !== 1 ? 's' : ''}</span>
+                                    ) : (
+                                      <span className="text-gray-900 font-bold">{firm.totalInteractions} interaction${firm.totalInteractions !== 1 ? 's' : ''}</span>
+                                    )}
+                                  </p>
+                                  <p className="text-[10px] text-gray-400">
+                                    {isTrendingActive 
+                                      ? `${firm.periodShares || 0} shares · ${firm.periodSaves || 0} saves` 
+                                      : `${firm.totalShares || 0} shares · ${firm.totalSaves || 0} saves`}
+                                  </p>
+                                </div>
+                                <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                  isTrendingActive 
+                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200" 
+                                    : "bg-blue-50 text-blue-700"
+                                }`}>
+                                  {isTrendingActive ? `${firm.periodScore} pts` : `${firm.engagementScore} pts`}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
               {/* EXPERIENCE LEVEL DEMAND VS SUPPLY RADAR */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>⚖️ Experience Level Demand vs. Supply</span>
+                        <InfoTooltip text="Compares candidate search volume (demand) against available posted vacancies (supply) across career seniority tiers." />
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5">
                         Candidate search interest compared to actual posted job inventory
@@ -966,17 +1632,17 @@ export default function AnalyticsPage() {
                   {(!data.experienceGap || data.experienceGap.length === 0) ? (
                     <p className="text-xs text-gray-400 italic py-8 text-center">No experience data available for this period.</p>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-2.5 overflow-y-auto pr-1 max-h-[350px]">
                       {data.experienceGap.map((tier: any, i: number) => {
                         const isShortage = tier.statusColor === "amber";
                         const isSurplus = tier.statusColor === "blue";
 
                         return (
-                          <div key={i} className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50">
-                            <div className="flex justify-between items-start mb-2">
+                          <div key={i} className="p-3 rounded-xl border border-gray-100 bg-gray-50/50">
+                            <div className="flex justify-between items-start mb-1.5">
                               <div>
                                 <h4 className="font-bold text-gray-900 text-sm">{tier.tier}</h4>
-                                <p className="text-[11px] text-gray-400">{tier.subtitle}</p>
+                                <p className="text-[10px] text-gray-400">{tier.subtitle}</p>
                               </div>
                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                 isShortage ? "bg-amber-100 text-amber-800" : isSurplus ? "bg-blue-100 text-blue-800" : "bg-emerald-100 text-emerald-800"
@@ -986,9 +1652,9 @@ export default function AnalyticsPage() {
                             </div>
 
                             {/* Comparison Bars */}
-                            <div className="space-y-1.5 mt-3">
+                            <div className="space-y-1.5 mt-2">
                               <div>
-                                <div className="flex justify-between text-[11px] mb-0.5">
+                                <div className="flex justify-between text-[10px] mb-0.5">
                                   <span className="text-gray-500 font-medium">Candidate Search Demand</span>
                                   <span className="font-bold text-gray-800">{tier.demandPct}% ({tier.demandCount} searches)</span>
                                 </div>
@@ -998,7 +1664,7 @@ export default function AnalyticsPage() {
                               </div>
 
                               <div>
-                                <div className="flex justify-between text-[11px] mb-0.5">
+                                <div className="flex justify-between text-[10px] mb-0.5">
                                   <span className="text-gray-500 font-medium">Posted Job Supply</span>
                                   <span className="font-bold text-gray-800">{tier.supplyPct}% ({tier.supplyCount} jobs)</span>
                                 </div>
@@ -1029,6 +1695,7 @@ export default function AnalyticsPage() {
                     >
                       <span>📄</span>
                       <span>Top Pages (Views)</span>
+                      <InfoTooltip text="Most viewed web pages across Trapped Into Architecture in this timeframe." />
                     </button>
                     <button 
                       onClick={() => setPageMode("landing")} 
@@ -1036,6 +1703,7 @@ export default function AnalyticsPage() {
                     >
                       <span>🚪</span>
                       <span>Entry Doors (First Visited)</span>
+                      <InfoTooltip text="Initial landing pages where visitors first arrived at the website." />
                     </button>
                   </div>
                   {pageMode === "views" && (
@@ -1156,7 +1824,10 @@ export default function AnalyticsPage() {
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div>
-                    <h3 className="text-lg font-bold">Inbound Traffic &amp; Referrals</h3>
+                    <h3 className="text-lg font-bold flex items-center">
+                    <span>Inbound Traffic &amp; Referrals</span>
+                    <InfoTooltip text="External channels, apps, and websites driving candidate traffic to Trapped Into Architecture." />
+                  </h3>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {trafficTab === "outside" 
                         ? "External apps & websites bringing visitors (WhatsApp, Instagram, etc.)" 
@@ -1328,115 +1999,169 @@ export default function AnalyticsPage() {
                 </div>
               </div>
 
-              {/* ACQUISITION CHANNELS */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h3 className="text-lg font-bold">Acquisition Channels</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">High-level audience discovery mix</p>
+              {/* ACQUISITION CHANNELS (LEVELED WITH COUNTRIES) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>Acquisition Channels</span>
+                        <InfoTooltip text="High-level marketing channel breakdown (Organic Search, Direct, Social Media, Referrals)." />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">High-level audience discovery mix</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[270px]">
+                    {(!data.channels || data.channels.length === 0) && <p className="text-gray-400 text-sm">No channel data available.</p>}
+                    {data.channels && (() => {
+                      const maxCh = Math.max(...data.channels.map((c: any) => Number(c.sessions) || 0));
+                      return data.channels.map((item: any, i: number) => {
+                        const ch = (item.channel || "").toLowerCase();
+                        let label = item.channel;
+                        let icon = "🌐";
+                        if (ch.includes("social")) { label = "Organic Social (WhatsApp, FB, Insta, LinkedIn)"; icon = "📱"; }
+                        else if (ch.includes("direct")) { label = "Direct (Typing URL, Bookmarks)"; icon = "🔗"; }
+                        else if (ch.includes("search")) { label = "Organic Search (Google, Bing)"; icon = "🔍"; }
+                        else if (ch.includes("referral")) { label = "Referrals (Partner websites)"; icon = "🌐"; }
+
+                        const val = Number(item.sessions) || 0;
+
+                        return (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium flex items-center gap-1.5 truncate max-w-[75%]">
+                                <span>{icon}</span>
+                                <span className="truncate">{label}</span>
+                              </span>
+                              <span className="font-semibold text-gray-700">{val} {val === 1 ? 'session' : 'sessions'}</span>
+                            </div>
+                            <ProgressBar value={val} max={maxCh || 1} />
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
-                <div className="space-y-4">
-                  {(!data.channels || data.channels.length === 0) && <p className="text-gray-400 text-sm">No channel data available.</p>}
-                  {data.channels && (() => {
-                    const maxCh = Math.max(...data.channels.map((c: any) => Number(c.sessions) || 0));
-                    return data.channels.map((item: any, i: number) => {
-                      const ch = (item.channel || "").toLowerCase();
-                      let label = item.channel;
-                      let icon = "🌐";
-                      if (ch.includes("social")) { label = "Organic Social (WhatsApp, FB, Insta, LinkedIn)"; icon = "📱"; }
-                      else if (ch.includes("direct")) { label = "Direct (Typing URL, Bookmarks)"; icon = "🔗"; }
-                      else if (ch.includes("search")) { label = "Organic Search (Google, Bing)"; icon = "🔍"; }
-                      else if (ch.includes("referral")) { label = "Referrals (Partner websites)"; icon = "🌐"; }
+              </div>
 
-                      const val = Number(item.sessions) || 0;
+              {/* COUNTRIES & CITIES (LEVELED WITH ACQUISITION CHANNELS & SCROLLABLE) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>{geoTab === "countries" ? "Countries" : "Top Cities"}</span>
+                        <InfoTooltip text={geoTab === "countries" ? "Geographic countries where candidate traffic originates based on visitor IP." : "Specific cities where visitor traffic originates."} />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {geoTab === "countries" ? "Candidate visitor distribution by country" : "Top visitor cities across the globe"}
+                      </p>
+                    </div>
+                    <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setGeoTab("countries")}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "countries" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🌍 Countries
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGeoTab("cities")}
+                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "cities" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                      >
+                        🏙️ Cities
+                      </button>
+                    </div>
+                  </div>
 
-                      return (
-                        <div key={i} className="text-sm">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-medium flex items-center gap-1.5 truncate max-w-[75%]">
-                              <span>{icon}</span>
-                              <span>{label}</span>
-                            </span>
-                            <span className="font-semibold text-gray-700">{val} {val === 1 ? 'session' : 'sessions'}</span>
+                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[270px]">
+                    {geoTab === "countries" ? (
+                      <>
+                        {(!data.countries || data.countries.length === 0) && <p className="text-gray-400 text-sm">No country data available.</p>}
+                        {data.countries && data.countries.map((item: any, i: number) => (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium truncate">{item.country}</span>
+                              <span className="font-semibold text-gray-700">{item.users}</span>
+                            </div>
+                            <ProgressBar value={item.users} max={Math.max(...data.countries.map((p: any) => p.users), 1)} />
                           </div>
-                          <ProgressBar value={val} max={maxCh || 1} />
+                        ))}
+                      </>
+                    ) : (
+                      <>
+                        {(!data.cities || data.cities.length === 0) && <p className="text-gray-400 text-sm">No city data available.</p>}
+                        {data.cities && data.cities.map((item: any, i: number) => (
+                          <div key={i} className="text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium truncate">{item.city}</span>
+                              <span className="font-semibold text-gray-700">{item.users}</span>
+                            </div>
+                            <ProgressBar value={item.users} max={Math.max(...data.cities.map((p: any) => p.users), 1)} />
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* DEVICES (LEVELED WITH BROWSERS) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>Devices</span>
+                        <InfoTooltip text="Device hardware used by visitors (Desktop computers, Mobile smartphones, Tablets)." />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">Visitor platform breakdown</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[230px]">
+                    {!data.devices || data.devices.length === 0 ? <p className="text-gray-400 text-sm">No device data available.</p> : null}
+                    {data.devices && data.devices.map((item: any, i: number) => (
+                      <div key={i} className="text-sm">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium capitalize">{item.deviceCategory}</span>
+                          <span className="font-semibold text-gray-700">{item.users}</span>
                         </div>
-                      );
-                    });
-                  })()}
+                        <ProgressBar value={item.users} max={Math.max(...data.devices.map((p: any) => p.users), 1)} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* COUNTRIES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Countries</h3>
-                <div className="space-y-4">
-                  {data.countries.length === 0 && <p className="text-gray-400 text-sm">No data available.</p>}
-                  {data.countries.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">{item.country}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
-                      </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.countries.map((p: any) => p.users))} />
+              {/* BROWSERS (LEVELED WITH DEVICES & SCROLLABLE) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+                <div>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h3 className="text-lg font-bold flex items-center">
+                        <span>Browsers</span>
+                        <InfoTooltip text="Web browsers used by visitors to access the website (Chrome, Safari, Edge, Firefox, etc.)." />
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">Browser client distribution</p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* BROWSERS */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Browsers</h3>
-                <div className="space-y-4">
-                  {data.browsers.length === 0 && <p className="text-gray-400 text-sm">No data available.</p>}
-                  {data.browsers.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">{item.browser}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
+                  </div>
+                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[230px]">
+                    {(!data.browsers || data.browsers.length === 0) && <p className="text-gray-400 text-sm">No browser data available.</p>}
+                    {data.browsers && data.browsers.map((item: any, i: number) => (
+                      <div key={i} className="text-sm">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-medium truncate">{item.browser}</span>
+                          <span className="font-semibold text-gray-700">{item.users}</span>
+                        </div>
+                        <ProgressBar value={item.users} max={Math.max(...data.browsers.map((p: any) => p.users), 1)} />
                       </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.browsers.map((p: any) => p.users))} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-           
-              {/* DEVICES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Devices</h3>
-                <div className="space-y-4">
-                  {!data.devices || data.devices.length === 0 ? <p className="text-gray-400 text-sm">No data available.</p> : null}
-                  {data.devices && data.devices.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium capitalize">{item.deviceCategory}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
-                      </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.devices.map((p: any) => p.users))} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* CITIES */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-bold mb-4">Top Cities</h3>
-                <div className="space-y-4">
-                  {!data.cities || data.cities.length === 0 ? <p className="text-gray-400 text-sm">No data available.</p> : null}
-                  {data.cities && data.cities.map((item: any, i: number) => (
-                    <div key={i} className="text-sm">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-medium">{item.city}</span>
-                        <span className="font-semibold text-gray-700">{item.users}</span>
-                      </div>
-                      <ProgressBar value={item.users} max={Math.max(...data.cities.map((p: any) => p.users))} />
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
  </div>
+          </div>
           </div>
         ) : null}
       

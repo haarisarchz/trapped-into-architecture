@@ -239,7 +239,17 @@ export default function AdminMailsPage() {
     );
   });
 
-  const inboxRecords = allRecords.filter((item) => !sentRecords.includes(item));
+  const inboxRecords = allRecords.filter((item) => {
+    if (sentRecords.includes(item)) return false;
+    const subj = (item.subject || "").trim();
+    // Exclude public visitor contact queries & suggestions (they belong to /admin/contact)
+    const isVisitorInquiry =
+      subj === "General Inquiry" ||
+      subj.startsWith("[Suggestion]") ||
+      subj.toLowerCase().includes("suggestion") ||
+      subj === "System Email Verification Test";
+    return !isVisitorInquiry;
+  });
 
   // Filter sent records
   const filteredSent = sentRecords.filter((item) => {
@@ -363,7 +373,7 @@ export default function AdminMailsPage() {
               }`}
             >
               <Mail size={13} />
-              <span>Inbound Replies</span>
+              <span>System & Inbound Alerts</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${activeTab === "inbox" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"}`}>
                 {inboxRecords.length}
               </span>
@@ -639,23 +649,112 @@ export default function AdminMailsPage() {
 
         {/* TAB 3: INBOUND REPLIES */}
         {activeTab === "inbox" && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center shadow-2xs">
-            <Mail size={32} className="mx-auto text-gray-300 mb-2" />
-            <h4 className="text-sm font-extrabold text-gray-900">Direct Inbound Email Channel</h4>
-            <p className="text-xs text-gray-500 max-w-md mx-auto mt-1 leading-relaxed">
-              When architects or practice representatives reply directly to notifications, messages route into your administrative email accounts (<span className="font-mono text-gray-700">admin.ti2a@gmail.com</span>).
-            </p>
-            <div className="mt-5">
-              <a
-                href="https://mail.google.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-black text-white hover:bg-gray-800 rounded-xl text-xs font-bold transition shadow-xs"
-              >
-                <span>Open Admin Gmail →</span>
-                <ExternalLink size={12} />
-              </a>
+          <div className="space-y-4">
+            {/* INBOUND CHANNEL BANNER */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 shrink-0">
+                  <Mail size={18} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-gray-900">Direct Inbound Email Channel</h4>
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Direct replies to platform notices route to <span className="font-mono text-gray-700 font-semibold">admin.ti2a@gmail.com</span>. Website contact submissions and incoming registration alerts appear below.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                <Link
+                  href="/admin/contact"
+                  className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition whitespace-nowrap"
+                >
+                  Contact Form Center →
+                </Link>
+                <a
+                  href="https://mail.google.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-black text-white hover:bg-gray-800 rounded-xl text-xs font-bold transition shadow-xs whitespace-nowrap"
+                >
+                  <span>Open Admin Gmail</span>
+                  <ExternalLink size={12} />
+                </a>
+              </div>
             </div>
+
+            {/* INBOUND RECORDS LIST */}
+            {inboxRecords.length === 0 ? (
+              <div className="p-12 text-center bg-white border border-gray-200 rounded-2xl text-xs text-gray-400">
+                No inbound replies or contact records in database.
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs divide-y divide-gray-100">
+                {inboxRecords.map((item) => {
+                  const cleanSnippet = (item.message || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+                  const isNewUser = item.subject === "NEW_USER_REGISTERED";
+                  const isJobPending = item.subject === "COMPANY_JOB_EMAIL_PENDING";
+                  const isSuggestion = (item.subject || "").toLowerCase().includes("suggestion");
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => { setSelectedItem(item); setModalViewMode("recipient"); }}
+                      className="px-4 py-3 hover:bg-slate-50 transition cursor-pointer flex items-center justify-between gap-3 group text-xs"
+                    >
+                      {/* SENDER */}
+                      <div className="flex items-center gap-3 min-w-[220px] max-w-[260px] shrink-0">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+                        <div className="truncate">
+                          <span className="font-extrabold text-gray-900 block truncate">{item.name || "Inbound Sender"}</span>
+                          <span className="text-[11px] text-gray-400 font-mono block truncate">{item.email}</span>
+                        </div>
+                      </div>
+
+                      {/* BADGES & SNIPPET */}
+                      <div className="flex-1 min-w-0 flex items-center gap-2">
+                        {isNewUser && (
+                          <span className="shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                            New Registration
+                          </span>
+                        )}
+                        {isJobPending && (
+                          <span className="shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                            Pending Dispatch
+                          </span>
+                        )}
+                        {isSuggestion && (
+                          <span className="shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Suggestion
+                          </span>
+                        )}
+                        {!isNewUser && !isJobPending && !isSuggestion && (
+                          <span className="shrink-0 text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200">
+                            {item.subject || "Inbound Message"}
+                          </span>
+                        )}
+                        <span className="truncate text-gray-600 font-normal">
+                          {cleanSnippet}
+                        </span>
+                      </div>
+
+                      {/* DATE + DELETE */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                          {new Date(item.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <button
+                          onClick={(e) => deleteRecord(item.id, e)}
+                          className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-600 transition"
+                          title="Delete record"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

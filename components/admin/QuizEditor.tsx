@@ -6,6 +6,7 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Save, Sparkles, UploadCloud, 
   Loader2, CheckCircle2, ArrowLeft, Image as ImageIcon, HelpCircle, Eye, RefreshCw, Wand2
 } from "lucide-react";
+import { getQuestionDifficulty } from "@/lib/quizDifficulty";
 
 interface Question {
   id?: string;
@@ -586,7 +587,12 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-gray-900 truncate">
-                    {q.question_text}
+                    <span className="inline-flex items-center gap-2">
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200">
+                        {getQuestionDifficulty(q.correct_answer || q.question_text) === "easy" ? "🟢 Easy" : getQuestionDifficulty(q.correct_answer || q.question_text) === "hard" ? "🔴 Hard" : "🟡 Medium"}
+                      </span>
+                      <span>{q.question_text}</span>
+                    </span>
                   </p>
                   
                   {q.question_type === "choose" ? (

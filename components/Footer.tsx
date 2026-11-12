@@ -13,6 +13,7 @@ import {
   InstagramBrandIcon,
   XBrandIcon,
 } from "@/components/icons/BrandIcons";
+import { parseChannels, DEFAULT_WHATSAPP_CHANNELS, DEFAULT_TELEGRAM_CHANNELS } from "@/lib/channels";
 
 const ensureHttp = (url?: string) => {
   if (!url) return "";
@@ -77,10 +78,13 @@ export default function Footer() {
     }
   };
 
+  const primaryWhatsapp = parseChannels(settings?.whatsapp_channel_url, DEFAULT_WHATSAPP_CHANNELS)[0]?.url;
+  const primaryTelegram = parseChannels(settings?.website_url, DEFAULT_TELEGRAM_CHANNELS)[0]?.url;
+
   const handleJobAlerts = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (settings?.whatsapp_channel_url) {
-      window.open(settings.whatsapp_channel_url, "_blank");
+    if (primaryWhatsapp) {
+      window.open(primaryWhatsapp, "_blank");
     } else {
       window.open("https://chat.whatsapp.com/", "_blank");
     }
@@ -169,9 +173,9 @@ export default function Footer() {
           </div>
 
           <div className="mt-3.5 flex flex-wrap items-center gap-3 text-gray-400">
-            {settings?.whatsapp_channel_url && (
+            {primaryWhatsapp && (
               <a
-                href={ensureHttp(settings.whatsapp_channel_url)}
+                href={ensureHttp(primaryWhatsapp)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition hover:scale-110 transform"
@@ -213,9 +217,9 @@ export default function Footer() {
                 <LinkedInBrandIcon size={24} />
               </a>
             )}
-            {settings?.website_url && (
+            {primaryTelegram && (
               <a
-                href={ensureHttp(settings.website_url)}
+                href={ensureHttp(primaryTelegram)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:opacity-80 transition hover:scale-110 transform"
@@ -262,6 +266,11 @@ export default function Footer() {
             <li>
               <Link href="/companies" className="hover:text-white transition block">
                 Companies Directory
+              </Link>
+            </li>
+            <li>
+              <Link href="/institutions" className="hover:text-white transition block">
+                Architecture Institutions (COA)
               </Link>
             </li>
             <li>

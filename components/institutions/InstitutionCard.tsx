@@ -1,0 +1,232 @@
+"use client";
+
+import React from "react";
+import Link from "next/link";
+import { MapPin, Building2, ExternalLink, ArrowRight, Check, Plus, Award, ShieldCheck } from "lucide-react";
+
+interface InstitutionCardProps {
+  institution: any;
+  isCompared?: boolean;
+  onToggleCompare?: (inst: any) => void;
+  canCompare?: boolean;
+}
+
+export default function InstitutionCard({
+  institution,
+  isCompared = false,
+  onToggleCompare,
+  canCompare = true,
+}: InstitutionCardProps) {
+  const latestRecord = institution.latest_record;
+  const bestRank = institution.best_rank;
+
+  const isClosed =
+    (institution.institution_type && /closed|closure|discontinued/i.test(institution.institution_type)) ||
+    (latestRecord && latestRecord.approval_status && /closed|closure|discontinued/i.test(latestRecord.approval_status)) ||
+    !latestRecord ||
+    (latestRecord && typeof latestRecord.approved_intake === "number" && latestRecord.approved_intake <= 0);
+  const isProgressive = institution.institution_type && /progressive closure/i.test(institution.institution_type);
+  const closureYearMatch = institution.institution_type ? institution.institution_type.match(/(\d{4}[-–_]\d{4}|\b20\d\d\b)/) : null;
+  const shortClosureYr = closureYearMatch ? closureYearMatch[1].replace(/^20/, "").replace(/[-–_]20/, "-") : "";
+
+  const locationString = [institution.locality, institution.city || institution.district, institution.state]
+    .filter(Boolean)
+    .join(", ");
+
+  const multiYearApproval = React.useMemo(() => {
+    const recs = institution.annual_records || [];
+    const validFuture = recs.filter(
+      (r: any) =>
+        r.academic_year &&
+        r.academic_year >= "2027-2028" &&
+        r.approved_intake > 0 &&
+        !/closure|discontinued|withdrawn/i.test(r.approval_status || "")
+    );
+    if (validFuture.length === 0) return null;
+    const sorted = Array.from(new Set(validFuture.map((r: any) => r.academic_year))).sort();
+    const maxYear = sorted[sorted.length - 1];
+    const shortMaxYr = String(maxYear || "").replace(/^20/, "").replace(/[-–_]20/, "-");
+    const ugRec = validFuture.find((r: any) => (r.course_name || "B.Arch") === "B.Arch");
+    const primary = ugRec || validFuture[0];
+    return {
+      maxYear,
+      shortMaxYr,
+      approvedIntake: primary.approved_intake,
+      courseName: primary.course_name || "B.Arch",
+    };
+  }, [institution.annual_records]);
+
+  const offerings = React.useMemo(() => {
+    const recs = institution.annual_records || [];
+    const hasUG = recs.some((r: any) => (r.course_name || "B.Arch") === "B.Arch" || r.course_name?.includes("Bachelor"));
+    const pgSet = new Set<string>();
+    const dipSet = new Set<string>();
+    recs.forEach((r: any) => {
+      const c = r.course_name || "";
+      if (c.startsWith("M.Arch") || c.includes("Master")) pgSet.add(c);
+      if (c.includes("Diploma")) dipSet.add(c);
+    });
+    return {
+      hasUG,
+      pgCount: pgSet.size,
+      diplomaCount: dipSet.size,
+    };
+  }, [institution.annual_records]);
+
+  return (
+    <div className="group bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-200 flex flex-col justify-between">
+      <div>
+        {/* Top Badges */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            {institution.coa_code ? (
+              <span className="font-mono text-xs font-bold px-2.5 py-1 bg-black text-white rounded-md tracking-wider">
+                {institution.coa_code}
+              </span>
+            ) : null}
+            <span className="text-xs font-semibold px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md">
+              {institution.state}
+            </span>
+            {institution.institution_type === 'Polytechnic / Diploma Institution' ? (
+              <span className="text-xs font-semibold px-2.5 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-md">
+                Polytechnic
+              </span>
+            ) : null}
+            {isClosed ? (
+              <span className="text-xs font-bold px-2.5 py-1 bg-red-100 text-red-800 border border-red-200 rounded-md">
+                Closed ({shortClosureYr || "COA"})
+              </span>
+            ) : isProgressive ? (
+              <span className="text-xs font-bold px-2.5 py-1 bg-amber-100 text-amber-800 border border-amber-200 rounded-md">
+                Prog. Closure (26-27)
+              </span>
+            ) : null}
+            {multiYearApproval && !isClosed && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-md">
+                <ShieldCheck size={12} className="text-emerald-700" />
+                Approved thru {multiYearApproval.shortMaxYr}
+              </span>
+            )}
+            {bestRank && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-md">
+                <Award size={12} className="text-amber-600" />
+                NIRF #{bestRank.rank_number} ({bestRank.ranking_year})
+              </span>
+            )}
+          </div>
+
+          {/* Compare Button */}
+          {onToggleCompare && (
+            <button
+              onClick={() => onToggleCompare(institution)}
+              disabled={!isCompared && !canCompare}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition flex items-center gap-1 shrink-0 ${
+                isCompared
+                  ? "bg-black text-white border-black hover:bg-gray-800"
+                  : canCompare
+                  ? "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:bg-gray-50"
+                  : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+              }`}
+              title={isCompared ? "Remove from comparison" : canCompare ? "Add to compare" : "Maximum 3 institutions selected"}
+            >
+              {isCompared ? (
+                <>
+                  <Check size={13} />
+                  <span>Compared</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={13} />
+                  <span>Compare</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Institution Name (full name always displayed) */}
+        <h3 className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-black transition leading-snug break-words mb-2">
+          <Link href={`/institutions/${institution.slug}`}>
+            {institution.institution_name}
+          </Link>
+        </h3>
+
+        {/* Location & Affiliation */}
+        <div className="space-y-1.5 text-xs text-gray-600 mb-3">
+          <div className="flex items-center gap-1.5">
+            <MapPin size={14} className="text-gray-400 shrink-0" />
+            <span className="truncate">{locationString || "Location details pending"}</span>
+          </div>
+          {institution.affiliated_university && (
+            <div className="flex items-center gap-1.5">
+              <Building2 size={14} className="text-gray-400 shrink-0" />
+              <span className="truncate">{institution.affiliated_university}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Academic Offerings Badges */}
+        <div className="flex items-center gap-1.5 flex-wrap mb-4">
+          {offerings.hasUG && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
+              B.Arch
+            </span>
+          )}
+          {offerings.pgCount > 0 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-800 border border-purple-200">
+              M.Arch ({offerings.pgCount} {offerings.pgCount === 1 ? "course" : "courses"})
+            </span>
+          )}
+          {offerings.diplomaCount > 0 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+              Diploma ({offerings.diplomaCount} {offerings.diplomaCount === 1 ? "stream" : "streams"})
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Card Bottom: Approved Intake & Action */}
+      <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-4 mt-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider font-semibold text-gray-400">
+            {isClosed
+              ? "Admissions Status"
+              : isProgressive
+              ? "Admissions Status"
+              : multiYearApproval
+              ? `Approved Thru Session ${multiYearApproval.maxYear}`
+              : latestRecord
+              ? `Approved Intake (${latestRecord.academic_year})`
+              : "Approved Intake"}
+          </div>
+          <div className="text-sm font-extrabold mt-0.5">
+            {isClosed ? (
+              <span className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded inline-block">
+                Closed Institution
+              </span>
+            ) : multiYearApproval ? (
+              <span className="text-emerald-950">
+                {multiYearApproval.approvedIntake} <span className="text-xs font-normal text-gray-500">seats ({multiYearApproval.courseName})</span>
+              </span>
+            ) : latestRecord && latestRecord.approved_intake > 0 ? (
+              <span className="text-gray-900">
+                {latestRecord.approved_intake} <span className="text-xs font-normal text-gray-500">seats ({latestRecord.course_name || "B.Arch"})</span>
+              </span>
+            ) : (
+              <span className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded inline-block">
+                Closed Institution
+              </span>
+            )}
+          </div>
+        </div>
+
+        <Link
+          href={`/institutions/${institution.slug}`}
+          className="inline-flex items-center gap-1 text-xs font-bold text-gray-900 hover:text-blue-600 transition group-hover:translate-x-0.5 py-1.5 px-3 rounded-lg hover:bg-gray-50"
+        >
+          View Profile <ArrowRight size={13} />
+        </Link>
+      </div>
+    </div>
+  );
+}

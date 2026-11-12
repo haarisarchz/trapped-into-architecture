@@ -4,6 +4,7 @@
 import Navbar from "@/components/Navbar";
 import JobCard from "@/components/Jobcard";
 import Footer from "@/components/Footer";
+import FortnightlyBriefingBanner from "@/components/FortnightlyBriefingBanner";
 import PaginationControls from "@/components/PaginationControls";
 import { supabase } from "@/lib/supabase";
 import { EXPERIENCE_OPTIONS } from "@/app/constants/jobFilters";
@@ -91,7 +92,9 @@ function JobsPageContent() {
 
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("q") || searchParams.get("search") || ""
+  );
 
   const activeClubInfo = useMemo(() => {
     if (!searchQuery || searchQuery.trim().length < 2) return null;
@@ -103,6 +106,7 @@ function JobsPageContent() {
  const [sortBy, setSortBy] = useState("latest");
 
  const [jobs, setJobs] = useState<any[]>([]);
+  const [isJobsLoaded, setIsJobsLoaded] = useState(false);
  const [datePosted, setDatePosted] = useState("");
   const [excludeExpired, setExcludeExpired] =
   useState(false);
@@ -149,12 +153,33 @@ const [showFilters, setShowFilters] = useState(false);
   const [visiblePositionsCount, setVisiblePositionsCount] = useState(10);
   const [cityWarning, setCityWarning] = useState(false);
 
+  const [stateSearch, setStateSearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const [positionSearch, setPositionSearch] = useState("");
+
   const stateStats = getAggregatedList(jobs, 'state');
-  const displayedStates = stateStats.slice(0, visibleStatesCount);
+  const filteredStateStats = stateSearch.trim()
+    ? stateStats.filter((s) => s.name.toLowerCase().includes(stateSearch.toLowerCase().trim()))
+    : stateStats;
+  const displayedStates = stateSearch.trim()
+    ? filteredStateStats
+    : filteredStateStats.slice(0, visibleStatesCount);
+
   const cityStats = getAggregatedList(jobs, 'city', (job: any) => selectedStates.length === 0 || selectedStates.includes(job.state));
-  const displayedCities = cityStats.slice(0, visibleCitiesCount);
+  const filteredCityStats = citySearch.trim()
+    ? cityStats.filter((c) => c.name.toLowerCase().includes(citySearch.toLowerCase().trim()))
+    : cityStats;
+  const displayedCities = citySearch.trim()
+    ? filteredCityStats
+    : filteredCityStats.slice(0, visibleCitiesCount);
+
   const positionStats = getAggregatedList(jobs, 'position');
-  const displayedPositions = positionStats.slice(0, visiblePositionsCount);
+  const filteredPositionStats = positionSearch.trim()
+    ? positionStats.filter((p) => p.name.toLowerCase().includes(positionSearch.toLowerCase().trim()))
+    : positionStats;
+  const displayedPositions = positionSearch.trim()
+    ? filteredPositionStats
+    : filteredPositionStats.slice(0, visiblePositionsCount);
 
   useEffect(() => {
 
@@ -205,9 +230,8 @@ const [showFilters, setShowFilters] = useState(false);
           share_count: job.share_count || 0,
         }))
       );
-
     }
-
+    setIsJobsLoaded(true);
   };
 
   fetchJobs();
@@ -231,6 +255,9 @@ const [showFilters, setShowFilters] = useState(false);
             setSelectedPositions([]);
             setSelectedQualifications([]);
             setSelectedSkills([]);
+            setStateSearch("");
+            setCitySearch("");
+            setPositionSearch("");
             setVisibleStatesCount(10);
             setVisibleCitiesCount(10);
             setVisiblePositionsCount(10);
@@ -253,180 +280,228 @@ const [showFilters, setShowFilters] = useState(false);
       <div className="p-6 overflow-y-auto flex-1 space-y-8 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full">
     
       {/* STATE */}
-
-    <div>
-
-      <h3 className="font-semibold mb-3">
-        State ({stateStats.length})
-      </h3>
-      <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-        {displayedStates.map((stateObj) => (
-          <label key={stateObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={selectedStates.includes(stateObj.name)}
-                onChange={(e) => {
-                  if (e.target.checked) setSelectedStates([...selectedStates, stateObj.name]);
-                  else setSelectedStates(selectedStates.filter((s) => s !== stateObj.name));
-                  setCityWarning(false);
-                }}
-                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-              />
-              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{stateObj.name}</span>
-            </div>
-            <span className="text-gray-400 text-xs font-medium">({stateObj.count})</span>
-          </label>
-        ))}
-        {stateStats.length > 10 && (
-          visibleStatesCount < stateStats.length ? (
-            <button 
-              type="button" 
-              onClick={() => setVisibleStatesCount((prev) => prev + 10)} 
-              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+      <div>
+        <h3 className="font-semibold mb-2">
+          State
+        </h3>
+        <div className="relative mb-2.5">
+          <input
+            type="text"
+            placeholder="Search state..."
+            value={stateSearch}
+            onChange={(e) => setStateSearch(e.target.value)}
+            className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black placeholder-gray-400 bg-gray-50/50"
+          />
+          {stateSearch && (
+            <button
+              type="button"
+              onClick={() => setStateSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
             >
-              Show More
+              ×
             </button>
+          )}
+        </div>
+        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+          {displayedStates.length === 0 ? (
+            <p className="text-xs text-gray-400 py-1">No matching states</p>
           ) : (
-            <button 
-              type="button" 
-              onClick={() => setVisibleStatesCount(10)} 
-              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
-            >
-              Show Less
-            </button>
-          )
-        )}
-      </div>
-
-    </div>
-
-    {/* CITY */}
-
-    <div>
-
-      <h3 className="font-semibold mb-3">
-        City ({cityStats.length})
-      </h3>
-      <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-        {displayedCities.map((cityObj) => (
-          <label key={cityObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={selectedCities.includes(cityObj.name)}
-                onChange={(e) => {
-                  if (e.target.checked) setSelectedCities([...selectedCities, cityObj.name]);
-                  else setSelectedCities(selectedCities.filter((c) => c !== cityObj.name));
-                }}
-                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-              />
-              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{cityObj.name}</span>
-            </div>
-            <span className="text-gray-400 text-xs font-medium">({cityObj.count})</span>
-          </label>
-        ))}
-        {cityStats.length > 10 && (
-          <div>
-            {visibleCitiesCount < cityStats.length ? (
-              <div>
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    if (selectedStates.length === 0) {
-                      setCityWarning(true);
-                    } else {
-                      setVisibleCitiesCount((prev) => prev + 10);
-                      setCityWarning(false);
-                    }
-                  }} 
-                  className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
-                >
-                  Show More
-                </button>
-                {cityWarning && selectedStates.length === 0 && (
-                  <div className="text-amber-800 bg-amber-50 border border-amber-200 rounded px-2.5 py-1 text-xs font-medium mt-1.5 flex items-center gap-1.5">
-                    <span>⚠️</span> Select state to see more
-                  </div>
-                )}
-                {visibleCitiesCount > 10 && (
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      setVisibleCitiesCount(10);
-                      setCityWarning(false);
-                    }} 
-                    className="text-gray-500 hover:underline text-xs mt-1.5 font-medium block"
-                  >
-                    Show Less
-                  </button>
-                )}
-              </div>
+            displayedStates.map((stateObj) => (
+              <label key={stateObj.name} className="flex items-center gap-3 w-full pr-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={selectedStates.includes(stateObj.name)}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedStates([...selectedStates, stateObj.name]);
+                    else setSelectedStates(selectedStates.filter((s) => s !== stateObj.name));
+                    setCityWarning(false);
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                />
+                <span className="truncate text-gray-700 group-hover:text-black transition-colors">{stateObj.name}</span>
+              </label>
+            ))
+          )}
+          {!stateSearch.trim() && stateStats.length > 10 && (
+            visibleStatesCount < stateStats.length ? (
+              <button 
+                type="button" 
+                onClick={() => setVisibleStatesCount((prev) => prev + 10)} 
+                className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+              >
+                Show More
+              </button>
             ) : (
               <button 
                 type="button" 
-                onClick={() => {
-                  setVisibleCitiesCount(10);
-                  setCityWarning(false);
-                }} 
+                onClick={() => setVisibleStatesCount(10)} 
                 className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
               >
                 Show Less
               </button>
-            )}
-          </div>
-        )}
+            )
+          )}
+        </div>
       </div>
 
-    </div>
-
-    {/* POSITION */}
-
-    <div>
-
-      <h3 className="font-semibold mb-3">
-        Position ({positionStats.length})
-      </h3>
-      <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-        {displayedPositions.map((posObj) => (
-          <label key={posObj.name} className="flex items-center justify-between gap-2 w-full pr-2 cursor-pointer group">
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                checked={selectedPositions.includes(posObj.name)}
-                onChange={(e) => {
-                  if (e.target.checked) setSelectedPositions([...selectedPositions, posObj.name]);
-                  else setSelectedPositions(selectedPositions.filter((p) => p !== posObj.name));
-                }}
-                className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
-              />
-              <span className="truncate text-gray-700 group-hover:text-black transition-colors">{posObj.name}</span>
-            </div>
-            <span className="text-gray-400 text-xs font-medium">({posObj.count})</span>
-          </label>
-        ))}
-        {positionStats.length > 10 && (
-          visiblePositionsCount < positionStats.length ? (
-            <button 
-              type="button" 
-              onClick={() => setVisiblePositionsCount((prev) => prev + 10)} 
-              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+      {/* CITY */}
+      <div>
+        <h3 className="font-semibold mb-2">
+          City
+        </h3>
+        <div className="relative mb-2.5">
+          <input
+            type="text"
+            placeholder="Search city..."
+            value={citySearch}
+            onChange={(e) => setCitySearch(e.target.value)}
+            className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black placeholder-gray-400 bg-gray-50/50"
+          />
+          {citySearch && (
+            <button
+              type="button"
+              onClick={() => setCitySearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
             >
-              Show More
+              ×
             </button>
+          )}
+        </div>
+        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+          {displayedCities.length === 0 ? (
+            <p className="text-xs text-gray-400 py-1">No matching cities</p>
           ) : (
-            <button 
-              type="button" 
-              onClick={() => setVisiblePositionsCount(10)} 
-              className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
-            >
-              Show Less
-            </button>
-          )
-        )}
+            displayedCities.map((cityObj) => (
+              <label key={cityObj.name} className="flex items-center gap-3 w-full pr-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={selectedCities.includes(cityObj.name)}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedCities([...selectedCities, cityObj.name]);
+                    else setSelectedCities(selectedCities.filter((c) => c !== cityObj.name));
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                />
+                <span className="truncate text-gray-700 group-hover:text-black transition-colors">{cityObj.name}</span>
+              </label>
+            ))
+          )}
+          {!citySearch.trim() && cityStats.length > 10 && (
+            <div>
+              {visibleCitiesCount < cityStats.length ? (
+                <div>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      if (selectedStates.length === 0) {
+                        setCityWarning(true);
+                      } else {
+                        setVisibleCitiesCount((prev) => prev + 10);
+                        setCityWarning(false);
+                      }
+                    }} 
+                    className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+                  >
+                    Show More
+                  </button>
+                  {cityWarning && selectedStates.length === 0 && (
+                    <div className="text-amber-800 bg-amber-50 border border-amber-200 rounded px-2.5 py-1 text-xs font-medium mt-1.5 flex items-center gap-1.5">
+                      <span>⚠️</span> Select state to see more
+                    </div>
+                  )}
+                  {visibleCitiesCount > 10 && (
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setVisibleCitiesCount(10);
+                        setCityWarning(false);
+                      }} 
+                      className="text-gray-500 hover:underline text-xs mt-1.5 font-medium block"
+                    >
+                      Show Less
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setVisibleCitiesCount(10);
+                    setCityWarning(false);
+                  }} 
+                  className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+                >
+                  Show Less
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-    </div>
+      {/* POSITION */}
+      <div>
+        <h3 className="font-semibold mb-2">
+          Position
+        </h3>
+        <div className="relative mb-2.5">
+          <input
+            type="text"
+            placeholder="Search position..."
+            value={positionSearch}
+            onChange={(e) => setPositionSearch(e.target.value)}
+            className="w-full text-xs px-2.5 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black placeholder-gray-400 bg-gray-50/50"
+          />
+          {positionSearch && (
+            <button
+              type="button"
+              onClick={() => setPositionSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+          {displayedPositions.length === 0 ? (
+            <p className="text-xs text-gray-400 py-1">No matching positions</p>
+          ) : (
+            displayedPositions.map((posObj) => (
+              <label key={posObj.name} className="flex items-center gap-3 w-full pr-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={selectedPositions.includes(posObj.name)}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedPositions([...selectedPositions, posObj.name]);
+                    else setSelectedPositions(selectedPositions.filter((p) => p !== posObj.name));
+                  }}
+                  className="w-4 h-4 rounded border-gray-300 text-black focus:ring-black"
+                />
+                <span className="truncate text-gray-700 group-hover:text-black transition-colors">{posObj.name}</span>
+              </label>
+            ))
+          )}
+          {!positionSearch.trim() && positionStats.length > 10 && (
+            visiblePositionsCount < positionStats.length ? (
+              <button 
+                type="button" 
+                onClick={() => setVisiblePositionsCount((prev) => prev + 10)} 
+                className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+              >
+                Show More
+              </button>
+            ) : (
+              <button 
+                type="button" 
+                onClick={() => setVisiblePositionsCount(10)} 
+                className="text-blue-600 hover:underline text-xs mt-2 font-medium block"
+              >
+                Show Less
+              </button>
+            )
+          )}
+        </div>
+      </div>
 
     {/* SALARY */}
         <div className="mb-8">
@@ -735,6 +810,7 @@ const [showFilters, setShowFilters] = useState(false);
 
   // Track on-site candidate searches with debouncing (1.5s after user finishes typing/filtering)
   useEffect(() => {
+    if (!isJobsLoaded) return;
     const q = searchQuery.trim();
     const city = selectedCities[0] || null;
     const state = selectedStates[0] || null;
@@ -766,7 +842,7 @@ const [showFilters, setShowFilters] = useState(false);
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCities, selectedStates, selectedPositions, filteredJobs.length]);
+  }, [isJobsLoaded, searchQuery, selectedCities, selectedStates, selectedPositions, filteredJobs.length]);
 
   return (
     <main className="min-h-screen bg-gray-100 text-black">
@@ -1345,6 +1421,7 @@ const [showFilters, setShowFilters] = useState(false);
 
 )}
 
+<FortnightlyBriefingBanner />
 <Footer />
 
 </main>

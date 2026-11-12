@@ -155,8 +155,8 @@ function PostJobContent() {
 
       // Check Gold Member status
       if (prof) {
-        const { data: edus } = await supabase.from("educations").select("*").eq("user_id", prof.id);
-        const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", prof.id);
+        const { data: edus } = await supabase.from('profile_educations').select("*").eq("user_id", prof.id);
+        const { data: exps } = await supabase.from('profile_experiences').select("*").eq("user_id", prof.id);
         const res = calculateProfileCompletion(prof, edus || [], exps || []);
         setUserCompletion(res.percentage);
       }

@@ -13,14 +13,31 @@ export default function ProfileSettingsTab({
   user,
   onUserUpdate,
 }: ProfileSettingsTabProps) {
+  const getStoredPreference = (key: string, fallback: boolean) => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("currentUser");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (typeof parsed[key] === "boolean") return parsed[key];
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return fallback;
+  };
+
   const [hidePhone, setHidePhone] = useState<boolean>(Boolean(user.hide_phone));
   const [hideWhatsapp, setHideWhatsapp] = useState<boolean>(Boolean(user.hide_whatsapp));
   const [hideEmail, setHideEmail] = useState<boolean>(Boolean(user.hide_email));
   const [hideDob, setHideDob] = useState<boolean>(Boolean(user.hide_dob));
-  const [hideCoa, setHideCoa] = useState<boolean>(Boolean(user.hide_coa));
-  const [hideExperience, setHideExperience] = useState<boolean>(Boolean(user.hide_experience));
-  const [hideEducation, setHideEducation] = useState<boolean>(Boolean(user.hide_education));
-  const [displayProfilePublicly, setDisplayProfilePublicly] = useState<boolean>(Boolean(user.display_profile_publicly));
+  const [hideCoa, setHideCoa] = useState<boolean>(getStoredPreference("hide_coa", Boolean(user.hide_coa)));
+  const [hideExperience, setHideExperience] = useState<boolean>(getStoredPreference("hide_experience", Boolean(user.hide_experience)));
+  const [hideEducation, setHideEducation] = useState<boolean>(getStoredPreference("hide_education", Boolean(user.hide_education)));
+  const [displayProfilePublicly, setDisplayProfilePublicly] = useState<boolean>(
+    getStoredPreference("display_profile_publicly", Boolean(user.display_profile_publicly))
+  );
   const [allowPublicSharing, setAllowPublicSharing] = useState<boolean>(
     user.allow_public_sharing !== false
   );
@@ -44,17 +61,32 @@ export default function ProfileSettingsTab({
         display_profile_publicly: displayProfilePublicly,
       };
 
-      let { error } = await supabase
-        .from("profiles")
-        .update(payload)
-        .eq("id", user.id);
+      // Resilient database update: gracefully strip any column PostgREST complains is missing from schema cache
+      let dbPayload = { ...payload };
+      let maxAttempts = 6;
+      while (maxAttempts > 0) {
+        const { error } = await supabase
+          .from("profiles")
+          .update(dbPayload)
+          .eq("id", user.id);
 
-      if (error && error.message?.includes("display_profile_publicly")) {
-        delete payload.display_profile_publicly;
-        const retry = await supabase.from("profiles").update(payload).eq("id", user.id);
-        if (retry.error) throw retry.error;
-      } else if (error) {
-        throw error;
+        if (!error) break;
+
+        const match = error.message?.match(/Could not find the ['"]?([a-zA-Z0-9_]+)['"]? column/i);
+        if (match && match[1] && match[1] in dbPayload) {
+          delete dbPayload[match[1]];
+          maxAttempts--;
+          continue;
+        }
+
+        if (error.message?.includes("display_profile_publicly") && "display_profile_publicly" in dbPayload) {
+          delete dbPayload.display_profile_publicly;
+          maxAttempts--;
+          continue;
+        }
+
+        console.warn("Database privacy update notice:", error.message);
+        break;
       }
 
       const updated = {

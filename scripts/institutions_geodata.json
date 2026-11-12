@@ -1,0 +1,5832 @@
+[
+  {
+    "id": "4d46bed6-9c51-4c72-87fa-b8e854299ff0",
+    "coa_code": "AS01",
+    "institution_name": "Guwahati College Of Architecture",
+    "slug": "guwahati-college-of-architecture",
+    "city": "Guwahati",
+    "state": "Assam",
+    "lat": 26.1445,
+    "lng": 91.7362
+  },
+  {
+    "id": "28c8555e-8a1e-45d1-ae80-615f7a17d4ba",
+    "coa_code": "TN05",
+    "institution_name": "SRM School of Architecture",
+    "slug": "srm-school-of-architecture-chengalpet",
+    "city": "Chengalpet",
+    "state": "Tamil Nadu",
+    "lat": 12.6939,
+    "lng": 79.9757
+  },
+  {
+    "id": "bdff80cf-29c5-4bd1-b5c6-2a29d490b0b3",
+    "coa_code": "CG07",
+    "institution_name": "Chanakya College of Art & Architecture",
+    "slug": "chanakya-college-of-art-architecture-raipur",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "lat": 21.2514,
+    "lng": 81.6296
+  },
+  {
+    "id": "65fb9aee-8844-427d-947e-2e8512aba05a",
+    "coa_code": "TN03",
+    "institution_name": "Adhiyaman College Of Engineering",
+    "slug": "adhiyaman-college-of-engineering-hosur",
+    "city": "Hosur",
+    "state": "Tamil Nadu",
+    "lat": 12.7409,
+    "lng": 77.8253
+  },
+  {
+    "id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+    "coa_code": "TN11",
+    "institution_name": "Thiagarajar College of Engineering",
+    "slug": "thiagarajar-college-of-engineering-madurai",
+    "city": "Madurai",
+    "state": "Tamil Nadu",
+    "lat": 9.9252,
+    "lng": 78.1198
+  },
+  {
+    "id": "3b0a49cd-514b-4285-bd86-ed15bd06c1b8",
+    "coa_code": "TN12",
+    "institution_name": "Periyar Maniammai University",
+    "slug": "periyar-maniammai-university-thanjavur",
+    "city": "Thanjavur",
+    "state": "Tamil Nadu",
+    "lat": 10.787,
+    "lng": 79.1378
+  },
+  {
+    "id": "9151f1df-55af-4bf5-aaa3-ad3657026772",
+    "coa_code": "TN19",
+    "institution_name": "Karpagam Academy of Higher Education",
+    "slug": "karpagam-academy-of-higher-education-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.0168,
+    "lng": 76.9558
+  },
+  {
+    "id": "0f861515-0dff-45ec-9369-a8945f65ac9d",
+    "coa_code": "TN24",
+    "institution_name": "DEAR Institute",
+    "slug": "dear-institute-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.7905,
+    "lng": 78.7047
+  },
+  {
+    "id": "f38227de-be85-4c33-8c9c-0ece34af122e",
+    "coa_code": "TN29",
+    "institution_name": "Mohammed Sathak A.J. Academy of Architecture",
+    "slug": "mohammed-sathak-aj-academy-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.0827,
+    "lng": 80.2707
+  },
+  {
+    "id": "04f238dd-6f77-4553-8f79-d198d4dbf391",
+    "coa_code": "TN16",
+    "institution_name": "McGans Ooty School of Architecture",
+    "slug": "mcgans-ooty-school-of-architecture-the-nilgiris",
+    "city": "The Nilgiris",
+    "state": "Tamil Nadu",
+    "lat": 11.1271,
+    "lng": 78.6569
+  },
+  {
+    "id": "9af5bb40-e8cd-4d19-8345-d1fcb615c20e",
+    "coa_code": "TN20",
+    "institution_name": "R.V.S School of Architecture",
+    "slug": "rvs-school-of-architecture-dindigul",
+    "city": "Dindigul",
+    "state": "Tamil Nadu",
+    "lat": 10.3673,
+    "lng": 77.9803
+  },
+  {
+    "id": "336b839c-3780-4c85-b0d0-19492e7ccc01",
+    "coa_code": "TN22",
+    "institution_name": "Excel College of Architecture and Planning",
+    "slug": "excel-college-of-architecture-and-planning-namakkal",
+    "city": "Namakkal",
+    "state": "Tamil Nadu",
+    "lat": 11.2189,
+    "lng": 78.1674
+  },
+  {
+    "id": "5de30999-01e0-4536-8e79-74e85bd7a00d",
+    "coa_code": "TN23",
+    "institution_name": "Sri Sai Ranganathan College",
+    "slug": "sri-sai-ranganathan-college-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.013851,
+    "lng": 76.958637
+  },
+  {
+    "id": "67cb3ab6-e2b3-4e4c-a231-a9a31b2164a8",
+    "coa_code": "TN13",
+    "institution_name": "MEASI Academy of Architecture",
+    "slug": "measi-academy-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.079751,
+    "lng": 80.273537
+  },
+  {
+    "id": "d5a67843-9a62-452d-ad22-e15ae3b3dfa1",
+    "coa_code": "TN32",
+    "institution_name": "C.A.R.E School of Architecture",
+    "slug": "care-school-of-architecture-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.787551,
+    "lng": 78.707537
+  },
+  {
+    "id": "1e94c3b1-cb9a-4bef-a0ed-b52ec24c7fe5",
+    "coa_code": "TN27",
+    "institution_name": "SVS School of Architecture",
+    "slug": "svs-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.017295,
+    "lng": 76.949883
+  },
+  {
+    "id": "12c89663-fd33-4b9f-8d17-b88256724f4f",
+    "coa_code": "TN30",
+    "institution_name": "J.K.K.Munirajah School of Architecture",
+    "slug": "jkkmunirajah-school-of-architecture-erode",
+    "city": "Erode",
+    "state": "Tamil Nadu",
+    "lat": 11.341,
+    "lng": 77.7172
+  },
+  {
+    "id": "afe46c16-597e-4862-a396-55ef18462730",
+    "coa_code": "TN41",
+    "institution_name": "Dr.M.G.R Educational and Research Institute",
+    "slug": "drmgr-educational-and-research-institute-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.083195,
+    "lng": 80.264783
+  },
+  {
+    "id": "5ab403ee-554a-4f33-a417-dc1d7e4f3e29",
+    "coa_code": "TN36",
+    "institution_name": "RVS KVK School of Architecture",
+    "slug": "rvs-kvk-school-of-architecture-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.790995,
+    "lng": 78.698783
+  },
+  {
+    "id": "589494b6-5120-4ae1-afdf-ae60c6eec04f",
+    "coa_code": "TN43",
+    "institution_name": "N.R.School of Architecture",
+    "slug": "nrschool-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.021015,
+    "lng": 76.961573
+  },
+  {
+    "id": "515f371f-50e5-41f0-bb1b-8f10699c6955",
+    "coa_code": "GJ07",
+    "institution_name": "School of Architecture, Vadodara Design Academy",
+    "slug": "school-of-architecture-vadodara-design-academy-vadodara",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.3072,
+    "lng": 73.1812
+  },
+  {
+    "id": "72ca62a0-6c54-47d2-bd66-67f779f53081",
+    "coa_code": "TN40",
+    "institution_name": "Prime College of Architecture and Planning",
+    "slug": "prime-college-of-architecture-and-planning-nagapattinam",
+    "city": "Nagapattinam",
+    "state": "Tamil Nadu",
+    "lat": 10.7672,
+    "lng": 79.8449
+  },
+  {
+    "id": "590b046e-e74a-44cc-ae55-6774a213a58f",
+    "coa_code": "GJ21",
+    "institution_name": "Laxmi Institute of Architecture",
+    "slug": "laxmi-institute-of-architecture-valsad",
+    "city": "Valsad",
+    "state": "Gujarat",
+    "lat": 20.5992,
+    "lng": 72.9342
+  },
+  {
+    "id": "d61db413-010f-4542-a6ed-db3824b94d4b",
+    "coa_code": "GJ29",
+    "institution_name": "Gokul College of Architecture & Design",
+    "slug": "gokul-college-of-architecture-design-patan",
+    "city": "Patan",
+    "state": "Gujarat",
+    "lat": 23.8493,
+    "lng": 72.1266
+  },
+  {
+    "id": "fa8a5de3-347d-44b6-989e-33eac347b560",
+    "coa_code": "TN46",
+    "institution_name": "Sasi Creative School of Architecture",
+    "slug": "sasi-creative-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.008922,
+    "lng": 76.954337
+  },
+  {
+    "id": "0092f8cf-e36f-43fa-aed5-9e5c7b2e387c",
+    "coa_code": "TN53",
+    "institution_name": "Kalasalingam School of Architecture",
+    "slug": "kalasalingam-school-of-architecture-virudhunagar",
+    "city": "Virudhunagar",
+    "state": "Tamil Nadu",
+    "lat": 11.124151,
+    "lng": 78.659737
+  },
+  {
+    "id": "7ad26440-3cb1-47f8-989a-bc79aaaab7ed",
+    "coa_code": "TN58",
+    "institution_name": "Park Institute of Architecture",
+    "slug": "park-institute-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.024347,
+    "lng": 76.950759
+  },
+  {
+    "id": "c7f6e241-8c8d-40d1-9db0-33ad2f381509",
+    "coa_code": "GJ33",
+    "institution_name": "Mahavir Swami College of Architecture",
+    "slug": "mahavir-swami-college-of-architecture-surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.1702,
+    "lng": 72.8311
+  },
+  {
+    "id": "5d9da854-13cc-43a4-86ef-3f7412f67d1f",
+    "coa_code": "HR16",
+    "institution_name": "South Point School of Architecture",
+    "slug": "south-point-school-of-architecture-sonipat",
+    "city": "Sonipat",
+    "state": "Haryana",
+    "lat": 28.9931,
+    "lng": 77.0151
+  },
+  {
+    "id": "cd37665b-5e51-47e5-8cb6-77e9b8c970fd",
+    "coa_code": "TN59",
+    "institution_name": "Dhanalakshmi Srinivasan School of Architecture",
+    "slug": "dhanalakshmi-srinivasan-school-of-architecture-perambalur",
+    "city": "Perambalur",
+    "state": "Tamil Nadu",
+    "lat": 11.127595,
+    "lng": 78.650983
+  },
+  {
+    "id": "5009bc70-491d-4e6e-98be-65fb491f5492",
+    "coa_code": "HR18",
+    "institution_name": "P.M. College of Architecture",
+    "slug": "pm-college-of-architecture-sonipat",
+    "city": "Sonipat",
+    "state": "Haryana",
+    "lat": 28.990151,
+    "lng": 77.017937
+  },
+  {
+    "id": "714aea7d-8dd8-4a4d-b2c1-3c70f589c202",
+    "coa_code": "TN50",
+    "institution_name": "Coimbatore Institute of Engineering and Technology",
+    "slug": "coimbatore-institute-of-engineering-and-technology",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.014257,
+    "lng": 76.965735
+  },
+  {
+    "id": "0bb8844a-9352-4eec-b0ec-da467088e4ec",
+    "coa_code": "TN44",
+    "institution_name": "Skandha School of Architecture",
+    "slug": "skandha-school-of-architecture-salem",
+    "city": "Salem",
+    "state": "Tamil Nadu",
+    "lat": 11.6643,
+    "lng": 78.146
+  },
+  {
+    "id": "724fe9fb-0636-4bd2-b8ec-3f15ff28ab49",
+    "coa_code": "TN55",
+    "institution_name": "Anand School of Architecture",
+    "slug": "anand-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.086915,
+    "lng": 80.276473
+  },
+  {
+    "id": "a52dd5f4-d894-4950-9f63-3b319d7a0187",
+    "coa_code": "TN48",
+    "institution_name": "St.Peters School of Architecture",
+    "slug": "stpeters-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.074822,
+    "lng": 80.269237
+  },
+  {
+    "id": "ee454016-e9fe-455c-a59a-4f4beea9912a",
+    "coa_code": "TN64",
+    "institution_name": "Capital College of Architecture",
+    "slug": "capital-college-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.011922,
+    "lng": 76.945939
+  },
+  {
+    "id": "9853ef07-e972-423f-a90a-5596e8d9e0c0",
+    "coa_code": "TN60",
+    "institution_name": "Dhanalakshmi Srinivasan School of Architecture",
+    "slug": "dhanalakshmi-srinivasan-school-of-architecture-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.794715,
+    "lng": 78.710473
+  },
+  {
+    "id": "33ad2b70-ba4b-4729-aafa-fec4dd97f794",
+    "coa_code": "TN74",
+    "institution_name": "VIT University",
+    "slug": "vit-university-vellore",
+    "city": "Vellore",
+    "state": "Tamil Nadu",
+    "lat": 12.9165,
+    "lng": 79.1325
+  },
+  {
+    "id": "49b84bb9-006b-48ea-b08f-d19fdc8c8a9d",
+    "coa_code": "TN71",
+    "institution_name": "Kongu School of Architecture",
+    "slug": "kongu-school-of-architecture-erode",
+    "city": "Erode",
+    "state": "Tamil Nadu",
+    "lat": 11.338051,
+    "lng": 77.720037
+  },
+  {
+    "id": "6486efa9-3325-4a60-824d-aba05fb6a67f",
+    "coa_code": "TN61",
+    "institution_name": "JK College of Architecture",
+    "slug": "jk-college-of-architecture-dindugul",
+    "city": "Dindugul",
+    "state": "Tamil Nadu",
+    "lat": 11.131315,
+    "lng": 78.662673
+  },
+  {
+    "id": "2af9a291-21ea-4ddd-b159-982a0f2ac469",
+    "coa_code": "TN72",
+    "institution_name": "AarupadaiVeedu Institute of Technology",
+    "slug": "aarupadaiveedu-institute-of-technology-chengalpattu",
+    "city": "Chengalpattu",
+    "state": "Tamil Nadu",
+    "lat": 11.119222,
+    "lng": 78.655437
+  },
+  {
+    "id": "546a2935-9f89-4c69-8468-5455b0edb177",
+    "coa_code": "GJ10",
+    "institution_name": "Grow More School of Architecture",
+    "slug": "grow-more-school-of-architecture-himatnagar",
+    "city": "Himatnagar",
+    "state": "Gujarat",
+    "lat": 23.5977,
+    "lng": 72.9698
+  },
+  {
+    "id": "0c99c931-2e67-4e08-b2d3-6899abc58c7b",
+    "coa_code": "HR22",
+    "institution_name": "Bhagwan Mahaveer School Of Architecture",
+    "slug": "bhagwan-mahaveer-school-of-architecture-near-o-p-jindal-university",
+    "city": "Near O P Jindal University",
+    "state": "Haryana",
+    "lat": 29.0588,
+    "lng": 76.0856
+  },
+  {
+    "id": "c06bc987-4f78-442b-a764-d217b277b9f2",
+    "coa_code": "GJ22",
+    "institution_name": "Kalol Institute of Architecture & Design",
+    "slug": "kalol-institute-of-architecture-design-gandhinagar",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "lat": 23.2156,
+    "lng": 72.6369
+  },
+  {
+    "id": "ece9aedc-4364-4240-99ad-c51ce43eb946",
+    "coa_code": "HR17",
+    "institution_name": "CCLS College of Architecture & Design",
+    "slug": "ccls-college-of-architecture-design-rohtak",
+    "city": "Rohtak",
+    "state": "Haryana",
+    "lat": 28.8955,
+    "lng": 76.6066
+  },
+  {
+    "id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "slug": "manipal-school-of-architecture-and-planning",
+    "city": "Manipal",
+    "state": "Karnataka",
+    "lat": 13.3525,
+    "lng": 74.7928
+  },
+  {
+    "id": "c7e2c773-c268-401b-8ef9-5b4af949d1b3",
+    "coa_code": "HR27",
+    "institution_name": "Faculty of Architecture and Design, Manav Rachna (MRIIRS)",
+    "slug": "faculty-of-architecture-and-design-manav-rachna-mriirs-faridabad",
+    "city": "Faridabad",
+    "state": "Haryana",
+    "lat": 28.4089,
+    "lng": 77.3178
+  },
+  {
+    "id": "06a997f8-0021-45c6-a3f2-f140d2a815ed",
+    "coa_code": "KA07",
+    "institution_name": "Dayananda Sagar College of Architecture",
+    "slug": "dayananda-sagar-college-of-architecture-south-end-of-jayanagar",
+    "city": "South End Of Jayanagar",
+    "state": "Karnataka",
+    "lat": 15.3173,
+    "lng": 75.7139
+  },
+  {
+    "id": "088e1460-123a-4f4d-8830-4e7b29409bb4",
+    "coa_code": "TN100",
+    "institution_name": "Mepco Schlenk Engineering college",
+    "slug": "mepco-schlenk-engineering-college-sivakasi",
+    "city": "Sivakasi",
+    "state": "Tamil Nadu",
+    "lat": 11.134647,
+    "lng": 78.651859
+  },
+  {
+    "id": "4958a03d-b990-4e81-b384-69a948101d27",
+    "coa_code": "TN101",
+    "institution_name": "Dhanalakshmi Srinivasan University",
+    "slug": "dhanalakshmi-srinivasan-university-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.782622,
+    "lng": 78.703237
+  },
+  {
+    "id": "1ef486af-114e-4d8d-b7c1-5dd7730f063e",
+    "coa_code": "TN102",
+    "institution_name": "Surya School of Architecture",
+    "slug": "surya-school-of-architecture-campus-2-villupuram",
+    "city": "Villupuram",
+    "state": "Tamil Nadu",
+    "lat": 11.124557,
+    "lng": 78.666835
+  },
+  {
+    "id": "c5a03d8d-5ec2-407b-9572-167526e8fbc4",
+    "coa_code": "TN103",
+    "institution_name": "Amrita School of Architecture",
+    "slug": "amrita-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.027427,
+    "lng": 76.959875
+  },
+  {
+    "id": "97f032a0-39ef-4211-936c-b358da349573",
+    "coa_code": "TN75",
+    "institution_name": "San Academy of Architecture",
+    "slug": "san-academy-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.005708,
+    "lng": 76.960608
+  },
+  {
+    "id": "7a2c3330-e247-471a-a961-b0d4b9e74d95",
+    "coa_code": "TN79",
+    "institution_name": "Jaya School of Architecture",
+    "slug": "jaya-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.090247,
+    "lng": 80.265659
+  },
+  {
+    "id": "e5bd0016-7fd0-432c-8ab1-53d015297ec0",
+    "coa_code": "TN81",
+    "institution_name": "Jawahar School of Architecture",
+    "slug": "jawahar-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.080157,
+    "lng": 80.280635
+  },
+  {
+    "id": "2742e2bb-c43f-4303-be0f-65faefad0930",
+    "coa_code": "TN90",
+    "institution_name": "Sree Sastha School of Architecture",
+    "slug": "sree-sastha-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.077822,
+    "lng": 80.260839
+  },
+  {
+    "id": "9d8d1f4c-2042-4354-a8ee-3d6e664a1a3d",
+    "coa_code": "TN78",
+    "institution_name": "Hindustan School of Architecture",
+    "slug": "hindustan-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.022161,
+    "lng": 76.94377
+  },
+  {
+    "id": "abcdf312-4fc4-4305-8f0d-c1d74d7425fb",
+    "coa_code": "TN96",
+    "institution_name": "Chettinad School of Architecture",
+    "slug": "chettinad-school-of-architecture-kanchipuram",
+    "city": "Kanchipuram",
+    "state": "Tamil Nadu",
+    "lat": 12.8342,
+    "lng": 79.7036
+  },
+  {
+    "id": "47b86482-5bdd-4064-b401-75eb0025a356",
+    "coa_code": "TN95",
+    "institution_name": "PAPNI School of Architecture",
+    "slug": "papni-school-of-architecture-kancheepuram",
+    "city": "Kancheepuram",
+    "state": "Tamil Nadu",
+    "lat": 11.122222,
+    "lng": 78.647039
+  },
+  {
+    "id": "75350e2f-2c28-4316-b4b9-03ab6c97fd7a",
+    "coa_code": "HR31",
+    "institution_name": "Jindal School of Design and Architecture",
+    "slug": "jindal-school-of-design-and-architecture-sonipat",
+    "city": "Sonipat",
+    "state": "Haryana",
+    "lat": 28.993595,
+    "lng": 77.009183
+  },
+  {
+    "id": "02a06272-ca3e-44e0-b2d5-bca7349f28ac",
+    "coa_code": "KA14",
+    "institution_name": "KLS Gogte Institute of Technology",
+    "slug": "kls-gogte-institute-of-technology-belgaum",
+    "city": "Belgaum",
+    "state": "Karnataka",
+    "lat": 15.8497,
+    "lng": 74.4977
+  },
+  {
+    "id": "cef380ed-4d5b-40aa-ad81-7f0542bc7af2",
+    "coa_code": "GJ35",
+    "institution_name": "Vadodara Institute of Architecture",
+    "slug": "vadodara-institute-of-architecture-vadodara",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.304251,
+    "lng": 73.184037
+  },
+  {
+    "id": "c1aaa90c-f472-41c2-a758-56c100d4f292",
+    "coa_code": "KA30",
+    "institution_name": "BGS School of Architecture and Planning",
+    "slug": "bgs-school-of-architecture-and-planning-k-gollahalli-postbengaluru-south",
+    "city": "K Gollahalli Postbengaluru South",
+    "state": "Karnataka",
+    "lat": 12.9716,
+    "lng": 77.5946
+  },
+  {
+    "id": "bfc710c2-bd57-4200-968e-b6b65dbc270c",
+    "coa_code": "KL16",
+    "institution_name": "Sneha College of Architecture",
+    "slug": "sneha-college-of-architecture-palakkad",
+    "city": "Palakkad",
+    "state": "Kerala",
+    "lat": 10.7867,
+    "lng": 76.6548
+  },
+  {
+    "id": "9d1978f0-e16d-40bb-aaee-1421ed013e82",
+    "coa_code": "KA42",
+    "institution_name": "Angadi School of Architecture",
+    "slug": "angadi-school-of-architecture-belgaum",
+    "city": "Belgaum",
+    "state": "Karnataka",
+    "lat": 15.846751,
+    "lng": 74.500537
+  },
+  {
+    "id": "9e562f3d-7a6a-46e7-b1c0-165bb5b1eec0",
+    "coa_code": "KA44",
+    "institution_name": "Sir M V School of Architecture",
+    "slug": "sir-m-v-school-of-architecture-hunasamaranahallioff-international-airport-road",
+    "city": "Hunasamaranahallioff International Airport Road",
+    "state": "Karnataka",
+    "lat": 15.314351,
+    "lng": 75.716737
+  },
+  {
+    "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "slug": "college-of-engineering-thiruvananthapuram",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "lat": 8.5241,
+    "lng": 76.9366
+  },
+  {
+    "id": "c7513d1e-7180-4fbd-9b25-1909f2530cef",
+    "coa_code": "KL03",
+    "institution_name": "MES School of Architecture",
+    "slug": "mes-school-of-architecture-malappuram",
+    "city": "Malappuram",
+    "state": "Kerala",
+    "lat": 11.051,
+    "lng": 76.0711
+  },
+  {
+    "id": "22b70ecc-fd6e-4324-9d77-3df40d8f321e",
+    "coa_code": "KL02",
+    "institution_name": "TKM College of Architecture",
+    "slug": "tkm-college-of-architecture-kollam",
+    "city": "Kollam",
+    "state": "Kerala",
+    "lat": 8.8932,
+    "lng": 76.6141
+  },
+  {
+    "id": "4e1e7e0f-a800-45ad-96ad-ba00b906ba18",
+    "coa_code": "KL09",
+    "institution_name": "Rajiv Gandhi Institute of Technology",
+    "slug": "rajiv-gandhi-institute-of-technology-kottayam",
+    "city": "Kottayam",
+    "state": "Kerala",
+    "lat": 9.5916,
+    "lng": 76.5222
+  },
+  {
+    "id": "57b4610f-a627-4c56-9b6e-2903da85a37e",
+    "coa_code": "KL07",
+    "institution_name": "DG College of Architecture",
+    "slug": "dg-college-of-architecture-malappuram",
+    "city": "Malappuram",
+    "state": "Kerala",
+    "lat": 11.048051,
+    "lng": 76.073937
+  },
+  {
+    "id": "89ffad77-d628-434d-baf7-14f4e5e7c54e",
+    "coa_code": "KL05",
+    "institution_name": "Government Engineering Colege",
+    "slug": "government-engineering-colege-thrissur",
+    "city": "Thrissur",
+    "state": "Kerala",
+    "lat": 10.5276,
+    "lng": 76.2144
+  },
+  {
+    "id": "aea057ff-ee69-4d62-833a-0f2f67f92bd7",
+    "coa_code": "KL10",
+    "institution_name": "Holy Crescent College of Architecture",
+    "slug": "holy-crescent-college-of-architecture-alwaye",
+    "city": "Alwaye",
+    "state": "Kerala",
+    "lat": 10.8505,
+    "lng": 76.2711
+  },
+  {
+    "id": "939a9413-6b79-40a3-82dc-f2d4be789435",
+    "coa_code": "KL11",
+    "institution_name": "TKM School of Architecture",
+    "slug": "tkm-school-of-architecture-kollam",
+    "city": "Kollam",
+    "state": "Kerala",
+    "lat": 8.890251,
+    "lng": 76.616937
+  },
+  {
+    "id": "69c4de43-c8cb-48fd-9ce5-7cba21d56459",
+    "coa_code": "KL15",
+    "institution_name": "ABATE Institute of Architecture",
+    "slug": "abate-institute-of-architecture-perinthalmanna",
+    "city": "Perinthalmanna",
+    "state": "Kerala",
+    "lat": 10.847551,
+    "lng": 76.273937
+  },
+  {
+    "id": "12dd61fd-f7da-421f-8375-7dfc2b801c83",
+    "coa_code": "KL14",
+    "institution_name": "IES-College-of Architecture",
+    "slug": "ies-college-of-architecture-thrissur",
+    "city": "Thrissur",
+    "state": "Kerala",
+    "lat": 10.524651,
+    "lng": 76.217237
+  },
+  {
+    "id": "6aba4d00-2cdd-407e-929a-38737d7b623c",
+    "coa_code": "TN37",
+    "institution_name": "Aalim Mohammed Salegh Academy of Architecture",
+    "slug": "aalim-mohammed-salegh-academy-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.093327,
+    "lng": 80.274775
+  },
+  {
+    "id": "5c11c7a8-1fa3-4ce8-8ee5-66550c0c5389",
+    "coa_code": "KA06",
+    "institution_name": "Poojya Dr. Shivakumar Swamiji School of Architecture",
+    "slug": "poojya-dr-shivakumar-swamiji-school-of-architecture-gulbarga",
+    "city": "Gulbarga",
+    "state": "Karnataka",
+    "lat": 17.3297,
+    "lng": 76.8343
+  },
+  {
+    "id": "869083b4-c45e-4da2-9ec6-fe7ebeaaae59",
+    "coa_code": "KA22",
+    "institution_name": "Dayananda Sagar Academy of Technology and Management",
+    "slug": "dayananda-sagar-academy-of-technology-and-management-opp-to-art-of-living-international-centre",
+    "city": "Opp To Art Of Living International Centre",
+    "state": "Karnataka",
+    "lat": 15.317795,
+    "lng": 75.707983
+  },
+  {
+    "id": "a30611bf-20f3-41a4-ac41-c0b211e04236",
+    "coa_code": "HR07",
+    "institution_name": "ICL Institute of Architecture and Town Planning",
+    "slug": "icl-institute-of-architecture-and-town-planning-ambala",
+    "city": "Ambala",
+    "state": "Haryana",
+    "lat": 29.055851,
+    "lng": 76.088437
+  },
+  {
+    "id": "b5af3072-8b2e-49cf-b691-ea2acc540487",
+    "coa_code": "KA27",
+    "institution_name": "Gopalan School of Architecture and Planning",
+    "slug": "gopalan-school-of-architecture-and-planning-whitefield",
+    "city": "Whitefield",
+    "state": "Karnataka",
+    "lat": 15.321515,
+    "lng": 75.719673
+  },
+  {
+    "id": "33c418cb-960e-445d-a438-db1f32d8731d",
+    "coa_code": "KA24",
+    "institution_name": "SJB School of Architecture and Planning",
+    "slug": "sjb-school-of-architecture-and-planning-kengeri",
+    "city": "Kengeri",
+    "state": "Karnataka",
+    "lat": 15.309422,
+    "lng": 75.712437
+  },
+  {
+    "id": "b9ffa3d8-4ac0-44e5-bb28-8625cf3d768a",
+    "coa_code": "KA25",
+    "institution_name": "IMPACT School Of Architecture",
+    "slug": "impact-school-of-architecture-sahakaranagar",
+    "city": "Sahakaranagar",
+    "state": "Karnataka",
+    "lat": 15.324847,
+    "lng": 75.708859
+  },
+  {
+    "id": "043db6ef-4f5b-41ef-bb03-f4e5d0b205dc",
+    "coa_code": "KA28",
+    "institution_name": "R.R.School Of Architecture",
+    "slug": "rrschool-of-architecture-chikkabanavara",
+    "city": "Chikkabanavara",
+    "state": "Karnataka",
+    "lat": 15.314757,
+    "lng": 75.723835
+  },
+  {
+    "id": "ca866766-9120-47cf-ba33-5a26533ca5f2",
+    "coa_code": "KA32",
+    "institution_name": "Nitte Institute of Architecture",
+    "slug": "nitte-institute-of-architecture-mangalore",
+    "city": "Mangalore",
+    "state": "Karnataka",
+    "lat": 12.9141,
+    "lng": 74.856
+  },
+  {
+    "id": "cfc8b313-7a78-490f-84dc-70141598943f",
+    "coa_code": "JH01A",
+    "institution_name": "Birla Institute of Technology (International Centre, Ras Al Khaimah)",
+    "slug": "birla-institute-of-technology-international-centre-ras-al-khaimah-ras-al-khaimah",
+    "city": "Ras Al Khaimah",
+    "state": "International",
+    "lat": 20.5937,
+    "lng": 78.9629
+  },
+  {
+    "id": "07656ca5-9e8c-4569-80f6-704e2fc114d6",
+    "coa_code": "KA29",
+    "institution_name": "Mysore School of Architecture",
+    "slug": "mysore-school-of-architecture",
+    "city": "Mysore",
+    "state": "Karnataka",
+    "lat": 12.2958,
+    "lng": 76.6394
+  },
+  {
+    "id": "804388cc-d5be-44b8-8cce-7b6ddbc94091",
+    "coa_code": "KA35",
+    "institution_name": "Aditya Academy of Architecture and Design",
+    "slug": "aditya-academy-of-architecture-and-design-bangalore-north",
+    "city": "Bangalore North",
+    "state": "Karnataka",
+    "lat": 13.0358,
+    "lng": 77.597
+  },
+  {
+    "id": "b2d7e69f-a1a6-4072-a00c-3bd4b3217a48",
+    "coa_code": "KA36",
+    "institution_name": "Reva University",
+    "slug": "reva-university-yelahanka",
+    "city": "Yelahanka",
+    "state": "Karnataka",
+    "lat": 15.312422,
+    "lng": 75.704039
+  },
+  {
+    "id": "f6aa3d66-85f9-4989-821b-02abb0319b4f",
+    "coa_code": "KA38",
+    "institution_name": "HMS Institute of Technology",
+    "slug": "hms-institute-of-technology-tumkur",
+    "city": "Tumkur",
+    "state": "Karnataka",
+    "lat": 13.3392,
+    "lng": 77.1017
+  },
+  {
+    "id": "97d6ba2f-0322-452b-9aaf-aeb88a666e08",
+    "coa_code": "KA45",
+    "institution_name": "Christ University",
+    "slug": "christ-university-mysore-road",
+    "city": "Mysore Road",
+    "state": "Karnataka",
+    "lat": 12.292851,
+    "lng": 76.642237
+  },
+  {
+    "id": "d05df31d-4ded-43f2-8b3c-d5566c32b537",
+    "coa_code": "KA46",
+    "institution_name": "EAST WEST SCHOOL OF ARCHITECTURE",
+    "slug": "east-west-school-of-architecture-anjana-nagar",
+    "city": "Anjana Nagar",
+    "state": "Karnataka",
+    "lat": 15.327927,
+    "lng": 75.717975
+  },
+  {
+    "id": "c453adf1-cde9-4847-bd9d-f02943066d26",
+    "coa_code": "KA48",
+    "institution_name": "GSSS SCHOOL OF ARCHITECTURE FOR WOMEN",
+    "slug": "gsss-school-of-architecture-for-women-mysore",
+    "city": "Mysore",
+    "state": "Karnataka",
+    "lat": 12.296295,
+    "lng": 76.633483
+  },
+  {
+    "id": "65b26829-d3b0-4371-a1a4-eefa148b07be",
+    "coa_code": "HR28",
+    "institution_name": "Faculty of Architecture & Planning, Jagan Nath University",
+    "slug": "faculty-of-architecture-planning-jagan-nath-university-jhajjar",
+    "city": "Jhajjar",
+    "state": "Haryana",
+    "lat": 29.059295,
+    "lng": 76.079683
+  },
+  {
+    "id": "6ca31d28-bdf7-4359-a4bd-27cba8432631",
+    "coa_code": "KL40",
+    "institution_name": "MEA College of Architecture",
+    "slug": "mea-college-of-architecture-malappuram",
+    "city": "Malappuram",
+    "state": "Kerala",
+    "lat": 11.051495,
+    "lng": 76.065183
+  },
+  {
+    "id": "1bf24c0e-b3a3-4852-a882-af87b63229a6",
+    "coa_code": "OR04",
+    "institution_name": "School of Architecture, Planning & Design",
+    "slug": "school-of-architecture-planning-design-khurda",
+    "city": "Khurda",
+    "state": "Odisha",
+    "lat": 20.9517,
+    "lng": 85.0985
+  },
+  {
+    "id": "79a46045-9fe9-4914-b2dc-b3b1d89891e1",
+    "coa_code": "TN06",
+    "institution_name": "AMACE",
+    "slug": "amace-tiruvannamalai",
+    "city": "Tiruvannamalai",
+    "state": "Tamil Nadu",
+    "lat": 11.137727,
+    "lng": 78.660975
+  },
+  {
+    "id": "eca7deff-22b1-4a82-af84-cbb8104b9cdd",
+    "coa_code": "RJD02",
+    "institution_name": "Shridevi Women Polytechnic",
+    "slug": "shridevi-women-polytechnic-hanumangarh-rjd02",
+    "city": "Hanumangarh",
+    "state": "Rajasthan",
+    "lat": 27.0238,
+    "lng": 74.2179
+  },
+  {
+    "id": "fb2b2b45-1037-472c-a91a-47d5ae97921a",
+    "coa_code": "KA05",
+    "institution_name": "KLE Technological University",
+    "slug": "kle-technological-university-hubli",
+    "city": "Hubli",
+    "state": "Karnataka",
+    "lat": 15.306208,
+    "lng": 75.718708
+  },
+  {
+    "id": "aefdccfc-f568-485f-8449-35ce73d165b3",
+    "coa_code": "KL28",
+    "institution_name": "Nizar Rahim And Mark School Of Architecture",
+    "slug": "nizar-rahim-and-mark-school-of-architecture-kollam",
+    "city": "Kollam",
+    "state": "Kerala",
+    "lat": 8.893695,
+    "lng": 76.608183
+  },
+  {
+    "id": "86dbdddc-315c-42b0-ba44-6a64a959ae4e",
+    "coa_code": "KL31",
+    "institution_name": "Vedavyasa College Of Architecture",
+    "slug": "vedavyasa-college-of-architecture-malappuram",
+    "city": "Malappuram",
+    "state": "Kerala",
+    "lat": 11.055215,
+    "lng": 76.076873
+  },
+  {
+    "id": "d2fafe35-6878-4bb1-97ca-58d6644222a7",
+    "coa_code": "KA15",
+    "institution_name": "University of Mysore",
+    "slug": "university-of-mysore",
+    "city": "Mysore",
+    "state": "Karnataka",
+    "lat": 12.300015,
+    "lng": 76.645173
+  },
+  {
+    "id": "598e892b-6310-4bbc-8b01-c53269fa7170",
+    "coa_code": "KL21",
+    "institution_name": "KMCT College Of Architecture",
+    "slug": "kmct-college-of-architecture-kallanthode-kozhikode",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "lat": 11.2588,
+    "lng": 75.7804
+  },
+  {
+    "id": "9dcdf5f7-bd1d-425e-b39f-5942f85c2df0",
+    "coa_code": "KL35",
+    "institution_name": "Avani Institute of Design",
+    "slug": "avani-institute-of-design-kozhikode",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "lat": 11.255851,
+    "lng": 75.783237
+  },
+  {
+    "id": "ed20404d-e24a-49a8-8918-e11c0b2f0723",
+    "coa_code": "KL32",
+    "institution_name": "Thejus College of Architecture",
+    "slug": "thejus-college-of-architecture-thrissur",
+    "city": "Thrissur",
+    "state": "Kerala",
+    "lat": 10.528095,
+    "lng": 76.208483
+  },
+  {
+    "id": "c06b24f6-86ee-440c-ac53-d16b5f0eef6d",
+    "coa_code": "KL27",
+    "institution_name": "Mangalam School Of Architecture And Planning",
+    "slug": "mangalam-school-of-architecture-and-planning-kottayam",
+    "city": "Kottayam",
+    "state": "Kerala",
+    "lat": 9.588651,
+    "lng": 76.525037
+  },
+  {
+    "id": "4bcf7fde-0c67-45ff-ad7b-a522e4567161",
+    "coa_code": "KL36",
+    "institution_name": "Talent Institute of Architecture",
+    "slug": "talent-institute-of-architecture-malappuram",
+    "city": "Malappuram",
+    "state": "Kerala",
+    "lat": 11.043122,
+    "lng": 76.069637
+  },
+  {
+    "id": "1c865b96-dfcc-4f54-af4d-2ec2abc8dcf8",
+    "coa_code": "KL39",
+    "institution_name": "SEED-A.P.J.Abdul Kalam School of Environmental Design",
+    "slug": "seed-apjabdul-kalam-school-of-environmental-design-muvattupuzha",
+    "city": "Muvattupuzha",
+    "state": "Kerala",
+    "lat": 10.850995,
+    "lng": 76.265183
+  },
+  {
+    "id": "1c5830cc-c44d-4495-8ae4-6bb868b16578",
+    "coa_code": "KL24",
+    "institution_name": "MES College of Architecture",
+    "slug": "mes-college-of-architecture-kozhikode",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "lat": 11.259295,
+    "lng": 75.774483
+  },
+  {
+    "id": "29c9b1be-6e82-49e5-b19b-f051889ce701",
+    "coa_code": "MH30",
+    "institution_name": "Vivekanand Institute of Technologys Padmabhushan Dr.Vasantdada Patil College of Architecture",
+    "slug": "vivekanand-institute-of-technologys-padmabhushan-drvasantdada-patil-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.5204,
+    "lng": 73.8567
+  },
+  {
+    "id": "db45f7f8-f2af-41a3-95bc-f03edc7db259",
+    "coa_code": "MH81",
+    "institution_name": "Jhulelal Institute of Architecture",
+    "slug": "jhulelal-institute-of-architecture-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.1458,
+    "lng": 79.0882
+  },
+  {
+    "id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+    "coa_code": "TN08",
+    "institution_name": "Hindustan Institute of Technology and Science",
+    "slug": "hindustan-institute-of-technology-and-science-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.071608,
+    "lng": 80.275508
+  },
+  {
+    "id": "3eac021b-6da2-4956-9a5c-10dad85ed007",
+    "coa_code": "MH105",
+    "institution_name": "School of Architecture, D Y Patil Deemed to be University",
+    "slug": "school-of-architecture-d-y-patil-deemed-to-be-university-navi-mumbai",
+    "city": "Navi Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.033,
+    "lng": 73.0297
+  },
+  {
+    "id": "61b50cad-2f2e-4b4b-8d37-abd39f98505d",
+    "coa_code": "MH34",
+    "institution_name": "Late Shri Bapuraoji Deshmukh Degree College of Architecture",
+    "slug": "late-shri-bapuraoji-deshmukh-degree-college-of-architecture-wardha",
+    "city": "Wardha",
+    "state": "Maharashtra",
+    "lat": 20.7453,
+    "lng": 78.6022
+  },
+  {
+    "id": "83f57d72-2712-490e-8e99-179d1f46c3d5",
+    "coa_code": "TS05",
+    "institution_name": "Maestro School of Planning and Architecture",
+    "slug": "maestro-school-of-planning-and-architecture-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.385,
+    "lng": 78.4867
+  },
+  {
+    "id": "17a9456a-6ac8-4a57-91be-9103dab544b6",
+    "coa_code": "UP20",
+    "institution_name": "College of Architecture, Invertis University",
+    "slug": "college-of-architecture-invertis-university-bareilly",
+    "city": "Bareilly",
+    "state": "Uttar Pradesh",
+    "lat": 26.8467,
+    "lng": 80.9462
+  },
+  {
+    "id": "7743f95c-101d-481c-a382-f5dcfe6471a1",
+    "coa_code": "AP23",
+    "institution_name": "Chadalawada Aruna School of Architecture",
+    "slug": "chadalawada-aruna-school-of-architecture-tirupati",
+    "city": "Tirupati",
+    "state": "Andhra Pradesh",
+    "lat": 13.6288,
+    "lng": 79.4192
+  },
+  {
+    "id": "0022c461-b48c-4d06-a698-f269cb3da735",
+    "coa_code": "KA12",
+    "institution_name": "R.V. College of Architecture",
+    "slug": "rv-college-of-architecture-bangalore",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "lat": 12.968651,
+    "lng": 77.597437
+  },
+  {
+    "id": "4a8ac32b-997f-489f-9950-46171539fcbf",
+    "coa_code": "KA21",
+    "institution_name": "Srinivas Institute Of Technology",
+    "slug": "srinivas-institute-of-technology-mangalore",
+    "city": "Mangalore",
+    "state": "Karnataka",
+    "lat": 12.911151,
+    "lng": 74.858837
+  },
+  {
+    "id": "262e6a35-50b9-4585-9448-049c0c61f7f9",
+    "coa_code": "KL20",
+    "institution_name": "KMCT College Of Architecture",
+    "slug": "kmct-college-of-architecture-manassery-kozhikode",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "lat": 11.263015,
+    "lng": 75.786173
+  },
+  {
+    "id": "bef6b2a7-9f0f-44db-bc97-0839dfdef99f",
+    "coa_code": "KL23",
+    "institution_name": "School of Architecture, Mookambika Technical Campus",
+    "slug": "school-of-architecture-mookambika-technical-campus-ernakulam",
+    "city": "Ernakulam",
+    "state": "Kerala",
+    "lat": 9.9816,
+    "lng": 76.2999
+  },
+  {
+    "id": "e265f5ba-1930-49f4-9a7e-bdd5431b0503",
+    "coa_code": "KL29",
+    "institution_name": "Eranad Knowledge City College of Architecture",
+    "slug": "eranad-knowledge-city-college-of-architecture-malappuram",
+    "city": "Malappuram",
+    "state": "Kerala",
+    "lat": 11.058547,
+    "lng": 76.066059
+  },
+  {
+    "id": "1056d963-bf7d-4538-8749-4e79d941f160",
+    "coa_code": "MH42",
+    "institution_name": "Balwant Sheth School of Architecture, SVKM's NMIMS",
+    "slug": "balwant-sheth-school-of-architecture-svkms-nmims-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.076,
+    "lng": 72.8777
+  },
+  {
+    "id": "6bfa7463-8b6e-498b-a5c4-542c31ba8566",
+    "coa_code": "TN80",
+    "institution_name": "Agni School of Architecture and Design Excellence",
+    "slug": "agni-school-of-architecture-and-design-excellence-dindigul",
+    "city": "Dindigul",
+    "state": "Tamil Nadu",
+    "lat": 10.364351,
+    "lng": 77.983137
+  },
+  {
+    "id": "54668482-e3c9-4410-a406-c32981bbb194",
+    "coa_code": "UP01",
+    "institution_name": "Faculty of ArchitectureDr.A.P.J.Abdul Kalam Technical UniversityFormerly U.P.Technical University",
+    "slug": "faculty-of-architecturedrapjabdul-kalam-technical-universityformerly-uptechnical-university-lucknow",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.843751,
+    "lng": 80.949037
+  },
+  {
+    "id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "slug": "faculty-of-architecture-zakir-hussain-college-of-engineering-tech-aligarh-muslim-university-aligarh",
+    "city": "Aligarh",
+    "state": "Uttar Pradesh",
+    "lat": 27.8974,
+    "lng": 78.088
+  },
+  {
+    "id": "48017001-1ecc-45d0-b7bb-50b0d9e12a54",
+    "coa_code": "UP08",
+    "institution_name": "School of Architecture, Planning and Design",
+    "slug": "school-of-architecture-planning-and-design-ghaziabad",
+    "city": "Ghaziabad",
+    "state": "Uttar Pradesh",
+    "lat": 28.6692,
+    "lng": 77.4538
+  },
+  {
+    "id": "3fcc21f6-c314-4eac-9770-237c025f5a30",
+    "coa_code": "UP07",
+    "institution_name": "Amity School of Architecture & Planning, Amity University Lucknow",
+    "slug": "amity-school-of-architecture-planning-amity-university-lucknow",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.847195,
+    "lng": 80.940283
+  },
+  {
+    "id": "1a6c00db-68ce-4087-b689-e8abd5b0fcd1",
+    "coa_code": "UP43",
+    "institution_name": "School of Architecture, Noida International University",
+    "slug": "school-of-architecture-noida-international-university-greater-noida",
+    "city": "Greater Noida",
+    "state": "Uttar Pradesh",
+    "lat": 28.4744,
+    "lng": 77.504
+  },
+  {
+    "id": "27ab8702-bd3e-4526-9381-24a446bcbe71",
+    "coa_code": "MH109",
+    "institution_name": "Dr Manoj A Shete College of Architecture",
+    "slug": "dr-manoj-a-shete-college-of-architecture-thane",
+    "city": "Thane",
+    "state": "Maharashtra",
+    "lat": 19.2183,
+    "lng": 72.9781
+  },
+  {
+    "id": "ea7d120b-6269-4928-8011-526b88c02e70",
+    "coa_code": "AP19",
+    "institution_name": "M.R.K.College Of Architecture",
+    "slug": "mrkcollege-of-architecture-west-godavari",
+    "city": "West Godavari",
+    "state": "Andhra Pradesh",
+    "lat": 15.9129,
+    "lng": 79.74
+  },
+  {
+    "id": "5202e4f2-1a4f-47ee-8b43-a1f4c88035d7",
+    "coa_code": "MH39",
+    "institution_name": "Asmita College of Architecture",
+    "slug": "asmita-college-of-architecture-thane",
+    "city": "Thane",
+    "state": "Maharashtra",
+    "lat": 19.215351,
+    "lng": 72.980937
+  },
+  {
+    "id": "3be20826-cd00-4fed-b22f-00ddbcbe2d8c",
+    "coa_code": "TN14",
+    "institution_name": "Salem School of Architecture",
+    "slug": "salem-school-of-architecture",
+    "city": "Salem",
+    "state": "Tamil Nadu",
+    "lat": 11.661351,
+    "lng": 78.148837
+  },
+  {
+    "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+    "coa_code": "KA02A",
+    "institution_name": "Manipal University - Dubai Campus",
+    "slug": "manipal-university-dubai-campus",
+    "city": "Karnataka",
+    "state": "Karnataka",
+    "lat": 28.6139,
+    "lng": 77.209
+  },
+  {
+    "id": "d4992a80-6d85-440d-9c41-629e7bd742e3",
+    "coa_code": "AP08",
+    "institution_name": "ANU College of Architecture & Planning",
+    "slug": "anu-college-of-architecture-planning-guntur",
+    "city": "Guntur",
+    "state": "Andhra Pradesh",
+    "lat": 16.3067,
+    "lng": 80.4365
+  },
+  {
+    "id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "slug": "school-of-planning-and-architecture-vijayawada",
+    "city": "Vijayawada",
+    "state": "Andhra Pradesh",
+    "lat": 16.5062,
+    "lng": 80.648
+  },
+  {
+    "id": "93004b49-6a23-4054-982e-42131e77d1a3",
+    "coa_code": "AP11",
+    "institution_name": "School of Architecture, GITAM University",
+    "slug": "school-of-architecture-gitam-university-visakhapatnam",
+    "city": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "lat": 17.6868,
+    "lng": 83.2185
+  },
+  {
+    "id": "6fdfd021-e2a8-4252-9985-d54bb5dafba5",
+    "coa_code": "AS02",
+    "institution_name": "Royal School Of Architecture",
+    "slug": "royal-school-of-architecture-guwahati",
+    "city": "Guwahati",
+    "state": "Assam",
+    "lat": 26.141551,
+    "lng": 91.739037
+  },
+  {
+    "id": "937eef16-6d8e-4ed5-a2f9-edd697cd5070",
+    "coa_code": "OR03",
+    "institution_name": "School of Architecture and Planning",
+    "slug": "school-of-architecture-and-planning-bhubaneswar",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "lat": 20.2961,
+    "lng": 85.8245
+  },
+  {
+    "id": "6a2ad9c5-93c0-43c8-949b-5748be4dcfc9",
+    "coa_code": "AP14",
+    "institution_name": "Varaha College Of Architecture and Planning",
+    "slug": "varaha-college-of-architecture-and-planning-visakhapatnam",
+    "city": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "lat": 17.683851,
+    "lng": 83.221337
+  },
+  {
+    "id": "cd2a0dd5-5a55-4580-a27d-2f7c9c92409b",
+    "coa_code": "AP02",
+    "institution_name": "Faculty of Architecture, College of Engineering (Andhra University)",
+    "slug": "faculty-of-architecture-college-of-engineering-andhra-university-visakhapatnam",
+    "city": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "lat": 17.687295,
+    "lng": 83.212583
+  },
+  {
+    "id": "b738e42c-8b9e-40a5-99bf-40aba3397533",
+    "coa_code": "BR01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology",
+    "slug": "faculty-of-architecture-national-institute-of-technology-patna",
+    "city": "Patna",
+    "state": "Bihar",
+    "lat": 25.5941,
+    "lng": 85.1376
+  },
+  {
+    "id": "daa34460-a04d-4a16-9245-2da124873851",
+    "coa_code": "JK04",
+    "institution_name": "School of Architecture, Abdul Ahad Azad Memorial Degree College Bemina",
+    "slug": "school-of-architecture-abdul-ahad-azad-memorial-degree-college-bemina-srinagar",
+    "city": "Srinagar",
+    "state": "Jammu & Kashmir",
+    "lat": 34.0837,
+    "lng": 74.7973
+  },
+  {
+    "id": "43be726e-1270-41b4-9b1c-e41f95a69923",
+    "coa_code": "KA16",
+    "institution_name": "Acharyas NRV School of Architecture",
+    "slug": "acharyas-nrv-school-of-architecture-hesaraghatta-main-road-chikkabanavara",
+    "city": "Hesaraghatta Main Road Chikkabanavara",
+    "state": "Karnataka",
+    "lat": 15.322661,
+    "lng": 75.70187
+  },
+  {
+    "id": "55f20873-ceb9-4f9b-9f81-dba4fb8c1377",
+    "coa_code": "KA17",
+    "institution_name": "BMS School of Architecture",
+    "slug": "bms-school-of-architecture-yelahanka",
+    "city": "Yelahanka",
+    "state": "Karnataka",
+    "lat": 15.321271,
+    "lng": 75.727191
+  },
+  {
+    "id": "1eff6580-e2c6-4646-b1ff-67084815797b",
+    "coa_code": "RJ05",
+    "institution_name": "Amity School of Architecture & Planning, Amity University Rajasthan",
+    "slug": "amity-school-of-architecture-planning-amity-university-rajasthan-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.9124,
+    "lng": 75.7873
+  },
+  {
+    "id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+    "coa_code": "DL06",
+    "institution_name": "University School of Architecture & Planning",
+    "slug": "university-school-of-architecture-planning-delhi",
+    "city": "Delhi",
+    "state": "Delhi",
+    "lat": 28.610951,
+    "lng": 77.211837
+  },
+  {
+    "id": "4df88b06-6798-43b4-9015-fa8e44a5fbde",
+    "coa_code": "DL09",
+    "institution_name": "Department of Architecture, Indira Gandhi Delhi Technical University for Women",
+    "slug": "department-of-architecture-indira-gandhi-delhi-technical-university-for-women",
+    "city": "Delhi",
+    "state": "Delhi",
+    "lat": 28.614395,
+    "lng": 77.203083
+  },
+  {
+    "id": "8bd36cde-a1ed-4d31-94ef-69ebe162eff5",
+    "coa_code": "BR03",
+    "institution_name": "Department of Architecture, Birla Institute of Technology (BIT Patna)",
+    "slug": "department-of-architecture-birla-institute-of-technology-bit-patna",
+    "city": "Patna",
+    "state": "Bihar",
+    "lat": 25.591151,
+    "lng": 85.140437
+  },
+  {
+    "id": "fe4788a8-2247-4343-97be-1353821d2e2b",
+    "coa_code": "MH78",
+    "institution_name": "Shree Chanakya Education Society Indira College of Architecture and Design",
+    "slug": "shree-chanakya-education-society-indira-college-of-architecture-and-design-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.517451,
+    "lng": 73.859537
+  },
+  {
+    "id": "b25a17f9-6965-4068-8326-78a1a2c5f902",
+    "coa_code": "MH98",
+    "institution_name": "Aditya College of Architecture",
+    "slug": "aditya-college-of-architecture-beed",
+    "city": "Beed",
+    "state": "Maharashtra",
+    "lat": 18.9891,
+    "lng": 75.7601
+  },
+  {
+    "id": "9862d7d5-030b-450d-bf91-73c76cb2b25b",
+    "coa_code": "PJ09",
+    "institution_name": "Sai School of Architecture",
+    "slug": "sai-school-of-architecture-amritsar",
+    "city": "Amritsar",
+    "state": "Punjab",
+    "lat": 31.634,
+    "lng": 74.8723
+  },
+  {
+    "id": "077e222d-d89a-4af8-9ad9-3eac3f2bf58f",
+    "coa_code": "TN87",
+    "institution_name": "PRIST University",
+    "slug": "prist-university-thanjavur",
+    "city": "Thanjavur",
+    "state": "Tamil Nadu",
+    "lat": 10.784051,
+    "lng": 79.140637
+  },
+  {
+    "id": "d28ebe7d-fbd5-4ebb-8b8b-704144bef57a",
+    "coa_code": "CG08",
+    "institution_name": "Amity School of Architecture and Planning",
+    "slug": "amity-school-of-architecture-and-planning-raipur",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "lat": 21.248451,
+    "lng": 81.632437
+  },
+  {
+    "id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+    "coa_code": "CH01",
+    "institution_name": "Chandigarh College Of Architecture",
+    "slug": "chandigarh-college-of-architecture",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "lat": 30.7333,
+    "lng": 76.7794
+  },
+  {
+    "id": "34f4f2af-06ed-4a85-af66-91f9ef967e95",
+    "coa_code": "DL03",
+    "institution_name": "College Of Architecture Vastu Kala Academy",
+    "slug": "college-of-architecture-vastu-kala-academy-new-delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "lat": 28.618115,
+    "lng": 77.214773
+  },
+  {
+    "id": "c99d9e90-17a7-447c-ad98-deec4d8fed73",
+    "coa_code": "GJ01",
+    "institution_name": "Faculty Of Architecture, M.S. University of Baroda",
+    "slug": "faculty-of-architecture-ms-university-of-baroda-vadodara",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.307695,
+    "lng": 73.175283
+  },
+  {
+    "id": "c6ad919a-30ef-47db-b700-a67b52a97c5e",
+    "coa_code": "OR09",
+    "institution_name": "Department of ArchitectureVeer Surendra Sai University of Technology",
+    "slug": "department-of-architectureveer-surendra-sai-university-of-technology-sambalpur",
+    "city": "Sambalpur",
+    "state": "Odisha",
+    "lat": 20.948751,
+    "lng": 85.101337
+  },
+  {
+    "id": "c7d0f86b-7526-4e30-9fde-f6c5baf30eab",
+    "coa_code": "DL11",
+    "institution_name": "PERIYAR SCHOOL OF ARCHITECTURE",
+    "slug": "periyar-school-of-architecture-new-delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "lat": 28.606022,
+    "lng": 77.207537
+  },
+  {
+    "id": "ef798bba-2cc7-46a5-b6c9-d6a6c9144ea2",
+    "coa_code": "GJ03",
+    "institution_name": "D.C.Patel School Of Architecture, Arvindbhai Patel Institute Of Environmental Design",
+    "slug": "dcpatel-school-of-architecture-arvindbhai-patel-institute-of-environmental-design-vallabh-vidyanagar",
+    "city": "Vallabh Vidyanagar",
+    "state": "Gujarat",
+    "lat": 22.5539,
+    "lng": 72.9238
+  },
+  {
+    "id": "5943e836-03e3-4e41-b262-3d2476c33535",
+    "coa_code": "GJ05",
+    "institution_name": "College of Architecture, Sardar Vallabhbhai Patel Institute of Technology",
+    "slug": "college-of-architecture-sardar-vallabhbhai-patel-institute-of-technology-anand",
+    "city": "Anand",
+    "state": "Gujarat",
+    "lat": 22.5645,
+    "lng": 72.9289
+  },
+  {
+    "id": "4e9c3cb4-40d1-4c7a-a96e-1770e5f969e2",
+    "coa_code": "RJ22",
+    "institution_name": "College of Architecture, Mohanlal Sukhadia University",
+    "slug": "college-of-architecture-mohanlal-sukhadia-university-udaipur",
+    "city": "Udaipur",
+    "state": "Rajasthan",
+    "lat": 27.020851,
+    "lng": 74.220737
+  },
+  {
+    "id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "slug": "faculty-of-architecture-and-ekistics-jamia-millia-islamia-new-delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "lat": 28.621447,
+    "lng": 77.203959
+  },
+  {
+    "id": "67c18f42-fab9-46aa-8887-0bbe374edbe1",
+    "coa_code": "CG01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology, Deemed University",
+    "slug": "faculty-of-architecture-national-institute-of-technology-deemed-university-raipur",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "lat": 21.251895,
+    "lng": 81.623683
+  },
+  {
+    "id": "0cfb2548-4c03-48fd-8367-94ee8ceb70a3",
+    "coa_code": "TN33",
+    "institution_name": "Surya School of Architecture",
+    "slug": "surya-school-of-architecture-campus-1-villupuram",
+    "city": "Villupuram",
+    "state": "Tamil Nadu",
+    "lat": 11.116008,
+    "lng": 78.661708
+  },
+  {
+    "id": "91821e31-fb85-4927-881f-6db7d1b2fd70",
+    "coa_code": "UP12",
+    "institution_name": "Teerthanker Mahaveer College of Architecture",
+    "slug": "teerthanker-mahaveer-college-of-architecture-moradabad",
+    "city": "Moradabad",
+    "state": "Uttar Pradesh",
+    "lat": 26.850915,
+    "lng": 80.951973
+  },
+  {
+    "id": "a0c78f00-5cce-4051-b9d1-6e0c928a8c44",
+    "coa_code": "CG09",
+    "institution_name": "Department of Architecture, ITM University",
+    "slug": "department-of-architecture-itm-university-raipur",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "lat": 21.255615,
+    "lng": 81.635373
+  },
+  {
+    "id": "006d336f-979b-47a4-979f-a63428cfb6f2",
+    "coa_code": "GA01",
+    "institution_name": "Goa College Of Architecture, Panaji",
+    "slug": "goa-college-of-architecture-panaji-north",
+    "city": "North",
+    "state": "Goa",
+    "lat": 13.032851,
+    "lng": 77.599837
+  },
+  {
+    "id": "54306156-f722-4e54-897d-2aee8c0d2f3c",
+    "coa_code": "GJ04",
+    "institution_name": "Faculty Of Architecture Sarvajanik College Of Engineering & Technology",
+    "slug": "faculty-of-architecture-sarvajanik-college-of-engineering-technology-surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.167251,
+    "lng": 72.833937
+  },
+  {
+    "id": "557803c1-19ce-4d89-b764-9347820425d8",
+    "coa_code": "GJ11",
+    "institution_name": "School of Architecture, Anant National University",
+    "slug": "school-of-architecture-anant-national-university-ahmedabad",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.0225,
+    "lng": 72.5714
+  },
+  {
+    "id": "3b03dbe0-f7d0-43e3-92d0-97ab5d0d390e",
+    "coa_code": "GJ14",
+    "institution_name": "ITM School Of Architecture Art And Design",
+    "slug": "itm-school-of-architecture-art-and-design-vadodara",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.311415,
+    "lng": 73.186973
+  },
+  {
+    "id": "00b2cfca-9b2d-4e1b-ae09-038b8392d1fa",
+    "coa_code": "GJ13",
+    "institution_name": "Faculty of Architecture, Parul Institute of Architecture and Research",
+    "slug": "faculty-of-architecture-parul-institute-of-architecture-and-research-vadodara",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.299322,
+    "lng": 73.179737
+  },
+  {
+    "id": "9df96300-5995-424c-aee2-c580792765d8",
+    "coa_code": "GJ06",
+    "institution_name": "Vyavasay Vidya Pratishthans Indubhai Parekh School Of Architecture",
+    "slug": "vyavasay-vidya-pratishthans-indubhai-parekh-school-of-architecture-rajkot",
+    "city": "Rajkot",
+    "state": "Gujarat",
+    "lat": 22.3039,
+    "lng": 70.8022
+  },
+  {
+    "id": "40c278c4-e258-4114-afa6-88f37337a9e4",
+    "coa_code": "GJ12",
+    "institution_name": "School Of Design And Architecture",
+    "slug": "school-of-design-and-architecture-vadodara",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.314747,
+    "lng": 73.176159
+  },
+  {
+    "id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+    "coa_code": "GJ02",
+    "institution_name": "Faculty of Architecture, CEPT University",
+    "slug": "faculty-of-architecture-cept-university-ahmedabad",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.019551,
+    "lng": 72.574237
+  },
+  {
+    "id": "5e12acc6-d0c7-4939-bdeb-ffffd08b7ea1",
+    "coa_code": "DL07",
+    "institution_name": "MBS School Of Planning And Architecture",
+    "slug": "mbs-school-of-planning-and-architecture-new-delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "lat": 28.611357,
+    "lng": 77.218935
+  },
+  {
+    "id": "fa1c6a5e-f921-4243-bc10-9a8eb46020d7",
+    "coa_code": "GJ09",
+    "institution_name": "Shri Gijubhai Chhaganbhai Patel Institute of Architecture, Interior Design and Fine Arts",
+    "slug": "shri-gijubhai-chhaganbhai-patel-institute-of-architecture-interior-design-and-fine-arts-surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.170695,
+    "lng": 72.825183
+  },
+  {
+    "id": "87b6be52-401f-4be5-9511-26a19f11a081",
+    "coa_code": "GJ08",
+    "institution_name": "Institute of Architecture, Hemchandracharya North Gujarat University",
+    "slug": "institute-of-architecture-hemchandracharya-north-gujarat-university-patan",
+    "city": "Patan",
+    "state": "Gujarat",
+    "lat": 23.846351,
+    "lng": 72.129437
+  },
+  {
+    "id": "bb31575a-90bb-4339-8ffb-0310c521395b",
+    "coa_code": "MH54",
+    "institution_name": "Mahatma Education Societys Pillais HOC College of Architecture",
+    "slug": "mahatma-education-societys-pillais-hoc-college-of-architecture-raigad",
+    "city": "Raigad",
+    "state": "Maharashtra",
+    "lat": 18.5158,
+    "lng": 73.1822
+  },
+  {
+    "id": "19735da4-26b2-4222-83a0-66f42d025300",
+    "coa_code": "MP15",
+    "institution_name": "College of Architecture",
+    "slug": "college-of-architecture-indore",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "lat": 22.7196,
+    "lng": 75.8577
+  },
+  {
+    "id": "b64e60d3-3fa3-4699-9b95-1452856ac3fb",
+    "coa_code": "TN98",
+    "institution_name": "Madha School of Architecture",
+    "slug": "madha-school-of-architecture-kancheepuram",
+    "city": "Kancheepuram",
+    "state": "Tamil Nadu",
+    "lat": 11.132461,
+    "lng": 78.64487
+  },
+  {
+    "id": "608a23f9-7a87-4fb3-8115-1b42060f0e02",
+    "coa_code": "KA43",
+    "institution_name": "RNS SCHOOL OF ARCHITECTURE",
+    "slug": "rns-school-of-architecture-rnsit-campuschannasandrauttarahalli-kengeri-main-roaddr-vishnuvardhan-roadrajarajeshwarinagar-postbangalore",
+    "city": "Rnsit Campuschannasandrauttarahalli Kengeri Main Roaddr Vishnuvardhan Roadrajarajeshwarinagar Postbangalore",
+    "state": "Karnataka",
+    "lat": 12.972095,
+    "lng": 77.588683
+  },
+  {
+    "id": "3b3b4232-ea8c-4e32-8ef4-e3a02a58367e",
+    "coa_code": "RJD03",
+    "institution_name": "Government Ramchandra Khaitan Polytechnic College JHALANA DOONGRI",
+    "slug": "government-ramchandra-khaitan-polytechnic-college-jhalana-doongri-jaipur-rjd03",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.909451,
+    "lng": 75.790137
+  },
+  {
+    "id": "a2e330db-862a-4640-99da-17834ac6195f",
+    "coa_code": "RJD04",
+    "institution_name": "Jai Minesh Adivasi University Kota Jai minesh Adivasi University Infront of IIIT Ranp",
+    "slug": "jai-minesh-adivasi-university-kota-jai-minesh-adivasi-university-infront-of-iiit-ranp-kota-rjd04",
+    "city": "Kota",
+    "state": "Rajasthan",
+    "lat": 27.024295,
+    "lng": 74.211983
+  },
+  {
+    "id": "9e59a014-83d1-49da-88bd-ca8313a0b48c",
+    "coa_code": "GJ23",
+    "institution_name": "Swarrnim Institute Of Design",
+    "slug": "swarrnim-institute-of-design-gandhinagar",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "lat": 23.212651,
+    "lng": 72.639737
+  },
+  {
+    "id": "326165b7-8d11-426c-a074-b274f00c733a",
+    "coa_code": "HR02",
+    "institution_name": "Deen Bandhu Chhotu Ram University Of Science & Technology",
+    "slug": "deen-bandhu-chhotu-ram-university-of-science-technology-murthal",
+    "city": "Murthal",
+    "state": "Haryana",
+    "lat": 29.063015,
+    "lng": 76.091373
+  },
+  {
+    "id": "a5a932c1-e57c-41c5-9e90-6f7ff08cf849",
+    "coa_code": "HP06",
+    "institution_name": "RAJIV GANDHI GOVERNMENT ENGINEERING COLLEGE KANGRA",
+    "slug": "rajiv-gandhi-government-engineering-college-kangra",
+    "city": "Kangra",
+    "state": "Himachal Pradesh",
+    "lat": 31.1048,
+    "lng": 77.1734
+  },
+  {
+    "id": "59ca5c08-7291-4da1-85d0-2778bc13f373",
+    "coa_code": "HR11",
+    "institution_name": "Ganga Institute Of Architecture & Town Planning",
+    "slug": "ganga-institute-of-architecture-town-planning-jhajjar",
+    "city": "Jhajjar",
+    "state": "Haryana",
+    "lat": 29.050922,
+    "lng": 76.084137
+  },
+  {
+    "id": "ab43dc95-fc9a-46bd-bb05-2845b1915cf2",
+    "coa_code": "GJ15",
+    "institution_name": "Shantaben Manubhai Patel School of Studies and Research in Architecture and Interior Design",
+    "slug": "shantaben-manubhai-patel-school-of-studies-and-research-in-architecture-and-interior-design-anand",
+    "city": "Anand",
+    "state": "Gujarat",
+    "lat": 22.561551,
+    "lng": 72.931737
+  },
+  {
+    "id": "f70a8b3f-7309-48b7-ad51-8028468e3710",
+    "coa_code": "GJ17",
+    "institution_name": "Bhagwan Mahavir College Of Architecture",
+    "slug": "bhagwan-mahavir-college-of-architecture-surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.174415,
+    "lng": 72.836873
+  },
+  {
+    "id": "28aa4471-f4fe-444c-87e9-f41bf0a0af27",
+    "coa_code": "GJ19",
+    "institution_name": "Raman Bhakta School Of Architecture",
+    "slug": "raman-bhakta-school-of-architecture-surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.162322,
+    "lng": 72.829637
+  },
+  {
+    "id": "27300dc0-1022-4751-88b4-de286ff1d6b4",
+    "coa_code": "GJ34",
+    "institution_name": "P P Savani School of Architecture",
+    "slug": "p-p-savani-school-of-architecture-surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.177747,
+    "lng": 72.826059
+  },
+  {
+    "id": "9071e3e2-76e6-404c-9316-8540109caa4f",
+    "coa_code": "HR08",
+    "institution_name": "Lingayas University School of Architecture",
+    "slug": "lingayas-university-school-of-architecture-faridabad",
+    "city": "Faridabad",
+    "state": "Haryana",
+    "lat": 28.405951,
+    "lng": 77.320637
+  },
+  {
+    "id": "4f301cc6-c991-4de2-ae43-57d393234c47",
+    "coa_code": "MH55",
+    "institution_name": "School of ArchitectureAnjuman-I-Islams Kalsekar Technical Campus",
+    "slug": "school-of-architectureanjuman-i-islams-kalsekar-technical-campus-navi-mumbai",
+    "city": "Navi Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.030051,
+    "lng": 73.032537
+  },
+  {
+    "id": "8f1aa200-0100-401d-afaf-25a8a10e28a8",
+    "coa_code": "GJ27",
+    "institution_name": "Vidyamandir College of Architecture",
+    "slug": "vidyamandir-college-of-architecture-surat",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.167657,
+    "lng": 72.841035
+  },
+  {
+    "id": "d95635e2-65fd-4d43-afdf-7b0979db06b9",
+    "coa_code": "UP30",
+    "institution_name": "Ansal School of Architecture",
+    "slug": "ansal-school-of-architecture-lucknow",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.838822,
+    "lng": 80.944737
+  },
+  {
+    "id": "298c9e9c-fd72-423c-b7ae-14844fcf15cc",
+    "coa_code": "AP21",
+    "institution_name": "Department of Architecture, K.L.E.F. University, Green Fields Campus",
+    "slug": "department-of-architecture-klef-university-green-fields-campus-guntur",
+    "city": "Guntur",
+    "state": "Andhra Pradesh",
+    "lat": 16.303751,
+    "lng": 80.439337
+  },
+  {
+    "id": "3440e0f2-d43e-4f18-bb63-94226b5a2e43",
+    "coa_code": "HR03",
+    "institution_name": "Gateway College Of Architecture & Design",
+    "slug": "gateway-college-of-architecture-design-sector-11",
+    "city": "Sector 11",
+    "state": "Haryana",
+    "lat": 29.066347,
+    "lng": 76.080559
+  },
+  {
+    "id": "20138fcd-eb98-49fb-bb6e-4174bd22500e",
+    "coa_code": "RJD05",
+    "institution_name": "Incharge SINGHANIA SCHOOL OF ARCHITECTURE pacheri Bari",
+    "slug": "incharge-singhania-school-of-architecture-pacheri-bari-jhunjhunu-rjd05",
+    "city": "Jhunjhunu",
+    "state": "Rajasthan",
+    "lat": 27.028015,
+    "lng": 74.223673
+  },
+  {
+    "id": "c0e94827-8093-4529-b2d5-be5ec4a0efad",
+    "coa_code": "GJ18",
+    "institution_name": "L.J. School Of Architecture",
+    "slug": "lj-school-of-architecture-ahmedabad",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.022995,
+    "lng": 72.565483
+  },
+  {
+    "id": "fbb65bc3-2f04-4d42-8f0c-a885829b0498",
+    "coa_code": "TND01",
+    "institution_name": "Dr. Dharmambal Govt. Polytechnic College for Women 4th Cross St",
+    "slug": "dr-dharmambal-govt-polytechnic-college-for-women-4th-cross-st-chennai-tnd01",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.088061,
+    "lng": 80.25867
+  },
+  {
+    "id": "787750b2-a240-44d0-a811-6fcff76ad42b",
+    "coa_code": "HR09",
+    "institution_name": "Om Institute of Architecture & Design",
+    "slug": "om-institute-of-architecture-design-hisar",
+    "city": "Hisar",
+    "state": "Haryana",
+    "lat": 29.056257,
+    "lng": 76.095535
+  },
+  {
+    "id": "6a5ba3f4-6025-4544-b345-9ff831abe9cc",
+    "coa_code": "GJ16",
+    "institution_name": "Institute of Design, Environment and Architecture",
+    "slug": "institute-of-design-environment-and-architecture-gandhinagar",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "lat": 23.216095,
+    "lng": 72.630983
+  },
+  {
+    "id": "b62024f5-02b8-4ff0-b00f-ce9cd54bfaae",
+    "coa_code": "WBD02",
+    "institution_name": "NORTH CALCUTTA POLYTECHNIC 15 Gobinda Mondal Lane",
+    "slug": "north-calcutta-polytechnic-15-gobinda-mondal-lane-kolkata-wbd02",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.5726,
+    "lng": 88.3639
+  },
+  {
+    "id": "e7e02b90-f6d6-4f6c-af76-6e3984060042",
+    "coa_code": "GJ20",
+    "institution_name": "Institute of Architecture & Planning",
+    "slug": "institute-of-architecture-planning-ahmedabad",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.026715,
+    "lng": 72.577173
+  },
+  {
+    "id": "55f4bd93-6d4c-487a-9368-0b6cd0dddf84",
+    "coa_code": "GJ24",
+    "institution_name": "Sal School Of Architecture",
+    "slug": "sal-school-of-architecture-ahmedabad",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.014622,
+    "lng": 72.569937
+  },
+  {
+    "id": "64f23cc1-e152-4c8a-bba5-f975c8de355b",
+    "coa_code": "GJ28",
+    "institution_name": "Marwadi Education Foundations Group of Institutions, Faculty of Architecture",
+    "slug": "marwadi-education-foundations-group-of-institutions-faculty-of-architecture-rajkot",
+    "city": "Rajkot",
+    "state": "Gujarat",
+    "lat": 22.300951,
+    "lng": 70.805037
+  },
+  {
+    "id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "slug": "department-of-architecture-nit-hamirpur",
+    "city": "Hamirpur",
+    "state": "Himachal Pradesh",
+    "lat": 31.6862,
+    "lng": 76.5213
+  },
+  {
+    "id": "c8d15cae-a85f-4407-9252-64bac68d40be",
+    "coa_code": "HR01",
+    "institution_name": "Sushant School Of Art and Architecture",
+    "slug": "sushant-school-of-art-and-architecture-gurgaon",
+    "city": "Gurgaon",
+    "state": "Haryana",
+    "lat": 28.4595,
+    "lng": 77.0266
+  },
+  {
+    "id": "8ba22f5c-dfc7-4630-99f0-1eecd30a2122",
+    "coa_code": "MP07",
+    "institution_name": "Bagulamukhi College of Architecture and Planning",
+    "slug": "bagulamukhi-college-of-architecture-and-planning-bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.2599,
+    "lng": 77.4126
+  },
+  {
+    "id": "679176e6-543a-4795-aa77-580939d0f0f2",
+    "coa_code": "TN93",
+    "institution_name": "Immanuel Arasar College of Architecture",
+    "slug": "immanuel-arasar-college-of-architecture-kanyakumari",
+    "city": "Kanyakumari",
+    "state": "Tamil Nadu",
+    "lat": 8.0883,
+    "lng": 77.5385
+  },
+  {
+    "id": "c8bb6790-9ab1-4a75-828f-c482be833bca",
+    "coa_code": "HR12",
+    "institution_name": "MM School Of Architecture",
+    "slug": "mm-school-of-architecture-ambala",
+    "city": "Ambala",
+    "state": "Haryana",
+    "lat": 29.053922,
+    "lng": 76.075739
+  },
+  {
+    "id": "c395a321-ddbb-4e40-896b-cf1a370b2784",
+    "coa_code": "HR13",
+    "institution_name": "Amity School Of Architecture & Planning",
+    "slug": "amity-school-of-architecture-planning-gurgaon",
+    "city": "Gurgaon",
+    "state": "Haryana",
+    "lat": 28.456551,
+    "lng": 77.029437
+  },
+  {
+    "id": "1bad7ddc-9d58-4b75-85ce-3dc51f9b9182",
+    "coa_code": "HR14",
+    "institution_name": "Hindu College of Design, Architecture & Planning",
+    "slug": "hindu-college-of-design-architecture-planning-industrial-area",
+    "city": "Industrial Area",
+    "state": "Haryana",
+    "lat": 29.069427,
+    "lng": 76.089675
+  },
+  {
+    "id": "5d1724f0-9b18-4563-b27d-413fd84cd427",
+    "coa_code": "HR30",
+    "institution_name": "World School of Planning and Architecture",
+    "slug": "world-school-of-planning-and-architecture-kundli",
+    "city": "Kundli",
+    "state": "Haryana",
+    "lat": 29.047708,
+    "lng": 76.090408
+  },
+  {
+    "id": "5984fbf9-ca94-408b-836b-1c3852a0fc60",
+    "coa_code": "TN89",
+    "institution_name": "Vivekanandha College of Architecture For Women",
+    "slug": "vivekanandha-college-of-architecture-for-women-namakkal",
+    "city": "Namakkal",
+    "state": "Tamil Nadu",
+    "lat": 11.215951,
+    "lng": 78.170237
+  },
+  {
+    "id": "92895e62-3b80-4133-a33f-5ad647175c56",
+    "coa_code": "AP24",
+    "institution_name": "School of Architecture, Dr.YSR Architecture and Fine Arts University Satellite City, Chinnamachupall",
+    "slug": "school-of-architecture-drysr-architecture-and-fine-arts-university-satellite-city-chinnamachupall-chinnamachupalli",
+    "city": "Chinnamachupalli",
+    "state": "ANDHRA PRADESH",
+    "lat": 15.909951,
+    "lng": 79.742837
+  },
+  {
+    "id": "3f4388e4-174d-4f84-a78e-72537b00e52e",
+    "coa_code": "HR32",
+    "institution_name": "Mr. RAKESH SAPRA Director ST. ANDREWS COLLEGE OF ARCHITECTURE & PLANNING KHURRAMPUR, FARRUKHNAGAR-HA",
+    "slug": "mr-rakesh-sapra-director-st-andrews-college-of-architecture-planning-khurrampur-farrukhnagar-ha",
+    "city": "HARYANA",
+    "state": "HARYANA",
+    "lat": 28.609022,
+    "lng": 77.199139
+  },
+  {
+    "id": "66e5bc84-b6cc-4576-8204-bf15b0231fce",
+    "coa_code": "HR26",
+    "institution_name": "Delhi Institute of Architecture & Planning",
+    "slug": "delhi-institute-of-architecture-planning-faridabad",
+    "city": "Faridabad",
+    "state": "Haryana",
+    "lat": 28.409395,
+    "lng": 77.311883
+  },
+  {
+    "id": "a2b99b15-c47f-49a6-a621-d3b8d49cafb7",
+    "coa_code": "JK03",
+    "institution_name": "Department of Architecture, Government College of Engineering and Technology (GCET)",
+    "slug": "department-of-architecture-government-college-of-engineering-and-technology-gcet-jammu",
+    "city": "Jammu",
+    "state": "Jammu & Kashmir",
+    "lat": 32.7266,
+    "lng": 74.857
+  },
+  {
+    "id": "cc80c1be-8627-4c51-bf55-30dd70455914",
+    "coa_code": "HR25",
+    "institution_name": "School of Architecture & Planning, G.D. Goenka University",
+    "slug": "school-of-architecture-planning-gd-goenka-university-gurgaon",
+    "city": "Gurgaon",
+    "state": "Haryana",
+    "lat": 28.459995,
+    "lng": 77.020683
+  },
+  {
+    "id": "a8d57abe-82d2-440f-868d-64cc3e9f91f8",
+    "coa_code": "HR21",
+    "institution_name": "School of Architecture & Planning, K.R.Mangalam University",
+    "slug": "school-of-architecture-planning-krmangalam-university-gurgaon",
+    "city": "Gurgaon",
+    "state": "Haryana",
+    "lat": 28.463715,
+    "lng": 77.032373
+  },
+  {
+    "id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "slug": "department-of-architecture-planning-birla-institute-of-technology-ranchi",
+    "city": "Ranchi",
+    "state": "Jharkhand",
+    "lat": 23.3441,
+    "lng": 85.3096
+  },
+  {
+    "id": "093afa53-2efe-4a8d-b307-76ae1477d54e",
+    "coa_code": "JH02",
+    "institution_name": "Awadh College of Architecture",
+    "slug": "awadh-college-of-architecture-purbi-singhbhum",
+    "city": "Purbi Singhbhum",
+    "state": "Jharkhand",
+    "lat": 23.6102,
+    "lng": 85.2799
+  },
+  {
+    "id": "54546af2-f4c2-47a9-8282-39f386cf38f3",
+    "coa_code": "HR15",
+    "institution_name": "Department of Planning and Architecture, Faculty of Planning and Architecture",
+    "slug": "department-of-planning-and-architecture-faculty-of-planning-and-architecture-rohtak",
+    "city": "Rohtak",
+    "state": "Haryana",
+    "lat": 28.892551,
+    "lng": 76.609437
+  },
+  {
+    "id": "3dc1c710-53b4-4cdb-9133-3078bfdc51a4",
+    "coa_code": "JK01",
+    "institution_name": "School of Architecture and Landscaping, College of Engineering",
+    "slug": "school-of-architecture-and-landscaping-college-of-engineering-reasi",
+    "city": "Reasi",
+    "state": "Jammu & Kashmir",
+    "lat": 33.0827,
+    "lng": 74.8329
+  },
+  {
+    "id": "aae112ac-7e59-4743-b603-169a48d00ea5",
+    "coa_code": "TN09",
+    "institution_name": "Mohammed Sathak Engineering College",
+    "slug": "mohammed-sathak-engineering-college-ramanathapuram",
+    "city": "Ramanathapuram",
+    "state": "Tamil Nadu",
+    "lat": 11.131071,
+    "lng": 78.670191
+  },
+  {
+    "id": "6b9d7988-c71a-4127-8405-14382dd7e963",
+    "coa_code": "JK05",
+    "institution_name": "Department of Architecture, Islamic University of Science & Technology (IUST)",
+    "slug": "department-of-architecture-islamic-university-of-science-technology-iust-pulwama",
+    "city": "Pulwama",
+    "state": "Jammu & Kashmir",
+    "lat": 32.8788,
+    "lng": 74.8988
+  },
+  {
+    "id": "453cd220-93e0-489d-bebc-5a4e50108e22",
+    "coa_code": "KA19",
+    "institution_name": "The Oxford School of Architecture",
+    "slug": "the-oxford-school-of-architecture-bangalore",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "lat": 12.975815,
+    "lng": 77.600373
+  },
+  {
+    "id": "b10451ca-dca3-4fd7-8dca-3473253627bc",
+    "coa_code": "AS03",
+    "institution_name": "Mr. CHINMOYANANDA PHUKAN Dean HAM-AK COLLEGE OF ARCHITECTURE, PLANNING AND DESIGN VILL &amp; PO:-SHI",
+    "slug": "mr-chinmoyananda-phukan-dean-ham-ak-college-of-architecture-planning-and-design-vill-amp-po-shi-dhing-road",
+    "city": "DHING ROAD",
+    "state": "ASSAM",
+    "lat": 26.2006,
+    "lng": 92.9376
+  },
+  {
+    "id": "7b5f833a-5c50-4952-a614-5c0188aec68e",
+    "coa_code": "HR33",
+    "institution_name": "Mr. BASANT BHUTANI Director CCLS COLLEGE OF ARCHITECTURE & DESIGN HASSANGARH, SAMPLA",
+    "slug": "mr-basant-bhutani-director-ccls-college-of-architecture-design-hassangarh-sampla-sampla",
+    "city": "SAMPLA",
+    "state": "HARYANA",
+    "lat": 29.064161,
+    "lng": 76.07357
+  },
+  {
+    "id": "e1efe5ed-b9eb-48b2-962b-954c33bddaef",
+    "coa_code": "MH121",
+    "institution_name": "Ms. SUPRIYA DHANANJAY NENE Dean Department of Architecture, NICMAR University Post Office, 25/1, NIC",
+    "slug": "ms-supriya-dhananjay-nene-dean-department-of-architecture-nicmar-university-post-office-251-nic-nicmar-university-post-office",
+    "city": "NICMAR University Post Office",
+    "state": "MAHARASHTRA",
+    "lat": 19.7515,
+    "lng": 75.7139
+  },
+  {
+    "id": "8ebb0b17-32d4-4d0c-9188-3993311ff8a7",
+    "coa_code": "KA09",
+    "institution_name": "Malik Sandal Institute Of Art & Architecture",
+    "slug": "malik-sandal-institute-of-art-architecture-vijaypur",
+    "city": "Vijaypur",
+    "state": "Karnataka",
+    "lat": 15.305311,
+    "lng": 75.706605
+  },
+  {
+    "id": "8caf1135-1b05-4d2f-acbb-ea6d98e5d317",
+    "coa_code": "MH123",
+    "institution_name": "Mr. Amol Shivajirao Jayshree Patil Head Of Department School of Architecture & Planning, Atharva Uni",
+    "slug": "mr-amol-shivajirao-jayshree-patil-head-of-department-school-of-architecture-planning-atharva-uni-atharva-university-mumbai-malad-marve-road",
+    "city": "Atharva University Mumbai Malad Marve Road",
+    "state": "MAHARASHTRA",
+    "lat": 19.073051,
+    "lng": 72.880537
+  },
+  {
+    "id": "063943a0-2a1b-4ccb-8f59-45554656228e",
+    "coa_code": "ML02",
+    "institution_name": "Incharge College of Architecture and Urban Planning, Tura Balalgre, P.O. Damalgre",
+    "slug": "incharge-college-of-architecture-and-urban-planning-tura-balalgre-po-damalgre-tura-balalgre",
+    "city": "Tura Balalgre",
+    "state": "MEGHALAYA",
+    "lat": 20.590751,
+    "lng": 78.965737
+  },
+  {
+    "id": "f7b13001-0312-4563-99b0-774ee2856591",
+    "coa_code": "TS18",
+    "institution_name": "Incharge Centre for Architecture, Mahindra University Survey No: 62/1A, Bahadurpally, Jeedimetla",
+    "slug": "incharge-centre-for-architecture-mahindra-university-survey-no-621a-bahadurpally-jeedimetla-bahadurpally",
+    "city": "Bahadurpally",
+    "state": "TELANGANA",
+    "lat": 18.1124,
+    "lng": 79.0193
+  },
+  {
+    "id": "0ca5f040-e0bf-4cb6-ada4-4ff5b3977ec5",
+    "coa_code": "UP51",
+    "institution_name": "School of Architecture and Planning Lucknow-Kanpur Highway (NH-27), Unnao district",
+    "slug": "school-of-architecture-and-planning-lucknow-kanpur-highway-nh-27-unnao-district-unnao-district",
+    "city": "Unnao district",
+    "state": "UTTAR PRADESH",
+    "lat": 26.854247,
+    "lng": 80.941159
+  },
+  {
+    "id": "076b6efe-f529-44f0-add7-f30e7686ed47",
+    "coa_code": "TND02",
+    "institution_name": "Thiagarajar Polytechnic College Post Box no.523",
+    "slug": "thiagarajar-polytechnic-college-post-box-no-523-salem-tnd02",
+    "city": "Salem",
+    "state": "Tamil Nadu",
+    "lat": 11.664795,
+    "lng": 78.140083
+  },
+  {
+    "id": "e286f1a7-5bf3-4569-b658-4f8fb03ff9c4",
+    "coa_code": "KA34",
+    "institution_name": "Wadiyar Centre For Architecture",
+    "slug": "wadiyar-centre-for-architecture-mysore",
+    "city": "Mysore",
+    "state": "Karnataka",
+    "lat": 12.287922,
+    "lng": 76.637937
+  },
+  {
+    "id": "5d3e28ac-f11b-4add-81de-c1ac2dbb5c50",
+    "coa_code": "KA40",
+    "institution_name": "Brindavan College of Architecture",
+    "slug": "brindavan-college-of-architecture-bangalore",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "lat": 12.963722,
+    "lng": 77.593137
+  },
+  {
+    "id": "65294ca5-4e09-4253-b755-ce242325a2de",
+    "coa_code": "TN69",
+    "institution_name": "MMES Academy of Architecture",
+    "slug": "mmes-academy-of-architecture-vellore",
+    "city": "Vellore",
+    "state": "Tamil Nadu",
+    "lat": 12.913551,
+    "lng": 79.135337
+  },
+  {
+    "id": "0b3842da-7c96-4901-b1eb-f7cf1cedc631",
+    "coa_code": "TND03",
+    "institution_name": "Periyar Centenary Polytechnic College Periyar Nagar",
+    "slug": "periyar-centenary-polytechnic-college-periyar-nagar-thanjavur-tnd03",
+    "city": "Thanjavur",
+    "state": "Tamil Nadu",
+    "lat": 10.787495,
+    "lng": 79.131883
+  },
+  {
+    "id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "slug": "bms-college-of-architecture-bull-temple-road",
+    "city": "Bull Temple Road",
+    "state": "Karnataka",
+    "lat": 15.331386,
+    "lng": 75.710648
+  },
+  {
+    "id": "f9f52324-2f66-4c54-be04-2d655b651da7",
+    "coa_code": "KA01",
+    "institution_name": "University of Visvesvaraya College of Engineering",
+    "slug": "university-of-visvesvaraya-college-of-engineering-jnana-bharathi",
+    "city": "Jnana Bharathi",
+    "state": "Karnataka",
+    "lat": 15.308693,
+    "lng": 75.726756
+  },
+  {
+    "id": "29846833-9682-4ca1-9364-93c774e482eb",
+    "coa_code": "HR34",
+    "institution_name": "Mr. RAJEEV GARG Head Of Department National Institute of Technology Kurukshetra National Institute o",
+    "slug": "mr-rajeev-garg-head-of-department-national-institute-of-technology-kurukshetra-national-institute-o-kurukshetra",
+    "city": "Kurukshetra",
+    "state": "HARYANA",
+    "lat": 29.062771,
+    "lng": 76.098891
+  },
+  {
+    "id": "be256cb9-592e-4c20-ab13-771d8e64ffb1",
+    "coa_code": "MH122",
+    "institution_name": "Adsul Architecture College AT CHAS, CHAS- NIMBLAK BAYPASS ROAD, ,AHMEDNAGAR",
+    "slug": "adsul-architecture-college-at-chas-chas-nimblak-baypass-road-ahmednagar",
+    "city": "MAHARASHTRA",
+    "state": "MAHARASHTRA",
+    "lat": 28.624527,
+    "lng": 77.213075
+  },
+  {
+    "id": "65496cf7-f422-49e5-bee8-51fdf1424d61",
+    "coa_code": "KA13",
+    "institution_name": "Siddaganga Institute Of Technology",
+    "slug": "siddaganga-institute-of-technology-tumkur",
+    "city": "Tumkur",
+    "state": "Karnataka",
+    "lat": 13.336251,
+    "lng": 77.104537
+  },
+  {
+    "id": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+    "coa_code": "KA11",
+    "institution_name": "MS Ramaiah Institute Of Technology",
+    "slug": "ms-ramaiah-institute-of-technology-m-s-r-nagarm-s-r-i-t",
+    "city": "M S R Nagarm S R I T",
+    "state": "Karnataka",
+    "lat": 15.315308,
+    "lng": 75.697768
+  },
+  {
+    "id": "1df09972-2f23-4a87-90a1-2e8601320f25",
+    "coa_code": "KA08",
+    "institution_name": "BLDE Associations College Of Engineering & Technology",
+    "slug": "blde-associations-college-of-engineering-technology-vijaypur",
+    "city": "Vijaypur",
+    "state": "Karnataka",
+    "lat": 15.329535,
+    "lng": 75.724726
+  },
+  {
+    "id": "88aebe2c-d50f-4cdd-ad0c-1616d1de722d",
+    "coa_code": "KA31",
+    "institution_name": "Bearys Enviro-Architecture Design School",
+    "slug": "bearys-enviro-architecture-design-school-dakshina-kannada",
+    "city": "Dakshina Kannada",
+    "state": "Karnataka",
+    "lat": 15.300822,
+    "lng": 75.714616
+  },
+  {
+    "id": "59510bb3-ebe3-4b80-9366-f9a951689d78",
+    "coa_code": "KA37",
+    "institution_name": "CMR University",
+    "slug": "cmr-university-chagalatti",
+    "city": "Chagalatti",
+    "state": "Karnataka",
+    "lat": 15.329329,
+    "lng": 75.70133
+  },
+  {
+    "id": "e902c9d9-9cde-418a-93e9-0a06e60e8c54",
+    "coa_code": "KA41",
+    "institution_name": "Nitte School of Architecture Planning and Design",
+    "slug": "nitte-school-of-architecture-planning-and-design-bangalore",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "lat": 12.979147,
+    "lng": 77.589559
+  },
+  {
+    "id": "23430458-d657-4f09-9e69-6a5174df3c90",
+    "coa_code": "KA39",
+    "institution_name": "PES University",
+    "slug": "pes-university-near-dsert",
+    "city": "Near Dsert",
+    "state": "Karnataka",
+    "lat": 15.316496,
+    "lng": 75.732188
+  },
+  {
+    "id": "9f901769-ccbb-4746-8c5f-0e08bdcc91fb",
+    "coa_code": "KA49",
+    "institution_name": "JSS Institute of Architecture and Planning",
+    "slug": "jss-institute-of-architecture-and-planning-dharwad",
+    "city": "Dharwad",
+    "state": "Karnataka",
+    "lat": 15.4589,
+    "lng": 75.0078
+  },
+  {
+    "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "slug": "national-institute-of-technology-kozhikode",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "lat": 11.250922,
+    "lng": 75.778937
+  },
+  {
+    "id": "588b49f9-0f37-42ac-88bd-32d6d395f4ff",
+    "coa_code": "KA47",
+    "institution_name": "Sharnbasva University",
+    "slug": "sharnbasva-university-gulbarga",
+    "city": "Gulbarga",
+    "state": "Karnataka",
+    "lat": 17.326751,
+    "lng": 76.837137
+  },
+  {
+    "id": "ba837959-ea81-4b68-a470-79b3c63e1d30",
+    "coa_code": "KL08",
+    "institution_name": "Bishop Jerome School of Architecture & Design",
+    "slug": "bishop-jerome-school-of-architecture-design-kollam",
+    "city": "Kollam",
+    "state": "Kerala",
+    "lat": 8.897415,
+    "lng": 76.619873
+  },
+  {
+    "id": "91b70408-0e86-4df9-af6b-0219466278ac",
+    "coa_code": "KL17",
+    "institution_name": "College Of Engineering And Technology - Payanur",
+    "slug": "college-of-engineering-and-technology-payanur-kannur",
+    "city": "Kannur",
+    "state": "Kerala",
+    "lat": 11.8745,
+    "lng": 75.3704
+  },
+  {
+    "id": "cd794185-9edb-4c4a-a1ef-fbcab84bec15",
+    "coa_code": "TN82",
+    "institution_name": "Nehru School of Architecture",
+    "slug": "nehru-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.020771,
+    "lng": 76.969091
+  },
+  {
+    "id": "5efd32ee-58e2-4660-846e-6435308798fa",
+    "coa_code": "KL18",
+    "institution_name": "Asian School Of Architecture And Design Innovations",
+    "slug": "asian-school-of-architecture-and-design-innovations-kochi",
+    "city": "Kochi",
+    "state": "Kerala",
+    "lat": 9.9312,
+    "lng": 76.2673
+  },
+  {
+    "id": "8db46e9b-a079-4595-a084-85a2aa15eada",
+    "coa_code": "KL22",
+    "institution_name": "KMEA College of Architecture",
+    "slug": "kmea-college-of-architecture-kochi",
+    "city": "Kochi",
+    "state": "Kerala",
+    "lat": 9.928251,
+    "lng": 76.270137
+  },
+  {
+    "id": "98bd510a-3ec8-4f80-86cc-db11d6ade397",
+    "coa_code": "MH124",
+    "institution_name": "Ms. MANJUSHA ANAND UKIDVE Director Hafeez Contractor School of Architecture Dr. Vishwanath Karad MIT",
+    "slug": "ms-manjusha-anand-ukidve-director-hafeez-contractor-school-of-architecture-dr-vishwanath-karad-mit-pune",
+    "city": "Pune",
+    "state": "MAHARASHTRA",
+    "lat": 18.520895,
+    "lng": 73.850783
+  },
+  {
+    "id": "3b211ffd-f51e-4ca7-b6ed-19ccde038f8e",
+    "coa_code": "TN104",
+    "institution_name": "Ms. GAYATHRI VISWANATHAN Head Of Department Department of Architecture, Kingston Engineering College",
+    "slug": "ms-gayathri-viswanathan-head-of-department-department-of-architecture-kingston-engineering-college-kingston-engineering-college-chittoor-main-road",
+    "city": "Kingston Engineering College Chittoor Main Road",
+    "state": "TAMIL NADU",
+    "lat": 13.2172,
+    "lng": 79.1003
+  },
+  {
+    "id": "263fd4b5-d2a7-4f2c-9d74-04d555d6e8c7",
+    "coa_code": "TS19",
+    "institution_name": "Mr. ASHISH GUPTA Head Of Department Amity School of Architecture & Planning Aerocity, Rajiv Gandhi I",
+    "slug": "mr-ashish-gupta-head-of-department-amity-school-of-architecture-planning-aerocity-rajiv-gandhi-i-rajiv-gandhi-intl-airport",
+    "city": "Rajiv Gandhi Intl Airport",
+    "state": "TELANGANA",
+    "lat": 18.109451,
+    "lng": 79.022137
+  },
+  {
+    "id": "55f4310c-7df5-4b51-b16c-0186bc02c983",
+    "coa_code": "TND05",
+    "institution_name": "Ayyanadar Janakiammal Polytechnic College Chinnakkamanpatti Post Sivakasi",
+    "slug": "ayyanadar-janakiammal-polytechnic-college-chinnakkamanpatti-post-sivakasi-virudhunagar-tnd05",
+    "city": "Virudhunagar",
+    "state": "Tamil Nadu",
+    "lat": 11.115111,
+    "lng": 78.649605
+  },
+  {
+    "id": "2feb5ba0-8e7f-46dc-8db8-f4d30d08cfb7",
+    "coa_code": "WBD03",
+    "institution_name": "Women's Polytechnic Chandernagore 4",
+    "slug": "women-s-polytechnic-chandernagore-4-hooghly-wbd03",
+    "city": "Hooghly",
+    "state": "West Bengal",
+    "lat": 22.9868,
+    "lng": 87.855
+  },
+  {
+    "id": "438df7e3-a69c-4749-975f-b26b76c9f558",
+    "coa_code": "WBD04",
+    "institution_name": "Women’s Polytechnic 1/1/2",
+    "slug": "women-s-polytechnic-1-1-2-kolkata-wbd04",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.569651,
+    "lng": 88.366737
+  },
+  {
+    "id": "825a1773-35e1-41dc-9de6-dc3ebad57230",
+    "coa_code": "WBD06",
+    "institution_name": "Santiniketan College of Architecture",
+    "slug": "santiniketan-college-of-architecture-birbhum-wbd06",
+    "city": "Birbhum",
+    "state": "West Bengal",
+    "lat": 22.983851,
+    "lng": 87.857837
+  },
+  {
+    "id": "b652a56c-f449-451e-9b7d-21f45766689d",
+    "coa_code": "KL30",
+    "institution_name": "SCMS School of Architecture",
+    "slug": "scms-school-of-architecture-ernakulam",
+    "city": "Ernakulam",
+    "state": "Kerala",
+    "lat": 9.978651,
+    "lng": 76.302737
+  },
+  {
+    "id": "f7524895-59cb-4c86-91c2-3b15c4109ec8",
+    "coa_code": "KL34",
+    "institution_name": "D C School Of Architecture And Design",
+    "slug": "d-c-school-of-architecture-and-design-idukki",
+    "city": "Idukki",
+    "state": "Kerala",
+    "lat": 10.854715,
+    "lng": 76.276873
+  },
+  {
+    "id": "be9bfaed-c079-4888-b56a-0b06ac6d830e",
+    "coa_code": "MH03",
+    "institution_name": "Academy Of Architecture",
+    "slug": "academy-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.076495,
+    "lng": 72.871783
+  },
+  {
+    "id": "89a0c4f8-bd8b-4897-822f-86b1a841c8de",
+    "coa_code": "MH01",
+    "institution_name": "Sir J.J.College Of Architecture",
+    "slug": "sir-jjcollege-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.080215,
+    "lng": 72.883473
+  },
+  {
+    "id": "e314d271-308a-48da-b96e-09ba540515bf",
+    "coa_code": "WBD07",
+    "institution_name": "BEHALA GOVERNMENT POLYTECHNIC 756 UPENDRA NATH BANERJEE ROAD",
+    "slug": "behala-government-polytechnic-756-upendra-nath-banerjee-road-kolkata-wbd07",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.573095,
+    "lng": 88.357983
+  },
+  {
+    "id": "c5e05a86-c353-4cf1-bd18-65448c3061dc",
+    "coa_code": "WBD08",
+    "institution_name": "SILIGURI GOVERNMENT POLYTECHNIC 1 No. Dabgram Colony",
+    "slug": "siliguri-government-polytechnic-1-no-dabgram-colony-siliguri-wbd08",
+    "city": "Siliguri",
+    "state": "West Bengal",
+    "lat": 22.987295,
+    "lng": 87.849083
+  },
+  {
+    "id": "0acfabc0-1170-4275-8234-a4ccce03ba94",
+    "coa_code": "GAD01",
+    "institution_name": "VRUNDAVAN COLLEGE OF ARCHITECTURE & DESIGN",
+    "slug": "vrundavan-college-of-architecture-design-north-goa-gad01",
+    "city": "NORTH GOA",
+    "state": "Goa",
+    "lat": 15.2993,
+    "lng": 74.124
+  },
+  {
+    "id": "01eb19fb-64e7-4de6-908b-124cca9fdd7f",
+    "coa_code": "BR05",
+    "institution_name": "School of Architecture, Gaya College of Engineering",
+    "slug": "school-of-architecture-gaya-college-of-engineering-gaya",
+    "city": "Gaya",
+    "state": "Bihar",
+    "lat": 25.0961,
+    "lng": 85.3131
+  },
+  {
+    "id": "2dce672c-7a47-4d85-8a41-d09decdaee2d",
+    "coa_code": "RJ23",
+    "institution_name": "Biyani Institute of Architecture and Design",
+    "slug": "biyani-institute-of-architecture-and-design-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.912895,
+    "lng": 75.781383
+  },
+  {
+    "id": "7635abf4-211e-470c-a411-f6c3d659ea76",
+    "coa_code": "RJ25",
+    "institution_name": "School of Architecture, Jai Minesh Adivasi University",
+    "slug": "school-of-architecture-jai-minesh-adivasi-university-kota",
+    "city": "Kota",
+    "state": "Rajasthan",
+    "lat": 27.015922,
+    "lng": 74.216437
+  },
+  {
+    "id": "e88c14fe-4259-497e-83e6-189e844a4e26",
+    "coa_code": "KL37",
+    "institution_name": "Nehru College of Architecture",
+    "slug": "nehru-college-of-architecture-palakkad",
+    "city": "Palakkad",
+    "state": "Kerala",
+    "lat": 10.783751,
+    "lng": 76.657637
+  },
+  {
+    "id": "8be8098a-57e8-4200-9a1c-f591ae14dd55",
+    "coa_code": "MH07",
+    "institution_name": "School of Architecture, D.Y. Patil College of Engineering and Technology",
+    "slug": "school-of-architecture-dy-patil-college-of-engineering-and-technology-kolhapur",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.705,
+    "lng": 74.2433
+  },
+  {
+    "id": "2d7a7cb5-fa68-4c30-b410-bc20edca2130",
+    "coa_code": "MH08",
+    "institution_name": "Department of Architecture, G.S. Mandal�s Maharashtra Institute of Technology",
+    "slug": "department-of-architecture-gs-mandals-maharashtra-institute-of-technology-aurangabad",
+    "city": "Aurangabad",
+    "state": "Maharashtra",
+    "lat": 19.8762,
+    "lng": 75.3433
+  },
+  {
+    "id": "e8f48b3b-89e9-4356-acb3-0dfbbead0cd6",
+    "coa_code": "MH09",
+    "institution_name": "Shri Prince Shivaji Maratha Boarding House's College Of Architecture, KOLHAPUR",
+    "slug": "shri-prince-shivaji-maratha-boarding-houses-college-of-architecture-kolhapur",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.702051,
+    "lng": 74.246137
+  },
+  {
+    "id": "a61aab2f-1d6f-4949-9f86-177265e7cacc",
+    "coa_code": "MH10",
+    "institution_name": "Marathwada Mitra Mandals College of Architecture",
+    "slug": "marathwada-mitra-mandals-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.524615,
+    "lng": 73.862473
+  },
+  {
+    "id": "0601eeaf-bf53-47f6-8ba8-666bedbbb87a",
+    "coa_code": "MH102",
+    "institution_name": "Vivekanand Education Society College of Architecture",
+    "slug": "vivekanand-education-society-college-of-architecture-mumbai-suburban",
+    "city": "Mumbai (suburban)",
+    "state": "Maharashtra",
+    "lat": 19.068122,
+    "lng": 72.876237
+  },
+  {
+    "id": "18b7dd10-adda-47e3-9169-71fe3c0882f2",
+    "coa_code": "KL19",
+    "institution_name": "Global Institute Of Architecture",
+    "slug": "global-institute-of-architecture-palakkad",
+    "city": "Palakkad",
+    "state": "Kerala",
+    "lat": 10.787195,
+    "lng": 76.648883
+  },
+  {
+    "id": "9bd68acb-3da9-4e3c-a3c0-945b1feaab48",
+    "coa_code": "KL26",
+    "institution_name": "Marian College of Architecture & Planning",
+    "slug": "marian-college-of-architecture-planning-thiruvananthapuram",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "lat": 8.521151,
+    "lng": 76.939437
+  },
+  {
+    "id": "d4767153-e601-4556-b01f-fc27c043e284",
+    "coa_code": "KL41",
+    "institution_name": "DC School of Architecture and Design",
+    "slug": "dc-school-of-architecture-and-design-thiruvananthapuram",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "lat": 8.524595,
+    "lng": 76.930683
+  },
+  {
+    "id": "3530a6e0-b3b9-43ec-94c2-e70e662de751",
+    "coa_code": "MH05",
+    "institution_name": "BKPS College Of Architecture",
+    "slug": "bkps-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.512522,
+    "lng": 73.855237
+  },
+  {
+    "id": "46d587ab-287f-481e-9999-4c73e3378513",
+    "coa_code": "MH06",
+    "institution_name": "School Of Architecture, College Of Engineering & Technology",
+    "slug": "school-of-architecture-college-of-engineering-technology-akola",
+    "city": "Akola",
+    "state": "Maharashtra",
+    "lat": 20.7002,
+    "lng": 77.0082
+  },
+  {
+    "id": "f3ffe039-6a97-42a5-ad87-443f03e62019",
+    "coa_code": "MH101",
+    "institution_name": "School of Architecture, Symbiosis Skills and Professional University, Pune",
+    "slug": "school-of-architecture-symbiosis-skills-and-professional-university-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.527947,
+    "lng": 73.851659
+  },
+  {
+    "id": "6fba8986-079b-4662-be27-358999a686b7",
+    "coa_code": "MH100",
+    "institution_name": "Marathwada Mitra Mandals Institute of Environmental and Designs College of Architecture",
+    "slug": "marathwada-mitra-mandals-institute-of-environmental-and-designs-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.517857,
+    "lng": 73.866635
+  },
+  {
+    "id": "a95e2fc8-4ff0-4cd2-838a-cd22a3468c8b",
+    "coa_code": "GJ36",
+    "institution_name": "Manjushree Institute of Design",
+    "slug": "manjushree-institute-of-design-gandhinagar",
+    "city": "Gandhinagar",
+    "state": "Gujarat",
+    "lat": 23.219815,
+    "lng": 72.642673
+  },
+  {
+    "id": "bc86d7f9-e528-4dc3-9f8f-035055095cd0",
+    "coa_code": "MH106",
+    "institution_name": "SANJAY GHODAWAT UNIVERSITY, KOLHAPUR",
+    "slug": "sanjay-ghodawat-university-kolhapur",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.705495,
+    "lng": 74.237383
+  },
+  {
+    "id": "e7232d6a-eb23-48b3-aec1-388dfd33fb4e",
+    "coa_code": "MH113",
+    "institution_name": "Tatyasaheb Kore College of Architecture",
+    "slug": "tatyasaheb-kore-college-of-architecture-kolhapur",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.709215,
+    "lng": 74.249073
+  },
+  {
+    "id": "d505cb18-0533-4754-a7f1-90b48d2d4388",
+    "coa_code": "MH15",
+    "institution_name": "Kamala Raheja Vidyanidhi Institute For Architecture & Environmental Studies, MUMBAI",
+    "slug": "kamala-raheja-vidyanidhi-institute-for-architecture-environmental-studies-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.083547,
+    "lng": 72.872659
+  },
+  {
+    "id": "720995ae-f7d9-4a5a-956a-b4a51a0b1004",
+    "coa_code": "MH115",
+    "institution_name": "INDALA SCHOOL OF ARCHITECTURE",
+    "slug": "indala-school-of-architecture-thane",
+    "city": "Thane",
+    "state": "Maharashtra",
+    "lat": 19.218795,
+    "lng": 72.972183
+  },
+  {
+    "id": "064b7621-c64e-474b-9951-23cd3129144f",
+    "coa_code": "MH19",
+    "institution_name": "Bharati Vidyapeeth University College Of Architecture",
+    "slug": "bharati-vidyapeeth-university-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.515522,
+    "lng": 73.846839
+  },
+  {
+    "id": "41145b9b-af6f-4cb5-8537-e62878701443",
+    "coa_code": "MH17",
+    "institution_name": "Mahatma Education Society's Pillai College Of Architecture",
+    "slug": "mahatma-education-societys-pillai-college-of-architecture-new-panvel",
+    "city": "New Panvel",
+    "state": "Maharashtra",
+    "lat": 18.9894,
+    "lng": 73.1175
+  },
+  {
+    "id": "21a0473a-9e78-407e-af98-0cca2783901f",
+    "coa_code": "MH21",
+    "institution_name": "Maharshi Karve Stree Shikshan Samstha's Dr.Bhanuben Nanavati College Of Architecture For Women",
+    "slug": "maharshi-karve-stree-shikshan-samsthas-drbhanuben-nanavati-college-of-architecture-for-women-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.531027,
+    "lng": 73.860775
+  },
+  {
+    "id": "871154b7-a5e9-436d-8cfc-c949d2e18b78",
+    "coa_code": "MH24",
+    "institution_name": "Shri V.B.Patil Trust`sAppasaheb Birnale College Of Architecture",
+    "slug": "shri-vbpatil-trustsappasaheb-birnale-college-of-architecture-sangli",
+    "city": "Sangli",
+    "state": "Maharashtra",
+    "lat": 16.8524,
+    "lng": 74.5815
+  },
+  {
+    "id": "81ebf1f4-b140-4086-9efe-ef0f56ac09fd",
+    "coa_code": "MH13",
+    "institution_name": "MVP Samajs College of Architecture",
+    "slug": "mvp-samajs-college-of-architecture-nashik",
+    "city": "Nashik",
+    "state": "Maharashtra",
+    "lat": 19.9975,
+    "lng": 73.7898
+  },
+  {
+    "id": "4007164f-68a4-4cb6-915b-f1f507648b2c",
+    "coa_code": "MH26",
+    "institution_name": "Priyadarshini Institute Of Architecture And Design Studies NAGPUR",
+    "slug": "priyadarshini-institute-of-architecture-and-design-studies-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.142851,
+    "lng": 79.091037
+  },
+  {
+    "id": "0b65bc5d-9eed-401e-886b-3a4d7c612edf",
+    "coa_code": "OR01",
+    "institution_name": "Faculty of Architecture and Design, College of Engineering & Technology",
+    "slug": "faculty-of-architecture-and-design-college-of-engineering-technology-bhubaneswar",
+    "city": "Bhubaneswar",
+    "state": "Odisha",
+    "lat": 20.293151,
+    "lng": 85.827337
+  },
+  {
+    "id": "fca77366-139f-4082-b0cf-f3aaf9973a2d",
+    "coa_code": "MH118",
+    "institution_name": "School of Architecture, Chhatrapati Shivaji Maharaj University",
+    "slug": "school-of-architecture-chhatrapati-shivaji-maharaj-university-panvel",
+    "city": "Panvel",
+    "state": "Maharashtra",
+    "lat": 18.986451,
+    "lng": 73.120337
+  },
+  {
+    "id": "8b584822-e7ff-4ce0-9b0a-8071a39a9c57",
+    "coa_code": "MH12",
+    "institution_name": "Department of Architecture, Jawaharlal Nehru Engineering College",
+    "slug": "department-of-architecture-jawaharlal-nehru-engineering-college-aurangabad",
+    "city": "Aurangabad",
+    "state": "Maharashtra",
+    "lat": 19.873251,
+    "lng": 75.346137
+  },
+  {
+    "id": "b7a200cf-4ba5-403e-9312-71a906e8fa92",
+    "coa_code": "MH108",
+    "institution_name": "Dayanand College of Architecture",
+    "slug": "dayanand-college-of-architecture-latur",
+    "city": "Latur",
+    "state": "Maharashtra",
+    "lat": 18.4088,
+    "lng": 76.5604
+  },
+  {
+    "id": "0794bbc5-415c-40e7-87f5-25ac2c7f3e0d",
+    "coa_code": "RJ24",
+    "institution_name": "School of Architecture, Rajasthan Institute of Engineering and Technology",
+    "slug": "school-of-architecture-rajasthan-institute-of-engineering-and-technology-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.916615,
+    "lng": 75.793073
+  },
+  {
+    "id": "168bbdf9-31aa-44e5-a412-0fe7cfc12787",
+    "coa_code": "MH16",
+    "institution_name": "D.Y.Patil School of Architecture",
+    "slug": "dypatil-school-of-architecture-navi-mumbai",
+    "city": "Navi Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.033495,
+    "lng": 73.023783
+  },
+  {
+    "id": "08d05249-7383-495b-96b3-8494c7ce9c45",
+    "coa_code": "MH119",
+    "institution_name": "UNIVERSAL COLLEGE OF ARCHITECHTURE",
+    "slug": "universal-college-of-architechture-palghar",
+    "city": "Palghar",
+    "state": "Maharashtra",
+    "lat": 19.6967,
+    "lng": 72.7699
+  },
+  {
+    "id": "9c4dc0af-cc90-48f8-9ca1-fcbfa0003eb5",
+    "coa_code": "MH117",
+    "institution_name": "School of Architecture and Planning",
+    "slug": "school-of-architecture-and-planning-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.509308,
+    "lng": 73.861508
+  },
+  {
+    "id": "adeeb4a7-a3cb-4e0f-a06b-726f23de5286",
+    "coa_code": "MH120",
+    "institution_name": "Dnyandeep Shikshan Prasarak Mandal's Dnyandeep College of Architecture, Boraj Khed",
+    "slug": "dnyandeep-shikshan-prasarak-mandals-dnyandeep-college-of-architecture-boraj-khed-ratnagiri",
+    "city": "Ratnagiri",
+    "state": "Maharashtra",
+    "lat": 16.9902,
+    "lng": 73.312
+  },
+  {
+    "id": "74e6bc8c-3171-4733-a7b1-fd1afe5eca5e",
+    "coa_code": "MH114",
+    "institution_name": "SIPNA SCHOOL OF PLANNING AND ARCHITECTURE",
+    "slug": "sipna-school-of-planning-and-architecture-amravati",
+    "city": "Amravati",
+    "state": "Maharashtra",
+    "lat": 20.9374,
+    "lng": 77.7796
+  },
+  {
+    "id": "bf6bb85c-e1b3-4bd2-be91-1e817f5c7b43",
+    "coa_code": "MH18",
+    "institution_name": "Rizvi College Of Architecture",
+    "slug": "rizvi-college-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.073457,
+    "lng": 72.887635
+  },
+  {
+    "id": "bab8cef7-9412-473e-90bf-ea5162715aab",
+    "coa_code": "MH20",
+    "institution_name": "Smt.Manoramabai Mundle, College of Architecture",
+    "slug": "smtmanoramabai-mundle-college-of-architecture-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.146295,
+    "lng": 79.082283
+  },
+  {
+    "id": "d19baa91-b773-4ee4-b8d5-4b41ff3cd764",
+    "coa_code": "MH14",
+    "institution_name": "Bharati Vidyapeeth's College Of ArchitectureNAVI MUMBAI",
+    "slug": "bharati-vidyapeeths-college-of-architecturenavi-mumbai",
+    "city": "Navi Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.037215,
+    "lng": 73.035473
+  },
+  {
+    "id": "7008ab76-dd24-4dee-9546-d7957a915cde",
+    "coa_code": "MH25",
+    "institution_name": "School of Architecture, Kavikulguru Institute of Technology and Science",
+    "slug": "school-of-architecture-kavikulguru-institute-of-technology-and-science-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.150015,
+    "lng": 79.093973
+  },
+  {
+    "id": "60f84742-d35a-4178-80d1-d7b08317ddad",
+    "coa_code": "MH27",
+    "institution_name": "Indian Education Society's College Of Architecture",
+    "slug": "indian-education-societys-college-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.071122,
+    "lng": 72.867839
+  },
+  {
+    "id": "7a1aa77b-d505-4c5c-9e41-a9f8dbcbdf82",
+    "coa_code": "MH107",
+    "institution_name": "Solapur Education Societys College of Architecture Solapur",
+    "slug": "solapur-education-societys-college-of-architecture-solapur",
+    "city": "Solapur",
+    "state": "Maharashtra",
+    "lat": 17.6599,
+    "lng": 75.9064
+  },
+  {
+    "id": "92c168fe-fe4d-4ead-892c-f51365dae184",
+    "coa_code": "MH23",
+    "institution_name": "Shri Siddeshwar Shikshan Mandal's College Of Architecture",
+    "slug": "shri-siddeshwar-shikshan-mandals-college-of-architecture-solapur",
+    "city": "Solapur",
+    "state": "Maharashtra",
+    "lat": 17.656951,
+    "lng": 75.909237
+  },
+  {
+    "id": "f17638aa-5ac0-4bc7-bcc7-f5c7b1fef138",
+    "coa_code": "MH28",
+    "institution_name": "Dr.Baliram Hiray College of Architecture",
+    "slug": "drbaliram-hiray-college-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.086627,
+    "lng": 72.881775
+  },
+  {
+    "id": "642b3b63-2a97-47a2-a393-1447feea7348",
+    "coa_code": "UP06A",
+    "institution_name": "Amity School of Architecture & Planning (Dubai Campus)",
+    "slug": "amity-school-of-architecture-and-planning-dubai-campus-dubai",
+    "city": "Dubai",
+    "state": "Dubai",
+    "lat": 20.594195,
+    "lng": 78.956983
+  },
+  {
+    "id": "2dc9d190-bd11-4490-b0f4-c5f50a51140e",
+    "coa_code": "TND06",
+    "institution_name": "MOHAMED SATHAK POLYTECNIC COLLEGE ECR",
+    "slug": "mohamed-sathak-polytecnic-college-ecr-ramanathapuram-tnd06",
+    "city": "Ramanathapuram",
+    "state": "Tamil Nadu",
+    "lat": 11.141186,
+    "lng": 78.653648
+  },
+  {
+    "id": "1732f20a-c96c-4843-b9c3-d859f123f0af",
+    "coa_code": "TRD01",
+    "institution_name": "Tripura Institute of Technology (Erstwhile Polytechnic Institute) Narsingarh",
+    "slug": "tripura-institute-of-technology-erstwhile-polytechnic-institute-narsingarh-agartala-trd01",
+    "city": "Agartala",
+    "state": "India",
+    "lat": 23.8315,
+    "lng": 91.2868
+  },
+  {
+    "id": "389720f0-55d6-4d59-b6f6-b91affc40eee",
+    "coa_code": "MH47",
+    "institution_name": "IDEAS-Institute Of Design Education & Architectural Studies",
+    "slug": "ideas-institute-of-design-education-architectural-studies-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.137922,
+    "lng": 79.086737
+  },
+  {
+    "id": "9996c131-622b-452a-87e5-05b337259d94",
+    "coa_code": "MH56",
+    "institution_name": "Dr.DY Patil School of Architecture",
+    "slug": "drdy-patil-school-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.525761,
+    "lng": 73.84467
+  },
+  {
+    "id": "ba1c15fc-5b75-40db-8e32-f99e3da5f0ba",
+    "coa_code": "MH67",
+    "institution_name": "Aditya College of Art, Architecture & Design",
+    "slug": "aditya-college-of-art-architecture-design-mumbai-suburban",
+    "city": "Mumbai (suburban)",
+    "state": "Maharashtra",
+    "lat": 19.064908,
+    "lng": 72.882508
+  },
+  {
+    "id": "1935238e-7ac3-4b00-89fc-3016948adca0",
+    "coa_code": "MH51",
+    "institution_name": "P.R.Patil College of Architecture",
+    "slug": "prpatil-college-of-architecture-amravati",
+    "city": "Amravati",
+    "state": "Maharashtra",
+    "lat": 20.934451,
+    "lng": 77.782437
+  },
+  {
+    "id": "3edaaa18-903d-4993-8917-82d4ef0c47c3",
+    "coa_code": "MH31",
+    "institution_name": "M.C.E.Society's Allana College Of Architecture",
+    "slug": "mcesocietys-allana-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.524371,
+    "lng": 73.869991
+  },
+  {
+    "id": "6995176c-0b1f-41a9-a21e-9caa751c474e",
+    "coa_code": "MH49",
+    "institution_name": "Vidya Pratishthans School of Architecture",
+    "slug": "vidya-pratishthans-school-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.508411,
+    "lng": 73.849405
+  },
+  {
+    "id": "ba3c242c-9c9b-4070-9ebb-5be68eea3483",
+    "coa_code": "MH58",
+    "institution_name": "Department of Architecture, Tulsiramji Gaikwad - Patil College of Engineering and Technology",
+    "slug": "department-of-architecture-tulsiramji-gaikwad-patil-college-of-engineering-and-technology-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.153347,
+    "lng": 79.083159
+  },
+  {
+    "id": "1ad0b28c-1d8b-44ca-b3b7-416d71f433fe",
+    "coa_code": "MH71",
+    "institution_name": "Akhil Bharatiya Maratha Shikshan Parishads Anantrao Pawar College of Architecture",
+    "slug": "akhil-bharatiya-maratha-shikshan-parishads-anantrao-pawar-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.534486,
+    "lng": 73.853448
+  },
+  {
+    "id": "f5a733a9-bc74-4a22-a1dd-79038a05c3bb",
+    "coa_code": "MH73",
+    "institution_name": "Thakur School Of Architecture & Planning",
+    "slug": "thakur-school-of-architecture-planning-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.081361,
+    "lng": 72.86567
+  },
+  {
+    "id": "6a5991c6-2237-4c7c-939b-d59d3a35e751",
+    "coa_code": "MH33",
+    "institution_name": "Sinhgad College of Architecture",
+    "slug": "sinhgad-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.511793,
+    "lng": 73.869556
+  },
+  {
+    "id": "df638062-1e38-4ac8-a5e9-d9e648844368",
+    "coa_code": "MH62",
+    "institution_name": "Aayojan School Of Architecture and Design",
+    "slug": "aayojan-school-of-architecture-and-design-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.518408,
+    "lng": 73.840568
+  },
+  {
+    "id": "6d519aa7-b866-4dd3-87cb-a4e7e7ad3a73",
+    "coa_code": "MH77",
+    "institution_name": "C.T.E.S.College Of Architecture",
+    "slug": "ctescollege-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.079971,
+    "lng": 72.890991
+  },
+  {
+    "id": "300666b6-ece7-437e-8aae-2cdabb82265b",
+    "coa_code": "MH75",
+    "institution_name": "D.Y.Patil School Of Architecture",
+    "slug": "dypatil-school-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.532635,
+    "lng": 73.867526
+  },
+  {
+    "id": "67432182-01bf-485b-a3db-21062c175505",
+    "coa_code": "MH53",
+    "institution_name": "VIVA School of Architecture",
+    "slug": "viva-school-of-architecture-palghar",
+    "city": "Palghar",
+    "state": "Maharashtra",
+    "lat": 19.693751,
+    "lng": 72.772737
+  },
+  {
+    "id": "36aa3203-d513-44c8-b43e-116836ef8c98",
+    "coa_code": "MH50",
+    "institution_name": "ADAs Minerva College of Architecture",
+    "slug": "adas-minerva-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.503922,
+    "lng": 73.857416
+  },
+  {
+    "id": "364a3894-d13e-4b39-8269-e269463c75e4",
+    "coa_code": "MH32",
+    "institution_name": "Padmashree Dr.D.Y.Patil College of Architecture",
+    "slug": "padmashree-drdypatil-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.532429,
+    "lng": 73.84413
+  },
+  {
+    "id": "c88b237d-2bd0-4fdd-bc3c-6b68f8cf3886",
+    "coa_code": "MH61",
+    "institution_name": "St.Wilfreds Institute Of ArchitectureRaigad",
+    "slug": "stwilfreds-institute-of-architectureraigad",
+    "city": "Raigad",
+    "state": "Maharashtra",
+    "lat": 18.512851,
+    "lng": 73.185037
+  },
+  {
+    "id": "c94c27f3-8ce9-4c59-b4b2-2ae064935577",
+    "coa_code": "MH48",
+    "institution_name": "Vidya Vardhans Institute of Design Environment and Architecture",
+    "slug": "vidya-vardhans-institute-of-design-environment-and-architecture-nashik",
+    "city": "Nashik",
+    "state": "Maharashtra",
+    "lat": 19.994551,
+    "lng": 73.792637
+  },
+  {
+    "id": "7adc3390-afa8-455a-beb1-017c5f4d1b08",
+    "coa_code": "MH66",
+    "institution_name": "Satish Misal Educational Foundation -BRICK School of Architecture",
+    "slug": "satish-misal-educational-foundation-brick-school-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.519596,
+    "lng": 73.874988
+  },
+  {
+    "id": "21dea58f-5ffe-4106-9329-e6e0db34e730",
+    "coa_code": "MH72",
+    "institution_name": "IDEAL Institute Of Architecture",
+    "slug": "ideal-institute-of-architecture-palghar",
+    "city": "Palghar",
+    "state": "Maharashtra",
+    "lat": 19.697195,
+    "lng": 72.763983
+  },
+  {
+    "id": "6e776a22-d578-443d-823c-e859f9a21637",
+    "coa_code": "MH79",
+    "institution_name": "KJ's Educational Institute, Trinity College of Architecture",
+    "slug": "kjs-educational-institute-trinity-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.508938,
+    "lng": 73.84228
+  },
+  {
+    "id": "318b89b9-c8ed-4c7a-803f-24ba20241020",
+    "coa_code": "MH76",
+    "institution_name": "School Of Environment And Architecture",
+    "slug": "school-of-environment-and-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.064011,
+    "lng": 72.870405
+  },
+  {
+    "id": "341b7881-45bd-47fa-9af7-78c5168bda10",
+    "coa_code": "MH74",
+    "institution_name": "Pimpri Chinchwad Education Trust S.B.Patil College of Architecture and Design",
+    "slug": "pimpri-chinchwad-education-trust-sbpatil-college-of-architecture-and-design-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.538567,
+    "lng": 73.859265
+  },
+  {
+    "id": "512c23d1-293e-4a01-b08a-109ee3687b06",
+    "coa_code": "KA33",
+    "institution_name": "K.S.School of Architecture",
+    "slug": "ksschool-of-architecture-mallasandra-off-kanakapura-road",
+    "city": "Mallasandra Off Kanakapura Road",
+    "state": "Karnataka",
+    "lat": 15.305838,
+    "lng": 75.69948
+  },
+  {
+    "id": "81d4bf45-a044-4b1b-881b-bed1d228d8ef",
+    "coa_code": "MH111",
+    "institution_name": "Symbiosis School of Planning, Architecture and Design",
+    "slug": "symbiosis-school-of-planning-architecture-and-design-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.143257,
+    "lng": 79.098135
+  },
+  {
+    "id": "adec9c88-ccb2-41d7-98b9-6d3db0d5aef8",
+    "coa_code": "TSD01",
+    "institution_name": "Sanjay Gandhi Memorial Government Polytechnic",
+    "slug": "sanjay-gandhi-memorial-government-polytechnic-telangana-tsd01",
+    "city": "Telangana",
+    "state": "Telangana",
+    "lat": 18.112895,
+    "lng": 79.013383
+  },
+  {
+    "id": "20013549-d41d-4e8f-88bb-894685ee06e6",
+    "coa_code": "MH70",
+    "institution_name": "Smt.Premalati Chavan College of Architecture",
+    "slug": "smtpremalati-chavan-college-of-architecture-satara",
+    "city": "Satara",
+    "state": "Maharashtra",
+    "lat": 17.6805,
+    "lng": 73.9997
+  },
+  {
+    "id": "20960bf3-405c-4fac-a35c-8123b2ccce2e",
+    "coa_code": "MH57",
+    "institution_name": "Lokmanya Tilak Institute Of Architecture & Design",
+    "slug": "lokmanya-tilak-institute-of-architecture-design-navi-mumbai",
+    "city": "Navi Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.025122,
+    "lng": 73.028237
+  },
+  {
+    "id": "1842a88b-f066-4bae-8343-06855292849a",
+    "coa_code": "MH91",
+    "institution_name": "Shri Shivaji Maratha Societys College of Architecture",
+    "slug": "shri-shivaji-maratha-societys-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.505,
+    "lng": 73.867952
+  },
+  {
+    "id": "32691b18-7850-435c-a2de-bfceb052cb2b",
+    "coa_code": "MH96",
+    "institution_name": "Pune",
+    "slug": "pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.524609,
+    "lng": 73.837048
+  },
+  {
+    "id": "844dace5-a01f-42cf-932f-2cf1e81640e5",
+    "coa_code": "MH94",
+    "institution_name": "Smt.K.L.Tiwari College of Architecture",
+    "slug": "smtkltiwari-college-of-architecture-thane",
+    "city": "Thane",
+    "state": "Maharashtra",
+    "lat": 19.222515,
+    "lng": 72.983873
+  },
+  {
+    "id": "ecc4758a-6373-44cc-b3ca-1c2fdfe8faa2",
+    "coa_code": "MP06",
+    "institution_name": "Hitkarni College Of Architecture & Town",
+    "slug": "hitkarni-college-of-architecture-town-jabalpur",
+    "city": "Jabalpur",
+    "state": "Madhya Pradesh",
+    "lat": 22.9734,
+    "lng": 78.6569
+  },
+  {
+    "id": "513e1a73-d488-47c3-a674-0ebac551955e",
+    "coa_code": "UKD01",
+    "institution_name": "UKD01-ID Head Of Department Govt. Girls Polytechnic Dehradun Suddhowala",
+    "slug": "ukd01-id-head-of-department-govt-girls-polytechnic-dehradun-suddhowala-dehradun-ukd01",
+    "city": "Dehradun",
+    "state": "Uttarakhand",
+    "lat": 30.3165,
+    "lng": 78.0322
+  },
+  {
+    "id": "b85ec9dd-7c8b-430c-872b-f514cb544ea0",
+    "coa_code": "MP02",
+    "institution_name": "Madhav Institute of Technology & Science ( (Deemed University))",
+    "slug": "madhav-institute-of-technology-science-deemed-university-gwalior",
+    "city": "Gwalior",
+    "state": "Madhya Pradesh",
+    "lat": 22.970451,
+    "lng": 78.659737
+  },
+  {
+    "id": "3f16df5d-71b4-4d16-9645-5b1563db89c7",
+    "coa_code": "MP14",
+    "institution_name": "Institute of Architecture, Sage University",
+    "slug": "institute-of-architecture-sage-university-indore",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "lat": 22.716651,
+    "lng": 75.860537
+  },
+  {
+    "id": "c95af350-c08a-4cab-97f6-14688eb21e27",
+    "coa_code": "UKD02",
+    "institution_name": "UKD02-ID Head Of Department B S Negi Mahila Pravidhik Prashikshan Sansthan Kaulagarh Road",
+    "slug": "ukd02-id-head-of-department-b-s-negi-mahila-pravidhik-prashikshan-sansthan-kaulagarh-road-dehradun-ukd02",
+    "city": "Dehradun",
+    "state": "Uttarakhand",
+    "lat": 30.313551,
+    "lng": 78.035037
+  },
+  {
+    "id": "6dac0f46-3202-42f7-95e3-c3a4865184ce",
+    "coa_code": "MH80",
+    "institution_name": "Jai Shri Siddhivinayak Foundation Trust",
+    "slug": "jai-shri-siddhivinayak-foundation-trust-thane",
+    "city": "Thane",
+    "state": "Maharashtra",
+    "lat": 19.210422,
+    "lng": 72.976637
+  },
+  {
+    "id": "0440cf82-56c6-452f-ae4f-242c52a150fc",
+    "coa_code": "MH82",
+    "institution_name": "Ideal College of Architecture",
+    "slug": "ideal-college-of-architecture-kolhapur",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.697122,
+    "lng": 74.241837
+  },
+  {
+    "id": "86ad0ed8-303e-40d8-a89b-c5509aab8b30",
+    "coa_code": "MH88",
+    "institution_name": "METs School of Architecture and Interior Design",
+    "slug": "mets-school-of-architecture-and-interior-design-nashik",
+    "city": "Nashik",
+    "state": "Maharashtra",
+    "lat": 19.997995,
+    "lng": 73.783883
+  },
+  {
+    "id": "24d02ea2-59b8-4888-9ca1-88dded7ef8fe",
+    "coa_code": "MH85",
+    "institution_name": "Amity School of Architecture and Planning",
+    "slug": "amity-school-of-architecture-and-planning-raigarh",
+    "city": "Raigarh",
+    "state": "Maharashtra",
+    "lat": 19.748551,
+    "lng": 75.716737
+  },
+  {
+    "id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "slug": "school-of-planning-architecture-bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.256951,
+    "lng": 77.415437
+  },
+  {
+    "id": "bcb3c1f4-2fdf-4971-b397-7eca3392e897",
+    "coa_code": "MP08",
+    "institution_name": "Amity School of Architecture & Planning, Amity University Gwalior",
+    "slug": "amity-school-of-architecture-planning-amity-university-gwalior",
+    "city": "Gwalior",
+    "state": "Madhya Pradesh",
+    "lat": 22.973895,
+    "lng": 78.650983
+  },
+  {
+    "id": "d2b70bce-f475-47eb-a3a1-28e497be6e00",
+    "coa_code": "ML01",
+    "institution_name": "Department Of ArchitectureSchool Of Technology",
+    "slug": "department-of-architectureschool-of-technology-shillong",
+    "city": "Shillong",
+    "state": "Meghalaya",
+    "lat": 25.5788,
+    "lng": 91.8933
+  },
+  {
+    "id": "1f78ae2f-38f4-437b-9f4d-fc8f058ca29b",
+    "coa_code": "MP12",
+    "institution_name": "Shri Vaishnav Institute of Architecture",
+    "slug": "shri-vaishnav-institute-of-architecture-indore",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "lat": 22.720095,
+    "lng": 75.851783
+  },
+  {
+    "id": "500f7141-161a-414c-9c29-0ab4c0731a7e",
+    "coa_code": "MH84",
+    "institution_name": "Yashoda College of Architecture Satara",
+    "slug": "yashoda-college-of-architecture-satara",
+    "city": "Satara",
+    "state": "Maharashtra",
+    "lat": 17.677551,
+    "lng": 74.002537
+  },
+  {
+    "id": "8e951959-9057-4b9e-9060-dd59b0e8074d",
+    "coa_code": "MH99",
+    "institution_name": "Ramesh Phirodia College of Architecture",
+    "slug": "ramesh-phirodia-college-of-architecture-ahmednagar",
+    "city": "Ahmednagar",
+    "state": "Maharashtra",
+    "lat": 19.0948,
+    "lng": 74.748
+  },
+  {
+    "id": "f86ebebf-c27a-490a-8599-330131ca77c2",
+    "coa_code": "MH89",
+    "institution_name": "Vishwaniketan College of Architecture, Arts and Design",
+    "slug": "vishwaniketan-college-of-architecture-arts-and-design-raigad",
+    "city": "Raigad",
+    "state": "Maharashtra",
+    "lat": 18.516295,
+    "lng": 73.176283
+  },
+  {
+    "id": "79f364b9-8228-41eb-9353-2fe907f94a14",
+    "coa_code": "MH93",
+    "institution_name": "Walwa Taluka Education Societys Shri S.D.Patil College of Architecture",
+    "slug": "walwa-taluka-education-societys-shri-sdpatil-college-of-architecture-islampur",
+    "city": "Islampur",
+    "state": "Maharashtra",
+    "lat": 19.751995,
+    "lng": 75.707983
+  },
+  {
+    "id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "slug": "faculty-of-architecture-maulana-azad-national-institute-of-technology-bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.260395,
+    "lng": 77.406683
+  },
+  {
+    "id": "8de7bece-7a33-4263-8be1-644d2f7e3d6a",
+    "coa_code": "APD01",
+    "institution_name": "Andhra Polytechnic",
+    "slug": "andhra-polytechnic-kakinada-apd01",
+    "city": "Kakinada",
+    "state": "Andhra Pradesh",
+    "lat": 16.9891,
+    "lng": 82.2475
+  },
+  {
+    "id": "e73d7435-0cc8-4b5c-855e-15e24bddba2d",
+    "coa_code": "ASD01",
+    "institution_name": "HAM-AK COLLEGE OF HIGHER EDUCATION",
+    "slug": "ham-ak-college-of-higher-education-nagaon-asd01",
+    "city": "Nagaon",
+    "state": "Assam",
+    "lat": 26.197651,
+    "lng": 92.940437
+  },
+  {
+    "id": "c9a15cf3-35b1-4af6-b780-d4ee842df97a",
+    "coa_code": "ASD02",
+    "institution_name": "HAM-AK COLLEGE OF ARCHITECTURE",
+    "slug": "ham-ak-college-of-architecture-nagaon-asd02",
+    "city": "Nagaon",
+    "state": "Assam",
+    "lat": 26.201095,
+    "lng": 92.931683
+  },
+  {
+    "id": "dc6cd922-2259-412b-8dfc-8a9d98533f42",
+    "coa_code": "KL12",
+    "institution_name": "College of Architecture",
+    "slug": "college-of-architecture-thiruvananthapuram",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "lat": 8.528315,
+    "lng": 76.942373
+  },
+  {
+    "id": "6c5458d8-9b98-4a97-8550-3183b3937641",
+    "coa_code": "MH86",
+    "institution_name": "Smt.Kashibai Navale College of Architecture",
+    "slug": "smtkashibai-navale-college-of-architecture-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.530144,
+    "lng": 73.874552
+  },
+  {
+    "id": "af14a347-eb57-476a-9d9b-b4ce185bdadf",
+    "coa_code": "MH95",
+    "institution_name": "MIT ADT University's School of Architecture and Planning",
+    "slug": "mit-adt-universitys-school-of-architecture-and-planning-pune",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "lat": 18.501346,
+    "lng": 73.850319
+  },
+  {
+    "id": "381aeb81-f252-48c5-a919-a26155793952",
+    "coa_code": "MP09",
+    "institution_name": "School Of Architecture & DesignITM University",
+    "slug": "school-of-architecture-designitm-university-gwalior",
+    "city": "Gwalior",
+    "state": "Madhya Pradesh",
+    "lat": 22.977615,
+    "lng": 78.662673
+  },
+  {
+    "id": "711c5f66-7c89-45b3-ba9d-aac4c8b4bcb0",
+    "coa_code": "MP11",
+    "institution_name": "Faculty of ArchitectureRKDF University",
+    "slug": "faculty-of-architecturerkdf-university-bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.264115,
+    "lng": 77.418373
+  },
+  {
+    "id": "46ead501-d71f-413a-ac28-c54384276a6f",
+    "coa_code": "MP04",
+    "institution_name": "I.P.S.Academys School Of Architecture",
+    "slug": "ipsacademys-school-of-architecture-indore",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "lat": 22.723815,
+    "lng": 75.863473
+  },
+  {
+    "id": "4bba4cde-0fe3-4856-9440-ccc41dbdd823",
+    "coa_code": "MP13",
+    "institution_name": "SCHOOL OF ARCHITECTURE-LNCT UNIVERSITY",
+    "slug": "school-of-architecture-lnct-university-bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.252022,
+    "lng": 77.411137
+  },
+  {
+    "id": "bea18289-3e8f-4ac4-b4d2-82a4154f95f6",
+    "coa_code": "MP17",
+    "institution_name": "SCHOOL OF DESIGN, SRI SATYA SAI UNIVERSITY OF TECHNOLOGY AND MEDICAL SCIENCES",
+    "slug": "school-of-design-sri-satya-sai-university-of-technology-and-medical-sciences-sehore",
+    "city": "Sehore",
+    "state": "Madhya Pradesh",
+    "lat": 22.965522,
+    "lng": 78.655437
+  },
+  {
+    "id": "b96a5915-29ae-49f9-8943-61460dad19b2",
+    "coa_code": "CGD01",
+    "institution_name": "Government Girls Polytechnic Raipur",
+    "slug": "government-girls-polytechnic-raipur-raipur-cgd01",
+    "city": "Raipur",
+    "state": "Chhattisgarh",
+    "lat": 21.243522,
+    "lng": 81.628137
+  },
+  {
+    "id": "d8f95fe2-1ad8-4006-a525-a161186f9bd2",
+    "coa_code": "MP16",
+    "institution_name": "School of Architecture, Rajiv Gandhi Proudyogiki Vishwavidyalaya A State Technological University of Madhya Pradesh",
+    "slug": "school-of-architecture-rajiv-gandhi-proudyogiki-vishwavidyalaya-a-state-technological-university-of-madhya-pradesh-bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.267447,
+    "lng": 77.407559
+  },
+  {
+    "id": "c025a8df-da97-44fe-ba38-b154d5dac104",
+    "coa_code": "CHD01",
+    "institution_name": "Govt. Polytechnic for Women",
+    "slug": "govt-polytechnic-for-women-chandigarh-chd01",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "lat": 30.730351,
+    "lng": 76.782237
+  },
+  {
+    "id": "800c4141-59be-4aac-af31-07aa5a990064",
+    "coa_code": "CHD02",
+    "institution_name": "Chandigarh College of Engineering and Technology Diploma Wing",
+    "slug": "chandigarh-college-of-engineering-and-technology-diploma-wing-chandigarh-chd02",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "lat": 30.733795,
+    "lng": 76.773483
+  },
+  {
+    "id": "166a10be-6476-423f-8847-74ffedd4156e",
+    "coa_code": "MP18",
+    "institution_name": "School of Architecture, VIT Bhopal University",
+    "slug": "school-of-architecture-vit-bhopal-university-sehore",
+    "city": "Sehore",
+    "state": "Madhya Pradesh",
+    "lat": 22.980947,
+    "lng": 78.651859
+  },
+  {
+    "id": "4bd0f8e5-dab7-48d5-adba-a88165a37e47",
+    "coa_code": "DLD01",
+    "institution_name": "Chhotu Ram Rural Institute of Technology CRRIT",
+    "slug": "chhotu-ram-rural-institute-of-technology-crrit-new-delhi-dld01",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "lat": 28.602808,
+    "lng": 77.213808
+  },
+  {
+    "id": "c8a47a30-5af3-4d63-bc79-7a17d7497c07",
+    "coa_code": "DLD02",
+    "institution_name": "Aryabhatt DSEU Campus",
+    "slug": "aryabhatt-dseu-campus-delhi-dld02",
+    "city": "Delhi",
+    "state": "Delhi",
+    "lat": 28.619261,
+    "lng": 77.19697
+  },
+  {
+    "id": "e82f4564-fcd9-4925-a896-18772e5e22ab",
+    "coa_code": "DLD03",
+    "institution_name": "Meerabai DSEU Maharani Bagh Campus Eastern Avenue Road",
+    "slug": "meerabai-dseu-maharani-bagh-campus-eastern-avenue-road-new-delhi-dld03",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "lat": 28.617871,
+    "lng": 77.222291
+  },
+  {
+    "id": "2bce6515-3a0b-4f6e-98b6-f5a812c6f0cb",
+    "coa_code": "GAD02",
+    "institution_name": "GOVERNMENT POLYTECHNIC PANAJI ALTINHO",
+    "slug": "government-polytechnic-panaji-altinho-goa-gad02",
+    "city": "Goa",
+    "state": "Goa",
+    "lat": 15.296351,
+    "lng": 74.126837
+  },
+  {
+    "id": "987b4f72-5d0e-47a5-b153-44a584b11ea0",
+    "coa_code": "GJD01",
+    "institution_name": "Government Polytechnic for Girls Navdi Bandar Rd",
+    "slug": "government-polytechnic-for-girls-navdi-bandar-rd-surat-gjd01",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.165322,
+    "lng": 72.821239
+  },
+  {
+    "id": "0a90b044-60ed-40c1-b4fa-6060e71f87d3",
+    "coa_code": "GJD02",
+    "institution_name": "BUTLER POLYTECHNIC New Sama Rd.",
+    "slug": "butler-polytechnic-new-sama-rd-vadodara-gjd02",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.304657,
+    "lng": 73.191135
+  },
+  {
+    "id": "a4742de3-043e-47c5-887e-858212a2ff26",
+    "coa_code": "GJD03",
+    "institution_name": "Government Polytechnic For Girls Ahmedabad Opp. PRL",
+    "slug": "government-polytechnic-for-girls-ahmedabad-opp-prl-ahmedabad-gjd03",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.030047,
+    "lng": 72.566359
+  },
+  {
+    "id": "f6436391-cef4-4666-8b54-29c31e2958f5",
+    "coa_code": "GJD04",
+    "institution_name": "Government Polytechnic Vadnagar BH S T Workshop",
+    "slug": "government-polytechnic-vadnagar-bh-s-t-workshop-mehsana-gjd04",
+    "city": "Mehsana",
+    "state": "Gujarat",
+    "lat": 23.588,
+    "lng": 72.3693
+  },
+  {
+    "id": "63a5f77a-6503-4b23-b05c-09e452b43dd3",
+    "coa_code": "GJD05",
+    "institution_name": "Parul Institute of Engineering & Technology (Diploma Studies) Parul University",
+    "slug": "parul-institute-of-engineering-technology-diploma-studies-parul-university-vadodara-gjd05",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.302322,
+    "lng": 73.171339
+  },
+  {
+    "id": "954a888b-e94b-4e8f-9a8a-949e964f20b0",
+    "coa_code": "GJD06",
+    "institution_name": "BHULABHAI VANMALIBHAI PATEL INSTITUTE OF TECHNOLOGY(DIPLOMA STUDIES) VIDYABHARTI CAMPUS AT &amp; PO:- UMRAKH",
+    "slug": "bhulabhai-vanmalibhai-patel-institute-of-technology-diploma-studies-vidyabharti-campus-at-amp-po-umrakh-bardoli-gjd06",
+    "city": "Bardoli",
+    "state": "Gujarat",
+    "lat": 21.1189,
+    "lng": 73.1114
+  },
+  {
+    "id": "4b94d462-ef40-48bd-9309-db47dc3df785",
+    "coa_code": "MP19",
+    "institution_name": "Jagran School of Architecture, Jagran Lakecity University",
+    "slug": "jagran-school-of-architecture-jagran-lakecity-university-bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.257357,
+    "lng": 77.422535
+  },
+  {
+    "id": "592d29a3-e737-4013-8227-ed0e10d6701c",
+    "coa_code": "GJD07",
+    "institution_name": "LJ POLYTECHNIC LJ CAMPUS NR SARKHEJ SANAND CIRCLE",
+    "slug": "lj-polytechnic-lj-campus-nr-sarkhej-sanand-circle-ahmedabad-gjd07",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.019957,
+    "lng": 72.581335
+  },
+  {
+    "id": "aec4c529-5091-4f33-9cf6-d634c4e27542",
+    "coa_code": "GJD08",
+    "institution_name": "POLYTECHNIC",
+    "slug": "polytechnic-vadodara-gjd08",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.317827,
+    "lng": 73.185275
+  },
+  {
+    "id": "3069bdff-8969-489d-baa4-9123278f92f0",
+    "coa_code": "GJD09",
+    "institution_name": "RMS POLYTECHNIC At.Bakrol",
+    "slug": "rms-polytechnic-at-bakrol-vadodara-gjd09",
+    "city": "Vadodara",
+    "state": "Gujarat",
+    "lat": 22.296108,
+    "lng": 73.186008
+  },
+  {
+    "id": "9f63c9c2-90d0-4557-8c99-825d8928162f",
+    "coa_code": "GJD10",
+    "institution_name": "Government Polytechnic",
+    "slug": "government-polytechnic-ahmedabad-gjd10",
+    "city": "Ahmedabad",
+    "state": "Gujarat",
+    "lat": 23.017622,
+    "lng": 72.561539
+  },
+  {
+    "id": "80abbe01-ddef-4657-ac39-bff2dcfa88ff",
+    "coa_code": "GJD12",
+    "institution_name": "Bhagwan Mahavir College of Architecture",
+    "slug": "bhagwan-mahavir-college-of-architecture-surat-gjd12",
+    "city": "Surat",
+    "state": "Gujarat",
+    "lat": 21.180827,
+    "lng": 72.835175
+  },
+  {
+    "id": "44dcf1ab-8dd1-4522-9e3c-9b1901a9d44a",
+    "coa_code": "HPD01",
+    "institution_name": "Incharge Govt. Polytechnic Sundernagar",
+    "slug": "incharge-govt-polytechnic-sundernagar-sunder-nagar-hpd01",
+    "city": "Sunder Nagar",
+    "state": "Himachal Pradesh",
+    "lat": 31.101851,
+    "lng": 77.176237
+  },
+  {
+    "id": "6ae85a2b-f3be-4726-b4cb-c1afc26646a7",
+    "coa_code": "HPD02",
+    "institution_name": "DR. B.R. AMBEDKAR GOVT. POLYTECHNIC AMBOTA AMBOTA",
+    "slug": "dr-b-r-ambedkar-govt-polytechnic-ambota-ambota-una-hpd02",
+    "city": "Una",
+    "state": "Himachal Pradesh",
+    "lat": 31.105295,
+    "lng": 77.167483
+  },
+  {
+    "id": "1432f85b-4b20-4d8e-9669-c757c0446a6b",
+    "coa_code": "HPD03",
+    "institution_name": "Govt. Polytechnic for Women Rehan",
+    "slug": "govt-polytechnic-for-women-rehan-kangra-hpd03",
+    "city": "Kangra",
+    "state": "Himachal Pradesh",
+    "lat": 31.109015,
+    "lng": 77.179173
+  },
+  {
+    "id": "b93667fa-ce8e-45ab-9de5-e522255ff1c4",
+    "coa_code": "HRD01",
+    "institution_name": "Sri Guru Tegh Bahadur Sahib Ji Government Polytechnic Ambala City",
+    "slug": "sri-guru-tegh-bahadur-sahib-ji-government-polytechnic-ambala-city-ambala-hrd01",
+    "city": "Ambala",
+    "state": "Haryana",
+    "lat": 29.046811,
+    "lng": 76.078305
+  },
+  {
+    "id": "e70fe113-1cd6-4bad-94de-9139fed65be8",
+    "coa_code": "UPD01",
+    "institution_name": "UPD01-ID Head Of Department Govt. Polytechnic Ghaziabad D-Block",
+    "slug": "upd01-id-head-of-department-govt-polytechnic-ghaziabad-d-block-ghaziabad-upd01",
+    "city": "Ghaziabad",
+    "state": "Uttar Pradesh",
+    "lat": 28.666251,
+    "lng": 77.456637
+  },
+  {
+    "id": "a71129b6-e937-448d-a2fd-149dbdfa55ea",
+    "coa_code": "UPD02",
+    "institution_name": "Government Girls Polytechnic Lucknow Faizabad Road",
+    "slug": "government-girls-polytechnic-lucknow-faizabad-road-lucknow-upd02",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.844157,
+    "lng": 80.956135
+  },
+  {
+    "id": "77d617a2-31ec-42b2-ba63-7b432c060c4d",
+    "coa_code": "UPD03",
+    "institution_name": "Government Polytechnic Deoria PO-G.I.Estate",
+    "slug": "government-polytechnic-deoria-po-g-i-estate-deoria-upd03",
+    "city": "Deoria",
+    "state": "Uttar Pradesh",
+    "lat": 26.841822,
+    "lng": 80.936339
+  },
+  {
+    "id": "292dc85d-e02e-4f1d-8590-07690ca02df7",
+    "coa_code": "UPD04",
+    "institution_name": "Seth Ganga Sagar Jatia Polytechnic G.T.Road",
+    "slug": "seth-ganga-sagar-jatia-polytechnic-g-t-road-bulandshahar-upd04",
+    "city": "Bulandshahar",
+    "state": "Uttar Pradesh",
+    "lat": 26.857327,
+    "lng": 80.950275
+  },
+  {
+    "id": "2fdce850-d8be-4928-baec-28c3fec87147",
+    "coa_code": "UPD05",
+    "institution_name": "Government Polytechnic Lucknow Ayodhya Road",
+    "slug": "government-polytechnic-lucknow-ayodhya-road-lucknow-upd05",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.835608,
+    "lng": 80.951008
+  },
+  {
+    "id": "3483fc98-d626-4f30-bc14-584e55bc64bd",
+    "coa_code": "UPD06",
+    "institution_name": "Dr.Ambedkar Institute of Technology for Handicapped Awadhpuri Kanpur Kanpur Nagar",
+    "slug": "dr-ambedkar-institute-of-technology-for-handicapped-awadhpuri-kanpur-kanpur-nagar-kanpur-nagar-upd06",
+    "city": "Kanpur Nagar",
+    "state": "Uttar Pradesh",
+    "lat": 26.4499,
+    "lng": 80.3319
+  },
+  {
+    "id": "98d9c23b-50c8-4a21-95a5-cac6942c6eb3",
+    "coa_code": "PJ03",
+    "institution_name": "Indo Global College of Architecture",
+    "slug": "indo-global-college-of-architecture-mohali",
+    "city": "Mohali",
+    "state": "All India",
+    "lat": 30.7046,
+    "lng": 76.7179
+  },
+  {
+    "id": "2c1a1cef-6e21-4671-a6a6-da7e655e90d1",
+    "coa_code": "OR02",
+    "institution_name": "Piloo-Mody College Of ArchitectureAjay-Binay Institute Of Technology",
+    "slug": "piloo-mody-college-of-architectureajay-binay-institute-of-technology-cuttack",
+    "city": "Cuttack",
+    "state": "Odisha",
+    "lat": 20.4625,
+    "lng": 85.8828
+  },
+  {
+    "id": "ef425146-1da9-4e24-8904-6db6e5b4a186",
+    "coa_code": "PJ07",
+    "institution_name": "RIMT College of Architecture",
+    "slug": "rimt-college-of-architecture-mandi-gobindgarh",
+    "city": "Mandi Gobindgarh",
+    "state": "All India",
+    "lat": 31.5892,
+    "lng": 76.9182
+  },
+  {
+    "id": "7c196b63-9f23-4dce-b487-8570607dc28c",
+    "coa_code": "PJ18",
+    "institution_name": "Soldier College of Architecture",
+    "slug": "soldier-college-of-architecture-jalandhar",
+    "city": "Jalandhar",
+    "state": "All India",
+    "lat": 31.326,
+    "lng": 75.5762
+  },
+  {
+    "id": "811188be-dc01-4960-a720-1db5c7c87a18",
+    "coa_code": "PJ05",
+    "institution_name": "College Of ArchitectureI.E.T.Bhaddal, I.E.T.Campus",
+    "slug": "college-of-architectureietbhaddal-ietcampus-ropar",
+    "city": "Ropar",
+    "state": "All India",
+    "lat": 20.597915,
+    "lng": 78.968673
+  },
+  {
+    "id": "9bf07b62-3cfb-4937-bb14-0053cb6e7f9b",
+    "coa_code": "PJ14",
+    "institution_name": "School of Architecture",
+    "slug": "school-of-architecture-nh-95",
+    "city": "Nh 95",
+    "state": "All India",
+    "lat": 20.585822,
+    "lng": 78.961437
+  },
+  {
+    "id": "1d3ce3d0-6684-4021-80e2-e9579524d57a",
+    "coa_code": "HRD02",
+    "institution_name": "Government Polytechnic for Women Sector-8",
+    "slug": "government-polytechnic-for-women-sector-8-faridabad-hrd02",
+    "city": "Faridabad",
+    "state": "Haryana",
+    "lat": 28.413115,
+    "lng": 77.323573
+  },
+  {
+    "id": "392f13f4-e936-4520-81f1-d72ec4b3b0ac",
+    "coa_code": "HRD03",
+    "institution_name": "Deenbandhu Sir Chhotu Ram Govt. Polytechnic Education Society Sampla NH -10 DELHI ROHTAK SAMPLA - BERI ROAD SAMPLA",
+    "slug": "deenbandhu-sir-chhotu-ram-govt-polytechnic-education-society-sampla-nh-10-delhi-rohtak-sampla-beri-road-sampla-rohtak-hrd03",
+    "city": "Rohtak",
+    "state": "Haryana",
+    "lat": 28.895995,
+    "lng": 76.600683
+  },
+  {
+    "id": "421106c5-07e6-4921-bf8d-5fcd5ae947e5",
+    "coa_code": "MZ01",
+    "institution_name": "Department of Planning and Architecture, Mizoram University",
+    "slug": "department-of-planning-and-architecture-mizoram-university-aizawl",
+    "city": "Aizawl",
+    "state": "Mizoram",
+    "lat": 23.7271,
+    "lng": 92.7176
+  },
+  {
+    "id": "f37dc185-d52a-426d-a833-e6cde3790f74",
+    "coa_code": "OR05",
+    "institution_name": "SGI School Of Architecture At-Nachhipur, Po-Bhatapatana",
+    "slug": "sgi-school-of-architecture-at-nachhipur-po-bhatapatana-khordha",
+    "city": "Khordha",
+    "state": "Odisha",
+    "lat": 20.952195,
+    "lng": 85.092583
+  },
+  {
+    "id": "5cdd8dab-d416-4de0-8084-8ee8f2a9f935",
+    "coa_code": "OR07",
+    "institution_name": "Faculty of Architecture, Sri Sri University",
+    "slug": "faculty-of-architecture-sri-sri-university-cuttack",
+    "city": "Cuttack",
+    "state": "Odisha",
+    "lat": 20.459551,
+    "lng": 85.885637
+  },
+  {
+    "id": "22ab99ba-2c60-4e29-9252-b23190f0975b",
+    "coa_code": "HRD04",
+    "institution_name": "Government Polytechnic for Women",
+    "slug": "government-polytechnic-for-women-sirsa-hrd04",
+    "city": "Sirsa",
+    "state": "Haryana",
+    "lat": 29.072886,
+    "lng": 76.082348
+  },
+  {
+    "id": "c09dab62-797b-4666-a044-b6d2963962de",
+    "coa_code": "HRD06",
+    "institution_name": "Government Polytechnic Panchkula Sector-26",
+    "slug": "government-polytechnic-panchkula-sector-26-panchkula-hrd06",
+    "city": "Panchkula",
+    "state": "Haryana",
+    "lat": 29.050193,
+    "lng": 76.098456
+  },
+  {
+    "id": "a063837d-fcf2-4050-8667-6fc0c552a58f",
+    "coa_code": "HRD07",
+    "institution_name": "Government Polytechnic",
+    "slug": "government-polytechnic-kurukshetra-hrd07",
+    "city": "Kurukshetra",
+    "state": "Haryana",
+    "lat": 29.056808,
+    "lng": 76.069468
+  },
+  {
+    "id": "46618b9f-6483-45a2-b973-8c981866508a",
+    "coa_code": "PJ01",
+    "institution_name": "Faculty Of Physical Planning & Architecture",
+    "slug": "faculty-of-physical-planning-architecture-amritsar",
+    "city": "Amritsar",
+    "state": "All India",
+    "lat": 31.631051,
+    "lng": 74.875137
+  },
+  {
+    "id": "0e62e532-d09a-4ee6-ae12-7a87a70ce166",
+    "coa_code": "PJ12",
+    "institution_name": "Department Of ArchitectureI. K. Gujral Punjab Technical University, Mohali Campus II",
+    "slug": "department-of-architecturei-k-gujral-punjab-technical-university-mohali-campus-ii",
+    "city": "Mohali",
+    "state": "All India",
+    "lat": 30.701651,
+    "lng": 76.720737
+  },
+  {
+    "id": "98ec6d8c-290d-454f-a06e-a899c17a17c2",
+    "coa_code": "PJ04",
+    "institution_name": "Chitkara School of Planning and Architecture",
+    "slug": "chitkara-school-of-planning-and-architecture-patiala",
+    "city": "Patiala",
+    "state": "All India",
+    "lat": 30.3398,
+    "lng": 76.3869
+  },
+  {
+    "id": "f99f41bc-e37d-4b77-85a6-7a248faa4556",
+    "coa_code": "PJ11",
+    "institution_name": "University Institute of Architecture",
+    "slug": "university-institute-of-architecture-mohali",
+    "city": "Mohali",
+    "state": "All India",
+    "lat": 30.705095,
+    "lng": 76.711983
+  },
+  {
+    "id": "7c4511cd-70ac-43d5-a829-cd684037cb18",
+    "coa_code": "PJ17",
+    "institution_name": "GNDEC School of Architecture",
+    "slug": "gndec-school-of-architecture-ludhiana",
+    "city": "Ludhiana",
+    "state": "All India",
+    "lat": 30.901,
+    "lng": 75.8573
+  },
+  {
+    "id": "d4645d30-c8ff-4b70-8b0d-e523211e169f",
+    "coa_code": "PJ19",
+    "institution_name": "Amity School of Architecture and Planning",
+    "slug": "amity-school-of-architecture-and-planning-mohali",
+    "city": "Mohali",
+    "state": "All India",
+    "lat": 30.708815,
+    "lng": 76.723673
+  },
+  {
+    "id": "397d151a-7d99-488d-8573-edd97c0b7c47",
+    "coa_code": "PJ13",
+    "institution_name": "CT Institute Of Architecture And Planning",
+    "slug": "ct-institute-of-architecture-and-planning-jalandhar",
+    "city": "Jalandhar",
+    "state": "All India",
+    "lat": 31.323051,
+    "lng": 75.579037
+  },
+  {
+    "id": "bb2254cf-4bb9-4044-991e-11cb032e139d",
+    "coa_code": "RJ06",
+    "institution_name": "Buddha Institute of Architecture & Town Planning",
+    "slug": "buddha-institute-of-architecture-town-planning-udaipur",
+    "city": "Udaipur",
+    "state": "Rajasthan",
+    "lat": 27.031347,
+    "lng": 74.212859
+  },
+  {
+    "id": "d50c07fd-1c15-4d64-8c7b-ab4fdce40f0a",
+    "coa_code": "RJ04",
+    "institution_name": "Faculty of Architecture",
+    "slug": "faculty-of-architecture-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.904522,
+    "lng": 75.785837
+  },
+  {
+    "id": "d495aacd-900a-4f5e-8337-26874b5a3f3d",
+    "coa_code": "RJ01",
+    "institution_name": "Department of Architecture and Planning, Malaviya National Institute of Technology",
+    "slug": "department-of-architecture-and-planning-malaviya-national-institute-of-technology-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.919947,
+    "lng": 75.782259
+  },
+  {
+    "id": "0a9aa055-a91e-41b2-83b6-c3176397c84e",
+    "coa_code": "HRD08",
+    "institution_name": "Mahagyani Rishi Ashtavakra Kendra Government Polytechnic Sector-26",
+    "slug": "mahagyani-rishi-ashtavakra-kendra-government-polytechnic-sector-26-panchkula-hrd08",
+    "city": "Panchkula",
+    "state": "Haryana",
+    "lat": 29.071035,
+    "lng": 76.096426
+  },
+  {
+    "id": "2b4163b9-6a0f-4a4e-8284-3d83410dbc57",
+    "coa_code": "RJ03",
+    "institution_name": "Aayojan School Of Architecture",
+    "slug": "aayojan-school-of-architecture-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.909857,
+    "lng": 75.797235
+  },
+  {
+    "id": "61520794-9738-492c-bedb-d227b85af404",
+    "coa_code": "PY02",
+    "institution_name": "School of Architecture/ Sri Manakula Vinayagar Engineering College",
+    "slug": "school-of-architecture-sri-manakula-vinayagar-engineering-college-puducherry",
+    "city": "Puducherry",
+    "state": "Puducherry",
+    "lat": 11.9416,
+    "lng": 79.8083
+  },
+  {
+    "id": "97357380-1706-41cd-aa50-44a793c3c1e2",
+    "coa_code": "OR06",
+    "institution_name": "National Institute Of TechnologyRourkela, Odisha",
+    "slug": "national-institute-of-technologyrourkela-odisha",
+    "city": "Rourkela",
+    "state": "Odisha",
+    "lat": 22.2604,
+    "lng": 84.8536
+  },
+  {
+    "id": "9181a7b6-1553-4b3d-b455-0e505fa2ca01",
+    "coa_code": "PJ02",
+    "institution_name": "Giani Zail Singh School of Architecture & Planning",
+    "slug": "giani-zail-singh-school-of-architecture-planning-bathinda",
+    "city": "Bathinda",
+    "state": "All India",
+    "lat": 20.601247,
+    "lng": 78.957859
+  },
+  {
+    "id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+    "coa_code": "PJ06",
+    "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+    "slug": "lovely-school-of-architecture-and-design-lovely-professional-university-phagwara",
+    "city": "Phagwara",
+    "state": "All India",
+    "lat": 20.591157,
+    "lng": 78.972835
+  },
+  {
+    "id": "84953fbc-af58-4a48-aaf8-39e2b7ac6df9",
+    "coa_code": "RJ02",
+    "institution_name": "Head Department of Architecture, MBM University",
+    "slug": "head-department-of-architecture-mbm-university-jodhpur",
+    "city": "Jodhpur",
+    "state": "Rajasthan",
+    "lat": 27.021257,
+    "lng": 74.227835
+  },
+  {
+    "id": "c39b0b8d-65f5-49d6-b77b-d82613dc4e91",
+    "coa_code": "TN15",
+    "institution_name": "Tamilnadu School of Architecture",
+    "slug": "tamilnadu-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.004811,
+    "lng": 76.948505
+  },
+  {
+    "id": "25d62502-8879-41d1-ba03-1070b848e29b",
+    "coa_code": "TN28",
+    "institution_name": "Crescent School of Architecture",
+    "slug": "crescent-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.086671,
+    "lng": 80.283991
+  },
+  {
+    "id": "47cf0ec3-9796-4fbc-a271-14e23b820c85",
+    "coa_code": "TN34",
+    "institution_name": "MIDAS - MARG Institute of Deisgn and Architecture Swarnabhoomi",
+    "slug": "midas-marg-institute-of-deisgn-and-architecture-swarnabhoomi-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.070711,
+    "lng": 80.263405
+  },
+  {
+    "id": "7c084fb0-c3af-4666-82b6-fce70a3bf847",
+    "coa_code": "TN31",
+    "institution_name": "M.A.M School of Architecture",
+    "slug": "mam-school-of-architecture-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.798047,
+    "lng": 78.699659
+  },
+  {
+    "id": "9a5c96ac-b9d1-40a9-baa2-5f4ebf5973fd",
+    "coa_code": "TN45",
+    "institution_name": "DA Vinci School of Design and Architecture",
+    "slug": "da-vinci-school-of-design-and-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.096786,
+    "lng": 80.267448
+  },
+  {
+    "id": "9a6b5155-3052-4920-8f9a-d2ad55184de5",
+    "coa_code": "RJ10",
+    "institution_name": "St.Wilfreds Institute Of Architecture",
+    "slug": "stwilfreds-institute-of-architecture-ajmer",
+    "city": "Ajmer",
+    "state": "Rajasthan",
+    "lat": 27.018922,
+    "lng": 74.208039
+  },
+  {
+    "id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "slug": "sap-anna-university-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.074093,
+    "lng": 80.283556
+  },
+  {
+    "id": "7e5fd477-6f02-417d-8bf1-793bf5e873d3",
+    "coa_code": "RJ09",
+    "institution_name": "School Of Architecture, Apex University",
+    "slug": "school-of-architecture-apex-university-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.907522,
+    "lng": 75.777439
+  },
+  {
+    "id": "6958d26a-7d41-4044-adec-a7d27660b17c",
+    "coa_code": "JKD01",
+    "institution_name": "GOVT. POLYTECHNIC COLLEGE BARAMULLA BARAMULLA",
+    "slug": "govt-polytechnic-college-baramulla-baramulla-baramula-jkd01",
+    "city": "Baramula",
+    "state": "Jammu and Kashmir",
+    "lat": 34.2017,
+    "lng": 74.3436
+  },
+  {
+    "id": "e3677d14-d3e2-4e66-a529-3b92bb481996",
+    "coa_code": "JKD02",
+    "institution_name": "Govt. Polytechnic Jammu",
+    "slug": "govt-polytechnic-jammu-jammu-jkd02",
+    "city": "JAMMU",
+    "state": "Jammu and Kashmir",
+    "lat": 32.723651,
+    "lng": 74.859837
+  },
+  {
+    "id": "b05a53a8-8bc3-4e1a-8b10-902443cb1e3a",
+    "coa_code": "RJ07",
+    "institution_name": "NIMS University",
+    "slug": "nims-university-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.923027,
+    "lng": 75.791375
+  },
+  {
+    "id": "6aedddd2-d0f3-406b-b94b-04a1148ac928",
+    "coa_code": "RJ20",
+    "institution_name": "Faculty of Architecture & Planning, Vivekananda Global University, Jaipur",
+    "slug": "faculty-of-architecture-planning-vivekananda-global-university-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.901308,
+    "lng": 75.792108
+  },
+  {
+    "id": "8df96170-e104-40d3-8eaf-3f0dffab2a74",
+    "coa_code": "RJ21",
+    "institution_name": "Department of Architecture and Planning, Banasthali Vidyapith",
+    "slug": "department-of-architecture-and-planning-banasthali-vidyapith-tonk",
+    "city": "Tonk",
+    "state": "Rajasthan",
+    "lat": 27.034427,
+    "lng": 74.221975
+  },
+  {
+    "id": "0b95dfef-433e-4510-b485-aea064a5515c",
+    "coa_code": "TN07",
+    "institution_name": "Bharat Institute of Higher Education and Research",
+    "slug": "bharat-institute-of-higher-education-and-research-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.080708,
+    "lng": 80.254568
+  },
+  {
+    "id": "db0551ff-5ff2-4afb-ae42-f0409834fb88",
+    "coa_code": "RJ12",
+    "institution_name": "School Of Architecture And DesignManipal University",
+    "slug": "school-of-architecture-and-designmanipal-university-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.917761,
+    "lng": 75.77527
+  },
+  {
+    "id": "168c050e-707c-4683-928f-9e256246659f",
+    "coa_code": "TN18",
+    "institution_name": "Meenakshi School of Architecture",
+    "slug": "meenakshi-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.094935,
+    "lng": 80.281526
+  },
+  {
+    "id": "8f1ca23d-f111-49ae-8b0c-243ee348e2f8",
+    "coa_code": "TN26",
+    "institution_name": "SRM University",
+    "slug": "srm-university-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.066222,
+    "lng": 80.271416
+  },
+  {
+    "id": "bb5705f1-7060-4d97-afd9-6b13ea0f31bc",
+    "coa_code": "TN51",
+    "institution_name": "Sigma College of Architecture",
+    "slug": "sigma-college-of-architecture-kanyakumari",
+    "city": "Kanyakumari",
+    "state": "Tamil Nadu",
+    "lat": 8.085351,
+    "lng": 77.541337
+  },
+  {
+    "id": "8877961a-53ca-44da-b08b-c2fc3359e139",
+    "coa_code": "KAD01",
+    "institution_name": "KLS Shri Vasantrao Potdar Polytechnic KLS Campus",
+    "slug": "kls-shri-vasantrao-potdar-polytechnic-kls-campus-belgaum-kad01",
+    "city": "Belgaum",
+    "state": "Karnataka",
+    "lat": 15.850195,
+    "lng": 74.491783
+  },
+  {
+    "id": "a608eca6-8671-49d6-9fca-af823ac5974e",
+    "coa_code": "KAD04",
+    "institution_name": "HKE Societys Womens Polytechnic 8R9J+F74",
+    "slug": "hke-societys-womens-polytechnic-8r9j-f74-gulbarga-kad04",
+    "city": "Gulbarga",
+    "state": "Karnataka",
+    "lat": 17.330195,
+    "lng": 76.828383
+  },
+  {
+    "id": "fd753384-a2be-4951-8e1c-06d618e34982",
+    "coa_code": "KAD06",
+    "institution_name": "K.L.E. Society`s Smt.Chanabasamma Ishwarappa Munavalli Polytechnic Vidyanagar",
+    "slug": "k-l-e-society-s-smt-chanabasamma-ishwarappa-munavalli-polytechnic-vidyanagar-hubli-kad06",
+    "city": "Hubli",
+    "state": "Karnataka",
+    "lat": 15.335467,
+    "lng": 75.716465
+  },
+  {
+    "id": "9521d834-95ab-4fd0-9be7-f6a2c4d470dc",
+    "coa_code": "KAD07",
+    "institution_name": "Impact Polytechnic KODIGEHALLI",
+    "slug": "impact-polytechnic-kodigehalli-bengaluru-kad07",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "lat": 12.969057,
+    "lng": 77.604535
+  },
+  {
+    "id": "fa4786b9-2412-4318-a49d-95f6d1347a65",
+    "coa_code": "KAD08",
+    "institution_name": "JSS Polytechnic for Women JSS Technical Institutions&#039; Campus",
+    "slug": "jss-polytechnic-for-women-jss-technical-institutions-039-campus-mysore-kad08",
+    "city": "Mysore",
+    "state": "Karnataka",
+    "lat": 12.303347,
+    "lng": 76.634359
+  },
+  {
+    "id": "9496d897-9861-44b9-afbc-76d9b77a0f83",
+    "coa_code": "KLD01",
+    "institution_name": "JDT Islam Polytechnic College Vellimadukunnu",
+    "slug": "jdt-islam-polytechnic-college-vellimadukunnu-kozhikode-kld01",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "lat": 11.266347,
+    "lng": 75.775359
+  },
+  {
+    "id": "c4b9dd0f-1be2-492b-954c-e2d2dcc683a0",
+    "coa_code": "KLD02",
+    "institution_name": "Government Polytechnic College",
+    "slug": "government-polytechnic-college-adoor-kld02",
+    "city": "Adoor",
+    "state": "Kerala",
+    "lat": 10.842622,
+    "lng": 76.269637
+  },
+  {
+    "id": "a41f8e28-293a-41af-a5a5-8e8674569a58",
+    "coa_code": "TN66",
+    "institution_name": "CAAD - Chennai Academy of Architecture and Design",
+    "slug": "caad-chennai-academy-of-architecture-and-design-thiruvallur",
+    "city": "Thiruvallur",
+    "state": "Tamil Nadu",
+    "lat": 11.118493,
+    "lng": 78.669756
+  },
+  {
+    "id": "ce986fd7-44e4-419d-8811-7634f7eb3583",
+    "coa_code": "RJ14",
+    "institution_name": "Faculty of Planning & Architecture, Poornima University",
+    "slug": "faculty-of-planning-architecture-poornima-university-jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "lat": 26.916371,
+    "lng": 75.800591
+  },
+  {
+    "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "slug": "national-institute-of-technology-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.787957,
+    "lng": 78.714635
+  },
+  {
+    "id": "2f21aa33-00bd-4e65-a7f4-92e47851fa4c",
+    "coa_code": "TN10",
+    "institution_name": "Sathyabama Institute of Science and Technology",
+    "slug": "sathyabama-institute-of-science-and-technology-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.094729,
+    "lng": 80.25813
+  },
+  {
+    "id": "587f1330-d2d9-44b4-a294-9b591fd9fa36",
+    "coa_code": "TN21",
+    "institution_name": "R.V.S School of Architecture",
+    "slug": "rvs-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.030886,
+    "lng": 76.952548
+  },
+  {
+    "id": "2cf2c3b9-08b4-4241-85af-b5078cbe7e21",
+    "coa_code": "TN35",
+    "institution_name": "Rajalakshmi School of Architecture",
+    "slug": "rajalakshmi-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.081896,
+    "lng": 80.288988
+  },
+  {
+    "id": "c0d8b816-7a65-4d2e-8551-c187fa79faff",
+    "coa_code": "TN49",
+    "institution_name": "St.Peters College of Engineering and Technology",
+    "slug": "stpeters-college-of-engineering-and-technology-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.071238,
+    "lng": 80.25628
+  },
+  {
+    "id": "9a32f11a-979b-4ccd-b085-0b937c46ee20",
+    "coa_code": "TN56",
+    "institution_name": "Misrimal Navajee Munoth Jain School of Architecture",
+    "slug": "misrimal-navajee-munoth-jain-school-of-architecture-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.100867,
+    "lng": 80.273265
+  },
+  {
+    "id": "a3b32308-b4ab-48cc-aa3e-0114784b6145",
+    "coa_code": "TN39",
+    "institution_name": "RVS - Padmavathy School of Architecture",
+    "slug": "rvs-padmavathy-school-of-architecture-tiruvallur",
+    "city": "Tiruvallur",
+    "state": "Tamil Nadu",
+    "lat": 11.125108,
+    "lng": 78.640768
+  },
+  {
+    "id": "55d8dcfb-f8a4-4c8d-81d9-8198fdbad1d5",
+    "coa_code": "KLD03",
+    "institution_name": "KMCT POLYTECHNIC COLLEGE KOZHIKODE KALLANTHODE",
+    "slug": "kmct-polytechnic-college-kozhikode-kallanthode-kozhikode-kld03",
+    "city": "Kozhikode",
+    "state": "Kerala",
+    "lat": 11.256257,
+    "lng": 75.790335
+  },
+  {
+    "id": "ce089ecd-6674-4722-bc1a-d4a7decf4b6d",
+    "coa_code": "KLD04",
+    "institution_name": "Madin College of Engineering and Management Melmuri Post",
+    "slug": "madin-college-of-engineering-and-management-melmuri-post-malappuram-kld04",
+    "city": "Malappuram",
+    "state": "Kerala",
+    "lat": 11.048457,
+    "lng": 76.081035
+  },
+  {
+    "id": "08e58fd3-03f4-45d1-bd28-ac03b99f9c2c",
+    "coa_code": "KLD05",
+    "institution_name": "MALABAR POLYTECHNIC COLLEGE KOTTAKKAL MARAVATTAM",
+    "slug": "malabar-polytechnic-college-kottakkal-maravattam-kottakkal-kld05",
+    "city": "Kottakkal",
+    "state": "Kerala",
+    "lat": 10.858047,
+    "lng": 76.266059
+  },
+  {
+    "id": "449f649d-0972-42fe-a2b8-3f88e13a06b7",
+    "coa_code": "KLD06",
+    "institution_name": "Government Women’s Polytechnic College",
+    "slug": "government-women-s-polytechnic-college-kalamassery-kld06",
+    "city": "Kalamassery",
+    "state": "Kerala",
+    "lat": 10.847957,
+    "lng": 76.281035
+  },
+  {
+    "id": "e9b17aaa-ecc1-464b-bd18-d8fe3156365e",
+    "coa_code": "MHD01",
+    "institution_name": "Smt. Premalatai Chavan Polytechnic",
+    "slug": "smt-premalatai-chavan-polytechnic-karad-mhd01",
+    "city": "Karad",
+    "state": "Maharashtra",
+    "lat": 19.755715,
+    "lng": 75.719673
+  },
+  {
+    "id": "e4be0a52-974e-47ac-ad68-c11bd3f198bd",
+    "coa_code": "MHD02",
+    "institution_name": "Kalaprabodhini's Institute of Design",
+    "slug": "kalaprabodhini-s-institute-of-design-kolhapur-mhd02",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.712547,
+    "lng": 74.238259
+  },
+  {
+    "id": "c4a98d9e-486a-4653-b8b6-8474f3d236a4",
+    "coa_code": "MHD03",
+    "institution_name": "Shri Siddeshwar Sikshan Mandal's College of Architecture",
+    "slug": "shri-siddeshwar-sikshan-mandal-s-college-of-architecture-solapur-mhd03",
+    "city": "Solapur",
+    "state": "Maharashtra",
+    "lat": 17.660395,
+    "lng": 75.900483
+  },
+  {
+    "id": "9e4de506-caf1-42d1-8f5b-29cdcd3177f2",
+    "coa_code": "MHD04",
+    "institution_name": "Shahid Sitaram College of Architecture A/p- Chandre",
+    "slug": "shahid-sitaram-college-of-architecture-a-p-chandre-kolhapur-mhd04",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.702457,
+    "lng": 74.253235
+  },
+  {
+    "id": "b816c366-0b34-4b78-b7d8-5e2b6a30e14e",
+    "coa_code": "MLD01",
+    "institution_name": "Jowai Polytechnic Ladthadlaboh",
+    "slug": "jowai-polytechnic-ladthadlaboh-jowai-mld01",
+    "city": "Jowai",
+    "state": "Meghalaya",
+    "lat": 20.588822,
+    "lng": 78.953039
+  },
+  {
+    "id": "bf28ad35-356e-4047-b8cf-e19ef99aae9e",
+    "coa_code": "MPD01",
+    "institution_name": "Mahakoshal College of Science and Arts TENDUKHEDA DAMOH",
+    "slug": "mahakoshal-college-of-science-and-arts-tendukheda-damoh-damoh-mpd01",
+    "city": "Damoh",
+    "state": "Madhya Pradesh",
+    "lat": 22.970857,
+    "lng": 78.666835
+  },
+  {
+    "id": "8483b040-8f39-4566-8556-e5b496737b2a",
+    "coa_code": "UPD07",
+    "institution_name": "Government Polytechnic Soron Kasganj-Bareily Road Soron",
+    "slug": "government-polytechnic-soron-kasganj-bareily-road-soron-uttar-pradesh-upd07",
+    "city": "Uttar Pradesh",
+    "state": "Uttar Pradesh",
+    "lat": 26.852061,
+    "lng": 80.93417
+  },
+  {
+    "id": "fcc91198-e784-4100-8770-b935ef7752bc",
+    "coa_code": "UPD08",
+    "institution_name": "Government Polytechnic Hardoi Bawan Road",
+    "slug": "government-polytechnic-hardoi-bawan-road-hardoi-upd08",
+    "city": "Hardoi",
+    "state": "Uttar Pradesh",
+    "lat": 26.850671,
+    "lng": 80.959491
+  },
+  {
+    "id": "305eda7f-506d-46dd-9ac1-75451ef3d5ac",
+    "coa_code": "UPD09",
+    "institution_name": "Maharana Pratap Polytechnic Gorakhpur Sunauli Road Gorakhnath",
+    "slug": "maharana-pratap-polytechnic-gorakhpur-sunauli-road-gorakhnath-gorakhpur-upd09",
+    "city": "Gorakhpur",
+    "state": "Uttar Pradesh",
+    "lat": 26.834711,
+    "lng": 80.938905
+  },
+  {
+    "id": "f4c25acf-71f0-4b6f-b1cb-131f28389c2e",
+    "coa_code": "UPD10",
+    "institution_name": "Government Polytechnic Thakurdwara Moradabad",
+    "slug": "government-polytechnic-thakurdwara-moradabad-moradabad-upd10",
+    "city": "Moradabad",
+    "state": "Uttar Pradesh",
+    "lat": 26.860786,
+    "lng": 80.942948
+  },
+  {
+    "id": "eb7c549a-aadc-4b88-b770-2db130402c49",
+    "coa_code": "JHD01",
+    "institution_name": "Government Women’s Polytechnic",
+    "slug": "government-women-s-polytechnic-jamshedpur-jhd01",
+    "city": "Jamshedpur",
+    "state": "Jharkhand",
+    "lat": 23.607251,
+    "lng": 85.282737
+  },
+  {
+    "id": "2e5b13d7-160b-41b3-87c6-86478ca2ad9b",
+    "coa_code": "MPD02",
+    "institution_name": "S. R.. Govt. Polytechnic College",
+    "slug": "s-r-govt-polytechnic-college-sagar-mpd02",
+    "city": "Sagar",
+    "state": "Madhya Pradesh",
+    "lat": 22.968522,
+    "lng": 78.647039
+  },
+  {
+    "id": "f5e0e140-37e6-4b56-b816-cb2507ba96c6",
+    "coa_code": "TN77",
+    "institution_name": "Prime Nest College of Architecture and Planning",
+    "slug": "prime-nest-college-of-architecture-and-planning-tiruchirappalli",
+    "city": "Tiruchirappalli",
+    "state": "Tamil Nadu",
+    "lat": 10.785622,
+    "lng": 78.694839
+  },
+  {
+    "id": "049a2c91-902e-41a2-8bd5-41cf20c42bcd",
+    "coa_code": "MPD03",
+    "institution_name": "Government Women's Polytechnic College",
+    "slug": "government-women-s-polytechnic-college-indore-mpd03",
+    "city": "Indore",
+    "state": "Madhya Pradesh",
+    "lat": 22.711722,
+    "lng": 75.856237
+  },
+  {
+    "id": "5f8aff50-ff36-425d-b12f-bb390788fb50",
+    "coa_code": "TN73",
+    "institution_name": "VPMM College of Architecture for Women",
+    "slug": "vpmm-college-of-architecture-for-women-virudhunagar",
+    "city": "Virudhunagar",
+    "state": "Tamil Nadu",
+    "lat": 11.139335,
+    "lng": 78.667726
+  },
+  {
+    "id": "87e306ff-00f1-4be4-baee-3a9b2c3220e5",
+    "coa_code": "WBD01",
+    "institution_name": "Ratua Satyendra Nath Bose Government Polytechnic Matiganj",
+    "slug": "ratua-satyendra-nath-bose-government-polytechnic-matiganj-malda-wbd01",
+    "city": "Malda",
+    "state": "West Bengal",
+    "lat": 22.991015,
+    "lng": 87.860773
+  },
+  {
+    "id": "614c320d-acc0-4036-ba51-171e89f9cf43",
+    "coa_code": "TN91",
+    "institution_name": "Rathinam School of Architecture",
+    "slug": "rathinam-school-of-architecture-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.008193,
+    "lng": 76.968656
+  },
+  {
+    "id": "6dfc2a40-9899-45c3-a8c7-787b90b3806c",
+    "coa_code": "TS03",
+    "institution_name": "Sri Venkateswara College Of Architecture",
+    "slug": "sri-venkateswara-college-of-architecture-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.382051,
+    "lng": 78.489537
+  },
+  {
+    "id": "ac624d49-c570-49ad-b309-56d7c59f120c",
+    "coa_code": "TN99",
+    "institution_name": "PSG Institute of Architecture and Planning",
+    "slug": "psg-institute-of-architecture-and-planning-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.014808,
+    "lng": 76.939668
+  },
+  {
+    "id": "bb563a00-a705-4722-9132-62d412b8bc5a",
+    "coa_code": "TS02",
+    "institution_name": "School Of ArchitectureCSI Institute Of Technology",
+    "slug": "school-of-architecturecsi-institute-of-technology-secunderabad",
+    "city": "Secunderabad",
+    "state": "Telangana",
+    "lat": 17.4399,
+    "lng": 78.4983
+  },
+  {
+    "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+    "coa_code": "TS01",
+    "institution_name": "School Of Planning and Architecture",
+    "slug": "school-of-planning-and-architecture-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.385495,
+    "lng": 78.480783
+  },
+  {
+    "id": "d98cf253-288f-403f-a2af-3e2655ec5e9e",
+    "coa_code": "TN94",
+    "institution_name": "Rathinam School of Architecture Design (TIPS)",
+    "slug": "rathinam-school-of-architecture-design-tips-coimbatore",
+    "city": "Coimbatore",
+    "state": "Tamil Nadu",
+    "lat": 11.029035,
+    "lng": 76.966626
+  },
+  {
+    "id": "dac97d21-a6a7-4f54-ac64-6983f5df97b1",
+    "coa_code": "TS08",
+    "institution_name": "J.B.R. Architecture College",
+    "slug": "jbr-architecture-college-rangareddy",
+    "city": "Rangareddy",
+    "state": "Telangana",
+    "lat": 17.4334,
+    "lng": 78.4116
+  },
+  {
+    "id": "bd7094d2-6ded-4ad2-b933-3512424d497a",
+    "coa_code": "TS07",
+    "institution_name": "School Of Planning and Architecture Jawaharlal Nehru Institute Of Advanced Studies",
+    "slug": "school-of-planning-and-architecture-jawaharlal-nehru-institute-of-advanced-studies-secunderabad",
+    "city": "Secunderabad",
+    "state": "Telangana",
+    "lat": 17.436951,
+    "lng": 78.501137
+  },
+  {
+    "id": "61d5ecdf-3aca-4c87-853e-f1ab876c4625",
+    "coa_code": "TN97",
+    "institution_name": "Saveetha College of Architecture and Design",
+    "slug": "saveetha-college-of-architecture-and-design-chennai",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 13.0673,
+    "lng": 80.281952
+  },
+  {
+    "id": "38b5993a-26fa-49dc-91d1-d814143cfc56",
+    "coa_code": "TS06",
+    "institution_name": "Deccan School Of Planning and Architecture",
+    "slug": "deccan-school-of-planning-and-architecture-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.389215,
+    "lng": 78.492473
+  },
+  {
+    "id": "f140af20-e143-4664-9d0c-5b588a590499",
+    "coa_code": "TS04",
+    "institution_name": "Vaishnavi School Of Architecture and Planning",
+    "slug": "vaishnavi-school-of-architecture-and-planning-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.377122,
+    "lng": 78.485237
+  },
+  {
+    "id": "89be9939-1570-4d42-86bb-cd084716f456",
+    "coa_code": "UP27",
+    "institution_name": "Accurate Institute of Architecture & Planning",
+    "slug": "accurate-institute-of-architecture-planning-greater-noida",
+    "city": "Greater Noida",
+    "state": "Uttar Pradesh",
+    "lat": 28.471451,
+    "lng": 77.506837
+  },
+  {
+    "id": "c1ff7aa5-0398-4af1-854d-60f01e5a7d2e",
+    "coa_code": "MPD04",
+    "institution_name": "Government Women's Polytechnic College Bhopal Government Women&#039;s Polytechnic College Bhopal",
+    "slug": "government-women-s-polytechnic-college-bhopal-government-women-039-s-polytechnic-college-bhopal-bhopal-mpd04",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.255022,
+    "lng": 77.402739
+  },
+  {
+    "id": "1a6b620d-8b0b-4e18-baa3-61711e01e97e",
+    "coa_code": "UP10",
+    "institution_name": "College Of ArchitectureMoradabad Educational Trust, Ram Ganga Vihar, Moradabad",
+    "slug": "college-of-architecturemoradabad-educational-trust-ram-ganga-vihar-moradabad",
+    "city": "Moradabad",
+    "state": "Uttar Pradesh",
+    "lat": 26.838093,
+    "lng": 80.959056
+  },
+  {
+    "id": "0114e1fe-5eed-418f-81c6-279a2e039de0",
+    "coa_code": "TS11",
+    "institution_name": "Ashoka School of Planning and Architecture, Malkapur",
+    "slug": "ashoka-school-of-planning-and-architecture-malkapur-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.392547,
+    "lng": 78.481659
+  },
+  {
+    "id": "1b7849c3-a9aa-40ab-a9ab-ff40515d9050",
+    "coa_code": "UP21",
+    "institution_name": "School of Architecture",
+    "slug": "school-of-architecture-greater-noida",
+    "city": "Greater Noida",
+    "state": "Uttar Pradesh",
+    "lat": 28.474895,
+    "lng": 77.498083
+  },
+  {
+    "id": "aa9d2c8a-9d40-4971-afeb-837e057aad36",
+    "coa_code": "TS17",
+    "institution_name": "Guru Nanak Institute of Architecture and Planning",
+    "slug": "guru-nanak-institute-of-architecture-and-planning-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.382457,
+    "lng": 78.496635
+  },
+  {
+    "id": "ac1e21fe-35bd-439b-b392-800b0e32def2",
+    "coa_code": "TS15",
+    "institution_name": "ICFAI School of Architecture",
+    "slug": "icfai-school-of-architecture-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.380122,
+    "lng": 78.476839
+  },
+  {
+    "id": "915f975d-7b8e-4589-a8d7-e77ff88b75fc",
+    "coa_code": "TS09",
+    "institution_name": "Aurora-S Design Academy",
+    "slug": "aurora-s-design-academy-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.395627,
+    "lng": 78.490775
+  },
+  {
+    "id": "f9c9dd1e-4655-4037-a2fb-9598a8788626",
+    "coa_code": "UA06",
+    "institution_name": "Dev Bhoomi School of Architecture",
+    "slug": "dev-bhoomi-school-of-architecture-dehradun",
+    "city": "Dehradun",
+    "state": "Uttarakhand",
+    "lat": 30.316995,
+    "lng": 78.026283
+  },
+  {
+    "id": "6ce2d727-c5f8-4351-90cc-d7c3659e06e0",
+    "coa_code": "MPD05",
+    "institution_name": "SARDAR VALLABHBHAI POLYTECHNIC COLLEGE Vivekanand Square",
+    "slug": "sardar-vallabhbhai-polytechnic-college-vivekanand-square-bhopal-mpd05",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "lat": 23.270527,
+    "lng": 77.416675
+  },
+  {
+    "id": "00229b68-a4a3-415e-8074-ff2efc942a45",
+    "coa_code": "UA02",
+    "institution_name": "DIT Faculty of Architecture, DIT University",
+    "slug": "dit-faculty-of-architecture-dit-university-dehradun",
+    "city": "Dehradun",
+    "state": "Uttarakhand",
+    "lat": 30.320715,
+    "lng": 78.037973
+  },
+  {
+    "id": "4552fc19-06ca-470a-bf4e-a31a982622c8",
+    "coa_code": "UP06",
+    "institution_name": "Amity School Of Architecture & Planning, Amity University, Noida, Uttar Pradesh",
+    "slug": "amity-school-of-architecture-planning-amity-university-noida-uttar-pradesh",
+    "city": "Noida",
+    "state": "Uttar Pradesh",
+    "lat": 28.5355,
+    "lng": 77.391
+  },
+  {
+    "id": "003954f3-8b37-4655-b639-8b808011bcda",
+    "coa_code": "UP04",
+    "institution_name": "School of Architecture & Planning, Babu Banarasi Das University",
+    "slug": "school-of-architecture-planning-babu-banarasi-das-university-lucknow",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.844708,
+    "lng": 80.930068
+  },
+  {
+    "id": "c08992bb-8fd8-40fc-8c3f-5499187c22a1",
+    "coa_code": "UP15",
+    "institution_name": "ITM School Of Architecture & Town Planning",
+    "slug": "itm-school-of-architecture-town-planning-lucknow",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.858935,
+    "lng": 80.957026
+  },
+  {
+    "id": "c150b220-f253-40c6-83ce-e77f431ab95b",
+    "coa_code": "UP34",
+    "institution_name": "Sanskar College of Architecture & Planning",
+    "slug": "sanskar-college-of-architecture-planning-ghaziabad",
+    "city": "Ghaziabad",
+    "state": "Uttar Pradesh",
+    "lat": 28.669695,
+    "lng": 77.447883
+  },
+  {
+    "id": "59710702-7809-43c1-9da6-b4e425bf7df2",
+    "coa_code": "UA04",
+    "institution_name": "School Of Architecture and Planning",
+    "slug": "school-of-architecture-and-planning-clement",
+    "city": "Clement",
+    "state": "Uttarakhand",
+    "lat": 30.0668,
+    "lng": 79.0193
+  },
+  {
+    "id": "9bd46b08-8df4-419d-928f-83d4147d8f0a",
+    "coa_code": "UP05",
+    "institution_name": "Faculty of Architecture, Planning and Design",
+    "slug": "faculty-of-architecture-planning-and-design-lucknow",
+    "city": "Lucknow",
+    "state": "Uttar Pradesh",
+    "lat": 26.830222,
+    "lng": 80.946916
+  },
+  {
+    "id": "9ff7383a-09ee-4a42-9270-2d09b1161f90",
+    "coa_code": "UP18",
+    "institution_name": "Sharda School of Design, Architecture & Planning, Sharda University",
+    "slug": "sharda-school-of-design-architecture-planning-sharda-university-greater-noida",
+    "city": "Greater Noida",
+    "state": "Uttar Pradesh",
+    "lat": 28.478615,
+    "lng": 77.509773
+  },
+  {
+    "id": "d37b29bd-291b-4676-88e1-01e45984ef36",
+    "coa_code": "TS10",
+    "institution_name": "Aurora-s Design Institute",
+    "slug": "aurora-s-design-institute-hyderabad",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.373908,
+    "lng": 78.491508
+  },
+  {
+    "id": "90ac7b7e-0452-4698-a391-cd6b00542afa",
+    "coa_code": "UP09",
+    "institution_name": "Institute Of Architecture And Town PlanningBundelkhand University",
+    "slug": "institute-of-architecture-and-town-planningbundelkhand-university-jhansi",
+    "city": "Jhansi",
+    "state": "Uttar Pradesh",
+    "lat": 26.858729,
+    "lng": 80.93363
+  },
+  {
+    "id": "eb1d3b8b-459c-4f0b-ad44-437b995abace",
+    "coa_code": "UP31",
+    "institution_name": "Purvanchal Institute of Architecture & Design",
+    "slug": "purvanchal-institute-of-architecture-design-gorakhpur",
+    "city": "Gorakhpur",
+    "state": "Uttar Pradesh",
+    "lat": 26.845896,
+    "lng": 80.964488
+  },
+  {
+    "id": "90db95b3-edd4-43a1-9b04-6e44b7aa604f",
+    "coa_code": "TS16",
+    "institution_name": "Woxsen School of Architecture and Planning",
+    "slug": "woxsen-school-of-architecture-and-planning-medak",
+    "city": "Medak",
+    "state": "Telangana",
+    "lat": 18.0475,
+    "lng": 78.2612
+  },
+  {
+    "id": "1216edd7-17fd-4a0c-b9d5-ccdef0ad66c0",
+    "coa_code": "TS14",
+    "institution_name": "GITAM School of Architecture",
+    "slug": "gitam-school-of-architecture-medak",
+    "city": "Medak",
+    "state": "Telangana",
+    "lat": 18.044551,
+    "lng": 78.264037
+  },
+  {
+    "id": "d9d8e71a-48a3-4c26-84cb-f772832d8377",
+    "coa_code": "UP11",
+    "institution_name": "Khandelwal College Of Architecture And Design",
+    "slug": "khandelwal-college-of-architecture-and-design-bareilly",
+    "city": "Bareilly",
+    "state": "Uttar Pradesh",
+    "lat": 26.835238,
+    "lng": 80.93178
+  },
+  {
+    "id": "e358e87f-5422-4f7a-bd5a-ff6c5b170207",
+    "coa_code": "MPD06",
+    "institution_name": "GOVERNMENT WOMEN'S POLYTECHNIC COLLEGE",
+    "slug": "government-women-s-polytechnic-college-gwalior-mpd06",
+    "city": "Gwalior",
+    "state": "Madhya Pradesh",
+    "lat": 22.984027,
+    "lng": 78.660975
+  },
+  {
+    "id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "slug": "department-of-architecture-planning-indian-institute-of-technology-roorkee",
+    "city": "Roorkee",
+    "state": "Uttarakhand",
+    "lat": 29.8543,
+    "lng": 77.888
+  },
+  {
+    "id": "265e2f86-fb82-4046-bb48-60be1fb545d9",
+    "coa_code": "UP22",
+    "institution_name": "Shri Ram School Of ArchitectureShri Ram Group Of Colleges",
+    "slug": "shri-ram-school-of-architectureshri-ram-group-of-colleges-muzaffarnagar",
+    "city": "Muzaffarnagar",
+    "state": "Uttar Pradesh",
+    "lat": 26.864867,
+    "lng": 80.948765
+  },
+  {
+    "id": "80eab96f-c5e4-4521-b25f-1e3a39447cf8",
+    "coa_code": "UP03",
+    "institution_name": "School of Architecture & Planning, Apeejay Institute of Technology",
+    "slug": "school-of-architecture-planningapeejay-institute-of-technologygreater-noida",
+    "city": "Greater Noida",
+    "state": "Uttar Pradesh",
+    "lat": 28.466522,
+    "lng": 77.502537
+  },
+  {
+    "id": "d119c3e0-8c43-4c8d-88f4-1cf6ba640eba",
+    "coa_code": "MPD07",
+    "institution_name": "Incharge MAHAKOSHAL COLLEGE OF SCIENCE CHHAPARA",
+    "slug": "incharge-mahakoshal-college-of-science-chhapara-seoni-mpd07",
+    "city": "Seoni",
+    "state": "Madhya Pradesh",
+    "lat": 22.962308,
+    "lng": 78.661708
+  },
+  {
+    "id": "171e17bb-23fd-439e-81f6-8c0bdf309466",
+    "coa_code": "NLD02",
+    "institution_name": "Government Polytechnic Doyang Wokha",
+    "slug": "government-polytechnic-doyang-wokha-wokha-nld02",
+    "city": "Wokha",
+    "state": "Nagaland",
+    "lat": 20.604327,
+    "lng": 78.966975
+  },
+  {
+    "id": "ed944294-f603-41c3-9402-5f894454ee9b",
+    "coa_code": "UP36",
+    "institution_name": "Axis Institute of Architecture",
+    "slug": "axis-institute-of-architecture-kanpur",
+    "city": "Kanpur",
+    "state": "Uttar Pradesh",
+    "lat": 26.446951,
+    "lng": 80.334737
+  },
+  {
+    "id": "fdc0af5b-b6b6-4579-98e1-abe56fb22068",
+    "coa_code": "UP45",
+    "institution_name": "Dayalbagh Educational Institute, Deemed University",
+    "slug": "dayalbagh-educational-institute-deemed-university-agra",
+    "city": "Agra",
+    "state": "Uttar Pradesh",
+    "lat": 27.1767,
+    "lng": 78.0081
+  },
+  {
+    "id": "17d88c78-41a6-4e55-8d9a-068ba41f8efb",
+    "coa_code": "ORD01",
+    "institution_name": "Government Polytechnic",
+    "slug": "government-polytechnic-khordha-ord01",
+    "city": "Khordha",
+    "state": "India",
+    "lat": 20.582608,
+    "lng": 78.967708
+  },
+  {
+    "id": "c45efe20-5d6b-4d75-925c-855c651bf03e",
+    "coa_code": "UP49",
+    "institution_name": "Department of Architecture, Planning and Design, IIT (BHU)",
+    "slug": "department-of-architecture-planning-and-design-iit-bhu-varanasi",
+    "city": "Varanasi",
+    "state": "Uttar Pradesh",
+    "lat": 25.3176,
+    "lng": 82.9739
+  },
+  {
+    "id": "02231ef9-3427-49e6-8615-0879527d7938",
+    "coa_code": "ORD02",
+    "institution_name": "MAHAMAYA INSTITUTE OF MEDICAL AND TECHNICAL SCIENCE",
+    "slug": "mahamaya-institute-of-medical-and-technical-science-nuapada-ord02",
+    "city": "Nuapada",
+    "state": "India",
+    "lat": 20.599061,
+    "lng": 78.95087
+  },
+  {
+    "id": "03d209fe-78ed-401c-8543-77378d4dffed",
+    "coa_code": "PJD01",
+    "institution_name": "Thapar Polytechnic College Thapar Technology Campus Bhadson Road",
+    "slug": "thapar-polytechnic-college-thapar-technology-campus-bhadson-road-patiala-pjd01",
+    "city": "Patiala",
+    "state": "India",
+    "lat": 30.336851,
+    "lng": 76.389737
+  },
+  {
+    "id": "81be6ef5-29ec-48d0-95ad-32bd5f33086e",
+    "coa_code": "PJD02",
+    "institution_name": "GOVERNMENT POLYTECHNIC COLLEGE Ladowali Road",
+    "slug": "government-polytechnic-college-ladowali-road-jalandhar-pjd02",
+    "city": "Jalandhar",
+    "state": "India",
+    "lat": 31.326495,
+    "lng": 75.570283
+  },
+  {
+    "id": "01b9dfae-1254-4ce4-b89d-2228497f13c0",
+    "coa_code": "UP35",
+    "institution_name": "School of Architecture and Regional Planning, Gautam Buddha University",
+    "slug": "school-of-architecture-and-regional-planning-gautam-buddha-university-greater-noida",
+    "city": "Greater Noida",
+    "state": "Uttar Pradesh",
+    "lat": 28.481947,
+    "lng": 77.498959
+  },
+  {
+    "id": "e0fa78ec-491b-4d94-bf55-e2f22b09f9b1",
+    "coa_code": "PJD03",
+    "institution_name": "GOVERNMENT POLYTECHNIC COLLEGE Bibiwala Road",
+    "slug": "government-polytechnic-college-bibiwala-road-bathinda-pjd03",
+    "city": "Bathinda",
+    "state": "India",
+    "lat": 20.597671,
+    "lng": 78.976191
+  },
+  {
+    "id": "9b33dd7c-300b-4d44-a685-66c6565c0ba1",
+    "coa_code": "PJD04",
+    "institution_name": "Govt. Polytechnic College Patiala SST Nagar",
+    "slug": "govt-polytechnic-college-patiala-sst-nagar-patiala-pjd04",
+    "city": "Patiala",
+    "state": "India",
+    "lat": 30.340295,
+    "lng": 76.380983
+  },
+  {
+    "id": "139aedfc-d3cc-40f8-8a54-3bf163df8489",
+    "coa_code": "PJD05",
+    "institution_name": "Mai Bhago Government Polytechnic College for Girls Majitha Road Bye Pass",
+    "slug": "mai-bhago-government-polytechnic-college-for-girls-majitha-road-bye-pass-amritsar-pjd05",
+    "city": "Amritsar",
+    "state": "India",
+    "lat": 31.634495,
+    "lng": 74.866383
+  },
+  {
+    "id": "3ca093fc-50e4-4072-99e9-417310bcdb21",
+    "coa_code": "PJD06",
+    "institution_name": "SAI POLYTECHNIC COLLEGE",
+    "slug": "sai-polytechnic-college-pathankot-pjd06",
+    "city": "Pathankot",
+    "state": "India",
+    "lat": 20.581711,
+    "lng": 78.955605
+  },
+  {
+    "id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "coa_code": "WB01",
+    "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "slug": "dept-of-architecture-town-and-regional-planning-indian-institute-of-engineering-science-and-technology-shibpur-howrah",
+    "city": "Howrah",
+    "state": "West Bengal",
+    "lat": 22.5958,
+    "lng": 88.2636
+  },
+  {
+    "id": "9c1a6373-1653-4e3c-8049-000fd80ca5d5",
+    "coa_code": "WB05",
+    "institution_name": "Om Dayal School Of Architecture",
+    "slug": "om-dayal-school-of-architecture-howrah",
+    "city": "Howrah",
+    "state": "West Bengal",
+    "lat": 22.592851,
+    "lng": 88.266437
+  },
+  {
+    "id": "3a358505-5913-4514-abd9-b899324132fa",
+    "coa_code": "WB03",
+    "institution_name": "Faculty Of ArchitectureJadavpur University",
+    "slug": "faculty-of-architecturejadavpur-university-kolkata",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.576815,
+    "lng": 88.369673
+  },
+  {
+    "id": "cd88f111-8346-46cd-9622-f0cb8fa7cc6b",
+    "coa_code": "WB07",
+    "institution_name": "Amity School of Architecture and Planning",
+    "slug": "amity-school-of-architecture-and-planning-kolkata",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.564722,
+    "lng": 88.362437
+  },
+  {
+    "id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "slug": "school-of-planning-and-architecture-spa-new-delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "lat": 28.601911,
+    "lng": 77.201705
+  },
+  {
+    "id": "a504729d-44c0-4996-bd80-e1edd8d0d634",
+    "coa_code": "PJD07",
+    "institution_name": "RIMT College of Architecture RIMT University",
+    "slug": "rimt-college-of-architecture-rimt-university-mandi-gobindgarh-pjd07",
+    "city": "Mandi Gobindgarh",
+    "state": "India",
+    "lat": 31.586251,
+    "lng": 76.921037
+  },
+  {
+    "id": "80e3d399-5c6b-493e-add8-1a216e456aae",
+    "coa_code": "MH04",
+    "institution_name": "Department of Architecture and Planning, VNIT Nagpur",
+    "slug": "department-of-architecture-and-planning-vnit-nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "lat": 21.140922,
+    "lng": 79.078339
+  },
+  {
+    "id": "80693c81-470a-400f-bbb7-157de626046c",
+    "coa_code": "MH103",
+    "institution_name": "D. Y. Patil College of Architecture.",
+    "slug": "d-y-patil-college-of-architecture-kolhapur",
+    "city": "Kolhapur",
+    "state": "Maharashtra",
+    "lat": 16.700122,
+    "lng": 74.233439
+  },
+  {
+    "id": "9f7cda22-aa14-4494-9021-36a278aaf8a8",
+    "coa_code": "MH104",
+    "institution_name": "VASANTDADA PATIL PRATISHTHANS MANOHAR PHALKE COLLEGE OF ARCHITECTURE",
+    "slug": "vasantdada-patil-pratishthans-manohar-phalke-college-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.090086,
+    "lng": 72.874448
+  },
+  {
+    "id": "752cc2df-0057-412a-a166-d36d1ef054ae",
+    "coa_code": "MH29",
+    "institution_name": "Pravara Rural College Of Architecture",
+    "slug": "pravara-rural-college-of-architecture-ahmednagar",
+    "city": "Ahmednagar",
+    "state": "Maharashtra",
+    "lat": 19.091851,
+    "lng": 74.750837
+  },
+  {
+    "id": "7b5e91e3-4a73-4607-a5b2-8293de6b0afd",
+    "coa_code": "PJD08",
+    "institution_name": "Incharge St.Soldier Institute of Pharmacy & Polytechnic Village Lidhran",
+    "slug": "incharge-st-soldier-institute-of-pharmacy-polytechnic-village-lidhran-jalandhar-pjd08",
+    "city": "Jalandhar",
+    "state": "India",
+    "lat": 31.330215,
+    "lng": 75.581973
+  },
+  {
+    "id": "936b768d-b8d0-45c1-97e8-5a32350aaf40",
+    "coa_code": "DL10",
+    "institution_name": "Department of Architecture and Planning, Netaji Subhas University of Technology",
+    "slug": "department-of-architecture-and-planning-netaji-subhas-university-of-technology-delhi",
+    "city": "Delhi",
+    "state": "Delhi",
+    "lat": 28.627986,
+    "lng": 77.205748
+  },
+  {
+    "id": "b9a99b54-cb31-4a5c-8f03-559e0edf021f",
+    "coa_code": "GJ25",
+    "institution_name": "Institute of Architecture, Ganpat University",
+    "slug": "institute-of-architecture-ganpat-university-mahesana",
+    "city": "Mahesana",
+    "state": "Gujarat",
+    "lat": 23.585051,
+    "lng": 72.372137
+  },
+  {
+    "id": "2bb3bd98-278b-4570-a4c3-113a88a2547b",
+    "coa_code": "UP50",
+    "institution_name": "Department of Architecture, Modern College of Engineering",
+    "slug": "department-of-architecture-modern-college-of-engineering-jhansi",
+    "city": "Jhansi",
+    "state": "Uttar Pradesh",
+    "lat": 26.8313,
+    "lng": 80.957452
+  },
+  {
+    "id": "05fd8c03-6cec-4bdb-be85-35ae8d8a6c4d",
+    "coa_code": "WB06",
+    "institution_name": "Techno India University, School Of Architecture",
+    "slug": "techno-india-university-school-of-architecture-kolkata",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.580147,
+    "lng": 88.358859
+  },
+  {
+    "id": "d106be1f-6a71-439f-9789-9cdebf5ce0b4",
+    "coa_code": "MH02",
+    "institution_name": "L.S.Raheja School Of Architecture",
+    "slug": "lsraheja-school-of-architecture-mumbai",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "lat": 19.067393,
+    "lng": 72.890556
+  },
+  {
+    "id": "833ada1d-b4c3-4e3f-a28f-db9e2a9fe4b5",
+    "coa_code": "UP48",
+    "institution_name": "Naraina School of Planning & Architecture",
+    "slug": "naraina-school-of-planning-architecture-gangaganj-panki-kanpur",
+    "city": "Gangaganj Panki Kanpur",
+    "state": "Uttar Pradesh",
+    "lat": 26.450395,
+    "lng": 80.325983
+  },
+  {
+    "id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "slug": "faculty-of-architecture-regional-planning-indian-institute-of-technology-kharagpur",
+    "city": "Kharagpur",
+    "state": "West Bengal",
+    "lat": 22.978922,
+    "lng": 87.853537
+  },
+  {
+    "id": "4b2cd893-9262-4483-b045-c5abd799e419",
+    "coa_code": "WB04",
+    "institution_name": "Rani Rashmoni School of Architecture",
+    "slug": "rani-rashmoni-school-of-architecture-durgapur",
+    "city": "Durgapur",
+    "state": "West Bengal",
+    "lat": 22.994347,
+    "lng": 87.849959
+  },
+  {
+    "id": "9c438d3a-4087-4028-9b25-b8feeb5767c9",
+    "coa_code": "WB08",
+    "institution_name": "SISTER NIVEDITA UNIVERSITY",
+    "slug": "sister-nivedita-university-kolkata",
+    "city": "Kolkata",
+    "state": "West Bengal",
+    "lat": 22.570057,
+    "lng": 88.373835
+  },
+  {
+    "id": "3b8b477e-7018-4b5a-a3a8-ea20d976c037",
+    "coa_code": "KAD03",
+    "institution_name": "K.L.E. Society`s Chidanand B.Kore Polytechnic SH 12",
+    "slug": "k-l-e-society-s-chidanand-b-kore-polytechnic-sh-12-chikodi-kad03",
+    "city": "Chikodi",
+    "state": "Karnataka",
+    "lat": 15.3019,
+    "lng": 75.725152
+  },
+  {
+    "id": "56285c7c-e0f9-4f9c-946c-2ec14daa55a1",
+    "coa_code": "NLD01",
+    "institution_name": "Government Polytechnic Peren New Peren",
+    "slug": "government-polytechnic-peren-new-peren-peren-nld01",
+    "city": "Peren",
+    "state": "Nagaland",
+    "lat": 20.607786,
+    "lng": 78.959648
+  },
+  {
+    "id": "5ff2ab2d-04b3-49fb-98fa-d718eac28377",
+    "coa_code": "TSD02",
+    "institution_name": "Vivek Vardhini Institute of Architecture 5-1-524",
+    "slug": "vivek-vardhini-institute-of-architecture-5-1-524-hyderabad-tsd02",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "lat": 17.390361,
+    "lng": 78.47467
+  },
+  {
+    "id": "a24e7e8b-d95d-4806-bc18-98e545ec065f",
+    "coa_code": "KAD09",
+    "institution_name": "ACHARYA POLYTECHNIC, Acharya",
+    "slug": "acharya-polytechnic-acharya-karnataka-kad09",
+    "city": "Karnataka",
+    "state": "Karnataka",
+    "lat": 15.321509,
+    "lng": 75.694248
+  },
+  {
+    "id": "4c5d2269-28bd-4b81-82ce-aa384b8a76ba",
+    "coa_code": "KAD10",
+    "institution_name": "JSS Polytechnic for the DIfferently",
+    "slug": "jss-polytechnic-for-the-differently-karnataka-kad10",
+    "city": "Karnataka",
+    "state": "Karnataka",
+    "lat": 15.327044,
+    "lng": 75.731752
+  },
+  {
+    "id": "0e4587ac-39da-4432-86ea-2e78f4dca4f4",
+    "coa_code": "GJD11",
+    "institution_name": "School of Architecture, Art & Design",
+    "slug": "school-of-architecture-art-design-gujarat-gjd11",
+    "city": "Gujarat",
+    "state": "Gujarat",
+    "lat": 22.2587,
+    "lng": 71.1924
+  },
+  {
+    "id": "3d8a8e4c-0a1d-49ed-b46a-8f06f7c69252",
+    "coa_code": "KAD02",
+    "institution_name": "Acharya Patashala Polytechnic",
+    "slug": "acharya-patashala-polytechnic-karnataka-kad02",
+    "city": "Karnataka",
+    "state": "Karnataka",
+    "lat": 15.298246,
+    "lng": 75.707519
+  },
+  {
+    "id": "a0fe2ac2-93b7-4b03-8f99-5c800fcecbef",
+    "coa_code": "KAD05",
+    "institution_name": "SJPN Trust's Polytechnic",
+    "slug": "sjpn-trust-s-polytechnic-karnataka-kad05",
+    "city": "Karnataka",
+    "state": "Karnataka",
+    "lat": 15.335815,
+    "lng": 75.704916
+  },
+  {
+    "id": "67a49faf-162a-4571-8224-6619e0762552",
+    "coa_code": "RJD01",
+    "institution_name": "Buddha Group of Institutions",
+    "slug": "buddha-group-of-institutions-rajasthan-rjd01",
+    "city": "Rajasthan",
+    "state": "Rajasthan",
+    "lat": 27.012708,
+    "lng": 74.222708
+  },
+  {
+    "id": "d0d12949-5dd5-40bc-8457-b2f80f08c509",
+    "coa_code": "TND04",
+    "institution_name": "K.S.R.Polytechnic College",
+    "slug": "k-s-r-polytechnic-college-tamil-nadu-tnd04",
+    "city": "Tamil Nadu",
+    "state": "Tamil Nadu",
+    "lat": 11.110622,
+    "lng": 78.657616
+  },
+  {
+    "id": "5aff9f09-c791-4a67-92b1-01a71b168e25",
+    "coa_code": "WBD05",
+    "institution_name": "Shree Ramkrishna Institute of Science",
+    "slug": "shree-ramkrishna-institute-of-science-west-bengal-wbd05",
+    "city": "West Bengal",
+    "state": "West Bengal",
+    "lat": 22.984257,
+    "lng": 87.864935
+  }
+]

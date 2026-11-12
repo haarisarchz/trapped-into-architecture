@@ -255,7 +255,7 @@ if (loading) {
             </div>
 
             {/* DATABASE DASHBOARD */}
-            {userRole === "ceo" && (
+            {(userRole === "ceo" || userRole === "superadmin") && (
               <div>
                 <button
                   onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
@@ -282,6 +282,17 @@ if (loading) {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* INSTITUTIONS (SUPERADMIN & CEO ONLY) */}
+            {(userRole === "ceo" || userRole === "superadmin") && (
+              <button
+                onClick={() => router.push("/admin/institutions")}
+                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white flex items-center justify-between"
+              >
+                <span>Institutions</span>
+                <span className="text-[10px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-full font-semibold">COA</span>
+              </button>
             )}
 
             {/* STANDALONE MENUS */}

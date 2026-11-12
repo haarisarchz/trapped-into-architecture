@@ -12,12 +12,12 @@ import { calculateCompanyLevel } from "@/utils/companyLevel";
 export default function Navbar() {
   const router = useRouter();
 
-    const [showProfileMenu, setShowProfileMenu] =
-  useState(false);
+  const [showVacanciesMenu, setShowVacanciesMenu] = useState(false);
+  const [showProfilesMenu, setShowProfilesMenu] = useState(false);
+  const [mobileVacanciesOpen, setMobileVacanciesOpen] = useState(false);
+  const [mobileProfilesOpen, setMobileProfilesOpen] = useState(false);
 
-
-const [showUserMenu, setShowUserMenu] =
-  useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const [showAuthPopup, setShowAuthPopup] =
     useState(false);
@@ -90,6 +90,15 @@ const [showUserMenu, setShowUserMenu] =
       if (!(event.target).closest('.notif-container')) {
         setShowNotif(false);
       }
+      if (!(event.target).closest('.vacancies-menu-container')) {
+        setShowVacanciesMenu(false);
+      }
+      if (!(event.target).closest('.profiles-menu-container')) {
+        setShowProfilesMenu(false);
+      }
+      if (!(event.target).closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
     };
     if (showNotif) {
       document.addEventListener("mousedown", handleClickOutside);
@@ -130,8 +139,8 @@ const [showUserMenu, setShowUserMenu] =
       // A. Member Milestone Level-Up Notifications (Silver 45%, Gold 66%, Platinum 81%, Diamond 91%)
       if (userProf && userId) {
         try {
-          const { data: edus } = await supabase.from("educations").select("*").eq("user_id", userId);
-          const { data: exps } = await supabase.from("experiences").select("*").eq("user_id", userId);
+          const { data: edus } = await supabase.from('profile_educations').select("*").eq("user_id", userId);
+          const { data: exps } = await supabase.from('profile_experiences').select("*").eq("user_id", userId);
           const { percentage, badgeTier } = calculateProfileCompletion(userProf, edus || [], exps || []);
           const profTime = userProf.updated_at || userProf.created_at || new Date().toISOString();
           let calculatedTier = badgeTier || "bronze";
@@ -192,7 +201,7 @@ const [showUserMenu, setShowUserMenu] =
                 id: `comp-tier-${c.id}-${compLvl.tier}`,
                 message: `${compLvl.icon} ${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.tier === 'gold' || compLvl.tier === 'platinum' || compLvl.tier === 'diamond' ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
                 time: compTime,
-                link: `/companies/${c.slug}`
+                link: compLvl.isInstitution ? `/institutions/${c.slug}` : `/companies/${c.slug}`
               });
             }
           });
@@ -687,12 +696,12 @@ useEffect(() => {
           <>
             <button
               onClick={() => {
-                router.push("/admin/jobs/add");
+                router.push("/admin/add-job");
                 setShowUserMenu(false);
               }}
               className="w-full text-left px-5 py-4 hover:bg-gray-50 border-b border-gray-100 font-medium text-gray-900"
             >
-              Add a Job
+              Add New Job
             </button>
             {isSuperAdminOrCeo && (
               <button
@@ -848,65 +857,97 @@ useEffect(() => {
         <span>Trapped Into Architecture</span>
       </Link>
 
-    <div className="flex items-center gap-8">
+    <div className="flex items-center gap-4 lg:gap-5">
 
       {/* HOME */}
-
       <Link
         href="/"
-        className="hover:text-gray-300 transition"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
         Home
       </Link>
 
-      {/* NEWS FEED */}
-
+      {/* FEED */}
       <Link
         href="/news-feed"
-        className="hover:text-gray-300 transition"
-      >Feed</Link>
-
-      {/* JOBS */}
-
-      <Link
-        href="/jobs"
-        className="hover:text-gray-300 transition"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
-        Jobs
+        Feed
       </Link>
 
-      {/* INTERNSHIPS */}
+      {/* VACANCIES (DROPDOWN: JOBS & INTERNSHIP) */}
+      <div className="relative vacancies-menu-container">
+        <button
+          onClick={() => {
+            setShowVacanciesMenu(!showVacanciesMenu);
+            setShowProfilesMenu(false);
+          }}
+          className="text-sm font-semibold text-gray-200 hover:text-white transition flex items-center gap-1 cursor-pointer whitespace-nowrap py-1"
+          aria-expanded={showVacanciesMenu}
+        >
+          <span>Vacancies</span>
+          <ChevronDown size={14} className={`transition-transform duration-200 opacity-80 ${showVacanciesMenu ? 'rotate-180' : ''}`} />
+        </button>
 
+        {showVacanciesMenu && (
+          <div className="absolute left-0 mt-2.5 w-52 rounded-2xl bg-white text-black shadow-2xl overflow-hidden z-50 border border-gray-200 animate-in fade-in zoom-in-95 duration-100 divide-y divide-gray-200">
+            <Link
+              href="/jobs"
+              onClick={() => setShowVacanciesMenu(false)}
+              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
+            >
+              <span>Jobs</span>
+              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
+            </Link>
+            <Link
+              href="/internships"
+              onClick={() => setShowVacanciesMenu(false)}
+              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
+            >
+              <span>Internship</span>
+              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* COMPANIES */}
       <Link
-        href="/internships"
-        className="hover:text-gray-300 transition"
+        href="/companies"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
       >
-        Internships
+        Companies
       </Link>
 
-     {/* COMPANIES */}
+      {/* INSTITUTIONS */}
+      <Link
+        href="/institutions"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
+      >
+        Institutions
+      </Link>
 
-<Link
-  href="/companies"
-  className="hover:text-gray-300 transition"
->
-  Companies
-</Link>
+      {/* QUIZZES */}
+      <Link
+        href="/quizzes"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
+      >
+        Quizzes
+      </Link>
 
-          {/* CONTACT */}
-
-          <Link
-            href="/contact"
-            className="hover:text-gray-300 transition"
-          >
-            Contact
-          </Link>
+      {/* CONTACTS */}
+      <Link
+        href="/contact"
+        className="text-sm font-semibold text-gray-200 hover:text-white transition whitespace-nowrap py-1"
+      >
+        Contacts
+      </Link>
 
           {/* LOGIN REGISTER BUTTON */}
 
 
   {currentUser ? (
-  <div className="relative">
+  <div className="relative user-menu-container">
     <button
       onClick={() => setShowUserMenu(!showUserMenu)}
       className={`px-4 py-2 rounded-xl transition flex items-center gap-2 cursor-pointer shadow-xs ${getDisplayNameTierStyles(userTier)}`}
@@ -934,12 +975,12 @@ useEffect(() => {
           <>
             <button
               onClick={() => {
-                router.push("/admin/jobs/add");
+                router.push("/admin/add-job");
                 setShowUserMenu(false);
               }}
               className="w-full text-left px-5 py-3 hover:bg-gray-100 border-b border-gray-100 font-medium text-gray-900"
             >
-              Add a Job
+              Add New Job
             </button>
             {isSuperAdminOrCeo && (
               <button
@@ -1085,10 +1126,30 @@ useEffect(() => {
   <div className="absolute top-full left-0 w-full bg-black text-white border-t border-gray-800 md:hidden z-50 shadow-2xl flex flex-col">
     <Link href="/" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Home</Link>
     <Link href="/news-feed" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Feed</Link>
-    <Link href="/jobs" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
-    <Link href="/internships" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Internships</Link>
+    
+    {/* MOBILE VACANCIES DROPDOWN */}
+    <div className="border-b border-gray-800">
+      <button
+        onClick={() => setMobileVacanciesOpen(!mobileVacanciesOpen)}
+        className="w-full flex items-center justify-between px-6 py-2.5 text-lg hover:bg-gray-900 transition text-left cursor-pointer"
+      >
+        <span>Vacancies</span>
+        <ChevronDown size={18} className={`transition-transform duration-200 opacity-80 ${mobileVacanciesOpen ? 'rotate-180' : ''}`} />
+      </button>
+      {mobileVacanciesOpen && (
+        <div className="bg-gray-900 pl-10 pr-6 py-1 divide-y divide-gray-800">
+          <Link href="/jobs" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Jobs</Link>
+          <Link href="/internships" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Internship</Link>
+        </div>
+      )}
+    </div>
+
+    {/* MOBILE COMPANIES */}
     <Link href="/companies" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
-    <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+
+    <Link href="/institutions" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Institutions</Link>
+    <Link href="/quizzes" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Quizzes</Link>
+    <Link href="/contact" className="block px-6 py-2.5 border-b border-gray-800 text-lg hover:bg-gray-900 transition" onClick={() => setMobileMenuOpen(false)}>Contacts</Link>
   </div>
 )}
 </nav>

@@ -33,6 +33,33 @@ export const revalidate = 60;
 
 const DEFAULT_ANNOUNCEMENTS: FeedItem[] = [
   {
+    id: "announcement-coa-directory",
+    category: "National Milestone",
+    badge_color: "bg-blue-100 text-blue-800 border-blue-300",
+    title: "Official Council of Architecture (COA) Directory 2026–27 Live",
+    author: "Trapped Into Architecture Desk",
+    summary:
+      "Explore India's most comprehensive statutory architecture directory. Access 583 COA-recognized colleges, 3,014 verified intake records, 38+ M.Arch specializations, polytechnic diplomas, and session-by-session leadership history.",
+    feature_highlights: [
+      {
+        feature: "UG, PG & Diploma Explorer",
+        desc: "Interactive tabs covering B.Arch (473 colleges), M.Arch specializations (115 colleges), and polytechnic diplomas (180 colleges).",
+      },
+      {
+        feature: "Advance Statutory Accolades",
+        desc: "Discover institutions awarded multi-year advance approvals through 2028–2030 by the Council.",
+      },
+      {
+        feature: "Historical Leadership Tracking",
+        desc: "Inspect session-specific Heads of Department and Principals across approval years.",
+      },
+    ],
+    link_url: "/institutions",
+    link_text: "Explore Institutions",
+    published_at: new Date().toISOString(),
+    status: "published",
+  },
+  {
     id: "default-1",
     category: "Feature Drop",
     badge_color: "bg-emerald-100 text-emerald-800 border-emerald-300",
