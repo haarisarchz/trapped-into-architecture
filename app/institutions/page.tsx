@@ -195,11 +195,23 @@ function InstitutionsContent() {
 
   // Derived filter options
   const allStatesList = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, string>();
     institutions.forEach((i) => {
-      if (i.state && i.state.trim()) set.add(i.state.trim());
+      const s = (i.state || "").trim();
+      if (!s) return;
+      const lower = s.toLowerCase();
+      if (lower === "all india" || lower === "india") return;
+      if (!map.has(lower)) {
+        // Format to clean title case if all uppercase
+        const isUpper = s === s.toUpperCase() && s.length > 3;
+        const cleanName = isUpper
+          ? s.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ")
+          : s;
+        map.set(lower, cleanName);
+      }
     });
-    return ["All India", ...Array.from(set).sort()];
+    const sorted = Array.from(map.values()).sort((a, b) => a.localeCompare(b));
+    return ["All India", ...sorted];
   }, [institutions]);
 
   const uniqueCities = useMemo(() => {
