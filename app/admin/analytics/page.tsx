@@ -1,6 +1,6 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getClubbedPositionInfo } from "@/utils/positionNormalize";
@@ -19,7 +19,7 @@ const ProgressBar = ({ value, max }: { value: number, max: number }) => (
   </div>
 );
 
-// Reusable Information Tooltip Component with Clean Hover Explanations
+// Reusable Information Tooltip Component with Mobile Tap / Desktop Hover Explanations
 function InfoTooltip({
   text,
   position = "top",
@@ -27,14 +27,84 @@ function InfoTooltip({
   text: string;
   position?: "top" | "bottom" | "left" | "right";
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const [shiftX, setShiftX] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShiftX(0);
+      return;
+    }
+
+    // Auto-clamp inside viewport on mobile so tooltip never clips outside screen edges
+    if (tooltipRef.current) {
+      const rect = tooltipRef.current.getBoundingClientRect();
+      const padding = 12;
+      const vw = typeof window !== "undefined" ? window.innerWidth : 360;
+      if (rect.left < padding) {
+        setShiftX(padding - rect.left);
+      } else if (rect.right > vw - padding) {
+        setShiftX(vw - padding - rect.right);
+      } else {
+        setShiftX(0);
+      }
+    }
+
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen]);
+
+  const isVertical = position === "top" || position === "bottom";
+
   return (
-    <span className="relative inline-flex items-center group/tip cursor-help ml-1.5 align-middle select-none">
-      <span className="w-3.5 h-3.5 rounded-full bg-gray-200/90 text-gray-500 flex items-center justify-center text-[9px] font-bold transition-colors group-hover/tip:bg-black group-hover/tip:text-white">
+    <span
+      ref={containerRef}
+      className="relative inline-flex items-center group/tip select-none ml-1.5 align-middle"
+    >
+      <button
+        type="button"
+        aria-label="More information"
+        aria-expanded={isOpen}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          setIsOpen((prev) => !prev);
+        }}
+        className={`w-4 h-4 sm:w-3.5 sm:h-3.5 rounded-full flex items-center justify-center text-[10px] sm:text-[9px] font-bold transition-all cursor-pointer ${
+          isOpen
+            ? "bg-black text-white ring-2 ring-black/20"
+            : "bg-gray-200/90 text-gray-500 hover:bg-black hover:text-white active:scale-95"
+        }`}
+      >
         ?
-      </span>
+      </button>
+
       <span
+        ref={tooltipRef}
         role="tooltip"
-        className={`absolute pointer-events-none hidden group-hover/tip:block z-50 w-52 sm:w-64 p-2.5 bg-gray-900/95 text-white text-[11px] font-normal rounded-xl shadow-2xl backdrop-blur-xs text-left leading-relaxed transition-all duration-150 animate-in fade-in zoom-in-95 ${
+        onClick={(e) => e.stopPropagation()}
+        style={
+          isVertical && shiftX !== 0
+            ? { transform: `translate(calc(-50% + ${shiftX}px), 0)` }
+            : undefined
+        }
+        className={`absolute z-50 w-52 sm:w-64 max-w-[85vw] p-2.5 bg-gray-900/95 text-white text-[11px] font-normal rounded-xl shadow-2xl backdrop-blur-xs text-left leading-relaxed transition-all duration-150 animate-in fade-in zoom-in-95 ${
+          isOpen
+            ? "block pointer-events-auto"
+            : "hidden group-hover/tip:block pointer-events-none"
+        } ${
           position === "bottom"
             ? "top-full mt-2 left-1/2 -translate-x-1/2"
             : position === "right"
@@ -44,8 +114,26 @@ function InfoTooltip({
             : "bottom-full mb-2 left-1/2 -translate-x-1/2"
         }`}
       >
-        {text}
+        <span className="block pr-3">{text}</span>
+        {isOpen && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
+            className="absolute top-1.5 right-1.5 text-gray-400 hover:text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10 sm:hidden cursor-pointer"
+            aria-label="Close tooltip"
+          >
+            ✕
+          </button>
+        )}
         <span
+          style={
+            isVertical && shiftX !== 0
+              ? { left: `calc(50% - ${shiftX}px)` }
+              : undefined
+          }
           className={`absolute border-4 border-transparent ${
             position === "bottom"
               ? "bottom-full left-1/2 -translate-x-1/2 border-b-gray-900/95"
