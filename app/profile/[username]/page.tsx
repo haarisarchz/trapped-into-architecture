@@ -11,6 +11,11 @@ import {
   Building2,
   Settings as SettingsIcon,
   LogOut,
+  GraduationCap,
+  Trash2,
+  ArrowRight,
+  ExternalLink,
+  MapPin,
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
@@ -44,6 +49,8 @@ export default function ProfilePage() {
   const [educations, setEducations] = useState<EducationEntry[]>([]);
   const [experiences, setExperiences] = useState<ExperienceEntry[]>([]);
   const [savedJobsData, setSavedJobsData] = useState<any[]>([]);
+  const [savedShortlists, setSavedShortlists] = useState<any[]>([]);
+  const [savedSubTab, setSavedSubTab] = useState<"jobs" | "colleges">("jobs");
   const [favoriteCompanies, setFavoriteCompanies] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
 
@@ -175,6 +182,33 @@ export default function ProfilePage() {
             .in("slug", slugs);
           if (comps) setFavoriteCompanies(comps);
         }
+
+        // Fetch Saved College Shortlists
+        try {
+          const { data: slData } = await supabase
+            .from("user_shortlists")
+            .select(`
+              id,
+              shortlist_name,
+              created_at,
+              shortlist_institutions (
+                institution_id,
+                institutions (id, coa_code, institution_name, city, state, slug)
+              )
+            `)
+            .eq("user_id", profile.id)
+            .order("created_at", { ascending: false });
+
+          if (slData && slData.length > 0) {
+            setSavedShortlists(slData);
+          } else {
+            const local = JSON.parse(localStorage.getItem(`ti2a_shortlists_${profile.id}`) || "[]");
+            setSavedShortlists(local);
+          }
+        } catch (e) {
+          const local = JSON.parse(localStorage.getItem(`ti2a_shortlists_${profile.id}`) || "[]");
+          setSavedShortlists(local);
+        }
       } catch (err) {
         console.error("Error loading full profile:", err);
       } finally {
@@ -200,6 +234,19 @@ export default function ProfilePage() {
           isSaved: true,
         }))
       );
+    }
+  };
+
+  const handleDeleteShortlist = async (shortlistId: string) => {
+    if (!confirm("Are you sure you want to delete this saved college shortlist?")) return;
+    try {
+      await supabase.from("user_shortlists").delete().eq("id", shortlistId);
+    } catch (e) {}
+    setSavedShortlists(savedShortlists.filter((s) => s.id !== shortlistId));
+    if (user?.id) {
+      const local = JSON.parse(localStorage.getItem(`ti2a_shortlists_${user.id}`) || "[]");
+      const filtered = local.filter((s: any) => s.id !== shortlistId);
+      localStorage.setItem(`ti2a_shortlists_${user.id}`, JSON.stringify(filtered));
     }
   };
 
@@ -447,95 +494,211 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* TAB 2 CONTENT: SAVED JOBS */}
+          {/* TAB 2 CONTENT: SAVED JOBS & COLLEGE SHORTLISTS */}
           {activeTab === "saved" && (
             <div className="border rounded-3xl p-6 md:p-8 bg-gray-50">
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Saved Jobs</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Saved Items</h2>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    Jobs and internship positions bookmarked for easy application
+                    Your bookmarked jobs and architecture college shortlists
                   </p>
                 </div>
-                <span className="text-xs font-bold px-3 py-1 bg-white border border-gray-200 rounded-full text-gray-700">
-                  {savedJobsData.length} Saved
-                </span>
+
+                <div className="flex items-center gap-1.5 bg-gray-200/70 p-1 rounded-xl self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setSavedSubTab("jobs")}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                      savedSubTab === "jobs"
+                        ? "bg-white text-black shadow-2xs"
+                        : "text-gray-600 hover:text-black"
+                    }`}
+                  >
+                    Jobs ({savedJobsData.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSavedSubTab("colleges")}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition ${
+                      savedSubTab === "colleges"
+                        ? "bg-white text-black shadow-2xs"
+                        : "text-gray-600 hover:text-black"
+                    }`}
+                  >
+                    College Shortlists ({savedShortlists.length})
+                  </button>
+                </div>
               </div>
 
-              {savedJobsData.length === 0 ? (
-                <div className="bg-white rounded-2xl p-10 text-center border border-gray-200">
-                  <Bookmark size={36} className="mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-500 font-medium text-sm">No saved jobs yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {savedJobsData.map((job) => {
-                    const isExpired =
-                      job.post_expiry_date &&
-                      new Date(job.post_expiry_date) < new Date();
+              {savedSubTab === "colleges" ? (
+                /* COLLEGE SHORTLISTS VIEW */
+                savedShortlists.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-10 text-center border border-gray-200">
+                    <GraduationCap size={36} className="mx-auto text-gray-400 mb-2" />
+                    <p className="text-gray-900 font-bold text-base mb-1">No College Shortlists Saved Yet</p>
+                    <p className="text-gray-500 text-xs max-w-md mx-auto mb-5 leading-relaxed">
+                      Select up to 4 architecture institutions in our directory, compare their COA approvals and distances, and click &quot;Save Shortlist&quot; to keep them here.
+                    </p>
+                    <Link
+                      href="/institutions"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-black text-white hover:bg-gray-800 text-xs font-bold rounded-xl transition"
+                    >
+                      Browse Architecture Institutions &rarr;
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {savedShortlists.map((sl: any) => {
+                      const institutionsList =
+                        sl.shortlist_institutions?.map((si: any) => si.institutions).filter(Boolean) ||
+                        sl.colleges ||
+                        [];
+                      const ids = institutionsList.map((i: any) => i.id).filter(Boolean);
 
-                    return (
-                      <div
-                        key={job.id}
-                        onClick={() => router.push(generateJobUrl(job))}
-                        className="bg-white rounded-2xl shadow-sm hover:shadow-md transition border border-gray-200 p-4 flex items-center gap-4 cursor-pointer"
-                      >
-                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center border border-gray-100">
-                          {job.image ? (
-                            <img
-                              src={job.image}
-                              alt={job.position}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-xs text-gray-400">No Image</span>
-                          )}
-                        </div>
+                      return (
+                        <div
+                          key={sl.id}
+                          className="bg-white rounded-2xl p-5 border border-gray-200 shadow-2xs hover:border-gray-300 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                        >
+                          <div className="space-y-2 min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-extrabold text-gray-900 text-base">
+                                {sl.shortlist_name || "Architecture College Shortlist"}
+                              </h3>
+                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+                                {institutionsList.length} Colleges
+                              </span>
+                              {sl.created_at && (
+                                <span className="text-[11px] text-gray-400">
+                                  Saved {new Date(sl.created_at).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
 
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900 leading-tight">
-                            <span className="font-bold">{job.firm_name}</span>
-                            <span className="text-gray-600"> is hiring </span>
-                            <span className="font-semibold text-black">{job.position}</span>
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {job.city}{job.state ? `, ${job.state}` : ""}
-                          </p>
-                        </div>
+                            {/* College Chips */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {institutionsList.map((inst: any) => (
+                                <span
+                                  key={inst.id}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-800"
+                                >
+                                  {inst.coa_code && (
+                                    <span className="font-mono text-[10px] font-bold bg-black text-white px-1 rounded">
+                                      {inst.coa_code}
+                                    </span>
+                                  )}
+                                  <span className="truncate max-w-[200px]" title={inst.institution_name}>
+                                    {inst.institution_name}
+                                  </span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleSavedJob(job.id);
-                            }}
-                            className={`p-2 rounded-xl transition ${
-                              job.isSaved
-                                ? "bg-black text-white"
-                                : "bg-gray-100 text-gray-500 hover:text-black cursor-pointer"
-                            }`}
-                          >
-                            {job.isSaved ? (
-                              <BookmarkCheck size={16} />
-                            ) : (
-                              <Bookmark size={16} />
+                          <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                            {ids.length > 0 && (
+                              <Link
+                                href={`/compare-institutions?ids=${ids.join(",")}`}
+                                className="px-4 py-2 bg-black text-white hover:bg-gray-800 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-2xs"
+                              >
+                                <span>Compare ({ids.length})</span>
+                                <ArrowRight size={13} />
+                              </Link>
                             )}
-                          </button>
-
-                          {isExpired ? (
-                            <span className="bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-xs font-semibold">
-                              Expired
-                            </span>
-                          ) : (
-                            <span className="bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 rounded-full text-xs font-semibold">
-                              Active
-                            </span>
-                          )}
+                            {isOwner && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteShortlist(sl.id)}
+                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
+                                title="Delete Shortlist"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )
+              ) : (
+                /* SAVED JOBS VIEW */
+                savedJobsData.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-10 text-center border border-gray-200">
+                    <Bookmark size={36} className="mx-auto text-gray-400 mb-2" />
+                    <p className="text-gray-500 font-medium text-sm">No saved jobs yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {savedJobsData.map((job) => {
+                      const isExpired =
+                        job.post_expiry_date &&
+                        new Date(job.post_expiry_date) < new Date();
+
+                      return (
+                        <div
+                          key={job.id}
+                          onClick={() => router.push(generateJobUrl(job))}
+                          className="bg-white rounded-2xl shadow-sm hover:shadow-md transition border border-gray-200 p-4 flex items-center gap-4 cursor-pointer"
+                        >
+                          <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center border border-gray-100">
+                            {job.image ? (
+                              <img
+                                src={job.image}
+                                alt={job.position}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xs text-gray-400">No Image</span>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-900 leading-tight">
+                              <span className="font-bold">{job.firm_name}</span>
+                              <span className="text-gray-600"> is hiring </span>
+                              <span className="font-semibold text-black">{job.position}</span>
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {job.city}{job.state ? `, ${job.state}` : ""}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleSavedJob(job.id);
+                              }}
+                              className={`p-2 rounded-xl transition ${
+                                job.isSaved
+                                  ? "bg-black text-white"
+                                  : "bg-gray-100 text-gray-500 hover:text-black cursor-pointer"
+                              }`}
+                            >
+                              {job.isSaved ? (
+                                <BookmarkCheck size={16} />
+                              ) : (
+                                <Bookmark size={16} />
+                              )}
+                            </button>
+
+                            {isExpired ? (
+                              <span className="bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                Expired
+                              </span>
+                            ) : (
+                              <span className="bg-green-50 text-green-700 border border-green-200 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                Active
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
               )}
             </div>
           )}

@@ -127,7 +127,7 @@ export default function InstitutionCard({
                   ? "bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:bg-gray-50"
                   : "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
               }`}
-              title={isCompared ? "Remove from comparison" : canCompare ? "Add to compare" : "Maximum 3 institutions selected"}
+              title={isCompared ? "Remove from comparison" : canCompare ? "Add to compare" : "Maximum 4 institutions selected"}
             >
               {isCompared ? (
                 <>
