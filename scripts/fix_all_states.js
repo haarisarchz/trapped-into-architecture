@@ -55,9 +55,20 @@ async function fixStates() {
   await supabase.from('institutions').update({ state: 'Odisha' }).in('coa_code', ['ORD01', 'ORD02']);
   console.log('Updated TRD01 to Tripura and ORD01/02 to Odisha');
 
-  console.log('--- 5. Standardizing International (UAE) Campuses ---');
-  await supabase.from('institutions').update({ state: 'International (UAE)' }).in('coa_code', ['UP06A', 'JH01A']);
-  console.log('Updated UP06A and JH01A to International (UAE)');
+  console.log('--- 5. Assigning Indian Parent Campus Locations for Overseas Extension Campuses ---');
+  await supabase.from('institutions').update({
+    city: 'Noida',
+    district: 'Gautam Buddha Nagar',
+    state: 'Uttar Pradesh',
+    country: 'India'
+  }).eq('coa_code', 'UP06A');
+  await supabase.from('institutions').update({
+    city: 'Ranchi',
+    district: 'Ranchi',
+    state: 'Jharkhand',
+    country: 'India'
+  }).eq('coa_code', 'JH01A');
+  console.log('Updated UP06A to Noida, Uttar Pradesh and JH01A to Ranchi, Jharkhand');
 
   console.log('--- 6. Verifying Final State Counts ---');
   const { data: finalInsts } = await supabase.from('institutions').select('state');
