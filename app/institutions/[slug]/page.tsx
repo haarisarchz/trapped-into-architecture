@@ -332,8 +332,7 @@ export default async function InstitutionProfilePage({
                 {isClosed ? (
                   <>
                     <div className="mt-1 flex items-baseline gap-2">
-                      <span className="text-3xl font-extrabold text-red-600">0</span>
-                      <span className="text-sm font-semibold text-red-500">seats (Closed)</span>
+                      <span className="text-2xl font-extrabold text-red-600">Closed Institution</span>
                     </div>
                     <div className="text-xs text-gray-600 font-medium mt-1">
                       Course: <strong>B.Arch</strong>

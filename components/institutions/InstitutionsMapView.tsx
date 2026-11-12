@@ -142,22 +142,55 @@ export default function InstitutionsMapView({
       markersMapRef.current = {};
 
       mappedInstitutions.forEach((inst) => {
-        const isNirf = !!inst.best_rank;
-        const isMultiYear = inst.annual_records?.some(
-          (r: any) =>
-            r.academic_year &&
-            r.academic_year >= "2027-2028" &&
-            r.approved_intake > 0 &&
-            !/closure|discontinued/i.test(r.approval_status || "")
-        );
-        const isPoly = inst.institution_type === "Polytechnic / Diploma Institution";
+        const latest = inst.latest_record;
+        const isClosed =
+          !latest ||
+          latest.approved_intake <= 0 ||
+          (inst.institution_type && /closed|closure|discontinued/i.test(inst.institution_type)) ||
+          (latest?.approval_status && /closed|closure|discontinued/i.test(latest.approval_status));
+
+        const isNirf = !isClosed && !!inst.best_rank;
+        const isMultiYear =
+          !isClosed &&
+          inst.annual_records?.some(
+            (r: any) =>
+              r.academic_year &&
+              r.academic_year >= "2027-2028" &&
+              r.approved_intake > 0 &&
+              !/closure|discontinued/i.test(r.approval_status || "")
+          );
+        const isPoly = !isClosed && inst.institution_type === "Polytechnic / Diploma Institution";
 
         // Determine marker icon appearance
         let markerHtml = "";
         let iconSize: [number, number] = [28, 28];
         let iconAnchor: [number, number] = [14, 14];
 
-        if (isNirf) {
+        if (isClosed) {
+          // Closed Institution marker (subtle muted gray dot with an x)
+          markerHtml = `
+            <div style="
+              width: 20px;
+              height: 20px;
+              background: #9ca3af;
+              color: white;
+              border-radius: 50%;
+              border: 2px solid #ffffff;
+              box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 8px;
+              font-weight: 800;
+              opacity: 0.75;
+              cursor: pointer;
+            ">
+              ✕
+            </div>
+          `;
+          iconSize = [20, 20];
+          iconAnchor = [10, 10];
+        } else if (isNirf) {
           // Gold NIRF Icon
           markerHtml = `
             <div style="
@@ -265,14 +298,11 @@ export default function InstitutionsMapView({
 
         const marker = L.marker([inst.lat, inst.lng], { icon: customIcon });
 
-        const latest = inst.latest_record;
-        const intakeSeats = latest?.approved_intake ? `${latest.approved_intake} seats` : "";
-
         // Sleek horizontal pill tooltip (never vertically crushed or clipped)
         const tooltipHtml = `
           <div style="display: flex; align-items: center; gap: 6px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 700; color: #111827; white-space: nowrap;">
             ${inst.coa_code ? `<span style="font-family: monospace; font-size: 9px; font-weight: 800; background: #000; color: #fff; padding: 1.5px 5px; border-radius: 4px;">${inst.coa_code}</span>` : ""}
-            ${inst.best_rank ? `<span style="font-size: 9px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 1.5px 5px; border-radius: 4px; border: 1px solid #fde68a;">#${inst.best_rank.rank_number}</span>` : ""}
+            ${!isClosed && inst.best_rank ? `<span style="font-size: 9px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 1.5px 5px; border-radius: 4px; border: 1px solid #fde68a;">#${inst.best_rank.rank_number}</span>` : ""}
             <span style="max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${inst.institution_name}</span>
             <span style="color: #6b7280; font-weight: 600; font-size: 10px;">(${inst.city || inst.district || inst.state})</span>
           </div>
@@ -290,9 +320,14 @@ export default function InstitutionsMapView({
           <div style="font-family: ui-sans-serif, system-ui, sans-serif; width: 250px; padding: 2px; line-height: 1.35;">
             <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 6px; flex-wrap: wrap;">
               ${inst.coa_code ? `<span style="font-family: monospace; font-size: 10px; font-weight: 800; background: #000; color: #fff; padding: 2px 5px; border-radius: 4px;">${inst.coa_code}</span>` : ""}
-              ${inst.best_rank ? `<span style="font-size: 10px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 5px; border-radius: 4px; border: 1px solid #fde68a;">NIRF #${inst.best_rank.rank_number}</span>` : ""}
+              ${!isClosed && inst.best_rank ? `<span style="font-size: 10px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 5px; border-radius: 4px; border: 1px solid #fde68a;">NIRF #${inst.best_rank.rank_number}</span>` : ""}
               <span style="font-size: 11px; font-weight: 600; color: #6b7280;">${inst.state || ""}</span>
-              ${intakeSeats ? `<span style="font-size: 10.5px; font-weight: 700; background: #f3f4f6; color: #111827; padding: 2px 5px; border-radius: 4px; margin-left: auto;">${intakeSeats}</span>` : ""}
+              ${isClosed
+                ? `<span style="font-size: 9.5px; font-weight: 800; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; padding: 2px 5px; border-radius: 4px; margin-left: auto;">Closed Institution</span>`
+                : (latest?.approved_intake
+                  ? `<span style="font-size: 10.5px; font-weight: 700; background: #f3f4f6; color: #111827; padding: 2px 5px; border-radius: 4px; margin-left: auto;">${latest.approved_intake} seats</span>`
+                  : "")
+              }
             </div>
             <h4 style="font-size: 13.5px; font-weight: 700; color: #111827; line-height: 1.35; margin: 0 0 4px 0; word-break: break-word;">
               ${inst.institution_name}
@@ -432,6 +467,8 @@ export default function InstitutionsMapView({
                 className={`p-3.5 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-2.5 ${
                   isSelected
                     ? "bg-amber-50/90 border-2 border-amber-400 shadow-xs"
+                    : isClosed
+                    ? "bg-gray-50/70 border border-gray-200 hover:border-gray-300 opacity-80 hover:opacity-100"
                     : "bg-white border border-gray-200/90 hover:border-gray-300 hover:shadow-xs"
                 }`}
               >
@@ -443,7 +480,7 @@ export default function InstitutionsMapView({
                           {inst.coa_code}
                         </span>
                       )}
-                      {inst.best_rank && (
+                      {!isClosed && inst.best_rank && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded">
                           <Award size={10} className="text-amber-600" />
                           NIRF #{inst.best_rank.rank_number}
@@ -451,9 +488,17 @@ export default function InstitutionsMapView({
                       )}
                       <span className="text-[11px] font-semibold text-gray-500">{inst.state}</span>
                     </div>
-                    {latest && (
+                    {isClosed ? (
+                      <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/80 px-2 py-0.5 rounded shrink-0">
+                        Closed Institution
+                      </span>
+                    ) : latest && latest.approved_intake > 0 ? (
                       <span className="text-[11px] font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded shrink-0">
                         {latest.approved_intake} seats
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/80 px-2 py-0.5 rounded shrink-0">
+                        Closed Institution
                       </span>
                     )}
                   </div>
@@ -510,6 +555,10 @@ export default function InstitutionsMapView({
           <div className="flex items-center gap-2 text-gray-700">
             <span className="w-3.5 h-3.5 rounded-md bg-teal-600 border border-white shadow-2xs inline-block shrink-0"></span>
             <span>Polytechnic / Diploma Institution</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-700">
+            <span className="w-3.5 h-3.5 rounded-full bg-gray-400 border border-white shadow-2xs inline-block shrink-0"></span>
+            <span>Closed Institution (0 seats)</span>
           </div>
         </div>
 

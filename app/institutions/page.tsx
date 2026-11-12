@@ -423,9 +423,46 @@ function InstitutionsContent() {
     filterActiveOnly,
   ]);
 
+  // Helper to determine if an institution is closed (0 approved seats or closure status)
+  const isInstClosed = (inst: any) => {
+    if (!inst) return false;
+    // Check if institution has future multi-year approved seats
+    const recs = inst.annual_records || [];
+    const hasFutureMultiYear = recs.some(
+      (r: any) =>
+        r.academic_year &&
+        r.academic_year >= "2026-2027" &&
+        r.approved_intake > 0 &&
+        !/closure|discontinued|withdrawn/i.test(r.approval_status || "")
+    );
+    if (hasFutureMultiYear) return false;
+
+    if (inst.institution_type && /closed|closure|discontinued/i.test(inst.institution_type)) {
+      return true;
+    }
+    const latest = inst.latest_record;
+    if (!latest) return true;
+    if (latest.approval_status && /closed|closure|discontinued/i.test(latest.approval_status)) {
+      return true;
+    }
+    if (typeof latest.approved_intake === "number" && latest.approved_intake <= 0) {
+      return true;
+    }
+    return false;
+  };
+
   // Sorting
   const sortedInstitutions = useMemo(() => {
     return [...filteredInstitutions].sort((a, b) => {
+      // 1. Primary Rule: Active institutions first, Closed (0 seats) last
+      const closedA = isInstClosed(a);
+      const closedB = isInstClosed(b);
+
+      if (closedA !== closedB) {
+        return closedA ? 1 : -1; // Closed institutions go to the end
+      }
+
+      // 2. Secondary Rule: within active or closed group
       if (sortBy === "nirf_asc") {
         const rankA = a.best_rank ? a.best_rank.rank_number : 9999;
         const rankB = b.best_rank ? b.best_rank.rank_number : 9999;
@@ -437,17 +474,19 @@ function InstitutionsContent() {
       if (sortBy === "intake_desc") {
         const intA = a.latest_record?.approved_intake || 0;
         const intB = b.latest_record?.approved_intake || 0;
-        return intB - intA;
+        if (intA !== intB) return intB - intA;
+        return a.institution_name.localeCompare(b.institution_name);
       }
       if (sortBy === "intake_asc") {
         const intA = a.latest_record?.approved_intake || 0;
         const intB = b.latest_record?.approved_intake || 0;
-        return intA - intB;
+        if (intA !== intB) return intA - intB;
+        return a.institution_name.localeCompare(b.institution_name);
       }
       if (sortBy === "code_asc") {
         return (a.coa_code || "").localeCompare(b.coa_code || "");
       }
-      return 0;
+      return a.institution_name.localeCompare(b.institution_name);
     });
   }, [filteredInstitutions, sortBy]);
 

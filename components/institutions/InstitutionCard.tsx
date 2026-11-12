@@ -20,7 +20,11 @@ export default function InstitutionCard({
   const latestRecord = institution.latest_record;
   const bestRank = institution.best_rank;
 
-  const isClosed = institution.institution_type && /closed/i.test(institution.institution_type);
+  const isClosed =
+    (institution.institution_type && /closed|closure|discontinued/i.test(institution.institution_type)) ||
+    (latestRecord && latestRecord.approval_status && /closed|closure|discontinued/i.test(latestRecord.approval_status)) ||
+    !latestRecord ||
+    (latestRecord && typeof latestRecord.approved_intake === "number" && latestRecord.approved_intake <= 0);
   const isProgressive = institution.institution_type && /progressive closure/i.test(institution.institution_type);
   const closureYearMatch = institution.institution_type ? institution.institution_type.match(/(\d{4}[-–_]\d{4}|\b20\d\d\b)/) : null;
   const shortClosureYr = closureYearMatch ? closureYearMatch[1].replace(/^20/, "").replace(/[-–_]20/, "-") : "";
@@ -197,23 +201,21 @@ export default function InstitutionCard({
           </div>
           <div className="text-sm font-extrabold mt-0.5">
             {isClosed ? (
-              <span className="text-xs font-bold text-red-600">
-                Discontinued (Closed w.e.f. {shortClosureYr || "Gazette"})
-              </span>
-            ) : isProgressive ? (
-              <span className="text-xs font-bold text-amber-700">
-                0 Fresh Seats (Progressive Closure)
+              <span className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded inline-block">
+                Closed Institution
               </span>
             ) : multiYearApproval ? (
               <span className="text-emerald-950">
                 {multiYearApproval.approvedIntake} <span className="text-xs font-normal text-gray-500">seats ({multiYearApproval.courseName})</span>
               </span>
-            ) : latestRecord ? (
+            ) : latestRecord && latestRecord.approved_intake > 0 ? (
               <span className="text-gray-900">
                 {latestRecord.approved_intake} <span className="text-xs font-normal text-gray-500">seats ({latestRecord.course_name || "B.Arch"})</span>
               </span>
             ) : (
-              <span className="text-xs font-medium text-gray-400">Record pending</span>
+              <span className="text-xs font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded inline-block">
+                Closed Institution
+              </span>
             )}
           </div>
         </div>
