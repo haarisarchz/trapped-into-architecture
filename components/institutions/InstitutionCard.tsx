@@ -140,8 +140,8 @@ export default function InstitutionCard({
           )}
         </div>
 
-        {/* Institution Name */}
-        <h3 className="text-lg font-bold text-gray-900 group-hover:text-black transition leading-snug line-clamp-2 mb-2">
+        {/* Institution Name (full name always displayed) */}
+        <h3 className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-black transition leading-snug break-words mb-2">
           <Link href={`/institutions/${institution.slug}`}>
             {institution.institution_name}
           </Link>

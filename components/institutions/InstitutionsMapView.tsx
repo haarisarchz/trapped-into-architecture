@@ -47,6 +47,7 @@ export default function InstitutionsMapView({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
+  const markersMapRef = useRef<Record<string, any>>({});
   const [selectedInst, setSelectedInst] = useState<any | null>(null);
   const [activeHub, setActiveHub] = useState<string>("All India");
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -138,6 +139,7 @@ export default function InstitutionsMapView({
       const L = (await import("leaflet")).default;
       const markersGroup = markersLayerRef.current;
       markersGroup.clearLayers();
+      markersMapRef.current = {};
 
       mappedInstitutions.forEach((inst) => {
         const isNirf = !!inst.best_rank;
@@ -263,7 +265,62 @@ export default function InstitutionsMapView({
 
         const marker = L.marker([inst.lat, inst.lng], { icon: customIcon });
 
-        // Click handler: Set selected institution and notify parent
+        const latest = inst.latest_record;
+        const intakeSeats = latest?.approved_intake ? `${latest.approved_intake} seats` : "";
+
+        // Multi-line wrap tooltip (never clipped or overflowing)
+        const tooltipHtml = `
+          <div style="font-family: ui-sans-serif, system-ui, sans-serif; white-space: normal; line-height: 1.35; padding: 2px 0;">
+            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 4px; flex-wrap: wrap;">
+              ${inst.coa_code ? `<span style="font-family: monospace; font-size: 10px; font-weight: 800; background: #000; color: #fff; padding: 1.5px 5px; border-radius: 4px;">${inst.coa_code}</span>` : ""}
+              ${inst.best_rank ? `<span style="font-size: 10px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 1.5px 5px; border-radius: 4px; border: 1px solid #fde68a;">NIRF #${inst.best_rank.rank_number}</span>` : ""}
+              <span style="font-size: 10.5px; font-weight: 600; color: #6b7280;">${inst.state || ""}</span>
+              ${intakeSeats ? `<span style="font-size: 10px; font-weight: 700; background: #f3f4f6; color: #374151; padding: 1.5px 5px; border-radius: 4px; margin-left: auto;">${intakeSeats}</span>` : ""}
+            </div>
+            <div style="font-size: 12.5px; font-weight: 700; color: #111827; word-break: break-word; margin-bottom: 2px;">
+              ${inst.institution_name}
+            </div>
+            <div style="font-size: 11px; color: #4b5563;">
+              📍 ${inst.city || inst.district || ""}${inst.state ? `, ${inst.state}` : ""}
+            </div>
+          </div>
+        `;
+
+        marker.bindTooltip(tooltipHtml, {
+          direction: "auto",
+          offset: [0, -12],
+          opacity: 1,
+          className: "custom-map-tooltip",
+        });
+
+        // Click popup with full details and direct profile link
+        const popupHtml = `
+          <div style="font-family: ui-sans-serif, system-ui, sans-serif; max-width: 280px; padding: 4px 2px; line-height: 1.35;">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap;">
+              ${inst.coa_code ? `<span style="font-family: monospace; font-size: 10px; font-weight: 800; background: #000; color: #fff; padding: 2px 6px; border-radius: 4px;">${inst.coa_code}</span>` : ""}
+              ${inst.best_rank ? `<span style="font-size: 10px; font-weight: 800; background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; border: 1px solid #fde68a;">NIRF #${inst.best_rank.rank_number}</span>` : ""}
+              <span style="font-size: 11px; font-weight: 600; color: #6b7280;">${inst.state || ""}</span>
+              ${intakeSeats ? `<span style="font-size: 11px; font-weight: 700; background: #f3f4f6; color: #111827; padding: 2px 6px; border-radius: 4px; margin-left: auto;">${intakeSeats}</span>` : ""}
+            </div>
+            <h4 style="font-size: 13.5px; font-weight: 700; color: #111827; line-height: 1.35; margin: 0 0 4px 0; word-break: break-word;">
+              ${inst.institution_name}
+            </h4>
+            <p style="font-size: 11px; color: #4b5563; margin: 0 0 10px 0;">
+              📍 ${inst.city || inst.district || ""}${inst.state ? `, ${inst.state}` : ""}
+            </p>
+            <a href="/institutions/${inst.slug}" style="display: block; width: 100%; text-align: center; background: #000; color: #fff; font-size: 11.5px; font-weight: 700; padding: 7px 10px; border-radius: 8px; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+              View Profile & History &rarr;
+            </a>
+          </div>
+        `;
+
+        marker.bindPopup(popupHtml, {
+          maxWidth: 320,
+          minWidth: 260,
+          className: "custom-map-popup",
+        });
+
+        // Click handler: Set selected institution, notify parent, pan and open popup
         marker.on("click", () => {
           setSelectedInst(inst);
           if (onSelectInstitution) onSelectInstitution(inst);
@@ -272,17 +329,7 @@ export default function InstitutionsMapView({
           });
         });
 
-        // Popup tooltip
-        marker.bindTooltip(
-          `<strong>${inst.coa_code || ""}</strong> ${inst.institution_name} (${inst.city})`,
-          {
-            direction: "top",
-            offset: [0, -10],
-            opacity: 0.95,
-            className: "text-xs font-sans",
-          }
-        );
-
+        markersMapRef.current[inst.id] = marker;
         markersGroup.addLayer(marker);
       });
     }
@@ -349,7 +396,7 @@ export default function InstitutionsMapView({
                 )}
                 <span className="text-xs text-gray-600 font-semibold">{selectedInst.city}, {selectedInst.state}</span>
               </div>
-              <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">
+              <h4 className="font-bold text-gray-900 text-sm leading-snug break-words">
                 {selectedInst.institution_name}
               </h4>
               <div className="mt-2 flex items-center gap-2">
@@ -382,6 +429,10 @@ export default function InstitutionsMapView({
                   setSelectedInst(inst);
                   if (mapInstanceRef.current) {
                     mapInstanceRef.current.setView([inst.lat, inst.lng], 13, { animate: true });
+                    const m = markersMapRef.current[inst.id];
+                    if (m) {
+                      setTimeout(() => m.openPopup(), 150);
+                    }
                   }
                 }}
                 className={`p-3.5 rounded-2xl transition cursor-pointer flex flex-col justify-between gap-2 ${
@@ -413,7 +464,7 @@ export default function InstitutionsMapView({
                     )}
                   </div>
 
-                  <h4 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2">
+                  <h4 className="text-sm font-bold text-gray-900 leading-snug break-words">
                     {inst.institution_name}
                   </h4>
                   <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
@@ -482,6 +533,48 @@ export default function InstitutionsMapView({
           <Maximize2 size={13} />
           <span>Reset India View</span>
         </button>
+        {/* Global Leaflet Tooltip & Popup Styling (zero truncation or clipping) */}
+        <style jsx global>{`
+          .leaflet-tooltip.custom-map-tooltip {
+            white-space: normal !important;
+            max-width: 280px !important;
+            width: auto !important;
+            padding: 8px 12px !important;
+            border-radius: 12px !important;
+            background: #ffffff !important;
+            color: #111827 !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.05) !important;
+            font-size: 12px !important;
+            line-height: 1.35 !important;
+          }
+          .leaflet-tooltip-top:before,
+          .leaflet-tooltip-bottom:before,
+          .leaflet-tooltip-left:before,
+          .leaflet-tooltip-right:before {
+            border-top-color: #ffffff !important;
+            border-bottom-color: #ffffff !important;
+          }
+          .leaflet-popup-content-wrapper {
+            border-radius: 16px !important;
+            padding: 2px !important;
+            box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid #e5e7eb !important;
+          }
+          .leaflet-popup-content {
+            margin: 12px 14px !important;
+            line-height: 1.4 !important;
+          }
+          .leaflet-container a.leaflet-popup-close-button {
+            top: 8px !important;
+            right: 8px !important;
+            color: #9ca3af !important;
+            padding: 4px !important;
+          }
+          .leaflet-container a.leaflet-popup-close-button:hover {
+            color: #111827 !important;
+          }
+        `}</style>
       </div>
     </div>
   );
