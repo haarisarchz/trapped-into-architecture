@@ -344,7 +344,7 @@ export default function QuizPlayPage() {
 
   // Base Points formula: Easy = 1 pt, Medium = 2 pts, Hard = 5 pts
   const getQuestionBasePoints = (q: Question) => {
-    const qDiff = (getQuestionDifficulty(q.correct_answer || q.question_text || "") || difficulty) as Difficulty;
+    const qDiff = (getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases) || difficulty) as Difficulty;
     if (qDiff === "easy") return 1;
     if (qDiff === "medium") return 2;
     if (qDiff === "hard") return 5;
@@ -632,7 +632,7 @@ export default function QuizPlayPage() {
   };
 
   const currentQ = questions[currentIndex];
-  const qDiff = currentQ ? (getQuestionDifficulty(currentQ.correct_answer || currentQ.question_text || "") as Difficulty) : difficulty;
+  const qDiff = currentQ ? (getQuestionDifficulty(currentQ.correct_answer || currentQ.question_text || "", currentQ.accepted_aliases) as Difficulty) : difficulty;
 
   if (loading) {
     return (
@@ -1128,7 +1128,7 @@ export default function QuizPlayPage() {
                               <div className="flex items-start justify-between gap-3">
                                 <div>
                                   <span className="font-mono text-[10px] text-gray-400 block mb-1">
-                                    Question {idx + 1} • {getQuestionDifficulty(q.correct_answer || q.question_text || "")} mode
+                                    Question {idx + 1} • {getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases)} mode
                                   </span>
                                   <p className="font-bold text-gray-900">
                                     {q.question_text}

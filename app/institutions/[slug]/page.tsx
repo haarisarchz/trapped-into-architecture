@@ -27,6 +27,8 @@ import {
   Minus,
   ShieldCheck,
 } from "lucide-react";
+import ProfileCompareButton from "@/components/institutions/ProfileCompareButton";
+import FloatingCompareBar from "@/components/institutions/FloatingCompareBar";
 
 export async function generateMetadata({
   params,
@@ -394,6 +396,9 @@ export default async function InstitutionProfilePage({
                     Intake records currently pending synchronization.
                   </div>
                 )}
+
+                {/* Compare Action Button */}
+                <ProfileCompareButton institution={inst} />
               </div>
             </div>
           </div>
@@ -831,6 +836,9 @@ export default async function InstitutionProfilePage({
             </div>
           </div>
         </div>
+
+        {/* Floating Compare Bar */}
+        <FloatingCompareBar />
       </main>
 
       <Footer />

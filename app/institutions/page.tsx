@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import InstitutionCard from "@/components/institutions/InstitutionCard";
 import CollegeCompareModal from "@/components/institutions/CollegeCompareModal";
+import FloatingCompareBar from "@/components/institutions/FloatingCompareBar";
+import { useInstitutionCompare } from "@/lib/hooks/useInstitutionCompare";
 import PaginationControls from "@/components/PaginationControls";
 import dynamic from "next/dynamic";
 import {
@@ -259,9 +261,8 @@ function InstitutionsContent() {
   const [loading, setLoading] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  // Comparison State
-  const [comparedInstitutions, setComparedInstitutions] = useState<any[]>([]);
-  const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+  // Comparison Store (Persisted to localStorage, max 4 institutions)
+  const { toggleCollege, isSelected, isFull } = useInstitutionCompare();
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -726,21 +727,6 @@ function InstitutionsContent() {
     filterMultiYear ||
     filterNirf ||
     filterActiveOnly;
-
-  // Comparison toggle handlers
-  const handleToggleCompare = (inst: any) => {
-    const isAlready = comparedInstitutions.some((c) => c.id === inst.id);
-    if (isAlready) {
-      setComparedInstitutions(comparedInstitutions.filter((c) => c.id !== inst.id));
-    } else {
-      if (comparedInstitutions.length >= 3) return;
-      setComparedInstitutions([...comparedInstitutions, inst]);
-    }
-  };
-
-  const handleRemoveCompare = (id: string) => {
-    setComparedInstitutions(comparedInstitutions.filter((c) => c.id !== id));
-  };
 
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
@@ -1353,9 +1339,9 @@ function InstitutionsContent() {
                         <InstitutionCard
                           key={inst.id}
                           institution={inst}
-                          isCompared={comparedInstitutions.some((c) => c.id === inst.id)}
-                          onToggleCompare={handleToggleCompare}
-                          canCompare={comparedInstitutions.length < 3}
+                          isCompared={isSelected(inst.id)}
+                          onToggleCompare={toggleCollege}
+                          canCompare={!isFull}
                         />
                       ))}
                     </div>
@@ -1383,39 +1369,10 @@ function InstitutionsContent() {
         </div>
 
         {/* FLOATING COMPARE BAR */}
-        {comparedInstitutions.length > 0 && (
-          <aside aria-label="Institution Comparison Bar" className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-black text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-4 max-w-lg w-[92vw] border border-gray-700">
-            <div className="flex-1 truncate">
-              <div className="text-xs text-gray-400 font-semibold uppercase">Comparison ({comparedInstitutions.length}/3)</div>
-              <div className="text-xs font-bold text-white truncate">
-                {comparedInstitutions.map((c) => c.coa_code || c.institution_name).join(", ")}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setIsCompareModalOpen(true)}
-                className="bg-white text-black px-4 py-2 rounded-xl text-xs font-extrabold hover:bg-gray-100 transition shadow-sm"
-              >
-                Compare Now
-              </button>
-              <button
-                onClick={() => setComparedInstitutions([])}
-                className="p-2 text-gray-400 hover:text-white transition"
-                title="Clear comparison"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </aside>
-        )}
-
-        {/* COMPARE MODAL */}
-        <CollegeCompareModal
-          isOpen={isCompareModalOpen}
-          onClose={() => setIsCompareModalOpen(false)}
-          institutions={comparedInstitutions}
-          onRemove={handleRemoveCompare}
+        <FloatingCompareBar
+          onAddMoreClick={() => {
+            window.scrollTo({ top: 120, behavior: "smooth" });
+          }}
         />
       </main>
 

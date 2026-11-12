@@ -60,9 +60,20 @@ export const BUILDING_DIFFICULTY_MAP: Record<string, QuestionDifficulty> = {
 };
 
 /**
- * Resolve difficulty for any question based on building name or correct answer
+ * Resolve difficulty for any question based on explicit tag or building name/correct answer
  */
-export function getQuestionDifficulty(identifier: string): QuestionDifficulty {
+export function getQuestionDifficulty(identifier: string, acceptedAliases?: string[]): QuestionDifficulty {
+  // 1. Check if acceptedAliases contains explicit tag: "diff:easy" | "diff:medium" | "diff:hard"
+  if (acceptedAliases && Array.isArray(acceptedAliases)) {
+    const tag = acceptedAliases.find(a => typeof a === "string" && a.startsWith("diff:"));
+    if (tag) {
+      const val = tag.split(":")[1]?.trim().toLowerCase();
+      if (val === "easy" || val === "medium" || val === "hard") {
+        return val as QuestionDifficulty;
+      }
+    }
+  }
+
   if (!identifier) return "medium";
   const clean = identifier.trim();
   
@@ -83,7 +94,7 @@ export function getQuestionDifficulty(identifier: string): QuestionDifficulty {
 /**
  * Filter and prioritize question pool according to selected game difficulty
  */
-export function getQuestionsForGameDifficulty<T extends { correct_answer?: string; question_text?: string }>(
+export function getQuestionsForGameDifficulty<T extends { correct_answer?: string; question_text?: string; accepted_aliases?: string[] }>(
   allQuestions: T[],
   chosenDifficulty: QuestionDifficulty,
   requestedCount: number
@@ -96,9 +107,9 @@ export function getQuestionsForGameDifficulty<T extends { correct_answer?: strin
   const hardQuestions: T[] = [];
 
   for (const q of allQuestions) {
-    // Check answer or text
+    // Check answer or text and explicit aliases
     const textToMatch = q.correct_answer || q.question_text || "";
-    const diff = getQuestionDifficulty(textToMatch);
+    const diff = getQuestionDifficulty(textToMatch, q.accepted_aliases);
     if (diff === "easy") easyQuestions.push(q);
     else if (diff === "hard") hardQuestions.push(q);
     else mediumQuestions.push(q);
