@@ -1,0 +1,4512 @@
+[
+  {
+    "nirf": {
+      "name": "Indian Institute of Technology Roorkee",
+      "city": "Roorkee",
+      "state": "Uttarakhand",
+      "nirfId": "IR-A-U-0560",
+      "yearsRanked": [
+        "2025 (#1)",
+        "2024 (#1)",
+        "2023 (#1)",
+        "2021 (#1)",
+        "2020 (#2)",
+        "2019 (#2)",
+        "2018 (#2)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+        "coa_code": "UA01",
+        "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+        "city": "Roorkee",
+        "state": "Uttarakhand",
+        "slug": "department-of-architecture-planning-indian-institute-of-technology-roorkee"
+      },
+      "score": 45,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+          "coa_code": "UA01",
+          "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+          "city": "Roorkee",
+          "state": "Uttarakhand",
+          "slug": "department-of-architecture-planning-indian-institute-of-technology-roorkee"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology Calicut",
+      "city": "Kozhikode",
+      "state": "Kerala",
+      "nirfId": "IR-A-U-0263",
+      "yearsRanked": [
+        "2025 (#2)",
+        "2024 (#3)",
+        "2023 (#2)",
+        "2021 (#2)",
+        "2020 (#3)",
+        "2019 (#3)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "598e892b-6310-4bbc-8b01-c53269fa7170",
+          "coa_code": "KL21",
+          "institution_name": "KMCT College Of Architecture",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "kmct-college-of-architecture-kallanthode-kozhikode"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Indian Institute of Technology Kharagpur",
+      "city": "Kharagpur",
+      "state": "West Bengal",
+      "nirfId": "IR-A-U-0573",
+      "yearsRanked": [
+        "2025 (#3)",
+        "2024 (#2)",
+        "2023 (#3)",
+        "2021 (#3)",
+        "2020 (#1)",
+        "2019 (#1)",
+        "2018 (#1)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+        "coa_code": "WB02",
+        "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+        "city": "Kharagpur",
+        "state": "West Bengal",
+        "slug": "faculty-of-architecture-regional-planning-indian-institute-of-technology-kharagpur"
+      },
+      "score": 45,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+          "coa_code": "WB02",
+          "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+          "city": "Kharagpur",
+          "state": "West Bengal",
+          "slug": "faculty-of-architecture-regional-planning-indian-institute-of-technology-kharagpur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Indian Institute of Engineering Science and Technology, Shibpur",
+      "city": "Howrah",
+      "state": "West Bengal",
+      "nirfId": "IR-A-U-0584",
+      "yearsRanked": [
+        "2025 (#4)",
+        "2024 (#4)",
+        "2023 (#10)",
+        "2022 (#6)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+        "coa_code": "WB01",
+        "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+        "city": "Howrah",
+        "state": "West Bengal",
+        "slug": "dept-of-architecture-town-and-regional-planning-indian-institute-of-engineering-science-and-technology-shibpur-howrah"
+      },
+      "score": 110,
+      "matchedWords": 4,
+      "totalWords": 4
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+          "coa_code": "WB01",
+          "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+          "city": "Howrah",
+          "state": "West Bengal",
+          "slug": "dept-of-architecture-town-and-regional-planning-indian-institute-of-engineering-science-and-technology-shibpur-howrah"
+        },
+        "score": 110,
+        "matchedWords": 4,
+        "totalWords": 4
+      },
+      {
+        "inst": {
+          "id": "9c1a6373-1653-4e3c-8049-000fd80ca5d5",
+          "coa_code": "WB05",
+          "institution_name": "Om Dayal School Of Architecture",
+          "city": "Howrah",
+          "state": "West Bengal",
+          "slug": "om-dayal-school-of-architecture-howrah"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 4
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Jamia Millia Islamia",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "nirfId": "IR-A-U-0108",
+      "yearsRanked": [
+        "2025 (#5)",
+        "2024 (#7)",
+        "2021 (#10)",
+        "2020 (#10)",
+        "2019 (#8)",
+        "2018 (#8)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+        "coa_code": "DL04",
+        "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+        "city": "New Delhi",
+        "state": "Delhi",
+        "slug": "faculty-of-architecture-and-ekistics-jamia-millia-islamia-new-delhi"
+      },
+      "score": 110,
+      "matchedWords": 3,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+          "coa_code": "DL04",
+          "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+          "city": "New Delhi",
+          "state": "Delhi",
+          "slug": "faculty-of-architecture-and-ekistics-jamia-millia-islamia-new-delhi"
+        },
+        "score": 110,
+        "matchedWords": 3,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+          "coa_code": "DL06",
+          "institution_name": "University School of Architecture & Planning",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "university-school-of-architecture-planning-delhi"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "4df88b06-6798-43b4-9015-fa8e44a5fbde",
+          "coa_code": "DL09",
+          "institution_name": "Department of Architecture, Indira Gandhi Delhi Technical University for Women",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "department-of-architecture-indira-gandhi-delhi-technical-university-for-women"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Centre for Environmental Planning and Technology University",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "nirfId": "IR-A-U-0127",
+      "yearsRanked": [
+        "2025 (#6)",
+        "2024 (#6)",
+        "2023 (#7)",
+        "2021 (#5)",
+        "2020 (#4)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "e7e02b90-f6d6-4f6c-af76-6e3984060042",
+        "coa_code": "GJ20",
+        "institution_name": "Institute of Architecture & Planning",
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "slug": "institute-of-architecture-planning-ahmedabad"
+      },
+      "score": 40,
+      "matchedWords": 1,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "e7e02b90-f6d6-4f6c-af76-6e3984060042",
+          "coa_code": "GJ20",
+          "institution_name": "Institute of Architecture & Planning",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "institute-of-architecture-planning-ahmedabad"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "557803c1-19ce-4d89-b764-9347820425d8",
+          "coa_code": "GJ11",
+          "institution_name": "School of Architecture, Anant National University",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "school-of-architecture-anant-national-university-ahmedabad"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+          "coa_code": "GJ02",
+          "institution_name": "Faculty of Architecture, CEPT University",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "faculty-of-architecture-cept-university-ahmedabad"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology Rourkela",
+      "city": "Rourkela",
+      "state": "Odisha",
+      "nirfId": "IR-A-U-0357",
+      "yearsRanked": [
+        "2025 (#7)",
+        "2024 (#9)",
+        "2023 (#8)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "97357380-1706-41cd-aa50-44a793c3c1e2",
+          "coa_code": "OR06",
+          "institution_name": "National Institute Of TechnologyRourkela, Odisha",
+          "city": "Rourkela",
+          "state": "Odisha",
+          "slug": "national-institute-of-technologyrourkela-odisha"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture New Delhi",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "nirfId": "IR-A-U-0116",
+      "yearsRanked": [
+        "2025 (#8)",
+        "2024 (#5)",
+        "2023 (#5)",
+        "2019 (#4)",
+        "2018 (#3)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 60,
+      "matchedWords": 1,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+          "coa_code": "DL06",
+          "institution_name": "University School of Architecture & Planning",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "university-school-of-architecture-planning-delhi"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "4df88b06-6798-43b4-9015-fa8e44a5fbde",
+          "coa_code": "DL09",
+          "institution_name": "Department of Architecture, Indira Gandhi Delhi Technical University for Women",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "department-of-architecture-indira-gandhi-delhi-technical-university-for-women"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology Tiruchirappalli",
+      "city": "Tiruchirappalli",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0467",
+      "yearsRanked": [
+        "2025 (#9)",
+        "2024 (#8)",
+        "2023 (#4)",
+        "2021 (#7)",
+        "2020 (#8)",
+        "2019 (#7)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+        "coa_code": "TN02",
+        "institution_name": "National Institute of Technology",
+        "city": "Tiruchirappalli",
+        "state": "Tamil Nadu",
+        "slug": "national-institute-of-technology-tiruchirappalli"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "0f861515-0dff-45ec-9369-a8945f65ac9d",
+          "coa_code": "TN24",
+          "institution_name": "DEAR Institute",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "dear-institute-tiruchirappalli"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Visvesvaraya National Institute of Technology, Nagpur",
+      "city": "Nagpur",
+      "state": "Maharashtra",
+      "nirfId": "IR-A-U-0334",
+      "yearsRanked": [
+        "2025 (#10)",
+        "2023 (#12)",
+        "2022 (#8)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 60,
+      "matchedWords": 1,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "4007164f-68a4-4cb6-915b-f1f507648b2c",
+          "coa_code": "MH26",
+          "institution_name": "Priyadarshini Institute Of Architecture And Design Studies NAGPUR",
+          "city": "Nagpur",
+          "state": "Maharashtra",
+          "slug": "priyadarshini-institute-of-architecture-and-design-studies-nagpur"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture Bhopal",
+      "city": "Bhopal",
+      "state": "Madhya Pradesh",
+      "nirfId": "IR-A-U-0626",
+      "yearsRanked": [
+        "2025 (#11)",
+        "2024 (#12)",
+        "2023 (#11)",
+        "2021 (#6)",
+        "2019 (#6)",
+        "2018 (#5)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+          "coa_code": "MP10",
+          "institution_name": "School of Planning & Architecture, Bhopal",
+          "city": "Bhopal",
+          "state": "Madhya Pradesh",
+          "slug": "school-of-planning-architecture-bhopal"
+        },
+        "score": 60,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "8ba22f5c-dfc7-4630-99f0-1eecd30a2122",
+          "coa_code": "MP07",
+          "institution_name": "Bagulamukhi College of Architecture and Planning",
+          "city": "Bhopal",
+          "state": "Madhya Pradesh",
+          "slug": "bagulamukhi-college-of-architecture-and-planning-bhopal"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Malaviya National Institute of Technology",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "nirfId": "IR-A-U-0410",
+      "yearsRanked": [
+        "2025 (#12)",
+        "2024 (#15)",
+        "2023 (#13)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "d495aacd-900a-4f5e-8337-26874b5a3f3d",
+        "coa_code": "RJ01",
+        "institution_name": "Department of Architecture and Planning, Malaviya National Institute of Technology",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "slug": "department-of-architecture-and-planning-malaviya-national-institute-of-technology-jaipur"
+      },
+      "score": 110,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "d495aacd-900a-4f5e-8337-26874b5a3f3d",
+          "coa_code": "RJ01",
+          "institution_name": "Department of Architecture and Planning, Malaviya National Institute of Technology",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "department-of-architecture-and-planning-malaviya-national-institute-of-technology-jaipur"
+        },
+        "score": 110,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology Patna",
+      "city": "Patna",
+      "state": "Bihar",
+      "nirfId": "IR-A-U-0072",
+      "yearsRanked": [
+        "2025 (#13)",
+        "2024 (#27)",
+        "2023 (#19)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "b738e42c-8b9e-40a5-99bf-40aba3397533",
+          "coa_code": "BR01",
+          "institution_name": "Faculty Of Architecture, National Institute Of Technology",
+          "city": "Patna",
+          "state": "Bihar",
+          "slug": "faculty-of-architecture-national-institute-of-technology-patna"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Chandigarh University",
+      "city": "Mohali",
+      "state": "Punjab",
+      "nirfId": "IR-A-U-0747",
+      "yearsRanked": [
+        "2025 (#14)",
+        "2024 (#13)",
+        "2023 (#15)",
+        "2022 (#19)",
+        "2021 (#16)"
+      ]
+    },
+    "best": null,
+    "candidates": [
+      {
+        "inst": {
+          "id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+          "coa_code": "CH01",
+          "institution_name": "Chandigarh College Of Architecture",
+          "city": "Chandigarh",
+          "state": "Chandigarh",
+          "slug": "chandigarh-college-of-architecture"
+        },
+        "score": 30,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "800c4141-59be-4aac-af31-07aa5a990064",
+          "coa_code": "CHD02",
+          "institution_name": "Chandigarh College of Engineering and Technology Diploma Wing",
+          "city": "Chandigarh",
+          "state": "Chandigarh",
+          "slug": "chandigarh-college-of-engineering-and-technology-diploma-wing-chandigarh-chd02"
+        },
+        "score": 30,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "College of Engineering Trivandrum",
+      "city": "Thiruvananthapuram",
+      "state": "Kerala",
+      "nirfId": "IR-A-C-43708",
+      "yearsRanked": [
+        "2025 (#15)",
+        "2023 (#17)",
+        "2021 (#11)",
+        "2020 (#11)",
+        "2018 (#4)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+        "coa_code": "KL01",
+        "institution_name": "College of Engineering",
+        "city": "Thiruvananthapuram",
+        "state": "Kerala",
+        "slug": "college-of-engineering-thiruvananthapuram"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+          "coa_code": "KL01",
+          "institution_name": "College of Engineering",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-engineering-thiruvananthapuram"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "9bd68acb-3da9-4e3c-a3c0-945b1feaab48",
+          "coa_code": "KL26",
+          "institution_name": "Marian College of Architecture & Planning",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "marian-college-of-architecture-planning-thiruvananthapuram"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "d4767153-e601-4556-b01f-fc27c043e284",
+          "coa_code": "KL41",
+          "institution_name": "DC School of Architecture and Design",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "dc-school-of-architecture-and-design-thiruvananthapuram"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Jadavpur University",
+      "city": "Kolkata",
+      "state": "West Bengal",
+      "nirfId": "IR-A-U-0575",
+      "yearsRanked": [
+        "2025 (#16)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "3a358505-5913-4514-abd9-b899324132fa",
+        "coa_code": "WB03",
+        "institution_name": "Faculty Of ArchitectureJadavpur University",
+        "city": "Kolkata",
+        "state": "West Bengal",
+        "slug": "faculty-of-architecturejadavpur-university-kolkata"
+      },
+      "score": 80,
+      "matchedWords": 0,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "3a358505-5913-4514-abd9-b899324132fa",
+          "coa_code": "WB03",
+          "institution_name": "Faculty Of ArchitectureJadavpur University",
+          "city": "Kolkata",
+          "state": "West Bengal",
+          "slug": "faculty-of-architecturejadavpur-university-kolkata"
+        },
+        "score": 80,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "b62024f5-02b8-4ff0-b00f-ce9cd54bfaae",
+          "coa_code": "WBD02",
+          "institution_name": "NORTH CALCUTTA POLYTECHNIC 15 Gobinda Mondal Lane",
+          "city": "Kolkata",
+          "state": "West Bengal",
+          "slug": "north-calcutta-polytechnic-15-gobinda-mondal-lane-kolkata-wbd02"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "438df7e3-a69c-4749-975f-b26b76c9f558",
+          "coa_code": "WBD04",
+          "institution_name": "Women’s Polytechnic 1/1/2",
+          "city": "Kolkata",
+          "state": "West Bengal",
+          "slug": "women-s-polytechnic-1-1-2-kolkata-wbd04"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Maulana Azad National Institute of Technology",
+      "city": "Bhopal",
+      "state": "Madhya Pradesh",
+      "nirfId": "IR-A-U-0284",
+      "yearsRanked": [
+        "2025 (#17)",
+        "2024 (#17)",
+        "2023 (#24)",
+        "2022 (#20)",
+        "2021 (#20)",
+        "2020 (#15)",
+        "2019 (#14)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "16013278-90fc-453f-934f-2355cc7ef280",
+        "coa_code": "MP01",
+        "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+        "city": "Bhopal",
+        "state": "Madhya Pradesh",
+        "slug": "faculty-of-architecture-maulana-azad-national-institute-of-technology-bhopal"
+      },
+      "score": 110,
+      "matchedWords": 3,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "16013278-90fc-453f-934f-2355cc7ef280",
+          "coa_code": "MP01",
+          "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+          "city": "Bhopal",
+          "state": "Madhya Pradesh",
+          "slug": "faculty-of-architecture-maulana-azad-national-institute-of-technology-bhopal"
+        },
+        "score": 110,
+        "matchedWords": 3,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "S.R.M. Institute of Science and Technology",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0473",
+      "yearsRanked": [
+        "2025 (#18)",
+        "2024 (#11)",
+        "2023 (#14)",
+        "2022 (#11)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+        "coa_code": "TN08",
+        "institution_name": "Hindustan Institute of Technology and Science",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "slug": "hindustan-institute-of-technology-and-science-chennai"
+      },
+      "score": 60,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+          "coa_code": "TN08",
+          "institution_name": "Hindustan Institute of Technology and Science",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "hindustan-institute-of-technology-and-science-chennai"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "2f21aa33-00bd-4e65-a7f4-92e47851fa4c",
+          "coa_code": "TN10",
+          "institution_name": "Sathyabama Institute of Science and Technology",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "sathyabama-institute-of-science-and-technology-chennai"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "f38227de-be85-4c33-8c9c-0ece34af122e",
+          "coa_code": "TN29",
+          "institution_name": "Mohammed Sathak A.J. Academy of Architecture",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "mohammed-sathak-aj-academy-of-architecture-chennai"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning & Architecture, Vijayawada",
+      "city": "Vijayawada",
+      "state": "Andhra Pradesh",
+      "nirfId": "IR-A-U-0627",
+      "yearsRanked": [
+        "2025 (#19)",
+        "2023 (#18)",
+        "2022 (#7)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+        "coa_code": "AP18",
+        "institution_name": "School Of Planning And Architecture, Vijayawada",
+        "city": "Vijayawada",
+        "state": "Andhra Pradesh",
+        "slug": "school-of-planning-and-architecture-vijayawada"
+      },
+      "score": 60,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+          "coa_code": "AP18",
+          "institution_name": "School Of Planning And Architecture, Vijayawada",
+          "city": "Vijayawada",
+          "state": "Andhra Pradesh",
+          "slug": "school-of-planning-and-architecture-vijayawada"
+        },
+        "score": 60,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "3f4388e4-174d-4f84-a78e-72537b00e52e",
+          "coa_code": "HR32",
+          "institution_name": "Mr. RAKESH SAPRA Director ST. ANDREWS COLLEGE OF ARCHITECTURE & PLANNING KHURRAMPUR, FARRUKHNAGAR-HA",
+          "city": null,
+          "state": "HARYANA",
+          "slug": "mr-rakesh-sapra-director-st-andrews-college-of-architecture-planning-khurrampur-farrukhnagar-ha"
+        },
+        "score": 35,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "BMS College of Architecture",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "nirfId": "IR-A-C-57952",
+      "yearsRanked": [
+        "2025 (#20)",
+        "2024 (#23)",
+        "2023 (#21)",
+        "2019 (#15)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+        "coa_code": "KA03",
+        "institution_name": "BMS College of Architecture",
+        "city": "Bull Temple Road",
+        "state": "Karnataka",
+        "slug": "bms-college-of-architecture-bull-temple-road"
+      },
+      "score": 140,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+          "coa_code": "KA03",
+          "institution_name": "BMS College of Architecture",
+          "city": "Bull Temple Road",
+          "state": "Karnataka",
+          "slug": "bms-college-of-architecture-bull-temple-road"
+        },
+        "score": 140,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "19735da4-26b2-4222-83a0-66f42d025300",
+          "coa_code": "MP15",
+          "institution_name": "College of Architecture",
+          "city": "Indore",
+          "state": "Madhya Pradesh",
+          "slug": "college-of-architecture-indore"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "dc6cd922-2259-412b-8dfc-8a9d98533f42",
+          "coa_code": "KL12",
+          "institution_name": "College of Architecture",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-architecture-thiruvananthapuram"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Manipal University Jaipur",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "nirfId": "IR-A-U-0749",
+      "yearsRanked": [
+        "2025 (#21)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "6aedddd2-d0f3-406b-b94b-04a1148ac928",
+        "coa_code": "RJ20",
+        "institution_name": "Faculty of Architecture & Planning, Vivekananda Global University, Jaipur",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "slug": "faculty-of-architecture-planning-vivekananda-global-university-jaipur"
+      },
+      "score": 45,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "6aedddd2-d0f3-406b-b94b-04a1148ac928",
+          "coa_code": "RJ20",
+          "institution_name": "Faculty of Architecture & Planning, Vivekananda Global University, Jaipur",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "faculty-of-architecture-planning-vivekananda-global-university-jaipur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 35,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "1eff6580-e2c6-4646-b1ff-67084815797b",
+          "coa_code": "RJ05",
+          "institution_name": "Amity School of Architecture & Planning, Amity University Rajasthan",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "amity-school-of-architecture-planning-amity-university-rajasthan-jaipur"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Birla Institute of Technology",
+      "city": "Ranchi",
+      "state": "Jharkhand",
+      "nirfId": "IR-A-U-0202",
+      "yearsRanked": [
+        "2025 (#22)",
+        "2024 (#20)",
+        "2023 (#20)",
+        "2022 (#25)",
+        "2021 (#14)",
+        "2020 (#13)",
+        "2019 (#10)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+        "coa_code": "JH01",
+        "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+        "city": "Ranchi",
+        "state": "Jharkhand",
+        "slug": "department-of-architecture-planning-birla-institute-of-technology-ranchi"
+      },
+      "score": 110,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+          "coa_code": "JH01",
+          "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+          "city": "Ranchi",
+          "state": "Jharkhand",
+          "slug": "department-of-architecture-planning-birla-institute-of-technology-ranchi"
+        },
+        "score": 110,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "cfc8b313-7a78-490f-84dc-70141598943f",
+          "coa_code": "JH01A",
+          "institution_name": "Birla Institute of Technology (International Centre, Ras Al Khaimah)",
+          "city": "Ras Al Khaimah",
+          "state": "International",
+          "slug": "birla-institute-of-technology-international-centre-ras-al-khaimah-ras-al-khaimah"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "8bd36cde-a1ed-4d31-94ef-69ebe162eff5",
+          "coa_code": "BR03",
+          "institution_name": "Department of Architecture, Birla Institute of Technology (BIT Patna)",
+          "city": "Patna",
+          "state": "Bihar",
+          "slug": "department-of-architecture-birla-institute-of-technology-bit-patna"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Shri Mata Vaishno Devi University",
+      "city": "Katra",
+      "state": "Jammu and Kashmir",
+      "nirfId": "IR-A-U-0201",
+      "yearsRanked": [
+        "2025 (#23)",
+        "2024 (#31)",
+        "2023 (#26)",
+        "2022 (#16)",
+        "2021 (#24)"
+      ]
+    },
+    "best": null,
+    "candidates": []
+  },
+  {
+    "nirf": {
+      "name": "Lovely Professional University",
+      "city": "Phagwara",
+      "state": "Punjab",
+      "nirfId": "IR-A-U-0379",
+      "yearsRanked": [
+        "2025 (#24)",
+        "2024 (#24)",
+        "2023 (#16)",
+        "2022 (#12)",
+        "2021 (#12)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+        "coa_code": "PJ06",
+        "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+        "city": "Phagwara",
+        "state": "All India",
+        "slug": "lovely-school-of-architecture-and-design-lovely-professional-university-phagwara"
+      },
+      "score": 100,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+          "coa_code": "PJ06",
+          "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+          "city": "Phagwara",
+          "state": "All India",
+          "slug": "lovely-school-of-architecture-and-design-lovely-professional-university-phagwara"
+        },
+        "score": 100,
+        "matchedWords": 2,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Amity University",
+      "city": "North Twenty Four Parganas",
+      "state": "West Bengal",
+      "nirfId": "IR-A-U-0779",
+      "yearsRanked": [
+        "2025 (#25)",
+        "2024 (#25)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "3fcc21f6-c314-4eac-9770-237c025f5a30",
+        "coa_code": "UP07",
+        "institution_name": "Amity School of Architecture & Planning, Amity University Lucknow",
+        "city": "Lucknow",
+        "state": "Uttar Pradesh",
+        "slug": "amity-school-of-architecture-planning-amity-university-lucknow"
+      },
+      "score": 80,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "3fcc21f6-c314-4eac-9770-237c025f5a30",
+          "coa_code": "UP07",
+          "institution_name": "Amity School of Architecture & Planning, Amity University Lucknow",
+          "city": "Lucknow",
+          "state": "Uttar Pradesh",
+          "slug": "amity-school-of-architecture-planning-amity-university-lucknow"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "1eff6580-e2c6-4646-b1ff-67084815797b",
+          "coa_code": "RJ05",
+          "institution_name": "Amity School of Architecture & Planning, Amity University Rajasthan",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "amity-school-of-architecture-planning-amity-university-rajasthan-jaipur"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "bcb3c1f4-2fdf-4971-b397-7eca3392e897",
+          "coa_code": "MP08",
+          "institution_name": "Amity School of Architecture & Planning, Amity University Gwalior",
+          "city": "Gwalior",
+          "state": "Madhya Pradesh",
+          "slug": "amity-school-of-architecture-planning-amity-university-gwalior"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Aligarh Muslim University",
+      "city": "Aligarh",
+      "state": "Uttar Pradesh",
+      "nirfId": "IR-A-U-0496",
+      "yearsRanked": [
+        "2025 (#26)",
+        "2024 (#14)",
+        "2023 (#9)",
+        "2022 (#13)",
+        "2021 (#13)",
+        "2020 (#16)",
+        "2019 (#13)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+        "coa_code": "UP02",
+        "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+        "city": "Aligarh",
+        "state": "Uttar Pradesh",
+        "slug": "faculty-of-architecture-zakir-hussain-college-of-engineering-tech-aligarh-muslim-university-aligarh"
+      },
+      "score": 110,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+          "coa_code": "UP02",
+          "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+          "city": "Aligarh",
+          "state": "Uttar Pradesh",
+          "slug": "faculty-of-architecture-zakir-hussain-college-of-engineering-tech-aligarh-muslim-university-aligarh"
+        },
+        "score": 110,
+        "matchedWords": 2,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Manipal School of Architecture and Planning, MAHE",
+      "city": "Udupi",
+      "state": "Karnataka",
+      "nirfId": "IR-A-C-46330",
+      "yearsRanked": [
+        "2025 (#27)",
+        "2024 (#28)",
+        "2023 (#25)",
+        "2022 (#15)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+        "coa_code": "KA02",
+        "institution_name": "Manipal School of Architecture and Planning",
+        "city": "Manipal",
+        "state": "Karnataka",
+        "slug": "manipal-school-of-architecture-and-planning"
+      },
+      "score": 80,
+      "matchedWords": 2,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+          "coa_code": "KA02",
+          "institution_name": "Manipal School of Architecture and Planning",
+          "city": "Manipal",
+          "state": "Karnataka",
+          "slug": "manipal-school-of-architecture-and-planning"
+        },
+        "score": 80,
+        "matchedWords": 2,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "937eef16-6d8e-4ed5-a2f9-edd697cd5070",
+          "coa_code": "OR03",
+          "institution_name": "School of Architecture and Planning",
+          "city": "Bhubaneswar",
+          "state": "Odisha",
+          "slug": "school-of-architecture-and-planning-bhubaneswar"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "9c4dc0af-cc90-48f8-9ca1-fcbfa0003eb5",
+          "coa_code": "MH117",
+          "institution_name": "School of Architecture and Planning",
+          "city": "Pune",
+          "state": "Maharashtra",
+          "slug": "school-of-architecture-and-planning-pune"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Anna University",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0439",
+      "yearsRanked": [
+        "2025 (#28)",
+        "2024 (#34)",
+        "2022 (#29)",
+        "2021 (#22)",
+        "2020 (#18)",
+        "2019 (#12)",
+        "2018 (#6)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+        "coa_code": "TN01",
+        "institution_name": "SAP, Anna University",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "slug": "sap-anna-university-chennai"
+      },
+      "score": 110,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+          "coa_code": "TN01",
+          "institution_name": "SAP, Anna University",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "sap-anna-university-chennai"
+        },
+        "score": 110,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "f38227de-be85-4c33-8c9c-0ece34af122e",
+          "coa_code": "TN29",
+          "institution_name": "Mohammed Sathak A.J. Academy of Architecture",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "mohammed-sathak-aj-academy-of-architecture-chennai"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "67cb3ab6-e2b3-4e4c-a231-a9a31b2164a8",
+          "coa_code": "TN13",
+          "institution_name": "MEASI Academy of Architecture",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "measi-academy-of-architecture-chennai"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Nirma University",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "nirfId": "IR-A-U-0146",
+      "yearsRanked": [
+        "2025 (#29)",
+        "2024 (#19)",
+        "2023 (#22)",
+        "2022 (#21)"
+      ]
+    },
+    "best": null,
+    "candidates": [
+      {
+        "inst": {
+          "id": "557803c1-19ce-4d89-b764-9347820425d8",
+          "coa_code": "GJ11",
+          "institution_name": "School of Architecture, Anant National University",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "school-of-architecture-anant-national-university-ahmedabad"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+          "coa_code": "GJ02",
+          "institution_name": "Faculty of Architecture, CEPT University",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "faculty-of-architecture-cept-university-ahmedabad"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "c0e94827-8093-4529-b2d5-be5ec4a0efad",
+          "coa_code": "GJ18",
+          "institution_name": "L.J. School Of Architecture",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "lj-school-of-architecture-ahmedabad"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology Hamirpur",
+      "city": "Hamirpur",
+      "state": "Himachal Pradesh",
+      "nirfId": "IR-A-U-0189",
+      "yearsRanked": [
+        "2025 (#30)",
+        "2024 (#32)",
+        "2023 (#28)",
+        "2021 (#23)",
+        "2020 (#19)",
+        "2018 (#9)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+          "coa_code": "HP01",
+          "institution_name": "Department of Architecture, NIT Hamirpur",
+          "city": "Hamirpur",
+          "state": "Himachal Pradesh",
+          "slug": "department-of-architecture-nit-hamirpur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "M. S. Ramaiah Institute of Technology",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "nirfId": "IR-A-C-1331",
+      "yearsRanked": [
+        "2025 (#31)",
+        "2024 (#21)",
+        "2023 (#23)",
+        "2022 (#17)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+        "coa_code": "KA11",
+        "institution_name": "MS Ramaiah Institute Of Technology",
+        "city": "M S R Nagarm S R I T",
+        "state": "Karnataka",
+        "slug": "ms-ramaiah-institute-of-technology-m-s-r-nagarm-s-r-i-t"
+      },
+      "score": 40,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+          "coa_code": "KA11",
+          "institution_name": "MS Ramaiah Institute Of Technology",
+          "city": "M S R Nagarm S R I T",
+          "state": "Karnataka",
+          "slug": "ms-ramaiah-institute-of-technology-m-s-r-nagarm-s-r-i-t"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "c1aaa90c-f472-41c2-a758-56c100d4f292",
+          "coa_code": "KA30",
+          "institution_name": "BGS School of Architecture and Planning",
+          "city": "K Gollahalli Postbengaluru South",
+          "state": "Karnataka",
+          "slug": "bgs-school-of-architecture-and-planning-k-gollahalli-postbengaluru-south"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Dr. M. G. R. Educational and Research Institute",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0461",
+      "yearsRanked": [
+        "2025 (#32)",
+        "2024 (#22)",
+        "2023 (#27)",
+        "2022 (#28)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "afe46c16-597e-4862-a396-55ef18462730",
+        "coa_code": "TN41",
+        "institution_name": "Dr.M.G.R Educational and Research Institute",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "slug": "drmgr-educational-and-research-institute-chennai"
+      },
+      "score": 160,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "afe46c16-597e-4862-a396-55ef18462730",
+          "coa_code": "TN41",
+          "institution_name": "Dr.M.G.R Educational and Research Institute",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "drmgr-educational-and-research-institute-chennai"
+        },
+        "score": 160,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "0b95dfef-433e-4510-b485-aea064a5515c",
+          "coa_code": "TN07",
+          "institution_name": "Bharat Institute of Higher Education and Research",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "bharat-institute-of-higher-education-and-research-chennai"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "f38227de-be85-4c33-8c9c-0ece34af122e",
+          "coa_code": "TN29",
+          "institution_name": "Mohammed Sathak A.J. Academy of Architecture",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "mohammed-sathak-aj-academy-of-architecture-chennai"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Thiagarajar College of Engineering",
+      "city": "Madurai",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-C-26794",
+      "yearsRanked": [
+        "2025 (#33)",
+        "2024 (#25)",
+        "2022 (#23)",
+        "2021 (#19)",
+        "2020 (#17)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+        "coa_code": "TN11",
+        "institution_name": "Thiagarajar College of Engineering",
+        "city": "Madurai",
+        "state": "Tamil Nadu",
+        "slug": "thiagarajar-college-of-engineering-madurai"
+      },
+      "score": 160,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+          "coa_code": "TN11",
+          "institution_name": "Thiagarajar College of Engineering",
+          "city": "Madurai",
+          "state": "Tamil Nadu",
+          "slug": "thiagarajar-college-of-engineering-madurai"
+        },
+        "score": 160,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+          "coa_code": "KL01",
+          "institution_name": "College of Engineering",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-engineering-thiruvananthapuram"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Christ University",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "nirfId": "IR-A-U-0217",
+      "yearsRanked": [
+        "2025 (#34)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "97d6ba2f-0322-452b-9aaf-aeb88a666e08",
+        "coa_code": "KA45",
+        "institution_name": "Christ University",
+        "city": "Mysore Road",
+        "state": "Karnataka",
+        "slug": "christ-university-mysore-road"
+      },
+      "score": 140,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "97d6ba2f-0322-452b-9aaf-aeb88a666e08",
+          "coa_code": "KA45",
+          "institution_name": "Christ University",
+          "city": "Mysore Road",
+          "state": "Karnataka",
+          "slug": "christ-university-mysore-road"
+        },
+        "score": 140,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "c1aaa90c-f472-41c2-a758-56c100d4f292",
+          "coa_code": "KA30",
+          "institution_name": "BGS School of Architecture and Planning",
+          "city": "K Gollahalli Postbengaluru South",
+          "state": "Karnataka",
+          "slug": "bgs-school-of-architecture-and-planning-k-gollahalli-postbengaluru-south"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology, Raipur",
+      "city": "Raipur",
+      "state": "Chhattisgarh",
+      "nirfId": "IR-A-U-0092",
+      "yearsRanked": [
+        "2025 (#35)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "67c18f42-fab9-46aa-8887-0bbe374edbe1",
+          "coa_code": "CG01",
+          "institution_name": "Faculty Of Architecture, National Institute Of Technology, Deemed University",
+          "city": "Raipur",
+          "state": "Chhattisgarh",
+          "slug": "faculty-of-architecture-national-institute-of-technology-deemed-university-raipur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Guru Gobind Singh Indraprastha University",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "nirfId": "IR-A-U-0099",
+      "yearsRanked": [
+        "2025 (#36)",
+        "2024 (#29)",
+        "2022 (#24)"
+      ]
+    },
+    "best": null,
+    "candidates": [
+      {
+        "inst": {
+          "id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+          "coa_code": "DL06",
+          "institution_name": "University School of Architecture & Planning",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "university-school-of-architecture-planning-delhi"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 4
+      },
+      {
+        "inst": {
+          "id": "4df88b06-6798-43b4-9015-fa8e44a5fbde",
+          "coa_code": "DL09",
+          "institution_name": "Department of Architecture, Indira Gandhi Delhi Technical University for Women",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "department-of-architecture-indira-gandhi-delhi-technical-university-for-women"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 4
+      },
+      {
+        "inst": {
+          "id": "34f4f2af-06ed-4a85-af66-91f9ef967e95",
+          "coa_code": "DL03",
+          "institution_name": "College Of Architecture Vastu Kala Academy",
+          "city": "New Delhi",
+          "state": "Delhi",
+          "slug": "college-of-architecture-vastu-kala-academy-new-delhi"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 4
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "BMS School of Architecture, Yelahanka",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "nirfId": "IR-A-C-47256",
+      "yearsRanked": [
+        "2025 (#37)",
+        "2024 (#38)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "55f20873-ceb9-4f9b-9f81-dba4fb8c1377",
+        "coa_code": "KA17",
+        "institution_name": "BMS School of Architecture",
+        "city": "Yelahanka",
+        "state": "Karnataka",
+        "slug": "bms-school-of-architecture-yelahanka"
+      },
+      "score": 75,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "55f20873-ceb9-4f9b-9f81-dba4fb8c1377",
+          "coa_code": "KA17",
+          "institution_name": "BMS School of Architecture",
+          "city": "Yelahanka",
+          "state": "Karnataka",
+          "slug": "bms-school-of-architecture-yelahanka"
+        },
+        "score": 75,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "9bf07b62-3cfb-4937-bb14-0053cb6e7f9b",
+          "coa_code": "PJ14",
+          "institution_name": "School of Architecture",
+          "city": "Nh 95",
+          "state": "All India",
+          "slug": "school-of-architecture-nh-95"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "1b7849c3-a9aa-40ab-a9ab-ff40515d9050",
+          "coa_code": "UP21",
+          "institution_name": "School of Architecture",
+          "city": "Greater Noida",
+          "state": "Uttar Pradesh",
+          "slug": "school-of-architecture-greater-noida"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Chitkara University",
+      "city": "Rajpura",
+      "state": "Punjab",
+      "nirfId": "IR-A-U-0373",
+      "yearsRanked": [
+        "2025 (#38)",
+        "2024 (#35)",
+        "2023 (#30)",
+        "2022 (#22)",
+        "2021 (#21)"
+      ]
+    },
+    "best": null,
+    "candidates": [
+      {
+        "inst": {
+          "id": "98ec6d8c-290d-454f-a06e-a899c17a17c2",
+          "coa_code": "PJ04",
+          "institution_name": "Chitkara School of Planning and Architecture",
+          "city": "Patiala",
+          "state": "All India",
+          "slug": "chitkara-school-of-planning-and-architecture-patiala"
+        },
+        "score": 30,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Faculty of Architecture and Planning, Dr APJ Abbdul Kalam Technical University, Lucknow",
+      "city": "Lucknow",
+      "state": "Uttar Pradesh",
+      "nirfId": "IR-A-C-46873",
+      "yearsRanked": [
+        "2025 (#39)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "d50c07fd-1c15-4d64-8c7b-ab4fdce40f0a",
+        "coa_code": "RJ04",
+        "institution_name": "Faculty of Architecture",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "slug": "faculty-of-architecture-jaipur"
+      },
+      "score": 54.285714285714285,
+      "matchedWords": 1,
+      "totalWords": 7
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "d50c07fd-1c15-4d64-8c7b-ab4fdce40f0a",
+          "coa_code": "RJ04",
+          "institution_name": "Faculty of Architecture",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "faculty-of-architecture-jaipur"
+        },
+        "score": 54.285714285714285,
+        "matchedWords": 1,
+        "totalWords": 7
+      },
+      {
+        "inst": {
+          "id": "54668482-e3c9-4410-a406-c32981bbb194",
+          "coa_code": "UP01",
+          "institution_name": "Faculty of ArchitectureDr.A.P.J.Abdul Kalam Technical UniversityFormerly U.P.Technical University",
+          "city": "Lucknow",
+          "state": "Uttar Pradesh",
+          "slug": "faculty-of-architecturedrapjabdul-kalam-technical-universityformerly-uptechnical-university-lucknow"
+        },
+        "score": 42.857142857142854,
+        "matchedWords": 3,
+        "totalWords": 7
+      },
+      {
+        "inst": {
+          "id": "3fcc21f6-c314-4eac-9770-237c025f5a30",
+          "coa_code": "UP07",
+          "institution_name": "Amity School of Architecture & Planning, Amity University Lucknow",
+          "city": "Lucknow",
+          "state": "Uttar Pradesh",
+          "slug": "amity-school-of-architecture-planning-amity-university-lucknow"
+        },
+        "score": 38.57142857142857,
+        "matchedWords": 2,
+        "totalWords": 7
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Anant National University",
+      "city": "Ahmedabad",
+      "state": "Gujarat",
+      "nirfId": "IR-A-U-0830",
+      "yearsRanked": [
+        "2025 (#40)",
+        "2024 (#37)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "557803c1-19ce-4d89-b764-9347820425d8",
+        "coa_code": "GJ11",
+        "institution_name": "School of Architecture, Anant National University",
+        "city": "Ahmedabad",
+        "state": "Gujarat",
+        "slug": "school-of-architecture-anant-national-university-ahmedabad"
+      },
+      "score": 110,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "557803c1-19ce-4d89-b764-9347820425d8",
+          "coa_code": "GJ11",
+          "institution_name": "School of Architecture, Anant National University",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "school-of-architecture-anant-national-university-ahmedabad"
+        },
+        "score": 110,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+          "coa_code": "GJ02",
+          "institution_name": "Faculty of Architecture, CEPT University",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "faculty-of-architecture-cept-university-ahmedabad"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "c0e94827-8093-4529-b2d5-be5ec4a0efad",
+          "coa_code": "GJ18",
+          "institution_name": "L.J. School Of Architecture",
+          "city": "Ahmedabad",
+          "state": "Gujarat",
+          "slug": "lj-school-of-architecture-ahmedabad"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Visvesvaraya National Institute of Technology Nagpur",
+      "city": "Nagpur",
+      "state": "Maharashtra",
+      "nirfId": "IR-A-U-0334",
+      "yearsRanked": [
+        "2024 (#10)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 60,
+      "matchedWords": 1,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "4007164f-68a4-4cb6-915b-f1f507648b2c",
+          "coa_code": "MH26",
+          "institution_name": "Priyadarshini Institute Of Architecture And Design Studies NAGPUR",
+          "city": "Nagpur",
+          "state": "Maharashtra",
+          "slug": "priyadarshini-institute-of-architecture-and-design-studies-nagpur"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture Vijayawada",
+      "city": "Vijayawada",
+      "state": "Andhra Pradesh",
+      "nirfId": "IR-A-U-0627",
+      "yearsRanked": [
+        "2024 (#16)",
+        "2019 (#9)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+        "coa_code": "AP18",
+        "institution_name": "School Of Planning And Architecture, Vijayawada",
+        "city": "Vijayawada",
+        "state": "Andhra Pradesh",
+        "slug": "school-of-planning-and-architecture-vijayawada"
+      },
+      "score": 160,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+          "coa_code": "AP18",
+          "institution_name": "School Of Planning And Architecture, Vijayawada",
+          "city": "Vijayawada",
+          "state": "Andhra Pradesh",
+          "slug": "school-of-planning-and-architecture-vijayawada"
+        },
+        "score": 160,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "3f4388e4-174d-4f84-a78e-72537b00e52e",
+          "coa_code": "HR32",
+          "institution_name": "Mr. RAKESH SAPRA Director ST. ANDREWS COLLEGE OF ARCHITECTURE & PLANNING KHURRAMPUR, FARRUKHNAGAR-HA",
+          "city": null,
+          "state": "HARYANA",
+          "slug": "mr-rakesh-sapra-director-st-andrews-college-of-architecture-planning-khurrampur-farrukhnagar-ha"
+        },
+        "score": 35,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "College of Engineering, Trivandrum",
+      "city": "Thiruvananthapuram",
+      "state": "Kerala",
+      "nirfId": "IR-A-C-43708",
+      "yearsRanked": [
+        "2024 (#18)",
+        "2022 (#14)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+        "coa_code": "KL01",
+        "institution_name": "College of Engineering",
+        "city": "Thiruvananthapuram",
+        "state": "Kerala",
+        "slug": "college-of-engineering-thiruvananthapuram"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+          "coa_code": "KL01",
+          "institution_name": "College of Engineering",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-engineering-thiruvananthapuram"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "9bd68acb-3da9-4e3c-a3c0-945b1feaab48",
+          "coa_code": "KL26",
+          "institution_name": "Marian College of Architecture & Planning",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "marian-college-of-architecture-planning-thiruvananthapuram"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "d4767153-e601-4556-b01f-fc27c043e284",
+          "coa_code": "KL41",
+          "institution_name": "DC School of Architecture and Design",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "dc-school-of-architecture-and-design-thiruvananthapuram"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Chandigarh College of Architecture, Sector-12",
+      "city": "Chandigarh",
+      "state": "Chandigarh",
+      "nirfId": "IR-A-C-29341",
+      "yearsRanked": [
+        "2024 (#30)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+        "coa_code": "CH01",
+        "institution_name": "Chandigarh College Of Architecture",
+        "city": "Chandigarh",
+        "state": "Chandigarh",
+        "slug": "chandigarh-college-of-architecture"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+          "coa_code": "CH01",
+          "institution_name": "Chandigarh College Of Architecture",
+          "city": "Chandigarh",
+          "state": "Chandigarh",
+          "slug": "chandigarh-college-of-architecture"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "19735da4-26b2-4222-83a0-66f42d025300",
+          "coa_code": "MP15",
+          "institution_name": "College of Architecture",
+          "city": "Indore",
+          "state": "Madhya Pradesh",
+          "slug": "college-of-architecture-indore"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "dc6cd922-2259-412b-8dfc-8a9d98533f42",
+          "coa_code": "KL12",
+          "institution_name": "College of Architecture",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-architecture-thiruvananthapuram"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Manipal University, Jaipur",
+      "city": "Jaipur",
+      "state": "Rajasthan",
+      "nirfId": "IR-A-U-0749",
+      "yearsRanked": [
+        "2024 (#33)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "6aedddd2-d0f3-406b-b94b-04a1148ac928",
+        "coa_code": "RJ20",
+        "institution_name": "Faculty of Architecture & Planning, Vivekananda Global University, Jaipur",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "slug": "faculty-of-architecture-planning-vivekananda-global-university-jaipur"
+      },
+      "score": 45,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "6aedddd2-d0f3-406b-b94b-04a1148ac928",
+          "coa_code": "RJ20",
+          "institution_name": "Faculty of Architecture & Planning, Vivekananda Global University, Jaipur",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "faculty-of-architecture-planning-vivekananda-global-university-jaipur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 35,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "1eff6580-e2c6-4646-b1ff-67084815797b",
+          "coa_code": "RJ05",
+          "institution_name": "Amity School of Architecture & Planning, Amity University Rajasthan",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "amity-school-of-architecture-planning-amity-university-rajasthan-jaipur"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology Raipur",
+      "city": "Raipur",
+      "state": "Chhattisgarh",
+      "nirfId": "IR-A-U-0092",
+      "yearsRanked": [
+        "2024 (#36)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "67c18f42-fab9-46aa-8887-0bbe374edbe1",
+          "coa_code": "CG01",
+          "institution_name": "Faculty Of Architecture, National Institute Of Technology, Deemed University",
+          "city": "Raipur",
+          "state": "Chhattisgarh",
+          "slug": "faculty-of-architecture-national-institute-of-technology-deemed-university-raipur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Gandhi Institute of Technology and Management",
+      "city": "Visakhapatnam",
+      "state": "Andhra Pradesh",
+      "nirfId": "IR-A-U-0011",
+      "yearsRanked": [
+        "2024 (#39)"
+      ]
+    },
+    "best": null,
+    "candidates": [
+      {
+        "inst": {
+          "id": "93004b49-6a23-4054-982e-42131e77d1a3",
+          "coa_code": "AP11",
+          "institution_name": "School of Architecture, GITAM University",
+          "city": "Visakhapatnam",
+          "state": "Andhra Pradesh",
+          "slug": "school-of-architecture-gitam-university-visakhapatnam"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "6a2ad9c5-93c0-43c8-949b-5748be4dcfc9",
+          "coa_code": "AP14",
+          "institution_name": "Varaha College Of Architecture and Planning",
+          "city": "Visakhapatnam",
+          "state": "Andhra Pradesh",
+          "slug": "varaha-college-of-architecture-and-planning-visakhapatnam"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "cd2a0dd5-5a55-4580-a27d-2f7c9c92409b",
+          "coa_code": "AP02",
+          "institution_name": "Faculty of Architecture, College of Engineering (Andhra University)",
+          "city": "Visakhapatnam",
+          "state": "Andhra Pradesh",
+          "slug": "faculty-of-architecture-college-of-engineering-andhra-university-visakhapatnam"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "B. S. Abdur Rahman Crescent Institute of Science and Technology",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0445",
+      "yearsRanked": [
+        "2024 (#40)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+        "coa_code": "TN08",
+        "institution_name": "Hindustan Institute of Technology and Science",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "slug": "hindustan-institute-of-technology-and-science-chennai"
+      },
+      "score": 37.5,
+      "matchedWords": 1,
+      "totalWords": 4
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+          "coa_code": "TN08",
+          "institution_name": "Hindustan Institute of Technology and Science",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "hindustan-institute-of-technology-and-science-chennai"
+        },
+        "score": 37.5,
+        "matchedWords": 1,
+        "totalWords": 4
+      },
+      {
+        "inst": {
+          "id": "25d62502-8879-41d1-ba03-1070b848e29b",
+          "coa_code": "TN28",
+          "institution_name": "Crescent School of Architecture",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "crescent-school-of-architecture-chennai"
+        },
+        "score": 37.5,
+        "matchedWords": 1,
+        "totalWords": 4
+      },
+      {
+        "inst": {
+          "id": "2f21aa33-00bd-4e65-a7f4-92e47851fa4c",
+          "coa_code": "TN10",
+          "institution_name": "Sathyabama Institute of Science and Technology",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "sathyabama-institute-of-science-and-technology-chennai"
+        },
+        "score": 37.5,
+        "matchedWords": 1,
+        "totalWords": 4
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Jamia Millia Islamia,New Delhi",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "nirfId": "IR-A-U-0108",
+      "yearsRanked": [
+        "2023 (#6)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+        "coa_code": "DL04",
+        "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+        "city": "New Delhi",
+        "state": "Delhi",
+        "slug": "faculty-of-architecture-and-ekistics-jamia-millia-islamia-new-delhi"
+      },
+      "score": 48,
+      "matchedWords": 3,
+      "totalWords": 5
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+          "coa_code": "DL04",
+          "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+          "city": "New Delhi",
+          "state": "Delhi",
+          "slug": "faculty-of-architecture-and-ekistics-jamia-millia-islamia-new-delhi"
+        },
+        "score": 48,
+        "matchedWords": 3,
+        "totalWords": 5
+      },
+      {
+        "inst": {
+          "id": "4df88b06-6798-43b4-9015-fa8e44a5fbde",
+          "coa_code": "DL09",
+          "institution_name": "Department of Architecture, Indira Gandhi Delhi Technical University for Women",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "department-of-architecture-indira-gandhi-delhi-technical-university-for-women"
+        },
+        "score": 36,
+        "matchedWords": 1,
+        "totalWords": 5
+      },
+      {
+        "inst": {
+          "id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+          "coa_code": "DL06",
+          "institution_name": "University School of Architecture & Planning",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "university-school-of-architecture-planning-delhi"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 5
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Chandigarh College of Architecture Sector-12",
+      "city": "Chandigarh",
+      "state": "Chandigarh",
+      "nirfId": "IR-A-C-29341",
+      "yearsRanked": [
+        "2023 (#29)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+        "coa_code": "CH01",
+        "institution_name": "Chandigarh College Of Architecture",
+        "city": "Chandigarh",
+        "state": "Chandigarh",
+        "slug": "chandigarh-college-of-architecture"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+          "coa_code": "CH01",
+          "institution_name": "Chandigarh College Of Architecture",
+          "city": "Chandigarh",
+          "state": "Chandigarh",
+          "slug": "chandigarh-college-of-architecture"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "19735da4-26b2-4222-83a0-66f42d025300",
+          "coa_code": "MP15",
+          "institution_name": "College of Architecture",
+          "city": "Indore",
+          "state": "Madhya Pradesh",
+          "slug": "college-of-architecture-indore"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "dc6cd922-2259-412b-8dfc-8a9d98533f42",
+          "coa_code": "KL12",
+          "institution_name": "College of Architecture",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-architecture-thiruvananthapuram"
+        },
+        "score": 50,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Indian Institute of Technology, Roorkee",
+      "city": "Roorkee",
+      "state": "Uttarakhand",
+      "nirfId": "IR-A-U-0560",
+      "yearsRanked": [
+        "2022 (#1)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+        "coa_code": "UA01",
+        "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+        "city": "Roorkee",
+        "state": "Uttarakhand",
+        "slug": "department-of-architecture-planning-indian-institute-of-technology-roorkee"
+      },
+      "score": 45,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+          "coa_code": "UA01",
+          "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+          "city": "Roorkee",
+          "state": "Uttarakhand",
+          "slug": "department-of-architecture-planning-indian-institute-of-technology-roorkee"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology, Calicut",
+      "city": "Kozhikode",
+      "state": "Kerala",
+      "nirfId": "IR-A-U-0263",
+      "yearsRanked": [
+        "2022 (#2)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "598e892b-6310-4bbc-8b01-c53269fa7170",
+          "coa_code": "KL21",
+          "institution_name": "KMCT College Of Architecture",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "kmct-college-of-architecture-kallanthode-kozhikode"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Indian Institute of Technology, Kharagpur",
+      "city": "Kharagpur",
+      "state": "West Bengal",
+      "nirfId": "IR-A-U-0573",
+      "yearsRanked": [
+        "2022 (#3)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+        "coa_code": "WB02",
+        "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+        "city": "Kharagpur",
+        "state": "West Bengal",
+        "slug": "faculty-of-architecture-regional-planning-indian-institute-of-technology-kharagpur"
+      },
+      "score": 45,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+          "coa_code": "WB02",
+          "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+          "city": "Kharagpur",
+          "state": "West Bengal",
+          "slug": "faculty-of-architecture-regional-planning-indian-institute-of-technology-kharagpur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture, New Delhi",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "nirfId": "IR-A-U-0116",
+      "yearsRanked": [
+        "2022 (#4)",
+        "2021 (#4)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 60,
+      "matchedWords": 1,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 60,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+          "coa_code": "DL06",
+          "institution_name": "University School of Architecture & Planning",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "university-school-of-architecture-planning-delhi"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "4df88b06-6798-43b4-9015-fa8e44a5fbde",
+          "coa_code": "DL09",
+          "institution_name": "Department of Architecture, Indira Gandhi Delhi Technical University for Women",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "department-of-architecture-indira-gandhi-delhi-technical-university-for-women"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology, Tiruchirappalli",
+      "city": "Tiruchirappalli",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0467",
+      "yearsRanked": [
+        "2022 (#5)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+        "coa_code": "TN02",
+        "institution_name": "National Institute of Technology",
+        "city": "Tiruchirappalli",
+        "state": "Tamil Nadu",
+        "slug": "national-institute-of-technology-tiruchirappalli"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "0f861515-0dff-45ec-9369-a8945f65ac9d",
+          "coa_code": "TN24",
+          "institution_name": "DEAR Institute",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "dear-institute-tiruchirappalli"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Jamia Millia Islamia, New Delhi",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "nirfId": "IR-A-U-0108",
+      "yearsRanked": [
+        "2022 (#9)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+        "coa_code": "DL04",
+        "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+        "city": "New Delhi",
+        "state": "Delhi",
+        "slug": "faculty-of-architecture-and-ekistics-jamia-millia-islamia-new-delhi"
+      },
+      "score": 48,
+      "matchedWords": 3,
+      "totalWords": 5
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+          "coa_code": "DL04",
+          "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+          "city": "New Delhi",
+          "state": "Delhi",
+          "slug": "faculty-of-architecture-and-ekistics-jamia-millia-islamia-new-delhi"
+        },
+        "score": 48,
+        "matchedWords": 3,
+        "totalWords": 5
+      },
+      {
+        "inst": {
+          "id": "4df88b06-6798-43b4-9015-fa8e44a5fbde",
+          "coa_code": "DL09",
+          "institution_name": "Department of Architecture, Indira Gandhi Delhi Technical University for Women",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "department-of-architecture-indira-gandhi-delhi-technical-university-for-women"
+        },
+        "score": 36,
+        "matchedWords": 1,
+        "totalWords": 5
+      },
+      {
+        "inst": {
+          "id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+          "coa_code": "DL06",
+          "institution_name": "University School of Architecture & Planning",
+          "city": "Delhi",
+          "state": "Delhi",
+          "slug": "university-school-of-architecture-planning-delhi"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 5
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture, Bhopal",
+      "city": "Bhopal",
+      "state": "Madhya Pradesh",
+      "nirfId": "IR-A-U-0626",
+      "yearsRanked": [
+        "2022 (#10)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+          "coa_code": "MP10",
+          "institution_name": "School of Planning & Architecture, Bhopal",
+          "city": "Bhopal",
+          "state": "Madhya Pradesh",
+          "slug": "school-of-planning-architecture-bhopal"
+        },
+        "score": 60,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "8ba22f5c-dfc7-4630-99f0-1eecd30a2122",
+          "coa_code": "MP07",
+          "institution_name": "Bagulamukhi College of Architecture and Planning",
+          "city": "Bhopal",
+          "state": "Madhya Pradesh",
+          "slug": "bagulamukhi-college-of-architecture-and-planning-bhopal"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "BMS College of Arhitecture",
+      "city": "Bengaluru",
+      "state": "Karnataka",
+      "nirfId": "IR-A-C-57952",
+      "yearsRanked": [
+        "2022 (#18)",
+        "2021 (#15)",
+        "2020 (#14)"
+      ]
+    },
+    "best": null,
+    "candidates": [
+      {
+        "inst": {
+          "id": "c1aaa90c-f472-41c2-a758-56c100d4f292",
+          "coa_code": "KA30",
+          "institution_name": "BGS School of Architecture and Planning",
+          "city": "K Gollahalli Postbengaluru South",
+          "state": "Karnataka",
+          "slug": "bgs-school-of-architecture-and-planning-k-gollahalli-postbengaluru-south"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "9521d834-95ab-4fd0-9be7-f6a2c4d470dc",
+          "coa_code": "KAD07",
+          "institution_name": "Impact Polytechnic KODIGEHALLI",
+          "city": "Bengaluru",
+          "state": "Karnataka",
+          "slug": "impact-polytechnic-kodigehalli-bengaluru-kad07"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology, Hamirpur",
+      "city": "Hamirpur",
+      "state": "Himachal Pradesh",
+      "nirfId": "IR-A-U-0189",
+      "yearsRanked": [
+        "2022 (#26)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+          "coa_code": "HP01",
+          "institution_name": "Department of Architecture, NIT Hamirpur",
+          "city": "Hamirpur",
+          "state": "Himachal Pradesh",
+          "slug": "department-of-architecture-nit-hamirpur"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Hindustan Institute of Technology and Science (HITS)",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0454",
+      "yearsRanked": [
+        "2022 (#27)",
+        "2020 (#20)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+        "coa_code": "TN08",
+        "institution_name": "Hindustan Institute of Technology and Science",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "slug": "hindustan-institute-of-technology-and-science-chennai"
+      },
+      "score": 100,
+      "matchedWords": 2,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+          "coa_code": "TN08",
+          "institution_name": "Hindustan Institute of Technology and Science",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "hindustan-institute-of-technology-and-science-chennai"
+        },
+        "score": 100,
+        "matchedWords": 2,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "2f21aa33-00bd-4e65-a7f4-92e47851fa4c",
+          "coa_code": "TN10",
+          "institution_name": "Sathyabama Institute of Science and Technology",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "sathyabama-institute-of-science-and-technology-chennai"
+        },
+        "score": 40,
+        "matchedWords": 1,
+        "totalWords": 3
+      },
+      {
+        "inst": {
+          "id": "f38227de-be85-4c33-8c9c-0ece34af122e",
+          "coa_code": "TN29",
+          "institution_name": "Mohammed Sathak A.J. Academy of Architecture",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "mohammed-sathak-aj-academy-of-architecture-chennai"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "National Institute of Technology, Patna",
+      "city": "Patna",
+      "state": "Bihar",
+      "nirfId": "IR-A-U-0072",
+      "yearsRanked": [
+        "2022 (#30)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "b738e42c-8b9e-40a5-99bf-40aba3397533",
+          "coa_code": "BR01",
+          "institution_name": "Faculty Of Architecture, National Institute Of Technology",
+          "city": "Patna",
+          "state": "Bihar",
+          "slug": "faculty-of-architecture-national-institute-of-technology-patna"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning & Architecture",
+      "city": "Vijayawada",
+      "state": "Andhra Pradesh",
+      "nirfId": "IR-A-U-0627",
+      "yearsRanked": [
+        "2021 (#8)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "81d4bf45-a044-4b1b-881b-bed1d228d8ef",
+        "coa_code": "MH111",
+        "institution_name": "Symbiosis School of Planning, Architecture and Design",
+        "city": "Nagpur",
+        "state": "Maharashtra",
+        "slug": "symbiosis-school-of-planning-architecture-and-design-nagpur"
+      },
+      "score": 80,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "81d4bf45-a044-4b1b-881b-bed1d228d8ef",
+          "coa_code": "MH111",
+          "institution_name": "Symbiosis School of Planning, Architecture and Design",
+          "city": "Nagpur",
+          "state": "Maharashtra",
+          "slug": "symbiosis-school-of-planning-architecture-and-design-nagpur"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+          "coa_code": "MP10",
+          "institution_name": "School of Planning & Architecture, Bhopal",
+          "city": "Bhopal",
+          "state": "Madhya Pradesh",
+          "slug": "school-of-planning-architecture-bhopal"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "833ada1d-b4c3-4e3f-a28f-db9e2a9fe4b5",
+          "coa_code": "UP48",
+          "institution_name": "Naraina School of Planning & Architecture",
+          "city": "Gangaganj Panki Kanpur",
+          "state": "Uttar Pradesh",
+          "slug": "naraina-school-of-planning-architecture-gangaganj-panki-kanpur"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Indian Institute of Engineering Science and Technology",
+      "city": "Shibpur",
+      "state": "West Bengal",
+      "nirfId": "IR-A-U-0584",
+      "yearsRanked": [
+        "2021 (#9)",
+        "2020 (#6)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+        "coa_code": "WB01",
+        "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+        "city": "Howrah",
+        "state": "West Bengal",
+        "slug": "dept-of-architecture-town-and-regional-planning-indian-institute-of-engineering-science-and-technology-shibpur-howrah"
+      },
+      "score": 90,
+      "matchedWords": 3,
+      "totalWords": 3
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+          "coa_code": "WB01",
+          "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+          "city": "Howrah",
+          "state": "West Bengal",
+          "slug": "dept-of-architecture-town-and-regional-planning-indian-institute-of-engineering-science-and-technology-shibpur-howrah"
+        },
+        "score": 90,
+        "matchedWords": 3,
+        "totalWords": 3
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Visvesvaraya National Institute of Technology",
+      "city": "Nagpur",
+      "state": "Maharashtra",
+      "nirfId": "IR-A-U-0334",
+      "yearsRanked": [
+        "2021 (#17)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+        "coa_code": "KL04",
+        "institution_name": "National Institute of Technology",
+        "city": "Kozhikode",
+        "state": "Kerala",
+        "slug": "national-institute-of-technology-kozhikode"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+          "coa_code": "KL04",
+          "institution_name": "National Institute of Technology",
+          "city": "Kozhikode",
+          "state": "Kerala",
+          "slug": "national-institute-of-technology-kozhikode"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+          "coa_code": "TN02",
+          "institution_name": "National Institute of Technology",
+          "city": "Tiruchirappalli",
+          "state": "Tamil Nadu",
+          "slug": "national-institute-of-technology-tiruchirappalli"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "db45f7f8-f2af-41a3-95bc-f03edc7db259",
+          "coa_code": "MH81",
+          "institution_name": "Jhulelal Institute of Architecture",
+          "city": "Nagpur",
+          "state": "Maharashtra",
+          "slug": "jhulelal-institute-of-architecture-nagpur"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Faculty of Architecture, Manipal Academy of Higher Education, Manipal",
+      "city": "Udupi",
+      "state": "Karnataka",
+      "nirfId": "IR-A-C-46330",
+      "yearsRanked": [
+        "2021 (#18)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "d50c07fd-1c15-4d64-8c7b-ab4fdce40f0a",
+        "coa_code": "RJ04",
+        "institution_name": "Faculty of Architecture",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "slug": "faculty-of-architecture-jaipur"
+      },
+      "score": 55,
+      "matchedWords": 1,
+      "totalWords": 6
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "d50c07fd-1c15-4d64-8c7b-ab4fdce40f0a",
+          "coa_code": "RJ04",
+          "institution_name": "Faculty of Architecture",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "faculty-of-architecture-jaipur"
+        },
+        "score": 55,
+        "matchedWords": 1,
+        "totalWords": 6
+      },
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 40,
+        "matchedWords": 2,
+        "totalWords": 6
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "M. G. R. Educational and Research Institute",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "nirfId": "IR-A-U-0461",
+      "yearsRanked": [
+        "2021 (#25)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "afe46c16-597e-4862-a396-55ef18462730",
+        "coa_code": "TN41",
+        "institution_name": "Dr.M.G.R Educational and Research Institute",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "slug": "drmgr-educational-and-research-institute-chennai"
+      },
+      "score": 110,
+      "matchedWords": 2,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "afe46c16-597e-4862-a396-55ef18462730",
+          "coa_code": "TN41",
+          "institution_name": "Dr.M.G.R Educational and Research Institute",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "drmgr-educational-and-research-institute-chennai"
+        },
+        "score": 110,
+        "matchedWords": 2,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "0b95dfef-433e-4510-b485-aea064a5515c",
+          "coa_code": "TN07",
+          "institution_name": "Bharat Institute of Higher Education and Research",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "bharat-institute-of-higher-education-and-research-chennai"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "f38227de-be85-4c33-8c9c-0ece34af122e",
+          "coa_code": "TN29",
+          "institution_name": "Mohammed Sathak A.J. Academy of Architecture",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "slug": "mohammed-sathak-aj-academy-of-architecture-chennai"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture",
+      "city": "New Delhi",
+      "state": "Delhi",
+      "nirfId": "IR-A-U-0116",
+      "yearsRanked": [
+        "2020 (#5)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 130,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 130,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "5e12acc6-d0c7-4939-bdeb-ffffd08b7ea1",
+          "coa_code": "DL07",
+          "institution_name": "MBS School Of Planning And Architecture",
+          "city": "New Delhi",
+          "state": "Delhi",
+          "slug": "mbs-school-of-planning-and-architecture-new-delhi"
+        },
+        "score": 110,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+          "coa_code": "DL01",
+          "institution_name": "School of Planning and Architecture (SPA)",
+          "city": "New Delhi",
+          "state": "Delhi",
+          "slug": "school-of-planning-and-architecture-spa-new-delhi"
+        },
+        "score": 110,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture",
+      "city": "Bhopal",
+      "state": "Madhya Pradesh",
+      "nirfId": "IR-A-U-0626",
+      "yearsRanked": [
+        "2020 (#7)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 130,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 130,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "83f57d72-2712-490e-8e99-179d1f46c3d5",
+          "coa_code": "TS05",
+          "institution_name": "Maestro School of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "maestro-school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+          "coa_code": "AP18",
+          "institution_name": "School Of Planning And Architecture, Vijayawada",
+          "city": "Vijayawada",
+          "state": "Andhra Pradesh",
+          "slug": "school-of-planning-and-architecture-vijayawada"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "School of Planning and Architecture",
+      "city": "Vijayawada",
+      "state": "Andhra Pradesh",
+      "nirfId": "IR-A-U-0627",
+      "yearsRanked": [
+        "2020 (#9)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 130,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 130,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+          "coa_code": "AP18",
+          "institution_name": "School Of Planning And Architecture, Vijayawada",
+          "city": "Vijayawada",
+          "state": "Andhra Pradesh",
+          "slug": "school-of-planning-and-architecture-vijayawada"
+        },
+        "score": 110,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "83f57d72-2712-490e-8e99-179d1f46c3d5",
+          "coa_code": "TS05",
+          "institution_name": "Maestro School of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "maestro-school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 80,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Manipal Academy of Higher Education",
+      "city": "Udupi",
+      "state": "Karnataka",
+      "nirfId": "IR-A-C-46330",
+      "yearsRanked": [
+        "2020 (#12)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+        "coa_code": "KA02A",
+        "institution_name": "Manipal University - Dubai Campus",
+        "city": "",
+        "state": "Karnataka",
+        "slug": "manipal-university-dubai-campus"
+      },
+      "score": 37.5,
+      "matchedWords": 1,
+      "totalWords": 4
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 37.5,
+        "matchedWords": 1,
+        "totalWords": 4
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "College of Engineering",
+      "city": "Thiruvananthapuram",
+      "state": "Kerala",
+      "nirfId": "IR-A-C-43708",
+      "yearsRanked": [
+        "2019 (#5)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+        "coa_code": "KL01",
+        "institution_name": "College of Engineering",
+        "city": "Thiruvananthapuram",
+        "state": "Kerala",
+        "slug": "college-of-engineering-thiruvananthapuram"
+      },
+      "score": 160,
+      "matchedWords": 1,
+      "totalWords": 1
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+          "coa_code": "KL01",
+          "institution_name": "College of Engineering",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-engineering-thiruvananthapuram"
+        },
+        "score": 160,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "91b70408-0e86-4df9-af6b-0219466278ac",
+          "coa_code": "KL17",
+          "institution_name": "College Of Engineering And Technology - Payanur",
+          "city": "Kannur",
+          "state": "Kerala",
+          "slug": "college-of-engineering-and-technology-payanur-kannur"
+        },
+        "score": 90,
+        "matchedWords": 1,
+        "totalWords": 1
+      },
+      {
+        "inst": {
+          "id": "ce089ecd-6674-4722-bc1a-d4a7decf4b6d",
+          "coa_code": "KLD04",
+          "institution_name": "Madin College of Engineering and Management Melmuri Post",
+          "city": "Malappuram",
+          "state": "Kerala",
+          "slug": "madin-college-of-engineering-and-management-melmuri-post-malappuram-kld04"
+        },
+        "score": 90,
+        "matchedWords": 1,
+        "totalWords": 1
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "College of Engineering Visakhapatnam",
+      "city": "Visakhapatnam",
+      "state": "Andhra Pradesh",
+      "nirfId": "IR-A-C-24004",
+      "yearsRanked": [
+        "2019 (#11)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+        "coa_code": "KL01",
+        "institution_name": "College of Engineering",
+        "city": "Thiruvananthapuram",
+        "state": "Kerala",
+        "slug": "college-of-engineering-thiruvananthapuram"
+      },
+      "score": 65,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+          "coa_code": "KL01",
+          "institution_name": "College of Engineering",
+          "city": "Thiruvananthapuram",
+          "state": "Kerala",
+          "slug": "college-of-engineering-thiruvananthapuram"
+        },
+        "score": 65,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "cd2a0dd5-5a55-4580-a27d-2f7c9c92409b",
+          "coa_code": "AP02",
+          "institution_name": "Faculty of Architecture, College of Engineering (Andhra University)",
+          "city": "Visakhapatnam",
+          "state": "Andhra Pradesh",
+          "slug": "faculty-of-architecture-college-of-engineering-andhra-university-visakhapatnam"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "93004b49-6a23-4054-982e-42131e77d1a3",
+          "coa_code": "AP11",
+          "institution_name": "School of Architecture, GITAM University",
+          "city": "Visakhapatnam",
+          "state": "Andhra Pradesh",
+          "slug": "school-of-architecture-gitam-university-visakhapatnam"
+        },
+        "score": 30,
+        "matchedWords": 0,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "JNAFAU School of Planning and Architecture",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "nirfId": "IR-3-A-OEA-C-17029",
+      "yearsRanked": [
+        "2018 (#7)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+        "coa_code": "TS01",
+        "institution_name": "School Of Planning and Architecture",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "slug": "school-of-planning-and-architecture-hyderabad"
+      },
+      "score": 95,
+      "matchedWords": 1,
+      "totalWords": 2
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+          "coa_code": "TS01",
+          "institution_name": "School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 95,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "83f57d72-2712-490e-8e99-179d1f46c3d5",
+          "coa_code": "TS05",
+          "institution_name": "Maestro School of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "maestro-school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      },
+      {
+        "inst": {
+          "id": "38b5993a-26fa-49dc-91d1-d814143cfc56",
+          "coa_code": "TS06",
+          "institution_name": "Deccan School Of Planning and Architecture",
+          "city": "Hyderabad",
+          "state": "Telangana",
+          "slug": "deccan-school-of-planning-and-architecture-hyderabad"
+        },
+        "score": 45,
+        "matchedWords": 1,
+        "totalWords": 2
+      }
+    ]
+  },
+  {
+    "nirf": {
+      "name": "Faculty of Architecture, Manipal Academy of Higher Education",
+      "city": "Udupi",
+      "state": "Karnataka",
+      "nirfId": "IR-1-A-A-C-46330",
+      "yearsRanked": [
+        "2018 (#10)"
+      ]
+    },
+    "best": {
+      "inst": {
+        "id": "d50c07fd-1c15-4d64-8c7b-ab4fdce40f0a",
+        "coa_code": "RJ04",
+        "institution_name": "Faculty of Architecture",
+        "city": "Jaipur",
+        "state": "Rajasthan",
+        "slug": "faculty-of-architecture-jaipur"
+      },
+      "score": 56,
+      "matchedWords": 1,
+      "totalWords": 5
+    },
+    "candidates": [
+      {
+        "inst": {
+          "id": "d50c07fd-1c15-4d64-8c7b-ab4fdce40f0a",
+          "coa_code": "RJ04",
+          "institution_name": "Faculty of Architecture",
+          "city": "Jaipur",
+          "state": "Rajasthan",
+          "slug": "faculty-of-architecture-jaipur"
+        },
+        "score": 56,
+        "matchedWords": 1,
+        "totalWords": 5
+      },
+      {
+        "inst": {
+          "id": "2c17a5d8-d750-4225-aa4a-1ce118f292f1",
+          "coa_code": "KA02A",
+          "institution_name": "Manipal University - Dubai Campus",
+          "city": "",
+          "state": "Karnataka",
+          "slug": "manipal-university-dubai-campus"
+        },
+        "score": 36,
+        "matchedWords": 1,
+        "totalWords": 5
+      }
+    ]
+  }
+]

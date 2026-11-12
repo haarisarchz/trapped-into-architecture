@@ -1,0 +1,282 @@
+[
+  {
+    "name": "Maulana Azad National Institute of Technology",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "nirfId": "IR-A-U-0284",
+    "yearsRanked": [
+      "2025 (#17)",
+      "2024 (#17)",
+      "2023 (#24)",
+      "2022 (#20)",
+      "2021 (#20)",
+      "2020 (#15)",
+      "2019 (#14)"
+    ]
+  },
+  {
+    "name": "S.R.M. Institute of Science and Technology",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "nirfId": "IR-A-U-0473",
+    "yearsRanked": [
+      "2025 (#18)",
+      "2024 (#11)",
+      "2023 (#14)",
+      "2022 (#11)"
+    ]
+  },
+  {
+    "name": "School of Planning & Architecture, Vijayawada",
+    "city": "Vijayawada",
+    "state": "Andhra Pradesh",
+    "nirfId": "IR-A-U-0627",
+    "yearsRanked": [
+      "2025 (#19)",
+      "2023 (#18)",
+      "2022 (#7)"
+    ]
+  },
+  {
+    "name": "Birla Institute of Technology",
+    "city": "Ranchi",
+    "state": "Jharkhand",
+    "nirfId": "IR-A-U-0202",
+    "yearsRanked": [
+      "2025 (#22)",
+      "2024 (#20)",
+      "2023 (#20)",
+      "2022 (#25)",
+      "2021 (#14)",
+      "2020 (#13)",
+      "2019 (#10)"
+    ]
+  },
+  {
+    "name": "Amity University",
+    "city": "North Twenty Four Parganas",
+    "state": "West Bengal",
+    "nirfId": "IR-A-U-0779",
+    "yearsRanked": [
+      "2025 (#25)",
+      "2024 (#25)"
+    ]
+  },
+  {
+    "name": "Anna University",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "nirfId": "IR-A-U-0439",
+    "yearsRanked": [
+      "2025 (#28)",
+      "2024 (#34)",
+      "2022 (#29)",
+      "2021 (#22)",
+      "2020 (#18)",
+      "2019 (#12)",
+      "2018 (#6)"
+    ]
+  },
+  {
+    "name": "M. S. Ramaiah Institute of Technology",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "nirfId": "IR-A-C-1331",
+    "yearsRanked": [
+      "2025 (#31)",
+      "2024 (#21)",
+      "2023 (#23)",
+      "2022 (#17)"
+    ]
+  },
+  {
+    "name": "Dr. M. G. R. Educational and Research Institute",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "nirfId": "IR-A-U-0461",
+    "yearsRanked": [
+      "2025 (#32)",
+      "2024 (#22)",
+      "2023 (#27)",
+      "2022 (#28)"
+    ]
+  },
+  {
+    "name": "Thiagarajar College of Engineering",
+    "city": "Madurai",
+    "state": "Tamil Nadu",
+    "nirfId": "IR-A-C-26794",
+    "yearsRanked": [
+      "2025 (#33)",
+      "2024 (#25)",
+      "2022 (#23)",
+      "2021 (#19)",
+      "2020 (#17)"
+    ]
+  },
+  {
+    "name": "Christ University",
+    "city": "Bengaluru",
+    "state": "Karnataka",
+    "nirfId": "IR-A-U-0217",
+    "yearsRanked": [
+      "2025 (#34)"
+    ]
+  },
+  {
+    "name": "Visvesvaraya National Institute of Technology Nagpur",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "nirfId": "IR-A-U-0334",
+    "yearsRanked": [
+      "2024 (#10)"
+    ]
+  },
+  {
+    "name": "College of Engineering, Trivandrum",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "nirfId": "IR-A-C-43708",
+    "yearsRanked": [
+      "2024 (#18)",
+      "2022 (#14)"
+    ]
+  },
+  {
+    "name": "Manipal University, Jaipur",
+    "city": "Jaipur",
+    "state": "Rajasthan",
+    "nirfId": "IR-A-U-0749",
+    "yearsRanked": [
+      "2024 (#33)"
+    ]
+  },
+  {
+    "name": "B. S. Abdur Rahman Crescent Institute of Science and Technology",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "nirfId": "IR-A-U-0445",
+    "yearsRanked": [
+      "2024 (#40)"
+    ]
+  },
+  {
+    "name": "Jamia Millia Islamia,New Delhi",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "nirfId": "IR-A-U-0108",
+    "yearsRanked": [
+      "2023 (#6)"
+    ]
+  },
+  {
+    "name": "Chandigarh College of Architecture Sector-12",
+    "city": "Chandigarh",
+    "state": "Chandigarh",
+    "nirfId": "IR-A-C-29341",
+    "yearsRanked": [
+      "2023 (#29)"
+    ]
+  },
+  {
+    "name": "School of Planning and Architecture, Bhopal",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "nirfId": "IR-A-U-0626",
+    "yearsRanked": [
+      "2022 (#10)"
+    ]
+  },
+  {
+    "name": "Hindustan Institute of Technology and Science (HITS)",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "nirfId": "IR-A-U-0454",
+    "yearsRanked": [
+      "2022 (#27)",
+      "2020 (#20)"
+    ]
+  },
+  {
+    "name": "School of Planning & Architecture",
+    "city": "Vijayawada",
+    "state": "Andhra Pradesh",
+    "nirfId": "IR-A-U-0627",
+    "yearsRanked": [
+      "2021 (#8)"
+    ]
+  },
+  {
+    "name": "Indian Institute of Engineering Science and Technology",
+    "city": "Shibpur",
+    "state": "West Bengal",
+    "nirfId": "IR-A-U-0584",
+    "yearsRanked": [
+      "2021 (#9)",
+      "2020 (#6)"
+    ]
+  },
+  {
+    "name": "M. G. R. Educational and Research Institute",
+    "city": "Chennai",
+    "state": "Tamil Nadu",
+    "nirfId": "IR-A-U-0461",
+    "yearsRanked": [
+      "2021 (#25)"
+    ]
+  },
+  {
+    "name": "School of Planning and Architecture",
+    "city": "New Delhi",
+    "state": "Delhi",
+    "nirfId": "IR-A-U-0116",
+    "yearsRanked": [
+      "2020 (#5)"
+    ]
+  },
+  {
+    "name": "School of Planning and Architecture",
+    "city": "Bhopal",
+    "state": "Madhya Pradesh",
+    "nirfId": "IR-A-U-0626",
+    "yearsRanked": [
+      "2020 (#7)"
+    ]
+  },
+  {
+    "name": "School of Planning and Architecture",
+    "city": "Vijayawada",
+    "state": "Andhra Pradesh",
+    "nirfId": "IR-A-U-0627",
+    "yearsRanked": [
+      "2020 (#9)"
+    ]
+  },
+  {
+    "name": "College of Engineering",
+    "city": "Thiruvananthapuram",
+    "state": "Kerala",
+    "nirfId": "IR-A-C-43708",
+    "yearsRanked": [
+      "2019 (#5)"
+    ]
+  },
+  {
+    "name": "College of Engineering Visakhapatnam",
+    "city": "Visakhapatnam",
+    "state": "Andhra Pradesh",
+    "nirfId": "IR-A-C-24004",
+    "yearsRanked": [
+      "2019 (#11)"
+    ]
+  },
+  {
+    "name": "JNAFAU School of Planning and Architecture",
+    "city": "Hyderabad",
+    "state": "Telangana",
+    "nirfId": "IR-3-A-OEA-C-17029",
+    "yearsRanked": [
+      "2018 (#7)"
+    ]
+  }
+]

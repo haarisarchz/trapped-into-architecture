@@ -852,13 +852,21 @@ useEffect(() => {
         </button>
 
         {showProfilesMenu && (
-          <div className="absolute left-0 mt-2.5 w-52 rounded-2xl bg-white text-black shadow-2xl overflow-hidden z-50 border border-gray-200 animate-in fade-in zoom-in-95 duration-100 divide-y divide-gray-200">
+          <div className="absolute left-0 mt-2.5 w-56 rounded-2xl bg-white text-black shadow-2xl overflow-hidden z-50 border border-gray-200 animate-in fade-in zoom-in-95 duration-100 divide-y divide-gray-200">
             <Link
               href="/companies"
               onClick={() => setShowProfilesMenu(false)}
               className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
             >
-              <span>Companies</span>
+              <span>Companies & Firms</span>
+              <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
+            </Link>
+            <Link
+              href="/institutions"
+              onClick={() => setShowProfilesMenu(false)}
+              className="w-full text-left px-5 py-3.5 hover:bg-gray-100 text-[15px] font-bold text-gray-900 flex items-center justify-between transition group"
+            >
+              <span>Institutions & Colleges</span>
               <span className="text-xs text-gray-400 group-hover:text-black transition">&rarr;</span>
             </Link>
             <Link
@@ -1109,7 +1117,8 @@ useEffect(() => {
       </button>
       {mobileProfilesOpen && (
         <div className="bg-gray-900 pl-10 pr-6 py-1 divide-y divide-gray-800">
-          <Link href="/companies" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Companies</Link>
+          <Link href="/companies" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Companies & Firms</Link>
+          <Link href="/institutions" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Institutions & Colleges</Link>
           <Link href="/individuals" className="block py-2.5 text-base font-bold text-white hover:text-amber-400 transition" onClick={() => setMobileMenuOpen(false)}>Professionals</Link>
         </div>
       )}

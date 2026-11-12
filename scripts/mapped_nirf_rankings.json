@@ -1,0 +1,1892 @@
+[
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "coa_code": "WB01",
+    "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+    "coa_code": "GJ02",
+    "institution_name": "Faculty of Architecture, CEPT University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "97357380-1706-41cd-aa50-44a793c3c1e2",
+    "coa_code": "OR06",
+    "institution_name": "National Institute Of TechnologyRourkela, Odisha",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "80e3d399-5c6b-493e-add8-1a216e456aae",
+    "coa_code": "MH04",
+    "institution_name": "Department of Architecture and Planning, VNIT Nagpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 10,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 11,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "d495aacd-900a-4f5e-8337-26874b5a3f3d",
+    "coa_code": "RJ01",
+    "institution_name": "Department of Architecture and Planning, Malaviya National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 12,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "b738e42c-8b9e-40a5-99bf-40aba3397533",
+    "coa_code": "BR01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 13,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "f99f41bc-e37d-4b77-85a6-7a248faa4556",
+    "coa_code": "PJ11",
+    "institution_name": "University Institute of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 14,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 15,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3a358505-5913-4514-abd9-b899324132fa",
+    "coa_code": "WB03",
+    "institution_name": "Faculty Of ArchitectureJadavpur University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 16,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 17,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "28c8555e-8a1e-45d1-ae80-615f7a17d4ba",
+    "coa_code": "TN05",
+    "institution_name": "SRM School of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 18,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 19,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 20,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "db0551ff-5ff2-4afb-ae42-f0409834fb88",
+    "coa_code": "RJ12",
+    "institution_name": "School Of Architecture And DesignManipal University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 21,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 22,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3dc1c710-53b4-4cdb-9133-3078bfdc51a4",
+    "coa_code": "JK01",
+    "institution_name": "School of Architecture and Landscaping, College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 23,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+    "coa_code": "PJ06",
+    "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 24,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "cd88f111-8346-46cd-9622-f0cb8fa7cc6b",
+    "coa_code": "WB07",
+    "institution_name": "Amity School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 25,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 26,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 27,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 28,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "e7e02b90-f6d6-4f6c-af76-6e3984060042",
+    "coa_code": "GJ20",
+    "institution_name": "Institute of Architecture & Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 29,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 30,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+    "coa_code": "KA11",
+    "institution_name": "MS Ramaiah Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 31,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "afe46c16-597e-4862-a396-55ef18462730",
+    "coa_code": "TN41",
+    "institution_name": "Dr.M.G.R Educational and Research Institute",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 32,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+    "coa_code": "TN11",
+    "institution_name": "Thiagarajar College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 33,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "97d6ba2f-0322-452b-9aaf-aeb88a666e08",
+    "coa_code": "KA45",
+    "institution_name": "Christ University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 34,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67c18f42-fab9-46aa-8887-0bbe374edbe1",
+    "coa_code": "CG01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology, Deemed University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 35,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+    "coa_code": "DL06",
+    "institution_name": "University School of Architecture & Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 36,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "55f20873-ceb9-4f9b-9f81-dba4fb8c1377",
+    "coa_code": "KA17",
+    "institution_name": "BMS School of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 37,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "98ec6d8c-290d-454f-a06e-a899c17a17c2",
+    "coa_code": "PJ04",
+    "institution_name": "Chitkara School of Planning and Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 38,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "54668482-e3c9-4410-a406-c32981bbb194",
+    "coa_code": "UP01",
+    "institution_name": "Faculty of ArchitectureDr.A.P.J.Abdul Kalam Technical UniversityFormerly U.P.Technical University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 39,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "557803c1-19ce-4d89-b764-9347820425d8",
+    "coa_code": "GJ11",
+    "institution_name": "School of Architecture, Anant National University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2025,
+    "rank_number": 40,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "coa_code": "WB01",
+    "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+    "coa_code": "GJ02",
+    "institution_name": "Faculty of Architecture, CEPT University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "97357380-1706-41cd-aa50-44a793c3c1e2",
+    "coa_code": "OR06",
+    "institution_name": "National Institute Of TechnologyRourkela, Odisha",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "80e3d399-5c6b-493e-add8-1a216e456aae",
+    "coa_code": "MH04",
+    "institution_name": "Department of Architecture and Planning, VNIT Nagpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 10,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "28c8555e-8a1e-45d1-ae80-615f7a17d4ba",
+    "coa_code": "TN05",
+    "institution_name": "SRM School of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 11,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 12,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "f99f41bc-e37d-4b77-85a6-7a248faa4556",
+    "coa_code": "PJ11",
+    "institution_name": "University Institute of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 13,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 14,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "d495aacd-900a-4f5e-8337-26874b5a3f3d",
+    "coa_code": "RJ01",
+    "institution_name": "Department of Architecture and Planning, Malaviya National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 15,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 16,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 17,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 18,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "e7e02b90-f6d6-4f6c-af76-6e3984060042",
+    "coa_code": "GJ20",
+    "institution_name": "Institute of Architecture & Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 19,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 20,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+    "coa_code": "KA11",
+    "institution_name": "MS Ramaiah Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 21,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "afe46c16-597e-4862-a396-55ef18462730",
+    "coa_code": "TN41",
+    "institution_name": "Dr.M.G.R Educational and Research Institute",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 22,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 23,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+    "coa_code": "PJ06",
+    "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 24,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "cd88f111-8346-46cd-9622-f0cb8fa7cc6b",
+    "coa_code": "WB07",
+    "institution_name": "Amity School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 25,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+    "coa_code": "TN11",
+    "institution_name": "Thiagarajar College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 25,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "b738e42c-8b9e-40a5-99bf-40aba3397533",
+    "coa_code": "BR01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 27,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 28,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+    "coa_code": "DL06",
+    "institution_name": "University School of Architecture & Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 29,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+    "coa_code": "CH01",
+    "institution_name": "Chandigarh College Of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 30,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3dc1c710-53b4-4cdb-9133-3078bfdc51a4",
+    "coa_code": "JK01",
+    "institution_name": "School of Architecture and Landscaping, College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 31,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 32,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "db0551ff-5ff2-4afb-ae42-f0409834fb88",
+    "coa_code": "RJ12",
+    "institution_name": "School Of Architecture And DesignManipal University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 33,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 34,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "98ec6d8c-290d-454f-a06e-a899c17a17c2",
+    "coa_code": "PJ04",
+    "institution_name": "Chitkara School of Planning and Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 35,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67c18f42-fab9-46aa-8887-0bbe374edbe1",
+    "coa_code": "CG01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology, Deemed University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 36,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "557803c1-19ce-4d89-b764-9347820425d8",
+    "coa_code": "GJ11",
+    "institution_name": "School of Architecture, Anant National University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 37,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "55f20873-ceb9-4f9b-9f81-dba4fb8c1377",
+    "coa_code": "KA17",
+    "institution_name": "BMS School of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 38,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "93004b49-6a23-4054-982e-42131e77d1a3",
+    "coa_code": "AP11",
+    "institution_name": "School of Architecture, GITAM University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 39,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "25d62502-8879-41d1-ba03-1070b848e29b",
+    "coa_code": "TN28",
+    "institution_name": "Crescent School of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2024,
+    "rank_number": 40,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+    "coa_code": "GJ02",
+    "institution_name": "Faculty of Architecture, CEPT University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "97357380-1706-41cd-aa50-44a793c3c1e2",
+    "coa_code": "OR06",
+    "institution_name": "National Institute Of TechnologyRourkela, Odisha",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "coa_code": "WB01",
+    "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 10,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 11,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "80e3d399-5c6b-493e-add8-1a216e456aae",
+    "coa_code": "MH04",
+    "institution_name": "Department of Architecture and Planning, VNIT Nagpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 12,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "d495aacd-900a-4f5e-8337-26874b5a3f3d",
+    "coa_code": "RJ01",
+    "institution_name": "Department of Architecture and Planning, Malaviya National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 13,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "28c8555e-8a1e-45d1-ae80-615f7a17d4ba",
+    "coa_code": "TN05",
+    "institution_name": "SRM School of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 14,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "f99f41bc-e37d-4b77-85a6-7a248faa4556",
+    "coa_code": "PJ11",
+    "institution_name": "University Institute of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 15,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+    "coa_code": "PJ06",
+    "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 16,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 17,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 18,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "b738e42c-8b9e-40a5-99bf-40aba3397533",
+    "coa_code": "BR01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 19,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 20,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 21,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "e7e02b90-f6d6-4f6c-af76-6e3984060042",
+    "coa_code": "GJ20",
+    "institution_name": "Institute of Architecture & Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 22,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+    "coa_code": "KA11",
+    "institution_name": "MS Ramaiah Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 23,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 24,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 25,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3dc1c710-53b4-4cdb-9133-3078bfdc51a4",
+    "coa_code": "JK01",
+    "institution_name": "School of Architecture and Landscaping, College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 26,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "afe46c16-597e-4862-a396-55ef18462730",
+    "coa_code": "TN41",
+    "institution_name": "Dr.M.G.R Educational and Research Institute",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 27,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 28,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "d05bd6ed-977e-456c-bc85-b60594544adb",
+    "coa_code": "CH01",
+    "institution_name": "Chandigarh College Of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 29,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "98ec6d8c-290d-454f-a06e-a899c17a17c2",
+    "coa_code": "PJ04",
+    "institution_name": "Chitkara School of Planning and Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2023,
+    "rank_number": 30,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "coa_code": "WB01",
+    "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "80e3d399-5c6b-493e-add8-1a216e456aae",
+    "coa_code": "MH04",
+    "institution_name": "Department of Architecture and Planning, VNIT Nagpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 10,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "28c8555e-8a1e-45d1-ae80-615f7a17d4ba",
+    "coa_code": "TN05",
+    "institution_name": "SRM School of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 11,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+    "coa_code": "PJ06",
+    "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 12,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 13,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 14,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 15,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3dc1c710-53b4-4cdb-9133-3078bfdc51a4",
+    "coa_code": "JK01",
+    "institution_name": "School of Architecture and Landscaping, College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 16,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+    "coa_code": "KA11",
+    "institution_name": "MS Ramaiah Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 17,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 18,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "f99f41bc-e37d-4b77-85a6-7a248faa4556",
+    "coa_code": "PJ11",
+    "institution_name": "University Institute of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 19,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 20,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "e7e02b90-f6d6-4f6c-af76-6e3984060042",
+    "coa_code": "GJ20",
+    "institution_name": "Institute of Architecture & Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 21,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "98ec6d8c-290d-454f-a06e-a899c17a17c2",
+    "coa_code": "PJ04",
+    "institution_name": "Chitkara School of Planning and Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 22,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+    "coa_code": "TN11",
+    "institution_name": "Thiagarajar College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 23,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "bedb7851-9595-4c5b-98ab-d47d0bd0497e",
+    "coa_code": "DL06",
+    "institution_name": "University School of Architecture & Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 24,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 25,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 26,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+    "coa_code": "TN08",
+    "institution_name": "Hindustan Institute of Technology and Science",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 27,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "afe46c16-597e-4862-a396-55ef18462730",
+    "coa_code": "TN41",
+    "institution_name": "Dr.M.G.R Educational and Research Institute",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 28,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 29,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "b738e42c-8b9e-40a5-99bf-40aba3397533",
+    "coa_code": "BR01",
+    "institution_name": "Faculty Of Architecture, National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2022,
+    "rank_number": 30,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+    "coa_code": "GJ02",
+    "institution_name": "Faculty of Architecture, CEPT University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "coa_code": "WB01",
+    "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 10,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 11,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "39f2ada5-aadc-4439-908a-ba624d691dc5",
+    "coa_code": "PJ06",
+    "institution_name": "Lovely School of Architecture and Design, Lovely Professional University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 12,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 13,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 14,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 15,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "f99f41bc-e37d-4b77-85a6-7a248faa4556",
+    "coa_code": "PJ11",
+    "institution_name": "University Institute of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 16,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "80e3d399-5c6b-493e-add8-1a216e456aae",
+    "coa_code": "MH04",
+    "institution_name": "Department of Architecture and Planning, VNIT Nagpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 17,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 18,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+    "coa_code": "TN11",
+    "institution_name": "Thiagarajar College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 19,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 20,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "98ec6d8c-290d-454f-a06e-a899c17a17c2",
+    "coa_code": "PJ04",
+    "institution_name": "Chitkara School of Planning and Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 21,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 22,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 23,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3dc1c710-53b4-4cdb-9133-3078bfdc51a4",
+    "coa_code": "JK01",
+    "institution_name": "School of Architecture and Landscaping, College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 24,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "afe46c16-597e-4862-a396-55ef18462730",
+    "coa_code": "TN41",
+    "institution_name": "Dr.M.G.R Educational and Research Institute",
+    "ranking_body": "NIRF",
+    "ranking_year": 2021,
+    "rank_number": 25,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "3e6af746-bc31-41ce-80a3-4c66b8dba981",
+    "coa_code": "GJ02",
+    "institution_name": "Faculty of Architecture, CEPT University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "coa_code": "WB01",
+    "institution_name": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 10,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 11,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 12,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 13,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 14,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 15,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 16,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+    "coa_code": "TN11",
+    "institution_name": "Thiagarajar College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 17,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 18,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 19,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+    "coa_code": "TN08",
+    "institution_name": "Hindustan Institute of Technology and Science",
+    "ranking_body": "NIRF",
+    "ranking_year": 2020,
+    "rank_number": 20,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "06adfea9-5d00-4e7a-a3ac-5a9d9e84f1b8",
+    "coa_code": "KL04",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ec719ea9-05c9-46a6-9d12-8d316cd8b00e",
+    "coa_code": "TN02",
+    "institution_name": "National Institute of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "coa_code": "AP18",
+    "institution_name": "School Of Planning And Architecture, Vijayawada",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "coa_code": "JH01",
+    "institution_name": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 10,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "cd2a0dd5-5a55-4580-a27d-2f7c9c92409b",
+    "coa_code": "AP02",
+    "institution_name": "Faculty of Architecture, College of Engineering (Andhra University)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 11,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 12,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "coa_code": "UP02",
+    "institution_name": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 13,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "16013278-90fc-453f-934f-2355cc7ef280",
+    "coa_code": "MP01",
+    "institution_name": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 14,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "coa_code": "KA03",
+    "institution_name": "BMS College of Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2019,
+    "rank_number": 15,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c20e9163-3ca0-4a52-a20c-30afccf86337",
+    "coa_code": "WB02",
+    "institution_name": "Faculty Of Architecture & Regional Planning Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 1,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "be2a74e4-7698-457a-bc88-f9fddf6e1a57",
+    "coa_code": "UA01",
+    "institution_name": "Department Of Architecture & Planning, Indian Institute Of Technology",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 2,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "ae02f56e-5bc7-437b-8e0e-257b022717c7",
+    "coa_code": "DL01",
+    "institution_name": "School of Planning and Architecture (SPA)",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 3,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "coa_code": "KL01",
+    "institution_name": "College of Engineering",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 4,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "coa_code": "MP10",
+    "institution_name": "School of Planning & Architecture, Bhopal",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 5,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "coa_code": "TN01",
+    "institution_name": "SAP, Anna University",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 6,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+    "coa_code": "TS01",
+    "institution_name": "School Of Planning and Architecture",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 7,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "coa_code": "DL04",
+    "institution_name": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 8,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "67baf2d5-1ea6-4579-af09-a80fe26b00ab",
+    "coa_code": "HP01",
+    "institution_name": "Department of Architecture, NIT Hamirpur",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 9,
+    "category": "Architecture"
+  },
+  {
+    "institution_id": "5a3be689-b093-4b4c-ba30-bcbe0fe3668f",
+    "coa_code": "KA02",
+    "institution_name": "Manipal School of Architecture and Planning",
+    "ranking_body": "NIRF",
+    "ranking_year": 2018,
+    "rank_number": 10,
+    "category": "Architecture"
+  }
+]

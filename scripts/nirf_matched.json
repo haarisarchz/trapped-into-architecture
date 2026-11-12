@@ -1,0 +1,373 @@
+[
+  {
+    "nirfName": "Indian Institute of Engineering Science and Technology, Shibpur",
+    "nirfCity": "Howrah",
+    "nirfState": "West Bengal",
+    "targetCode": "WB01",
+    "targetName": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "targetId": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "yearsRanked": [
+      "2025 (#4)",
+      "2024 (#4)",
+      "2023 (#10)",
+      "2022 (#6)"
+    ]
+  },
+  {
+    "nirfName": "Jamia Millia Islamia",
+    "nirfCity": "New Delhi",
+    "nirfState": "Delhi",
+    "targetCode": "DL04",
+    "targetName": "Faculty Of Architecture And Ekistics Jamia Millia Islamia",
+    "targetId": "c42c3e06-9e6a-4549-893c-43fa35093aa8",
+    "yearsRanked": [
+      "2025 (#5)",
+      "2024 (#7)",
+      "2021 (#10)",
+      "2020 (#10)",
+      "2019 (#8)",
+      "2018 (#8)"
+    ]
+  },
+  {
+    "nirfName": "National Institute of Technology Rourkela",
+    "nirfCity": "Rourkela",
+    "nirfState": "Odisha",
+    "targetCode": "OR06",
+    "targetName": "National Institute Of TechnologyRourkela, Odisha",
+    "targetId": "97357380-1706-41cd-aa50-44a793c3c1e2",
+    "yearsRanked": [
+      "2025 (#7)",
+      "2024 (#9)",
+      "2023 (#8)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning and Architecture Bhopal",
+    "nirfCity": "Bhopal",
+    "nirfState": "Madhya Pradesh",
+    "targetCode": "MP10",
+    "targetName": "School of Planning & Architecture, Bhopal",
+    "targetId": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "yearsRanked": [
+      "2025 (#11)",
+      "2024 (#12)",
+      "2023 (#11)",
+      "2021 (#6)",
+      "2019 (#6)",
+      "2018 (#5)"
+    ]
+  },
+  {
+    "nirfName": "Malaviya National Institute of Technology",
+    "nirfCity": "Jaipur",
+    "nirfState": "Rajasthan",
+    "targetCode": "RJ01",
+    "targetName": "Department of Architecture and Planning, Malaviya National Institute of Technology",
+    "targetId": "d495aacd-900a-4f5e-8337-26874b5a3f3d",
+    "yearsRanked": [
+      "2025 (#12)",
+      "2024 (#15)",
+      "2023 (#13)"
+    ]
+  },
+  {
+    "nirfName": "Jadavpur University",
+    "nirfCity": "Kolkata",
+    "nirfState": "West Bengal",
+    "targetCode": "WB03",
+    "targetName": "Faculty Of ArchitectureJadavpur University",
+    "targetId": "3a358505-5913-4514-abd9-b899324132fa",
+    "yearsRanked": [
+      "2025 (#16)"
+    ]
+  },
+  {
+    "nirfName": "Maulana Azad National Institute of Technology",
+    "nirfCity": "Bhopal",
+    "nirfState": "Madhya Pradesh",
+    "targetCode": "MP01",
+    "targetName": "Faculty Of Architecture, Maulana Azad National Institute Of Technology",
+    "targetId": "16013278-90fc-453f-934f-2355cc7ef280",
+    "yearsRanked": [
+      "2025 (#17)",
+      "2024 (#17)",
+      "2023 (#24)",
+      "2022 (#20)",
+      "2021 (#20)",
+      "2020 (#15)",
+      "2019 (#14)"
+    ]
+  },
+  {
+    "nirfName": "S.R.M. Institute of Science and Technology",
+    "nirfCity": "Chennai",
+    "nirfState": "Tamil Nadu",
+    "targetCode": "TN08",
+    "targetName": "Hindustan Institute of Technology and Science",
+    "targetId": "f64c0db9-f145-434e-8549-7b526ad60ab4",
+    "yearsRanked": [
+      "2025 (#18)",
+      "2024 (#11)",
+      "2023 (#14)",
+      "2022 (#11)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning & Architecture, Vijayawada",
+    "nirfCity": "Vijayawada",
+    "nirfState": "Andhra Pradesh",
+    "targetCode": "AP18",
+    "targetName": "School Of Planning And Architecture, Vijayawada",
+    "targetId": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "yearsRanked": [
+      "2025 (#19)",
+      "2023 (#18)",
+      "2022 (#7)"
+    ]
+  },
+  {
+    "nirfName": "BMS College of Architecture",
+    "nirfCity": "Bengaluru",
+    "nirfState": "Karnataka",
+    "targetCode": "KA03",
+    "targetName": "BMS College of Architecture",
+    "targetId": "61bedfbb-15a4-4080-9fb2-b30f6de899a4",
+    "yearsRanked": [
+      "2025 (#20)",
+      "2024 (#23)",
+      "2023 (#21)",
+      "2019 (#15)"
+    ]
+  },
+  {
+    "nirfName": "Birla Institute of Technology",
+    "nirfCity": "Ranchi",
+    "nirfState": "Jharkhand",
+    "targetCode": "JH01",
+    "targetName": "Department of Architecture & Planning, Birla Institute Of Technology",
+    "targetId": "1e9df20f-d627-4b35-824c-2f6b8cea0159",
+    "yearsRanked": [
+      "2025 (#22)",
+      "2024 (#20)",
+      "2023 (#20)",
+      "2022 (#25)",
+      "2021 (#14)",
+      "2020 (#13)",
+      "2019 (#10)"
+    ]
+  },
+  {
+    "nirfName": "Amity University",
+    "nirfCity": "North Twenty Four Parganas",
+    "nirfState": "West Bengal",
+    "targetCode": "WB07",
+    "targetName": "Amity School of Architecture and Planning",
+    "targetId": "cd88f111-8346-46cd-9622-f0cb8fa7cc6b",
+    "yearsRanked": [
+      "2025 (#25)",
+      "2024 (#25)"
+    ]
+  },
+  {
+    "nirfName": "Aligarh Muslim University",
+    "nirfCity": "Aligarh",
+    "nirfState": "Uttar Pradesh",
+    "targetCode": "UP02",
+    "targetName": "Faculty Of Architecture, Zakir Hussain College Of Engineering & Tech., Aligarh Muslim University, ALIGARH",
+    "targetId": "6e4b7c17-6e62-46a5-bec4-f9fcbc12e327",
+    "yearsRanked": [
+      "2025 (#26)",
+      "2024 (#14)",
+      "2023 (#9)",
+      "2022 (#13)",
+      "2021 (#13)",
+      "2020 (#16)",
+      "2019 (#13)"
+    ]
+  },
+  {
+    "nirfName": "Anna University",
+    "nirfCity": "Chennai",
+    "nirfState": "Tamil Nadu",
+    "targetCode": "TN01",
+    "targetName": "SAP, Anna University",
+    "targetId": "2bed6abc-28e8-4c67-860f-c858f9150cbf",
+    "yearsRanked": [
+      "2025 (#28)",
+      "2024 (#34)",
+      "2022 (#29)",
+      "2021 (#22)",
+      "2020 (#18)",
+      "2019 (#12)",
+      "2018 (#6)"
+    ]
+  },
+  {
+    "nirfName": "M. S. Ramaiah Institute of Technology",
+    "nirfCity": "Bengaluru",
+    "nirfState": "Karnataka",
+    "targetCode": "KA11",
+    "targetName": "MS Ramaiah Institute Of Technology",
+    "targetId": "88387c7e-d880-4f18-a345-61b41ebd2b21",
+    "yearsRanked": [
+      "2025 (#31)",
+      "2024 (#21)",
+      "2023 (#23)",
+      "2022 (#17)"
+    ]
+  },
+  {
+    "nirfName": "Dr. M. G. R. Educational and Research Institute",
+    "nirfCity": "Chennai",
+    "nirfState": "Tamil Nadu",
+    "targetCode": "TN41",
+    "targetName": "Dr.M.G.R Educational and Research Institute",
+    "targetId": "afe46c16-597e-4862-a396-55ef18462730",
+    "yearsRanked": [
+      "2025 (#32)",
+      "2024 (#22)",
+      "2023 (#27)",
+      "2022 (#28)"
+    ]
+  },
+  {
+    "nirfName": "Thiagarajar College of Engineering",
+    "nirfCity": "Madurai",
+    "nirfState": "Tamil Nadu",
+    "targetCode": "TN11",
+    "targetName": "Thiagarajar College of Engineering",
+    "targetId": "321d9b69-fcb5-46db-aa7d-7e93f79f0f61",
+    "yearsRanked": [
+      "2025 (#33)",
+      "2024 (#25)",
+      "2022 (#23)",
+      "2021 (#19)",
+      "2020 (#17)"
+    ]
+  },
+  {
+    "nirfName": "Christ University",
+    "nirfCity": "Bengaluru",
+    "nirfState": "Karnataka",
+    "targetCode": "KA45",
+    "targetName": "Christ University",
+    "targetId": "97d6ba2f-0322-452b-9aaf-aeb88a666e08",
+    "yearsRanked": [
+      "2025 (#34)"
+    ]
+  },
+  {
+    "nirfName": "Anant National University",
+    "nirfCity": "Ahmedabad",
+    "nirfState": "Gujarat",
+    "targetCode": "GJ11",
+    "targetName": "School of Architecture, Anant National University",
+    "targetId": "557803c1-19ce-4d89-b764-9347820425d8",
+    "yearsRanked": [
+      "2025 (#40)",
+      "2024 (#37)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning and Architecture Vijayawada",
+    "nirfCity": "Vijayawada",
+    "nirfState": "Andhra Pradesh",
+    "targetCode": "AP18",
+    "targetName": "School Of Planning And Architecture, Vijayawada",
+    "targetId": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "yearsRanked": [
+      "2024 (#16)",
+      "2019 (#9)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning and Architecture, Bhopal",
+    "nirfCity": "Bhopal",
+    "nirfState": "Madhya Pradesh",
+    "targetCode": "MP10",
+    "targetName": "School of Planning & Architecture, Bhopal",
+    "targetId": "482c94cd-dd73-4480-ba3e-6837fdaeba52",
+    "yearsRanked": [
+      "2022 (#10)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning & Architecture",
+    "nirfCity": "Vijayawada",
+    "nirfState": "Andhra Pradesh",
+    "targetCode": "AP18",
+    "targetName": "School Of Planning And Architecture, Vijayawada",
+    "targetId": "a2791e2e-acf8-464d-9dff-fc0cbbe941ca",
+    "yearsRanked": [
+      "2021 (#8)"
+    ]
+  },
+  {
+    "nirfName": "Indian Institute of Engineering Science and Technology",
+    "nirfCity": "Shibpur",
+    "nirfState": "West Bengal",
+    "targetCode": "WB01",
+    "targetName": "Dept. of Architecture, Town and Regional Planning, Indian Institute of Engineering Science and Technology, Shibpur",
+    "targetId": "24350ee9-dc72-44b1-b9f6-7bdb5954f220",
+    "yearsRanked": [
+      "2021 (#9)",
+      "2020 (#6)"
+    ]
+  },
+  {
+    "nirfName": "M. G. R. Educational and Research Institute",
+    "nirfCity": "Chennai",
+    "nirfState": "Tamil Nadu",
+    "targetCode": "TN41",
+    "targetName": "Dr.M.G.R Educational and Research Institute",
+    "targetId": "afe46c16-597e-4862-a396-55ef18462730",
+    "yearsRanked": [
+      "2021 (#25)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning and Architecture",
+    "nirfCity": "New Delhi",
+    "nirfState": "Delhi",
+    "targetCode": "TS01",
+    "targetName": "School Of Planning and Architecture",
+    "targetId": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+    "yearsRanked": [
+      "2020 (#5)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning and Architecture",
+    "nirfCity": "Bhopal",
+    "nirfState": "Madhya Pradesh",
+    "targetCode": "TS01",
+    "targetName": "School Of Planning and Architecture",
+    "targetId": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+    "yearsRanked": [
+      "2020 (#7)"
+    ]
+  },
+  {
+    "nirfName": "School of Planning and Architecture",
+    "nirfCity": "Vijayawada",
+    "nirfState": "Andhra Pradesh",
+    "targetCode": "TS01",
+    "targetName": "School Of Planning and Architecture",
+    "targetId": "9a56900a-4700-40f8-a8f9-7e977cc2cfef",
+    "yearsRanked": [
+      "2020 (#9)"
+    ]
+  },
+  {
+    "nirfName": "College of Engineering",
+    "nirfCity": "Thiruvananthapuram",
+    "nirfState": "Kerala",
+    "targetCode": "KL01",
+    "targetName": "College of Engineering",
+    "targetId": "1c3e5cf0-5581-4163-b586-ab4ef7373a7c",
+    "yearsRanked": [
+      "2019 (#5)"
+    ]
+  }
+]

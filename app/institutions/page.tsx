@@ -75,7 +75,7 @@ function InstitutionsContent() {
   const [selectedUniversity, setSelectedUniversity] = useState(searchParams.get("university") || "");
   const [selectedIntakeRange, setSelectedIntakeRange] = useState(searchParams.get("intake") || "all");
   const [selectedYear, setSelectedYear] = useState(searchParams.get("year") || "latest");
-  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "name_asc");
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "nirf_asc");
   const [selectedProgram, setSelectedProgram] = useState<"all" | "ug" | "pg" | "diploma">(
     (searchParams.get("program") as any) || "all"
   );
@@ -83,8 +83,8 @@ function InstitutionsContent() {
   const [filterMultiYear, setFilterMultiYear] = useState(searchParams.get("multiYear") === "true");
   const [filterNirf, setFilterNirf] = useState(searchParams.get("nirf") === "true");
   const [filterActiveOnly, setFilterActiveOnly] = useState(searchParams.get("activeOnly") === "true");
-  const [viewMode, setViewMode] = useState<"grid" | "map">(
-    (searchParams.get("view") as any) === "map" ? "map" : "grid"
+  const [viewMode, setViewMode] = useState<"split" | "grid">(
+    (searchParams.get("view") as any) === "grid" ? "grid" : "split"
   );
 
   // Data
@@ -172,7 +172,7 @@ function InstitutionsContent() {
     if (filterMultiYear) params.set("multiYear", "true");
     if (filterNirf) params.set("nirf", "true");
     if (filterActiveOnly) params.set("activeOnly", "true");
-    if (viewMode === "map") params.set("view", "map");
+    if (viewMode === "grid") params.set("view", "grid");
 
     const newUrl = params.toString() ? `/institutions?${params.toString()}` : "/institutions";
     router.replace(newUrl, { scroll: false });
@@ -194,6 +194,14 @@ function InstitutionsContent() {
   ]);
 
   // Derived filter options
+  const allStatesList = useMemo(() => {
+    const set = new Set<string>();
+    institutions.forEach((i) => {
+      if (i.state && i.state.trim()) set.add(i.state.trim());
+    });
+    return ["All India", ...Array.from(set).sort()];
+  }, [institutions]);
+
   const uniqueCities = useMemo(() => {
     const set = new Set<string>();
     institutions.forEach((i) => {
@@ -446,7 +454,7 @@ function InstitutionsContent() {
     setSelectedUniversity("");
     setSelectedIntakeRange("all");
     setSelectedYear("latest");
-    setSortBy("name_asc");
+    setSortBy("nirf_asc");
     setSelectedProgram("all");
     setSelectedSpecialization("");
     setFilterMultiYear(false);
@@ -488,529 +496,480 @@ function InstitutionsContent() {
       <Navbar />
 
       <main className="flex-1 pb-16">
-        {/* HERO / INTRO SECTION */}
-        <section className="bg-black text-white pt-12 pb-14 px-4 sm:px-6 border-b border-gray-800">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 text-gray-300 rounded-full text-xs font-semibold uppercase tracking-wider mb-3">
-                  <GraduationCap size={14} className="text-white" />
-                  National Directory
+        {/* HYBRID A: COMPACT ARCHITECTURAL COMMAND BAR (~125px) */}
+        <section className="bg-zinc-950 text-white border-b border-zinc-800 shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 space-y-3">
+            {/* ROW 1: Branding/Title + Compact Search + State Dropdown */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-base shrink-0 shadow-sm">
+                  🏛️
                 </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
-                  Architecture Institutions in India
-                </h1>
-                <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                  Discover, explore, and compare official Council of Architecture (COA) recognized institutions across India.
-                  Access validated annual approved intake figures, university affiliations, and regulatory approval records.
-                </p>
-              </div>
-
-              {/* Latest Record Badge */}
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 shrink-0 self-start md:self-auto">
-                <div className="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">
-                  Reporting Year Data
-                </div>
-                <div className="text-2xl font-extrabold text-white flex items-center gap-2">
-                  <span>{latestAcademicYear}</span>
-                </div>
-                <div className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
-                  <Info size={12} /> Source: Official Council of Architecture
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-tight">
+                      Architecture Institutions in India
+                    </h1>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-gray-300 border border-white/10 shrink-0">
+                      COA National Directory
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 truncate mt-0.5">
+                    <span className="text-amber-400 font-bold">{institutions.length || 583}</span> Accredited Colleges &bull;{" "}
+                    <span className="text-white font-medium">3,014</span> Verified Annual Logs &bull;{" "}
+                    <span className="text-emerald-400 font-medium">{latestAcademicYear} Statutory Session</span>
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* SEARCH BAR */}
-            <div className="mt-8 bg-white rounded-2xl p-2 sm:p-2.5 shadow-xl flex flex-col sm:flex-row items-stretch gap-2">
-              <div className="relative flex-1 flex items-center">
-                <Search size={20} className="absolute left-4 text-gray-400 shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  placeholder="Search by college name, COA code (e.g. TN01), city, district, or university..."
-                  className="w-full pl-11 pr-10 py-3 text-sm sm:text-base text-gray-900 bg-transparent focus:outline-none placeholder:text-gray-400"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3 p-1 text-gray-400 hover:text-black transition"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className="md:hidden flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-800 rounded-xl font-bold text-sm hover:bg-gray-200 transition"
-                >
-                  <SlidersHorizontal size={16} /> Filters
-                  {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-blue-600"></span>}
-                </button>
-              </div>
-            </div>
-
-            {/* STATE PILLS CAROUSEL / SHORTCUTS */}
-            <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
-              <span className="text-gray-400 font-medium shrink-0 mr-1">Explore States:</span>
-              {MAJOR_STATES.map((st) => {
-                const active = selectedState === st;
-                return (
-                  <button
-                    key={st}
-                    onClick={() => {
-                      setSelectedState(st);
-                      setSelectedCity("");
+              {/* Integrated Search Bar + State Select */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="relative flex-1 sm:w-80">
+                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className={`px-3.5 py-1.5 rounded-full font-semibold transition shrink-0 whitespace-nowrap ${
-                      active
-                        ? "bg-white text-black shadow-sm"
-                        : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white"
-                    }`}
-                  >
-                    {st}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* MAIN DIRECTORY VIEW */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
-          {/* CATALOG METRICS SUMMARY */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Accredited Institutions</div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-1">583</div>
-              <div className="text-[11px] text-gray-500 mt-0.5">COA Recognized Nationwide</div>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Verified Annual Intakes</div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-blue-600 mt-1">3,014</div>
-              <div className="text-[11px] text-gray-500 mt-0.5">Historical Session Logs</div>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Postgraduate Programs</div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-purple-600 mt-1">38+</div>
-              <div className="text-[11px] text-gray-500 mt-0.5">M.Arch Specializations</div>
-            </div>
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-2xs">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Statutory Session</div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1">2026–27</div>
-              <div className="text-[11px] text-gray-500 mt-0.5">Official COA Gazettes Live</div>
-            </div>
-          </div>
-
-          {/* PROGRAM SWITCHER TABS */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-1.5 shadow-2xs mb-4 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-            <button
-              onClick={() => {
-                setSelectedProgram("all");
-                setSelectedSpecialization("");
-                setCurrentPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
-                selectedProgram === "all"
-                  ? "bg-black text-white shadow-xs"
-                  : "text-gray-600 hover:text-black hover:bg-gray-50"
-              }`}
-            >
-              <span>All Institutions</span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
-                  selectedProgram === "all" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {programCounts.all}
-              </span>
-            </button>
-
-            <button
-              onClick={() => {
-                setSelectedProgram("ug");
-                setSelectedSpecialization("");
-                setCurrentPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
-                selectedProgram === "ug"
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-blue-600 hover:bg-blue-50/50"
-              }`}
-            >
-              <GraduationCap size={16} />
-              <span>B.Arch (UG)</span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
-                  selectedProgram === "ug" ? "bg-white/20 text-white" : "bg-blue-50 text-blue-700"
-                }`}
-              >
-                {programCounts.ug}
-              </span>
-            </button>
-
-            <button
-              onClick={() => {
-                setSelectedProgram("pg");
-                setSelectedSpecialization("");
-                setCurrentPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
-                selectedProgram === "pg"
-                  ? "bg-purple-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-purple-600 hover:bg-purple-50/50"
-              }`}
-            >
-              <BookOpen size={16} />
-              <span>M.Arch (PG Specializations)</span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
-                  selectedProgram === "pg" ? "bg-white/20 text-white" : "bg-purple-50 text-purple-700"
-                }`}
-              >
-                {programCounts.pg}
-              </span>
-            </button>
-
-            <button
-              onClick={() => {
-                setSelectedProgram("diploma");
-                setSelectedSpecialization("");
-                setCurrentPage(1);
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap transition ${
-                selectedProgram === "diploma"
-                  ? "bg-emerald-700 text-white shadow-xs"
-                  : "text-gray-600 hover:text-emerald-700 hover:bg-emerald-50/50"
-              }`}
-            >
-              <Building2 size={16} />
-              <span>Diploma & Polytechnics</span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
-                  selectedProgram === "diploma" ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-800"
-                }`}
-              >
-                {programCounts.diploma}
-              </span>
-            </button>
-          </div>
-
-          {/* QUICK FILTER CHIPS & SPECIALIZATION BAR */}
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <button
-              onClick={() => {
-                setFilterMultiYear(!filterMultiYear);
-                setCurrentPage(1);
-              }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition border ${
-                filterMultiYear
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <ShieldCheck size={14} className={filterMultiYear ? "text-white" : "text-emerald-600"} />
-              <span>Multi-Year Advance Sanction</span>
-              {filterMultiYear && <Check size={12} className="ml-0.5" />}
-            </button>
-
-            <button
-              onClick={() => {
-                setFilterNirf(!filterNirf);
-                setCurrentPage(1);
-              }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition border ${
-                filterNirf
-                  ? "bg-amber-500 text-white border-amber-500 shadow-2xs"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <Award size={14} className={filterNirf ? "text-white" : "text-amber-500"} />
-              <span>NIRF Ranked Architecture Colleges</span>
-              {filterNirf && <Check size={12} className="ml-0.5" />}
-            </button>
-
-            <button
-              onClick={() => {
-                setFilterActiveOnly(!filterActiveOnly);
-                setCurrentPage(1);
-              }}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition border ${
-                filterActiveOnly
-                  ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${filterActiveOnly ? "bg-white" : "bg-green-500"}`}></span>
-              <span>Active Admissions Only</span>
-              {filterActiveOnly && <Check size={12} className="ml-0.5" />}
-            </button>
-
-            {/* Dynamic Specialization Dropdown if PG or Diploma or available */}
-            {availableSpecializations.length > 0 && (
-              <div className="ml-auto flex items-center gap-2">
-                <span className="text-xs font-bold text-gray-500 hidden sm:inline">Specialization:</span>
-                <select
-                  value={selectedSpecialization}
-                  onChange={(e) => {
-                    setSelectedSpecialization(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="text-xs font-semibold bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-gray-800 focus:outline-none focus:border-black max-w-[260px] truncate"
-                >
-                  <option value="">
-                    {selectedProgram === "pg" ? "All M.Arch Specializations (38+)" : "All Diploma Courses"}
-                  </option>
-                  {availableSpecializations.map((spec) => (
-                    <option key={spec} value={spec}>
-                      {spec}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {/* SIDEBAR FILTERS (DESKTOP) */}
-            <aside className={`md:block ${showMobileFilters ? "block" : "hidden"} md:col-span-1 space-y-6`}>
-              <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs sticky top-24">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-                  <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
-                    <Filter size={16} /> Filter Institutions
-                  </div>
-                  {hasActiveFilters && (
+                    placeholder="Search college, COA code, city..."
+                    className="w-full bg-zinc-900 text-white placeholder-gray-400 text-xs sm:text-sm pl-9 pr-8 py-2 rounded-xl border border-zinc-700/80 focus:outline-none focus:border-amber-400 transition"
+                  />
+                  {searchQuery && (
                     <button
-                      onClick={clearAllFilters}
-                      className="text-xs text-blue-600 hover:underline font-semibold"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-white transition"
                     >
-                      Clear All
+                      <X size={14} />
                     </button>
                   )}
                 </div>
 
-                {/* Program Level Filter */}
-                <div className="space-y-1.5 mb-4">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Program Level</label>
-                  <select
-                    value={selectedProgram}
-                    onChange={(e) => {
-                      setSelectedProgram(e.target.value as any);
-                      setSelectedSpecialization("");
-                      setCurrentPage(1);
-                    }}
-                    className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                <select
+                  value={selectedState}
+                  onChange={(e) => {
+                    setSelectedState(e.target.value);
+                    setSelectedCity("");
+                    setCurrentPage(1);
+                  }}
+                  className="bg-zinc-900 text-white text-xs sm:text-sm px-3 py-2 rounded-xl border border-zinc-700/80 focus:outline-none focus:border-amber-400 font-medium shrink-0 cursor-pointer max-w-[160px] truncate"
+                >
+                  {allStatesList.map((st) => (
+                    <option key={st} value={st} className="bg-zinc-900 text-white">
+                      {st}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* ROW 2: Program Level Tabs + Accolade Chips + View Toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1.5 border-t border-zinc-800/80 text-xs">
+              {/* Program Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                <button
+                  onClick={() => {
+                    setSelectedProgram("all");
+                    setSelectedSpecialization("");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
+                    selectedProgram === "all"
+                      ? "bg-white text-black shadow-xs"
+                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
+                  }`}
+                >
+                  <span>All</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    selectedProgram === "all" ? "bg-black/10 text-black font-bold" : "bg-zinc-800 text-gray-400"
+                  }`}>
+                    {programCounts.all}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSelectedProgram("ug");
+                    setSelectedSpecialization("");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
+                    selectedProgram === "ug"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
+                  }`}
+                >
+                  <GraduationCap size={13} />
+                  <span>B.Arch (UG)</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    selectedProgram === "ug" ? "bg-white/20 text-white font-bold" : "bg-zinc-800 text-gray-400"
+                  }`}>
+                    {programCounts.ug}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSelectedProgram("pg");
+                    setSelectedSpecialization("");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
+                    selectedProgram === "pg"
+                      ? "bg-purple-600 text-white shadow-xs"
+                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
+                  }`}
+                >
+                  <BookOpen size={13} />
+                  <span>M.Arch (PG)</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    selectedProgram === "pg" ? "bg-white/20 text-white font-bold" : "bg-zinc-800 text-gray-400"
+                  }`}>
+                    {programCounts.pg}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSelectedProgram("diploma");
+                    setSelectedSpecialization("");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg font-bold transition shrink-0 flex items-center gap-1.5 ${
+                    selectedProgram === "diploma"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-zinc-900 text-gray-300 hover:bg-zinc-800 hover:text-white"
+                  }`}
+                >
+                  <Building2 size={13} />
+                  <span>Diploma</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    selectedProgram === "diploma" ? "bg-white/20 text-white font-bold" : "bg-zinc-800 text-gray-400"
+                  }`}>
+                    {programCounts.diploma}
+                  </span>
+                </button>
+              </div>
+
+              {/* Accolade Chips & View Switcher */}
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none justify-between sm:justify-end">
+                {/* NIRF Chip */}
+                <button
+                  onClick={() => {
+                    setFilterNirf(!filterNirf);
+                    setCurrentPage(1);
+                  }}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
+                    filterNirf
+                      ? "bg-amber-400 text-black border-amber-300 shadow-xs font-black"
+                      : "bg-zinc-900 text-gray-300 border-zinc-700/80 hover:bg-zinc-800"
+                  }`}
+                >
+                  <Award size={13} className={filterNirf ? "text-black" : "text-amber-400"} />
+                  <span>NIRF Ranked (46)</span>
+                </button>
+
+                {/* Multi-Year Sanction */}
+                <button
+                  onClick={() => {
+                    setFilterMultiYear(!filterMultiYear);
+                    setCurrentPage(1);
+                  }}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
+                    filterMultiYear
+                      ? "bg-emerald-600 text-white border-emerald-500 shadow-xs font-black"
+                      : "bg-zinc-900 text-gray-300 border-zinc-700/80 hover:bg-zinc-800"
+                  }`}
+                >
+                  <ShieldCheck size={13} className={filterMultiYear ? "text-white" : "text-emerald-400"} />
+                  <span>Multi-Year</span>
+                </button>
+
+                {/* View Switcher: Split Explorer vs Grid */}
+                <div className="flex items-center p-0.5 bg-zinc-900 rounded-lg border border-zinc-700/80 shrink-0 ml-1">
+                  <button
+                    onClick={() => setViewMode("split")}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition ${
+                      viewMode === "split"
+                        ? "bg-amber-400 text-black shadow-xs font-extrabold"
+                        : "text-gray-300 hover:text-white"
+                    }`}
+                    title="Split-Screen Explorer: Colleges List + Live India Map"
                   >
-                    <option value="all">All Programs ({programCounts.all})</option>
-                    <option value="ug">B.Arch / UG ({programCounts.ug})</option>
-                    <option value="pg">M.Arch / PG ({programCounts.pg})</option>
-                    <option value="diploma">Diploma / Polytechnics ({programCounts.diploma})</option>
-                  </select>
-                </div>
-
-                {/* State Filter */}
-                <div className="space-y-1.5 mb-4">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">State</label>
-                  <select
-                    value={selectedState}
-                    onChange={(e) => {
-                      setSelectedState(e.target.value);
-                      setSelectedCity("");
-                      setCurrentPage(1);
-                    }}
-                    className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                    <MapIcon size={12} />
+                    <span>Split Explorer</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition ${
+                      viewMode === "grid"
+                        ? "bg-white text-black shadow-xs font-extrabold"
+                        : "text-gray-300 hover:text-white"
+                    }`}
+                    title="Classic Grid Directory Cards"
                   >
-                    {MAJOR_STATES.map((st) => (
-                      <option key={st} value={st}>
-                        {st}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* City / District Filter */}
-                {uniqueCities.length > 0 && (
-                  <div className="space-y-1.5 mb-4">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">City / District</label>
-                    <select
-                      value={selectedCity}
-                      onChange={(e) => {
-                        setSelectedCity(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
-                    >
-                      <option value="">All Cities & Districts</option>
-                      {uniqueCities.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Affiliated University */}
-                {uniqueUniversities.length > 0 && (
-                  <div className="space-y-1.5 mb-4">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                      Affiliated University
-                    </label>
-                    <select
-                      value={selectedUniversity}
-                      onChange={(e) => {
-                        setSelectedUniversity(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
-                    >
-                      <option value="">All Universities</option>
-                      {uniqueUniversities.map((u) => (
-                        <option key={u} value={u}>
-                          {u}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Approved Intake Range */}
-                <div className="space-y-1.5 mb-4">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Approved Seats</label>
-                  <select
-                    value={selectedIntakeRange}
-                    onChange={(e) => {
-                      setSelectedIntakeRange(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
-                  >
-                    {INTAKE_RANGES.map((r) => (
-                      <option key={r.value} value={r.value}>
-                        {r.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Academic Reporting Year Filter */}
-                {uniqueAcademicYears.length > 1 && (
-                  <div className="space-y-1.5 mb-4">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Reporting Year</label>
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => {
-                        setSelectedYear(e.target.value);
-                        setCurrentPage(1);
-                      }}
-                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
-                    >
-                      <option value="latest">Latest Year ({latestAcademicYear})</option>
-                      {uniqueAcademicYears.map((yr) => (
-                        <option key={yr} value={yr}>
-                          {yr}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Statutory & Accolade Toggles */}
-                <div className="pt-3 border-t border-gray-100 space-y-2 mb-4">
-                  <label className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">
-                    Accreditation & Quality
-                  </label>
-                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={filterMultiYear}
-                      onChange={(e) => {
-                        setFilterMultiYear(e.target.checked);
-                        setCurrentPage(1);
-                      }}
-                      className="rounded border-gray-300 text-black focus:ring-black"
-                    />
-                    <span>Multi-Year Advance Sanction</span>
-                  </label>
-                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={filterNirf}
-                      onChange={(e) => {
-                        setFilterNirf(e.target.checked);
-                        setCurrentPage(1);
-                      }}
-                      className="rounded border-gray-300 text-black focus:ring-black"
-                    />
-                    <span>NIRF Ranked Architecture</span>
-                  </label>
-                  <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={filterActiveOnly}
-                      onChange={(e) => {
-                        setFilterActiveOnly(e.target.checked);
-                        setCurrentPage(1);
-                      }}
-                      className="rounded border-gray-300 text-black focus:ring-black"
-                    />
-                    <span>Hide Closed Programs</span>
-                  </label>
-                </div>
-
-                {/* Disclaimer note */}
-                <div className="pt-3 border-t border-gray-100 text-[11px] text-gray-400 leading-normal">
-                  All listings are based on published Council of Architecture records.
+                    <LayoutGrid size={12} />
+                    <span>Grid</span>
+                  </button>
                 </div>
               </div>
-            </aside>
+            </div>
+          </div>
+        </section>
 
-            {/* RESULTS CONTENT */}
-            <div className="md:col-span-3">
-              {/* Results Top Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 bg-white p-4 rounded-2xl border border-gray-200">
-                <div className="text-sm font-bold text-gray-900">
-                  Showing <span className="text-black">{filteredInstitutions.length}</span> institutions
-                  {selectedState !== "All India" && <span className="text-gray-500 font-normal"> in {selectedState}</span>}
+        {/* BODY CONTAINER */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5">
+          {viewMode === "split" ? (
+            /* ================= VIEW 1: SPLIT-SCREEN EXPLORER (DEFAULT) ================= */
+            <div>
+              {loading ? (
+                <div className="h-[calc(100vh-220px)] min-h-[650px] w-full rounded-3xl bg-gray-100 animate-pulse flex flex-col items-center justify-center text-gray-400 gap-3 border border-gray-200">
+                  <div className="w-10 h-10 rounded-full border-2 border-black border-t-transparent animate-spin" />
+                  <span className="text-sm font-semibold text-gray-600">Loading Architecture Directory & India Map...</span>
                 </div>
-
-                <div className="flex items-center gap-3 flex-wrap">
-                  {/* View Mode Switcher */}
-                  <div className="flex items-center p-1 bg-gray-100 rounded-xl border border-gray-200">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                        viewMode === "grid"
-                          ? "bg-white text-black shadow-2xs"
-                          : "text-gray-600 hover:text-gray-900"
-                      }`}
-                      title="Grid Cards View"
-                    >
-                      <LayoutGrid size={13} />
-                      <span>Grid</span>
-                    </button>
-                    <button
-                      onClick={() => setViewMode("map")}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                        viewMode === "map"
-                          ? "bg-black text-white shadow-2xs"
-                          : "text-gray-600 hover:text-gray-900"
-                      }`}
-                      title="Interactive Map View"
-                    >
-                      <MapIcon size={13} />
-                      <span>Interactive Map</span>
-                    </button>
+              ) : (
+                <InstitutionsMapView
+                  institutions={sortedInstitutions}
+                  selectedProgram={selectedProgram}
+                />
+              )}
+            </div>
+          ) : (
+            /* ================= VIEW 2: FULL DIRECTORY GRID ================= */
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              {/* SIDEBAR FILTERS (DESKTOP) */}
+              <aside className={`md:block ${showMobileFilters ? "block" : "hidden"} md:col-span-1 space-y-6`}>
+                <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-xs sticky top-24">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                    <div className="flex items-center gap-2 font-bold text-gray-900 text-sm">
+                      <Filter size={16} /> Filter Institutions
+                    </div>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearAllFilters}
+                        className="text-xs text-blue-600 hover:underline font-semibold"
+                      >
+                        Clear All
+                      </button>
+                    )}
                   </div>
 
-                  {/* Sort selector */}
-                  {viewMode === "grid" && (
+                  {/* Program Level Filter */}
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Program Level</label>
+                    <select
+                      value={selectedProgram}
+                      onChange={(e) => {
+                        setSelectedProgram(e.target.value as any);
+                        setSelectedSpecialization("");
+                        setCurrentPage(1);
+                      }}
+                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                    >
+                      <option value="all">All Programs ({programCounts.all})</option>
+                      <option value="ug">B.Arch / UG ({programCounts.ug})</option>
+                      <option value="pg">M.Arch / PG ({programCounts.pg})</option>
+                      <option value="diploma">Diploma / Polytechnics ({programCounts.diploma})</option>
+                    </select>
+                  </div>
+
+                  {/* State Filter */}
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">State</label>
+                    <select
+                      value={selectedState}
+                      onChange={(e) => {
+                        setSelectedState(e.target.value);
+                        setSelectedCity("");
+                        setCurrentPage(1);
+                      }}
+                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                    >
+                      {allStatesList.map((st) => (
+                        <option key={st} value={st}>
+                          {st}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* City / District Filter */}
+                  {uniqueCities.length > 0 && (
+                    <div className="space-y-1.5 mb-4">
+                      <label className="text-xs font-bold uppercase tracking-wider text-gray-400">City / District</label>
+                      <select
+                        value={selectedCity}
+                        onChange={(e) => {
+                          setSelectedCity(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                      >
+                        <option value="">All Cities & Districts</option>
+                        {uniqueCities.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Affiliated University */}
+                  {uniqueUniversities.length > 0 && (
+                    <div className="space-y-1.5 mb-4">
+                      <label className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                        Affiliated University
+                      </label>
+                      <select
+                        value={selectedUniversity}
+                        onChange={(e) => {
+                          setSelectedUniversity(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                      >
+                        <option value="">All Universities</option>
+                        {uniqueUniversities.map((u) => (
+                          <option key={u} value={u}>
+                            {u}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Approved Intake Range */}
+                  <div className="space-y-1.5 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Approved Seats</label>
+                    <select
+                      value={selectedIntakeRange}
+                      onChange={(e) => {
+                        setSelectedIntakeRange(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                    >
+                      {INTAKE_RANGES.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Academic Reporting Year Filter */}
+                  {uniqueAcademicYears.length > 1 && (
+                    <div className="space-y-1.5 mb-4">
+                      <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Reporting Year</label>
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => {
+                          setSelectedYear(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        className="w-full text-xs font-semibold bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:border-black"
+                      >
+                        <option value="latest">Latest Year ({latestAcademicYear})</option>
+                        {uniqueAcademicYears.map((yr) => (
+                          <option key={yr} value={yr}>
+                            {yr}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Statutory & Accolade Toggles */}
+                  <div className="pt-3 border-t border-gray-100 space-y-2 mb-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-400 block mb-2">
+                      Accreditation & Quality
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filterMultiYear}
+                        onChange={(e) => {
+                          setFilterMultiYear(e.target.checked);
+                          setCurrentPage(1);
+                        }}
+                        className="rounded border-gray-300 text-black focus:ring-black"
+                      />
+                      <span>Multi-Year Advance Sanction</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filterNirf}
+                        onChange={(e) => {
+                          setFilterNirf(e.target.checked);
+                          setCurrentPage(1);
+                        }}
+                        className="rounded border-gray-300 text-black focus:ring-black"
+                      />
+                      <span>NIRF Ranked Architecture</span>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filterActiveOnly}
+                        onChange={(e) => {
+                          setFilterActiveOnly(e.target.checked);
+                          setCurrentPage(1);
+                        }}
+                        className="rounded border-gray-300 text-black focus:ring-black"
+                      />
+                      <span>Hide Closed Programs</span>
+                    </label>
+                  </div>
+
+                  {/* Disclaimer note */}
+                  <div className="pt-3 border-t border-gray-100 text-[11px] text-gray-400 leading-normal">
+                    All listings are based on published Council of Architecture records.
+                  </div>
+                </div>
+              </aside>
+
+              {/* RESULTS CONTENT (GRID) */}
+              <div className="md:col-span-3">
+                {/* Results Top Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 bg-white p-4 rounded-2xl border border-gray-200">
+                  <div className="text-sm font-bold text-gray-900">
+                    Showing <span className="text-black">{filteredInstitutions.length}</span> institutions
+                    {selectedState !== "All India" && <span className="text-gray-500 font-normal"> in {selectedState}</span>}
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* View Mode Switcher */}
+                    <div className="flex items-center p-1 bg-gray-100 rounded-xl border border-gray-200">
+                      <button
+                        onClick={() => setViewMode("split")}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                          viewMode === "split"
+                            ? "bg-black text-white shadow-2xs"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                        title="Split Explorer (Map + Colleges)"
+                      >
+                        <MapIcon size={13} />
+                        <span>Split Explorer</span>
+                      </button>
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                          viewMode === "grid"
+                            ? "bg-black text-white shadow-2xs"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                        title="Grid Cards View"
+                      >
+                        <LayoutGrid size={13} />
+                        <span>Grid</span>
+                      </button>
+                    </div>
+
+                    {/* Sort selector */}
                     <div className="flex items-center gap-2">
                       <ArrowUpDown size={14} className="text-gray-400" />
                       <span className="text-xs text-gray-500 font-medium">Sort:</span>
@@ -1019,89 +978,83 @@ function InstitutionsContent() {
                         onChange={(e) => setSortBy(e.target.value)}
                         className="text-xs font-bold text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-black"
                       >
-                        <option value="name_asc">Institution Name (A-Z)</option>
                         <option value="nirf_asc">NIRF Rank: Top First</option>
+                        <option value="name_asc">Institution Name (A-Z)</option>
                         <option value="name_desc">Institution Name (Z-A)</option>
                         <option value="intake_desc">Intake: High to Low</option>
                         <option value="intake_asc">Intake: Low to High</option>
                         <option value="code_asc">COA Code</option>
                       </select>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Loading State */}
-              {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse space-y-4">
-                      <div className="h-5 bg-gray-200 rounded w-1/3"></div>
-                      <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-100 rounded w-1/2"></div>
-                      <div className="h-10 bg-gray-100 rounded-xl mt-4"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : paginatedInstitutions.length === 0 ? (
-                /* Empty State */
-                <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-xl mx-auto my-8">
-                  <GraduationCap size={48} className="mx-auto text-gray-300 mb-3" />
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">No institutions found</h3>
-                  <p className="text-sm text-gray-500 mb-6">
-                    {hasActiveFilters
-                      ? "No institutions matched your current search or filter criteria. Try adjusting or clearing your filters."
-                      : "Institution records are currently being imported from official COA sources. Check back shortly!"}
-                  </p>
-                  {hasActiveFilters && (
-                    <button
-                      onClick={clearAllFilters}
-                      className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition"
-                    >
-                      Clear All Filters
-                    </button>
-                  )}
-                </div>
-              ) : viewMode === "map" ? (
-                /* Interactive India Map View */
-                <InstitutionsMapView
-                  institutions={sortedInstitutions}
-                  selectedProgram={selectedProgram}
-                />
-              ) : (
-                /* Cards Grid */
-                <>
+                {/* Loading State */}
+                {loading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {paginatedInstitutions.map((inst) => (
-                      <InstitutionCard
-                        key={inst.id}
-                        institution={inst}
-                        isCompared={comparedInstitutions.some((c) => c.id === inst.id)}
-                        onToggleCompare={handleToggleCompare}
-                        canCompare={comparedInstitutions.length < 3}
-                      />
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse space-y-4">
+                        <div className="h-5 bg-gray-200 rounded w-1/3"></div>
+                        <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                        <div className="h-10 bg-gray-100 rounded-xl mt-4"></div>
+                      </div>
                     ))}
                   </div>
-
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="mt-8 flex justify-center">
-                      <PaginationControls
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        itemsPerPage={itemsPerPage}
-                        totalItems={totalItems}
-                        onPageChange={(p) => {
-                          setCurrentPage(p);
-                          window.scrollTo({ top: 380, behavior: "smooth" });
-                        }}
-                      />
+                ) : paginatedInstitutions.length === 0 ? (
+                  /* Empty State */
+                  <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-xl mx-auto my-8">
+                    <GraduationCap size={48} className="mx-auto text-gray-300 mb-3" />
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">No institutions found</h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                      {hasActiveFilters
+                        ? "No institutions matched your current search or filter criteria. Try adjusting or clearing your filters."
+                        : "Institution records are currently being imported from official COA sources. Check back shortly!"}
+                    </p>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearAllFilters}
+                        className="px-5 py-2.5 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition"
+                      >
+                        Clear All Filters
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  /* Cards Grid */
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {paginatedInstitutions.map((inst) => (
+                        <InstitutionCard
+                          key={inst.id}
+                          institution={inst}
+                          isCompared={comparedInstitutions.some((c) => c.id === inst.id)}
+                          onToggleCompare={handleToggleCompare}
+                          canCompare={comparedInstitutions.length < 3}
+                        />
+                      ))}
                     </div>
-                  )}
-                </>
-              )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="mt-8 flex justify-center">
+                        <PaginationControls
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          itemsPerPage={itemsPerPage}
+                          totalItems={totalItems}
+                          onPageChange={(p) => {
+                            setCurrentPage(p);
+                            window.scrollTo({ top: 120, behavior: "smooth" });
+                          }}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* FLOATING COMPARE BAR */}

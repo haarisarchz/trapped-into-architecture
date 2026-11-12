@@ -269,6 +269,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link href="/institutions" className="hover:text-white transition block">
+                Architecture Institutions (COA)
+              </Link>
+            </li>
+            <li>
               <Link href="/subscriptions" className="hover:text-white transition block">
                 Subscriptions &amp; Upgrades
               </Link>

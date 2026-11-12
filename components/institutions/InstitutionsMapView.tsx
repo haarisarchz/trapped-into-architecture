@@ -299,9 +299,9 @@ export default function InstitutionsMapView({
   };
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-5 min-h-[750px]">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-5 h-[calc(100vh-220px)] min-h-[650px] max-h-[850px]">
       {/* LEFT COLUMN: SCROLLABLE COLLEGE CARDS (5 COLS ON DESKTOP) */}
-      <div className="lg:col-span-5 flex flex-col h-[750px] bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs">
+      <div className="lg:col-span-5 flex flex-col h-full bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs">
         {/* Hubs Selector Header */}
         <div className="p-4 border-b border-gray-100 bg-gray-50/80">
           <div className="flex items-center justify-between mb-2.5">
@@ -441,7 +441,7 @@ export default function InstitutionsMapView({
       </div>
 
       {/* RIGHT COLUMN: INTERACTIVE LEAFLET MAP (7 COLS ON DESKTOP) */}
-      <div className="lg:col-span-7 h-[500px] lg:h-[750px] relative rounded-3xl border border-gray-200 overflow-hidden shadow-xs bg-gray-100">
+      <div className="lg:col-span-7 h-[500px] lg:h-full relative rounded-3xl border border-gray-200 overflow-hidden shadow-xs bg-gray-100">
         {/* Map Container */}
         <div ref={mapContainerRef} className="w-full h-full z-0" />
 
