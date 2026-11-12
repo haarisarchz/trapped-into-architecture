@@ -150,15 +150,6 @@ export default function InstitutionsMapView({
           (latest?.approval_status && /closed|closure|discontinued/i.test(latest.approval_status));
 
         const isNirf = !isClosed && !!inst.best_rank;
-        const isMultiYear =
-          !isClosed &&
-          inst.annual_records?.some(
-            (r: any) =>
-              r.academic_year &&
-              r.academic_year >= "2027-2028" &&
-              r.approved_intake > 0 &&
-              !/closure|discontinued/i.test(r.approval_status || "")
-          );
         const isPoly = !isClosed && inst.institution_type === "Polytechnic / Diploma Institution";
 
         // Determine marker icon appearance
@@ -215,31 +206,6 @@ export default function InstitutionsMapView({
           `;
           iconSize = [30, 30];
           iconAnchor = [15, 15];
-        } else if (isMultiYear) {
-          // Emerald Multi-Year Icon
-          markerHtml = `
-            <div style="
-              width: 26px;
-              height: 26px;
-              background: #059669;
-              color: white;
-              border-radius: 50%;
-              border: 2px solid #ffffff;
-              box-shadow: 0 3px 8px rgba(5, 150, 105, 0.4);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 11px;
-              font-weight: bold;
-              cursor: pointer;
-            ">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
-          `;
-          iconSize = [26, 26];
-          iconAnchor = [13, 13];
         } else if (isPoly) {
           // Teal Polytechnic Icon
           markerHtml = `
@@ -545,10 +511,6 @@ export default function InstitutionsMapView({
             <span>NIRF Top 40 Architecture Institute</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700">
-            <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 border border-white shadow-2xs inline-block shrink-0"></span>
-            <span>Multi-Year Advance Sanction</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-700">
             <span className="w-3.5 h-3.5 rounded-full bg-zinc-900 border border-white shadow-2xs inline-block shrink-0"></span>
             <span>Accredited B.Arch / M.Arch College</span>
           </div>
@@ -558,7 +520,7 @@ export default function InstitutionsMapView({
           </div>
           <div className="flex items-center gap-2 text-gray-700">
             <span className="w-3.5 h-3.5 rounded-full bg-gray-400 border border-white shadow-2xs inline-block shrink-0"></span>
-            <span>Closed Institution (0 seats)</span>
+            <span>Closed Institution</span>
           </div>
         </div>
 
