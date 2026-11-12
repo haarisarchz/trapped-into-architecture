@@ -96,13 +96,13 @@ export default function InstitutionsMapView({
       // Add Zoom control at top right
       L.control.zoom({ position: "topright" }).addTo(map);
 
-      // CartoDB Voyager tiles (crisp, modern architectural map styling)
+      // OpenStreetMap standard tiles (100% free, open-source, zero API key required)
       L.tileLayer(
-        "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
           attribution:
-            '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          subdomains: "abcd",
+            '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
+          subdomains: ["a", "b", "c"],
           maxZoom: 19,
         }
       ).addTo(map);
