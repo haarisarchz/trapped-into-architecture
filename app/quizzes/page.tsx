@@ -287,29 +287,7 @@ export default function QuizzesHubPage() {
                   {filteredQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 0;
                     const playsCount = quiz.quiz_scores?.[0]?.count || 0;
-                    const isArchitectQuiz = quiz.slug.includes("architect");
-
-                    // 4 Collage images showing projects and master architects
-                    let collageImages: { img: string; label: string }[] = [];
-                    if (isArchitectQuiz) {
-                      const masters = catalogItems.filter(c => c?.architect && c?.architect_photo?.includes("ik.imagekit.io"));
-                      const works = catalogItems.filter(c => c?.building_name && c?.building_photo?.includes("ik.imagekit.io"));
-                      
-                      collageImages = [
-                        { img: masters[0]?.architect_photo || "https://ik.imagekit.io/ti2a/quizzes/frank-lloyd-wright-architect.jpg", label: masters[0]?.architect || "Frank Lloyd Wright" },
-                        { img: works[0]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/fallingwater-kaufmann-residence-building.jpg", label: works[0]?.building_name || "Fallingwater (Kaufmann Residence)" },
-                        { img: masters[1]?.architect_photo || "https://ik.imagekit.io/ti2a/quizzes/zaha-hadid-architect.jpg", label: masters[1]?.architect || "Zaha Hadid" },
-                        { img: works[1]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/heydar-aliyev-center-building.jpg", label: works[1]?.building_name || "Heydar Aliyev Center" }
-                      ];
-                    } else {
-                      const works = catalogItems.filter(c => c?.building_name && c?.building_photo?.includes("ik.imagekit.io"));
-                      collageImages = [
-                        { img: works[0]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/fallingwater-kaufmann-residence-building.jpg", label: works[0]?.building_name || "Fallingwater" },
-                        { img: works[1]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/sydney-opera-house-building.jpg", label: works[1]?.building_name || "Sydney Opera House" },
-                        { img: works[2]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/salk-institute-for-biological-studies-building.jpg", label: works[2]?.building_name || "Salk Institute" },
-                        { img: works[3]?.building_photo || "https://ik.imagekit.io/ti2a/quizzes/cathedral-of-bras-lia-catedral-metropolitana-building.jpg", label: works[3]?.building_name || "Cathedral of Brasília" }
-                      ];
-                    }
+                    const slug = quiz.slug;
 
                     return (
                       <Link 
@@ -317,48 +295,322 @@ export default function QuizzesHubPage() {
                         href={`/quizzes/${quiz.slug}`}
                         className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col group"
                       >
-                        {/* 4-PHOTO ARCHITECTURAL COLLAGE HEADER */}
-                        <div className="h-52 bg-black relative overflow-hidden grid grid-cols-2 grid-rows-2 gap-1 p-1">
-                          {collageImages.map((c, cIdx) => (
-                            <div key={cIdx} className="relative overflow-hidden group-hover:opacity-95 transition bg-gray-900">
-                              {c.img ? (
-                                <img referrerPolicy="no-referrer" 
-                                  src={c.img} 
-                                  alt={c.label || "Architecture preview"} 
-                                  className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                                  onError={(e) => {
-                                    (e.target as HTMLElement).style.display = "none";
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gray-800 flex items-center justify-center text-xs text-white/40">
-                                  🏛️
+                        {/* BESPOKE QUIZ HEADER TEMPLATES */}
+                        {(() => {
+                          // TEMPLATE 1: Guess the Building -> 4-Quadrant World Landmarks Collage
+                          if (slug === "iconic-world-landmarks-guess-the-building") {
+                            const items = [
+                              { img: "/quizzes/sydney-opera-house.jpg", label: "Sydney Opera House" },
+                              { img: "/quizzes/grand-louvre-pyramid.jpg", label: "Louvre Pyramid" },
+                              { img: "/quizzes/sagrada-familia.jpg", label: "Sagrada Família" },
+                              { img: "/quizzes/fallingwater-kaufmann-residence.jpg", label: "Fallingwater" },
+                            ];
+                            return (
+                              <div className="h-52 bg-black relative overflow-hidden grid grid-cols-2 grid-rows-2 gap-1 p-1">
+                                {items.map((c, i) => (
+                                  <div key={i} className="relative overflow-hidden bg-gray-900 group">
+                                    <img 
+                                      referrerPolicy="no-referrer"
+                                      src={c.img} 
+                                      alt={c.label} 
+                                      className="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                                      onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-1">
+                                      <p className="text-[9px] font-bold text-white truncate drop-shadow-xs">{c.label}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="absolute top-3 left-3 z-10">
+                                  <span className="bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                    🏛️ {quiz.category}
+                                  </span>
                                 </div>
-                              )}
-                              {c.label && (
-                                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-1.5">
-                                  <p className="text-[9px] font-bold text-white truncate drop-shadow-xs">
-                                    {c.label}
+                                <div className="absolute top-3 right-3 z-10">
+                                  <span className="bg-white text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md">
+                                    Landmark Photos
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // TEMPLATE 2: Master Architects: Who Designed It? -> Asymmetric 60/40 Hero + 2 Stacked
+                          if (slug === "master-architects-who-designed-it") {
+                            return (
+                              <div className="h-52 bg-black relative overflow-hidden flex gap-1 p-1">
+                                <div className="w-3/5 h-full relative overflow-hidden bg-gray-900">
+                                  <img 
+                                    referrerPolicy="no-referrer"
+                                    src="/quizzes/chapelle-notre-dame-du-haut-ronchamp.jpg" 
+                                    alt="Ronchamp" 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                                  />
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2">
+                                    <span className="text-[8px] font-extrabold text-purple-300 uppercase tracking-wider block">Featured Masterwork</span>
+                                    <p className="text-[11px] font-bold text-white truncate">Ronchamp (Le Corbusier)</p>
+                                  </div>
+                                </div>
+                                <div className="w-2/5 h-full flex flex-col gap-1">
+                                  <div className="h-1/2 relative overflow-hidden bg-gray-900">
+                                    <img 
+                                      referrerPolicy="no-referrer"
+                                      src="/quizzes/barcelona-pavilion.jpg" 
+                                      alt="Barcelona Pavilion" 
+                                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-1">
+                                      <p className="text-[8px] font-bold text-white truncate">Barcelona Pavilion</p>
+                                    </div>
+                                  </div>
+                                  <div className="h-1/2 relative overflow-hidden bg-gray-900">
+                                    <img 
+                                      referrerPolicy="no-referrer"
+                                      src="/quizzes/guggenheim-museum-bilbao.jpg" 
+                                      alt="Bilbao" 
+                                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-1">
+                                      <p className="text-[8px] font-bold text-white truncate">Guggenheim Bilbao</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="absolute top-3 left-3 z-10">
+                                  <span className="bg-purple-600/90 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                    📐 {quiz.category}
+                                  </span>
+                                </div>
+                                <div className="absolute top-3 right-3 z-10">
+                                  <span className="bg-white text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md">
+                                    Architects + Works
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // TEMPLATE 3: Where in the World? -> 3-Column Skyline Triptych with City Pins
+                          if (slug === "where-in-the-world-guess-the-city-country") {
+                            const skylines = [
+                              { img: "/quizzes/the-shard.jpg", pin: "🇬🇧 London", city: "The Shard" },
+                              { img: "/quizzes/cctv-headquarters.jpg", pin: "🇨🇳 Beijing", city: "CCTV Tower" },
+                              { img: "/quizzes/lotus-temple.jpg", pin: "🇮🇳 New Delhi", city: "Lotus Temple" }
+                            ];
+                            return (
+                              <div className="h-52 bg-black relative overflow-hidden grid grid-cols-3 gap-1 p-1">
+                                {skylines.map((s, i) => (
+                                  <div key={i} className="relative overflow-hidden bg-gray-900">
+                                    <img 
+                                      referrerPolicy="no-referrer"
+                                      src={s.img} 
+                                      alt={s.city} 
+                                      className="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                                    />
+                                    <div className="absolute top-2 inset-x-1 flex justify-center">
+                                      <span className="bg-black/85 backdrop-blur-sm text-amber-300 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border border-amber-400/30 shadow-xs">
+                                        {s.pin}
+                                      </span>
+                                    </div>
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-1 text-center">
+                                      <p className="text-[9px] font-bold text-white truncate">{s.city}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="absolute top-3 left-3 z-10">
+                                  <span className="bg-amber-600/90 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                    🌍 {quiz.category}
+                                  </span>
+                                </div>
+                                <div className="absolute top-3 right-3 z-10">
+                                  <span className="bg-white text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md">
+                                    Global Geography
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // TEMPLATE 4: Architectural Detective -> Mystery Blueprint / Clues Dossier Card
+                          if (slug === "architectural-detective-guess-the-clues") {
+                            return (
+                              <div className="h-52 bg-gradient-to-br from-[#0f172a] via-[#091122] to-[#020617] relative overflow-hidden p-4 flex flex-col justify-between border-b border-cyan-500/20">
+                                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:14px_14px]" />
+                                
+                                <div className="relative z-10 flex items-center justify-between">
+                                  <span className="bg-cyan-500/20 text-cyan-300 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border border-cyan-400/30 flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" /> DOSSIER // ARCHITECTURAL DETECTIVE
+                                  </span>
+                                  <span className="bg-white/10 text-white/90 text-[10px] font-mono px-2 py-0.5 rounded-md border border-white/10">
+                                    NO PHOTOS
+                                  </span>
+                                </div>
+
+                                <div className="relative z-10 my-auto bg-black/50 backdrop-blur-sm rounded-xl p-3 border border-cyan-500/30 shadow-inner">
+                                  <p className="text-[9px] font-mono text-cyan-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                    <span>🔍</span> FORENSIC TEASER:
+                                  </p>
+                                  <p className="text-xs text-gray-200 font-mono italic leading-snug line-clamp-2">
+                                    "Features sunken barrel vaults covered in broken ceramic mosaic tiles that reflect solar heat..."
                                   </p>
                                 </div>
+
+                                <div className="relative z-10 flex items-center justify-between text-[10px] text-gray-400 font-mono">
+                                  <span>3 TECTONIC CLUES PER BUILDING</span>
+                                  <span className="text-cyan-400 font-bold group-hover:translate-x-1 transition">SOLVE →</span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // TEMPLATE 5: Timeline Challenge -> Chronological Horizontal Filmstrip
+                          if (slug === "timeline-challenge-when-was-it-built") {
+                            const eras = [
+                              { year: "1910", name: "Robie House", img: "/quizzes/robie-house-flw.jpg" },
+                              { year: "1931", name: "Villa Savoye", img: "/quizzes/villa-savoye.jpg" },
+                              { year: "1962", name: "TWA Center", img: "/quizzes/twa-flight-center-saarinen.jpg" },
+                              { year: "2012", name: "The Shard", img: "/quizzes/the-shard.jpg" }
+                            ];
+                            return (
+                              <div className="h-52 bg-[#091122] relative overflow-hidden flex flex-col justify-between p-2">
+                                <div className="h-38 grid grid-cols-4 gap-1">
+                                  {eras.map((e, idx) => (
+                                    <div key={idx} className="relative overflow-hidden rounded-lg bg-gray-900 group">
+                                      <img 
+                                        referrerPolicy="no-referrer"
+                                        src={e.img} 
+                                        alt={e.name} 
+                                        className="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                                      />
+                                      <div className="absolute top-1 inset-x-0 flex justify-center">
+                                        <span className="bg-blue-600/90 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full border border-blue-400/40 shadow-xs">
+                                          {e.year}
+                                        </span>
+                                      </div>
+                                      <div className="absolute inset-x-0 bottom-0 bg-black/85 p-1 text-center">
+                                        <p className="text-[8px] font-bold text-white truncate">{e.name}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="h-7 bg-black/60 rounded-lg flex items-center justify-between px-3 text-[10px] text-blue-300 font-extrabold">
+                                  <span>⏪ 1900s Early Modern</span>
+                                  <span className="text-gray-400 font-mono text-[9px]">CHRONOLOGICAL SPRINT</span>
+                                  <span>2020s Contemporary ⏩</span>
+                                </div>
+
+                                <div className="absolute top-3 left-3 z-10">
+                                  <span className="bg-blue-700/90 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                    ⏳ {quiz.category}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // TEMPLATE 6: Architectural Styles & Movements -> 3 Contrasting Movements
+                          if (slug === "architectural-styles-and-movements") {
+                            const styles = [
+                              { name: "Catalan Modernisme", img: "/quizzes/casa-batllo.jpg", badge: "Organic" },
+                              { name: "Brutalism", img: "/quizzes/palace-of-assembly-chandigarh.jpg", badge: "Concrete" },
+                              { name: "High-Tech", img: "/quizzes/centre-pompidou.jpg", badge: "Exposed" }
+                            ];
+                            return (
+                              <div className="h-52 bg-black relative overflow-hidden grid grid-cols-3 gap-1 p-1">
+                                {styles.map((s, idx) => (
+                                  <div key={idx} className="relative overflow-hidden bg-gray-900">
+                                    <img 
+                                      referrerPolicy="no-referrer"
+                                      src={s.img} 
+                                      alt={s.name} 
+                                      className="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                                    />
+                                    <div className="absolute top-2 inset-x-1 flex justify-center">
+                                      <span className="bg-pink-600/90 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded-full border border-pink-400/30">
+                                        {s.badge}
+                                      </span>
+                                    </div>
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-1.5 text-center">
+                                      <p className="text-[9px] font-extrabold text-white leading-tight">{s.name}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="absolute top-3 left-3 z-10">
+                                  <span className="bg-pink-600/90 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                    🎨 {quiz.category}
+                                  </span>
+                                </div>
+                                <div className="absolute top-3 right-3 z-10">
+                                  <span className="bg-white text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md">
+                                    Styles & Theory
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // TEMPLATE 7: Architect's Portfolio: Pair the Masterpieces -> 50/50 Dual Diptych
+                          if (slug === "architects-oeuvre-pair-the-masterpieces") {
+                            return (
+                              <div className="h-52 bg-black relative overflow-hidden flex gap-1 p-1">
+                                <div className="w-1/2 h-full relative overflow-hidden bg-gray-900">
+                                  <img 
+                                    referrerPolicy="no-referrer"
+                                    src="/quizzes/salk-institute.jpg" 
+                                    alt="Salk Institute" 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                                  />
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-2 text-center">
+                                    <span className="text-[8px] font-bold text-teal-300 block">Work A</span>
+                                    <p className="text-[10px] font-bold text-white truncate">Salk Institute</p>
+                                  </div>
+                                </div>
+                                
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-black/90 border border-teal-400/50 text-teal-300 px-2.5 py-1 rounded-full shadow-lg text-[10px] font-bold flex items-center gap-1 backdrop-blur-md">
+                                  <span>⇄</span> Match Pair
+                                </div>
+
+                                <div className="w-1/2 h-full relative overflow-hidden bg-gray-900">
+                                  <img 
+                                    referrerPolicy="no-referrer"
+                                    src="/quizzes/iim-ahmedabad-louis-kahn.jpg" 
+                                    alt="IIM Ahmedabad" 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                                  />
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-2 text-center">
+                                    <span className="text-[8px] font-bold text-teal-300 block">Work B</span>
+                                    <p className="text-[10px] font-bold text-white truncate">IIM Ahmedabad</p>
+                                  </div>
+                                </div>
+
+                                <div className="absolute top-3 left-3 z-10">
+                                  <span className="bg-teal-600/90 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                    👥 {quiz.category}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // Fallback Template: Single Cinematic Cover
+                          return (
+                            <div className="h-52 bg-gray-900 relative overflow-hidden">
+                              {quiz.cover_image && (
+                                <img 
+                                  referrerPolicy="no-referrer"
+                                  src={quiz.cover_image} 
+                                  alt={quiz.title} 
+                                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                                />
                               )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                              <div className="absolute top-3 left-3 z-10">
+                                <span className="bg-black/85 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                  {quiz.category}
+                                </span>
+                              </div>
                             </div>
-                          ))}
-
-                          {/* Category Badge Floating Top Left */}
-                          <div className="absolute top-3 left-3 z-10">
-                            <span className="bg-black/85 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
-                              {quiz.category}
-                            </span>
-                          </div>
-
-                          {/* Preview Tag Floating Top Right */}
-                          <div className="absolute top-3 right-3 z-10">
-                            <span className="bg-white text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md">
-                              {isArchitectQuiz ? "Architects + Works" : "Photo Identification"}
-                            </span>
-                          </div>
-                        </div>
+                          );
+                        })()}
 
                         {/* Card Content */}
                         <div className="p-6 flex-1 flex flex-col justify-between">
