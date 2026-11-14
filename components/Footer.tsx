@@ -280,7 +280,7 @@ export default function Footer() {
             </li>
             <li>
               <Link href="/badges-and-perks" className="hover:text-white transition block">
-                Badges &amp; Perks
+                Badges &amp; Features
               </Link>
             </li>
           </ul>

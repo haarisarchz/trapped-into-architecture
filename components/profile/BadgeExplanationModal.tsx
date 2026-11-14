@@ -292,7 +292,7 @@ export default function BadgeExplanationModal({
             onClick={onClose}
             className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline flex items-center gap-1"
           >
-            <span>View Full Badges &amp; Perks Guide &rarr;</span>
+            <span>View Full Badges &amp; Features Guide &rarr;</span>
           </Link>
           <button
             type="button"

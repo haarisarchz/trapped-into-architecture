@@ -56,11 +56,11 @@ export default function BadgesAndPerksPage() {
           </div>
 
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tight leading-tight max-w-4xl mx-auto">
-            Badges, Tiers &amp; Studio Perks
+            Badges, Tiers &amp; Studio Features
           </h1>
 
           <p className="mt-4 text-sm sm:text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed">
-            Trapped Into Architecture is powered by verified trust. Discover what each level unlocks for architects, designers, and architectural practices across India.
+            Trapped Into Architecture is powered by verified trust. Discover features, privileges, and milestones for architects, designers, and architectural practices across India.
           </p>
 
           {/* STREAMLINED TAB SELECTOR (Member Perks | Studio Perks | Special Badges) */}
@@ -74,7 +74,7 @@ export default function BadgesAndPerksPage() {
               }`}
             >
               <Users size={16} />
-              <span>Member Perks</span>
+              <span>Member Features</span>
             </button>
 
             <button
@@ -86,7 +86,7 @@ export default function BadgesAndPerksPage() {
               }`}
             >
               <Building2 size={16} />
-              <span>Studio Perks</span>
+              <span>Studio Features</span>
             </button>
 
             <button

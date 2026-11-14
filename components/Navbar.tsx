@@ -2289,7 +2289,7 @@ window.location.reload();
                     Complete Your Profile
                   </h4>
                   <p className="text-[11px] text-gray-500 truncate">
-                    Reach Gold Tier (66%+) to post jobs and unlock verified perks.
+                    Reach Gold Tier (66%+) to post jobs, claim studios, and get verified.
                   </p>
                 </div>
                 <ArrowRight size={14} className="text-gray-400 group-hover:text-black transition" />
@@ -2336,7 +2336,7 @@ window.location.reload();
             <div className="flex flex-col sm:flex-row gap-2.5 relative z-10">
               <a
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  "Hey! I just joined Trapped Into Architecture — India's dedicated architectural job, studio directory & professional networking portal. Explore studios, jobs & perks: https://trappedintoarchitecture.com"
+                  "Hey! I just joined Trapped Into Architecture — India's dedicated architectural job, studio directory & professional networking portal. Explore studios, jobs, quizzes & features: https://trappedintoarchitecture.com"
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

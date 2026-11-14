@@ -148,26 +148,41 @@ export default function GuestEngagementSlider() {
       </button>
 
       <div className="flex items-start gap-3.5">
-        {/* MEDAL BADGE */}
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-100 to-amber-200 text-amber-900 flex items-center justify-center text-xl shrink-0 border border-amber-300 shadow-xs">
-          🥉
+        {/* ICON BADGE */}
+        <div className="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+          <Sparkles size={18} />
         </div>
 
         <div className="flex-1 pr-4">
-          <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 mb-1">
-            <Sparkles size={11} className="text-amber-700" />
-            <span>Bronze Member Perk</span>
+          <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200 mb-1">
+            <Sparkles size={11} className="text-black" />
+            <span>Free Member Features</span>
           </div>
 
           <h4 className="text-sm font-extrabold text-gray-900 leading-tight">
-            {isJobPage ? "Bookmark this opening?" : "Unlock Free Architect Dossier"}
+            {isJobPage ? "Save This Opening & Apply Directly" : "Save Openings, Claim Studios & Play Quizzes"}
           </h4>
 
-          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            {isJobPage
-              ? "Create your free architectural dossier to save jobs, get your Bronze Medal (+20% Score), and receive direct recruiter alerts."
-              : "Register free in 15s to claim your Bronze Medal (+20% Score), save openings, and apply to India's top studios."}
-          </p>
+          {isJobPage ? (
+            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+              Create a free account in 15 seconds to <strong>save openings</strong>, track applications, and connect directly with India&apos;s leading architecture firms.
+            </p>
+          ) : (
+            <ul className="mt-2 space-y-1 text-xs text-gray-600 leading-snug">
+              <li className="flex items-center gap-1.5">
+                <span className="text-[12px]">🔖</span>
+                <span><strong>Save Openings:</strong> Bookmark jobs &amp; internships</span>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-[12px]">🏛️</span>
+                <span><strong>Claim Studios:</strong> Manage practice profiles &amp; openings</span>
+              </li>
+              <li className="flex items-center gap-1.5">
+                <span className="text-[12px]">🎯</span>
+                <span><strong>Play Quizzes:</strong> Test knowledge &amp; join leaderboard</span>
+              </li>
+            </ul>
+          )}
 
           <div className="flex items-center gap-2 mt-3.5">
             <button
