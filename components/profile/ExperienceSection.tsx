@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock, Search, Check, ShieldCheck, Sparkles, ExternalLink, X, FileText, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { ExperienceEntry, calculateTotalExperience } from "@/utils/profileCompletion";
+import { ExperienceEntry, calculateTotalExperience, BadgeTier } from "@/utils/profileCompletion";
 import { ORGANIZATION_TYPES } from "@/utils/institutionsData";
 import UploadSuccessDialog from "./UploadSuccessDialog";
 
@@ -13,6 +13,7 @@ interface ExperienceSectionProps {
   experiences: ExperienceEntry[];
   onExperiencesChange: (newExp: ExperienceEntry[]) => void;
   onUploadStateChange?: (isUploading: boolean) => void;
+  badgeTier?: BadgeTier;
 }
 
 interface OrgSuggestion {
@@ -32,6 +33,7 @@ export default function ExperienceSection({
   experiences,
   onExperiencesChange,
   onUploadStateChange,
+  badgeTier = "bronze",
 }: ExperienceSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -53,6 +55,20 @@ export default function ExperienceSection({
   const [certificateSize, setCertificateSize] = useState<number | null>(null);
   const [uploadingCert, setUploadingCert] = useState(false);
   const [certProgress, setCertProgress] = useState(0);
+
+  // Combined certificate storage calculations: 4 MB standard, +5 MB for Platinum (9 MB total)
+  const isPlatinumOrAbove = badgeTier === "platinum" || badgeTier === "diamond";
+  const maxCombinedCertBytes = isPlatinumOrAbove ? 9 * 1024 * 1024 : 4 * 1024 * 1024;
+  const maxCombinedCertMb = isPlatinumOrAbove ? 9 : 4;
+
+  const totalCertificatesUsedBytes = experiences.reduce(
+    (sum, exp) => sum + (exp.certificate_size || 0),
+    0
+  );
+
+  const otherCertificatesBytes = experiences
+    .filter((exp) => exp.id !== editingId)
+    .reduce((sum, exp) => sum + (exp.certificate_size || 0), 0);
 
   // Success dialog state
   const [successDialog, setSuccessDialog] = useState<{
@@ -275,9 +291,25 @@ export default function ExperienceSection({
       return;
     }
 
-    if (file.size > 4 * 1024 * 1024) {
+    // Check combined certificate storage limit across all experiences
+    const totalAfterUpload = otherCertificatesBytes + file.size;
+
+    if (totalAfterUpload > maxCombinedCertBytes) {
+      const remainingBytes = Math.max(0, maxCombinedCertBytes - otherCertificatesBytes);
+      const remainingMb = (remainingBytes / (1024 * 1024)).toFixed(2);
+      const usedMb = (otherCertificatesBytes / (1024 * 1024)).toFixed(2);
+      const fileMb = (file.size / (1024 * 1024)).toFixed(2);
+      const limitLabel = isPlatinumOrAbove ? "9 MB (Platinum Tier: 4MB + 5MB bonus)" : "4 MB";
+
       alert(
-        `Experience Certificate file exceeds the 4 MB limit (your file: ${(file.size / (1024 * 1024)).toFixed(2)} MB). Please select a PDF file under 4 MB.`
+        `Combined Experience Certificates storage limit exceeded!\n\n` +
+        `• Total Allowed Storage: ${limitLabel}\n` +
+        `• Currently Used across other certificates: ${usedMb} MB\n` +
+        `• Remaining Space: ${remainingMb} MB\n` +
+        `• Selected File: ${fileMb} MB\n\n` +
+        (isPlatinumOrAbove
+          ? `Please compress your PDF to ${remainingMb} MB or less.`
+          : `Please compress your PDF to ${remainingMb} MB or less, or reach Platinum Tier (85% profile completion) to unlock +5 MB extra certificate storage (9 MB total)!`)
       );
       e.target.value = "";
       return;
@@ -554,6 +586,62 @@ export default function ExperienceSection({
           </div>
         </div>
       </div>
+
+      {/* Cumulative Experience Certificates Storage Bar */}
+      {isOwner && (
+        <div className="bg-white border border-gray-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+              <FileText size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold text-gray-900">
+                  Combined Experience Certificates Storage
+                </p>
+                {isPlatinumOrAbove ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                    💎 Platinum Perk: 9 MB (4MB + 5MB bonus)
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                    Combined Limit: 4 MB
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Total across all companies:{" "}
+                <span className="font-bold text-gray-800">
+                  {(totalCertificatesUsedBytes / (1024 * 1024)).toFixed(2)} MB
+                </span>{" "}
+                of <span className="font-bold text-gray-800">{maxCombinedCertMb} MB</span> used
+                {!isPlatinumOrAbove && (
+                  <span className="text-amber-700 ml-1 font-medium">
+                    (Reach Platinum tier to unlock +5 MB bonus)
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+          {/* Progress Mini Bar */}
+          <div className="w-full sm:w-36">
+            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden border border-gray-200">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  totalCertificatesUsedBytes > maxCombinedCertBytes * 0.9
+                    ? "bg-red-500"
+                    : totalCertificatesUsedBytes > maxCombinedCertBytes * 0.7
+                    ? "bg-amber-500"
+                    : "bg-blue-600"
+                }`}
+                style={{
+                  width: `${Math.min(100, (totalCertificatesUsedBytes / maxCombinedCertBytes) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Experience List */}
       {sortedExperiences.length === 0 ? (
@@ -878,14 +966,23 @@ export default function ExperienceSection({
                 />
               </div>
 
-              {/* Experience Certificate Attachment (Max 4 MB, PDF Only) */}
+              {/* Experience Certificate Attachment (Combined 4 MB, or 9 MB for Platinum) */}
               <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/70">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
                   <div className="flex items-center gap-2">
                     <FileText size={16} className="text-blue-600" />
                     <span className="text-xs font-bold text-gray-800">Experience Certificate</span>
+                    {isPlatinumOrAbove && (
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-100 border border-purple-200 px-1.5 py-0.5 rounded">
+                        💎 +5MB Platinum Perk
+                      </span>
+                    )}
                   </div>
-                  <span className="text-[10px] text-gray-500 font-semibold">Max 4 MB (PDF only)</span>
+                  <span className="text-[10px] text-gray-500 font-semibold">
+                    {otherCertificatesBytes > 0
+                      ? `${(otherCertificatesBytes / (1024 * 1024)).toFixed(2)} MB of ${maxCombinedCertMb} MB combined used`
+                      : `Max ${maxCombinedCertMb} MB combined limit (PDF only)`}
+                  </span>
                 </div>
 
                 {certificateUrl ? (
@@ -915,7 +1012,11 @@ export default function ExperienceSection({
                 ) : (
                   <label className={`flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg border border-gray-300 cursor-pointer transition ${uploadingCert ? "opacity-60 pointer-events-none" : ""}`}>
                     <Upload size={13} />
-                    <span>{uploadingCert ? `Uploading (${certProgress}%)...` : "Attach Experience Certificate (Max 4MB PDF)"}</span>
+                    <span>
+                      {uploadingCert
+                        ? `Uploading (${certProgress}%)...`
+                        : `Attach Experience Certificate (PDF - ${maxCombinedCertMb}MB Combined Limit)`}
+                    </span>
                     <input
                       type="file"
                       accept=".pdf,application/pdf"
@@ -924,6 +1025,13 @@ export default function ExperienceSection({
                       className="hidden"
                     />
                   </label>
+                )}
+
+                {/* Platinum perk encouragement if not yet platinum */}
+                {!isPlatinumOrAbove && (
+                  <p className="text-[10px] text-amber-700 mt-2 font-medium">
+                    Tip: Platinum members unlock +5 MB extra certificate storage (9 MB total across all firms).
+                  </p>
                 )}
 
                 {/* PROGRESS BAR NEAR CERTIFICATE SECTION */}

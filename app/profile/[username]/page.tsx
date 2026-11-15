@@ -524,6 +524,7 @@ export default function ProfilePage() {
                   experiences={experiences}
                   onExperiencesChange={setExperiences}
                   onUploadStateChange={setIsUploadingDoc}
+                  badgeTier={completion.badgeTier}
                 />
               )}
 
