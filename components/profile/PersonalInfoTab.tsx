@@ -1174,6 +1174,140 @@ export default function PersonalInfoTab({
           )}
         </div>
       </div>
+
+      {/* PHONE / WHATSAPP VERIFICATION MODAL */}
+      {phoneModalOpen && (
+        <div className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-gray-200 space-y-5 animate-in fade-in zoom-in-95 duration-150 relative">
+            <button
+              type="button"
+              onClick={() => setPhoneModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-black p-1 rounded-full cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0">
+                <MessageCircle size={22} />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-gray-900">
+                  Verify Phone Number
+                </h3>
+                <p className="text-xs text-gray-500">
+                  Unlock +5% Profile Score &amp; Verified Badge
+                </p>
+              </div>
+            </div>
+
+            {/* TARGET PHONE */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Target Number
+                </span>
+                <span className="text-sm font-extrabold text-gray-900 font-mono">
+                  {formData.phone || user.phone}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                +5% Score
+              </span>
+            </div>
+
+            {/* STEP 1: SEND ON WHATSAPP */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-700">
+                  Step 1: Your 6-Digit Verification PIN
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyCode}
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                >
+                  {codeCopied ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                  <span>{codeCopied ? "Copied!" : "Copy PIN"}</span>
+                </button>
+              </div>
+
+              <div className="bg-gray-100 border border-gray-200 rounded-2xl p-3 text-center">
+                <span className="text-2xl font-black tracking-widest text-gray-900 font-mono select-all">
+                  {phoneCode}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const targetMsg = `Hi Ti2A! Please verify my phone number for my profile (@${user.username || user.full_name || "candidate"}). My verification code is: ${phoneCode}`;
+                  window.open(
+                    `https://wa.me/918608609661?text=${encodeURIComponent(targetMsg)}`,
+                    "_blank"
+                  );
+                  setWaMessageSent(true);
+                }}
+                className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              >
+                <MessageCircle size={15} />
+                <span>Open WhatsApp &amp; Send to Ti2A Helpline (+91 8608609661)</span>
+              </button>
+              <p className="text-[10px] text-gray-400 text-center">
+                Official Ti2A Helpline: +91 8608609661 • 100% Free
+              </p>
+            </div>
+
+            {/* STEP 2: CONFIRM PIN */}
+            <form onSubmit={handleConfirmPhoneVerification} className="space-y-3 pt-1 border-t border-gray-100">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">
+                  Step 2: Enter PIN to Confirm
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={inputPhoneCode}
+                  onChange={(e) => setInputPhoneCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Enter 6-digit PIN"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-center text-lg font-black tracking-widest font-mono bg-white outline-none focus:border-black"
+                />
+              </div>
+
+              {phoneVerifyError && (
+                <div className="p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center gap-1.5 font-medium">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{phoneVerifyError}</span>
+                </div>
+              )}
+
+              {phoneVerifySuccess && (
+                <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-1.5 font-bold">
+                  <CheckCircle2 size={14} className="shrink-0 text-emerald-600" />
+                  <span>🎉 Phone verified successfully! +5% profile completion score added.</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setPhoneModalOpen(false)}
+                  className="flex-1 py-2.5 border border-gray-200 text-gray-600 hover:text-black font-bold text-xs rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={verifyingPhone || phoneVerifySuccess}
+                  className="flex-1 py-2.5 bg-black hover:bg-gray-800 text-white font-extrabold text-xs rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {verifyingPhone ? "Verifying..." : "Confirm & Claim +5%"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
