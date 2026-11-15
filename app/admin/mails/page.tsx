@@ -10,7 +10,7 @@ import Footer from "@/components/Footer";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { 
   Mail, Send, Search, RefreshCw, Trash2, CheckCircle2, 
-  ExternalLink, Building2, ShieldCheck, X, Sparkles, AlertCircle, MessageSquare, MessageCircle, Check, ChevronRight
+  ExternalLink, Building2, ShieldCheck, X, Sparkles, AlertCircle, MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 
@@ -64,10 +64,10 @@ export default function AdminMailsPage() {
   const [loading, setLoading] = useState(true);
 
   // Tabs: "sent" | "campaign" | "inbox"
-  const [activeTab, setActiveTab] = useState<"sent" | "campaign" | "whatsapp" | "inbox">("sent");
+  const [activeTab, setActiveTab] = useState<"sent" | "campaign" | "inbox">("sent");
 
   // Filter for Sent Mails: "all" | "outreach" | "verification" | "direct"
-  const [sentFilter, setSentFilter] = useState<"all" | "outreach" | "whatsapp" | "verification" | "direct">("all");
+  const [sentFilter, setSentFilter] = useState<"all" | "outreach" | "verification" | "direct">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Records
@@ -90,14 +90,6 @@ export default function AdminMailsPage() {
   const [dispatchingBatch, setDispatchingBatch] = useState(false);
   const [batchSuccessMessage, setBatchSuccessMessage] = useState<string | null>(null);
 
-  // WhatsApp Campaign State
-  const [waStats, setWaStats] = useState<any>(null);
-  const [waNextBatch, setWaNextBatch] = useState<any[]>([]);
-  const [waLoading, setWaLoading] = useState(false);
-  const [waModalOpen, setWaModalOpen] = useState(false);
-  const [waCurrentIndex, setWaCurrentIndex] = useState(0);
-  const [waDispatchedIds, setWaDispatchedIds] = useState<string[]>([]);
-
   useEffect(() => {
     const userStr = localStorage.getItem("currentUser");
     if (!userStr) {
@@ -113,7 +105,6 @@ export default function AdminMailsPage() {
     setCurrentUser(user);
     loadData();
     loadCampaignData();
-    loadWaCampaignData();
   }, [router]);
 
   const loadData = async () => {
@@ -130,43 +121,6 @@ export default function AdminMailsPage() {
       console.error("Error loading mail records:", err.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadWaCampaignData = async () => {
-    setWaLoading(true);
-    try {
-      const res = await fetch("/api/admin/whatsapp-outreach");
-      const data = await res.json();
-      if (data.success) {
-        setWaStats(data.stats);
-        setWaNextBatch(data.nextBatch || []);
-      }
-    } catch (err) {
-      console.error("Error loading WhatsApp campaign:", err);
-    } finally {
-      setWaLoading(false);
-    }
-  };
-
-  const handleSendWhatsAppStudio = async (studio: any) => {
-    window.open(studio.waUrl, "_blank");
-    try {
-      await fetch("/api/admin/whatsapp-outreach", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyId: studio.id,
-          firmName: studio.firmName,
-          phone: studio.fullPhone,
-          slug: studio.slug,
-        }),
-      });
-      setWaDispatchedIds((prev) => [...prev, studio.id]);
-      loadData();
-      loadWaCampaignData();
-    } catch (e) {
-      console.warn("Could not log WhatsApp dispatch:", e);
     }
   };
 
@@ -277,8 +231,6 @@ export default function AdminMailsPage() {
       subj === "USER_VERIFICATION_SENT" ||
       subj === "USER_VERIFIED" ||
       subj === "ADMIN_DIRECT" ||
-      subj === "WHATSAPP_STUDIO_INVITE_SENT" ||
-      subj.startsWith("WHATSAPP_") ||
       subj.startsWith("[Live on Ti2A]") ||
       msg.includes("verification code") ||
       msg.includes("outreach notification") ||
@@ -347,13 +299,13 @@ export default function AdminMailsPage() {
             <AdminQuickMenu />
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2">
-                <span>Mail &amp; WhatsApp Outreach Center</span>
+                <span>Mail &amp; Outreach Center</span>
                 <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                   Verified Domain
                 </span>
               </h1>
               <p className="text-xs text-gray-500 mt-0.5">
-                Multi-channel studio outreach &amp; candidate alerts routed via Email &amp; WhatsApp
+                Dispatches routed from <span className="font-mono text-gray-700">notifications@trappedintoarchitecture.com</span>
               </p>
             </div>
           </div>
@@ -429,7 +381,7 @@ export default function AdminMailsPage() {
           </div>
 
           <button
-            onClick={() => { loadData(); loadCampaignData(); loadWaCampaignData(); }}
+            onClick={() => { loadData(); loadCampaignData(); }}
             className="p-2 bg-white hover:bg-gray-100 border border-gray-200 rounded-xl text-gray-500 hover:text-black transition cursor-pointer"
             title="Refresh"
           >
@@ -695,154 +647,6 @@ export default function AdminMailsPage() {
           </div>
         )}
 
-        
-        {/* ======================================================== */}
-        {/* TAB 2.5: WHATSAPP 10-15 BATCH CAMPAIGN (EXISTING & NEW) */}
-        {/* ======================================================== */}
-        {activeTab === "whatsapp" && (
-          <div className="space-y-6">
-            {/* STATS OVERVIEW */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Studios With WhatsApp</span>
-                <span className="text-2xl font-black text-gray-900 mt-1 block">
-                  {waStats?.totalWithWhatsApp ?? "..."}
-                </span>
-              </div>
-              <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
-                <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider block">Already Invited</span>
-                <span className="text-2xl font-black text-emerald-700 mt-1 block">
-                  {waStats?.alreadyNotifiedCount ?? "..."}
-                </span>
-              </div>
-              <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
-                <span className="text-xs font-bold text-teal-600 uppercase tracking-wider block">Pending Queue</span>
-                <span className="text-2xl font-black text-teal-700 mt-1 block">
-                  {waStats?.pendingCount ?? "..."}
-                </span>
-              </div>
-              <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
-                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider block">Current Batch Ready</span>
-                <span className="text-2xl font-black text-blue-700 mt-1 block">
-                  {waStats?.batchSize ?? "..."}
-                </span>
-              </div>
-            </div>
-
-            {/* ACTION BANNER */}
-            <div className="bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-900 rounded-3xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
-              <div>
-                <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-300 block mb-1">
-                  100% Free WhatsApp Outreach (10–15 Studios / Batch)
-                </span>
-                <h3 className="text-lg font-black text-white">
-                  Next WhatsApp Invite Batch Ready
-                </h3>
-                <p className="text-xs text-emerald-100/80 mt-0.5 max-w-xl">
-                  Dispatches 1-click personalized claim studio invitations directly to practice owners. Uses zero paid APIs and stays within safe messaging volume.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5 shrink-0">
-                <button
-                  disabled={waLoading || (waStats?.pendingCount || 0) === 0}
-                  onClick={() => {
-                    setWaCurrentIndex(0);
-                    setWaModalOpen(true);
-                  }}
-                  className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl text-xs transition shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  <MessageCircle size={15} />
-                  <span>Start Rapid Batch Dispatch ({waNextBatch.length})</span>
-                </button>
-              </div>
-            </div>
-
-            {/* BATCH TABLE (TOP 10-15 STUDIOS) */}
-            <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-2xs">
-              <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-extrabold text-gray-900">
-                    Next {waNextBatch.length} Studios in Queue
-                  </h4>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Click &quot;Send on WhatsApp&quot; to fire individually or use the Rapid Dispatcher above.
-                  </p>
-                </div>
-                <button
-                  onClick={loadWaCampaignData}
-                  className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition cursor-pointer"
-                  title="Refresh Queue"
-                >
-                  <RefreshCw size={13} className={waLoading ? "animate-spin" : ""} />
-                </button>
-              </div>
-
-              {waLoading ? (
-                <div className="p-12 text-center text-xs text-gray-400">Loading WhatsApp batch...</div>
-              ) : waNextBatch.length === 0 ? (
-                <div className="p-12 text-center text-xs text-gray-500">
-                  🎉 All studios with WhatsApp numbers have been invited! No pending studios in queue.
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100">
-                  {waNextBatch.map((studio, idx) => {
-                    const isDispatched = waDispatchedIds.includes(studio.id);
-                    return (
-                      <div
-                        key={studio.id}
-                        className="px-4 py-3.5 hover:bg-slate-50 transition flex items-center justify-between gap-3 text-xs"
-                      >
-                        {/* LEFT: NUMBER + FIRM */}
-                        <div className="flex items-center gap-3 min-w-[240px] max-w-[280px] shrink-0">
-                          <span className="w-6 h-6 rounded-lg bg-gray-100 text-gray-600 font-bold flex items-center justify-center text-[11px] shrink-0">
-                            {idx + 1}
-                          </span>
-                          <div className="truncate">
-                            <span className="font-extrabold text-gray-900 block truncate">{studio.firmName}</span>
-                            <span className="text-[11px] text-gray-500 font-mono block truncate">
-                              +{studio.fullPhone}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* MIDDLE: LOCATION & PREVIEW */}
-                        <div className="flex-1 min-w-0 flex items-center gap-2">
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">
-                            {[studio.city, studio.state].filter(Boolean).join(", ") || "India"}
-                          </span>
-                          <span className="truncate text-gray-400 text-[11px]">
-                            {studio.claimUrl}
-                          </span>
-                        </div>
-
-                        {/* RIGHT: ACTION */}
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isDispatched ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
-                              <Check size={12} />
-                              <span>Dispatched</span>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleSendWhatsAppStudio(studio)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer whitespace-nowrap"
-                            >
-                              <MessageCircle size={13} />
-                              <span>Send on WhatsApp</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* TAB 3: INBOUND REPLIES */}
         {activeTab === "inbox" && (
           <div className="space-y-4">
@@ -955,144 +759,6 @@ export default function AdminMailsPage() {
         )}
 
       </div>
-
-
-      {/* ======================================================== */}
-      {/* RAPID BATCH DISPATCHER MODAL (10-15 STUDIOS STEPPER)     */}
-      {/* ======================================================== */}
-      {waModalOpen && waNextBatch.length > 0 && (() => {
-        const currentStudio = waNextBatch[waCurrentIndex] || waNextBatch[0];
-        const isLast = waCurrentIndex >= waNextBatch.length - 1;
-
-        const handleStepForward = async () => {
-          // 1. Open WhatsApp
-          window.open(currentStudio.waUrl, "_blank");
-
-          // 2. Log in DB
-          try {
-            await fetch("/api/admin/whatsapp-outreach", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                companyId: currentStudio.id,
-                firmName: currentStudio.firmName,
-                phone: currentStudio.fullPhone,
-                slug: currentStudio.slug,
-              }),
-            });
-            setWaDispatchedIds((prev) => [...prev, currentStudio.id]);
-          } catch (e) {
-            console.warn("Could not log dispatch:", e);
-          }
-
-          // 3. Advance or close
-          if (isLast) {
-            setWaModalOpen(false);
-            setWaCurrentIndex(0);
-            loadData();
-            loadWaCampaignData();
-          } else {
-            setWaCurrentIndex((prev) => prev + 1);
-          }
-        };
-
-        const handleSkip = () => {
-          if (isLast) {
-            setWaModalOpen(false);
-            setWaCurrentIndex(0);
-          } else {
-            setWaCurrentIndex((prev) => prev + 1);
-          }
-        };
-
-        return (
-          <div className="fixed inset-0 z-[130] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 space-y-5 animate-in fade-in zoom-in-95 duration-150 relative">
-              <button
-                type="button"
-                onClick={() => setWaModalOpen(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-black p-1 rounded-full cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-
-              <div className="flex items-center justify-between pr-8">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center">
-                    <MessageCircle size={18} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-extrabold text-gray-900">
-                      Rapid WhatsApp Dispatcher
-                    </h3>
-                    <p className="text-[11px] text-gray-500">
-                      Batch of {waNextBatch.length} Studios • 100% Free
-                    </p>
-                  </div>
-                </div>
-
-                <span className="text-xs font-mono font-bold bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full">
-                  {waCurrentIndex + 1} / {waNextBatch.length}
-                </span>
-              </div>
-
-              {/* PROGRESS BAR */}
-              <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                <div
-                  className="bg-emerald-500 h-full transition-all duration-300"
-                  style={{ width: `${((waCurrentIndex + 1) / waNextBatch.length) * 100}%` }}
-                />
-              </div>
-
-              {/* CURRENT STUDIO CARD */}
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Target Studio</div>
-                    <h4 className="text-lg font-black text-gray-900 leading-snug">{currentStudio.firmName}</h4>
-                    <p className="text-xs text-gray-500">
-                      {[currentStudio.city, currentStudio.state].filter(Boolean).join(", ") || "India"}
-                    </p>
-                  </div>
-                  <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                    +{currentStudio.fullPhone}
-                  </span>
-                </div>
-              </div>
-
-              {/* MESSAGE CARD PREVIEW */}
-              <div className="space-y-1">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Prefilled Invitation Message:</div>
-                <div className="bg-white border border-gray-200 rounded-xl p-3 text-xs text-gray-700 leading-relaxed font-mono whitespace-pre-wrap max-h-36 overflow-y-auto">
-                  {currentStudio.inviteText}
-                </div>
-              </div>
-
-              {/* BUTTONS */}
-              <div className="flex items-center gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleStepForward}
-                  className="flex-1 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                >
-                  <MessageCircle size={15} />
-                  <span>{isLast ? "Open in WhatsApp & Finish Batch ✓" : "Open in WhatsApp & Next ➡️"}</span>
-                </button>
-
-                {!isLast && (
-                  <button
-                    type="button"
-                    onClick={handleSkip}
-                    className="py-3 px-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition cursor-pointer"
-                  >
-                    Skip ⏩
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* READING MODAL (RECIPIENT VIEW VS AUDIT LOG) */}
       {selectedItem && (() => {

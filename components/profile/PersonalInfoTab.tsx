@@ -18,6 +18,7 @@ import {
   Info,
   Clock,
   RotateCcw,
+  HelpCircle,
 } from "lucide-react";
 import { LinkedInBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
@@ -28,21 +29,54 @@ interface PersonalInfoTabProps {
   isUploadingDoc?: boolean;
 }
 
+function FieldInfoTooltip({ text, title }: { text: string; title?: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <span className="relative inline-flex items-center ml-1.5 align-middle select-none">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        className="text-gray-400 hover:text-black transition cursor-pointer p-0.5 rounded-full hover:bg-gray-200/70 inline-flex items-center justify-center"
+        aria-label="Info"
+      >
+        <HelpCircle size={13} />
+      </button>
+
+      {open && (
+        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-[11px] font-normal normal-case rounded-xl shadow-xl z-50 pointer-events-none leading-relaxed animate-in fade-in zoom-in-95 duration-150">
+          {title && <span className="font-bold text-amber-300 block mb-1 text-xs">{title}</span>}
+          <span>{text}</span>
+          <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 const USER_TRACKS = [
   { value: "job_seeker", label: "🎯 Job Seeker / Candidate" },
   { value: "student", label: "🎓 Architecture Student / Intern" },
-  { value: "recruiter", label: "🏢 Recruiter / Architecture Firm" },
+  { value: "recruiter", label: "🏢 Firm Owner / Company Admin / Recruiter" },
   { value: "academician", label: "🏛️ Academician / Researcher / Educator" },
   { value: "freelancer", label: "💼 Freelancer / Design Consultant" },
-  { value: "explorer", label: "☕ Explorer / Architecture Enthusiast" },
+  { value: "explorer", label: "☕ Explorer / Casual Surfer / Reader" },
 ];
 
 const VALID_PROFESSIONS = [
   "Practising Architect",
   "Academician",
+  "Practising Architect & Academician",
   "Undergraduate Student",
   "Postgraduate Student",
   "Research Scholar",
+  "Freelance Architect / Consultant",
 ];
 
 const GENDER_OPTIONS = [
@@ -507,8 +541,12 @@ export default function PersonalInfoTab({
 
         {/* DISPLAY NAME */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Display Name
+          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center">
+            <span>Display Name</span>
+            <FieldInfoTooltip
+              title="Display Name"
+              text="Your public short name displayed across jobs, discussions, and your public profile (e.g. Ar. Haaris)."
+            />
           </label>
           {isEditing ? (
             <input
@@ -527,8 +565,12 @@ export default function PersonalInfoTab({
 
         {/* TAGLINE / HEADLINE */}
         <div className="md:col-span-2">
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Professional Tagline / Headline (LinkedIn Style)
+          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center">
+            <span>Professional Tagline / Headline (LinkedIn Style)</span>
+            <FieldInfoTooltip
+              title="Professional Tagline"
+              text="A one-line professional headline highlighting your primary expertise or dual roles (e.g. Principal Architect at Studio X | Associate Professor at College Y)."
+            />
           </label>
           {isEditing ? (
             <input
@@ -547,8 +589,12 @@ export default function PersonalInfoTab({
 
         {/* USER TRACK */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Profile Track
+          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center">
+            <span>Profile Track</span>
+            <FieldInfoTooltip
+              title="Profile Track (Platform Intent)"
+              text="Your goal on TI2A: Tells firms and candidates what you are here to do (e.g. actively seeking jobs, hiring for a firm, freelancing, or casually surfing & reading)."
+            />
           </label>
           {isEditing ? (
             <select
@@ -569,8 +615,13 @@ export default function PersonalInfoTab({
 
         {/* PROFESSION */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Profession <span className="text-red-500">*</span>
+          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center">
+            <span>Profession</span>
+            <span className="text-red-500 ml-0.5">*</span>
+            <FieldInfoTooltip
+              title="Profession (Industry Identity)"
+              text="Your real-world vocational identity in the architecture community (e.g. Practising Architect, Academician, Student, or Dual Practice & Teaching)."
+            />
           </label>
           {isEditing ? (
             <select
@@ -592,8 +643,12 @@ export default function PersonalInfoTab({
 
         {/* HIGHEST QUALIFICATION */}
         <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">
-            Highest Qualification
+          <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center">
+            <span>Highest Qualification</span>
+            <FieldInfoTooltip
+              title="Highest Qualification"
+              text="Your highest completed academic degree level in architecture, planning, or allied design disciplines."
+            />
           </label>
           {isEditing ? (
             <select
@@ -951,8 +1006,12 @@ export default function PersonalInfoTab({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-600 block">
-                  COA Number
+                <label className="text-xs font-bold uppercase tracking-wider text-gray-600 flex items-center">
+                  <span>COA Number</span>
+                  <FieldInfoTooltip
+                    title="Council of Architecture (COA)"
+                    text="Your CA/YYYY/XXXXX registration number issued by COA India. Validates your official registration as an architect."
+                  />
                 </label>
                 {user.hide_coa && (
                   <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-semibold border border-amber-200">
