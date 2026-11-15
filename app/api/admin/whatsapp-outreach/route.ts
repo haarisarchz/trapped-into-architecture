@@ -15,7 +15,7 @@ export async function GET() {
       (notifiedRecords || []).map((r) => (r.name || "").trim().toLowerCase())
     );
 
-    // 2. Fetch all unclaimed companies with phone or whatsapp
+    // 2. Fetch all unclaimed companies
     const { data: companies, error: compErr } = await supabase
       .from("companies")
       .select("id, firm_name, phone, whatsapp, slug, city, state, logo_url, is_claimed")
@@ -25,10 +25,39 @@ export async function GET() {
       return NextResponse.json({ error: compErr.message }, { status: 500 });
     }
 
-    const allWithPhone = (companies || []).filter((c) => {
-      const raw = (c.whatsapp || c.phone || "").replace(/\D/g, "");
-      return raw.length >= 10 && !c.is_claimed;
+    // 3. Fallback: extract mobile numbers from jobs description/links if company profile is missing phone
+    const { data: jobsWithDesc } = await supabase
+      .from("jobs")
+      .select("firm_name, job_description, apply_link")
+      .not("job_description", "is", null);
+
+    const jobPhoneMap = new Map<string, string>();
+    const phoneRegex = /(?:\+?91[\s.-]?)?([6-9]\d{9})/g;
+
+    (jobsWithDesc || []).forEach((j) => {
+      const text = `${j.job_description || ""} ${j.apply_link || ""}`;
+      let match;
+      while ((match = phoneRegex.exec(text)) !== null) {
+        const key = (j.firm_name || "").trim().toLowerCase();
+        if (key && !jobPhoneMap.has(key)) {
+          jobPhoneMap.set(key, match[1]);
+        }
+      }
     });
+
+    const allWithPhone = (companies || [])
+      .map((c) => {
+        let phone = c.whatsapp || c.phone || "";
+        if (!phone) {
+          const fallback = jobPhoneMap.get((c.firm_name || "").trim().toLowerCase());
+          if (fallback) phone = fallback;
+        }
+        return { ...c, effectivePhone: phone };
+      })
+      .filter((c) => {
+        const raw = (c.effectivePhone || "").replace(/\D/g, "");
+        return raw.length >= 10 && !c.is_claimed;
+      });
 
     const pending = allWithPhone.filter((c) => {
       const key = (c.firm_name || "").trim().toLowerCase();
@@ -36,7 +65,7 @@ export async function GET() {
     });
 
     const nextBatch = pending.slice(0, 15).map((c) => {
-      const raw = (c.whatsapp || c.phone || "").replace(/\D/g, "");
+      const raw = (c.effectivePhone || "").replace(/\D/g, "");
       const fullPhone = raw.length === 10 ? `91${raw}` : raw;
       const slug = c.slug || c.firm_name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       const claimUrl = `${siteUrl}/companies/${slug}`;
@@ -45,7 +74,7 @@ export async function GET() {
       return {
         id: c.id,
         firmName: c.firm_name,
-        rawPhone: c.whatsapp || c.phone,
+        rawPhone: c.effectivePhone,
         fullPhone,
         slug,
         claimUrl,

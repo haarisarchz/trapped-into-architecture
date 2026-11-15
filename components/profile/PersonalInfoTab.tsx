@@ -21,6 +21,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { LinkedInBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
+import MultiChipSelector, { ChipOption } from "./MultiChipSelector";
 
 interface PersonalInfoTabProps {
   user: any;
@@ -60,23 +61,42 @@ function FieldInfoTooltip({ text, title }: { text: string; title?: string }) {
   );
 }
 
-const USER_TRACKS = [
-  { value: "job_seeker", label: "🎯 Job Seeker / Candidate" },
-  { value: "student", label: "🎓 Architecture Student / Intern" },
-  { value: "recruiter", label: "🏢 Firm Owner / Company Admin / Recruiter" },
-  { value: "academician", label: "🏛️ Academician / Researcher / Educator" },
-  { value: "freelancer", label: "💼 Freelancer / Design Consultant" },
-  { value: "explorer", label: "☕ Explorer / Casual Surfer / Reader" },
+export const PROFILE_TRACK_OPTIONS: ChipOption[] = [
+  { value: "job_seeker", label: "🎯 Job Seeker / Candidate", desc: "Applying for architecture & design jobs" },
+  { value: "internship_seeker", label: "📐 Internship Seeker", desc: "Seeking semester practical training & internships" },
+  { value: "student", label: "🎓 Architecture Student (Studies & Thesis)", desc: "Exploring syllabus, thesis & college papers" },
+  { value: "exam_aspirant", label: "📝 Exam Aspirant (GATE / NATA / UPSC / CPWD)", desc: "Practicing exam question papers & test prep" },
+  { value: "quiz_player", label: "🧠 Quiz Competitor / Trivia Player", desc: "Playing architecture quizzes & climbing leaderboards" },
+  { value: "firm_owner", label: "🏢 Firm Owner / Practice Principal", desc: "Managing firm profile, projects & company presence" },
+  { value: "recruiter", label: "👔 Recruiter / Talent Scout", desc: "Posting jobs & scouting architecture candidates" },
+  { value: "freelancer", label: "💼 Freelancer / Design Consultant", desc: "Open to freelance 3D, BIM, drafting & project gigs" },
+  { value: "collaborator", label: "🤝 Design Collaborator / Joint Ventures", desc: "Seeking project associations with other firms" },
+  { value: "academician", label: "🏛️ Academician / Researcher / Educator", desc: "Faculty networking, research papers & pedagogy" },
+  { value: "institution_rep", label: "🏫 College / Institution Representative", desc: "Managing college profile, admissions & faculty" },
+  { value: "juror_mentor", label: "🌟 Design Juror / Thesis Mentor / Speaker", desc: "Available for design juries, guest lectures & reviews" },
+  { value: "writer", label: "📰 Architectural Writer / Critic / Journalist", desc: "Publishing design stories, news & firm features" },
+  { value: "explorer", label: "☕ Casual Explorer / Architecture Reader", desc: "Browsing news feeds, trending projects & articles" },
 ];
 
-const VALID_PROFESSIONS = [
-  "Practising Architect",
-  "Academician",
-  "Practising Architect & Academician",
-  "Undergraduate Student",
-  "Postgraduate Student",
-  "Research Scholar",
-  "Freelance Architect / Consultant",
+export const PROFESSION_OPTIONS: ChipOption[] = [
+  { value: "Assistant Professor", label: "Assistant Professor", desc: "Teaching & research faculty in architecture college" },
+  { value: "Associate Professor", label: "Associate Professor", desc: "Senior academic teaching & studio mentor" },
+  { value: "Professor", label: "Professor", desc: "Senior professorship / design chair" },
+  { value: "Dean / Director / HOD", label: "Dean / Director / HOD", desc: "Head of architecture department or school" },
+  { value: "Visiting Faculty", label: "Visiting Faculty / Juror", desc: "Visiting design instructor / external juror" },
+  { value: "Principal Architect", label: "Principal Architect / Partner", desc: "Founder, partner or head of architecture firm" },
+  { value: "Practising Architect", label: "Practising Architect", desc: "Licensed architect actively executing projects" },
+  { value: "Project Architect", label: "Project Architect / Senior Architect", desc: "Leading project delivery, client & site coordination" },
+  { value: "Junior Architect", label: "Junior Architect", desc: "Entry-level architect, drafting & design development" },
+  { value: "Landscape Architect", label: "Landscape Architect", desc: "Specialist in outdoor public & private landscapes" },
+  { value: "Urban Designer / Planner", label: "Urban Designer / Urban Planner", desc: "City planning, masterplanning & urban spaces" },
+  { value: "Interior Architect / Designer", label: "Interior Architect / Designer", desc: "Interior spaces, spatial styling & detail design" },
+  { value: "BIM Coordinator / Architect", label: "BIM Coordinator / Computational Designer", desc: "Revit, BIM management & computational modeling" },
+  { value: "Architectural Visualizer", label: "Architectural Visualizer / 3D Artist", desc: "3D rendering, animation & CGI visualization" },
+  { value: "Conservation Architect", label: "Conservation / Heritage Architect", desc: "Historic preservation & architectural restoration" },
+  { value: "Architecture Student", label: "Architecture Student", desc: "Enrolled in B.Arch / M.Arch / Diploma degree" },
+  { value: "Research Scholar", label: "Research Scholar / PhD Candidate", desc: "Doctoral researcher in architectural studies" },
+  { value: "Freelance Architect", label: "Freelance Architect / Consultant", desc: "Independent design consultant" },
 ];
 
 const GENDER_OPTIONS = [
@@ -106,6 +126,34 @@ export default function PersonalInfoTab({
   const [hasDraftAvailable, setHasDraftAvailable] = useState(false);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
 
+  // Helper to parse comma-separated or JSON string to chip array
+  const parseToChips = (val: any): string[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val.filter(Boolean);
+    if (typeof val === "string") {
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed.filter(Boolean);
+      } catch (e) {}
+      return val.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+    return [];
+  };
+
+  const [selectedTracks, setSelectedTracks] = useState<string[]>(() =>
+    parseToChips(user?.user_track || "job_seeker")
+  );
+  const [selectedProfessions, setSelectedProfessions] = useState<string[]>(() =>
+    parseToChips(user?.profession || "")
+  );
+
+  // Sync state when user prop updates
+  React.useEffect(() => {
+    setSelectedTracks(parseToChips(user?.user_track || "job_seeker"));
+    setSelectedProfessions(parseToChips(user?.profession || ""));
+    setFormData({ ...user });
+  }, [user]);
+
   // Check for saved local draft on mount
   React.useEffect(() => {
     if (!user?.id) return;
@@ -114,7 +162,6 @@ export default function PersonalInfoTab({
       if (rawDraft) {
         const parsed = JSON.parse(rawDraft);
         if (parsed && parsed.data) {
-          // Verify if draft has any differences
           const isDifferent = Object.keys(parsed.data).some(
             (k) => parsed.data[k] !== user[k] && parsed.data[k] !== undefined
           );
@@ -140,11 +187,18 @@ export default function PersonalInfoTab({
       try {
         localStorage.setItem(
           `ti2a_profile_draft_${user.id}`,
-          JSON.stringify({ data: formData, timestamp: Date.now() })
+          JSON.stringify({
+            data: {
+              ...formData,
+              user_track: selectedTracks.join(", "),
+              profession: selectedProfessions.join(", "),
+            },
+            timestamp: Date.now(),
+          })
         );
       } catch (e) {}
     }
-  }, [formData, isEditing, user?.id]);
+  }, [formData, selectedTracks, selectedProfessions, isEditing, user?.id]);
 
   const handleResumeDraft = () => {
     try {
@@ -153,6 +207,8 @@ export default function PersonalInfoTab({
         const parsed = JSON.parse(rawDraft);
         if (parsed && parsed.data) {
           setFormData(parsed.data);
+          if (parsed.data.user_track) setSelectedTracks(parseToChips(parsed.data.user_track));
+          if (parsed.data.profession) setSelectedProfessions(parseToChips(parsed.data.profession));
           setIsEditing(true);
           setHasDraftAvailable(false);
         }
@@ -163,6 +219,8 @@ export default function PersonalInfoTab({
   const handleDiscardDraft = () => {
     try {
       localStorage.removeItem(`ti2a_profile_draft_${user.id}`);
+      setSelectedTracks(parseToChips(user?.user_track || "job_seeker"));
+      setSelectedProfessions(parseToChips(user?.profession || ""));
       setHasDraftAvailable(false);
     } catch (e) {}
   };
@@ -366,10 +424,18 @@ export default function PersonalInfoTab({
       return;
     }
 
-    if (!formData.profession || !VALID_PROFESSIONS.includes(formData.profession)) {
-      alert("Please select a valid Profession. It is required.");
+    if (selectedProfessions.length === 0) {
+      alert("Please select or enter at least one Profession. It is required.");
       return;
     }
+
+    if (selectedTracks.length === 0) {
+      alert("Please select at least one Profile Track.");
+      return;
+    }
+
+    const userTrackString = selectedTracks.join(", ");
+    const professionString = selectedProfessions.join(", ");
 
     setSaving(true);
     try {
@@ -386,13 +452,13 @@ export default function PersonalInfoTab({
         portfolio_url: formData.portfolio_url || null,
         twitter_url: formData.twitter_url || null,
         dob: formData.dob || null,
-        profession: formData.profession,
+        profession: professionString,
         education: formData.education || null,
         bio: formData.bio || null,
         tagline: formData.tagline || null,
         gender: formData.gender || null,
         highest_qualification: formData.highest_qualification || null,
-        user_track: formData.user_track || "job_seeker",
+        user_track: userTrackString || "job_seeker",
         coa_number: formData.coa_number || null,
         coa_valid_until: formData.coa_valid_until || null,
         coa_is_active: Boolean(formData.coa_is_active),
