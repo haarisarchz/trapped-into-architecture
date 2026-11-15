@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock, Search, Check, ShieldCheck, Sparkles, ExternalLink, X } from "lucide-react";
+import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock, Search, Check, ShieldCheck, Sparkles, ExternalLink, X, FileText, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ExperienceEntry, calculateTotalExperience } from "@/utils/profileCompletion";
 import { ORGANIZATION_TYPES } from "@/utils/institutionsData";
@@ -45,6 +45,10 @@ export default function ExperienceSection({
   const [endDate, setEndDate] = useState("");
   const [isCurrent, setIsCurrent] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
+  const [certificateName, setCertificateName] = useState<string | null>(null);
+  const [certificateSize, setCertificateSize] = useState<number | null>(null);
+  const [uploadingCert, setUploadingCert] = useState(false);
 
   // Autocomplete State
   const [orgSuggestions, setOrgSuggestions] = useState<OrgSuggestion[]>([]);
@@ -225,6 +229,55 @@ export default function ExperienceSection({
     }
   };
 
+  const handleCertificateUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      alert(`Certificate file exceeds 4 MB limit (${(file.size / (1024 * 1024)).toFixed(1)} MB). Please select a file under 4 MB.`);
+      return;
+    }
+
+    setUploadingCert(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "/experience-certificates");
+
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          setCertificateUrl(data.url);
+          setCertificateName(file.name);
+          setCertificateSize(file.size);
+          return;
+        }
+      }
+
+      // fallback to Supabase
+      const ext = file.name.split(".").pop() || "pdf";
+      const fn = `cert-${userId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("applicant-docs").upload(fn, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: pubData } = supabase.storage.from("applicant-docs").getPublicUrl(fn);
+      setCertificateUrl(pubData.publicUrl);
+      setCertificateName(file.name);
+      setCertificateSize(file.size);
+    } catch (err: any) {
+      console.error("Certificate upload error:", err);
+      alert(err.message || "Failed to upload certificate");
+    } finally {
+      setUploadingCert(false);
+    }
+  };
+
+  const handleRemoveCertificate = () => {
+    setCertificateUrl(null);
+    setCertificateName(null);
+    setCertificateSize(null);
+  };
+
   const resetForm = () => {
     setFirmName("");
     setOrganizationType(ORGANIZATION_TYPES[0]);
@@ -236,6 +289,9 @@ export default function ExperienceSection({
     setEndDate("");
     setIsCurrent(false);
     setSelectedOrgId(null);
+    setCertificateUrl(null);
+    setCertificateName(null);
+    setCertificateSize(null);
     setEditingId(null);
   };
 
@@ -256,6 +312,9 @@ export default function ExperienceSection({
     setEndDate(entry.end_date || "");
     setIsCurrent(Boolean(entry.is_current));
     setSelectedOrgId((entry as any).company_id || null);
+    setCertificateUrl(entry.certificate_url || null);
+    setCertificateName(entry.certificate_name || null);
+    setCertificateSize(entry.certificate_size || null);
     setModalOpen(true);
   };
 
@@ -275,6 +334,9 @@ export default function ExperienceSection({
         start_date: startDate,
         end_date: isCurrent ? null : endDate || null,
         is_current: isCurrent,
+        certificate_url: certificateUrl,
+        certificate_name: certificateName,
+        certificate_size: certificateSize,
       };
 
       if (selectedOrgId) {
@@ -448,6 +510,22 @@ export default function ExperienceSection({
                     <p className="mt-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 whitespace-pre-wrap leading-relaxed">
                       {exp.role_description}
                     </p>
+                  )}
+
+                  {/* Certificate Link if attached */}
+                  {exp.certificate_url && (
+                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold">
+                      <FileText size={13} />
+                      <a
+                        href={exp.certificate_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline flex items-center gap-1"
+                      >
+                        <span>{exp.certificate_name || "Experience Certificate"}</span>
+                        <ExternalLink size={11} />
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>
@@ -687,6 +765,54 @@ export default function ExperienceSection({
                   placeholder="Outline key project typologies, BIM coordination, client presentations, construction drawings, or academic courses taught..."
                   className="w-full border border-gray-300 rounded-xl p-3 text-sm bg-white"
                 />
+              </div>
+
+              {/* Experience Certificate Attachment (Max 4 MB) */}
+              <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/70">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-blue-600" />
+                    <span className="text-xs font-bold text-gray-800">Experience Certificate</span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 font-semibold">Max 4 MB (PDF/JPG/PNG)</span>
+                </div>
+
+                {certificateUrl ? (
+                  <div className="bg-white p-2.5 rounded-lg border border-gray-200 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-700 truncate max-w-[200px]">
+                      {certificateName || "Certificate attached"}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <a
+                        href={certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline p-1"
+                      >
+                        Preview
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCertificate}
+                        className="text-xs text-red-500 hover:text-red-700 p-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg border border-gray-300 cursor-pointer transition">
+                    <Upload size={13} />
+                    <span>{uploadingCert ? "Uploading..." : "Attach Experience Certificate (PDF/Image)"}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={handleCertificateUpload}
+                      disabled={uploadingCert}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
               {/* Action Buttons */}

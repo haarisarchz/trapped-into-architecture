@@ -29,6 +29,8 @@ import PersonalInfoTab from "@/components/profile/PersonalInfoTab";
 import EducationSection from "@/components/profile/EducationSection";
 import ExperienceSection from "@/components/profile/ExperienceSection";
 import ProfileSettingsTab from "@/components/profile/ProfileSettingsTab";
+import SmartApplyDocumentsCard from "@/components/profile/SmartApplyDocumentsCard";
+import AutomaticMailContentEditor from "@/components/profile/AutomaticMailContentEditor";
 import {
   calculateProfileCompletion,
   calculateTotalExperience,
@@ -108,6 +110,17 @@ export default function ProfilePage() {
           likes_count: profile.likes_count || 0,
           email_verified: Boolean(profile.email_verified || profile.is_email_verified),
           phone_verified: Boolean(profile.phone_verified || profile.is_phone_verified),
+          // TI2A Smart Apply fields
+          resume_url: profile.resume_url || "",
+          resume_name: profile.resume_name || "",
+          resume_size: profile.resume_size || 0,
+          portfolio_file_url: profile.portfolio_file_url || "",
+          portfolio_file_name: profile.portfolio_file_name || "",
+          portfolio_file_size: profile.portfolio_file_size || 0,
+          docs_uploaded_at: profile.docs_uploaded_at || null,
+          docs_expires_at: profile.docs_expires_at || null,
+          custom_mail_subject: profile.custom_mail_subject || null,
+          custom_mail_body: profile.custom_mail_body || null,
         };
 
         setUser(formattedUser);
@@ -451,6 +464,22 @@ export default function ProfilePage() {
                 isOwner={isOwner}
                 onUserUpdate={handleUserUpdate}
               />
+
+              {/* TI2A SMART APPLY DOCUMENTS (Resume & Portfolio) */}
+              <SmartApplyDocumentsCard
+                user={user}
+                isOwner={isOwner}
+                onUserUpdate={handleUserUpdate}
+              />
+
+              {/* TI2A SMART APPLY AUTOMATIC MAIL CONTENT EDITOR (Owner only) */}
+              {isOwner && (
+                <AutomaticMailContentEditor
+                  user={user}
+                  isOwner={isOwner}
+                  onUserUpdate={handleUserUpdate}
+                />
+              )}
 
               {/* Work Experience with cumulative duration & roles (or Private Notice) */}
               {(!isOwner && user.hide_experience) ? (

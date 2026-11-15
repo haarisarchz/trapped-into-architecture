@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GuestEngagementSlider from "@/components/GuestEngagementSlider";
+import SmartApplyExpiryBanner from "@/components/SmartApplyExpiryBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -147,6 +148,7 @@ export default function RootLayout({
         />
         {children}
         <GuestEngagementSlider />
+        <SmartApplyExpiryBanner />
       </body>
     </html>
   );
