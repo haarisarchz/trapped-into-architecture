@@ -10,7 +10,7 @@ import Footer from "@/components/Footer";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { 
   Mail, Send, Search, RefreshCw, Trash2, CheckCircle2, 
-  ExternalLink, Building2, ShieldCheck, X, Sparkles, AlertCircle, MessageSquare
+  ExternalLink, Building2, ShieldCheck, X, Sparkles, AlertCircle, MessageSquare, MessageCircle
 } from "lucide-react";
 import Link from "next/link";
 
@@ -311,6 +311,13 @@ export default function AdminMailsPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href="/admin/whatsapp"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <MessageCircle size={14} />
+              <span>WhatsApp Center →</span>
+            </Link>
             <Link
               href="/admin/contact"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-gray-100 border border-gray-200 text-gray-700 rounded-xl text-xs font-bold transition shadow-2xs"

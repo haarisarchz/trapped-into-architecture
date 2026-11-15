@@ -566,6 +566,13 @@ export default function ContactSettingsPage() {
 
           <div className="flex items-center gap-2.5">
             <Link
+              href="/admin/whatsapp"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
+            >
+              <MessageCircle size={13} />
+              <span>WhatsApp Center →</span>
+            </Link>
+            <Link
               href="/admin/mails"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
             >

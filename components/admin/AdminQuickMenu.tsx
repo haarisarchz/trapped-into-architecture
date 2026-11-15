@@ -146,6 +146,7 @@ export default function AdminQuickMenu() {
             {navItem("/admin/users", "Users")}
             {navItem("/admin/contact", "Contact & Suggestions")}
             {navItem("/admin/mails", "Mail Center")}
+            {navItem("/admin/whatsapp", "WhatsApp Center")}
           </>
         )}
       </div>
