@@ -499,6 +499,7 @@ export default function ContactSettingsPage() {
       subj === "USER_VERIFIED" ||
       subj === "ADMIN_DIRECT" ||
       subj === "NEW_USER_REGISTERED" ||
+      subj.startsWith("WHATSAPP_") ||
       subj.startsWith("USER_") ||
       subj.startsWith("COMPANY_") ||
       subj.startsWith("NOTIFIED_") ||
