@@ -17,7 +17,7 @@ export default function AdminQuickMenu() {
 
   // Accordion state
   const isJobActive = pathname === "/admin" || pathname === "/admin/jobs" || pathname === "/admin/add-job" || pathname === "/admin/companies";
-  const isDbActive = pathname === "/admin/catalog" || pathname === "/admin/quizzes" || pathname === "/admin/institutions";
+  const isDbActive = pathname === "/admin/catalog" || pathname === "/admin/quizzes";
   const isOthersActive = pathname === "/admin/news-feed" || pathname === "/admin/contact" || pathname === "/admin/mails" || pathname === "/admin/whatsapp";
 
   const [jobOpen, setJobOpen] = useState(isJobActive);
@@ -200,11 +200,13 @@ export default function AdminQuickMenu() {
               <div className="bg-gray-50/70 py-1 border-y border-gray-100 space-y-0.5">
                 {navItem("/admin/catalog", "Architecture Catalog", true)}
                 {navItem("/admin/quizzes", "Architecture Quizzes", true)}
-                {navItem("/admin/institutions", "Institutions (COA)", true)}
               </div>
             )}
           </div>
         )}
+
+        {/* 4. Institutions (Separate Heading) */}
+        {isCeoOrSuper && navItem("/admin/institutions", "Institutions")}
 
         {/* 4. Analytics */}
         {navItem("/admin/analytics", "Analytics")}
