@@ -16,6 +16,8 @@ import {
   Copy,
   Check,
   Info,
+  Clock,
+  RotateCcw,
 } from "lucide-react";
 import { LinkedInBrandIcon, InstagramBrandIcon } from "@/components/icons/BrandIcons";
 
@@ -23,6 +25,7 @@ interface PersonalInfoTabProps {
   user: any;
   isOwner: boolean;
   onUserUpdate: (updated: any) => void;
+  isUploadingDoc?: boolean;
 }
 
 const USER_TRACKS = [
@@ -61,10 +64,75 @@ export default function PersonalInfoTab({
   user,
   isOwner,
   onUserUpdate,
+  isUploadingDoc = false,
 }: PersonalInfoTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...user });
   const [saving, setSaving] = useState(false);
+  const [hasDraftAvailable, setHasDraftAvailable] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+
+  // Check for saved local draft on mount
+  React.useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const rawDraft = localStorage.getItem(`ti2a_profile_draft_${user.id}`);
+      if (rawDraft) {
+        const parsed = JSON.parse(rawDraft);
+        if (parsed && parsed.data) {
+          // Verify if draft has any differences
+          const isDifferent = Object.keys(parsed.data).some(
+            (k) => parsed.data[k] !== user[k] && parsed.data[k] !== undefined
+          );
+          if (isDifferent) {
+            setHasDraftAvailable(true);
+            if (parsed.timestamp) {
+              setDraftSavedAt(
+                new Date(parsed.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {}
+  }, [user]);
+
+  // Auto-save draft when editing
+  React.useEffect(() => {
+    if (isEditing && user?.id) {
+      try {
+        localStorage.setItem(
+          `ti2a_profile_draft_${user.id}`,
+          JSON.stringify({ data: formData, timestamp: Date.now() })
+        );
+      } catch (e) {}
+    }
+  }, [formData, isEditing, user?.id]);
+
+  const handleResumeDraft = () => {
+    try {
+      const rawDraft = localStorage.getItem(`ti2a_profile_draft_${user.id}`);
+      if (rawDraft) {
+        const parsed = JSON.parse(rawDraft);
+        if (parsed && parsed.data) {
+          setFormData(parsed.data);
+          setIsEditing(true);
+          setHasDraftAvailable(false);
+        }
+      }
+    } catch (e) {}
+  };
+
+  const handleDiscardDraft = () => {
+    try {
+      localStorage.removeItem(`ti2a_profile_draft_${user.id}`);
+      setHasDraftAvailable(false);
+    } catch (e) {}
+  };
+
   const [verifyingEmail, setVerifyingEmail] = useState(false);
   const [verifyingPhone, setVerifyingPhone] = useState(false);
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
@@ -254,6 +322,11 @@ export default function PersonalInfoTab({
   };
 
   const handleSave = async () => {
+    if (isUploadingDoc) {
+      alert("A document is currently uploading. Please wait for the upload to complete before saving your profile.");
+      return;
+    }
+
     if (!formData.fullName || formData.fullName.trim() === "") {
       alert("Full Name is a required field.");
       return;
@@ -322,6 +395,14 @@ export default function PersonalInfoTab({
         }
       }
 
+      // Clear draft on successful save
+      if (user?.id) {
+        try {
+          localStorage.removeItem(`ti2a_profile_draft_${user.id}`);
+          setHasDraftAvailable(false);
+        } catch (e) {}
+      }
+
       onUserUpdate(updatedUser);
       setIsEditing(false);
       alert("Personal & contact details saved successfully!");
@@ -335,6 +416,40 @@ export default function PersonalInfoTab({
 
   return (
     <div className="border rounded-3xl p-6 md:p-8 bg-gray-50">
+      {/* UNSAVED DRAFT ALERT BANNER */}
+      {hasDraftAvailable && isOwner && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Clock size={16} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-amber-900">Unsaved Profile Draft Available</p>
+              <p className="text-[11px] text-amber-700">
+                You have unsaved profile changes from your previous session {draftSavedAt ? `(${draftSavedAt})` : ""}.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={handleResumeDraft}
+              className="text-xs font-bold px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5"
+            >
+              <RotateCcw size={12} />
+              <span>Resume Draft</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDiscardDraft}
+              className="text-xs font-semibold px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 rounded-xl transition cursor-pointer"
+            >
+              Discard
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Personal & Credentials</h2>
@@ -353,10 +468,18 @@ export default function PersonalInfoTab({
                 setIsEditing(true);
               }
             }}
-            disabled={saving}
-            className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl font-semibold transition text-sm cursor-pointer shadow-sm"
+            disabled={saving || isUploadingDoc}
+            className={`bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl font-semibold transition text-sm cursor-pointer shadow-sm ${
+              isUploadingDoc ? "opacity-60 cursor-not-allowed" : ""
+            }`}
           >
-            {saving ? "Saving..." : isEditing ? "Save Changes" : "Edit Details"}
+            {saving
+              ? "Saving..."
+              : isUploadingDoc
+              ? "Uploading File... Please Wait"
+              : isEditing
+              ? "Save Changes"
+              : "Edit Details"}
           </button>
         )}
       </div>

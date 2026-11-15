@@ -5,12 +5,14 @@ import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock, Se
 import { supabase } from "@/lib/supabase";
 import { ExperienceEntry, calculateTotalExperience } from "@/utils/profileCompletion";
 import { ORGANIZATION_TYPES } from "@/utils/institutionsData";
+import UploadSuccessDialog from "./UploadSuccessDialog";
 
 interface ExperienceSectionProps {
   userId: string;
   isOwner: boolean;
   experiences: ExperienceEntry[];
   onExperiencesChange: (newExp: ExperienceEntry[]) => void;
+  onUploadStateChange?: (isUploading: boolean) => void;
 }
 
 interface OrgSuggestion {
@@ -29,6 +31,7 @@ export default function ExperienceSection({
   isOwner,
   experiences,
   onExperiencesChange,
+  onUploadStateChange,
 }: ExperienceSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,6 +52,34 @@ export default function ExperienceSection({
   const [certificateName, setCertificateName] = useState<string | null>(null);
   const [certificateSize, setCertificateSize] = useState<number | null>(null);
   const [uploadingCert, setUploadingCert] = useState(false);
+  const [certProgress, setCertProgress] = useState(0);
+
+  // Success dialog state
+  const [successDialog, setSuccessDialog] = useState<{
+    isOpen: boolean;
+    fileName: string;
+    fileSizeFormatted: string;
+  }>({
+    isOpen: false,
+    fileName: "",
+    fileSizeFormatted: "",
+  });
+
+  // Track upload state & warn before unloading
+  useEffect(() => {
+    if (onUploadStateChange) {
+      onUploadStateChange(uploadingCert);
+    }
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (uploadingCert) {
+        e.preventDefault();
+        e.returnValue = "A file is currently uploading. If you leave now, the upload will be cancelled.";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [uploadingCert, onUploadStateChange]);
 
   // Autocomplete State
   const [orgSuggestions, setOrgSuggestions] = useState<OrgSuggestion[]>([]);
@@ -233,42 +264,122 @@ export default function ExperienceSection({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check PDF only
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      alert("Only PDF files are accepted for Experience Certificate. Please select a valid PDF file.");
+      e.target.value = "";
+      return;
+    }
+
     if (file.size > 4 * 1024 * 1024) {
-      alert(`Certificate file exceeds 4 MB limit (${(file.size / (1024 * 1024)).toFixed(1)} MB). Please select a file under 4 MB.`);
+      alert(
+        `Experience Certificate file exceeds the 4 MB limit (your file: ${(file.size / (1024 * 1024)).toFixed(2)} MB). Please select a PDF file under 4 MB.`
+      );
+      e.target.value = "";
       return;
     }
 
     setUploadingCert(true);
+    setCertProgress(5);
+
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "/experience-certificates");
+      // Upload using XMLHttpRequest for real progress
+      const uploadWithProgress = (fileToUpload: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          const formData = new FormData();
+          formData.append("file", fileToUpload);
+          formData.append("folder", "/experience-certificates");
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) {
-          setCertificateUrl(data.url);
-          setCertificateName(file.name);
-          setCertificateSize(file.size);
-          return;
-        }
-      }
+          xhr.upload.onprogress = (ev) => {
+            if (ev.lengthComputable) {
+              const pct = Math.min(95, Math.round((ev.loaded / ev.total) * 100));
+              setCertProgress(pct);
+            }
+          };
 
-      // fallback to Supabase
-      const ext = file.name.split(".").pop() || "pdf";
-      const fn = `cert-${userId}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("applicant-docs").upload(fn, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data: pubData } = supabase.storage.from("applicant-docs").getPublicUrl(fn);
-      setCertificateUrl(pubData.publicUrl);
+          xhr.onload = async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const res = JSON.parse(xhr.responseText);
+                if (res.url) {
+                  setCertProgress(100);
+                  resolve(res.url);
+                  return;
+                }
+              } catch (err) {}
+            }
+
+            // Fallback to Supabase Storage
+            try {
+              const ext = fileToUpload.name.split(".").pop() || "pdf";
+              const fn = `cert-${userId}-${Date.now()}.${ext}`;
+              const { error: upErr } = await supabase.storage
+                .from("applicant-docs")
+                .upload(fn, fileToUpload, { upsert: true });
+
+              if (upErr) throw upErr;
+
+              const { data: pubData } = supabase.storage
+                .from("applicant-docs")
+                .getPublicUrl(fn);
+
+              setCertProgress(100);
+              resolve(pubData.publicUrl);
+            } catch (fallbackErr: any) {
+              reject(new Error(xhr.responseText || fallbackErr.message || "Failed to upload certificate"));
+            }
+          };
+
+          xhr.onerror = async () => {
+            try {
+              const ext = fileToUpload.name.split(".").pop() || "pdf";
+              const fn = `cert-${userId}-${Date.now()}.${ext}`;
+              const { error: upErr } = await supabase.storage
+                .from("applicant-docs")
+                .upload(fn, fileToUpload, { upsert: true });
+
+              if (upErr) throw upErr;
+
+              const { data: pubData } = supabase.storage
+                .from("applicant-docs")
+                .getPublicUrl(fn);
+
+              setCertProgress(100);
+              resolve(pubData.publicUrl);
+            } catch (fallbackErr: any) {
+              reject(fallbackErr);
+            }
+          };
+
+          xhr.open("POST", "/api/upload");
+          xhr.send(formData);
+        });
+      };
+
+      const uploadedUrl = await uploadWithProgress(file);
+
+      setCertificateUrl(uploadedUrl);
       setCertificateName(file.name);
       setCertificateSize(file.size);
+
+      // Show Upload Success Dialog
+      setSuccessDialog({
+        isOpen: true,
+        fileName: file.name,
+        fileSizeFormatted: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      });
     } catch (err: any) {
       console.error("Certificate upload error:", err);
       alert(err.message || "Failed to upload certificate");
     } finally {
       setUploadingCert(false);
+      setCertProgress(0);
+      e.target.value = "";
     }
   };
 
@@ -767,20 +878,20 @@ export default function ExperienceSection({
                 />
               </div>
 
-              {/* Experience Certificate Attachment (Max 4 MB) */}
+              {/* Experience Certificate Attachment (Max 4 MB, PDF Only) */}
               <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/70">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <FileText size={16} className="text-blue-600" />
                     <span className="text-xs font-bold text-gray-800">Experience Certificate</span>
                   </div>
-                  <span className="text-[10px] text-gray-500 font-semibold">Max 4 MB (PDF/JPG/PNG)</span>
+                  <span className="text-[10px] text-gray-500 font-semibold">Max 4 MB (PDF only)</span>
                 </div>
 
                 {certificateUrl ? (
                   <div className="bg-white p-2.5 rounded-lg border border-gray-200 flex items-center justify-between">
                     <span className="text-xs font-semibold text-gray-700 truncate max-w-[200px]">
-                      {certificateName || "Certificate attached"}
+                      {certificateName || "Certificate.pdf"}
                     </span>
                     <div className="flex items-center gap-1">
                       <a
@@ -794,24 +905,41 @@ export default function ExperienceSection({
                       <button
                         type="button"
                         onClick={handleRemoveCertificate}
-                        className="text-xs text-red-500 hover:text-red-700 p-1"
+                        disabled={uploadingCert}
+                        className="text-xs text-red-500 hover:text-red-700 p-1 cursor-pointer"
                       >
                         Remove
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <label className="flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg border border-gray-300 cursor-pointer transition">
+                  <label className={`flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg border border-gray-300 cursor-pointer transition ${uploadingCert ? "opacity-60 pointer-events-none" : ""}`}>
                     <Upload size={13} />
-                    <span>{uploadingCert ? "Uploading..." : "Attach Experience Certificate (PDF/Image)"}</span>
+                    <span>{uploadingCert ? `Uploading (${certProgress}%)...` : "Attach Experience Certificate (Max 4MB PDF)"}</span>
                     <input
                       type="file"
-                      accept=".pdf,image/*"
+                      accept=".pdf,application/pdf"
                       onChange={handleCertificateUpload}
                       disabled={uploadingCert}
                       className="hidden"
                     />
                   </label>
+                )}
+
+                {/* PROGRESS BAR NEAR CERTIFICATE SECTION */}
+                {uploadingCert && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <div className="flex items-center justify-between text-xs font-bold text-blue-900 mb-1.5">
+                      <span>Uploading Certificate...</span>
+                      <span>{certProgress}%</span>
+                    </div>
+                    <div className="w-full bg-blue-200/70 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-150"
+                        style={{ width: `${certProgress}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -820,16 +948,17 @@ export default function ExperienceSection({
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-black transition"
+                  disabled={uploadingCert}
+                  className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-black transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition"
+                  disabled={submitting || uploadingCert}
+                  className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer disabled:opacity-50"
                 >
-                  {submitting ? "Saving..." : editingId ? "Update Experience" : "Save Experience"}
+                  {submitting ? "Saving..." : uploadingCert ? "Uploading..." : editingId ? "Update Experience" : "Add Experience"}
                 </button>
               </div>
             </form>
@@ -964,6 +1093,15 @@ export default function ExperienceSection({
           </div>
         </div>
       )}
+
+      {/* UPLOAD SUCCESS DIALOG MODAL */}
+      <UploadSuccessDialog
+        isOpen={successDialog.isOpen}
+        onClose={() => setSuccessDialog({ ...successDialog, isOpen: false })}
+        fileName={successDialog.fileName}
+        fileType="Experience Certificate"
+        fileSizeFormatted={successDialog.fileSizeFormatted}
+      />
     </div>
   );
 }

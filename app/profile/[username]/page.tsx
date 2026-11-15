@@ -55,6 +55,29 @@ export default function ProfilePage() {
   const [savedSubTab, setSavedSubTab] = useState<"jobs" | "colleges">("jobs");
   const [favoriteCompanies, setFavoriteCompanies] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+
+  // Warn if leaving the page during an active upload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isUploadingDoc) {
+        e.preventDefault();
+        e.returnValue = "A file is currently uploading. If you leave now, the upload will be cancelled.";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isUploadingDoc]);
+
+  const handleTabChange = (tab: "details" | "saved" | "companies" | "settings") => {
+    if (isUploadingDoc && tab !== activeTab) {
+      if (!confirm("A document is currently uploading. Switching tabs may interrupt your upload. Are you sure you want to navigate away?")) {
+        return;
+      }
+    }
+    setActiveTab(tab);
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -381,7 +404,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex gap-2 flex-wrap">
             {/* TAB 1: Profile Details */}
             <button
-              onClick={() => setActiveTab("details")}
+              onClick={() => handleTabChange("details")}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "details"
                   ? "bg-black text-white shadow-sm"
@@ -394,7 +417,7 @@ export default function ProfilePage() {
 
             {/* TAB 2: Saved Jobs */}
             <button
-              onClick={() => setActiveTab("saved")}
+              onClick={() => handleTabChange("saved")}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "saved"
                   ? "bg-black text-white shadow-sm"
@@ -418,7 +441,7 @@ export default function ProfilePage() {
 
             {/* TAB 3: Favourite Companies */}
             <button
-              onClick={() => setActiveTab("companies")}
+              onClick={() => handleTabChange("companies")}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "companies"
                   ? "bg-black text-white shadow-sm"
@@ -443,7 +466,7 @@ export default function ProfilePage() {
             {/* TAB 4: Settings & Privacy (Visible to Profile Owner) */}
             {isOwner && (
               <button
-                onClick={() => setActiveTab("settings")}
+                onClick={() => handleTabChange("settings")}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                   activeTab === "settings"
                     ? "bg-black text-white shadow-sm"
@@ -463,6 +486,7 @@ export default function ProfilePage() {
                 user={user}
                 isOwner={isOwner}
                 onUserUpdate={handleUserUpdate}
+                isUploadingDoc={isUploadingDoc}
               />
 
               {/* TI2A SMART APPLY DOCUMENTS (Resume & Portfolio) */}
@@ -470,6 +494,7 @@ export default function ProfilePage() {
                 user={user}
                 isOwner={isOwner}
                 onUserUpdate={handleUserUpdate}
+                onUploadStateChange={setIsUploadingDoc}
               />
 
               {/* TI2A SMART APPLY AUTOMATIC MAIL CONTENT EDITOR (Owner only) */}
@@ -498,6 +523,7 @@ export default function ProfilePage() {
                   isOwner={isOwner}
                   experiences={experiences}
                   onExperiencesChange={setExperiences}
+                  onUploadStateChange={setIsUploadingDoc}
                 />
               )}
 
