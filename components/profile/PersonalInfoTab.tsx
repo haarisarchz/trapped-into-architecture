@@ -659,23 +659,39 @@ export default function PersonalInfoTab({
             <span>Profile Track</span>
             <FieldInfoTooltip
               title="Profile Track (Platform Intent)"
-              text="Your goal on TI2A: Tells firms and candidates what you are here to do (e.g. actively seeking jobs, hiring for a firm, freelancing, or casually surfing & reading)."
+              text="Your goals on TI2A (select up to 3): Tells firms and the community what you are here to do (e.g. actively seeking jobs, playing quizzes, preparing for exams, hiring for a firm, or casually reading)."
             />
           </label>
           {isEditing ? (
-            <select
-              value={formData.user_track || "job_seeker"}
-              onChange={(e) => setFormData({ ...formData, user_track: e.target.value })}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black text-sm"
-            >
-              {USER_TRACKS.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
+            <MultiChipSelector
+              selected={selectedTracks}
+              onChange={setSelectedTracks}
+              maxItems={3}
+              options={PROFILE_TRACK_OPTIONS}
+              fieldLabel="Profile Tracks"
+              placeholder="Search or select intent (e.g. Quiz Player, Exam Aspirant)..."
+              allowCustom={false}
+            />
           ) : (
-            <p className="text-base font-semibold text-gray-900 bg-white p-3.5 rounded-xl border border-gray-100">
-              {USER_TRACKS.find((t) => t.value === user.user_track)?.label || "🎯 Job Seeker / Candidate"}
-            </p>
+            <div className="flex flex-wrap gap-2 p-2 bg-white rounded-xl border border-gray-100 min-h-[48px] items-center">
+              {selectedTracks.length > 0 ? (
+                selectedTracks.map((tr) => {
+                  const opt = PROFILE_TRACK_OPTIONS.find(
+                    (o) => o.value.toLowerCase() === tr.toLowerCase()
+                  );
+                  return (
+                    <span
+                      key={tr}
+                      className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-900 rounded-lg text-xs font-bold border border-gray-200"
+                    >
+                      {opt ? opt.label : tr}
+                    </span>
+                  );
+                })
+              ) : (
+                <span className="text-gray-400 text-sm italic">Not specified</span>
+              )}
+            </div>
           )}
         </div>
 
@@ -686,24 +702,34 @@ export default function PersonalInfoTab({
             <span className="text-red-500 ml-0.5">*</span>
             <FieldInfoTooltip
               title="Profession (Industry Identity)"
-              text="Your real-world vocational identity in the architecture community (e.g. Practising Architect, Academician, Student, or Dual Practice & Teaching)."
+              text="Your clear-cut vocational title in the architecture community (select up to 2, e.g. Assistant Professor, Principal Architect, Architect, Student)."
             />
           </label>
           {isEditing ? (
-            <select
-              value={formData.profession || ""}
-              onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-black text-sm"
-            >
-              <option value="" disabled>Select Profession</option>
-              {VALID_PROFESSIONS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
+            <MultiChipSelector
+              selected={selectedProfessions}
+              onChange={setSelectedProfessions}
+              maxItems={2}
+              options={PROFESSION_OPTIONS}
+              fieldLabel="Professions"
+              placeholder="Search or type profession (e.g. Assistant Professor)..."
+              allowCustom={true}
+            />
           ) : (
-            <p className="text-base font-semibold text-gray-900 bg-white p-3.5 rounded-xl border border-gray-100">
-              {user.profession || "Not specified"}
-            </p>
+            <div className="flex flex-wrap gap-2 p-2 bg-white rounded-xl border border-gray-100 min-h-[48px] items-center">
+              {selectedProfessions.length > 0 ? (
+                selectedProfessions.map((prof) => (
+                  <span
+                    key={prof}
+                    className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-900 rounded-lg text-xs font-bold border border-gray-200"
+                  >
+                    {prof}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-400 text-sm italic">Not specified</span>
+              )}
+            </div>
           )}
         </div>
 

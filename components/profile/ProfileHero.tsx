@@ -413,12 +413,22 @@ export default function ProfileHero({
                 <span>{badge.title}</span>
               </span>
 
-              {/* Profession */}
-              {user.profession && (
-                <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full font-medium">
-                  {user.profession}
-                </span>
-              )}
+              {/* Profession Badges (supports single or dual professions) */}
+              {user.profession &&
+                user.profession
+                  .split(",")
+                  .map((p: string, idx: number) => {
+                    const trimmed = p.trim();
+                    if (!trimmed) return null;
+                    return (
+                      <span
+                        key={idx}
+                        className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full font-medium"
+                      >
+                        {trimmed}
+                      </span>
+                    );
+                  })}
 
               {/* Experience Duration */}
               {totalExpFormatted && totalExpFormatted !== "Fresher / No experience added" && (
