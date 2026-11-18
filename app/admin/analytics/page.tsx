@@ -2,7 +2,24 @@
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { Sparkles, MapPin, ArrowRight } from "lucide-react";
+import { 
+  Sparkles, 
+  MapPin, 
+  ArrowRight, 
+  ArrowDown, 
+  UserPlus, 
+  Building2, 
+  Bell, 
+  ShieldCheck, 
+  Trophy, 
+  Lock, 
+  CheckCircle2, 
+  TrendingDown, 
+  TrendingUp, 
+  Flame, 
+  Zap,
+  Info 
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getClubbedPositionInfo } from "@/utils/positionNormalize";
@@ -1056,250 +1073,492 @@ export default function AnalyticsPage() {
               const claim = funnels.claimStudio || {};
               const quiz = funnels.quizzes || {};
 
+              const getBarWidth = (val: number, max: number) => {
+                if (!max || max <= 0) return "15%";
+                const pct = Math.round((val / max) * 100);
+                return `${Math.max(12, Math.min(100, pct))}%`;
+              };
+
+              const getDropBadge = (current: number, prev: number) => {
+                if (!prev || prev <= 0) return null;
+                const loss = Math.max(0, prev - current);
+                const dropPct = Math.round((loss / prev) * 100);
+                return `${dropPct}% drop`;
+              };
+
               return (
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-gray-100 pb-4">
+                <div className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/90 shadow-sm space-y-7">
+                  {/* SECTION HEADER */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-gray-100 pb-5">
                     <div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-1">
-                        <Sparkles size={12} className="text-indigo-600" />
-                        <span>Drop-off &amp; Journey Analytics</span>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-2">
+                        <Zap size={13} className="text-indigo-600 animate-pulse" />
+                        <span>Interactive Funnel Telemetry</span>
                       </div>
-                      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
                         <span>🎯 Conversion Funnels &amp; Drop-offs</span>
-                        <InfoTooltip text="Tracks candidate and studio journeys from button clicks through login walls, tier limits, and completions. Pinpoints exactly where visitors drop off." />
+                        <InfoTooltip text="Tracks candidate and studio journeys from button clicks through login walls, profile tier limits, and final confirmations. Pinpoints exactly where visitors drop off." />
                       </h2>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Live visitor drop-off rates across Registrations, Job Posting, Alert Subscriptions, Studio Claims &amp; Quizzes
+                      <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                        Full-funnel visitor journeys across Registrations, Job Posting, Alert Subscriptions, Studio Claims &amp; Quizzes
                       </p>
                     </div>
-                    <span className="text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full w-fit">
-                      5 Conversion Pipelines
-                    </span>
+
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-xs">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                        <span>5 Active Pipelines</span>
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {/* 5-PIPELINE RESPONSIVE GRID (TOP ROW: 3 CARDS, BOTTOM ROW: 2 BALANCED CARDS) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
 
-                    {/* FUNNEL 1: REGISTRATION DROP-OFF */}
-                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                    {/* PIPELINE 1: USER REGISTRATION (PURPLE THEME) */}
+                    <div className="lg:col-span-2 bg-gradient-to-b from-purple-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-purple-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                       <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-black uppercase tracking-wider text-purple-900 flex items-center">
-                            Registration Pipeline
-                            <InfoTooltip text="Shows how many visitors clicked 'Register' vs how many actually completed account creation and verification in Supabase." />
-                          </span>
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                            (reg.dropOffRate || 0) > 70 ? "bg-red-100 text-red-700 border border-red-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                          }`}>
-                            {reg.dropOffRate || 0}% drop-off
-                          </span>
+                        {/* CARD HEADER */}
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-purple-200">
+                              <UserPlus size={20} />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                                <span>Registration Funnel</span>
+                                <InfoTooltip text="Tracks how many candidates clicked 'Register' across navbar and guest prompts vs who submitted the form and completed OTP verification." />
+                              </h3>
+                              <p className="text-[11px] text-gray-500">Visitor ➔ Candidate Account</p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-200">
+                              <TrendingDown size={12} className="text-purple-600" />
+                              <span>{reg.dropOffRate || 0}% drop</span>
+                            </span>
+                          </div>
                         </div>
 
-                        {/* STEP PIPELINE */}
-                        <div className="space-y-2 mt-4">
-                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
-                            <span className="text-gray-600 font-medium">1. Register Intent Clicks</span>
-                            <span className="font-mono font-bold text-gray-900">{reg.intentClicks || 0}</span>
+                        {/* VISUAL FUNNEL FLOW (DYNAMIC NARROWING BARS) */}
+                        <div className="space-y-3 mt-5">
+                          {/* STAGE 1 */}
+                          <div>
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1">
+                                <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black inline-flex items-center justify-center">1</span>
+                                <span>Register Intent Clicks</span>
+                              </span>
+                              <span className="font-mono font-black text-gray-900 text-sm">{reg.intentClicks || 0}</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
+                              <div 
+                                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-500 shadow-xs" 
+                                style={{ width: "100%" }}
+                              />
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
-                            <span className="text-gray-600 font-medium">2. Form Submissions</span>
-                            <span className="font-mono font-bold text-gray-900">{reg.formSubmits || 0}</span>
+
+                          {/* DROP CONNECTOR */}
+                          {getDropBadge(reg.formSubmits || 0, reg.intentClicks || 0) && (
+                            <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-rose-600 -my-1">
+                              <ArrowDown size={11} className="text-rose-500" />
+                              <span className="bg-rose-50 border border-rose-200 px-2 py-0.2 rounded-full">
+                                {getDropBadge(reg.formSubmits || 0, reg.intentClicks || 0)}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* STAGE 2 */}
+                          <div>
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1">
+                                <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black inline-flex items-center justify-center">2</span>
+                                <span>Form Submissions</span>
+                              </span>
+                              <span className="font-mono font-black text-gray-900 text-sm">{reg.formSubmits || 0}</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
+                              <div 
+                                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-500" 
+                                style={{ width: getBarWidth(reg.formSubmits || 0, reg.intentClicks || 0) }}
+                              />
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-purple-50/80 rounded-xl border border-purple-200 text-purple-950 font-semibold">
-                            <span>3. Created Accounts (DB)</span>
-                            <span className="font-mono font-black">{reg.actualProfiles || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-950 font-semibold">
-                            <span>4. Email/Badge Verified</span>
-                            <span className="font-mono font-black">{reg.verifiedUsers || 0}</span>
+
+                          {/* DROP CONNECTOR */}
+                          {getDropBadge(reg.actualProfiles || 0, reg.formSubmits || 0) && (
+                            <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-rose-600 -my-1">
+                              <ArrowDown size={11} className="text-rose-500" />
+                              <span className="bg-rose-50 border border-rose-200 px-2 py-0.2 rounded-full">
+                                {getDropBadge(reg.actualProfiles || 0, reg.formSubmits || 0)}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* STAGE 3 (CONVERTED DB PROFILES) */}
+                          <div className="bg-purple-100/60 p-3 rounded-2xl border border-purple-200/90 mt-2">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-black text-purple-950 flex items-center gap-1.5">
+                                <CheckCircle2 size={14} className="text-purple-700" />
+                                <span>Created Accounts (DB)</span>
+                              </span>
+                              <span className="font-mono font-black text-purple-950 text-base">{reg.actualProfiles || 0}</span>
+                            </div>
+                            <div className="w-full bg-purple-200/70 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-purple-700 transition-all duration-500" 
+                                style={{ width: getBarWidth(reg.actualProfiles || 0, reg.intentClicks || 0) }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] font-semibold text-purple-900 mt-2 pt-1.5 border-t border-purple-200/70">
+                              <span>Email Verified Badges:</span>
+                              <span className="font-mono font-bold bg-white px-2 py-0.5 rounded-md border border-purple-200">
+                                {reg.verifiedUsers || 0} verified
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
-                        <span>All-Time Registered:</span>
-                        <strong className="text-gray-900 font-mono font-bold">{reg.totalProfilesAllTime || 0} users</strong>
+                      {/* CARD FOOTER CALLOUT */}
+                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">All-Time Database:</span>
+                        <span className="font-mono font-black text-gray-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                          {reg.totalProfilesAllTime || 0} users
+                        </span>
                       </div>
                     </div>
 
-                    {/* FUNNEL 2: SUBSCRIBE FOR ALERTS */}
-                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                    {/* PIPELINE 2: POST A JOB & GATE BLOCKERS (AMBER / ORANGE THEME) */}
+                    <div className="lg:col-span-2 bg-gradient-to-b from-amber-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-amber-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                       <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-black uppercase tracking-wider text-emerald-900 flex items-center">
-                            Alerts &amp; Subscriptions
-                            <InfoTooltip text="Tracks clicks on 'Subscribe for Alerts' across homepage, city job pages, and fortnightly briefing banners vs completed subscriber submissions." />
-                          </span>
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            {sub.dropOffRate || 0}% drop-off
-                          </span>
+                        {/* CARD HEADER */}
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-amber-200">
+                              <Building2 size={20} />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                                <span>Post a Job Funnel</span>
+                                <InfoTooltip text="Tracks employers and users wanting to publish a job. Displays drop-offs at the unauthenticated login wall, the 66% Gold Member profile wall, and studio registration." />
+                              </h3>
+                              <p className="text-[11px] text-gray-500">Access Walls ➔ Published Vacancies</p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
+                              <TrendingDown size={12} className="text-amber-700" />
+                              <span>{post.dropOffRate || 0}% drop</span>
+                            </span>
+                          </div>
                         </div>
 
-                        {/* STEP PIPELINE */}
-                        <div className="space-y-2 mt-4">
-                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
-                            <span className="text-gray-600 font-medium">1. Subscribe Intent Clicks</span>
-                            <span className="font-mono font-bold text-gray-900">{sub.alertClicks || 0}</span>
+                        {/* VISUAL FUNNEL FLOW */}
+                        <div className="space-y-3 mt-5">
+                          {/* TOP OF FUNNEL: CLICKS */}
+                          <div>
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1">
+                                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black inline-flex items-center justify-center">1</span>
+                                <span>Post Job Views &amp; Clicks</span>
+                              </span>
+                              <span className="font-mono font-black text-gray-900 text-sm">{post.totalInterest || 0}</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
+                              <div 
+                                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500" 
+                                style={{ width: "100%" }}
+                              />
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-blue-50/70 rounded-xl border border-blue-200 text-blue-900 font-medium">
-                            <span>↳ Fortnightly Briefing</span>
-                            <span className="font-mono font-bold">{sub.briefingCount || 0}</span>
+
+                          {/* ROADBLOCK GATE BREAKDOWN (COLOR-CODED RADAR) */}
+                          <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-3 space-y-2">
+                            <div className="text-[11px] font-extrabold uppercase tracking-wider text-amber-950 flex items-center justify-between">
+                              <span>Access Control Drop-off Walls:</span>
+                              <Lock size={12} className="text-amber-700" />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-1.5 text-xs">
+                              <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-red-200/70">
+                                <span className="text-red-700 font-semibold flex items-center gap-1">
+                                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                                  <span>Unauthenticated Gate</span>
+                                </span>
+                                <span className="font-mono font-black text-red-900">{post.blockedUnauth || 0}</span>
+                              </div>
+
+                              <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-amber-200/70">
+                                <span className="text-amber-800 font-semibold flex items-center gap-1">
+                                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                                  <span>Gold Tier (&lt;66%) Gate</span>
+                                </span>
+                                <span className="font-mono font-black text-amber-900">{post.blockedTier || 0}</span>
+                              </div>
+
+                              <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-orange-200/70">
+                                <span className="text-orange-800 font-semibold flex items-center gap-1">
+                                  <span className="w-2 h-2 rounded-full bg-orange-500" />
+                                  <span>No Studio Claimed Gate</span>
+                                </span>
+                                <span className="font-mono font-black text-orange-900">{post.blockedNoCompany || 0}</span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-emerald-50/70 rounded-xl border border-emerald-200 text-emerald-900 font-medium">
-                            <span>↳ WhatsApp Job Alerts</span>
-                            <span className="font-mono font-bold">{sub.alertsCount || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-emerald-100/70 rounded-xl border border-emerald-300 text-emerald-950 font-bold">
-                            <span>2. Completed Subscriptions</span>
-                            <span className="font-mono font-black">{sub.completedSubscriptions || 0}</span>
+
+                          {/* STAGE 2: PUBLISHED VACANCIES */}
+                          <div className="bg-emerald-100/60 p-3 rounded-2xl border border-emerald-300">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-black text-emerald-950 flex items-center gap-1.5">
+                                <CheckCircle2 size={14} className="text-emerald-700" />
+                                <span>Published Vacancies</span>
+                              </span>
+                              <span className="font-mono font-black text-emerald-950 text-base">{post.published || 0}</span>
+                            </div>
+                            <div className="w-full bg-emerald-200 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-emerald-600 transition-all duration-500" 
+                                style={{ width: getBarWidth(post.published || 0, post.totalInterest || 0) }}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
-                        <span>All-Time Subscribers:</span>
-                        {isCeoOrSuper ? (
-                          <Link href="/admin/subscriptions" className="text-emerald-700 font-bold hover:underline flex items-center gap-1">
-                            <span>{sub.totalSubscribersAllTime || 0} in Hub &rarr;</span>
-                          </Link>
-                        ) : (
-                          <strong className="text-gray-900 font-mono font-bold">{sub.totalSubscribersAllTime || 0} subscribers</strong>
-                        )}
+                      {/* CARD FOOTER */}
+                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">Form Unlocked Studios:</span>
+                        <span className="font-mono font-black text-emerald-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                          {post.formUnlocked || 0} cleared
+                        </span>
                       </div>
                     </div>
 
-                    {/* FUNNEL 3: POST A JOB & ACCESS GATES */}
-                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                    {/* PIPELINE 3: ALERTS & SUBSCRIPTIONS (EMERALD THEME) */}
+                    <div className="lg:col-span-2 bg-gradient-to-b from-emerald-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-emerald-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                       <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-black uppercase tracking-wider text-amber-900 flex items-center">
-                            Post a Job Pipeline
-                            <InfoTooltip text="Tracks employers and users wanting to publish a job. Displays drop-offs at the unauthenticated login wall, the 66% Gold Member profile wall, and studio registration." />
-                          </span>
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
-                            {post.dropOffRate || 0}% drop-off
-                          </span>
+                        {/* CARD HEADER */}
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-200">
+                              <Bell size={20} />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                                <span>Alerts &amp; Subscriptions</span>
+                                <InfoTooltip text="Tracks clicks on 'Subscribe for Alerts' across homepage, city job pages, and fortnightly briefing banners vs completed subscriber submissions." />
+                              </h3>
+                              <p className="text-[11px] text-gray-500">Interest ➔ WhatsApp &amp; Email Leads</p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-950 border border-emerald-300">
+                              <TrendingDown size={12} className="text-emerald-700" />
+                              <span>{sub.dropOffRate || 0}% drop</span>
+                            </span>
+                          </div>
                         </div>
 
-                        {/* STEP PIPELINE */}
-                        <div className="space-y-1.5 mt-4">
-                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
-                            <span className="text-gray-600 font-medium">1. Post Job Clicks &amp; Views</span>
-                            <span className="font-mono font-bold text-gray-900">{post.totalInterest || 0}</span>
+                        {/* VISUAL FUNNEL FLOW */}
+                        <div className="space-y-3 mt-5">
+                          {/* STAGE 1 */}
+                          <div>
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1">
+                                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-black inline-flex items-center justify-center">1</span>
+                                <span>Subscribe Intent Clicks</span>
+                              </span>
+                              <span className="font-mono font-black text-gray-900 text-sm">{sub.alertClicks || 0}</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
+                              <div 
+                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" 
+                                style={{ width: "100%" }}
+                              />
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between text-[11px] px-2 py-1 bg-red-50/60 rounded-lg text-red-700">
-                            <span>🚫 Blocked: Not Logged In</span>
-                            <span className="font-mono font-bold">{post.blockedUnauth || 0}</span>
+
+                          {/* CHANNEL SPLIT CARDS */}
+                          <div className="grid grid-cols-2 gap-2 mt-2">
+                            <div className="p-2.5 bg-blue-50/80 rounded-2xl border border-blue-200">
+                              <span className="text-[10px] font-bold text-blue-700 block uppercase tracking-wider">Fortnightly Briefing</span>
+                              <span className="font-mono font-black text-blue-950 text-sm mt-0.5 block">{sub.briefingCount || 0}</span>
+                              <span className="text-[9px] text-blue-600 block mt-0.5">1st &amp; 15th Email</span>
+                            </div>
+
+                            <div className="p-2.5 bg-emerald-50/80 rounded-2xl border border-emerald-200">
+                              <span className="text-[10px] font-bold text-emerald-700 block uppercase tracking-wider">WhatsApp Alerts</span>
+                              <span className="font-mono font-black text-emerald-950 text-sm mt-0.5 block">{sub.alertsCount || 0}</span>
+                              <span className="text-[9px] text-emerald-600 block mt-0.5">Instant Drops</span>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-between text-[11px] px-2 py-1 bg-amber-50/60 rounded-lg text-amber-800">
-                            <span>🚫 Blocked: Under 66% Profile</span>
-                            <span className="font-mono font-bold">{post.blockedTier || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-[11px] px-2 py-1 bg-orange-50/60 rounded-lg text-orange-800">
-                            <span>🚫 Blocked: No Studio Claimed</span>
-                            <span className="font-mono font-bold">{post.blockedNoCompany || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-green-50 rounded-xl border border-green-200 text-green-950 font-bold">
-                            <span>2. Form Unlocked / Published</span>
-                            <span className="font-mono font-black">{post.published || 0}</span>
+
+                          {/* STAGE 2 (COMPLETED) */}
+                          <div className="bg-emerald-100/70 p-3 rounded-2xl border border-emerald-300 mt-2">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-black text-emerald-950 flex items-center gap-1.5">
+                                <CheckCircle2 size={14} className="text-emerald-700" />
+                                <span>Total Completed Leads</span>
+                              </span>
+                              <span className="font-mono font-black text-emerald-950 text-base">{sub.completedSubscriptions || 0}</span>
+                            </div>
+                            <div className="w-full bg-emerald-200 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-emerald-700 transition-all duration-500" 
+                                style={{ width: getBarWidth(sub.completedSubscriptions || 0, sub.alertClicks || 0) }}
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
-                        <span>Form Unlocked:</span>
-                        <strong className="text-gray-900 font-mono font-bold">{post.formUnlocked || 0} studios</strong>
+                      {/* CARD FOOTER */}
+                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">All-Time Audience:</span>
+                        <span className="font-mono font-black text-emerald-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                          {sub.totalSubscribersAllTime || 0} subscribers
+                        </span>
                       </div>
                     </div>
 
-                    {/* FUNNEL 4: CLAIM STUDIO / PRACTICE */}
-                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                    {/* PIPELINE 4: CLAIM STUDIO / PRACTICE (BLUE THEME, SPANS 3 COLS) */}
+                    <div className="lg:col-span-3 bg-gradient-to-b from-blue-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-blue-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                       <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-black uppercase tracking-wider text-blue-900 flex items-center">
-                            Claim Studio Pipeline
-                            <InfoTooltip text="Tracks practice owners who click 'Claim this Studio' on firm profile pages vs those who submit proof of ownership to the admin team." />
-                          </span>
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200">
-                            {claim.dropOffRate || 0}% drop-off
-                          </span>
+                        {/* CARD HEADER */}
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-600 text-white flex items-center justify-center shadow-md shadow-blue-200">
+                              <ShieldCheck size={20} />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                                <span>Studio &amp; Practice Claim Pipeline</span>
+                                <InfoTooltip text="Tracks practice owners who click 'Claim this Studio' on firm profile pages vs those who submit proof of ownership to the admin team." />
+                              </h3>
+                              <p className="text-[11px] text-gray-500">Directory Profile ➔ Verified Practice Owner</p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-blue-100 text-blue-950 border border-blue-200">
+                              <TrendingDown size={12} className="text-blue-700" />
+                              <span>{claim.dropOffRate || 0}% drop</span>
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="space-y-2 mt-4">
-                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
-                            <span className="text-gray-600 font-medium">1. Claim Studio Clicks</span>
-                            <span className="font-mono font-bold text-gray-900">{claim.claimClicks || 0}</span>
+                        {/* VISUAL FUNNEL FLOW */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                          <div className="p-3.5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="font-bold text-gray-700">1. Claim Clicks</span>
+                              <span className="font-mono font-black text-gray-900 text-base">{claim.claimClicks || 0}</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                              <div className="h-full rounded-full bg-blue-500" style={{ width: "100%" }} />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-2">Firm profile header &amp; modal clicks</p>
                           </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-blue-50 rounded-xl border border-blue-200 text-blue-950 font-bold">
-                            <span>2. Claim Form Submissions</span>
-                            <span className="font-mono font-black">{claim.submits || 0}</span>
+
+                          <div className="p-3.5 bg-blue-50 rounded-2xl border border-blue-200">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="font-bold text-blue-950 flex items-center gap-1">
+                                <CheckCircle2 size={13} className="text-blue-700" />
+                                <span>2. Claims Submitted</span>
+                              </span>
+                              <span className="font-mono font-black text-blue-950 text-base">{claim.submits || 0}</span>
+                            </div>
+                            <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-blue-700" 
+                                style={{ width: getBarWidth(claim.submits || 0, claim.claimClicks || 0) }} 
+                              />
+                            </div>
+                            <p className="text-[10px] text-blue-700 mt-2">Formal ownership requests received</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
-                        <span>Submissions in Period:</span>
-                        <strong className="text-blue-900 font-mono font-bold">{claim.submits || 0} claims</strong>
+                      {/* CARD FOOTER */}
+                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">Ownership Requests in Period:</span>
+                        <span className="font-mono font-black text-blue-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                          {claim.submits || 0} submissions
+                        </span>
                       </div>
                     </div>
 
-                    {/* FUNNEL 5: ARCHITECTURE QUIZZES */}
-                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                    {/* PIPELINE 5: ARCHITECTURE QUIZZES ENGAGEMENT (ROSE/PURPLE FLAME THEME, SPANS 3 COLS) */}
+                    <div className="lg:col-span-3 bg-gradient-to-b from-rose-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-rose-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
                       <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-xs font-black uppercase tracking-wider text-teal-900 flex items-center">
-                            Quizzes Completion Rate
-                            <InfoTooltip text="Tracks candidate quiz engagement: how many started answering architectural questions vs how many reached the final scorecard." />
-                          </span>
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-900 border border-teal-200">
-                            {quiz.completionRate || 0}% finished
-                          </span>
+                        {/* CARD HEADER */}
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-rose-200">
+                              <Trophy size={20} />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                                <span>Architecture Quizzes Pipeline</span>
+                                <InfoTooltip text="Tracks candidate quiz engagement: how many started answering architectural questions vs how many reached the final scorecard." />
+                              </h3>
+                              <p className="text-[11px] text-gray-500">Play Starts ➔ Completed Scorecards</p>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-rose-100 text-rose-950 border border-rose-200">
+                              <TrendingUp size={12} className="text-rose-600" />
+                              <span>{quiz.completionRate || 0}% finished</span>
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="space-y-2 mt-4">
-                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
-                            <span className="text-gray-600 font-medium">1. Quiz Starts &amp; Card Clicks</span>
-                            <span className="font-mono font-bold text-gray-900">{quiz.starts || 0}</span>
+                        {/* VISUAL FUNNEL FLOW */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                          <div className="p-3.5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="font-bold text-gray-700">1. Quiz Plays Started</span>
+                              <span className="font-mono font-black text-gray-900 text-base">{quiz.starts || 0}</span>
+                            </div>
+                            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                              <div className="h-full rounded-full bg-rose-500" style={{ width: "100%" }} />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-2">Card clicks &amp; round beginnings</p>
                           </div>
-                          <div className="flex items-center justify-between text-xs p-2 bg-teal-50 rounded-xl border border-teal-200 text-teal-950 font-bold">
-                            <span>2. Quizzes Completed</span>
-                            <span className="font-mono font-black">{quiz.completions || 0}</span>
+
+                          <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200">
+                            <div className="flex items-center justify-between text-xs mb-1.5">
+                              <span className="font-bold text-rose-950 flex items-center gap-1">
+                                <CheckCircle2 size={13} className="text-rose-700" />
+                                <span>2. Reached Scorecard</span>
+                              </span>
+                              <span className="font-mono font-black text-rose-950 text-base">{quiz.completions || 0}</span>
+                            </div>
+                            <div className="w-full bg-rose-200 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-rose-600" 
+                                style={{ width: getBarWidth(quiz.completions || 0, quiz.starts || 0) }} 
+                              />
+                            </div>
+                            <p className="text-[10px] text-rose-700 mt-2">Finished tests &amp; claimed points</p>
                           </div>
                         </div>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
-                        <span>Finished Scorecards:</span>
-                        <strong className="text-teal-900 font-mono font-bold">{quiz.completions || 0} plays</strong>
+                      {/* CARD FOOTER */}
+                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">Total Completed Rounds:</span>
+                        <span className="font-mono font-black text-rose-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                          {quiz.completions || 0} plays
+                        </span>
                       </div>
                     </div>
-
-                    {/* FUNNEL 6: QUICK LINK TO SUBSCRIPTION & SEO HUB (SUPERADMIN & CEO ONLY) */}
-                    {isCeoOrSuper && (
-                      <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-5 text-white flex flex-col justify-between shadow-xs">
-                        <div>
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 text-indigo-300 border border-white/10 mb-2">
-                            <MapPin size={11} />
-                            <span>Executive Access</span>
-                          </div>
-                          <h3 className="text-base font-black text-white">
-                            Subscriptions &amp; SEO Hub
-                          </h3>
-                          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                            Access full subscriber contact lists, WhatsApp drop requests, CSV exports, and direct links to all 20 Indian City &amp; 16 State job landing pages.
-                          </p>
-                        </div>
-
-                        <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between">
-                          <Link
-                            href="/admin/subscriptions"
-                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-black hover:bg-slate-100 rounded-xl text-xs font-bold transition shadow-xs"
-                          >
-                            <span>Open Subscriptions &amp; SEO Hub</span>
-                            <ArrowRight size={14} />
-                          </Link>
-                        </div>
-                      </div>
-                    )}
 
                   </div>
                 </div>
