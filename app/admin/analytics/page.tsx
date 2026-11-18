@@ -862,15 +862,15 @@ export default function AnalyticsPage() {
               )}
             </div>
 
-            {/* CANDIDATE CONVERSIONS & ACTIONS */}
-            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
+            {/* CANDIDATE CONVERSIONS, ACTIONS & FUNNELS */}
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4 sm:space-y-5">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pb-3.5 border-b border-gray-100">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <span>⚡ Candidate Conversions &amp; Actions</span>
-                    <InfoTooltip text="High-intent hiring actions taken by candidates on job listings during this timeframe." />
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span>⚡ Candidate Conversions, Actions &amp; Funnels</span>
+                    <InfoTooltip text="High-intent hiring actions taken by candidates on job listings, multi-step visitor conversion funnels, and engaged platform listings." />
                   </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Direct candidate interactions within the selected time period</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Direct hiring actions, full-funnel visitor journeys, and top engaged listings</p>
                 </div>
                 <span className="text-xs font-semibold px-3 py-1 bg-green-100 text-green-800 rounded-full w-fit">
                   Live Tracking Active
@@ -959,6 +959,443 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
               </div>
+
+              {/* CONVERSION FUNNELS & DROP-OFF TELEMETRY (5 COMPACT PIPELINE CARDS) */}
+              {(() => {
+                const funnels = data.conversions?.funnels || {};
+                const reg = funnels.registration || {};
+                const post = funnels.postJob || {};
+                const sub = funnels.subscriptions || {};
+                const claim = funnels.claimStudio || {};
+                const quiz = funnels.quizzes || {};
+
+                const getBarWidth = (val: number, max: number) => {
+                  if (!max || max <= 0) return "15%";
+                  const pct = Math.round((val / max) * 100);
+                  return `${Math.max(12, Math.min(100, pct))}%`;
+                };
+
+                return (
+                  <div className="pt-4 border-t border-gray-100">
+                    {/* SUBSECTION HEADER */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3.5">
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-1">
+                          <Zap size={11} className="text-indigo-600 animate-pulse" />
+                          <span>Interactive Funnel Telemetry</span>
+                        </div>
+                        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
+                          <span>🎯 Conversion Funnels &amp; Drop-offs</span>
+                          <InfoTooltip text="Tracks candidate and studio journeys from button clicks through login walls, profile tier limits, and final confirmations. Pinpoints exactly where visitors drop off." />
+                        </h3>
+                        <p className="text-[11px] text-gray-500 mt-0.5">
+                          Multi-step visitor journeys across Registrations, Job Posting, Alert Subscriptions, Studio Claims &amp; Quizzes
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 bg-slate-900 text-white rounded-lg shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+                          <span>5 Active Pipelines</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 5-PIPELINE RESPONSIVE GRID (TOP ROW: 3 CARDS, BOTTOM ROW: 2 BALANCED CARDS) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3.5 sm:gap-4">
+
+                      {/* PIPELINE 1: USER REGISTRATION (PURPLE THEME) */}
+                      <div className="lg:col-span-2 bg-gradient-to-b from-purple-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-purple-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
+                        <div>
+                          {/* CARD HEADER */}
+                          <div className="flex items-start justify-between gap-2.5 mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
+                                <UserPlus size={16} />
+                              </div>
+                              <div>
+                                <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
+                                  <span>Registration Funnel</span>
+                                  <InfoTooltip text="Tracks how many candidates clicked 'Register' across navbar and guest prompts vs who submitted the form and completed OTP verification." />
+                                </h3>
+                                <p className="text-[10px] text-gray-500">Visitor ➔ Candidate Account</p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200">
+                                <TrendingDown size={11} className="text-purple-600" />
+                                <span>{reg.dropOffRate || 0}% drop</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* VISUAL COMPACT STEPS */}
+                          <div className="space-y-2.5 mt-3">
+                            {/* Step 1 */}
+                            <div>
+                              <div className="flex items-center justify-between text-xs mb-0.5">
+                                <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                  <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-800 text-[9px] font-black inline-flex items-center justify-center">1</span>
+                                  <span>Intent Clicks</span>
+                                </span>
+                                <span className="font-mono font-bold text-gray-900 text-xs">{reg.intentClicks || 0}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full rounded-full bg-purple-500 transition-all duration-500" style={{ width: "100%" }} />
+                              </div>
+                            </div>
+
+                            {/* Step 2 */}
+                            <div>
+                              <div className="flex items-center justify-between text-xs mb-0.5">
+                                <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                  <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-800 text-[9px] font-black inline-flex items-center justify-center">2</span>
+                                  <span>Form Submissions</span>
+                                </span>
+                                <span className="font-mono font-bold text-gray-900 text-xs">{reg.formSubmits || 0}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div 
+                                  className="h-full rounded-full bg-purple-600 transition-all duration-500" 
+                                  style={{ width: getBarWidth(reg.formSubmits || 0, reg.intentClicks || 0) }} 
+                                />
+                              </div>
+                            </div>
+
+                            {/* Step 3 (Created Accounts DB) */}
+                            <div className="bg-purple-100/60 p-2.5 rounded-xl border border-purple-200/80">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="font-bold text-purple-950 flex items-center gap-1 text-[11px]">
+                                  <CheckCircle2 size={13} className="text-purple-700" />
+                                  <span>Accounts Created (DB)</span>
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[9px] font-bold text-purple-700 bg-white px-1.5 py-0.2 rounded border border-purple-200">
+                                    {reg.verifiedUsers || 0} verified
+                                  </span>
+                                  <span className="font-mono font-black text-purple-950 text-xs">{reg.actualProfiles || 0}</span>
+                                </div>
+                              </div>
+                              <div className="w-full bg-purple-200/80 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                  className="h-full rounded-full bg-purple-700 transition-all duration-500" 
+                                  style={{ width: getBarWidth(reg.actualProfiles || 0, reg.intentClicks || 0) }} 
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CARD FOOTER */}
+                        <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-500">All-Time Users:</span>
+                          <span className="font-mono font-black text-gray-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
+                            {reg.totalProfilesAllTime || 0} users
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* PIPELINE 2: POST A JOB & GATE BLOCKERS (AMBER / ORANGE THEME) */}
+                      <div className="lg:col-span-2 bg-gradient-to-b from-amber-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-amber-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
+                        <div>
+                          {/* CARD HEADER */}
+                          <div className="flex items-start justify-between gap-2.5 mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-xs">
+                                <Building2 size={16} />
+                              </div>
+                              <div>
+                                <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
+                                  <span>Post a Job Funnel</span>
+                                  <InfoTooltip text="Tracks employers and users wanting to publish a job. Displays drop-offs at the unauthenticated login wall, the 66% Gold Member profile wall, and studio registration." />
+                                </h3>
+                                <p className="text-[10px] text-gray-500">Access Walls ➔ Published</p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
+                                <TrendingDown size={11} className="text-amber-700" />
+                                <span>{post.dropOffRate || 0}% drop</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* VISUAL COMPACT STEPS */}
+                          <div className="space-y-2.5 mt-3">
+                            {/* Step 1: Total Interest */}
+                            <div>
+                              <div className="flex items-center justify-between text-xs mb-0.5">
+                                <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                  <span className="w-4 h-4 rounded-full bg-amber-100 text-amber-900 text-[9px] font-black inline-flex items-center justify-center">1</span>
+                                  <span>Post Job Clicks</span>
+                                </span>
+                                <span className="font-mono font-bold text-gray-900 text-xs">{post.totalInterest || 0}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: "100%" }} />
+                              </div>
+                            </div>
+
+                            {/* ROADBLOCK GATE STRIP (COMPACT SINGLE-LINE) */}
+                            <div className="bg-amber-50/80 border border-amber-200/80 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[10px]">
+                              <span className="font-bold text-amber-950 flex items-center gap-1 text-[11px]">
+                                <Lock size={11} className="text-amber-700" />
+                                <span>Blocked at Walls:</span>
+                              </span>
+                              <div className="flex items-center gap-1 font-mono font-bold text-[9px]">
+                                <span className="bg-white text-red-700 px-1.5 py-0.5 rounded border border-red-200" title="Unauthenticated Gate">Login: {post.blockedUnauth || 0}</span>
+                                <span className="bg-white text-amber-800 px-1.5 py-0.5 rounded border border-amber-200" title="Gold Tier (<66%) Gate">Tier: {post.blockedTier || 0}</span>
+                                <span className="bg-white text-orange-800 px-1.5 py-0.5 rounded border border-orange-200" title="No Studio Claimed Gate">Firm: {post.blockedNoCompany || 0}</span>
+                              </div>
+                            </div>
+
+                            {/* Step 2: Published Vacancies */}
+                            <div className="bg-emerald-100/60 p-2.5 rounded-xl border border-emerald-300">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="font-bold text-emerald-950 flex items-center gap-1 text-[11px]">
+                                  <CheckCircle2 size={13} className="text-emerald-700" />
+                                  <span>Published Vacancies</span>
+                                </span>
+                                <span className="font-mono font-black text-emerald-950 text-xs">{post.published || 0}</span>
+                              </div>
+                              <div className="w-full bg-emerald-200 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                  className="h-full rounded-full bg-emerald-600 transition-all duration-500" 
+                                  style={{ width: getBarWidth(post.published || 0, post.totalInterest || 0) }} 
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CARD FOOTER */}
+                        <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-500">Unlocked Studios:</span>
+                          <span className="font-mono font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
+                            {post.formUnlocked || 0} cleared
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* PIPELINE 3: ALERTS & SUBSCRIPTIONS (EMERALD THEME) */}
+                      <div className="lg:col-span-2 bg-gradient-to-b from-emerald-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-emerald-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
+                        <div>
+                          {/* CARD HEADER */}
+                          <div className="flex items-start justify-between gap-2.5 mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs">
+                                <Bell size={16} />
+                              </div>
+                              <div>
+                                <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
+                                  <span>Alerts &amp; Subscriptions</span>
+                                  <InfoTooltip text="Tracks clicks on 'Subscribe for Alerts' across homepage, city job pages, and fortnightly briefing banners vs completed subscriber submissions." />
+                                </h3>
+                                <p className="text-[10px] text-gray-500">Interest ➔ Audience Leads</p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950 border border-emerald-300">
+                                <TrendingDown size={11} className="text-emerald-700" />
+                                <span>{sub.dropOffRate || 0}% drop</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* VISUAL COMPACT STEPS */}
+                          <div className="space-y-2.5 mt-3">
+                            {/* Step 1: Subscribe Intent Clicks */}
+                            <div>
+                              <div className="flex items-center justify-between text-xs mb-0.5">
+                                <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                  <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-900 text-[9px] font-black inline-flex items-center justify-center">1</span>
+                                  <span>Subscribe Clicks</span>
+                                </span>
+                                <span className="font-mono font-bold text-gray-900 text-xs">{sub.alertClicks || 0}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: "100%" }} />
+                              </div>
+                            </div>
+
+                            {/* CHANNELS STRIP (COMPACT SINGLE-LINE) */}
+                            <div className="bg-emerald-50/80 border border-emerald-200/80 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[10px]">
+                              <span className="font-bold text-emerald-950 text-[11px]">Channels:</span>
+                              <div className="flex items-center gap-1.5 font-mono font-bold text-[9px]">
+                                <span className="bg-white text-blue-800 px-1.5 py-0.5 rounded border border-blue-200">Briefing: {sub.briefingCount || 0}</span>
+                                <span className="bg-white text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">WhatsApp: {sub.alertsCount || 0}</span>
+                              </div>
+                            </div>
+
+                            {/* Step 2: Total Completed Leads */}
+                            <div className="bg-emerald-100/70 p-2.5 rounded-xl border border-emerald-300">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="font-bold text-emerald-950 flex items-center gap-1 text-[11px]">
+                                  <CheckCircle2 size={13} className="text-emerald-700" />
+                                  <span>Completed Subscribers</span>
+                                </span>
+                                <span className="font-mono font-black text-emerald-950 text-xs">{sub.completedSubscriptions || 0}</span>
+                              </div>
+                              <div className="w-full bg-emerald-200 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                  className="h-full rounded-full bg-emerald-700 transition-all duration-500" 
+                                  style={{ width: getBarWidth(sub.completedSubscriptions || 0, sub.alertClicks || 0) }} 
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CARD FOOTER */}
+                        <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-500">All-Time Audience:</span>
+                          <span className="font-mono font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
+                            {sub.totalSubscribersAllTime || 0} subs
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* PIPELINE 4: CLAIM STUDIO / PRACTICE (BLUE THEME, SPANS 3 COLS) */}
+                      <div className="lg:col-span-3 bg-gradient-to-b from-blue-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-blue-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
+                        <div>
+                          {/* CARD HEADER */}
+                          <div className="flex items-start justify-between gap-2.5 mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 text-white flex items-center justify-center shadow-xs">
+                                <ShieldCheck size={16} />
+                              </div>
+                              <div>
+                                <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
+                                  <span>Studio Claim Pipeline</span>
+                                  <InfoTooltip text="Tracks practice owners who click 'Claim this Studio' on firm profile pages vs those who submit proof of ownership to the admin team." />
+                                </h3>
+                                <p className="text-[10px] text-gray-500">Directory Profile ➔ Verified Practice Owner</p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-100 text-blue-950 border border-blue-200">
+                                <TrendingDown size={11} className="text-blue-700" />
+                                <span>{claim.dropOffRate || 0}% drop</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* VISUAL 2-STEP BOXES */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                            <div className="p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="font-bold text-gray-700 text-[11px]">1. Claim Clicks</span>
+                                <span className="font-mono font-black text-gray-900 text-xs">{claim.claimClicks || 0}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full rounded-full bg-blue-500" style={{ width: "100%" }} />
+                              </div>
+                              <p className="text-[9px] text-gray-400 mt-1">Profile header &amp; modal clicks</p>
+                            </div>
+
+                            <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-200">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="font-bold text-blue-950 flex items-center gap-1 text-[11px]">
+                                  <CheckCircle2 size={12} className="text-blue-700" />
+                                  <span>2. Claims Submitted</span>
+                                </span>
+                                <span className="font-mono font-black text-blue-950 text-xs">{claim.submits || 0}</span>
+                              </div>
+                              <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                                <div 
+                                  className="h-full rounded-full bg-blue-700" 
+                                  style={{ width: getBarWidth(claim.submits || 0, claim.claimClicks || 0) }} 
+                                />
+                              </div>
+                              <p className="text-[9px] text-blue-700 mt-1">Formal ownership requests</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CARD FOOTER */}
+                        <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-500">Ownership Requests:</span>
+                          <span className="font-mono font-black text-blue-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
+                            {claim.submits || 0} submissions
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* PIPELINE 5: ARCHITECTURE QUIZZES (ROSE THEME, SPANS 3 COLS) */}
+                      <div className="lg:col-span-3 bg-gradient-to-b from-rose-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-rose-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
+                        <div>
+                          {/* CARD HEADER */}
+                          <div className="flex items-start justify-between gap-2.5 mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-purple-600 text-white flex items-center justify-center shadow-xs">
+                                <Trophy size={16} />
+                              </div>
+                              <div>
+                                <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
+                                  <span>Quizzes Pipeline</span>
+                                  <InfoTooltip text="Tracks candidate quiz engagement: how many started answering architectural questions vs how many reached the final scorecard." />
+                                </h3>
+                                <p className="text-[10px] text-gray-500">Play Starts ➔ Completed Scorecards</p>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-950 border border-rose-200">
+                                <TrendingUp size={11} className="text-rose-600" />
+                                <span>{quiz.completionRate || 0}% finished</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* VISUAL 2-STEP BOXES */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                            <div className="p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="font-bold text-gray-700 text-[11px]">1. Plays Started</span>
+                                <span className="font-mono font-black text-gray-900 text-xs">{quiz.starts || 0}</span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                                <div className="h-full rounded-full bg-rose-500" style={{ width: "100%" }} />
+                              </div>
+                              <p className="text-[9px] text-gray-400 mt-1">Quiz card starts &amp; round 1</p>
+                            </div>
+
+                            <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-200">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="font-bold text-rose-950 flex items-center gap-1 text-[11px]">
+                                  <CheckCircle2 size={12} className="text-rose-700" />
+                                  <span>2. Reached Scorecard</span>
+                                </span>
+                                <span className="font-mono font-black text-rose-950 text-xs">{quiz.completions || 0}</span>
+                              </div>
+                              <div className="w-full bg-rose-200 rounded-full h-2 overflow-hidden">
+                                <div 
+                                  className="h-full rounded-full bg-rose-600" 
+                                  style={{ width: getBarWidth(quiz.completions || 0, quiz.starts || 0) }} 
+                                />
+                              </div>
+                              <p className="text-[9px] text-rose-700 mt-1">Finished tests &amp; claimed points</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CARD FOOTER */}
+                        <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                          <span className="text-gray-500">Completed Rounds:</span>
+                          <span className="font-mono font-black text-rose-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
+                            {quiz.completions || 0} plays
+                          </span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* TOP SHARED & RECENT LISTINGS (WITH VIEW TOGGLE & LOCATION) */}
               {(() => {
@@ -1063,450 +1500,6 @@ export default function AnalyticsPage() {
                 );
               })()}
             </div>
-
-            {/* CONVERSION FUNNELS & DROP-OFF ANALYSIS */}
-            {(() => {
-              const funnels = data.conversions?.funnels || {};
-              const reg = funnels.registration || {};
-              const post = funnels.postJob || {};
-              const sub = funnels.subscriptions || {};
-              const claim = funnels.claimStudio || {};
-              const quiz = funnels.quizzes || {};
-
-              const getBarWidth = (val: number, max: number) => {
-                if (!max || max <= 0) return "15%";
-                const pct = Math.round((val / max) * 100);
-                return `${Math.max(12, Math.min(100, pct))}%`;
-              };
-
-              const getDropBadge = (current: number, prev: number) => {
-                if (!prev || prev <= 0) return null;
-                const loss = Math.max(0, prev - current);
-                const dropPct = Math.round((loss / prev) * 100);
-                return `${dropPct}% drop`;
-              };
-
-              return (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200/90 shadow-sm space-y-4 sm:space-y-5">
-                  {/* SECTION HEADER */}
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-gray-100 pb-3.5">
-                    <div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-1">
-                        <Zap size={12} className="text-indigo-600 animate-pulse" />
-                        <span>Interactive Funnel Telemetry</span>
-                      </div>
-                      <h2 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
-                        <span>🎯 Conversion Funnels &amp; Drop-offs</span>
-                        <InfoTooltip text="Tracks candidate and studio journeys from button clicks through login walls, profile tier limits, and final confirmations. Pinpoints exactly where visitors drop off." />
-                      </h2>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Full-funnel visitor journeys across Registrations, Job Posting, Alert Subscriptions, Studio Claims &amp; Quizzes
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-slate-900 text-white rounded-xl shadow-xs">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-                        <span>5 Active Pipelines</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* 5-PIPELINE RESPONSIVE GRID (TOP ROW: 3 CARDS, BOTTOM ROW: 2 BALANCED CARDS) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3.5 sm:gap-4">
-
-                    {/* PIPELINE 1: USER REGISTRATION (PURPLE THEME) */}
-                    <div className="lg:col-span-2 bg-gradient-to-b from-purple-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-purple-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
-                      <div>
-                        {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-2.5 mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
-                              <UserPlus size={16} />
-                            </div>
-                            <div>
-                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
-                                <span>Registration Funnel</span>
-                                <InfoTooltip text="Tracks how many candidates clicked 'Register' across navbar and guest prompts vs who submitted the form and completed OTP verification." />
-                              </h3>
-                              <p className="text-[10px] text-gray-500">Visitor ➔ Candidate Account</p>
-                            </div>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200">
-                              <TrendingDown size={11} className="text-purple-600" />
-                              <span>{reg.dropOffRate || 0}% drop</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* VISUAL COMPACT STEPS */}
-                        <div className="space-y-2.5 mt-3">
-                          {/* Step 1 */}
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-0.5">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
-                                <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-800 text-[9px] font-black inline-flex items-center justify-center">1</span>
-                                <span>Intent Clicks</span>
-                              </span>
-                              <span className="font-mono font-bold text-gray-900 text-xs">{reg.intentClicks || 0}</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                              <div className="h-full rounded-full bg-purple-500 transition-all duration-500" style={{ width: "100%" }} />
-                            </div>
-                          </div>
-
-                          {/* Step 2 */}
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-0.5">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
-                                <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-800 text-[9px] font-black inline-flex items-center justify-center">2</span>
-                                <span>Form Submissions</span>
-                              </span>
-                              <span className="font-mono font-bold text-gray-900 text-xs">{reg.formSubmits || 0}</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                              <div 
-                                className="h-full rounded-full bg-purple-600 transition-all duration-500" 
-                                style={{ width: getBarWidth(reg.formSubmits || 0, reg.intentClicks || 0) }} 
-                              />
-                            </div>
-                          </div>
-
-                          {/* Step 3 (Created Accounts DB) */}
-                          <div className="bg-purple-100/60 p-2.5 rounded-xl border border-purple-200/80">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-bold text-purple-950 flex items-center gap-1 text-[11px]">
-                                <CheckCircle2 size={13} className="text-purple-700" />
-                                <span>Accounts Created (DB)</span>
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[9px] font-bold text-purple-700 bg-white px-1.5 py-0.2 rounded border border-purple-200">
-                                  {reg.verifiedUsers || 0} verified
-                                </span>
-                                <span className="font-mono font-black text-purple-950 text-xs">{reg.actualProfiles || 0}</span>
-                              </div>
-                            </div>
-                            <div className="w-full bg-purple-200/80 rounded-full h-1.5 overflow-hidden">
-                              <div 
-                                className="h-full rounded-full bg-purple-700 transition-all duration-500" 
-                                style={{ width: getBarWidth(reg.actualProfiles || 0, reg.intentClicks || 0) }} 
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* CARD FOOTER */}
-                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">All-Time Users:</span>
-                        <span className="font-mono font-black text-gray-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
-                          {reg.totalProfilesAllTime || 0} users
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* PIPELINE 2: POST A JOB & GATE BLOCKERS (AMBER / ORANGE THEME) */}
-                    <div className="lg:col-span-2 bg-gradient-to-b from-amber-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-amber-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
-                      <div>
-                        {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-2.5 mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-xs">
-                              <Building2 size={16} />
-                            </div>
-                            <div>
-                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
-                                <span>Post a Job Funnel</span>
-                                <InfoTooltip text="Tracks employers and users wanting to publish a job. Displays drop-offs at the unauthenticated login wall, the 66% Gold Member profile wall, and studio registration." />
-                              </h3>
-                              <p className="text-[10px] text-gray-500">Access Walls ➔ Published</p>
-                            </div>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
-                              <TrendingDown size={11} className="text-amber-700" />
-                              <span>{post.dropOffRate || 0}% drop</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* VISUAL COMPACT STEPS */}
-                        <div className="space-y-2.5 mt-3">
-                          {/* Step 1: Total Interest */}
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-0.5">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
-                                <span className="w-4 h-4 rounded-full bg-amber-100 text-amber-900 text-[9px] font-black inline-flex items-center justify-center">1</span>
-                                <span>Post Job Clicks</span>
-                              </span>
-                              <span className="font-mono font-bold text-gray-900 text-xs">{post.totalInterest || 0}</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                              <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: "100%" }} />
-                            </div>
-                          </div>
-
-                          {/* ROADBLOCK GATE STRIP (COMPACT SINGLE-LINE) */}
-                          <div className="bg-amber-50/80 border border-amber-200/80 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[10px]">
-                            <span className="font-bold text-amber-950 flex items-center gap-1 text-[11px]">
-                              <Lock size={11} className="text-amber-700" />
-                              <span>Blocked at Walls:</span>
-                            </span>
-                            <div className="flex items-center gap-1 font-mono font-bold text-[9px]">
-                              <span className="bg-white text-red-700 px-1.5 py-0.5 rounded border border-red-200" title="Unauthenticated Gate">Login: {post.blockedUnauth || 0}</span>
-                              <span className="bg-white text-amber-800 px-1.5 py-0.5 rounded border border-amber-200" title="Gold Tier (<66%) Gate">Tier: {post.blockedTier || 0}</span>
-                              <span className="bg-white text-orange-800 px-1.5 py-0.5 rounded border border-orange-200" title="No Studio Claimed Gate">Firm: {post.blockedNoCompany || 0}</span>
-                            </div>
-                          </div>
-
-                          {/* Step 2: Published Vacancies */}
-                          <div className="bg-emerald-100/60 p-2.5 rounded-xl border border-emerald-300">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-bold text-emerald-950 flex items-center gap-1 text-[11px]">
-                                <CheckCircle2 size={13} className="text-emerald-700" />
-                                <span>Published Vacancies</span>
-                              </span>
-                              <span className="font-mono font-black text-emerald-950 text-xs">{post.published || 0}</span>
-                            </div>
-                            <div className="w-full bg-emerald-200 rounded-full h-1.5 overflow-hidden">
-                              <div 
-                                className="h-full rounded-full bg-emerald-600 transition-all duration-500" 
-                                style={{ width: getBarWidth(post.published || 0, post.totalInterest || 0) }} 
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* CARD FOOTER */}
-                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">Unlocked Studios:</span>
-                        <span className="font-mono font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
-                          {post.formUnlocked || 0} cleared
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* PIPELINE 3: ALERTS & SUBSCRIPTIONS (EMERALD THEME) */}
-                    <div className="lg:col-span-2 bg-gradient-to-b from-emerald-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-emerald-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
-                      <div>
-                        {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-2.5 mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs">
-                              <Bell size={16} />
-                            </div>
-                            <div>
-                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
-                                <span>Alerts &amp; Subscriptions</span>
-                                <InfoTooltip text="Tracks clicks on 'Subscribe for Alerts' across homepage, city job pages, and fortnightly briefing banners vs completed subscriber submissions." />
-                              </h3>
-                              <p className="text-[10px] text-gray-500">Interest ➔ Audience Leads</p>
-                            </div>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950 border border-emerald-300">
-                              <TrendingDown size={11} className="text-emerald-700" />
-                              <span>{sub.dropOffRate || 0}% drop</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* VISUAL COMPACT STEPS */}
-                        <div className="space-y-2.5 mt-3">
-                          {/* Step 1: Subscribe Intent Clicks */}
-                          <div>
-                            <div className="flex items-center justify-between text-xs mb-0.5">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
-                                <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-900 text-[9px] font-black inline-flex items-center justify-center">1</span>
-                                <span>Subscribe Clicks</span>
-                              </span>
-                              <span className="font-mono font-bold text-gray-900 text-xs">{sub.alertClicks || 0}</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                              <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: "100%" }} />
-                            </div>
-                          </div>
-
-                          {/* CHANNELS STRIP (COMPACT SINGLE-LINE) */}
-                          <div className="bg-emerald-50/80 border border-emerald-200/80 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[10px]">
-                            <span className="font-bold text-emerald-950 text-[11px]">Channels:</span>
-                            <div className="flex items-center gap-1.5 font-mono font-bold text-[9px]">
-                              <span className="bg-white text-blue-800 px-1.5 py-0.5 rounded border border-blue-200">Briefing: {sub.briefingCount || 0}</span>
-                              <span className="bg-white text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">WhatsApp: {sub.alertsCount || 0}</span>
-                            </div>
-                          </div>
-
-                          {/* Step 2: Total Completed Leads */}
-                          <div className="bg-emerald-100/70 p-2.5 rounded-xl border border-emerald-300">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-bold text-emerald-950 flex items-center gap-1 text-[11px]">
-                                <CheckCircle2 size={13} className="text-emerald-700" />
-                                <span>Completed Subscribers</span>
-                              </span>
-                              <span className="font-mono font-black text-emerald-950 text-xs">{sub.completedSubscriptions || 0}</span>
-                            </div>
-                            <div className="w-full bg-emerald-200 rounded-full h-1.5 overflow-hidden">
-                              <div 
-                                className="h-full rounded-full bg-emerald-700 transition-all duration-500" 
-                                style={{ width: getBarWidth(sub.completedSubscriptions || 0, sub.alertClicks || 0) }} 
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* CARD FOOTER */}
-                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">All-Time Audience:</span>
-                        <span className="font-mono font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
-                          {sub.totalSubscribersAllTime || 0} subs
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* PIPELINE 4: CLAIM STUDIO / PRACTICE (BLUE THEME, SPANS 3 COLS) */}
-                    <div className="lg:col-span-3 bg-gradient-to-b from-blue-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-blue-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
-                      <div>
-                        {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-2.5 mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 text-white flex items-center justify-center shadow-xs">
-                              <ShieldCheck size={16} />
-                            </div>
-                            <div>
-                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
-                                <span>Studio Claim Pipeline</span>
-                                <InfoTooltip text="Tracks practice owners who click 'Claim this Studio' on firm profile pages vs those who submit proof of ownership to the admin team." />
-                              </h3>
-                              <p className="text-[10px] text-gray-500">Directory Profile ➔ Verified Practice Owner</p>
-                            </div>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-100 text-blue-950 border border-blue-200">
-                              <TrendingDown size={11} className="text-blue-700" />
-                              <span>{claim.dropOffRate || 0}% drop</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* VISUAL 2-STEP BOXES */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
-                          <div className="p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-bold text-gray-700 text-[11px]">1. Claim Clicks</span>
-                              <span className="font-mono font-black text-gray-900 text-xs">{claim.claimClicks || 0}</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                              <div className="h-full rounded-full bg-blue-500" style={{ width: "100%" }} />
-                            </div>
-                            <p className="text-[9px] text-gray-400 mt-1">Profile header &amp; modal clicks</p>
-                          </div>
-
-                          <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-200">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-bold text-blue-950 flex items-center gap-1 text-[11px]">
-                                <CheckCircle2 size={12} className="text-blue-700" />
-                                <span>2. Claims Submitted</span>
-                              </span>
-                              <span className="font-mono font-black text-blue-950 text-xs">{claim.submits || 0}</span>
-                            </div>
-                            <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
-                              <div 
-                                className="h-full rounded-full bg-blue-700" 
-                                style={{ width: getBarWidth(claim.submits || 0, claim.claimClicks || 0) }} 
-                              />
-                            </div>
-                            <p className="text-[9px] text-blue-700 mt-1">Formal ownership requests</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* CARD FOOTER */}
-                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">Ownership Requests:</span>
-                        <span className="font-mono font-black text-blue-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
-                          {claim.submits || 0} submissions
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* PIPELINE 5: ARCHITECTURE QUIZZES (ROSE THEME, SPANS 3 COLS) */}
-                    <div className="lg:col-span-3 bg-gradient-to-b from-rose-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-rose-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
-                      <div>
-                        {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-2.5 mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-purple-600 text-white flex items-center justify-center shadow-xs">
-                              <Trophy size={16} />
-                            </div>
-                            <div>
-                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
-                                <span>Quizzes Pipeline</span>
-                                <InfoTooltip text="Tracks candidate quiz engagement: how many started answering architectural questions vs how many reached the final scorecard." />
-                              </h3>
-                              <p className="text-[10px] text-gray-500">Play Starts ➔ Completed Scorecards</p>
-                            </div>
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-950 border border-rose-200">
-                              <TrendingUp size={11} className="text-rose-600" />
-                              <span>{quiz.completionRate || 0}% finished</span>
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* VISUAL 2-STEP BOXES */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
-                          <div className="p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-bold text-gray-700 text-[11px]">1. Plays Started</span>
-                              <span className="font-mono font-black text-gray-900 text-xs">{quiz.starts || 0}</span>
-                            </div>
-                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-                              <div className="h-full rounded-full bg-rose-500" style={{ width: "100%" }} />
-                            </div>
-                            <p className="text-[9px] text-gray-400 mt-1">Quiz card starts &amp; round 1</p>
-                          </div>
-
-                          <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-200">
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-bold text-rose-950 flex items-center gap-1 text-[11px]">
-                                <CheckCircle2 size={12} className="text-rose-700" />
-                                <span>2. Reached Scorecard</span>
-                              </span>
-                              <span className="font-mono font-black text-rose-950 text-xs">{quiz.completions || 0}</span>
-                            </div>
-                            <div className="w-full bg-rose-200 rounded-full h-2 overflow-hidden">
-                              <div 
-                                className="h-full rounded-full bg-rose-600" 
-                                style={{ width: getBarWidth(quiz.completions || 0, quiz.starts || 0) }} 
-                              />
-                            </div>
-                            <p className="text-[9px] text-rose-700 mt-1">Finished tests &amp; claimed points</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* CARD FOOTER */}
-                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">Completed Rounds:</span>
-                        <span className="font-mono font-black text-rose-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
-                          {quiz.completions || 0} plays
-                        </span>
-                      </div>
-                    </div>
-
-                  </div>
-                </div>
-              );
-            })()}
 
             {/* CANDIDATE ON-SITE SEARCHES & UNMET DEMAND */}
             <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
