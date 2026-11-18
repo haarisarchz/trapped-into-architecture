@@ -322,10 +322,9 @@ if (loading) {
                 </button>
                 <button
                   onClick={() => router.push("/admin/mails")}
-                  className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white flex items-center justify-between"
+                  className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white whitespace-nowrap"
                 >
-                  <span>Mail &amp; WhatsApp Center</span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full font-semibold">Email + WA</span>
+                  Mail &amp; WhatsApp Center
                 </button>
               </>
             )}
