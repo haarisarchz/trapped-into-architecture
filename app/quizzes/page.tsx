@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { trackEvent } from "@/utils/analytics";
 import { 
   Trophy, Play, Clock, HelpCircle, Users, Sparkles, 
-  ArrowRight, Filter, ChevronRight, Award, Flame, Search, Lock
+  ArrowRight, ArrowDown, Filter, ChevronRight, Award, Flame, Search, Lock, CheckCircle2, XCircle
 } from "lucide-react";
 
 export default function QuizzesHubPage() {
@@ -14,6 +14,7 @@ export default function QuizzesHubPage() {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [demoSelected, setDemoSelected] = useState<string | null>(null);
   
   // Auth state
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -97,7 +98,9 @@ export default function QuizzesHubPage() {
   };
 
   const filteredQuizzes = quizzes.filter(q => {
-    const matchesCat = activeCategory === "all" || (q.category || "").toLowerCase() === activeCategory.toLowerCase();
+    const qCat = (q.category || "").toLowerCase();
+    const active = activeCategory.toLowerCase();
+    const matchesCat = active === "all" || qCat.includes(active) || active.includes(qCat);
     const matchesSearch = !searchQuery.trim() || 
       (q.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
       (q.description || "").toLowerCase().includes(searchQuery.toLowerCase());
@@ -105,12 +108,14 @@ export default function QuizzesHubPage() {
   });
 
   const categories = [
-    { id: "all", label: "All Quizzes" },
-    { id: "architects", label: "🏛️ Architects & Firms" },
-    { id: "contemporary", label: "🏢 Contemporary" },
-    { id: "history", label: "🏺 History & Heritage" },
-    { id: "pritzker", label: "🏆 Pritzker Prize" },
-    { id: "software", label: "💻 CAD / Software" }
+    { id: "all", label: "🌟 All Tournaments (7)" },
+    { id: "Guess the Building", label: "🏛️ Guess the Building" },
+    { id: "Architects & Firms", label: "📐 Architects & Firms" },
+    { id: "World Geography", label: "🌍 World Geography" },
+    { id: "History & Milestones", label: "⏳ History & Timeline" },
+    { id: "History & Theory", label: "🎨 Styles & Theory" },
+    { id: "Architecture Trivia", label: "🔍 Clues & Detective" },
+    { id: "Architects & Portfolios", label: "👥 Master Portfolios" }
   ];
 
   return (
@@ -120,30 +125,30 @@ export default function QuizzesHubPage() {
         
         {/* WIDE DYNAMIC HERO WITH LIVE QUIZ PREVIEW */}
         <div className="bg-white border-b border-gray-200 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
               
               {/* Left Column (7 cols): Full-spread Heading & Value Props */}
               <div className="lg:col-span-7">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-black text-white rounded-full text-xs font-bold uppercase tracking-wider mb-5 shadow-xs">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-black text-white rounded-full text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
                   <Sparkles size={13} className="text-amber-400" /> Architecture Arena
                 </div>
 
-                <h1 className="text-3xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight">
+                <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight">
                   Recognize the Masters. <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
                     Rule the Architecture Leaderboard.
                   </span>
                 </h1>
 
-                <p className="mt-3 text-base text-gray-600 leading-relaxed max-w-2xl">
-                  45+ iconic world projects, legendary studios, and tectonic trivia. Challenge fellow architects, beat the clock in rapid fire, and claim your place in the rankings.
+                <p className="mt-3 text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl">
+                  65+ iconic architectural masterworks, legendary studios, and tectonic trivia. Challenge fellow architects, beat the continuous countdown in rapid fire, and claim your place in the rankings.
                 </p>
 
                 {/* Quick Feature Badges */}
-                <div className="mt-6 flex flex-wrap items-center gap-4 text-xs font-bold text-gray-700">
+                <div className="mt-5 flex flex-wrap items-center gap-3 text-xs font-bold text-gray-700">
                   <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
-                    <span className="text-base">📸</span> 45+ High-Res Photos
+                    <span className="text-base">📸</span> 65+ High-Res Photos
                   </div>
                   <div className="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
                     <span className="text-base">⚡</span> 12s Rapid Fire Mode
@@ -153,13 +158,31 @@ export default function QuizzesHubPage() {
                   </div>
                 </div>
 
+                {/* Direct Action Jump Buttons */}
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <a 
+                    href="#tournaments-grid"
+                    className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-sm transition"
+                  >
+                    <span>Explore All 7 Tournaments</span>
+                    <ArrowDown size={14} />
+                  </a>
+                  <Link 
+                    href="/quizzes/iconic-world-landmarks-guess-the-building?autostart=1"
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 shadow-sm transition"
+                  >
+                    <Play size={13} fill="currentColor" />
+                    <span>Quick Play: Guess the Building</span>
+                  </Link>
+                </div>
+
                 {/* Categories */}
-                <div className="mt-8 flex flex-wrap items-center gap-2">
+                <div className="mt-6 flex flex-wrap items-center gap-2">
                   {categories.map(c => (
                     <button
                       key={c.id}
                       onClick={() => setActiveCategory(c.id)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition shadow-xs ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ${
                         activeCategory === c.id 
                           ? "bg-black text-white shadow-md scale-105" 
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
@@ -184,19 +207,19 @@ export default function QuizzesHubPage() {
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                       <span className="text-[11px] font-extrabold uppercase tracking-widest text-gray-400">
-                        Live Preview Demo
+                        Interactive Live Preview
                       </span>
                     </div>
                     <span className="text-[10px] bg-white/15 px-2 py-0.5 rounded-full font-mono font-bold text-amber-300">
-                      Sample Question
+                      Try Me &bull; Click an Option
                     </span>
                   </div>
 
                   {/* Sample Photo */}
                   <div className="relative rounded-2xl overflow-hidden h-40 bg-gray-800 mb-4 border border-white/10">
                     <img referrerPolicy="no-referrer" 
-                      src="https://ik.imagekit.io/ti2a/quizzes/fallingwater-kaufmann-residence-building.jpg" 
-                      alt="Sample Project" 
+                      src="/quizzes/fallingwater-kaufmann-residence.jpg" 
+                      alt="Fallingwater" 
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white border border-white/20">
@@ -209,29 +232,58 @@ export default function QuizzesHubPage() {
                     Which master architect designed the cantilevered terraces of &quot;Fallingwater&quot;?
                   </p>
 
-                  {/* Sample Options */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-300 text-xs font-bold flex items-center justify-between">
-                      <span>Frank Lloyd Wright</span>
-                      <span>✓</span>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-xs font-medium">
-                      Le Corbusier
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-xs font-medium">
-                      Mies van der Rohe
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-xs font-medium">
-                      Louis Kahn
-                    </div>
+                  {/* Sample Options - FULLY INTERACTIVE */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {[
+                      { name: "Frank Lloyd Wright", isCorrect: true },
+                      { name: "Le Corbusier", isCorrect: false },
+                      { name: "Mies van der Rohe", isCorrect: false },
+                      { name: "Louis Kahn", isCorrect: false }
+                    ].map(opt => {
+                      const isChosen = demoSelected === opt.name;
+                      let btnStyle = "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10";
+                      if (demoSelected) {
+                        if (opt.isCorrect) {
+                          btnStyle = "bg-emerald-500/25 border-emerald-500 text-emerald-300 font-bold";
+                        } else if (isChosen) {
+                          btnStyle = "bg-red-500/25 border-red-500 text-red-300 font-bold";
+                        } else {
+                          btnStyle = "bg-white/5 border-white/10 text-gray-500 opacity-60";
+                        }
+                      }
+                      return (
+                        <button
+                          key={opt.name}
+                          type="button"
+                          onClick={() => setDemoSelected(opt.name)}
+                          className={`p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer ${btnStyle}`}
+                        >
+                          <span className="truncate">{opt.name}</span>
+                          {demoSelected && opt.isCorrect && <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />}
+                          {demoSelected && isChosen && !opt.isCorrect && <XCircle size={13} className="text-red-400 shrink-0" />}
+                        </button>
+                      );
+                    })}
                   </div>
 
+                  {demoSelected && (
+                    <div className={`p-2 rounded-xl mb-3 text-[11px] font-bold text-center ${
+                      demoSelected === "Frank Lloyd Wright" 
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" 
+                        : "bg-red-500/20 text-red-300 border border-red-500/40"
+                    }`}>
+                      {demoSelected === "Frank Lloyd Wright"
+                        ? "✓ Spot on! Designed 1935 over a waterfall in Mill Run, PA."
+                        : "✕ Close! It was designed by Frank Lloyd Wright in 1935."}
+                    </div>
+                  )}
+
                   <Link 
-                    href="/quizzes/iconic-world-landmarks-guess-the-building"
+                    href="/quizzes/iconic-world-landmarks-guess-the-building?autostart=1"
                     onClick={() => trackEvent("quiz_start_click", { slug: "iconic-world-landmarks-guess-the-building", source: "featured_hero" })}
                     className="w-full py-2.5 bg-white text-black hover:bg-gray-100 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition shadow-sm"
                   >
-                    Play Full Quiz Now (45 Projects) <ArrowRight size={14} />
+                    Play Full Quiz (65 Masterworks) <ArrowRight size={14} />
                   </Link>
                 </div>
               </div>
@@ -241,7 +293,7 @@ export default function QuizzesHubPage() {
         </div>
 
         {/* MAIN BODY: 2-COLUMN LAYOUT */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="tournaments-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 scroll-mt-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             {/* LEFT / CENTER: QUIZ CARDS FEED (8 Columns) */}
@@ -294,7 +346,7 @@ export default function QuizzesHubPage() {
                     return (
                       <Link 
                         key={quiz.id}
-                        href={`/quizzes/${quiz.slug}`}
+                        href={`/quizzes/${quiz.slug}?autostart=1`}
                         onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "hub_grid" })}
                         className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col group"
                       >

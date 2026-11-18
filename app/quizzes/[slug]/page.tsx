@@ -333,6 +333,14 @@ export default function QuizPlayPage() {
     setTotalTimeElapsed(0);
   };
 
+  // Immediate Autostart if requested in query params (e.g. ?autostart=1)
+  useEffect(() => {
+    const autostart = searchParams.get("autostart");
+    if ((autostart === "1" || autostart === "true") && allQuestionsPool.length > 0 && !gameStarted && !isGameOver) {
+      handleStartGame();
+    }
+  }, [allQuestionsPool, searchParams]);
+
   const handleTimeExpired = () => {
     finishGame(true);
   };
@@ -763,14 +771,26 @@ export default function QuizPlayPage() {
                     </div>
                   )}
 
-                  {quiz.cover_image && (
+                  <div className="relative w-full h-48 sm:h-64 rounded-2xl mb-6 overflow-hidden bg-gradient-to-br from-gray-900 to-black border border-gray-200 shadow-xs flex items-center justify-center">
                     <img referrerPolicy="no-referrer"
-                      src={quiz.cover_image} 
+                      src={quiz.cover_image || "/quizzes/fallingwater-kaufmann-residence.jpg"} 
                       alt={quiz.title} 
-                      className="w-full h-48 sm:h-64 object-cover rounded-2xl mb-6 shadow-xs border border-gray-100"
-                      onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { 
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/quizzes/fallingwater-kaufmann-residence.jpg";
+                      }}
                     />
-                  )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                    <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+                      <span className="px-3 py-1 bg-black/75 backdrop-blur-md text-amber-300 text-xs font-black rounded-full border border-amber-400/30">
+                        ⚡ Tournament Ready
+                      </span>
+                      <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-black text-xs font-bold rounded-full">
+                        {allQuestionsPool.length || 65} Questions
+                      </span>
+                    </div>
+                  </div>
 
                   <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full uppercase tracking-wider">
                     {quiz.category}
