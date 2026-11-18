@@ -195,7 +195,7 @@ if (loading) {
         </div>
 
         {/* SCROLLABLE MENU (Middle section that scrolls independently) */}
-        <div className="space-y-1.5 flex-1 overflow-y-auto min-h-0 pr-1 -mr-1 dark-admin-scrollbar">
+        <div className="space-y-1.5 flex-1 overflow-y-auto min-h-0 pr-1.5 dark-admin-scrollbar">
           
           {/* ADMIN ACTIVITY */}
           <button
