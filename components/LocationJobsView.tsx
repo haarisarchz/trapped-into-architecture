@@ -219,6 +219,44 @@ export default function LocationJobsView({
     </div>
   );
 
+  if (initialJobs.length === 0) {
+    return (
+      <div className="w-full bg-white rounded-3xl p-8 sm:p-14 text-center border border-gray-200 shadow-xs my-4">
+        <div className="w-16 h-16 mx-auto mb-4 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+          <MapPin size={32} />
+        </div>
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+          No Live Openings in {locationName} Right Now
+        </h3>
+        <p className="text-gray-500 text-sm sm:text-base max-w-lg mx-auto mb-8 leading-relaxed">
+          Architecture studios in {locationName} post vacancies periodically. Subscribe for WhatsApp alerts or join our channel so you get notified the instant a new opening is published.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href={`/subscriptions?${locationType}=${encodeURIComponent(locationName)}`}
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-xs"
+          >
+            <Bell size={16} />
+            <span>Get WhatsApp Alerts for {locationName}</span>
+          </Link>
+          <Link
+            href="/post-a-job"
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-black hover:bg-gray-800 text-white text-xs sm:text-sm font-bold rounded-xl transition shadow-xs"
+          >
+            <span>Hiring in {locationName}? Post a Job</span>
+          </Link>
+          <Link
+            href="/jobs"
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs sm:text-sm font-bold rounded-xl transition"
+          >
+            <span>Browse All Architecture Jobs</span>
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 items-start">
       {/* DESKTOP FILTERS */}

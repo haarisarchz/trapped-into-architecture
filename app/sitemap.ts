@@ -1,6 +1,7 @@
 import { generateJobUrl } from "@/utils/jobUrl";
 import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
+import { CORE_METRO_CITIES, CORE_METRO_STATES } from '@/lib/channels';
 
 const BASE_URL = 'https://trappedintoarchitecture.com';
 
@@ -57,8 +58,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq('status', 'published');
 
   if (jobs) {
-    const citiesSet = new Set<string>();
-    const statesSet = new Set<string>();
+    const cityCounts = new Map<string, number>();
+    const stateCounts = new Map<string, number>();
 
     jobs.forEach((job) => {
       sitemapData.push({
@@ -69,31 +70,64 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
 
       if (job.city && job.city.trim()) {
-        citiesSet.add(job.city.trim().toLowerCase().replace(/\s+/g, "-"));
+        const cSlug = job.city.trim().toLowerCase().replace(/\s+/g, "-");
+        cityCounts.set(cSlug, (cityCounts.get(cSlug) || 0) + 1);
       }
       if (job.state && job.state.trim()) {
-        statesSet.add(job.state.trim().toLowerCase().replace(/\s+/g, "-"));
+        const sSlug = job.state.trim().toLowerCase().replace(/\s+/g, "-");
+        stateCounts.set(sSlug, (stateCounts.get(sSlug) || 0) + 1);
       }
     });
 
-    // Add City programmatic landing pages
-    citiesSet.forEach((citySlug) => {
+    // 1. Core Metro Cities: ALWAYS included even if 0 current jobs (e.g. Kolkata)
+    const addedCities = new Set<string>();
+    CORE_METRO_CITIES.forEach((metro) => {
+      const metroSlug = metro.replace(/\s+/g, "-");
       sitemapData.push({
-        url: `${BASE_URL}/jobs/city/${encodeURIComponent(citySlug)}`,
+        url: `${BASE_URL}/jobs/city/${encodeURIComponent(metroSlug)}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily',
+        priority: 0.9,
+      });
+      addedCities.add(metroSlug);
+    });
+
+    // 2. Automated Rule: Add any city with >= 5 jobs
+    cityCounts.forEach((count, citySlug) => {
+      if (!addedCities.has(citySlug) && count >= 5) {
+        sitemapData.push({
+          url: `${BASE_URL}/jobs/city/${encodeURIComponent(citySlug)}`,
+          lastModified: new Date(),
+          changeFrequency: 'daily',
+          priority: 0.85,
+        });
+        addedCities.add(citySlug);
+      }
+    });
+
+    // 3. States: Core states and any state with >= 5 jobs
+    const addedStates = new Set<string>();
+    CORE_METRO_STATES.forEach((st) => {
+      const stSlug = st.replace(/\s+/g, "-");
+      sitemapData.push({
+        url: `${BASE_URL}/jobs/state/${encodeURIComponent(stSlug)}`,
         lastModified: new Date(),
         changeFrequency: 'daily',
         priority: 0.85,
       });
+      addedStates.add(stSlug);
     });
 
-    // Add State programmatic landing pages
-    statesSet.forEach((stateSlug) => {
-      sitemapData.push({
-        url: `${BASE_URL}/jobs/state/${encodeURIComponent(stateSlug)}`,
-        lastModified: new Date(),
-        changeFrequency: 'daily',
-        priority: 0.8,
-      });
+    stateCounts.forEach((count, stateSlug) => {
+      if (!addedStates.has(stateSlug) && count >= 5) {
+        sitemapData.push({
+          url: `${BASE_URL}/jobs/state/${encodeURIComponent(stateSlug)}`,
+          lastModified: new Date(),
+          changeFrequency: 'daily',
+          priority: 0.85,
+        });
+        addedStates.add(stateSlug);
+      }
     });
   }
 

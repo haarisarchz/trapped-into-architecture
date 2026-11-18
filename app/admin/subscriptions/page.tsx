@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { supabase } from "@/lib/supabase";
+import { isCoreMetro, isCoreState } from "@/lib/channels";
 import { 
   Bell, 
   Mail, 
@@ -244,11 +245,155 @@ export default function SubscriptionsHubPage() {
     document.body.removeChild(link);
   };
 
+  // All SEO Pages with Automated 5-Job Rule & Core Metros Always Active
+  const allSeoPages = useMemo(() => {
+    const list: any[] = [];
+    const seenCities = new Set<string>();
+
+    // 1. Process curated INDIAN_CITIES
+    INDIAN_CITIES.forEach((c) => {
+      const slug = c.slug.toLowerCase();
+      seenCities.add(slug);
+      seenCities.add(c.name.toLowerCase());
+      const count = jobCountsByCity[c.name.toLowerCase()] || jobCountsByCity[slug] || 0;
+      const isMetro = isCoreMetro(c.name) || isCoreMetro(c.slug);
+      const isActiveRule = count >= 5;
+
+      let statusBadge = "Incubating (< 5 jobs)";
+      let badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+      if (isMetro) {
+        statusBadge = "Core Metro (Always Active)";
+        badgeColor = "bg-indigo-50 text-indigo-700 border-indigo-200";
+      } else if (isActiveRule) {
+        statusBadge = "Active Hub (≥ 5 jobs)";
+        badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+      }
+
+      list.push({
+        type: "city",
+        name: c.name,
+        slug: c.slug,
+        subLabel: `${c.tier} · ${c.state}`,
+        urlPath: `/jobs/city/${c.slug}`,
+        fullUrl: `https://trappedintoarchitecture.com/jobs/city/${c.slug}`,
+        activeJobs: count,
+        isMetro,
+        isActiveRule,
+        statusBadge,
+        badgeColor,
+      });
+    });
+
+    // 2. Discover any additional cities from live DB
+    Object.entries(jobCountsByCity).forEach(([cityName, count]) => {
+      const slug = cityName.toLowerCase().replace(/\s+/g, "-");
+      if (!seenCities.has(slug) && !seenCities.has(cityName.toLowerCase())) {
+        seenCities.add(slug);
+        seenCities.add(cityName.toLowerCase());
+        const formattedName = cityName.replace(/\b\w/g, (l) => l.toUpperCase());
+        const isMetro = isCoreMetro(cityName) || isCoreMetro(slug);
+        const isActiveRule = count >= 5;
+
+        let statusBadge = "Incubating (< 5 jobs)";
+        let badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+        if (isMetro) {
+          statusBadge = "Core Metro (Always Active)";
+          badgeColor = "bg-indigo-50 text-indigo-700 border-indigo-200";
+        } else if (isActiveRule) {
+          statusBadge = "Active Hub (≥ 5 jobs)";
+          badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        }
+
+        list.push({
+          type: "city",
+          name: formattedName,
+          slug: slug,
+          subLabel: `Auto-Discovered · Live Listings`,
+          urlPath: `/jobs/city/${slug}`,
+          fullUrl: `https://trappedintoarchitecture.com/jobs/city/${slug}`,
+          activeJobs: count,
+          isMetro,
+          isActiveRule,
+          statusBadge,
+          badgeColor,
+        });
+      }
+    });
+
+    // 3. Process curated INDIAN_STATES
+    const seenStates = new Set<string>();
+    INDIAN_STATES.forEach((s) => {
+      const slug = s.slug.toLowerCase();
+      seenStates.add(slug);
+      seenStates.add(s.name.toLowerCase());
+      const count = jobCountsByState[s.name.toLowerCase()] || jobCountsByState[slug] || 0;
+      const isCore = isCoreState(s.name) || isCoreState(s.slug);
+      const isActiveRule = count >= 5;
+
+      let statusBadge = "Incubating (< 5 jobs)";
+      let badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+      if (isActiveRule || isCore) {
+        statusBadge = "Active State (≥ 5 jobs)";
+        badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+      }
+
+      list.push({
+        type: "state",
+        name: s.name,
+        slug: s.slug,
+        subLabel: `${s.region} · Capital: ${s.capital}`,
+        urlPath: `/jobs/state/${s.slug}`,
+        fullUrl: `https://trappedintoarchitecture.com/jobs/state/${s.slug}`,
+        activeJobs: count,
+        isMetro: isCore,
+        isActiveRule,
+        statusBadge,
+        badgeColor,
+      });
+    });
+
+    // 4. Discover any additional states from DB
+    Object.entries(jobCountsByState).forEach(([stName, count]) => {
+      const slug = stName.toLowerCase().replace(/\s+/g, "-");
+      if (!seenStates.has(slug) && !seenStates.has(stName.toLowerCase())) {
+        seenStates.add(slug);
+        seenStates.add(stName.toLowerCase());
+        const formattedName = stName.replace(/\b\w/g, (l) => l.toUpperCase());
+        const isCore = isCoreState(stName) || isCoreState(slug);
+        const isActiveRule = count >= 5;
+
+        let statusBadge = "Incubating (< 5 jobs)";
+        let badgeColor = "bg-amber-50 text-amber-700 border-amber-200";
+        if (isActiveRule || isCore) {
+          statusBadge = "Active State (≥ 5 jobs)";
+          badgeColor = "bg-emerald-50 text-emerald-700 border-emerald-200";
+        }
+
+        list.push({
+          type: "state",
+          name: formattedName,
+          slug: slug,
+          subLabel: `Auto-Discovered State`,
+          urlPath: `/jobs/state/${slug}`,
+          fullUrl: `https://trappedintoarchitecture.com/jobs/state/${slug}`,
+          activeJobs: count,
+          isMetro: isCore,
+          isActiveRule,
+          statusBadge,
+          badgeColor,
+        });
+      }
+    });
+
+    return list;
+  }, [jobCountsByCity, jobCountsByState]);
+
   // KPI Calculations
   const totalSubscribers = subscribers.length;
   const briefingSubscribers = subscribers.filter((s) => s.subject === "SUBSCRIBE_FORTNIGHTLY_BRIEFING").length;
   const alertSubscribers = subscribers.filter((s) => s.subject !== "SUBSCRIBE_FORTNIGHTLY_BRIEFING").length;
-  const totalSeoPages = INDIAN_CITIES.length + INDIAN_STATES.length;
+  const totalSeoPages = allSeoPages.length;
+  const activeLandingPagesCount = allSeoPages.filter((p) => p.activeJobs >= 5 || p.isMetro).length;
 
   // Filtered Subscribers
   const filteredSubscribers = useMemo(() => {
@@ -271,42 +416,24 @@ export default function SubscriptionsHubPage() {
 
   // Filtered SEO Pages
   const filteredPages = useMemo(() => {
-    const pages: any[] = [];
-
-    if (pageTypeFilter === "all" || pageTypeFilter === "city") {
-      INDIAN_CITIES.forEach((c) => {
-        const count = jobCountsByCity[c.name.toLowerCase()] || 0;
-        pages.push({
-          type: "city",
-          name: c.name,
-          slug: c.slug,
-          subLabel: `${c.tier} · ${c.state}`,
-          urlPath: `/jobs/city/${c.slug}`,
-          fullUrl: `https://trappedintoarchitecture.com/jobs/city/${c.slug}`,
-          activeJobs: count,
-        });
-      });
+    let result = allSeoPages;
+    if (pageTypeFilter === "city") {
+      result = result.filter((p) => p.type === "city");
+    } else if (pageTypeFilter === "state") {
+      result = result.filter((p) => p.type === "state");
     }
 
-    if (pageTypeFilter === "all" || pageTypeFilter === "state") {
-      INDIAN_STATES.forEach((s) => {
-        const count = jobCountsByState[s.name.toLowerCase()] || 0;
-        pages.push({
-          type: "state",
-          name: s.name,
-          slug: s.slug,
-          subLabel: `${s.region} · Capital: ${s.capital}`,
-          urlPath: `/jobs/state/${s.slug}`,
-          fullUrl: `https://trappedintoarchitecture.com/jobs/state/${s.slug}`,
-          activeJobs: count,
-        });
-      });
+    if (pageSearch.trim()) {
+      const q = pageSearch.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q) || p.subLabel.toLowerCase().includes(q));
     }
 
-    if (!pageSearch.trim()) return pages;
-    const q = pageSearch.toLowerCase();
-    return pages.filter((p) => p.name.toLowerCase().includes(q) || p.subLabel.toLowerCase().includes(q));
-  }, [pageTypeFilter, pageSearch, jobCountsByCity, jobCountsByState]);
+    // Sort: Active Hubs / Core Metros first, then by activeJobs desc
+    return [...result].sort((a, b) => {
+      if (a.isMetro !== b.isMetro) return a.isMetro ? -1 : 1;
+      return b.activeJobs - a.activeJobs;
+    });
+  }, [allSeoPages, pageTypeFilter, pageSearch]);
 
   if (loadingAuth) {
     return (
@@ -416,7 +543,9 @@ export default function SubscriptionsHubPage() {
             </div>
             <div className="mt-3">
               <span className="text-3xl font-black text-slate-900">{totalSeoPages}</span>
-              <p className="text-[11px] text-slate-500 mt-1">{INDIAN_CITIES.length} Cities + {INDIAN_STATES.length} States</p>
+              <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+                {activeLandingPagesCount} Active Hubs (≥ 5 jobs / Metros)
+              </p>
             </div>
           </div>
         </div>
@@ -582,6 +711,45 @@ export default function SubscriptionsHubPage() {
         {/* TAB 2: CITY & STATE SEO PAGES DIRECTORY */}
         {activeTab === "pages" && (
           <div className="space-y-4">
+            {/* POLICY BANNER */}
+            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-2xl p-4 sm:p-5 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-slate-800 shadow-xs">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 bg-indigo-500/20 text-indigo-300 rounded-xl mt-0.5">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>Automated City &amp; State Landing Page Engine</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      Rule: ≥ 5 Jobs
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                    Every city and state with <strong className="text-white">5 or more jobs</strong> (including active, outdated, and expired openings) automatically gets a public landing page and sitemap indexation. <strong className="text-white">Core Metros</strong> (Delhi, Mumbai, Bengaluru, Chennai, Hyderabad, Kolkata, Pune, Ahmedabad) stay permanently active.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 shrink-0 bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl">
+                <div className="text-right">
+                  <div className="text-xl font-black text-emerald-400">
+                    {activeLandingPagesCount}
+                  </div>
+                  <div className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
+                    Active Hubs
+                  </div>
+                </div>
+                <div className="h-8 w-px bg-white/10" />
+                <div className="text-right">
+                  <div className="text-xl font-black text-white">
+                    {totalSeoPages}
+                  </div>
+                  <div className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
+                    Total Monitored
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* SEARCH & FILTER CONTROLS */}
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="relative w-full sm:w-80">
@@ -610,7 +778,7 @@ export default function SubscriptionsHubPage() {
                     pageTypeFilter === "city" ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  Cities ({INDIAN_CITIES.length})
+                  Cities ({allSeoPages.filter((p) => p.type === "city").length})
                 </button>
                 <button
                   onClick={() => setPageTypeFilter("state")}
@@ -618,7 +786,7 @@ export default function SubscriptionsHubPage() {
                     pageTypeFilter === "state" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  States ({INDIAN_STATES.length})
+                  States ({allSeoPages.filter((p) => p.type === "state").length})
                 </button>
               </div>
             </div>
@@ -636,7 +804,7 @@ export default function SubscriptionsHubPage() {
                   >
                     <div>
                       {/* TOP BADGES */}
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center justify-between mb-3 gap-2">
                         <span
                           className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
                             isCity
@@ -647,19 +815,28 @@ export default function SubscriptionsHubPage() {
                           {isCity ? "City Directory" : "State Directory"}
                         </span>
 
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
-                          <Briefcase size={12} className="text-slate-500" />
-                          <span>{page.activeJobs} Jobs</span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${page.badgeColor}`}
+                        >
+                          {page.statusBadge}
                         </span>
                       </div>
 
                       {/* LOCATION TITLE & SUBTITLE */}
-                      <h3 className="text-lg font-black text-slate-900 group-hover:text-black">
-                        {page.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {page.subLabel}
-                      </p>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="text-lg font-black text-slate-900 group-hover:text-black">
+                            {page.name}
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {page.subLabel}
+                          </p>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-md shrink-0">
+                          <Briefcase size={12} className="text-slate-500" />
+                          <span>{page.activeJobs} Jobs</span>
+                        </span>
+                      </div>
 
                       {/* URL DISPLAY */}
                       <div className="mt-3 p-2 bg-slate-50 rounded-xl border border-slate-150 font-mono text-[11px] text-slate-600 break-all select-all">
