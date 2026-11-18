@@ -51,13 +51,23 @@ export async function GET(req: Request) {
       const converted = (data || []).map((inq: any) => {
         const sessionMatch = inq.subject.match(/\[Direct Chat\]\s*([^\s]+)/);
         const sessId = sessionMatch ? sessionMatch[1] : `legacy-${inq.id}`;
+        const isAdmin = inq.name === "Admin Ti2A" || inq.email === "admin@trappedintoarchitecture.com";
+        let msgText = inq.message || "";
+        let imgUrl: string | null = null;
+        const imgMatch = msgText.match(/\[Attached Screenshot\]:\s*([^\s\n]+)/);
+        if (imgMatch) {
+          imgUrl = imgMatch[1];
+          msgText = msgText.replace(/\[Attached Screenshot\]:\s*[^\s\n]+/, "").trim();
+        }
+
         return {
           id: inq.id,
           session_id: sessId,
-          sender: "visitor",
-          message: inq.message,
+          sender: isAdmin ? "admin" : "visitor",
+          message: msgText,
+          image_url: imgUrl,
           sender_name: inq.name !== "Anonymous Visitor" ? inq.name : null,
-          sender_contact: inq.phone || (inq.email !== "chat@trappedintoarchitecture.com" ? inq.email : null),
+          sender_contact: inq.phone || (inq.email !== "chat@trappedintoarchitecture.com" && inq.email !== "admin@trappedintoarchitecture.com" ? inq.email : null),
           created_at: inq.created_at
         };
       });
@@ -72,15 +82,27 @@ export async function GET(req: Request) {
         .eq("subject", `[Direct Chat] ${sessionId}`)
         .order("created_at", { ascending: true });
 
-      const converted = (data || []).map((inq: any) => ({
-        id: inq.id,
-        session_id: sessionId,
-        sender: "visitor",
-        message: inq.message,
-        sender_name: inq.name !== "Anonymous Visitor" ? inq.name : null,
-        sender_contact: inq.phone || (inq.email !== "chat@trappedintoarchitecture.com" ? inq.email : null),
-        created_at: inq.created_at
-      }));
+      const converted = (data || []).map((inq: any) => {
+        const isAdmin = inq.name === "Admin Ti2A" || inq.email === "admin@trappedintoarchitecture.com";
+        let msgText = inq.message || "";
+        let imgUrl: string | null = null;
+        const imgMatch = msgText.match(/\[Attached Screenshot\]:\s*([^\s\n]+)/);
+        if (imgMatch) {
+          imgUrl = imgMatch[1];
+          msgText = msgText.replace(/\[Attached Screenshot\]:\s*[^\s\n]+/, "").trim();
+        }
+
+        return {
+          id: inq.id,
+          session_id: sessionId,
+          sender: isAdmin ? "admin" : "visitor",
+          message: msgText,
+          image_url: imgUrl,
+          sender_name: inq.name !== "Anonymous Visitor" ? inq.name : null,
+          sender_contact: inq.phone || (inq.email !== "chat@trappedintoarchitecture.com" && inq.email !== "admin@trappedintoarchitecture.com" ? inq.email : null),
+          created_at: inq.created_at
+        };
+      });
 
       return NextResponse.json({ messages: converted });
     }
@@ -143,15 +165,16 @@ export async function POST(req: Request) {
     if (!savedRecord) {
       try {
         const fallbackMsg = imageUrl ? `${trimmedMsg ? trimmedMsg + "\n\n" : ""}[Attached Screenshot]: ${imageUrl}` : trimmedMsg;
+        const isAdmin = sender === "admin";
         const { data } = await supabase
           .from("contact_inquiries")
           .insert([{
-            name: senderName ? senderName.trim() : "Anonymous Visitor",
-            email: senderContact && senderContact.includes("@") ? senderContact.trim() : "chat@trappedintoarchitecture.com",
+            name: senderName ? senderName.trim() : (isAdmin ? "Admin Ti2A" : "Anonymous Visitor"),
+            email: senderContact && senderContact.includes("@") ? senderContact.trim() : (isAdmin ? "admin@trappedintoarchitecture.com" : "chat@trappedintoarchitecture.com"),
             phone: senderContact && !senderContact.includes("@") ? senderContact.trim() : null,
             subject: `[Direct Chat] ${sessionId}`,
             message: fallbackMsg,
-            is_read: false
+            is_read: isAdmin
           }])
           .select()
           .single();
