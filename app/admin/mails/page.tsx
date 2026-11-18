@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.trappedintoarchitecture.com";
+
 interface ContactInquiry {
   id: string;
   name: string;
@@ -161,6 +163,7 @@ function AdminMailsContent() {
   const [waModalOpen, setWaModalOpen] = useState(false);
   const [waCurrentIndex, setWaCurrentIndex] = useState(0);
   const [waDispatchedIds, setWaDispatchedIds] = useState<string[]>([]);
+  const [selectedWaDispatchedIds, setSelectedWaDispatchedIds] = useState<string[]>([]);
 
   // Initial Auth & Load
   useEffect(() => {
@@ -418,13 +421,92 @@ function AdminMailsContent() {
     }
   };
 
+  // Helper to construct WhatsApp Web invitation URL for a studio record
+  const getWaUrlFromDispatchedItem = (item: DispatchedRecord) => {
+    const raw = (item.email || "").replace("@whatsapp", "").replace(/\D/g, "");
+    const cleanPhone = raw.length === 10 ? `91${raw}` : raw;
+    const firmSlug = (item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const claimUrl = `${siteUrl}/companies/${firmSlug}`;
+    const inviteText = `Hello ${item.name} Team! 👋\n\nYour studio directory listing is live on Trapped Into Architecture (Ti2A):\n👉 ${claimUrl}\n\nYou can claim your studio profile for free to publish vacancies, showcase your latest architectural projects, and hire verified architects directly.\n\nClaim your studio profile here:\n👉 ${claimUrl}\n\nWarm regards,\nTrapped Into Architecture Team`;
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(inviteText)}`;
+  };
+
+  const handleManualDispatchWhatsApp = (item: DispatchedRecord, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const waUrl = getWaUrlFromDispatchedItem(item);
+    window.open(waUrl, "_blank");
+  };
+
+  const handleMoveBackToQueue = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      const { error } = await supabase.from("contact_inquiries").delete().eq("id", id);
+      if (error) throw error;
+      setWaDispatchedHistory((prev) => prev.filter((r) => r.id !== id));
+      setSelectedWaDispatchedIds((prev) => prev.filter((item) => item !== id));
+      loadWhatsAppQueue();
+      loadWhatsAppDispatchedLogs();
+    } catch (err: any) {
+      alert("Error moving record back to queue: " + err.message);
+    }
+  };
+
+  const handleBatchManualDispatch = () => {
+    if (selectedWaDispatchedIds.length === 0) return;
+    const selectedItems = waDispatchedHistory.filter((i) => selectedWaDispatchedIds.includes(i.id));
+    selectedItems.forEach((item, idx) => {
+      setTimeout(() => {
+        const url = getWaUrlFromDispatchedItem(item);
+        window.open(url, "_blank");
+      }, idx * 300);
+    });
+  };
+
+  const handleBatchMoveBackToQueue = async () => {
+    if (selectedWaDispatchedIds.length === 0) return;
+    if (!confirm(`Move ${selectedWaDispatchedIds.length} studio(s) back to the pending WhatsApp queue?`)) return;
+    try {
+      const { error } = await supabase
+        .from("contact_inquiries")
+        .delete()
+        .in("id", selectedWaDispatchedIds);
+      if (error) throw error;
+      setWaDispatchedHistory((prev) => prev.filter((r) => !selectedWaDispatchedIds.includes(r.id)));
+      setSelectedWaDispatchedIds([]);
+      loadWhatsAppQueue();
+      loadWhatsAppDispatchedLogs();
+    } catch (err: any) {
+      alert("Error moving back to queue: " + err.message);
+    }
+  };
+
+  const handleBatchDeleteWaLogs = async () => {
+    if (selectedWaDispatchedIds.length === 0) return;
+    if (!confirm(`Permanently delete ${selectedWaDispatchedIds.length} dispatch logs?`)) return;
+    try {
+      const { error } = await supabase
+        .from("contact_inquiries")
+        .delete()
+        .in("id", selectedWaDispatchedIds);
+      if (error) throw error;
+      setWaDispatchedHistory((prev) => prev.filter((r) => !selectedWaDispatchedIds.includes(r.id)));
+      setSelectedWaDispatchedIds([]);
+      loadWhatsAppQueue();
+      loadWhatsAppDispatchedLogs();
+    } catch (err: any) {
+      alert("Error deleting logs: " + err.message);
+    }
+  };
+
   const deleteWaDispatchedLog = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!confirm("Are you sure you want to delete this dispatch log?")) return;
     try {
       await supabase.from("contact_inquiries").delete().eq("id", id);
       setWaDispatchedHistory((prev) => prev.filter((r) => r.id !== id));
+      setSelectedWaDispatchedIds((prev) => prev.filter((item) => item !== id));
       loadWhatsAppQueue();
+      loadWhatsAppDispatchedLogs();
     } catch (err) {
       alert("Error deleting record");
     }
@@ -866,7 +948,7 @@ function AdminMailsContent() {
                     <div className="divide-y divide-gray-100">
                       {campaignNextBatch.map((item, idx) => (
                         <div
-                          key={item.id}
+                          key={item.id || item.slug || `${item.firmName}-${idx}`}
                           className="px-4 py-3.5 hover:bg-slate-50 transition flex items-center justify-between gap-3 text-xs"
                         >
                           <div className="flex items-center gap-3 min-w-[220px] max-w-[260px] shrink-0">
@@ -876,7 +958,7 @@ function AdminMailsContent() {
                             <div className="truncate">
                               <span className="font-extrabold text-gray-900 block truncate">{item.firmName}</span>
                               <span className="text-[11px] text-gray-400 font-mono block truncate">
-                                {item.targetEmail}
+                                {item.targetEmail || item.email || "No email"}
                               </span>
                             </div>
                           </div>
@@ -886,13 +968,17 @@ function AdminMailsContent() {
                               {item.jobCount} Active Job{item.jobCount !== 1 ? "s" : ""}
                             </span>
                             <span className="truncate text-gray-500 text-[11px]">
-                              {item.jobs.map((j: any) => j.position).join(", ")}
+                              {Array.isArray(item.jobs)
+                                ? item.jobs.map((j: any) => j.position || j).join(", ")
+                                : Array.isArray(item.positions)
+                                ? item.positions.join(", ")
+                                : "Active vacancies"}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
                             <a
-                              href={item.claimUrl}
+                              href={item.claimUrl || `/companies/${item.slug || ""}?claim=true`}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-600 hover:text-black hover:underline"
@@ -1207,21 +1293,95 @@ function AdminMailsContent() {
             {/* TAB: WHATSAPP DISPATCHED HISTORY */}
             {waTab === "dispatched" && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="relative w-full sm:w-80">
-                    <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      value={waSearchQuery}
-                      onChange={(e) => setWaSearchQuery(e.target.value)}
-                      placeholder="Search dispatched studios..."
-                      className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-black transition shadow-2xs"
-                    />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    {/* SELECT ALL CHECKBOX */}
+                    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-gray-200 shadow-2xs shrink-0">
+                      <input
+                        type="checkbox"
+                        id="select-all-wa"
+                        checked={
+                          filteredWaDispatched.length > 0 &&
+                          filteredWaDispatched.every((i) => selectedWaDispatchedIds.includes(i.id))
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedWaDispatchedIds(filteredWaDispatched.map((i) => i.id));
+                          } else {
+                            setSelectedWaDispatchedIds([]);
+                          }
+                        }}
+                        className="w-4 h-4 rounded text-black border-gray-300 focus:ring-black cursor-pointer"
+                      />
+                      <label htmlFor="select-all-wa" className="text-xs text-gray-700 font-semibold cursor-pointer select-none">
+                        Select All ({filteredWaDispatched.length})
+                      </label>
+                    </div>
+
+                    <div className="relative flex-1 sm:w-80">
+                      <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={waSearchQuery}
+                        onChange={(e) => setWaSearchQuery(e.target.value)}
+                        placeholder="Search dispatched studios..."
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-black transition shadow-2xs"
+                      />
+                    </div>
                   </div>
                   <span className="text-xs text-gray-500 font-semibold">
                     Total WhatsApp Dispatches: {waDispatchedHistory.length}
                   </span>
                 </div>
+
+                {/* BATCH ACTION BAR WHEN ITEMS SELECTED */}
+                {selectedWaDispatchedIds.length > 0 && (
+                  <div className="p-3.5 bg-gray-900 text-white rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-md animate-in fade-in duration-150">
+                    <div className="flex items-center gap-2 text-xs font-bold">
+                      <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">
+                        {selectedWaDispatchedIds.length}
+                      </span>
+                      <span>Studio(s) Selected</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleBatchManualDispatch}
+                        className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      >
+                        <MessageCircle size={13} />
+                        <span>Dispatch Selected on WhatsApp</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleBatchMoveBackToQueue}
+                        className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-white/20"
+                      >
+                        <RefreshCw size={12} />
+                        <span>Move to Queue ({selectedWaDispatchedIds.length})</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleBatchDeleteWaLogs}
+                        className="px-3 py-1.5 bg-red-600/80 hover:bg-red-600 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Trash2 size={12} />
+                        <span>Delete</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedWaDispatchedIds([])}
+                        className="px-2.5 py-1.5 text-gray-400 hover:text-white text-xs font-semibold cursor-pointer"
+                      >
+                        Deselect
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {filteredWaDispatched.length === 0 ? (
                   <div className="p-12 text-center bg-white border border-gray-200 rounded-2xl text-xs text-gray-400">
@@ -1229,47 +1389,91 @@ function AdminMailsContent() {
                   </div>
                 ) : (
                   <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs divide-y divide-gray-100">
-                    {filteredWaDispatched.map((item) => (
-                      <div
-                        key={item.id}
-                        className="px-4 py-3 hover:bg-slate-50 transition flex items-center justify-between gap-3 text-xs"
-                      >
-                        <div className="flex items-center gap-3 min-w-[220px] max-w-[260px] shrink-0">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                          <div className="truncate">
-                            <span className="font-extrabold text-gray-900 block truncate">{item.name}</span>
-                            <span className="text-[11px] text-gray-400 block truncate font-mono">
-                              {item.email}
+                    {filteredWaDispatched.map((item) => {
+                      const isSelected = selectedWaDispatchedIds.includes(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className={`px-4 py-3.5 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                            isSelected ? "bg-emerald-50/50" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-[220px] max-w-[280px] shrink-0">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                if (e.target.checked) {
+                                  setSelectedWaDispatchedIds((prev) => [...prev, item.id]);
+                                } else {
+                                  setSelectedWaDispatchedIds((prev) => prev.filter((id) => id !== item.id));
+                                }
+                              }}
+                              className="w-4 h-4 rounded text-black border-gray-300 focus:ring-black cursor-pointer shrink-0"
+                            />
+                            <div className="truncate">
+                              <span className="font-extrabold text-gray-900 block truncate">{item.name}</span>
+                              <span className="text-[11px] text-gray-500 block truncate font-mono">
+                                {item.email}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 min-w-0 flex items-center gap-2">
+                            <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              WhatsApp Sent
+                            </span>
+                            <span className="truncate text-gray-600 text-[11px]" title={item.message}>
+                              {item.message}
                             </span>
                           </div>
-                        </div>
 
-                        <div className="flex-1 min-w-0 flex items-center gap-2">
-                          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            WhatsApp Sent
-                          </span>
-                          <span className="truncate text-gray-600 text-[11px]">{item.message}</span>
-                        </div>
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                            <span className="text-[11px] text-gray-400 whitespace-nowrap hidden sm:inline">
+                              {new Date(item.created_at).toLocaleDateString("en-GB", {
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
 
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="text-[11px] text-gray-400 whitespace-nowrap">
-                            {new Date(item.created_at).toLocaleDateString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                          <button
-                            onClick={(e) => deleteWaDispatchedLog(item.id, e)}
-                            className="p-1 text-gray-400 hover:text-red-600 transition cursor-pointer"
-                            title="Delete log"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                            {/* MANUAL DISPATCH ON WHATSAPP */}
+                            <button
+                              type="button"
+                              onClick={(e) => handleManualDispatchWhatsApp(item, e)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-2xs cursor-pointer"
+                              title="Open in WhatsApp Web with pre-filled invitation text"
+                            >
+                              <MessageCircle size={13} />
+                              <span>Dispatch on WhatsApp</span>
+                            </button>
+
+                            {/* MOVE BACK TO QUEUE */}
+                            <button
+                              type="button"
+                              onClick={(e) => handleMoveBackToQueue(item.id, e)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 hover:bg-amber-100 hover:text-amber-800 text-gray-700 font-semibold text-xs rounded-xl transition border border-gray-200 cursor-pointer"
+                              title="Unmark from sent and move back to the WhatsApp Queue"
+                            >
+                              <RefreshCw size={12} />
+                              <span>Move to Queue</span>
+                            </button>
+
+                            {/* DELETE LOG */}
+                            <button
+                              type="button"
+                              onClick={(e) => deleteWaDispatchedLog(item.id, e)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Delete log permanently"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
