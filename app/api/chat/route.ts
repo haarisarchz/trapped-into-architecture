@@ -100,14 +100,15 @@ export async function POST(req: Request) {
       message, 
       sender = "visitor", 
       senderName = null, 
-      senderContact = null 
+      senderContact = null,
+      imageUrl = null 
     } = body;
 
-    if (!sessionId || !message || !message.trim()) {
-      return NextResponse.json({ error: "Session ID and message are required." }, { status: 400 });
+    if (!sessionId || (!message && !imageUrl)) {
+      return NextResponse.json({ error: "Session ID and message or image are required." }, { status: 400 });
     }
 
-    const trimmedMsg = message.trim();
+    const trimmedMsg = (message || "").trim();
     const forwarded = req.headers.get("x-forwarded-for");
     const clientIp = forwarded ? forwarded.split(",")[0].trim() : (req.headers.get("x-real-ip") || "Unknown IP");
 
@@ -121,6 +122,8 @@ export async function POST(req: Request) {
           session_id: sessionId,
           sender: sender === "admin" ? "admin" : "visitor",
           message: trimmedMsg,
+          image_url: imageUrl || null,
+          status: "active",
           sender_name: senderName ? senderName.trim() : null,
           sender_contact: senderContact ? senderContact.trim() : null,
           client_ip: clientIp,
@@ -139,6 +142,7 @@ export async function POST(req: Request) {
     // 2. Fallback insert to contact_inquiries if chat_messages is unavailable
     if (!savedRecord) {
       try {
+        const fallbackMsg = imageUrl ? `${trimmedMsg ? trimmedMsg + "\n\n" : ""}[Attached Screenshot]: ${imageUrl}` : trimmedMsg;
         const { data } = await supabase
           .from("contact_inquiries")
           .insert([{
@@ -146,7 +150,7 @@ export async function POST(req: Request) {
             email: senderContact && senderContact.includes("@") ? senderContact.trim() : "chat@trappedintoarchitecture.com",
             phone: senderContact && !senderContact.includes("@") ? senderContact.trim() : null,
             subject: `[Direct Chat] ${sessionId}`,
-            message: trimmedMsg,
+            message: fallbackMsg,
             is_read: false
           }])
           .select()
@@ -155,8 +159,10 @@ export async function POST(req: Request) {
         savedRecord = {
           id: data?.id || `fallback-${Date.now()}`,
           session_id: sessionId,
-          sender: "visitor",
+          sender: sender === "admin" ? "admin" : "visitor",
           message: trimmedMsg,
+          image_url: imageUrl || null,
+          status: "active",
           sender_name: senderName,
           sender_contact: senderContact,
           created_at: new Date().toISOString()
@@ -186,11 +192,19 @@ export async function POST(req: Request) {
                 <p style="margin: 4px 0;"><strong>IP:</strong> ${clientIp}</p>
                 <p style="margin: 4px 0;"><strong>Session:</strong> ${sessionId}</p>
               </div>
+              ${trimmedMsg ? `
               <div style="background: #f3f4f6; padding: 14px 16px; border-radius: 12px; font-size: 14px; line-height: 1.5; color: #111827;">
                 ${trimmedMsg}
-              </div>
+              </div>` : ''}
+              ${imageUrl ? `
+              <div style="margin-top: 12px;">
+                <p style="font-size: 12px; font-weight: bold; color: #4b5563; margin-bottom: 6px;">Attached Screenshot / Image:</p>
+                <a href="${imageUrl}" target="_blank">
+                  <img src="${imageUrl}" style="max-width: 100%; max-height: 280px; border-radius: 10px; border: 1px solid #e5e7eb; object-fit: contain;" />
+                </a>
+              </div>` : ''}
               <div style="margin-top: 18px; text-align: center;">
-                <a href="https://trappedintoarchitecture.com/admin/contact" style="display: inline-block; background: #000; color: #fff; text-decoration: none; font-size: 12px; font-weight: bold; padding: 10px 18px; rounded: 10px; border-radius: 8px;">
+                <a href="https://trappedintoarchitecture.com/admin/contact" style="display: inline-block; background: #000; color: #fff; text-decoration: none; font-size: 12px; font-weight: bold; padding: 10px 18px; border-radius: 8px;">
                   Open Admin Chat Inbox →
                 </a>
               </div>
@@ -206,10 +220,10 @@ export async function POST(req: Request) {
   }
 }
 
-// PATCH: Update visitor name / contact info across their session
+// PATCH: Update visitor name / contact info OR thread status (active / resolved)
 export async function PATCH(req: Request) {
   try {
-    const { sessionId, senderName, senderContact } = await req.json();
+    const { sessionId, senderName, senderContact, status, markRead } = await req.json();
 
     if (!sessionId) {
       return NextResponse.json({ error: "Session ID required" }, { status: 400 });
@@ -218,6 +232,8 @@ export async function PATCH(req: Request) {
     const updates: any = {};
     if (senderName && senderName.trim()) updates.sender_name = senderName.trim();
     if (senderContact && senderContact.trim()) updates.sender_contact = senderContact.trim();
+    if (status && (status === "active" || status === "resolved")) updates.status = status;
+    if (markRead === true) updates.is_read = true;
 
     if (Object.keys(updates).length > 0) {
       try {
@@ -231,6 +247,7 @@ export async function PATCH(req: Request) {
       try {
         const inqUpdates: any = {};
         if (updates.sender_name) inqUpdates.name = updates.sender_name;
+        if (updates.is_read !== undefined) inqUpdates.is_read = updates.is_read;
         if (updates.sender_contact) {
           if (updates.sender_contact.includes("@")) inqUpdates.email = updates.sender_contact;
           else inqUpdates.phone = updates.sender_contact;
@@ -245,5 +262,30 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Failed to update contact" }, { status: 500 });
+  }
+}
+
+// DELETE: Delete a message or an entire session thread
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const sessionId = searchParams.get("sessionId");
+    const messageId = searchParams.get("id");
+
+    if (!sessionId && !messageId) {
+      return NextResponse.json({ error: "Session ID or Message ID required" }, { status: 400 });
+    }
+
+    if (messageId) {
+      await supabase.from("chat_messages").delete().eq("id", messageId);
+      await supabase.from("contact_inquiries").delete().eq("id", messageId);
+    } else if (sessionId) {
+      await supabase.from("chat_messages").delete().eq("session_id", sessionId);
+      await supabase.from("contact_inquiries").delete().eq("subject", `[Direct Chat] ${sessionId}`);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || "Failed to delete" }, { status: 500 });
   }
 }

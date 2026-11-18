@@ -7,19 +7,36 @@ import {
   MessageCircle, 
   X, 
   Send, 
-  Check, 
   User, 
   ShieldCheck, 
   ArrowRight,
-  Smile
+  Smile,
+  Paperclip,
+  Image as ImageIcon,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  ExternalLink,
+  Sparkles,
+  Loader2
 } from "lucide-react";
 
 interface ChatMsg {
   id?: string;
   sender: "visitor" | "admin" | "system";
   message: string;
+  image_url?: string | null;
   created_at?: string;
 }
+
+const QUICK_STARTERS = [
+  { text: "🔍 Looking for Architecture Jobs", prompt: "Hi! I am looking for verified architecture jobs in Chennai / Bangalore. Can you guide me?" },
+  { text: "🏢 Want to Post a Job / Hire", prompt: "Hello, I want to post an architecture job opening for my studio." },
+  { text: "📁 Portfolio & Resume Guidance", prompt: "Hi Admin Ti2A, I need guidance regarding portfolio reviews and architecture applications." },
+  { text: "💡 Platform Query / Feedback", prompt: "Hi! I have a question regarding Trapped Into Architecture features." }
+];
+
+const QUICK_EMOJIS = ["👋", "💼", "📁", "👍", "🙏", "✨", "🏢", "❤️"];
 
 export default function FloatingAdminChat() {
   const pathname = usePathname();
@@ -35,7 +52,15 @@ export default function FloatingAdminChat() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   
+  // Attachments / Screenshot upload state
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [activeLightboxImg, setActiveLightboxImg] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   // Progressive contact capture state
   const [hasProvidedContact, setHasProvidedContact] = useState(false);
   const [dismissedContactPrompt, setDismissedContactPrompt] = useState(false);
@@ -44,6 +69,30 @@ export default function FloatingAdminChat() {
   const [isSavingContact, setIsSavingContact] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const lastMessageCountRef = useRef(0);
+
+  // Web Audio chime generator
+  const playChime = () => {
+    if (!soundEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } catch (e) {}
+  };
 
   // 1. Initialize persistent session & load history
   useEffect(() => {
@@ -63,45 +112,137 @@ export default function FloatingAdminChat() {
     }
 
     // Fetch conversation history from API
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch(`/api/chat?sessionId=${sId}`);
-        const data = await res.json();
-        if (data && Array.isArray(data.messages) && data.messages.length > 0) {
-          setMessages(data.messages);
-          // If history exists, dismiss the floating bubble prompt pill so it doesn't disturb
+    fetchHistory(sId, true);
+  }, []);
+
+  const fetchHistory = async (sId: string, initial = false) => {
+    if (!sId) return;
+    try {
+      const res = await fetch(`/api/chat?sessionId=${sId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && Array.isArray(data.messages)) {
+        if (!initial && data.messages.length > lastMessageCountRef.current) {
+          const latest = data.messages[data.messages.length - 1];
+          if (latest.sender === "admin") {
+            playChime();
+          }
+        }
+        setMessages(data.messages);
+        lastMessageCountRef.current = data.messages.length;
+        if (data.messages.length > 0 && initial) {
           setShowPromptPill(false);
         }
-      } catch (err) {
-        // Fallback gracefully
       }
-    };
+    } catch (err) {}
+  };
 
-    fetchHistory();
-  }, []);
+  // Live polling: Check for admin replies every 6s when chat window is open
+  useEffect(() => {
+    if (!isOpen || !sessionId) return;
+    const interval = setInterval(() => {
+      fetchHistory(sessionId, false);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [isOpen, sessionId]);
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, pendingImagePreview]);
+
+  // Clipboard Paste Support (Ctrl+V for screenshots)
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          setPendingImage(file);
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            setPendingImagePreview(event.target?.result as string);
+          };
+          reader.readAsDataURL(file);
+          break;
+        }
+      }
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        alert("Please attach an image file (PNG, JPG, WebP, etc.)");
+        return;
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        alert("Image must be smaller than 8MB");
+        return;
+      }
+      setPendingImage(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setPendingImagePreview(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Upload image to ImageKit via /api/upload
+  const uploadImageAttachment = async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "/chat-screenshots");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.url || null;
+      }
+    } catch (err) {
+      console.warn("Screenshot upload error:", err);
+    }
+    return null;
+  };
 
   // Handle message send
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const text = inputValue.trim();
-    if (!text || isSending || !sessionId) return;
+  const handleSendMessage = async (textToSend?: string) => {
+    const text = (textToSend !== undefined ? textToSend : inputValue).trim();
+    if ((!text && !pendingImage) || isSending || !sessionId) return;
 
-    const newMsg: ChatMsg = {
+    setIsSending(true);
+    let uploadedImageUrl: string | null = null;
+
+    if (pendingImage) {
+      setIsUploadingImage(true);
+      uploadedImageUrl = await uploadImageAttachment(pendingImage);
+      setIsUploadingImage(false);
+    }
+
+    const optimisticMsg: ChatMsg = {
       sender: "visitor",
       message: text,
+      image_url: uploadedImageUrl,
       created_at: new Date().toISOString()
     };
 
-    setMessages(prev => [...prev, newMsg]);
+    setMessages(prev => [...prev, optimisticMsg]);
     setInputValue("");
-    setIsSending(true);
+    setPendingImage(null);
+    setPendingImagePreview(null);
+    setShowEmojiPicker(false);
+    playChime();
 
     try {
       await fetch("/api/chat", {
@@ -112,9 +253,11 @@ export default function FloatingAdminChat() {
           message: text,
           sender: "visitor",
           senderName: visitorName || null,
-          senderContact: visitorContact || null
+          senderContact: visitorContact || null,
+          imageUrl: uploadedImageUrl
         })
       });
+      lastMessageCountRef.current += 1;
     } catch (err) {
       console.warn("Error sending chat message:", err);
     } finally {
@@ -148,6 +291,16 @@ export default function FloatingAdminChat() {
     } finally {
       setIsSavingContact(false);
     }
+  };
+
+  // Start a new fresh chat
+  const handleResetChat = () => {
+    if (!confirm("Start a new fresh conversation? Your past messages will be saved.")) return;
+    const newSessionId = `chat_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem("ti2a_chat_session_id", newSessionId);
+    setSessionId(newSessionId);
+    setMessages([]);
+    lastMessageCountRef.current = 0;
   };
 
   const visitorMessageCount = messages.filter(m => m.sender === "visitor").length;
@@ -188,7 +341,7 @@ export default function FloatingAdminChat() {
                 e.stopPropagation();
                 setShowPromptPill(false);
               }}
-              className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition"
+              className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition cursor-pointer"
               title="Dismiss"
             >
               <X size={13} />
@@ -199,42 +352,59 @@ export default function FloatingAdminChat() {
 
       {/* 2. EXPANDED LIVE CHAT WINDOW */}
       {isOpen && (
-        <div className="w-[340px] sm:w-[380px] h-[520px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden mb-3 animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-[340px] sm:w-[390px] h-[550px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden mb-3 animate-in fade-in zoom-in-95 duration-200">
           
           {/* CHAT HEADER */}
-          <div className="bg-slate-950 text-white p-4 flex items-center justify-between shrink-0 shadow-xs">
+          <div className="bg-slate-950 text-white p-3.5 sm:p-4 flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-white text-black font-extrabold flex items-center justify-center text-xs shadow-xs">
+                <div className="w-9 h-9 rounded-full bg-white text-black font-extrabold flex items-center justify-center text-xs shadow-xs">
                   Ti2A
                 </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-950 rounded-full"></span>
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-950 rounded-full animate-pulse"></span>
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-sm text-white">Admin Ti2A</h3>
+                  <h3 className="font-bold text-xs sm:text-sm text-white">Admin Ti2A</h3>
                   <ShieldCheck size={14} className="text-emerald-400" />
                 </div>
-                <p className="text-[11px] text-gray-400 flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Active now • Live Helpdesk
+                <p className="text-[10px] sm:text-[11px] text-gray-400 flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Active Now • Verified Architecture Advisor
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-slate-800 text-gray-400 hover:text-white flex items-center justify-center transition cursor-pointer"
-                title="Close chat"
+              <button
+                type="button"
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className="w-7 h-7 rounded-full hover:bg-slate-800 text-gray-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                title={soundEnabled ? "Mute audio chime" : "Enable audio chime"}
               >
-                <X size={18} />
+                {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+              </button>
+              <button 
+                type="button"
+                onClick={handleResetChat}
+                className="w-7 h-7 rounded-full hover:bg-slate-800 text-gray-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                title="Start a new chat"
+              >
+                <RotateCcw size={13} />
+              </button>
+              <button 
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="w-7 h-7 rounded-full hover:bg-slate-800 text-gray-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                title="Minimize chat"
+              >
+                <X size={16} />
               </button>
             </div>
           </div>
 
           {/* CHAT MESSAGE STREAM */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/50 text-xs">
+          <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-slate-50/50 text-xs">
             
             {/* INITIAL ADMIN GREETING BUBBLE */}
             <div className="flex items-start gap-2">
@@ -243,9 +413,31 @@ export default function FloatingAdminChat() {
               </div>
               <div className="bg-white p-3 rounded-2xl rounded-tl-sm border border-gray-200 text-gray-800 shadow-2xs max-w-[85%] leading-relaxed">
                 <p className="font-semibold text-gray-900 mb-0.5">Admin Ti2A</p>
-                Hi, how can I help you? I am admin Ti2A. Looking for job drops, firm details, or have a suggestion?
+                Hi, how can I help you? I am admin Ti2A. Looking for job drops, firm details, portfolio advice, or have a suggestion?
               </div>
             </div>
+
+            {/* 1-TAP QUICK CONVERSATION STARTERS (When conversation is fresh) */}
+            {messages.length <= 1 && (
+              <div className="pt-1 pb-1 space-y-1.5 animate-in fade-in duration-200">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-gray-400 px-1">
+                  Quick Starters
+                </p>
+                <div className="flex flex-col gap-1.5">
+                  {QUICK_STARTERS.map((starter, sIdx) => (
+                    <button
+                      key={sIdx}
+                      type="button"
+                      onClick={() => handleSendMessage(starter.prompt)}
+                      className="text-left text-[11px] font-semibold text-gray-700 bg-white hover:bg-black hover:text-white border border-gray-200 hover:border-black p-2.5 rounded-xl transition cursor-pointer shadow-2xs flex items-center justify-between group"
+                    >
+                      <span>{starter.text}</span>
+                      <ArrowRight size={11} className="opacity-40 group-hover:opacity-100 transition" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* MESSAGE HISTORY */}
             {messages.map((m, idx) => {
@@ -268,7 +460,22 @@ export default function FloatingAdminChat() {
                     }`}
                   >
                     {!isVisitor && <p className="font-semibold text-gray-900 mb-0.5">Admin Ti2A</p>}
-                    <p className="whitespace-pre-wrap">{m.message}</p>
+                    
+                    {/* Render text if present */}
+                    {m.message && <p className="whitespace-pre-wrap">{m.message}</p>}
+
+                    {/* Render attached screenshot / image if present */}
+                    {m.image_url && (
+                      <div className="mt-2 rounded-xl overflow-hidden border border-white/20 bg-black/10 cursor-pointer">
+                        <img 
+                          src={m.image_url} 
+                          alt="Attached Screenshot"
+                          onClick={() => setActiveLightboxImg(m.image_url || null)}
+                          className="max-h-48 w-full object-cover hover:scale-102 transition" 
+                        />
+                      </div>
+                    )}
+
                     <span className={`block text-[9px] mt-1 text-right ${isVisitor ? "text-gray-400" : "text-gray-400"}`}>
                       {m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Delivered"}
                     </span>
@@ -285,7 +492,7 @@ export default function FloatingAdminChat() {
                   <span>Save this conversation</span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-normal mb-2.5">
-                  To ensure our chat is backed up and we can follow up with your queries:
+                  To ensure your chat is saved and we can reply back on WhatsApp or Email:
                 </p>
                 <form onSubmit={handleSaveContact} className="space-y-2">
                   <input
@@ -343,33 +550,151 @@ export default function FloatingAdminChat() {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* PENDING SCREENSHOT PREVIEW BANNER */}
+          {pendingImagePreview && (
+            <div className="px-3 py-2 bg-slate-100 border-t border-gray-200 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <img 
+                  src={pendingImagePreview} 
+                  alt="Screenshot preview" 
+                  className="w-10 h-10 object-cover rounded-lg border border-gray-300 shrink-0" 
+                />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold text-gray-800 truncate">
+                    {pendingImage?.name || "Screenshot ready to send"}
+                  </p>
+                  <p className="text-[10px] text-gray-500">Will upload when you hit send</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingImage(null);
+                  setPendingImagePreview(null);
+                }}
+                className="text-gray-400 hover:text-red-500 p-1 rounded-md hover:bg-white transition cursor-pointer shrink-0"
+                title="Remove screenshot"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
+          {/* QUICK EMOJI BAR */}
+          {showEmojiPicker && (
+            <div className="px-3 py-2 bg-white border-t border-gray-100 flex items-center justify-between gap-1 animate-in fade-in duration-150">
+              <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
+                {QUICK_EMOJIS.map((emoji, eIdx) => (
+                  <button
+                    key={eIdx}
+                    type="button"
+                    onClick={() => {
+                      setInputValue(prev => prev + emoji);
+                      inputRef.current?.focus();
+                    }}
+                    className="w-7 h-7 text-sm hover:scale-125 transition flex items-center justify-center rounded-md hover:bg-gray-100 cursor-pointer"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(false)}
+                className="text-[10px] text-gray-400 hover:text-black font-semibold px-1.5 py-0.5 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* CHAT INPUT AREA */}
           <form 
-            onSubmit={handleSendMessage}
-            className="p-3 bg-white border-t border-gray-100 flex items-center gap-2 shrink-0"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+            className="p-3 bg-white border-t border-gray-100 flex items-center gap-1.5 shrink-0"
           >
+            {/* Hidden native file input */}
             <input 
+              ref={fileInputRef}
+              type="file" 
+              accept="image/*" 
+              onChange={handleFileSelect} 
+              className="hidden" 
+            />
+
+            {/* Screenshot / File attachment button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-8 h-8 rounded-xl text-gray-500 hover:text-black hover:bg-gray-100 flex items-center justify-center transition cursor-pointer shrink-0"
+              title="Attach screenshot or photo (or paste Ctrl+V)"
+            >
+              <Paperclip size={15} />
+            </button>
+
+            {/* Emoji toggle button */}
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className={`w-8 h-8 rounded-xl flex items-center justify-center transition cursor-pointer shrink-0 ${
+                showEmojiPicker ? "bg-amber-100 text-amber-800" : "text-gray-500 hover:text-black hover:bg-gray-100"
+              }`}
+              title="Quick emojis"
+            >
+              <Smile size={16} />
+            </button>
+
+            <input 
+              ref={inputRef}
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Type your message..."
+              onPaste={handlePaste}
+              placeholder={pendingImage ? "Add a caption (optional)..." : "Type a message or paste screenshot..."}
               disabled={isSending}
-              className="flex-1 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs outline-none focus:border-black focus:bg-white transition"
+              className="flex-1 bg-gray-50 text-gray-900 border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-black focus:bg-white transition"
             />
+
             <button
               type="submit"
-              disabled={!inputValue.trim() || isSending}
+              disabled={(!inputValue.trim() && !pendingImage) || isSending}
               className="w-9 h-9 rounded-xl bg-slate-950 text-white flex items-center justify-center hover:bg-slate-800 transition disabled:opacity-30 shrink-0 cursor-pointer shadow-xs"
               title="Send Message"
             >
-              <Send size={15} />
+              {isSending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             </button>
           </form>
 
         </div>
       )}
 
-      {/* 3. FLOATING TRIGGER BUTTON (Always visible at bottom-right) */}
+      {/* 3. LIGHTBOX MODAL (Clicking on any screenshot) */}
+      {activeLightboxImg && (
+        <div 
+          onClick={() => setActiveLightboxImg(null)}
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in duration-200"
+        >
+          <div className="relative max-w-3xl max-h-[90vh] bg-black rounded-2xl overflow-hidden p-2 shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setActiveLightboxImg(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-white hover:text-black transition cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            <img 
+              src={activeLightboxImg} 
+              alt="Screenshot full size" 
+              className="max-h-[85vh] max-w-full object-contain rounded-xl"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 4. FLOATING TRIGGER BUTTON (Always visible at bottom-right) */}
       <button
         onClick={() => {
           setIsOpen(!isOpen);
