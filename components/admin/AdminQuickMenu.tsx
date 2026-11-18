@@ -180,7 +180,7 @@ export default function AdminQuickMenu() {
               {navItem("/admin/jobs", "Manage Jobs", true)}
               {navItem("/admin/add-job", "Add New Job", true)}
               {navItem("/admin/companies", "Manage Companies", true)}
-              {navItem("/admin/subscriptions", "Subscriptions & SEO Pages", true)}
+              {isCeoOrSuper && navItem("/admin/subscriptions", "Subscriptions & SEO Pages", true)}
             </div>
           )}
         </div>

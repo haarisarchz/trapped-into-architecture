@@ -130,9 +130,9 @@ export default function SubscriptionsHubPage() {
           }
         }
 
-        const isAllowed = ["superadmin", "admin", "ceo", "jobadmin"].includes(role);
+        const isAllowed = ["superadmin", "ceo"].includes(role);
         if (!isAllowed) {
-          router.push("/");
+          router.push("/admin");
           return;
         }
         setAuthorized(true);

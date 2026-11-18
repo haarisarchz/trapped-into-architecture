@@ -386,6 +386,15 @@ export default function AnalyticsPage() {
   const [selectedConversionMetric, setSelectedConversionMetric] = useState<
     "applyClicks" | "emailClicks" | "contactClicks" | "shareClicks" | "saveClicks"
   >("applyClicks");
+  const [isCeoOrSuper, setIsCeoOrSuper] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "null");
+      const role = (stored?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      setIsCeoOrSuper(role === "ceo" || role === "superadmin");
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -1148,9 +1157,13 @@ export default function AnalyticsPage() {
 
                       <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
                         <span>All-Time Subscribers:</span>
-                        <Link href="/admin/subscriptions" className="text-emerald-700 font-bold hover:underline flex items-center gap-1">
-                          <span>{sub.totalSubscribersAllTime || 0} in Hub &rarr;</span>
-                        </Link>
+                        {isCeoOrSuper ? (
+                          <Link href="/admin/subscriptions" className="text-emerald-700 font-bold hover:underline flex items-center gap-1">
+                            <span>{sub.totalSubscribersAllTime || 0} in Hub &rarr;</span>
+                          </Link>
+                        ) : (
+                          <strong className="text-gray-900 font-mono font-bold">{sub.totalSubscribersAllTime || 0} subscribers</strong>
+                        )}
                       </div>
                     </div>
 
@@ -1260,31 +1273,33 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
 
-                    {/* FUNNEL 6: QUICK LINK TO SUBSCRIPTION & SEO HUB */}
-                    <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-5 text-white flex flex-col justify-between shadow-xs">
-                      <div>
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 text-indigo-300 border border-white/10 mb-2">
-                          <MapPin size={11} />
-                          <span>Admin Navigation</span>
+                    {/* FUNNEL 6: QUICK LINK TO SUBSCRIPTION & SEO HUB (SUPERADMIN & CEO ONLY) */}
+                    {isCeoOrSuper && (
+                      <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-5 text-white flex flex-col justify-between shadow-xs">
+                        <div>
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 text-indigo-300 border border-white/10 mb-2">
+                            <MapPin size={11} />
+                            <span>Executive Access</span>
+                          </div>
+                          <h3 className="text-base font-black text-white">
+                            Subscriptions &amp; SEO Hub
+                          </h3>
+                          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                            Access full subscriber contact lists, WhatsApp drop requests, CSV exports, and direct links to all 20 Indian City &amp; 16 State job landing pages.
+                          </p>
                         </div>
-                        <h3 className="text-base font-black text-white">
-                          Subscriptions &amp; SEO Hub
-                        </h3>
-                        <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                          Access full subscriber contact lists, WhatsApp drop requests, CSV exports, and direct links to all 20 Indian City &amp; 16 State job landing pages.
-                        </p>
-                      </div>
 
-                      <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between">
-                        <Link
-                          href="/admin/subscriptions"
-                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-black hover:bg-slate-100 rounded-xl text-xs font-bold transition shadow-xs"
-                        >
-                          <span>Open Subscriptions &amp; SEO Hub</span>
-                          <ArrowRight size={14} />
-                        </Link>
+                        <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between">
+                          <Link
+                            href="/admin/subscriptions"
+                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-black hover:bg-slate-100 rounded-xl text-xs font-bold transition shadow-xs"
+                          >
+                            <span>Open Subscriptions &amp; SEO Hub</span>
+                            <ArrowRight size={14} />
+                          </Link>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                   </div>
                 </div>
