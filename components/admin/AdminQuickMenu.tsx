@@ -16,9 +16,9 @@ export default function AdminQuickMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Accordion state
-  const isJobActive = pathname === "/admin" || pathname === "/admin/jobs" || pathname === "/admin/add-job" || pathname === "/admin/companies" || pathname === "/admin/subscriptions";
+  const isJobActive = pathname === "/admin" || pathname === "/admin/jobs" || pathname === "/admin/add-job" || pathname === "/admin/companies";
   const isDbActive = pathname === "/admin/catalog" || pathname === "/admin/quizzes";
-  const isOthersActive = pathname === "/admin/news-feed" || pathname === "/admin/contact" || pathname === "/admin/mails" || pathname === "/admin/whatsapp";
+  const isOthersActive = pathname === "/admin/news-feed" || pathname === "/admin/contact" || pathname === "/admin/mails" || pathname === "/admin/whatsapp" || pathname === "/admin/subscriptions";
 
   const [jobOpen, setJobOpen] = useState(isJobActive);
   const [dbOpen, setDbOpen] = useState(isDbActive);
@@ -229,6 +229,7 @@ export default function AdminQuickMenu() {
           {othersOpen && (
             <div className="bg-gray-50/70 py-1 border-y border-gray-100 space-y-0.5">
               {navItem("/admin/news-feed", "News Feed Management", true)}
+              {isCeoOrSuper && navItem("/admin/subscriptions", "Subscriptions Hub", true)}
               {navItem("/admin/contact", "Contact & Suggestions", true)}
               {navItem("/admin/mails", "Mail & WhatsApp Center", true)}
             </div>
