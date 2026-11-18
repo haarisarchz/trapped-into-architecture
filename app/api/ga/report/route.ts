@@ -212,7 +212,7 @@ export async function GET(request: Request) {
       dimensions: [{ name: "eventName" }],
       metrics: [{ name: "eventCount" }],
       orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
-      limit: 30,
+      limit: 100,
     }).catch(err => {
       console.warn("GA events error:", err.message);
       return [{ rows: [] }];
@@ -326,6 +326,13 @@ export async function GET(request: Request) {
     let allJobsCount = 0;
     let allSharesList: any[] = [];
     let allSavesList: any[] = [];
+    let periodProfilesCount = 0;
+    let totalProfilesCount = 0;
+    let periodBriefingSubscribers = 0;
+    let periodJobAlertSubscribers = 0;
+    let totalSubscribersCount = 0;
+    let periodClaimsCount = 0;
+    let periodUserJobsCount = 0;
     const jobInfoMap: Record<string, string> = {};
 
     if (supabaseUrl && supabaseAnonKey) {
@@ -802,6 +809,53 @@ export async function GET(request: Request) {
             buildTier("Senior & Principal (5+ Yrs)", "Team leads, senior architects & principals", expSupply.senior, expDemand.senior),
           ];
         }
+
+        // Live Funnel Ground Truth Queries from Supabase
+        try {
+          // 1. Registered Profiles in period
+          let profQuery = sb.from("profiles").select("id, created_at", { count: "exact", head: true });
+          if (sinceDate) profQuery = profQuery.gte("created_at", sinceDate);
+          if (untilDate) profQuery = profQuery.lte("created_at", untilDate);
+          const { count: pCount } = await profQuery;
+          periodProfilesCount = pCount || 0;
+
+          const { count: totPCount } = await sb.from("profiles").select("id", { count: "exact", head: true });
+          totalProfilesCount = totPCount || 0;
+
+          // 2. Alert & Briefing Subscribers in period
+          let subQuery = sb.from("contact_inquiries").select("id, created_at, subject")
+            .in("subject", ["SUBSCRIBE_FORTNIGHTLY_BRIEFING", "SUBSCRIBE_JOB_ALERTS"]);
+          if (sinceDate) subQuery = subQuery.gte("created_at", sinceDate);
+          if (untilDate) subQuery = subQuery.lte("created_at", untilDate);
+          const { data: subData } = await subQuery;
+          if (subData) {
+            subData.forEach((s: any) => {
+              if (s.subject === "SUBSCRIBE_FORTNIGHTLY_BRIEFING") periodBriefingSubscribers++;
+              else if (s.subject === "SUBSCRIBE_JOB_ALERTS") periodJobAlertSubscribers++;
+            });
+          }
+
+          const { count: totSubCount } = await sb.from("contact_inquiries").select("id", { count: "exact", head: true })
+            .in("subject", ["SUBSCRIBE_FORTNIGHTLY_BRIEFING", "SUBSCRIBE_JOB_ALERTS"]);
+          totalSubscribersCount = totSubCount || 0;
+
+          // 3. Studio Claim Requests in period
+          let claimQuery = sb.from("company_claim_requests").select("id, created_at", { count: "exact", head: true });
+          if (sinceDate) claimQuery = claimQuery.gte("created_at", sinceDate);
+          if (untilDate) claimQuery = claimQuery.lte("created_at", untilDate);
+          const { count: cCount } = await claimQuery;
+          periodClaimsCount = cCount || 0;
+
+          // 4. User Posted Jobs in period
+          let uJobsQuery = sb.from("jobs").select("id, created_at", { count: "exact", head: true })
+            .eq("is_admin_posted", false);
+          if (sinceDate) uJobsQuery = uJobsQuery.gte("created_at", sinceDate);
+          if (untilDate) uJobsQuery = uJobsQuery.lte("created_at", untilDate);
+          const { count: ujCount } = await uJobsQuery;
+          periodUserJobsCount = ujCount || 0;
+        } catch (fErr) {
+          console.warn("Funnel Supabase query error:", fErr);
+        }
       } catch (sbErr) {
         console.warn("Supabase analytics stats error:", sbErr);
       }
@@ -839,6 +893,85 @@ export async function GET(request: Request) {
     const guestRegisterClicks = eventsMap["guest_register_click"] || 0;
     const guestPopupViews = eventsMap["guest_popup_view"] || 0;
 
+    // Funnel Analytics Calculations
+    const registerIntentClicks = (eventsMap["register_intent_click"] || 0) + guestRegisterClicks;
+    const registerFormSubmits = (eventsMap["register_submit_click"] || 0) + (eventsMap["register_success"] || 0);
+    const registeredUsersCount = periodProfilesCount > 0 ? periodProfilesCount : (eventsMap["register_success"] || 0);
+    const registerVerified = (eventsMap["register_verified"] || 0) + (eventsMap["email_verified"] || 0);
+    const registerDropOffRate = registerIntentClicks > 0 
+      ? Math.max(0, Math.min(100, Math.round(((registerIntentClicks - registeredUsersCount) / registerIntentClicks) * 100)))
+      : 0;
+
+    const postJobClicks = (eventsMap["post_job_click"] || 0) + (eventsMap["post_job_view"] || 0);
+    const postJobBlockedUnauth = eventsMap["post_job_blocked_unauth"] || 0;
+    const postJobBlockedTier = eventsMap["post_job_blocked_tier"] || 0;
+    const postJobBlockedNoCompany = eventsMap["post_job_blocked_nocompany"] || 0;
+    const postJobFormUnlocked = eventsMap["post_job_form_unlocked"] || 0;
+    const postJobSubmits = eventsMap["post_job_submit"] || 0;
+    const postJobPublished = periodUserJobsCount > 0 ? periodUserJobsCount : (eventsMap["post_job_success"] || 0);
+    const postJobDropOffRate = postJobClicks > 0
+      ? Math.max(0, Math.min(100, Math.round(((postJobClicks - postJobPublished) / postJobClicks) * 100)))
+      : 0;
+
+    const subscribeAlertClicks = eventsMap["subscribe_alert_click"] || 0;
+    const completedSubscriptions = (periodBriefingSubscribers + periodJobAlertSubscribers) > 0
+      ? (periodBriefingSubscribers + periodJobAlertSubscribers)
+      : (eventsMap["subscribe_alert_success"] || 0);
+    const subscribeDropOffRate = subscribeAlertClicks > 0
+      ? Math.max(0, Math.min(100, Math.round(((subscribeAlertClicks - completedSubscriptions) / subscribeAlertClicks) * 100)))
+      : 0;
+
+    const claimStudioClicks = eventsMap["claim_studio_click"] || 0;
+    const claimStudioSubmits = periodClaimsCount > 0 ? periodClaimsCount : (eventsMap["claim_studio_submit"] || 0);
+    const claimDropOffRate = claimStudioClicks > 0
+      ? Math.max(0, Math.min(100, Math.round(((claimStudioClicks - claimStudioSubmits) / claimStudioClicks) * 100)))
+      : 0;
+
+    const quizStarts = eventsMap["quiz_start_click"] || 0;
+    const quizCompletions = eventsMap["quiz_complete"] || 0;
+    const quizCompletionRate = quizStarts > 0
+      ? Math.min(100, Math.round((quizCompletions / quizStarts) * 100))
+      : 0;
+
+    const funnels = {
+      registration: {
+        intentClicks: registerIntentClicks,
+        formSubmits: registerFormSubmits,
+        actualProfiles: registeredUsersCount,
+        verifiedUsers: registerVerified,
+        totalProfilesAllTime: totalProfilesCount,
+        dropOffRate: registerDropOffRate,
+      },
+      postJob: {
+        totalInterest: postJobClicks,
+        blockedUnauth: postJobBlockedUnauth,
+        blockedTier: postJobBlockedTier,
+        blockedNoCompany: postJobBlockedNoCompany,
+        formUnlocked: postJobFormUnlocked,
+        submits: postJobSubmits,
+        published: postJobPublished,
+        dropOffRate: postJobDropOffRate,
+      },
+      subscriptions: {
+        alertClicks: subscribeAlertClicks,
+        completedSubscriptions,
+        briefingCount: periodBriefingSubscribers,
+        alertsCount: periodJobAlertSubscribers,
+        totalSubscribersAllTime: totalSubscribersCount,
+        dropOffRate: subscribeDropOffRate,
+      },
+      claimStudio: {
+        claimClicks: claimStudioClicks,
+        submits: claimStudioSubmits,
+        dropOffRate: claimDropOffRate,
+      },
+      quizzes: {
+        starts: quizStarts,
+        completions: quizCompletions,
+        completionRate: quizCompletionRate,
+      },
+    };
+
     const conversions = {
       applyClicks: eventsMap["apply_click"] || 0,
       emailClicks: eventsMap["email_click"] || 0,
@@ -854,7 +987,8 @@ export async function GET(request: Request) {
       totalLifetimeSaves,
       topSharedJobs,
       recentJobs,
-      rawEvents
+      rawEvents,
+      funnels,
     };
 
     const bounceVal = Number(overviewRes[0]?.rows?.[0]?.metricValues?.[4]?.value || 0);

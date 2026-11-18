@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Mail, CheckCircle2, ArrowRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { trackEvent } from "@/utils/analytics";
 
 export default function FortnightlyBriefingBanner() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ export default function FortnightlyBriefingBanner() {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+    trackEvent("subscribe_alert_click", { type: "briefing" });
     const cleanEmail = (email || "").trim().toLowerCase();
 
     if (!cleanEmail || !cleanEmail.includes("@")) {
@@ -38,6 +40,7 @@ export default function FortnightlyBriefingBanner() {
       }
 
       setSubscribed(true);
+      trackEvent("subscribe_alert_success", { type: "briefing" });
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to subscribe. Please try again.");
     } finally {

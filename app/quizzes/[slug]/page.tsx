@@ -4,6 +4,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
+import { trackEvent } from "@/utils/analytics";
 import { 
   Trophy, Play, Clock, HelpCircle, ArrowRight, ArrowLeft, 
   CheckCircle2, XCircle, Share2, MessageCircle, Copy, 
@@ -304,6 +305,13 @@ export default function QuizPlayPage() {
 
     setQuestions(sampled);
     setGameStarted(true);
+    trackEvent("quiz_start_click", {
+      quiz_slug: slug,
+      quiz_title: quiz?.title,
+      difficulty,
+      game_mode: gameMode,
+      question_count: sampled.length,
+    });
     setIsGameOver(false);
     setCurrentIndex(0);
     setUserAnswers({});
@@ -485,6 +493,16 @@ export default function QuizPlayPage() {
       totalTimeElapsed,
       totalAllottedTime,
       timedOut
+    });
+
+    trackEvent("quiz_complete", {
+      quiz_slug: slug,
+      quiz_title: quiz?.title,
+      difficulty,
+      total_points: totalPoints,
+      accuracy: accuracyPercentage,
+      correct_count: correctCount,
+      total_questions: questions.length,
     });
   };
 

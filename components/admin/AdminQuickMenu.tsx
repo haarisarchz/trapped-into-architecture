@@ -16,7 +16,7 @@ export default function AdminQuickMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Accordion state
-  const isJobActive = pathname === "/admin" || pathname === "/admin/jobs" || pathname === "/admin/add-job" || pathname === "/admin/companies";
+  const isJobActive = pathname === "/admin" || pathname === "/admin/jobs" || pathname === "/admin/add-job" || pathname === "/admin/companies" || pathname === "/admin/subscriptions";
   const isDbActive = pathname === "/admin/catalog" || pathname === "/admin/quizzes";
   const isOthersActive = pathname === "/admin/news-feed" || pathname === "/admin/contact" || pathname === "/admin/mails" || pathname === "/admin/whatsapp";
 
@@ -180,6 +180,7 @@ export default function AdminQuickMenu() {
               {navItem("/admin/jobs", "Manage Jobs", true)}
               {navItem("/admin/add-job", "Add New Job", true)}
               {navItem("/admin/companies", "Manage Companies", true)}
+              {navItem("/admin/subscriptions", "Subscriptions & SEO Pages", true)}
             </div>
           )}
         </div>

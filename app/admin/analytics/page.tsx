@@ -1,6 +1,8 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { Sparkles, MapPin, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getClubbedPositionInfo } from "@/utils/positionNormalize";
@@ -1035,6 +1037,259 @@ export default function AnalyticsPage() {
                 );
               })()}
             </div>
+
+            {/* CONVERSION FUNNELS & DROP-OFF ANALYSIS */}
+            {(() => {
+              const funnels = data.conversions?.funnels || {};
+              const reg = funnels.registration || {};
+              const post = funnels.postJob || {};
+              const sub = funnels.subscriptions || {};
+              const claim = funnels.claimStudio || {};
+              const quiz = funnels.quizzes || {};
+
+              return (
+                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-gray-100 pb-4">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-1">
+                        <Sparkles size={12} className="text-indigo-600" />
+                        <span>Drop-off &amp; Journey Analytics</span>
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <span>🎯 Conversion Funnels &amp; Drop-offs</span>
+                        <InfoTooltip text="Tracks candidate and studio journeys from button clicks through login walls, tier limits, and completions. Pinpoints exactly where visitors drop off." />
+                      </h2>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Live visitor drop-off rates across Registrations, Job Posting, Alert Subscriptions, Studio Claims &amp; Quizzes
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full w-fit">
+                      5 Conversion Pipelines
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                    {/* FUNNEL 1: REGISTRATION DROP-OFF */}
+                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-black uppercase tracking-wider text-purple-900 flex items-center">
+                            Registration Pipeline
+                            <InfoTooltip text="Shows how many visitors clicked 'Register' vs how many actually completed account creation and verification in Supabase." />
+                          </span>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                            (reg.dropOffRate || 0) > 70 ? "bg-red-100 text-red-700 border border-red-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                          }`}>
+                            {reg.dropOffRate || 0}% drop-off
+                          </span>
+                        </div>
+
+                        {/* STEP PIPELINE */}
+                        <div className="space-y-2 mt-4">
+                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
+                            <span className="text-gray-600 font-medium">1. Register Intent Clicks</span>
+                            <span className="font-mono font-bold text-gray-900">{reg.intentClicks || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
+                            <span className="text-gray-600 font-medium">2. Form Submissions</span>
+                            <span className="font-mono font-bold text-gray-900">{reg.formSubmits || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-purple-50/80 rounded-xl border border-purple-200 text-purple-950 font-semibold">
+                            <span>3. Created Accounts (DB)</span>
+                            <span className="font-mono font-black">{reg.actualProfiles || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-950 font-semibold">
+                            <span>4. Email/Badge Verified</span>
+                            <span className="font-mono font-black">{reg.verifiedUsers || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
+                        <span>All-Time Registered:</span>
+                        <strong className="text-gray-900 font-mono font-bold">{reg.totalProfilesAllTime || 0} users</strong>
+                      </div>
+                    </div>
+
+                    {/* FUNNEL 2: SUBSCRIBE FOR ALERTS */}
+                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-black uppercase tracking-wider text-emerald-900 flex items-center">
+                            Alerts &amp; Subscriptions
+                            <InfoTooltip text="Tracks clicks on 'Subscribe for Alerts' across homepage, city job pages, and fortnightly briefing banners vs completed subscriber submissions." />
+                          </span>
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            {sub.dropOffRate || 0}% drop-off
+                          </span>
+                        </div>
+
+                        {/* STEP PIPELINE */}
+                        <div className="space-y-2 mt-4">
+                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
+                            <span className="text-gray-600 font-medium">1. Subscribe Intent Clicks</span>
+                            <span className="font-mono font-bold text-gray-900">{sub.alertClicks || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-blue-50/70 rounded-xl border border-blue-200 text-blue-900 font-medium">
+                            <span>↳ Fortnightly Briefing</span>
+                            <span className="font-mono font-bold">{sub.briefingCount || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-emerald-50/70 rounded-xl border border-emerald-200 text-emerald-900 font-medium">
+                            <span>↳ WhatsApp Job Alerts</span>
+                            <span className="font-mono font-bold">{sub.alertsCount || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-emerald-100/70 rounded-xl border border-emerald-300 text-emerald-950 font-bold">
+                            <span>2. Completed Subscriptions</span>
+                            <span className="font-mono font-black">{sub.completedSubscriptions || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
+                        <span>All-Time Subscribers:</span>
+                        <Link href="/admin/subscriptions" className="text-emerald-700 font-bold hover:underline flex items-center gap-1">
+                          <span>{sub.totalSubscribersAllTime || 0} in Hub &rarr;</span>
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* FUNNEL 3: POST A JOB & ACCESS GATES */}
+                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-black uppercase tracking-wider text-amber-900 flex items-center">
+                            Post a Job Pipeline
+                            <InfoTooltip text="Tracks employers and users wanting to publish a job. Displays drop-offs at the unauthenticated login wall, the 66% Gold Member profile wall, and studio registration." />
+                          </span>
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                            {post.dropOffRate || 0}% drop-off
+                          </span>
+                        </div>
+
+                        {/* STEP PIPELINE */}
+                        <div className="space-y-1.5 mt-4">
+                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
+                            <span className="text-gray-600 font-medium">1. Post Job Clicks &amp; Views</span>
+                            <span className="font-mono font-bold text-gray-900">{post.totalInterest || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] px-2 py-1 bg-red-50/60 rounded-lg text-red-700">
+                            <span>🚫 Blocked: Not Logged In</span>
+                            <span className="font-mono font-bold">{post.blockedUnauth || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] px-2 py-1 bg-amber-50/60 rounded-lg text-amber-800">
+                            <span>🚫 Blocked: Under 66% Profile</span>
+                            <span className="font-mono font-bold">{post.blockedTier || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] px-2 py-1 bg-orange-50/60 rounded-lg text-orange-800">
+                            <span>🚫 Blocked: No Studio Claimed</span>
+                            <span className="font-mono font-bold">{post.blockedNoCompany || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-green-50 rounded-xl border border-green-200 text-green-950 font-bold">
+                            <span>2. Form Unlocked / Published</span>
+                            <span className="font-mono font-black">{post.published || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
+                        <span>Form Unlocked:</span>
+                        <strong className="text-gray-900 font-mono font-bold">{post.formUnlocked || 0} studios</strong>
+                      </div>
+                    </div>
+
+                    {/* FUNNEL 4: CLAIM STUDIO / PRACTICE */}
+                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-black uppercase tracking-wider text-blue-900 flex items-center">
+                            Claim Studio Pipeline
+                            <InfoTooltip text="Tracks practice owners who click 'Claim this Studio' on firm profile pages vs those who submit proof of ownership to the admin team." />
+                          </span>
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200">
+                            {claim.dropOffRate || 0}% drop-off
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 mt-4">
+                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
+                            <span className="text-gray-600 font-medium">1. Claim Studio Clicks</span>
+                            <span className="font-mono font-bold text-gray-900">{claim.claimClicks || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-blue-50 rounded-xl border border-blue-200 text-blue-950 font-bold">
+                            <span>2. Claim Form Submissions</span>
+                            <span className="font-mono font-black">{claim.submits || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
+                        <span>Submissions in Period:</span>
+                        <strong className="text-blue-900 font-mono font-bold">{claim.submits || 0} claims</strong>
+                      </div>
+                    </div>
+
+                    {/* FUNNEL 5: ARCHITECTURE QUIZZES */}
+                    <div className="bg-gray-50/70 rounded-2xl p-5 border border-gray-200/90 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-black uppercase tracking-wider text-teal-900 flex items-center">
+                            Quizzes Completion Rate
+                            <InfoTooltip text="Tracks candidate quiz engagement: how many started answering architectural questions vs how many reached the final scorecard." />
+                          </span>
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-900 border border-teal-200">
+                            {quiz.completionRate || 0}% finished
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 mt-4">
+                          <div className="flex items-center justify-between text-xs p-2 bg-white rounded-xl border border-gray-200/70">
+                            <span className="text-gray-600 font-medium">1. Quiz Starts &amp; Card Clicks</span>
+                            <span className="font-mono font-bold text-gray-900">{quiz.starts || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs p-2 bg-teal-50 rounded-xl border border-teal-200 text-teal-950 font-bold">
+                            <span>2. Quizzes Completed</span>
+                            <span className="font-mono font-black">{quiz.completions || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-gray-200 text-[11px] text-gray-500 flex items-center justify-between">
+                        <span>Finished Scorecards:</span>
+                        <strong className="text-teal-900 font-mono font-bold">{quiz.completions || 0} plays</strong>
+                      </div>
+                    </div>
+
+                    {/* FUNNEL 6: QUICK LINK TO SUBSCRIPTION & SEO HUB */}
+                    <div className="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-2xl p-5 text-white flex flex-col justify-between shadow-xs">
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/10 text-indigo-300 border border-white/10 mb-2">
+                          <MapPin size={11} />
+                          <span>Admin Navigation</span>
+                        </div>
+                        <h3 className="text-base font-black text-white">
+                          Subscriptions &amp; SEO Hub
+                        </h3>
+                        <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                          Access full subscriber contact lists, WhatsApp drop requests, CSV exports, and direct links to all 20 Indian City &amp; 16 State job landing pages.
+                        </p>
+                      </div>
+
+                      <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between">
+                        <Link
+                          href="/admin/subscriptions"
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-black hover:bg-slate-100 rounded-xl text-xs font-bold transition shadow-xs"
+                        >
+                          <span>Open Subscriptions &amp; SEO Hub</span>
+                          <ArrowRight size={14} />
+                        </Link>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* CANDIDATE ON-SITE SEARCHES & UNMET DEMAND */}
             <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">

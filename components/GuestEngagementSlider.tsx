@@ -121,6 +121,10 @@ export default function GuestEngagementSlider() {
       source: "guest_slider_popup",
       category: "conversion",
     });
+    trackGaEvent("register_intent_click", {
+      source: "guest_slider",
+      category: "conversion",
+    });
 
     // Trigger registration modal in Navbar
     if (typeof window !== "undefined") {

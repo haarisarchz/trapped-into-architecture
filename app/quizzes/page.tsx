@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
+import { trackEvent } from "@/utils/analytics";
 import { 
   Trophy, Play, Clock, HelpCircle, Users, Sparkles, 
   ArrowRight, Filter, ChevronRight, Award, Flame, Search, Lock
@@ -227,6 +228,7 @@ export default function QuizzesHubPage() {
 
                   <Link 
                     href="/quizzes/iconic-world-landmarks-guess-the-building"
+                    onClick={() => trackEvent("quiz_start_click", { slug: "iconic-world-landmarks-guess-the-building", source: "featured_hero" })}
                     className="w-full py-2.5 bg-white text-black hover:bg-gray-100 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition shadow-sm"
                   >
                     Play Full Quiz Now (45 Projects) <ArrowRight size={14} />
@@ -293,6 +295,7 @@ export default function QuizzesHubPage() {
                       <Link 
                         key={quiz.id}
                         href={`/quizzes/${quiz.slug}`}
+                        onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "hub_grid" })}
                         className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col group"
                       >
                         {/* BESPOKE QUIZ HEADER TEMPLATES */}

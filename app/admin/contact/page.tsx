@@ -629,7 +629,7 @@ export default function ContactSettingsPage() {
             identifiedMsg?.sender_name || latest?.sender_name || `Visitor #${sessionId.slice(0, 6)}`,
           senderContact: identifiedMsg?.sender_contact || latest?.sender_contact || null,
           clientIp: (latest as any)?.client_ip || null,
-          status: isResolved ? "resolved" : "active",
+          status: (isResolved ? "resolved" : "active") as "active" | "resolved",
           lastMessage: latest?.message || (latest?.image_url ? "[Attached Screenshot]" : ""),
           lastMessageAt: latest?.created_at || "",
           messageCount: sorted.length,

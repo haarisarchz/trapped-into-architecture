@@ -66,7 +66,7 @@ const INTAKE_RANGES = [
   { label: "120+ seats", value: "121-500" },
 ];
 
-export function isChennaiMetropolitan(inst: any): boolean {
+function isChennaiMetropolitan(inst: any): boolean {
   if (!inst) return false;
   const state = (inst.state || "").toLowerCase().trim();
   if (state !== "tamil nadu") return false;
@@ -122,7 +122,7 @@ export function isChennaiMetropolitan(inst: any): boolean {
   return false;
 }
 
-export function isBangaloreMetropolitan(inst: any): boolean {
+function isBangaloreMetropolitan(inst: any): boolean {
   if (!inst) return false;
   if ((inst.state || "").toLowerCase().trim() !== "karnataka") return false;
   const dist = (inst.district || "").toLowerCase().trim();
@@ -144,7 +144,7 @@ export function isBangaloreMetropolitan(inst: any): boolean {
   return bmrKeywords.some(kw => text.includes(kw));
 }
 
-export function isDelhiNcrMetropolitan(inst: any): boolean {
+function isDelhiNcrMetropolitan(inst: any): boolean {
   if (!inst) return false;
   const state = (inst.state || "").toLowerCase().trim();
   if (!["delhi", "haryana", "uttar pradesh"].includes(state)) return false;
@@ -167,7 +167,7 @@ export function isDelhiNcrMetropolitan(inst: any): boolean {
   return ncrKeywords.some(kw => text.includes(kw));
 }
 
-export function isMumbaiMetropolitan(inst: any): boolean {
+function isMumbaiMetropolitan(inst: any): boolean {
   if (!inst) return false;
   if ((inst.state || "").toLowerCase().trim() !== "maharashtra") return false;
   const dist = (inst.district || "").toLowerCase().trim();
@@ -196,7 +196,7 @@ export function isMumbaiMetropolitan(inst: any): boolean {
   return false;
 }
 
-export function isPuneMetropolitan(inst: any): boolean {
+function isPuneMetropolitan(inst: any): boolean {
   if (!inst) return false;
   if ((inst.state || "").toLowerCase().trim() !== "maharashtra") return false;
   const dist = (inst.district || "").toLowerCase().trim();
@@ -212,7 +212,7 @@ export function isPuneMetropolitan(inst: any): boolean {
   return pmrKeywords.some(kw => text.includes(kw));
 }
 
-export function isKolkataMetropolitan(inst: any): boolean {
+function isKolkataMetropolitan(inst: any): boolean {
   if (!inst) return false;
   if ((inst.state || "").toLowerCase().trim() !== "west bengal") return false;
   const dist = (inst.district || "").toLowerCase().trim();

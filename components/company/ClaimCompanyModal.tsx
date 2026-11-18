@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { X, Building2, ShieldCheck, Send, CheckCircle2, Sparkles, AlertCircle, Lock, ArrowRight } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { supabase } from "@/lib/supabase";
+import { trackEvent } from "@/utils/analytics";
 import Link from "next/link";
 
 interface ClaimCompanyModalProps {
@@ -140,6 +141,11 @@ export default function ClaimCompanyModal({
       }).catch((e) => console.warn("Failed to notify CEO of studio claim request:", e));
 
       setSubmitted(true);
+      trackEvent("claim_studio_submit", {
+        company_id: companyId || null,
+        company_slug: companySlug,
+        company_name: companyName,
+      });
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to submit claim request.");
     } finally {
