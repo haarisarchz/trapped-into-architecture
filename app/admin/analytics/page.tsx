@@ -458,10 +458,10 @@ export default function AnalyticsPage() {
   return (
     <main className="min-h-screen bg-gray-50 text-black font-sans">
       <Navbar />
-      <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-10">
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
         
         {/* STICKY HEADER & TIMELINE CONTROLS */}
-        <div className="sticky top-0 z-40 bg-gray-50/95 backdrop-blur-md py-3.5 mb-8 -mx-6 px-6 lg:-mx-8 lg:px-8 border-b border-gray-200/80 shadow-xs transition-all">
+        <div className="sticky top-0 z-40 bg-gray-50/95 backdrop-blur-md py-2.5 mb-4 sm:mb-5 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-gray-200/80 shadow-xs transition-all">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-3">
               <AdminQuickMenu />
@@ -536,7 +536,7 @@ export default function AnalyticsPage() {
               </div>
             )}
 
-            <div className={`space-y-6 transition-opacity duration-300 ${loading ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
+            <div className={`space-y-4 sm:space-y-5 transition-opacity duration-300 ${loading ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
             
             {/* OVERVIEW METRICS WITH VERTICAL BAR SPARKLINES & INTERACTIVE CHART */}
             <div className="space-y-4">
@@ -863,8 +863,8 @@ export default function AnalyticsPage() {
             </div>
 
             {/* CANDIDATE CONVERSIONS & ACTIONS */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>⚡ Candidate Conversions &amp; Actions</span>
@@ -974,7 +974,7 @@ export default function AnalyticsPage() {
                 });
 
                 return (
-                  <div className="mt-6 pt-5 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                       <div className="flex items-center gap-2">
                         <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold">
@@ -1087,25 +1087,25 @@ export default function AnalyticsPage() {
               };
 
               return (
-                <div className="bg-white p-6 sm:p-7 rounded-3xl border border-gray-200/90 shadow-sm space-y-7">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200/90 shadow-sm space-y-4 sm:space-y-5">
                   {/* SECTION HEADER */}
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-gray-100 pb-5">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 border-b border-gray-100 pb-3.5">
                     <div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-2">
-                        <Zap size={13} className="text-indigo-600 animate-pulse" />
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200/60 mb-1">
+                        <Zap size={12} className="text-indigo-600 animate-pulse" />
                         <span>Interactive Funnel Telemetry</span>
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                      <h2 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
                         <span>🎯 Conversion Funnels &amp; Drop-offs</span>
                         <InfoTooltip text="Tracks candidate and studio journeys from button clicks through login walls, profile tier limits, and final confirmations. Pinpoints exactly where visitors drop off." />
                       </h2>
-                      <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-0.5">
                         Full-funnel visitor journeys across Registrations, Job Posting, Alert Subscriptions, Studio Claims &amp; Quizzes
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-slate-900 text-white rounded-xl shadow-xs">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-slate-900 text-white rounded-xl shadow-xs">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
                         <span>5 Active Pipelines</span>
                       </span>
@@ -1113,216 +1113,168 @@ export default function AnalyticsPage() {
                   </div>
 
                   {/* 5-PIPELINE RESPONSIVE GRID (TOP ROW: 3 CARDS, BOTTOM ROW: 2 BALANCED CARDS) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3.5 sm:gap-4">
 
                     {/* PIPELINE 1: USER REGISTRATION (PURPLE THEME) */}
-                    <div className="lg:col-span-2 bg-gradient-to-b from-purple-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-purple-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                    <div className="lg:col-span-2 bg-gradient-to-b from-purple-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-purple-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
                       <div>
                         {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-3 mb-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-purple-200">
-                              <UserPlus size={20} />
+                        <div className="flex items-start justify-between gap-2.5 mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
+                              <UserPlus size={16} />
                             </div>
                             <div>
-                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
                                 <span>Registration Funnel</span>
                                 <InfoTooltip text="Tracks how many candidates clicked 'Register' across navbar and guest prompts vs who submitted the form and completed OTP verification." />
                               </h3>
-                              <p className="text-[11px] text-gray-500">Visitor ➔ Candidate Account</p>
+                              <p className="text-[10px] text-gray-500">Visitor ➔ Candidate Account</p>
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-200">
-                              <TrendingDown size={12} className="text-purple-600" />
+                          <div className="text-right shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200">
+                              <TrendingDown size={11} className="text-purple-600" />
                               <span>{reg.dropOffRate || 0}% drop</span>
                             </span>
                           </div>
                         </div>
 
-                        {/* VISUAL FUNNEL FLOW (DYNAMIC NARROWING BARS) */}
-                        <div className="space-y-3 mt-5">
-                          {/* STAGE 1 */}
+                        {/* VISUAL COMPACT STEPS */}
+                        <div className="space-y-2.5 mt-3">
+                          {/* Step 1 */}
                           <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1">
-                                <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black inline-flex items-center justify-center">1</span>
-                                <span>Register Intent Clicks</span>
+                            <div className="flex items-center justify-between text-xs mb-0.5">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-800 text-[9px] font-black inline-flex items-center justify-center">1</span>
+                                <span>Intent Clicks</span>
                               </span>
-                              <span className="font-mono font-black text-gray-900 text-sm">{reg.intentClicks || 0}</span>
+                              <span className="font-mono font-bold text-gray-900 text-xs">{reg.intentClicks || 0}</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
-                              <div 
-                                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-500 shadow-xs" 
-                                style={{ width: "100%" }}
-                              />
+                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                              <div className="h-full rounded-full bg-purple-500 transition-all duration-500" style={{ width: "100%" }} />
                             </div>
                           </div>
 
-                          {/* DROP CONNECTOR */}
-                          {getDropBadge(reg.formSubmits || 0, reg.intentClicks || 0) && (
-                            <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-rose-600 -my-1">
-                              <ArrowDown size={11} className="text-rose-500" />
-                              <span className="bg-rose-50 border border-rose-200 px-2 py-0.2 rounded-full">
-                                {getDropBadge(reg.formSubmits || 0, reg.intentClicks || 0)}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* STAGE 2 */}
+                          {/* Step 2 */}
                           <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1">
-                                <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black inline-flex items-center justify-center">2</span>
+                            <div className="flex items-center justify-between text-xs mb-0.5">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-800 text-[9px] font-black inline-flex items-center justify-center">2</span>
                                 <span>Form Submissions</span>
                               </span>
-                              <span className="font-mono font-black text-gray-900 text-sm">{reg.formSubmits || 0}</span>
+                              <span className="font-mono font-bold text-gray-900 text-xs">{reg.formSubmits || 0}</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
+                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                               <div 
-                                className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-500" 
-                                style={{ width: getBarWidth(reg.formSubmits || 0, reg.intentClicks || 0) }}
+                                className="h-full rounded-full bg-purple-600 transition-all duration-500" 
+                                style={{ width: getBarWidth(reg.formSubmits || 0, reg.intentClicks || 0) }} 
                               />
                             </div>
                           </div>
 
-                          {/* DROP CONNECTOR */}
-                          {getDropBadge(reg.actualProfiles || 0, reg.formSubmits || 0) && (
-                            <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-rose-600 -my-1">
-                              <ArrowDown size={11} className="text-rose-500" />
-                              <span className="bg-rose-50 border border-rose-200 px-2 py-0.2 rounded-full">
-                                {getDropBadge(reg.actualProfiles || 0, reg.formSubmits || 0)}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* STAGE 3 (CONVERTED DB PROFILES) */}
-                          <div className="bg-purple-100/60 p-3 rounded-2xl border border-purple-200/90 mt-2">
+                          {/* Step 3 (Created Accounts DB) */}
+                          <div className="bg-purple-100/60 p-2.5 rounded-xl border border-purple-200/80">
                             <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-black text-purple-950 flex items-center gap-1.5">
-                                <CheckCircle2 size={14} className="text-purple-700" />
-                                <span>Created Accounts (DB)</span>
+                              <span className="font-bold text-purple-950 flex items-center gap-1 text-[11px]">
+                                <CheckCircle2 size={13} className="text-purple-700" />
+                                <span>Accounts Created (DB)</span>
                               </span>
-                              <span className="font-mono font-black text-purple-950 text-base">{reg.actualProfiles || 0}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[9px] font-bold text-purple-700 bg-white px-1.5 py-0.2 rounded border border-purple-200">
+                                  {reg.verifiedUsers || 0} verified
+                                </span>
+                                <span className="font-mono font-black text-purple-950 text-xs">{reg.actualProfiles || 0}</span>
+                              </div>
                             </div>
-                            <div className="w-full bg-purple-200/70 rounded-full h-3 overflow-hidden">
+                            <div className="w-full bg-purple-200/80 rounded-full h-1.5 overflow-hidden">
                               <div 
                                 className="h-full rounded-full bg-purple-700 transition-all duration-500" 
-                                style={{ width: getBarWidth(reg.actualProfiles || 0, reg.intentClicks || 0) }}
+                                style={{ width: getBarWidth(reg.actualProfiles || 0, reg.intentClicks || 0) }} 
                               />
-                            </div>
-                            <div className="flex items-center justify-between text-[11px] font-semibold text-purple-900 mt-2 pt-1.5 border-t border-purple-200/70">
-                              <span>Email Verified Badges:</span>
-                              <span className="font-mono font-bold bg-white px-2 py-0.5 rounded-md border border-purple-200">
-                                {reg.verifiedUsers || 0} verified
-                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* CARD FOOTER CALLOUT */}
-                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">All-Time Database:</span>
-                        <span className="font-mono font-black text-gray-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                      {/* CARD FOOTER */}
+                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">All-Time Users:</span>
+                        <span className="font-mono font-black text-gray-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
                           {reg.totalProfilesAllTime || 0} users
                         </span>
                       </div>
                     </div>
 
                     {/* PIPELINE 2: POST A JOB & GATE BLOCKERS (AMBER / ORANGE THEME) */}
-                    <div className="lg:col-span-2 bg-gradient-to-b from-amber-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-amber-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                    <div className="lg:col-span-2 bg-gradient-to-b from-amber-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-amber-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
                       <div>
                         {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-3 mb-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-amber-200">
-                              <Building2 size={20} />
+                        <div className="flex items-start justify-between gap-2.5 mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-xs">
+                              <Building2 size={16} />
                             </div>
                             <div>
-                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
                                 <span>Post a Job Funnel</span>
                                 <InfoTooltip text="Tracks employers and users wanting to publish a job. Displays drop-offs at the unauthenticated login wall, the 66% Gold Member profile wall, and studio registration." />
                               </h3>
-                              <p className="text-[11px] text-gray-500">Access Walls ➔ Published Vacancies</p>
+                              <p className="text-[10px] text-gray-500">Access Walls ➔ Published</p>
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
-                              <TrendingDown size={12} className="text-amber-700" />
+                          <div className="text-right shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
+                              <TrendingDown size={11} className="text-amber-700" />
                               <span>{post.dropOffRate || 0}% drop</span>
                             </span>
                           </div>
                         </div>
 
-                        {/* VISUAL FUNNEL FLOW */}
-                        <div className="space-y-3 mt-5">
-                          {/* TOP OF FUNNEL: CLICKS */}
+                        {/* VISUAL COMPACT STEPS */}
+                        <div className="space-y-2.5 mt-3">
+                          {/* Step 1: Total Interest */}
                           <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1">
-                                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black inline-flex items-center justify-center">1</span>
-                                <span>Post Job Views &amp; Clicks</span>
+                            <div className="flex items-center justify-between text-xs mb-0.5">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                <span className="w-4 h-4 rounded-full bg-amber-100 text-amber-900 text-[9px] font-black inline-flex items-center justify-center">1</span>
+                                <span>Post Job Clicks</span>
                               </span>
-                              <span className="font-mono font-black text-gray-900 text-sm">{post.totalInterest || 0}</span>
+                              <span className="font-mono font-bold text-gray-900 text-xs">{post.totalInterest || 0}</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
-                              <div 
-                                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500" 
-                                style={{ width: "100%" }}
-                              />
+                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                              <div className="h-full rounded-full bg-amber-500 transition-all duration-500" style={{ width: "100%" }} />
                             </div>
                           </div>
 
-                          {/* ROADBLOCK GATE BREAKDOWN (COLOR-CODED RADAR) */}
-                          <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-3 space-y-2">
-                            <div className="text-[11px] font-extrabold uppercase tracking-wider text-amber-950 flex items-center justify-between">
-                              <span>Access Control Drop-off Walls:</span>
-                              <Lock size={12} className="text-amber-700" />
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-1.5 text-xs">
-                              <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-red-200/70">
-                                <span className="text-red-700 font-semibold flex items-center gap-1">
-                                  <span className="w-2 h-2 rounded-full bg-red-500" />
-                                  <span>Unauthenticated Gate</span>
-                                </span>
-                                <span className="font-mono font-black text-red-900">{post.blockedUnauth || 0}</span>
-                              </div>
-
-                              <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-amber-200/70">
-                                <span className="text-amber-800 font-semibold flex items-center gap-1">
-                                  <span className="w-2 h-2 rounded-full bg-amber-500" />
-                                  <span>Gold Tier (&lt;66%) Gate</span>
-                                </span>
-                                <span className="font-mono font-black text-amber-900">{post.blockedTier || 0}</span>
-                              </div>
-
-                              <div className="flex items-center justify-between bg-white px-2.5 py-1.5 rounded-xl border border-orange-200/70">
-                                <span className="text-orange-800 font-semibold flex items-center gap-1">
-                                  <span className="w-2 h-2 rounded-full bg-orange-500" />
-                                  <span>No Studio Claimed Gate</span>
-                                </span>
-                                <span className="font-mono font-black text-orange-900">{post.blockedNoCompany || 0}</span>
-                              </div>
+                          {/* ROADBLOCK GATE STRIP (COMPACT SINGLE-LINE) */}
+                          <div className="bg-amber-50/80 border border-amber-200/80 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[10px]">
+                            <span className="font-bold text-amber-950 flex items-center gap-1 text-[11px]">
+                              <Lock size={11} className="text-amber-700" />
+                              <span>Blocked at Walls:</span>
+                            </span>
+                            <div className="flex items-center gap-1 font-mono font-bold text-[9px]">
+                              <span className="bg-white text-red-700 px-1.5 py-0.5 rounded border border-red-200" title="Unauthenticated Gate">Login: {post.blockedUnauth || 0}</span>
+                              <span className="bg-white text-amber-800 px-1.5 py-0.5 rounded border border-amber-200" title="Gold Tier (<66%) Gate">Tier: {post.blockedTier || 0}</span>
+                              <span className="bg-white text-orange-800 px-1.5 py-0.5 rounded border border-orange-200" title="No Studio Claimed Gate">Firm: {post.blockedNoCompany || 0}</span>
                             </div>
                           </div>
 
-                          {/* STAGE 2: PUBLISHED VACANCIES */}
-                          <div className="bg-emerald-100/60 p-3 rounded-2xl border border-emerald-300">
+                          {/* Step 2: Published Vacancies */}
+                          <div className="bg-emerald-100/60 p-2.5 rounded-xl border border-emerald-300">
                             <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-black text-emerald-950 flex items-center gap-1.5">
-                                <CheckCircle2 size={14} className="text-emerald-700" />
+                              <span className="font-bold text-emerald-950 flex items-center gap-1 text-[11px]">
+                                <CheckCircle2 size={13} className="text-emerald-700" />
                                 <span>Published Vacancies</span>
                               </span>
-                              <span className="font-mono font-black text-emerald-950 text-base">{post.published || 0}</span>
+                              <span className="font-mono font-black text-emerald-950 text-xs">{post.published || 0}</span>
                             </div>
-                            <div className="w-full bg-emerald-200 rounded-full h-3 overflow-hidden">
+                            <div className="w-full bg-emerald-200 rounded-full h-1.5 overflow-hidden">
                               <div 
                                 className="h-full rounded-full bg-emerald-600 transition-all duration-500" 
-                                style={{ width: getBarWidth(post.published || 0, post.totalInterest || 0) }}
+                                style={{ width: getBarWidth(post.published || 0, post.totalInterest || 0) }} 
                               />
                             </div>
                           </div>
@@ -1330,87 +1282,78 @@ export default function AnalyticsPage() {
                       </div>
 
                       {/* CARD FOOTER */}
-                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">Form Unlocked Studios:</span>
-                        <span className="font-mono font-black text-emerald-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">Unlocked Studios:</span>
+                        <span className="font-mono font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
                           {post.formUnlocked || 0} cleared
                         </span>
                       </div>
                     </div>
 
                     {/* PIPELINE 3: ALERTS & SUBSCRIPTIONS (EMERALD THEME) */}
-                    <div className="lg:col-span-2 bg-gradient-to-b from-emerald-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-emerald-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                    <div className="lg:col-span-2 bg-gradient-to-b from-emerald-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-emerald-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
                       <div>
                         {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-3 mb-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-200">
-                              <Bell size={20} />
+                        <div className="flex items-start justify-between gap-2.5 mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs">
+                              <Bell size={16} />
                             </div>
                             <div>
-                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
+                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
                                 <span>Alerts &amp; Subscriptions</span>
                                 <InfoTooltip text="Tracks clicks on 'Subscribe for Alerts' across homepage, city job pages, and fortnightly briefing banners vs completed subscriber submissions." />
                               </h3>
-                              <p className="text-[11px] text-gray-500">Interest ➔ WhatsApp &amp; Email Leads</p>
+                              <p className="text-[10px] text-gray-500">Interest ➔ Audience Leads</p>
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-950 border border-emerald-300">
-                              <TrendingDown size={12} className="text-emerald-700" />
+                          <div className="text-right shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-950 border border-emerald-300">
+                              <TrendingDown size={11} className="text-emerald-700" />
                               <span>{sub.dropOffRate || 0}% drop</span>
                             </span>
                           </div>
                         </div>
 
-                        {/* VISUAL FUNNEL FLOW */}
-                        <div className="space-y-3 mt-5">
-                          {/* STAGE 1 */}
+                        {/* VISUAL COMPACT STEPS */}
+                        <div className="space-y-2.5 mt-3">
+                          {/* Step 1: Subscribe Intent Clicks */}
                           <div>
-                            <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-semibold text-gray-700 flex items-center gap-1">
-                                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-black inline-flex items-center justify-center">1</span>
-                                <span>Subscribe Intent Clicks</span>
+                            <div className="flex items-center justify-between text-xs mb-0.5">
+                              <span className="font-semibold text-gray-700 flex items-center gap-1.5 text-[11px]">
+                                <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-900 text-[9px] font-black inline-flex items-center justify-center">1</span>
+                                <span>Subscribe Clicks</span>
                               </span>
-                              <span className="font-mono font-black text-gray-900 text-sm">{sub.alertClicks || 0}</span>
+                              <span className="font-mono font-bold text-gray-900 text-xs">{sub.alertClicks || 0}</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-3.5 overflow-hidden p-0.5">
-                              <div 
-                                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" 
-                                style={{ width: "100%" }}
-                              />
+                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                              <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: "100%" }} />
                             </div>
                           </div>
 
-                          {/* CHANNEL SPLIT CARDS */}
-                          <div className="grid grid-cols-2 gap-2 mt-2">
-                            <div className="p-2.5 bg-blue-50/80 rounded-2xl border border-blue-200">
-                              <span className="text-[10px] font-bold text-blue-700 block uppercase tracking-wider">Fortnightly Briefing</span>
-                              <span className="font-mono font-black text-blue-950 text-sm mt-0.5 block">{sub.briefingCount || 0}</span>
-                              <span className="text-[9px] text-blue-600 block mt-0.5">1st &amp; 15th Email</span>
-                            </div>
-
-                            <div className="p-2.5 bg-emerald-50/80 rounded-2xl border border-emerald-200">
-                              <span className="text-[10px] font-bold text-emerald-700 block uppercase tracking-wider">WhatsApp Alerts</span>
-                              <span className="font-mono font-black text-emerald-950 text-sm mt-0.5 block">{sub.alertsCount || 0}</span>
-                              <span className="text-[9px] text-emerald-600 block mt-0.5">Instant Drops</span>
+                          {/* CHANNELS STRIP (COMPACT SINGLE-LINE) */}
+                          <div className="bg-emerald-50/80 border border-emerald-200/80 px-2.5 py-1.5 rounded-xl flex items-center justify-between text-[10px]">
+                            <span className="font-bold text-emerald-950 text-[11px]">Channels:</span>
+                            <div className="flex items-center gap-1.5 font-mono font-bold text-[9px]">
+                              <span className="bg-white text-blue-800 px-1.5 py-0.5 rounded border border-blue-200">Briefing: {sub.briefingCount || 0}</span>
+                              <span className="bg-white text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200">WhatsApp: {sub.alertsCount || 0}</span>
                             </div>
                           </div>
 
-                          {/* STAGE 2 (COMPLETED) */}
-                          <div className="bg-emerald-100/70 p-3 rounded-2xl border border-emerald-300 mt-2">
+                          {/* Step 2: Total Completed Leads */}
+                          <div className="bg-emerald-100/70 p-2.5 rounded-xl border border-emerald-300">
                             <div className="flex items-center justify-between text-xs mb-1">
-                              <span className="font-black text-emerald-950 flex items-center gap-1.5">
-                                <CheckCircle2 size={14} className="text-emerald-700" />
-                                <span>Total Completed Leads</span>
+                              <span className="font-bold text-emerald-950 flex items-center gap-1 text-[11px]">
+                                <CheckCircle2 size={13} className="text-emerald-700" />
+                                <span>Completed Subscribers</span>
                               </span>
-                              <span className="font-mono font-black text-emerald-950 text-base">{sub.completedSubscriptions || 0}</span>
+                              <span className="font-mono font-black text-emerald-950 text-xs">{sub.completedSubscriptions || 0}</span>
                             </div>
-                            <div className="w-full bg-emerald-200 rounded-full h-3 overflow-hidden">
+                            <div className="w-full bg-emerald-200 rounded-full h-1.5 overflow-hidden">
                               <div 
                                 className="h-full rounded-full bg-emerald-700 transition-all duration-500" 
-                                style={{ width: getBarWidth(sub.completedSubscriptions || 0, sub.alertClicks || 0) }}
+                                style={{ width: getBarWidth(sub.completedSubscriptions || 0, sub.alertClicks || 0) }} 
                               />
                             </div>
                           </div>
@@ -1418,143 +1361,143 @@ export default function AnalyticsPage() {
                       </div>
 
                       {/* CARD FOOTER */}
-                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
                         <span className="text-gray-500">All-Time Audience:</span>
-                        <span className="font-mono font-black text-emerald-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
-                          {sub.totalSubscribersAllTime || 0} subscribers
+                        <span className="font-mono font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
+                          {sub.totalSubscribersAllTime || 0} subs
                         </span>
                       </div>
                     </div>
 
                     {/* PIPELINE 4: CLAIM STUDIO / PRACTICE (BLUE THEME, SPANS 3 COLS) */}
-                    <div className="lg:col-span-3 bg-gradient-to-b from-blue-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-blue-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                    <div className="lg:col-span-3 bg-gradient-to-b from-blue-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-blue-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
                       <div>
                         {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-3 mb-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-600 text-white flex items-center justify-center shadow-md shadow-blue-200">
-                              <ShieldCheck size={20} />
+                        <div className="flex items-start justify-between gap-2.5 mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 text-white flex items-center justify-center shadow-xs">
+                              <ShieldCheck size={16} />
                             </div>
                             <div>
-                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
-                                <span>Studio &amp; Practice Claim Pipeline</span>
+                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
+                                <span>Studio Claim Pipeline</span>
                                 <InfoTooltip text="Tracks practice owners who click 'Claim this Studio' on firm profile pages vs those who submit proof of ownership to the admin team." />
                               </h3>
-                              <p className="text-[11px] text-gray-500">Directory Profile ➔ Verified Practice Owner</p>
+                              <p className="text-[10px] text-gray-500">Directory Profile ➔ Verified Practice Owner</p>
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-blue-100 text-blue-950 border border-blue-200">
-                              <TrendingDown size={12} className="text-blue-700" />
+                          <div className="text-right shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-100 text-blue-950 border border-blue-200">
+                              <TrendingDown size={11} className="text-blue-700" />
                               <span>{claim.dropOffRate || 0}% drop</span>
                             </span>
                           </div>
                         </div>
 
-                        {/* VISUAL FUNNEL FLOW */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-                          <div className="p-3.5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs">
-                            <div className="flex items-center justify-between text-xs mb-1.5">
-                              <span className="font-bold text-gray-700">1. Claim Clicks</span>
-                              <span className="font-mono font-black text-gray-900 text-base">{claim.claimClicks || 0}</span>
+                        {/* VISUAL 2-STEP BOXES */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                          <div className="p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-bold text-gray-700 text-[11px]">1. Claim Clicks</span>
+                              <span className="font-mono font-black text-gray-900 text-xs">{claim.claimClicks || 0}</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                               <div className="h-full rounded-full bg-blue-500" style={{ width: "100%" }} />
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-2">Firm profile header &amp; modal clicks</p>
+                            <p className="text-[9px] text-gray-400 mt-1">Profile header &amp; modal clicks</p>
                           </div>
 
-                          <div className="p-3.5 bg-blue-50 rounded-2xl border border-blue-200">
-                            <div className="flex items-center justify-between text-xs mb-1.5">
-                              <span className="font-bold text-blue-950 flex items-center gap-1">
-                                <CheckCircle2 size={13} className="text-blue-700" />
+                          <div className="p-2.5 bg-blue-50 rounded-xl border border-blue-200">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-bold text-blue-950 flex items-center gap-1 text-[11px]">
+                                <CheckCircle2 size={12} className="text-blue-700" />
                                 <span>2. Claims Submitted</span>
                               </span>
-                              <span className="font-mono font-black text-blue-950 text-base">{claim.submits || 0}</span>
+                              <span className="font-mono font-black text-blue-950 text-xs">{claim.submits || 0}</span>
                             </div>
-                            <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                            <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
                               <div 
                                 className="h-full rounded-full bg-blue-700" 
                                 style={{ width: getBarWidth(claim.submits || 0, claim.claimClicks || 0) }} 
                               />
                             </div>
-                            <p className="text-[10px] text-blue-700 mt-2">Formal ownership requests received</p>
+                            <p className="text-[9px] text-blue-700 mt-1">Formal ownership requests</p>
                           </div>
                         </div>
                       </div>
 
                       {/* CARD FOOTER */}
-                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">Ownership Requests in Period:</span>
-                        <span className="font-mono font-black text-blue-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">Ownership Requests:</span>
+                        <span className="font-mono font-black text-blue-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
                           {claim.submits || 0} submissions
                         </span>
                       </div>
                     </div>
 
-                    {/* PIPELINE 5: ARCHITECTURE QUIZZES ENGAGEMENT (ROSE/PURPLE FLAME THEME, SPANS 3 COLS) */}
-                    <div className="lg:col-span-3 bg-gradient-to-b from-rose-50/40 via-white to-gray-50/60 rounded-3xl p-5 sm:p-6 border border-rose-200/80 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
+                    {/* PIPELINE 5: ARCHITECTURE QUIZZES (ROSE THEME, SPANS 3 COLS) */}
+                    <div className="lg:col-span-3 bg-gradient-to-b from-rose-50/40 via-white to-gray-50/60 rounded-2xl p-4 sm:p-5 border border-rose-200/80 shadow-2xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between group">
                       <div>
                         {/* CARD HEADER */}
-                        <div className="flex items-start justify-between gap-3 mb-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-rose-200">
-                              <Trophy size={20} />
+                        <div className="flex items-start justify-between gap-2.5 mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-500 to-purple-600 text-white flex items-center justify-center shadow-xs">
+                              <Trophy size={16} />
                             </div>
                             <div>
-                              <h3 className="text-sm font-extrabold text-gray-900 flex items-center gap-1.5">
-                                <span>Architecture Quizzes Pipeline</span>
+                              <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 flex items-center gap-1">
+                                <span>Quizzes Pipeline</span>
                                 <InfoTooltip text="Tracks candidate quiz engagement: how many started answering architectural questions vs how many reached the final scorecard." />
                               </h3>
-                              <p className="text-[11px] text-gray-500">Play Starts ➔ Completed Scorecards</p>
+                              <p className="text-[10px] text-gray-500">Play Starts ➔ Completed Scorecards</p>
                             </div>
                           </div>
 
-                          <div className="text-right">
-                            <span className="inline-flex items-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-full bg-rose-100 text-rose-950 border border-rose-200">
-                              <TrendingUp size={12} className="text-rose-600" />
+                          <div className="text-right shrink-0">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-950 border border-rose-200">
+                              <TrendingUp size={11} className="text-rose-600" />
                               <span>{quiz.completionRate || 0}% finished</span>
                             </span>
                           </div>
                         </div>
 
-                        {/* VISUAL FUNNEL FLOW */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-                          <div className="p-3.5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs">
-                            <div className="flex items-center justify-between text-xs mb-1.5">
-                              <span className="font-bold text-gray-700">1. Quiz Plays Started</span>
-                              <span className="font-mono font-black text-gray-900 text-base">{quiz.starts || 0}</span>
+                        {/* VISUAL 2-STEP BOXES */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                          <div className="p-2.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-bold text-gray-700 text-[11px]">1. Plays Started</span>
+                              <span className="font-mono font-black text-gray-900 text-xs">{quiz.starts || 0}</span>
                             </div>
-                            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                               <div className="h-full rounded-full bg-rose-500" style={{ width: "100%" }} />
                             </div>
-                            <p className="text-[10px] text-gray-400 mt-2">Card clicks &amp; round beginnings</p>
+                            <p className="text-[9px] text-gray-400 mt-1">Quiz card starts &amp; round 1</p>
                           </div>
 
-                          <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200">
-                            <div className="flex items-center justify-between text-xs mb-1.5">
-                              <span className="font-bold text-rose-950 flex items-center gap-1">
-                                <CheckCircle2 size={13} className="text-rose-700" />
+                          <div className="p-2.5 bg-rose-50 rounded-xl border border-rose-200">
+                            <div className="flex items-center justify-between text-xs mb-1">
+                              <span className="font-bold text-rose-950 flex items-center gap-1 text-[11px]">
+                                <CheckCircle2 size={12} className="text-rose-700" />
                                 <span>2. Reached Scorecard</span>
                               </span>
-                              <span className="font-mono font-black text-rose-950 text-base">{quiz.completions || 0}</span>
+                              <span className="font-mono font-black text-rose-950 text-xs">{quiz.completions || 0}</span>
                             </div>
-                            <div className="w-full bg-rose-200 rounded-full h-3 overflow-hidden">
+                            <div className="w-full bg-rose-200 rounded-full h-2 overflow-hidden">
                               <div 
                                 className="h-full rounded-full bg-rose-600" 
                                 style={{ width: getBarWidth(quiz.completions || 0, quiz.starts || 0) }} 
                               />
                             </div>
-                            <p className="text-[10px] text-rose-700 mt-2">Finished tests &amp; claimed points</p>
+                            <p className="text-[9px] text-rose-700 mt-1">Finished tests &amp; claimed points</p>
                           </div>
                         </div>
                       </div>
 
                       {/* CARD FOOTER */}
-                      <div className="mt-5 pt-3.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
-                        <span className="text-gray-500">Total Completed Rounds:</span>
-                        <span className="font-mono font-black text-rose-900 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shadow-2xs">
+                      <div className="mt-3.5 pt-2.5 border-t border-gray-200/80 flex items-center justify-between text-[11px]">
+                        <span className="text-gray-500">Completed Rounds:</span>
+                        <span className="font-mono font-black text-rose-900 bg-white px-2 py-0.5 rounded-lg border border-gray-200 shadow-2xs">
                           {quiz.completions || 0} plays
                         </span>
                       </div>
@@ -1566,10 +1509,10 @@ export default function AnalyticsPage() {
             })()}
 
             {/* CANDIDATE ON-SITE SEARCHES & UNMET DEMAND */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>🔍 Candidate Search Demand &amp; Missing Jobs</span>
                     <InfoTooltip text="Live search logs capturing the exact job roles, software, and locations candidates are looking for on the jobs board." />
                   </h2>
@@ -1582,10 +1525,10 @@ export default function AnalyticsPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
                 {/* Top Search Keywords */}
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
+                <div className="bg-gray-50 p-3.5 sm:p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
                     <span className="flex items-center">
                       Top Keywords Searched
@@ -1593,14 +1536,14 @@ export default function AnalyticsPage() {
                     </span>
                     <span className="text-[10px] text-gray-400 font-normal">Hits</span>
                   </h4>
-                  <p className="text-[10px] text-gray-500 mb-3">Job titles &amp; software searched on the jobs page</p>
+                  <p className="text-[10px] text-gray-500 mb-2.5">Job titles &amp; software searched on the jobs page</p>
                   {(!data.searches?.topKeywords || data.searches.topKeywords.length === 0) ? (
                     <div className="py-4 text-center">
                       <p className="text-xs text-gray-400 italic">No keyword searches logged in this period yet.</p>
                       <p className="text-[10px] text-gray-400 mt-1">Live logger active — searches on /jobs will appear here automatically.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {data.searches.topKeywords.map((k: any, i: number) => {
                         const club = getClubbedPositionInfo(k.keyword);
                         return (
@@ -1625,7 +1568,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Top Searched Cities */}
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
+                <div className="bg-gray-50 p-3.5 sm:p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
                     <span className="flex items-center">
                       Top Locations Filtered
@@ -1633,14 +1576,14 @@ export default function AnalyticsPage() {
                     </span>
                     <span className="text-[10px] text-gray-400 font-normal">Filters</span>
                   </h4>
-                  <p className="text-[10px] text-gray-500 mb-3">Cities candidates filtered by on the jobs page</p>
+                  <p className="text-[10px] text-gray-500 mb-2.5">Cities candidates filtered by on the jobs page</p>
                   {(!data.searches?.topCities || data.searches.topCities.length === 0) ? (
                     <div className="py-4 text-center">
                       <p className="text-xs text-gray-400 italic">No location filters used in this period yet.</p>
                       <p className="text-[10px] text-gray-400 mt-1">Live logger active — city filters on /jobs will appear here automatically.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {data.searches.topCities.map((c: any, i: number) => (
                         <div key={i} className="flex justify-between items-center text-xs">
                           <span className="font-semibold text-gray-800 truncate max-w-[180px]">📍 {c.city}</span>
@@ -1652,7 +1595,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Unmet Demand (Zero Result Searches) */}
-                <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200/90">
+                <div className="bg-amber-50/70 p-3.5 sm:p-4 rounded-xl border border-amber-200/90">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-1 flex items-center justify-between">
                     <span className="flex items-center">
                       <span>⚠️ Missing Jobs (0 Results Found)</span>
@@ -1660,7 +1603,7 @@ export default function AnalyticsPage() {
                     </span>
                     <span className="text-[10px] bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded font-bold">Market Demand</span>
                   </h4>
-                  <p className="text-[10px] text-amber-700 mb-3">Roles candidates searched for where NO jobs were found. Post these next!</p>
+                  <p className="text-[10px] text-amber-700 mb-2.5">Roles candidates searched for where NO jobs were found. Post these next!</p>
                   
                   {(!data.searches?.zeroResults || data.searches.zeroResults.length === 0) ? (
                     <div className="py-4 text-center">
@@ -1668,7 +1611,7 @@ export default function AnalyticsPage() {
                       <p className="text-[10px] text-amber-700/60 mt-1">When someone searches for a role with 0 results, it flags here.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {data.searches.zeroResults.map((z: any, i: number) => (
                         <div key={i} className="flex justify-between items-center text-xs bg-white/80 p-2 rounded-lg border border-amber-200/50">
                           <div className="truncate pr-2">
@@ -1689,10 +1632,10 @@ export default function AnalyticsPage() {
 
             {/* GOOGLE SEARCH CONSOLE (SEO KEYWORDS & SEARCH RANKINGS) */}
             {gscData && gscData.connected ? (
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                       <span>🔎 Google Search Console (SEO Keywords &amp; Google Rankings)</span>
                       <InfoTooltip text="Search engine performance on Google Search: impressions, clicks, CTR, and search ranking." />
                       <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full">Connected</span>
@@ -1718,32 +1661,32 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* 4 Macro SEO Badges */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-blue-50/60 border border-blue-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-blue-700 uppercase tracking-wider">Google Clicks</p>
-                    <p className="text-2xl font-bold text-blue-900 mt-1">{gscData.totals?.clicks?.toLocaleString() || 0}</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                  <div className="bg-blue-50/60 border border-blue-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Google Clicks</p>
+                    <p className="text-xl sm:text-2xl font-black text-blue-900 mt-0.5">{gscData.totals?.clicks?.toLocaleString() || 0}</p>
                     <p className="text-[10px] text-blue-600 mt-0.5">Direct visitors from Google</p>
                   </div>
-                  <div className="bg-purple-50/60 border border-purple-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-purple-700 uppercase tracking-wider">Google Impressions</p>
-                    <p className="text-2xl font-bold text-purple-900 mt-1">{gscData.totals?.impressions?.toLocaleString() || 0}</p>
+                  <div className="bg-purple-50/60 border border-purple-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">Google Impressions</p>
+                    <p className="text-xl sm:text-2xl font-black text-purple-900 mt-0.5">{gscData.totals?.impressions?.toLocaleString() || 0}</p>
                     <p className="text-[10px] text-purple-600 mt-0.5">Times seen in Google search</p>
                   </div>
-                  <div className="bg-emerald-50/60 border border-emerald-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-emerald-700 uppercase tracking-wider">Average CTR</p>
-                    <p className="text-2xl font-bold text-emerald-900 mt-1">{gscData.totals?.ctr || "0%"}</p>
+                  <div className="bg-emerald-50/60 border border-emerald-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Average CTR</p>
+                    <p className="text-xl sm:text-2xl font-black text-emerald-900 mt-0.5">{gscData.totals?.ctr || "0%"}</p>
                     <p className="text-[10px] text-emerald-600 mt-0.5">Click-through percentage</p>
                   </div>
-                  <div className="bg-amber-50/60 border border-amber-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-amber-700 uppercase tracking-wider">Average Position</p>
-                    <p className="text-2xl font-bold text-amber-900 mt-1">#{gscData.totals?.position || 0}</p>
+                  <div className="bg-amber-50/60 border border-amber-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Average Position</p>
+                    <p className="text-xl sm:text-2xl font-black text-amber-900 mt-0.5">#{gscData.totals?.position || 0}</p>
                     <p className="text-[10px] text-amber-600 mt-0.5">Average Google search rank</p>
                   </div>
                 </div>
 
                 {/* Content Tables */}
                 {gscTab === "keywords" ? (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-64 overflow-y-auto pr-1">
                     <table className="w-full text-left text-sm">
                       <thead>
                         <tr className="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -1802,7 +1745,7 @@ export default function AnalyticsPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-64 overflow-y-auto pr-1">
                     <table className="w-full text-left text-sm">
                       <thead>
                         <tr className="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -1962,31 +1905,31 @@ export default function AnalyticsPage() {
 
             {/* CANDIDATE APPLICATION & CONVERSION FUNNEL */}
             {data.funnel && (
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                       <span>🎯 Candidate Conversion &amp; Drop-off Funnel</span>
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
                       Track the step-by-step candidate journey from first arrival to applied vacancy, identifying where candidates drop off
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 self-start">
+                  <div className="flex items-center gap-3 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-100 self-start">
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Overall Conversion</p>
-                      <p className="text-lg font-bold text-emerald-600">{data.funnel.overallConversionRate}</p>
+                      <p className="text-base sm:text-lg font-bold text-emerald-600">{data.funnel.overallConversionRate}</p>
                     </div>
-                    <div className="w-px h-8 bg-gray-200" />
+                    <div className="w-px h-7 bg-gray-200" />
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">View-to-Apply Rate</p>
-                      <p className="text-lg font-bold text-blue-600">{data.funnel.jobToApplyRate}</p>
+                      <p className="text-base sm:text-lg font-bold text-blue-600">{data.funnel.jobToApplyRate}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 4-Step Funnel Visual Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {data.funnel.steps.map((step: any, idx: number) => {
                     const stepColors = [
                       { bg: "bg-blue-50/60", border: "border-blue-100", bar: "bg-blue-600", text: "text-blue-700", badge: "bg-blue-100 text-blue-800" },
@@ -1996,7 +1939,7 @@ export default function AnalyticsPage() {
                     ][idx] || { bg: "bg-gray-50", border: "border-gray-100", bar: "bg-gray-600", text: "text-gray-700", badge: "bg-gray-100 text-gray-800" };
 
                     return (
-                      <div key={step.id} className={`p-4 rounded-xl border ${stepColors.border} ${stepColors.bg} flex flex-col justify-between relative`}>
+                      <div key={step.id} className={`p-3.5 sm:p-4 rounded-xl border ${stepColors.border} ${stepColors.bg} flex flex-col justify-between relative`}>
                         <div>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400">Step {step.id}</span>
@@ -2032,14 +1975,14 @@ export default function AnalyticsPage() {
             )}
 
             {/* 2-COLUMN GRID: FIRMS LEADERBOARD & EXPERIENCE RADAR */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
               
               {/* FIRMS DEMAND LEADERBOARD */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[410px]">
                 <div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>🏢 Top Architecture Firms Leaderboard</span>
                         <InfoTooltip text="Architectural practices ranked by candidate engagement, job views, shares, and saved listings." />
                       </h3>
@@ -2054,16 +1997,16 @@ export default function AnalyticsPage() {
                       <button 
                         type="button"
                         onClick={() => setFirmLeaderboardMode("trending")} 
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
-                        🕒 Recent / Trending
+                        🕒 Trending
                       </button>
                       <button 
                         type="button"
                         onClick={() => setFirmLeaderboardMode("overall")} 
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
-                        🏆 Overall (All-Time)
+                        🏆 All-Time
                       </button>
                     </div>
                   </div>
@@ -2075,7 +2018,7 @@ export default function AnalyticsPage() {
 
                     if (!displayedFirms || displayedFirms.length === 0) {
                       return (
-                        <div className="py-10 text-center bg-gray-50/60 rounded-xl border border-dashed border-gray-200 my-4">
+                        <div className="py-8 text-center bg-gray-50/60 rounded-xl border border-dashed border-gray-200 my-3">
                           <p className="text-gray-600 text-xs font-semibold">No candidate shares or saves recorded for firms in this timeframe.</p>
                           <p className="text-gray-400 text-[11px] mt-1">Switch to <strong>Overall (All-Time)</strong> to see which firms candidates engaged with most.</p>
                           <button 
@@ -2090,7 +2033,7 @@ export default function AnalyticsPage() {
                     }
 
                     return (
-                      <div className="divide-y divide-gray-100 overflow-y-auto pr-1 max-h-[350px]">
+                      <div className="divide-y divide-gray-100 overflow-y-auto pr-1 max-h-[290px]">
                         {displayedFirms.map((firm: any, i: number) => {
                           const rankMedals = ["🥇", "🥈", "🥉"];
                           const isTrendingActive = firmLeaderboardMode === "trending";
@@ -2144,11 +2087,11 @@ export default function AnalyticsPage() {
               </div>
 
               {/* EXPERIENCE LEVEL DEMAND VS SUPPLY RADAR */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[410px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>⚖️ Experience Level Demand vs. Supply</span>
                         <InfoTooltip text="Compares candidate search volume (demand) against available posted vacancies (supply) across career seniority tiers." />
                       </h3>
@@ -2161,7 +2104,7 @@ export default function AnalyticsPage() {
                   {(!data.experienceGap || data.experienceGap.length === 0) ? (
                     <p className="text-xs text-gray-400 italic py-8 text-center">No experience data available for this period.</p>
                   ) : (
-                    <div className="space-y-2.5 overflow-y-auto pr-1 max-h-[350px]">
+                    <div className="space-y-2.5 overflow-y-auto pr-1 max-h-[290px]">
                       {data.experienceGap.map((tier: any, i: number) => {
                         const isShortage = tier.statusColor === "amber";
                         const isSurplus = tier.statusColor === "blue";
@@ -2212,10 +2155,10 @@ export default function AnalyticsPage() {
             </div>
 
             {/* DETAILED TABLES */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
               
               {/* TOP PAGES & ENTRY DOORS */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[440px]">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0">
                     <button 
@@ -2350,7 +2293,7 @@ export default function AnalyticsPage() {
               </div>
 
               {/* TRAFFIC SOURCES & REFERRALS (OUTSIDE TRAFFIC VS INSIDE NAVIGATION) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[440px]">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div>
                     <h3 className="text-lg font-bold flex items-center">
@@ -2529,18 +2472,18 @@ export default function AnalyticsPage() {
               </div>
 
               {/* ACQUISITION CHANNELS (LEVELED WITH COUNTRIES) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>Acquisition Channels</span>
                         <InfoTooltip text="High-level marketing channel breakdown (Organic Search, Direct, Social Media, Referrals)." />
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5">High-level audience discovery mix</p>
                     </div>
                   </div>
-                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[270px]">
+                  <div className="space-y-3 overflow-y-auto pr-1 max-h-[235px]">
                     {(!data.channels || data.channels.length === 0) && <p className="text-gray-400 text-sm">No channel data available.</p>}
                     {data.channels && (() => {
                       const maxCh = Math.max(...data.channels.map((c: any) => Number(c.sessions) || 0));
@@ -2574,11 +2517,11 @@ export default function AnalyticsPage() {
               </div>
 
               {/* COUNTRIES & CITIES (LEVELED WITH ACQUISITION CHANNELS & SCROLLABLE) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>{geoTab === "countries" ? "Countries" : "Top Cities"}</span>
                         <InfoTooltip text={geoTab === "countries" ? "Geographic countries where candidate traffic originates based on visitor IP." : "Specific cities where visitor traffic originates."} />
                       </h3>
@@ -2590,21 +2533,21 @@ export default function AnalyticsPage() {
                       <button
                         type="button"
                         onClick={() => setGeoTab("countries")}
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "countries" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${geoTab === "countries" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
                         🌍 Countries
                       </button>
                       <button
                         type="button"
                         onClick={() => setGeoTab("cities")}
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "cities" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${geoTab === "cities" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
                         🏙️ Cities
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[270px]">
+                  <div className="space-y-3 overflow-y-auto pr-2 max-h-[235px]">
                     {geoTab === "countries" ? (
                       <>
                         {(!data.countries || data.countries.length === 0) && <p className="text-gray-400 text-sm">No country data available.</p>}
@@ -2637,18 +2580,18 @@ export default function AnalyticsPage() {
               </div>
 
               {/* DEVICES (LEVELED WITH BROWSERS) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[300px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>Devices</span>
                         <InfoTooltip text="Device hardware used by visitors (Desktop computers, Mobile smartphones, Tablets)." />
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5">Visitor platform breakdown</p>
                     </div>
                   </div>
-                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[230px]">
+                  <div className="space-y-3 overflow-y-auto pr-1 max-h-[195px]">
                     {!data.devices || data.devices.length === 0 ? <p className="text-gray-400 text-sm">No device data available.</p> : null}
                     {data.devices && data.devices.map((item: any, i: number) => (
                       <div key={i} className="text-sm">
@@ -2664,18 +2607,18 @@ export default function AnalyticsPage() {
               </div>
 
               {/* BROWSERS (LEVELED WITH DEVICES & SCROLLABLE) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[300px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>Browsers</span>
                         <InfoTooltip text="Web browsers used by visitors to access the website (Chrome, Safari, Edge, Firefox, etc.)." />
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5">Browser client distribution</p>
                     </div>
                   </div>
-                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[230px]">
+                  <div className="space-y-3 overflow-y-auto pr-2 max-h-[195px]">
                     {(!data.browsers || data.browsers.length === 0) && <p className="text-gray-400 text-sm">No browser data available.</p>}
                     {data.browsers && data.browsers.map((item: any, i: number) => (
                       <div key={i} className="text-sm">
