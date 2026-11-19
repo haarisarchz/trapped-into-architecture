@@ -7,7 +7,7 @@ import { trackEvent } from "@/utils/analytics";
 import { 
   Trophy, Play, Clock, HelpCircle, Users, Sparkles, 
   ArrowRight, ArrowDown, Filter, ChevronRight, Award, Flame, Search, Lock, 
-  CheckCircle2, XCircle, SlidersHorizontal, LayoutGrid, List, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle
+  CheckCircle2, XCircle, SlidersHorizontal, LayoutGrid, List, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle, LayoutList
 } from "lucide-react";
 
 export default function QuizzesHubPage() {
@@ -16,7 +16,7 @@ export default function QuizzesHubPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"most_played" | "newest" | "oldest">("most_played");
-  const [viewMode, setViewMode] = useState<"image" | "text">("image");
+  const [viewMode, setViewMode] = useState<"grid" | "editorial" | "text">("editorial");
   const [demoSelected, setDemoSelected] = useState<string>("Frank Lloyd Wright");
   
   // Start Quiz Setup Modal state
@@ -306,24 +306,36 @@ export default function QuizzesHubPage() {
                 </select>
               </div>
 
-              {/* View By Toggle with explicit "View by:" text */}
+              {/* View By Toggle: Grid, Editorial, and Text */}
               <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
                 <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">View by:</span>
-                <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg">
+                <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg gap-0.5">
                   <button
-                    onClick={() => setViewMode("image")}
+                    onClick={() => setViewMode("grid")}
                     className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                      viewMode === "image" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
+                      viewMode === "grid" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
                     }`}
+                    title="2-Column Grid Layout"
                   >
                     <LayoutGrid size={13} />
-                    <span>Image</span>
+                    <span>Grid</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode("editorial")}
+                    className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                      viewMode === "editorial" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
+                    }`}
+                    title="Editorial Split Layout"
+                  >
+                    <LayoutList size={13} />
+                    <span>Editorial</span>
                   </button>
                   <button
                     onClick={() => setViewMode("text")}
                     className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
                       viewMode === "text" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
                     }`}
+                    title="Compact Text View"
                   >
                     <List size={13} />
                     <span>Text</span>
@@ -401,8 +413,87 @@ export default function QuizzesHubPage() {
                     View All Quizzes
                   </button>
                 </div>
-              ) : viewMode === "image" ? (
-                /* 1. EDITORIAL STUDIO SPLIT VIEW (Dedicated Architectural Photo Left, Content & Actions Right) */
+              ) : viewMode === "grid" ? (
+                /* 1. 2-COLUMN GRID VIEW (Classic Elevated Architecture Grid) */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {filteredAndSortedQuizzes.map(quiz => {
+                    const questionCount = quiz.quiz_questions?.[0]?.count || 65;
+                    const playsCount = quiz.quiz_scores?.[0]?.count || 0;
+                    const featuredImg = getFeaturedQuizImage(quiz.slug, quiz.cover_image);
+
+                    return (
+                      <div 
+                        key={quiz.id}
+                        className="bg-white rounded-3xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col justify-between group"
+                      >
+                        <div>
+                          {/* Photo with healthy 210px height so buildings fit comfortably */}
+                          <div className="h-52 bg-gray-900 relative overflow-hidden">
+                            <img 
+                              referrerPolicy="no-referrer"
+                              src={featuredImg} 
+                              alt={quiz.title} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                              onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                            
+                            <div className="absolute top-3 left-3 z-10">
+                              <span className="bg-black/85 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                                {quiz.category}
+                              </span>
+                            </div>
+
+                            <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between text-[10px] text-white/90 font-mono font-bold">
+                              <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
+                                <HelpCircle size={11} className="text-amber-400" /> {questionCount} Qs
+                              </span>
+                              <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
+                                <Flame size={11} className="text-orange-400" /> {playsCount} Plays
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Card Content */}
+                          <div className="p-4 sm:p-5">
+                            <h3 className="text-base font-black text-gray-950 group-hover:text-blue-600 transition mb-1 leading-snug">
+                              {quiz.title}
+                            </h3>
+                            <p className="text-xs font-medium text-gray-600 line-clamp-2 leading-relaxed">
+                              {getSimplifiedQuizDescription(quiz.slug, quiz.description)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="p-4 sm:p-5 pt-0">
+                          <div className="pt-3 border-t border-gray-100 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSetupModalQuiz(quiz)}
+                              className="flex-1 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
+                            >
+                              <Play size={13} fill="currentColor" />
+                              <span>Play (Different Modes)</span>
+                            </button>
+
+                            <Link 
+                              href={`/quizzes/${quiz.slug}?autostart=1`}
+                              onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "quick_play" })}
+                              className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition shrink-0"
+                              title="1-Click Instant Play (10 Questions)"
+                            >
+                              <Zap size={13} fill="currentColor" />
+                              <span>Quick Play</span>
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : viewMode === "editorial" ? (
+                /* 2. EDITORIAL STUDIO SPLIT VIEW (Dedicated Architectural Photo Left, Content & Actions Right) */
                 <div className="space-y-4">
                   {filteredAndSortedQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 65;
