@@ -402,8 +402,8 @@ export default function QuizzesHubPage() {
                   </button>
                 </div>
               ) : viewMode === "image" ? (
-                /* 1. IMAGE VIEW (Compact Image Height, Rows Visible Above Fold) */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                /* 1. EDITORIAL STUDIO SPLIT VIEW (Dedicated Architectural Photo Left, Content & Actions Right) */
+                <div className="space-y-4">
                   {filteredAndSortedQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 65;
                     const playsCount = quiz.quiz_scores?.[0]?.count || 0;
@@ -412,65 +412,70 @@ export default function QuizzesHubPage() {
                     return (
                       <div 
                         key={quiz.id}
-                        className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col justify-between group"
+                        className="bg-white rounded-3xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-lg hover:border-black transition duration-200 flex flex-col sm:flex-row group"
                       >
-                        <div>
-                          {/* COMPACT SINGLE HIGH-RES IMAGE (h-40 sm:h-44) */}
-                          <div className="h-40 sm:h-44 bg-gray-900 relative overflow-hidden">
-                            <img 
-                              referrerPolicy="no-referrer"
-                              src={featuredImg} 
-                              alt={quiz.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                              onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                            
-                            <div className="absolute top-2.5 left-2.5 z-10">
-                              <span className="bg-black/85 backdrop-blur-md text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-white/20 shadow-md">
-                                {quiz.category}
-                              </span>
-                            </div>
-
-                            <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between text-[10px] text-white/90 font-mono font-bold">
-                              <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
-                                <HelpCircle size={11} className="text-amber-400" /> {questionCount} Qs
-                              </span>
-                              <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
-                                <Flame size={11} className="text-orange-400" /> {playsCount} Plays
-                              </span>
-                            </div>
+                        {/* Left Docked Photo: Natural 4:3 Proportion, Zero Horizontal Stretching */}
+                        <div className="w-full sm:w-60 md:w-72 h-52 sm:h-auto bg-gray-900 relative shrink-0 overflow-hidden">
+                          <img 
+                            referrerPolicy="no-referrer"
+                            src={featuredImg} 
+                            alt={quiz.title} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                            onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent sm:hidden" />
+                          
+                          <div className="absolute top-3 left-3 z-10">
+                            <span className="bg-black/85 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                              {quiz.category}
+                            </span>
                           </div>
 
-                          {/* Card Content */}
-                          <div className="p-4">
-                            <h3 className="text-sm sm:text-base font-black text-gray-900 group-hover:text-blue-600 transition mb-1 leading-snug">
-                              {quiz.title}
-                            </h3>
-                            <p className="text-xs font-medium text-gray-600 line-clamp-1 leading-relaxed mb-3">
-                              {getSimplifiedQuizDescription(quiz.slug, quiz.description)}
-                            </p>
+                          <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex sm:hidden items-center justify-between text-[10px] text-white/90 font-mono font-bold">
+                            <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
+                              <HelpCircle size={11} className="text-amber-400" /> {questionCount} Qs
+                            </span>
+                            <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
+                              <Flame size={11} className="text-orange-400" /> {playsCount} Plays
+                            </span>
                           </div>
                         </div>
 
-                        {/* REFINED BUTTONS: Large "Play (Different Modes)" + Small "Quick Play" */}
-                        <div className="p-4 pt-0">
-                          <div className="pt-2.5 border-t border-gray-100 flex items-center gap-2">
-                            {/* 1. Large Primary Button: Play (Different Modes) */}
+                        {/* Right Content & Actions */}
+                        <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="hidden sm:flex items-center gap-2 mb-2 flex-wrap">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                                {quiz.category}
+                              </span>
+                              <span className="text-[11px] font-mono text-gray-400 font-bold">
+                                {questionCount} Questions &bull; {playsCount} Plays
+                              </span>
+                            </div>
+
+                            <h3 className="text-base sm:text-lg font-black text-gray-950 group-hover:text-blue-600 transition mb-1.5 leading-snug">
+                              {quiz.title}
+                            </h3>
+                            <p className="text-xs sm:text-sm font-medium text-gray-600 line-clamp-2 leading-relaxed">
+                              {getSimplifiedQuizDescription(quiz.slug, quiz.description)}
+                            </p>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="pt-3.5 mt-3 border-t border-gray-100 flex items-center gap-2.5">
                             <button
                               type="button"
                               onClick={() => setSetupModalQuiz(quiz)}
-                              className="flex-1 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
+                              className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
                             >
                               <Play size={13} fill="currentColor" />
                               <span>Play (Different Modes)</span>
                             </button>
 
-                            {/* 2. Small Secondary Button: Quick Play */}
                             <Link 
                               href={`/quizzes/${quiz.slug}?autostart=1`}
                               onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "quick_play" })}
-                              className="px-3 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition shrink-0"
+                              className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition shrink-0"
                               title="1-Click Instant Play (10 Questions)"
                             >
                               <Zap size={13} fill="currentColor" />
