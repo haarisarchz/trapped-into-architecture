@@ -80,7 +80,6 @@ export default function QuizzesHubPage() {
 
       if (data) {
         // Distinguish real participants from namesake/seed entries
-        // Namesake rows have user_id === null AND guest_session_id === null
         const realParticipants = data.filter(e => e.user_id !== null || (e.guest_session_id !== null && !e.display_name?.startsWith("Architect_#anon")));
         const seedParticipants = data.filter(e => e.user_id === null && e.guest_session_id === null);
 
@@ -140,7 +139,7 @@ export default function QuizzesHubPage() {
   };
 
   const categories = [
-    { id: "all", label: "🌟 All Tournaments (7)" },
+    { id: "all", label: "🌟 All Quizzes (7)" },
     { id: "Guess the Building", label: "🏛️ Guess the Building" },
     { id: "Architects & Firms", label: "📐 Architects & Firms" },
     { id: "World Geography", label: "🌍 World Geography" },
@@ -176,48 +175,48 @@ export default function QuizzesHubPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50/70 pt-[80px] pb-20">
+      <div className="min-h-screen bg-gray-50/70 pt-[72px] pb-12">
         
-        {/* CLEAN STRAIGHTFORWARD HEADER */}
+        {/* COMPACT CLEAN HEADER (GAPS MINIMIZED) */}
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 sm:py-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-4.5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               
               {/* Title & Hashtag Pills */}
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-950 tracking-tight">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-950 tracking-tight leading-tight">
                   Architecture Quizzes &amp; Knowledge Arena
                 </h1>
 
                 {/* Hashtag Pills */}
-                <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs font-bold text-gray-600">
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg text-gray-700 transition">
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-gray-600">
+                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
                     #65+ Masterworks
                   </span>
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg text-gray-700 transition">
+                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
                     #100+ Master Architects
                   </span>
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg text-gray-700 transition">
+                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
                     #High-Res Architectural Photos
                   </span>
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2.5 py-1 rounded-lg text-gray-700 transition">
+                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
                     #Floor Plans &amp; Tectonic Clues
                   </span>
-                  <span className="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-black border border-blue-200">
+                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-black border border-blue-200">
                     #Instant Practice &amp; Challenge Modes
                   </span>
                 </div>
               </div>
 
               {/* Crowd & Catalog Stats */}
-              <div className="flex items-center gap-2.5 shrink-0">
-                <div className="px-3.5 py-2 rounded-2xl bg-black text-white text-center shadow-xs">
-                  <span className="text-base sm:text-lg font-black block leading-none">7</span>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-300">Active Quizzes</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="px-3 py-1.5 rounded-xl bg-black text-white text-center shadow-xs">
+                  <span className="text-sm sm:text-base font-black block leading-none">7</span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-gray-300">Active Quizzes</span>
                 </div>
-                <div className="px-3.5 py-2 rounded-2xl bg-amber-400 text-amber-950 text-center shadow-xs">
-                  <span className="text-base sm:text-lg font-black block leading-none">455</span>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900">Questions Available</span>
+                <div className="px-3 py-1.5 rounded-xl bg-amber-400 text-amber-950 text-center shadow-xs">
+                  <span className="text-sm sm:text-base font-black block leading-none">455</span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-900">Questions Available</span>
                 </div>
               </div>
 
@@ -226,36 +225,44 @@ export default function QuizzesHubPage() {
         </div>
 
         {/* MAIN BODY: 66% (Left / Center) vs 33% (Right Sidebar) */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             {/* LEFT 66% (8 COLS): CONTROLS & QUIZ CARDS */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-8 space-y-4">
               
-              {/* Toolbar: Category Pills, Sort By, View By, Search */}
-              <div className="bg-white rounded-3xl border border-gray-200 p-4 sm:p-5 shadow-xs space-y-4">
+              {/* Toolbar: Prominent Search + Search Button + Sort + View + Categories */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-xs space-y-3">
                 
-                {/* Top Row: Search + Sort By + View By */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                {/* Top Row: High-Contrast Search Bar with Dedicated Search Button */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div className="relative flex-1">
-                    <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input 
-                      type="text"
-                      placeholder="Search architecture quizzes, architects, or buildings..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-black bg-gray-50 focus:bg-white transition"
-                    />
+                    <div className="relative w-full flex items-center">
+                      <Search size={15} className="absolute left-3.5 text-gray-500 pointer-events-none" />
+                      <input 
+                        type="text"
+                        placeholder="Search architecture quizzes, architects, or buildings..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-22 py-2 text-xs font-medium border-2 border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white text-gray-900 shadow-2xs transition"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-1 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-lg text-xs font-black shadow-xs transition cursor-pointer"
+                      >
+                        Search
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
                     {/* Sort By Dropdown */}
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600 font-bold">
                       <span className="hidden sm:inline text-[11px] uppercase tracking-wider">Sort:</span>
                       <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="text-xs font-bold bg-gray-100 hover:bg-gray-200 border-none rounded-xl px-3 py-2 text-gray-800 focus:outline-none cursor-pointer transition"
+                        className="text-xs font-bold bg-gray-100 hover:bg-gray-200 border-none rounded-xl px-2.5 py-2 text-gray-800 focus:outline-none cursor-pointer transition"
                       >
                         <option value="most_played">🔥 Most Played</option>
                         <option value="newest">✨ Newly Added</option>
@@ -272,7 +279,7 @@ export default function QuizzesHubPage() {
                         }`}
                         title="Image View"
                       >
-                        <LayoutGrid size={14} />
+                        <LayoutGrid size={13} />
                         <span className="text-[11px] hidden sm:inline">Image</span>
                       </button>
                       <button
@@ -282,22 +289,22 @@ export default function QuizzesHubPage() {
                         }`}
                         title="Text View"
                       >
-                        <List size={14} />
+                        <List size={13} />
                         <span className="text-[11px] hidden sm:inline">Text</span>
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Category Pills */}
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100">
+                {/* Category Pills (Tournaments renamed to Quizzes) */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100">
                   {categories.map(c => (
                     <button
                       key={c.id}
                       onClick={() => setActiveCategory(c.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer ${
                         activeCategory === c.id 
-                          ? "bg-black text-white scale-105" 
+                          ? "bg-black text-white scale-102" 
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
@@ -310,13 +317,13 @@ export default function QuizzesHubPage() {
 
               {/* Quiz Cards Feed */}
               {loading ? (
-                <div className="p-16 text-center text-gray-400 font-medium bg-white rounded-3xl border border-gray-200">
+                <div className="p-12 text-center text-gray-400 font-medium bg-white rounded-3xl border border-gray-200">
                   Loading Quizzes...
                 </div>
               ) : filteredAndSortedQuizzes.length === 0 ? (
-                <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center">
-                  <span className="text-4xl block mb-2">🏛️</span>
-                  <h3 className="text-base font-bold text-gray-900 mb-1">No quizzes match your filter</h3>
+                <div className="bg-white rounded-3xl border border-gray-200 p-10 text-center">
+                  <span className="text-3xl block mb-2">🏛️</span>
+                  <h3 className="text-sm font-bold text-gray-900 mb-1">No quizzes match your filter</h3>
                   <p className="text-xs text-gray-500 mb-4">
                     Try searching for another topic or reset categories.
                   </p>
@@ -328,8 +335,8 @@ export default function QuizzesHubPage() {
                   </button>
                 </div>
               ) : viewMode === "image" ? (
-                /* 1. IMAGE DOMINANT VIEW (Single Featured Image per Card) */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                /* 1. IMAGE VIEW (Compact Image Height, Rows Visible Above Fold) */
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {filteredAndSortedQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 65;
                     const playsCount = quiz.quiz_scores?.[0]?.count || 0;
@@ -338,10 +345,10 @@ export default function QuizzesHubPage() {
                     return (
                       <div 
                         key={quiz.id}
-                        className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col group"
+                        className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col group"
                       >
-                        {/* SINGLE HIGH-RES IMAGE HEADER */}
-                        <div className="h-52 bg-gray-900 relative overflow-hidden">
+                        {/* COMPACT SINGLE HIGH-RES IMAGE (h-40 sm:h-44) */}
+                        <div className="h-40 sm:h-44 bg-gray-900 relative overflow-hidden">
                           <img 
                             referrerPolicy="no-referrer"
                             src={featuredImg} 
@@ -351,55 +358,55 @@ export default function QuizzesHubPage() {
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                           
-                          <div className="absolute top-3 left-3 z-10">
-                            <span className="bg-black/80 backdrop-blur-md text-white text-[11px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
+                          <div className="absolute top-2.5 left-2.5 z-10">
+                            <span className="bg-black/85 backdrop-blur-md text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-white/20 shadow-md">
                               {quiz.category}
                             </span>
                           </div>
 
-                          <div className="absolute bottom-3 left-3 right-3 z-10 flex items-center justify-between text-[11px] text-white/90 font-mono font-bold">
+                          <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between text-[10px] text-white/90 font-mono font-bold">
                             <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
-                              <HelpCircle size={12} className="text-amber-400" /> {questionCount} Questions
+                              <HelpCircle size={11} className="text-amber-400" /> {questionCount} Qs
                             </span>
                             <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
-                              <Flame size={12} className="text-orange-400" /> {playsCount} Plays
+                              <Flame size={11} className="text-orange-400" /> {playsCount} Plays
                             </span>
                           </div>
                         </div>
 
                         {/* Card Content */}
-                        <div className="p-5 flex-1 flex flex-col justify-between">
+                        <div className="p-4 flex-1 flex flex-col justify-between">
                           <div>
-                            <h3 className="text-base font-black text-gray-900 group-hover:text-blue-600 transition mb-1 leading-snug">
+                            <h3 className="text-sm sm:text-base font-black text-gray-900 group-hover:text-blue-600 transition mb-1 leading-snug">
                               {quiz.title}
                             </h3>
-                            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-4">
+                            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">
                               {quiz.description || "Test your architectural visual recall across legendary world projects and master architects."}
                             </p>
                           </div>
 
-                          {/* Dual Action Buttons: Quick Play (10Q) & Start Quiz (Settings Modal) */}
-                          <div className="pt-3 border-t border-gray-100 flex items-center gap-2">
-                            {/* 1. Quick Play Direct Link */}
-                            <Link 
-                              href={`/quizzes/${quiz.slug}?autostart=1`}
-                              onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "quick_play" })}
-                              className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition"
-                            >
-                              <Zap size={13} fill="currentColor" />
-                              <span>Quick Play (10Q)</span>
-                            </Link>
-
-                            {/* 2. Start Quiz with Mode Modal */}
+                          {/* REFINED BUTTONS: Large "Play (Different Modes)" + Small "Quick Play" */}
+                          <div className="pt-2.5 border-t border-gray-100 flex items-center gap-2">
+                            {/* 1. Large Primary Button: Play (Different Modes) */}
                             <button
                               type="button"
                               onClick={() => setSetupModalQuiz(quiz)}
-                              className="px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-                              title="Customize Quiz Mode, Difficulty & Questions"
+                              className="flex-1 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
                             >
-                              <SlidersHorizontal size={13} />
-                              <span className="hidden sm:inline">Options</span>
+                              <Play size={13} fill="currentColor" />
+                              <span>Play (Different Modes)</span>
                             </button>
+
+                            {/* 2. Small Secondary Button: Quick Play */}
+                            <Link 
+                              href={`/quizzes/${quiz.slug}?autostart=1`}
+                              onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "quick_play" })}
+                              className="px-3 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition shrink-0"
+                              title="1-Click Instant Play (10 Questions)"
+                            >
+                              <Zap size={13} fill="currentColor" />
+                              <span>Quick Play</span>
+                            </Link>
                           </div>
                         </div>
                       </div>
@@ -407,34 +414,34 @@ export default function QuizzesHubPage() {
                   })}
                 </div>
               ) : (
-                /* 2. TEXT DOMINANT VIEW (Clean Rows with Quick Play & Options) */
-                <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden divide-y divide-gray-100 shadow-xs">
+                /* 2. TEXT VIEW (Clean Rows with Play (Different Modes) & Quick Play) */
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden divide-y divide-gray-100 shadow-xs">
                   {filteredAndSortedQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 65;
                     const playsCount = quiz.quiz_scores?.[0]?.count || 0;
                     const featuredImg = getFeaturedQuizImage(quiz.slug, quiz.cover_image);
 
                     return (
-                      <div key={quiz.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/60 transition group">
-                        <div className="flex items-start gap-4 min-w-0">
+                      <div key={quiz.id} className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50/60 transition group">
+                        <div className="flex items-start gap-3 min-w-0">
                           <img 
                             referrerPolicy="no-referrer"
                             src={featuredImg} 
                             alt={quiz.title} 
-                            className="w-16 h-16 rounded-2xl object-cover shrink-0 border border-gray-200 group-hover:scale-105 transition"
+                            className="w-14 h-14 rounded-xl object-cover shrink-0 border border-gray-200 group-hover:scale-105 transition"
                             onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
                           />
                           <div className="min-w-0">
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block">
+                            <span className="text-[9px] font-extrabold uppercase tracking-wider text-blue-600 block">
                               {quiz.category}
                             </span>
-                            <h3 className="text-sm font-black text-gray-900 truncate group-hover:text-blue-600 transition">
+                            <h3 className="text-xs sm:text-sm font-black text-gray-900 truncate group-hover:text-blue-600 transition">
                               {quiz.title}
                             </h3>
                             <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
                               {quiz.description || "Visual quiz challenge."}
                             </p>
-                            <div className="mt-1 flex items-center gap-3 text-[11px] text-gray-400 font-mono">
+                            <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-400 font-mono">
                               <span>{questionCount} Qs</span>
                               <span>•</span>
                               <span>{playsCount} plays</span>
@@ -443,19 +450,19 @@ export default function QuizzesHubPage() {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <Link 
-                            href={`/quizzes/${quiz.slug}?autostart=1`}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition"
-                          >
-                            <Zap size={13} fill="currentColor" /> Quick Play
-                          </Link>
                           <button
                             type="button"
                             onClick={() => setSetupModalQuiz(quiz)}
-                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                            className="px-3.5 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                           >
-                            <SlidersHorizontal size={13} />
+                            <Play size={12} fill="currentColor" /> Play (Different Modes)
                           </button>
+                          <Link 
+                            href={`/quizzes/${quiz.slug}?autostart=1`}
+                            className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition"
+                          >
+                            <Zap size={12} fill="currentColor" /> Quick Play
+                          </Link>
                         </div>
                       </div>
                     );
@@ -466,24 +473,24 @@ export default function QuizzesHubPage() {
             </div>
 
             {/* RIGHT 33% (4 COLS): LIVE DEMO + LEADERBOARD + RULES */}
-            <div className="lg:col-span-4 space-y-6 sticky top-[96px]">
+            <div className="lg:col-span-4 space-y-4 sticky top-[88px]">
               
               {/* 1. COMPACT LIVE DEMO (Pre-checked Green Option) */}
-              <div className="bg-gradient-to-br from-gray-900 via-gray-950 to-black p-5 rounded-3xl text-white shadow-xl border border-gray-800 relative overflow-hidden">
-                <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
+              <div className="bg-gradient-to-br from-gray-900 via-gray-950 to-black p-4 sm:p-5 rounded-2xl text-white shadow-xl border border-gray-800 relative overflow-hidden">
+                <div className="flex items-center justify-between mb-2.5 border-b border-white/10 pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[11px] font-black uppercase tracking-wider text-gray-300">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-300">
                       Live Sample Demo
                     </span>
                   </div>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
                     Easy Question
                   </span>
                 </div>
 
                 {/* Sample Photo */}
-                <div className="relative rounded-2xl overflow-hidden h-36 bg-gray-800 mb-3 border border-white/10">
+                <div className="relative rounded-xl overflow-hidden h-32 bg-gray-800 mb-2.5 border border-white/10">
                   <img 
                     referrerPolicy="no-referrer" 
                     src="/quizzes/fallingwater-kaufmann-residence.jpg" 
@@ -495,25 +502,25 @@ export default function QuizzesHubPage() {
                   </div>
                 </div>
 
-                <p className="text-xs font-bold text-gray-200 mb-3">
+                <p className="text-xs font-bold text-gray-200 mb-2.5">
                   Which master architect designed the cantilevered terraces of &quot;Fallingwater&quot;?
                 </p>
 
                 {/* Four Options: Green Pre-checked Answer */}
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="grid grid-cols-2 gap-1.5 mb-2.5">
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Frank Lloyd Wright")}
-                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-emerald-500/25 border-emerald-500 text-emerald-300 font-extrabold"
+                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-emerald-500/25 border-emerald-500 text-emerald-300 font-extrabold"
                   >
                     <span className="truncate">Frank Lloyd Wright</span>
-                    <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
+                    <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Le Corbusier")}
-                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
+                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
                   >
                     <span className="truncate">Le Corbusier</span>
                   </button>
@@ -521,7 +528,7 @@ export default function QuizzesHubPage() {
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Mies van der Rohe")}
-                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
+                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
                   >
                     <span className="truncate">Mies van der Rohe</span>
                   </button>
@@ -529,37 +536,37 @@ export default function QuizzesHubPage() {
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Louis Kahn")}
-                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
+                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
                   >
                     <span className="truncate">Louis Kahn</span>
                   </button>
                 </div>
 
-                <div className="p-2 rounded-xl mb-3 text-[11px] font-bold text-center bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <div className="p-1.5 rounded-lg mb-2.5 text-[10px] font-bold text-center bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                   ✓ Correct! Designed 1935 over a waterfall in Mill Run, PA.
                 </div>
 
                 <Link 
                   href="/quizzes/iconic-world-landmarks-guess-the-building?autostart=1"
-                  className="w-full py-2.5 bg-white text-black hover:bg-gray-100 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition shadow-sm"
+                  className="w-full py-2 bg-white text-black hover:bg-gray-100 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition shadow-sm"
                 >
-                  Play Full Quiz (65 Masterworks) <ArrowRight size={14} />
+                  Play Full Quiz (65 Masterworks) <ArrowRight size={13} />
                 </Link>
               </div>
 
               {/* 2. LEADERBOARD WIDGET */}
-              <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-xs">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-black text-gray-900 flex items-center gap-2">
-                    <Trophy size={16} className="text-amber-500" /> Live Leaderboard
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs">
+                <div className="flex items-center justify-between mb-2.5">
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900 flex items-center gap-1.5">
+                    <Trophy size={15} className="text-amber-500" /> Live Leaderboard
                   </h3>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
+                  <span className="text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200">
                     Live Points
                   </span>
                 </div>
 
                 {/* Difficulty Tabs: Easy / Medium / Hard */}
-                <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-3">
+                <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-2.5">
                   <button
                     onClick={() => setLeaderboardDifficulty("easy")}
                     className={`py-1 text-xs font-bold rounded-lg transition ${
@@ -588,11 +595,11 @@ export default function QuizzesHubPage() {
 
                 {/* Leaderboard Rows */}
                 {loadingLeaderboard ? (
-                  <div className="p-6 text-center text-gray-400 text-xs">
+                  <div className="p-5 text-center text-gray-400 text-xs">
                     Updating scores...
                   </div>
                 ) : leaderboard.length === 0 ? (
-                  <div className="p-6 text-center text-gray-400 text-xs">
+                  <div className="p-5 text-center text-gray-400 text-xs">
                     Be the first to enter the leaderboard!
                   </div>
                 ) : (
@@ -613,7 +620,7 @@ export default function QuizzesHubPage() {
                               : "border-gray-100 hover:bg-gray-50"
                           }`}
                         >
-                          <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
                               idx === 0 ? "bg-amber-400 text-amber-950" :
                               idx === 1 ? "bg-gray-300 text-gray-800" :
@@ -647,27 +654,27 @@ export default function QuizzesHubPage() {
               </div>
 
               {/* 3. RULES & SCORING MECHANICS */}
-              <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-xs text-xs space-y-3">
+              <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs text-xs space-y-2.5">
                 <h3 className="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
                   <ShieldCheck size={14} className="text-blue-600" /> Rules &amp; Scoring Mechanics
                 </h3>
 
-                <div className="space-y-2 text-gray-600 leading-normal">
-                  <div className="flex items-start gap-2">
+                <div className="space-y-1.5 text-gray-600 leading-normal text-[11px]">
+                  <div className="flex items-start gap-1.5">
                     <span className="font-black text-gray-900">🟢 Easy:</span>
-                    <span>10s/Q continuous clock &bull; 1 pt per correct answer &bull; Obvious iconic choices.</span>
+                    <span>10s/Q &bull; 1 pt per correct answer &bull; Obvious iconic choices.</span>
                   </div>
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-1.5">
                     <span className="font-black text-gray-900">🟡 Medium:</span>
-                    <span>15s/Q continuous clock &bull; 2 pts per correct answer &bull; Subtle architectural distractors.</span>
+                    <span>15s/Q &bull; 2 pts per correct answer &bull; Subtle architectural distractors.</span>
                   </div>
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-1.5">
                     <span className="font-black text-gray-900">🔴 Hard:</span>
-                    <span>20s/Q continuous clock &bull; 5 pts per correct answer &bull; Same studio / movement deep cuts.</span>
+                    <span>20s/Q &bull; 5 pts per correct answer &bull; Same studio / movement deep cuts.</span>
                   </div>
-                  <div className="pt-2 border-t border-gray-100 flex items-start gap-2 text-blue-700 font-semibold">
+                  <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-700 font-semibold">
                     <span>⚡ Modes:</span>
-                    <span><strong>Practice:</strong> Instant answer clues &bull; <strong>Challenge:</strong> Continuous timer + points.</span>
+                    <span><strong>Practice:</strong> Instant answer clues &bull; <strong>Challenge:</strong> Countdown timer + points.</span>
                   </div>
                 </div>
               </div>
@@ -677,7 +684,7 @@ export default function QuizzesHubPage() {
           </div>
         </div>
 
-        {/* START QUIZ CUSTOMIZATION MODAL */}
+        {/* START QUIZ CUSTOMIZATION MODAL (MODES & DIFFICULTY) */}
         {setupModalQuiz && (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl border border-gray-200 max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
@@ -694,7 +701,7 @@ export default function QuizzesHubPage() {
                 <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
                   Quiz Setup
                 </span>
-                <h3 className="text-lg font-black text-gray-900 mt-1">
+                <h3 className="text-base sm:text-lg font-black text-gray-900 mt-1">
                   {setupModalQuiz.title}
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -802,13 +809,13 @@ export default function QuizzesHubPage() {
                 </div>
               </div>
 
-              {/* Launch Game Button */}
+              {/* Start Quiz Button (Tournament removed) */}
               <Link
                 href={`/quizzes/${setupModalQuiz.slug}?mode=${modalMode}&difficulty=${modalDifficulty}&count=${modalCount}&autostart=1`}
                 onClick={() => setSetupModalQuiz(null)}
-                className="w-full py-3 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition"
+                className="w-full py-3 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
               >
-                <span>Launch Quiz Tournament</span>
+                <span>Start Quiz</span>
                 <ArrowRight size={14} />
               </Link>
 
