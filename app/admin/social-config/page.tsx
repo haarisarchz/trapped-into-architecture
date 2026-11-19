@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 import TestFacebookButton from "@/components/admin/TestFacebookButton";
+import TestLinkedInButton from "@/components/admin/TestLinkedInButton";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 
 export default function SocialConfigPage() {
@@ -67,6 +68,11 @@ export default function SocialConfigPage() {
                 {p.id === 'facebook' && (
                   <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
                     <TestFacebookButton />
+                  </div>
+                )}
+                {p.id === 'linkedin' && (
+                  <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+                    <TestLinkedInButton />
                   </div>
                 )}
               </div>
