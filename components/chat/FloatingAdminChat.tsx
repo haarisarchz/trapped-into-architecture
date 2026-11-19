@@ -147,6 +147,22 @@ export default function FloatingAdminChat() {
     return () => clearInterval(interval);
   }, [isOpen, sessionId]);
 
+  // Listen to guest slider visibility to yield on mobile screens
+  useEffect(() => {
+    const handleSliderState = (e: any) => {
+      setIsGuestSliderVisible(!!e.detail?.visible);
+    };
+    window.addEventListener("ti2a_guest_slider_state", handleSliderState);
+    return () => window.removeEventListener("ti2a_guest_slider_state", handleSliderState);
+  }, []);
+
+  // When live chat opens, tell guest engagement slider to hide so it doesn't distract
+  useEffect(() => {
+    if (isOpen) {
+      window.dispatchEvent(new CustomEvent("ti2a_chat_opened"));
+    }
+  }, [isOpen]);
+
   // Scroll to bottom whenever messages update
   useEffect(() => {
     if (isOpen) {
@@ -309,7 +325,7 @@ export default function FloatingAdminChat() {
   const showRegisterNudge = visitorMessageCount >= 5;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden">
+    <div className={`fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden ${isGuestSliderVisible && !isOpen ? "hidden sm:flex" : "flex"}`}>
       
       {/* 1. FLOATING GREETING PILL (Visible when chat is closed) */}
       {!isOpen && showPromptPill && (
