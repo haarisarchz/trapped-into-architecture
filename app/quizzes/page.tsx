@@ -135,14 +135,14 @@ export default function QuizzesHubPage() {
                 </div>
 
                 <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight">
-                  Recognize the Masters. <br />
+                  Architecture Quiz Arena: <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
-                    Rule the Architecture Leaderboard.
+                    Recognize the Masters & Rule the Leaderboard.
                   </span>
                 </h1>
 
                 <p className="mt-3 text-sm sm:text-base text-gray-600 leading-relaxed max-w-2xl">
-                  65+ iconic architectural masterworks, legendary studios, and tectonic trivia. Challenge fellow architects, beat the continuous countdown in rapid fire, and claim your place in the rankings.
+                  Free architecture quizzes with 455+ questions and answers across 65+ iconic masterworks, legendary studios, and tectonic trivia. Challenge fellow architects, beat the continuous countdown in rapid fire, and claim your place in the rankings.
                 </p>
 
                 {/* Quick Feature Badges */}
