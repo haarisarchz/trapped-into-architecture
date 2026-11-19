@@ -6,8 +6,8 @@ import Navbar from "@/components/Navbar";
 import { trackEvent } from "@/utils/analytics";
 import { 
   Trophy, Play, Clock, HelpCircle, Users, Sparkles, 
-  ArrowRight, ArrowDown, Filter, ChevronRight, Award, Flame, Search, Lock, 
-  CheckCircle2, XCircle, SlidersHorizontal, LayoutGrid, List, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle, LayoutList
+  ArrowRight, ArrowDown, Filter, ChevronLeft, ChevronRight, Award, Flame, Search, Lock, 
+  CheckCircle2, XCircle, SlidersHorizontal, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle
 } from "lucide-react";
 
 export default function QuizzesHubPage() {
@@ -16,7 +16,8 @@ export default function QuizzesHubPage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"most_played" | "newest" | "oldest">("most_played");
-  const [viewMode, setViewMode] = useState<"grid" | "editorial" | "text">("editorial");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const QUIZZES_PER_PAGE = 10;
   const [demoSelected, setDemoSelected] = useState<string>("Frank Lloyd Wright");
   
   // Start Quiz Setup Modal state
@@ -66,6 +67,10 @@ export default function QuizzesHubPage() {
   useEffect(() => {
     fetchLeaderboard();
   }, [leaderboardDifficulty, leaderboardQuizFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchQuery, sortBy]);
 
   const fetchQuizzes = async () => {
     try {
@@ -144,7 +149,7 @@ export default function QuizzesHubPage() {
       case "master-architects-who-designed-it":
         return "/quizzes/chapelle-notre-dame-du-haut-ronchamp.jpg";
       case "where-in-the-world-guess-the-city-country":
-        return "/quizzes/the-shard.jpg";
+        return fallbackCover || "/quizzes/sydney-opera-house.jpg";
       case "timeline-challenge-when-was-it-built":
         return "/quizzes/villa-savoye.jpg";
       case "architectural-styles-and-movements":
@@ -212,6 +217,15 @@ export default function QuizzesHubPage() {
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       }
     });
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedQuizzes.length / QUIZZES_PER_PAGE));
+  const paginatedQuizzes = filteredAndSortedQuizzes.slice(
+    (currentPage - 1) * QUIZZES_PER_PAGE,
+    currentPage * QUIZZES_PER_PAGE
+  );
+  const startIndex = filteredAndSortedQuizzes.length === 0 ? 0 : (currentPage - 1) * QUIZZES_PER_PAGE + 1;
+  const endIndex = Math.min(currentPage * QUIZZES_PER_PAGE, filteredAndSortedQuizzes.length);
 
   return (
     <>
@@ -289,60 +303,18 @@ export default function QuizzesHubPage() {
               </div>
             </div>
 
-            {/* 2. Controls Group with Explicit Labels and Clear Gaps */}
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              
-              {/* Sort By Dropdown with clear label */}
-              <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
-                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="text-xs font-black bg-transparent border-none text-gray-900 focus:outline-none cursor-pointer pr-1"
-                >
-                  <option value="most_played">🔥 Most Played</option>
-                  <option value="newest">✨ Newly Added</option>
-                  <option value="oldest">⏳ Oldest Quiz</option>
-                </select>
-              </div>
-
-              {/* View By Toggle: Grid, Editorial, and Text */}
-              <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
-                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">View by:</span>
-                <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg gap-0.5">
-                  <button
-                    onClick={() => setViewMode("grid")}
-                    className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                      viewMode === "grid" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
-                    }`}
-                    title="2-Column Grid Layout"
-                  >
-                    <LayoutGrid size={13} />
-                    <span>Grid</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode("editorial")}
-                    className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                      viewMode === "editorial" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
-                    }`}
-                    title="Balanced Split Layout"
-                  >
-                    <LayoutList size={13} />
-                    <span>Balance</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode("text")}
-                    className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                      viewMode === "text" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
-                    }`}
-                    title="Compact Text View"
-                  >
-                    <List size={13} />
-                    <span>Text</span>
-                  </button>
-                </div>
-              </div>
-
+            {/* 2. Controls Group: Sort By Dropdown with clear label */}
+            <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200 shrink-0">
+              <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="text-xs font-black bg-transparent border-none text-gray-900 focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="most_played">🔥 Most Played</option>
+                <option value="newest">✨ Newly Added</option>
+                <option value="oldest">⏳ Oldest Quiz</option>
+              </select>
             </div>
           </div>
 
@@ -390,8 +362,8 @@ export default function QuizzesHubPage() {
                     Select any visual quiz challenge or launch with your custom time rules
                   </p>
                 </div>
-                <span className="text-xs font-mono font-bold text-gray-400 hidden sm:inline">
-                  Page 1 of 1
+                <span className="text-xs font-mono font-bold text-gray-500 hidden sm:inline bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200">
+                  Page {currentPage} of {totalPages}
                 </span>
               </div>
 
@@ -413,89 +385,10 @@ export default function QuizzesHubPage() {
                     View All Quizzes
                   </button>
                 </div>
-              ) : viewMode === "grid" ? (
-                /* 1. 2-COLUMN GRID VIEW (Classic Elevated Architecture Grid) */
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {filteredAndSortedQuizzes.map(quiz => {
-                    const questionCount = quiz.quiz_questions?.[0]?.count || 65;
-                    const playsCount = quiz.quiz_scores?.[0]?.count || 0;
-                    const featuredImg = getFeaturedQuizImage(quiz.slug, quiz.cover_image);
-
-                    return (
-                      <div 
-                        key={quiz.id}
-                        className="bg-white rounded-3xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-black transition duration-300 flex flex-col justify-between group"
-                      >
-                        <div>
-                          {/* Photo with healthy 210px height so buildings fit comfortably */}
-                          <div className="h-52 bg-gray-900 relative overflow-hidden">
-                            <img 
-                              referrerPolicy="no-referrer"
-                              src={featuredImg} 
-                              alt={quiz.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                              onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                            
-                            <div className="absolute top-3 left-3 z-10">
-                              <span className="bg-black/85 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
-                                {quiz.category}
-                              </span>
-                            </div>
-
-                            <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between text-[10px] text-white/90 font-mono font-bold">
-                              <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
-                                <HelpCircle size={11} className="text-amber-400" /> {questionCount} Qs
-                              </span>
-                              <span className="flex items-center gap-1 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-white/10">
-                                <Flame size={11} className="text-orange-400" /> {playsCount} Plays
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Card Content */}
-                          <div className="p-4 sm:p-5">
-                            <h3 className="text-base font-black text-gray-950 group-hover:text-blue-600 transition mb-1 leading-snug">
-                              {quiz.title}
-                            </h3>
-                            <p className="text-xs font-medium text-gray-600 line-clamp-2 leading-relaxed">
-                              {getSimplifiedQuizDescription(quiz.slug, quiz.description)}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="p-4 sm:p-5 pt-0">
-                          <div className="pt-3 border-t border-gray-100 flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setSetupModalQuiz(quiz)}
-                              className="flex-1 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
-                            >
-                              <Play size={13} fill="currentColor" />
-                              <span>Play (Different Modes)</span>
-                            </button>
-
-                            <Link 
-                              href={`/quizzes/${quiz.slug}?autostart=1`}
-                              onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "quick_play" })}
-                              className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition shrink-0"
-                              title="1-Click Instant Play (10 Questions)"
-                            >
-                              <Zap size={13} fill="currentColor" />
-                              <span>Quick Play</span>
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : viewMode === "editorial" ? (
-                /* 2. BALANCED SPLIT VIEW (Dedicated Architectural Photo Left, Content & Actions Right) */
+              ) : (
+                /* BALANCED SPLIT VIEW (Permanent Default Architecture View) */
                 <div className="space-y-4">
-                  {filteredAndSortedQuizzes.map(quiz => {
+                  {paginatedQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 65;
                     const playsCount = quiz.quiz_scores?.[0]?.count || 0;
                     const featuredImg = getFeaturedQuizImage(quiz.slug, quiz.cover_image);
@@ -578,66 +471,68 @@ export default function QuizzesHubPage() {
                     );
                   })}
                 </div>
-              ) : (
-                /* 2. REDESIGNED TEXT VIEW (Distinct Standalone Cards, Roomy Height, Bold Headings) */
-                <div className="space-y-3.5">
-                  {filteredAndSortedQuizzes.map(quiz => {
-                    const questionCount = quiz.quiz_questions?.[0]?.count || 65;
-                    const playsCount = quiz.quiz_scores?.[0]?.count || 0;
-                    const featuredImg = getFeaturedQuizImage(quiz.slug, quiz.cover_image);
+              )}
 
-                    return (
-                      <div 
-                        key={quiz.id} 
-                        className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs hover:border-black hover:shadow-md transition duration-200 group"
-                      >
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-gray-900 border border-gray-200 shrink-0">
-                            <img 
-                              referrerPolicy="no-referrer"
-                              src={featuredImg} 
-                              alt={quiz.title} 
-                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                              onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
-                                {quiz.category}
-                              </span>
-                              <span className="text-[11px] font-mono text-gray-400 font-bold">
-                                {questionCount} Questions &bull; {playsCount} Plays
-                              </span>
-                            </div>
-                            <h3 className="text-base sm:text-lg font-black text-gray-950 truncate leading-snug group-hover:text-blue-600 transition">
-                              {quiz.title}
-                            </h3>
-                            <p className="text-xs font-medium text-gray-600 line-clamp-1 mt-1 leading-relaxed">
-                              {getSimplifiedQuizDescription(quiz.slug, quiz.description)}
-                            </p>
-                          </div>
-                        </div>
+              {/* PAGINATION CONTROLS */}
+              {filteredAndSortedQuizzes.length > 0 && (
+                <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white rounded-2xl border border-gray-200/90 p-3 sm:px-4 shadow-xs">
+                  <div className="text-xs font-bold text-gray-500">
+                    Showing <span className="text-gray-950 font-black">{startIndex}–{endIndex}</span> of{" "}
+                    <span className="text-gray-950 font-black">{filteredAndSortedQuizzes.length}</span> quizzes
+                  </div>
 
-                        <div className="flex items-center gap-2.5 shrink-0 self-stretch sm:self-center pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                          <button
-                            type="button"
-                            onClick={() => setSetupModalQuiz(quiz)}
-                            className="flex-1 sm:flex-none px-4 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
-                          >
-                            <Play size={13} fill="currentColor" /> Play (Different Modes)
-                          </button>
-                          <Link 
-                            href={`/quizzes/${quiz.slug}?autostart=1`}
-                            className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition shrink-0"
-                            title="1-Click Instant Play (10 Questions)"
-                          >
-                            <Zap size={13} fill="currentColor" /> Quick Play
-                          </Link>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setCurrentPage(prev => Math.max(1, prev - 1));
+                        window.scrollTo({ top: 300, behavior: "smooth" });
+                      }}
+                      disabled={currentPage === 1}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                        currentPage === 1 
+                          ? "text-gray-300 border border-gray-200 cursor-not-allowed bg-gray-50" 
+                          : "text-gray-700 bg-gray-100 hover:bg-black hover:text-white"
+                      }`}
+                    >
+                      <ChevronLeft size={14} />
+                      <span>Previous</span>
+                    </button>
+
+                    <div className="flex items-center gap-1 px-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => {
+                            setCurrentPage(page);
+                            window.scrollTo({ top: 300, behavior: "smooth" });
+                          }}
+                          className={`w-8 h-8 rounded-xl text-xs font-black transition cursor-pointer flex items-center justify-center ${
+                            currentPage === page
+                              ? "bg-black text-white shadow-xs"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setCurrentPage(prev => Math.min(totalPages, prev + 1));
+                        window.scrollTo({ top: 300, behavior: "smooth" });
+                      }}
+                      disabled={currentPage === totalPages}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                        currentPage === totalPages 
+                          ? "text-gray-300 border border-gray-200 cursor-not-allowed bg-gray-50" 
+                          : "text-gray-700 bg-gray-100 hover:bg-black hover:text-white"
+                      }`}
+                    >
+                      <span>Next</span>
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
                 </div>
               )}
 
