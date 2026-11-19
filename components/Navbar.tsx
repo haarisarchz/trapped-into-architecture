@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, ShieldCheck, RefreshCw, AlertCircle } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
+import { trackEvent } from "@/utils/analytics";
 
 export default function Navbar() {
   const router = useRouter();
@@ -595,6 +596,7 @@ useEffect(() => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        trackEvent("register_verified", { email: verificationEmail });
         setVerifyStatusMessage({
           text: data.message || "Email verified successfully! You've unlocked your Verified Badge (+5%).",
           type: "success",
@@ -628,6 +630,7 @@ useEffect(() => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        trackEvent("register_verified", { email: verificationEmail });
         setVerifyStatusMessage({ text: "A fresh 6-digit code has been sent to your email!", type: "success" });
       } else {
         setVerifyStatusMessage({ text: data.error || "Failed to resend code.", type: "error" });
@@ -706,6 +709,7 @@ useEffect(() => {
             {isSuperAdminOrCeo && (
               <button
                 onClick={() => {
+                  trackEvent("post_job_click", { source: "navbar_admin_preview" });
                   router.push("/post-a-job?preview=true");
                   setShowUserMenu(false);
                 }}
@@ -730,6 +734,7 @@ useEffect(() => {
         {!isInternalAdmin && isCompanyAdmin && (
           <button
             onClick={() => {
+              trackEvent("post_job_click", { source: "navbar_company_admin" });
               router.push("/post-a-job");
               setShowUserMenu(false);
             }}
@@ -743,6 +748,7 @@ useEffect(() => {
         {!isInternalAdmin && !isCompanyAdmin && (
           <button
             onClick={() => {
+              trackEvent("post_job_click", { source: "navbar_regular_user" });
               setShowCompanyAdminModal(true);
               setShowUserMenu(false);
             }}
@@ -775,7 +781,11 @@ useEffect(() => {
               Login
             </button>
             <button 
-              onClick={() => { setAuthTab("register"); setShowAuthPopup(true); }}
+              onClick={() => { 
+                trackEvent("register_intent_click", { source: "navbar_desktop" });
+                setAuthTab("register"); 
+                setShowAuthPopup(true); 
+              }}
               className="font-semibold hover:text-gray-300 transition"
             >
               Register
@@ -985,6 +995,7 @@ useEffect(() => {
             {isSuperAdminOrCeo && (
               <button
                 onClick={() => {
+                  trackEvent("post_job_click", { source: "navbar_mobile_admin_preview" });
                   router.push("/post-a-job?preview=true");
                   setShowUserMenu(false);
                 }}
@@ -1009,6 +1020,7 @@ useEffect(() => {
         {!isInternalAdmin && isCompanyAdmin && (
           <button
             onClick={() => {
+              trackEvent("post_job_click", { source: "navbar_mobile_company_admin" });
               router.push("/post-a-job");
               setShowUserMenu(false);
             }}
@@ -1022,6 +1034,7 @@ useEffect(() => {
         {!isInternalAdmin && !isCompanyAdmin && (
           <button
             onClick={() => {
+              trackEvent("post_job_click", { source: "navbar_mobile_regular_user" });
               setShowCompanyAdminModal(true);
               setShowUserMenu(false);
             }}
@@ -1046,7 +1059,10 @@ useEffect(() => {
   </div>
 ) : (
   <button
-    onClick={() => setShowAuthPopup(true)}
+    onClick={() => {
+      trackEvent("register_intent_click", { source: "navbar_mobile" });
+      setShowAuthPopup(true);
+    }}
     className="border border-white px-5 py-2 rounded-xl hover:bg-white hover:text-black transition"
   >
     Login / Register
@@ -2214,6 +2230,7 @@ window.location.reload();
         }
 
         /* CREATE USER IN SUPABASE AUTH */
+        trackEvent("register_submit_click", { profession });
 
         const { data: authData, error: authError } =
           await supabase.auth.signUp({
@@ -2287,6 +2304,7 @@ window.location.reload();
           setVerifyStatusMessage(null);
 
           await supabase.auth.signOut();
+          trackEvent("register_success", { userId: authData.user.id });
           setAuthTab("success");
         }
       }}
@@ -2363,7 +2381,7 @@ window.location.reload();
                     Complete Your Profile
                   </h4>
                   <p className="text-[11px] text-gray-500 truncate">
-                    Reach Gold Tier (66%+) to post jobs and unlock verified perks.
+                    Reach Gold Tier (66%+) to post jobs, claim studios, and get verified.
                   </p>
                 </div>
                 <ArrowRight size={14} className="text-gray-400 group-hover:text-black transition" />
@@ -2410,7 +2428,7 @@ window.location.reload();
             <div className="flex flex-col sm:flex-row gap-2.5 relative z-10">
               <a
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  "Hey! I just joined Trapped Into Architecture — India's dedicated architectural job, studio directory & professional networking portal. Explore studios, jobs & perks: https://trappedintoarchitecture.com"
+                  "Hey! I just joined Trapped Into Architecture — India's dedicated architectural job, studio directory & professional networking portal. Explore studios, jobs, quizzes & features: https://trappedintoarchitecture.com"
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

@@ -36,6 +36,7 @@ import ClaimCompanyModal from "./ClaimCompanyModal";
 import LoginOrRegisterClaimModal from "./LoginOrRegisterClaimModal";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { formatExperience } from "@/utils/formatJobDetails";
+import { trackEvent } from "@/utils/analytics";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
 
 interface CompanyHeaderAndTabsProps {
@@ -260,6 +261,10 @@ export default function CompanyHeaderAndTabs({
   }, []);
 
   const handleClaimClick = () => {
+    trackEvent("claim_studio_click", {
+      company_id: company.id,
+      company_name: company.firm_name,
+    });
     const userStr = localStorage.getItem("currentUser");
     if (!userStr) {
       setIsAuthChoiceModalOpen(true);

@@ -74,19 +74,30 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       stats: {
+        totalCompanies: allFirms.length,
         totalFirmsWithJobs: allFirms.length,
         totalWithValidEmail: validEmailFirms.length,
         alreadyNotifiedCount: completedFirms.length,
         pendingCount: pendingFirms.length,
+        batchSize: Math.min(15, pendingFirms.length),
         dailyRate: 15,
         estimatedDaysRemaining: Math.ceil(pendingFirms.length / 15),
       },
-      nextBatch: pendingFirms.slice(0, 15).map((f) => ({
+      nextBatch: pendingFirms.slice(0, 15).map((f, idx) => ({
+        id: f.slug || `${f.firmName}-${idx}`,
         firmName: f.firmName,
         email: f.email,
+        targetEmail: f.email,
         jobCount: f.jobs.length,
-        positions: f.jobs.map((j) => j.position).slice(0, 3),
+        jobs: f.jobs.map((j: any) => ({
+          id: j.id,
+          position: j.position,
+          city: j.city,
+          state: j.state,
+        })),
+        positions: f.jobs.map((j: any) => j.position).slice(0, 3),
         slug: f.slug,
+        claimUrl: `${siteUrl}/companies/${f.slug}?claim=true`,
       })),
       recentlyNotified: completedFirms.slice(-5).map((f) => ({
         firmName: f.firmName,
@@ -285,6 +296,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       count: dispatchedCount,
+      sent: dispatchedCount,
+      totalPendingRemaining: Math.max(0, pendingQueue.length - dispatchedCount),
       sentList,
       message: `Dispatched today's batch of ${dispatchedCount} studio outreach emails successfully!`,
     });

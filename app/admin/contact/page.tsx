@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
@@ -20,7 +20,13 @@ import {
   ChevronRight,
   Lightbulb,
   UploadCloud,
-  Plus
+  Plus,
+  MessageSquare,
+  User,
+  Clock,
+  ExternalLink,
+  CheckCircle2,
+  Image as ImageIcon
 } from "lucide-react";
 import { 
   SocialChannel, 
@@ -39,6 +45,33 @@ interface ContactInquiry {
   message: string;
   is_read: boolean;
   created_at: string;
+}
+
+interface ChatMessage {
+  id: string;
+  session_id: string;
+  sender: "visitor" | "admin";
+  message: string;
+  image_url?: string | null;
+  status?: string | null;
+  sender_name: string | null;
+  sender_contact: string | null;
+  client_ip?: string | null;
+  is_read?: boolean;
+  created_at: string;
+}
+
+interface ChatSessionGroup {
+  sessionId: string;
+  senderName: string;
+  senderContact: string | null;
+  clientIp: string | null;
+  status: "active" | "resolved";
+  lastMessage: string;
+  lastMessageAt: string;
+  messageCount: number;
+  unreadCount: number;
+  messages: ChatMessage[];
 }
 
 const LockedField = ({ label, value, onChange, fieldKey, type = "text", subLabel, isTextarea = false }: any) => {
@@ -311,9 +344,19 @@ const MultiChannelManager = ({
 
 export default function ContactSettingsPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"inbox" | "settings">("inbox");
+  const [activeTab, setActiveTab] = useState<"chat" | "inbox" | "settings">("chat");
   const [loading, setLoading] = useState(true);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  // Direct Chat Messages State
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
+  const [chatSearchQuery, setChatSearchQuery] = useState("");
+  const [chatStatusFilter, setChatStatusFilter] = useState<"all" | "active" | "resolved">("all");
+  const [activeAdminLightboxImg, setActiveAdminLightboxImg] = useState<string | null>(null);
 
   // Inquiries State
   const [allInquiries, setAllInquiries] = useState<ContactInquiry[]>([]);
@@ -367,6 +410,7 @@ export default function ContactSettingsPage() {
 
     fetchSettings();
     fetchInquiries();
+    fetchChatMessages();
   }, [router]);
 
   const fetchSettings = async () => {
@@ -452,6 +496,165 @@ export default function ContactSettingsPage() {
     }
   };
 
+  const CANNED_REPLIES = [
+    { label: "Jobs Search", text: "Hi! You can browse and filter all active architecture vacancies across Chennai, Bangalore, and all India at https://trappedintoarchitecture.com/jobs" },
+    { label: "Post a Job", text: "Hello! Architecture studios can post verified openings and internship drops directly at https://trappedintoarchitecture.com/post-a-job" },
+    { label: "WhatsApp Channel", text: "Join our official WhatsApp channel for instant city-wise architectural job alerts: https://whatsapp.com/channel/0029Vaz1p0kCRs1uBTCWpJ2X" },
+    { label: "Portfolio Guidance", text: "Feel free to share your Google Drive / Behance portfolio link or paste screenshots here for guidance!" },
+    { label: "Studio Hiring", text: "For urgent studio recruitment or hiring multiple architects, you can also reach our team directly at admin.ti2a@gmail.com." }
+  ];
+
+  // Auto-refresh chat messages every 6s while activeTab is chat
+  useEffect(() => {
+    if (activeTab !== "chat") return;
+    const interval = setInterval(() => {
+      fetchChatMessages(false);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
+  const fetchChatMessages = async (showLoading = true) => {
+    try {
+      if (showLoading) setLoadingChat(true);
+      const res = await fetch("/api/chat?admin=true");
+      if (res.ok) {
+        const data = await res.json();
+        const msgs: ChatMessage[] = data.messages || [];
+        setChatMessages(msgs);
+        if (msgs.length > 0 && !activeSessionId) {
+          setActiveSessionId(msgs[0].session_id);
+        }
+      }
+    } catch (err: any) {
+      console.error("Error fetching chat messages:", err.message);
+    } finally {
+      if (showLoading) setLoadingChat(false);
+    }
+  };
+
+  const toggleThreadResolveStatus = async (sessionId: string, currentStatus?: string) => {
+    const nextStatus = currentStatus === "resolved" ? "active" : "resolved";
+    try {
+      await fetch("/api/chat", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          status: nextStatus
+        })
+      });
+      setChatMessages((prev) =>
+        prev.map((m) => (m.session_id === sessionId ? { ...m, status: nextStatus } : m))
+      );
+    } catch (err: any) {
+      alert("Error updating status: " + err.message);
+    }
+  };
+
+  const handleDeleteChatSession = async (sessionId: string) => {
+    if (!confirm("Are you sure you want to delete this entire visitor conversation thread?")) return;
+    try {
+      const res = await fetch(`/api/chat?sessionId=${sessionId}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setChatMessages((prev) => prev.filter((m) => m.session_id !== sessionId));
+        if (activeSessionId === sessionId) {
+          setActiveSessionId(null);
+        }
+      } else {
+        alert("Failed to delete chat thread.");
+      }
+    } catch (err: any) {
+      alert("Error deleting chat: " + err.message);
+    }
+  };
+
+  const handleSendAdminReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyText.trim() || !activeSessionId) return;
+
+    setSendingReply(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: activeSessionId,
+          message: replyText.trim(),
+          sender: "admin",
+          senderName: "Admin Ti2A"
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const saved = data.message;
+        if (saved) {
+          setChatMessages((prev) => [saved, ...prev]);
+        }
+        setReplyText("");
+      } else {
+        alert("Failed to send reply. Please try again.");
+      }
+    } catch (err: any) {
+      alert("Error sending reply: " + err.message);
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
+  // Group chat messages by session
+  const chatSessions: ChatSessionGroup[] = useMemo(() => {
+    const groups: { [key: string]: ChatMessage[] } = {};
+    chatMessages.forEach((msg) => {
+      const sid = msg.session_id || "unknown";
+      if (!groups[sid]) groups[sid] = [];
+      groups[sid].push(msg);
+    });
+
+    return Object.entries(groups)
+      .map(([sessionId, msgs]) => {
+        const sorted = [...msgs].sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        const latest = sorted[sorted.length - 1];
+        const identifiedMsg = sorted.find((m) => m.sender_name || m.sender_contact);
+        const unreadCount = sorted.filter((m) => m.sender === "visitor" && !m.is_read).length;
+        const isResolved = latest?.status === "resolved" || sorted.some(m => m.status === "resolved");
+
+        return {
+          sessionId,
+          senderName:
+            identifiedMsg?.sender_name || latest?.sender_name || `Visitor #${sessionId.slice(0, 6)}`,
+          senderContact: identifiedMsg?.sender_contact || latest?.sender_contact || null,
+          clientIp: (latest as any)?.client_ip || null,
+          status: (isResolved ? "resolved" : "active") as "active" | "resolved",
+          lastMessage: latest?.message || (latest?.image_url ? "[Attached Screenshot]" : ""),
+          lastMessageAt: latest?.created_at || "",
+          messageCount: sorted.length,
+          unreadCount,
+          messages: sorted
+        };
+      })
+      .filter((session) => {
+        if (chatStatusFilter === "active" && session.status !== "active") return false;
+        if (chatStatusFilter === "resolved" && session.status !== "resolved") return false;
+        if (!chatSearchQuery.trim()) return true;
+        const q = chatSearchQuery.toLowerCase();
+        return (
+          session.senderName.toLowerCase().includes(q) ||
+          (session.senderContact && session.senderContact.toLowerCase().includes(q)) ||
+          session.lastMessage.toLowerCase().includes(q) ||
+          session.sessionId.toLowerCase().includes(q)
+        );
+      })
+      .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+  }, [chatMessages, chatSearchQuery, chatStatusFilter]);
+
+  const activeSession = chatSessions.find((s) => s.sessionId === activeSessionId) || chatSessions[0] || null;
+  const unreadChatCount = chatMessages.filter((m) => m.sender === "visitor" && !m.is_read).length;
+
   const toggleReadStatus = async (id: string, currentStatus: boolean, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     try {
@@ -499,6 +702,8 @@ export default function ContactSettingsPage() {
       subj === "USER_VERIFIED" ||
       subj === "ADMIN_DIRECT" ||
       subj === "NEW_USER_REGISTERED" ||
+      subj.startsWith("[Direct Chat]") ||
+      subj.startsWith("WHATSAPP_") ||
       subj.startsWith("USER_") ||
       subj.startsWith("COMPANY_") ||
       subj.startsWith("NOTIFIED_") ||
@@ -555,10 +760,10 @@ export default function ContactSettingsPage() {
             <AdminQuickMenu />
             <div>
               <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
-                Contact &amp; Suggestions
+                Contact &amp; Messages
               </h1>
               <p className="text-xs text-gray-500 mt-0.5">
-                Manage visitor messages, community suggestion box, and site contact channels
+                Manage visitor live chat messages, formal inquiries, and public channels
               </p>
             </div>
           </div>
@@ -569,7 +774,7 @@ export default function ContactSettingsPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
             >
               <Send size={13} />
-              <span>Go to Mail Center →</span>
+              <span>Mail &amp; WhatsApp Center →</span>
             </Link>
 
             <button
@@ -582,7 +787,24 @@ export default function ContactSettingsPage() {
         </div>
 
         {/* TABS */}
-        <div className="flex items-center gap-2 border-b border-gray-200 mb-6 pb-2">
+        <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 mb-6 pb-2">
+          <button
+            onClick={() => setActiveTab("chat")}
+            className={`px-4 py-2 font-bold text-xs rounded-xl flex items-center gap-2 transition cursor-pointer ${
+              activeTab === "chat" 
+                ? "bg-black text-white shadow-xs" 
+                : "bg-white text-gray-600 hover:text-black border border-gray-200"
+            }`}
+          >
+            <MessageCircle size={14} className={activeTab === "chat" ? "text-emerald-400" : "text-emerald-600"} />
+            <span>Direct Chat Messages</span>
+            {unreadChatCount > 0 && (
+              <span className="bg-emerald-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black animate-pulse">
+                {unreadChatCount}
+              </span>
+            )}
+          </button>
+
           <button
             onClick={() => setActiveTab("inbox")}
             className={`px-4 py-2 font-bold text-xs rounded-xl flex items-center gap-2 transition cursor-pointer ${
@@ -592,7 +814,7 @@ export default function ContactSettingsPage() {
             }`}
           >
             <Inbox size={14} />
-            <span>Inquiries &amp; Suggestions</span>
+            <span>Inquiries</span>
             {unreadCount > 0 && (
               <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-black animate-pulse">
                 {unreadCount}
@@ -613,7 +835,370 @@ export default function ContactSettingsPage() {
           </button>
         </div>
 
-        {/* TAB 1: INQUIRIES & SUGGESTIONS */}
+        {/* TAB 1: DIRECT CHAT MESSAGES */}
+        {activeTab === "chat" && (
+          <div className="space-y-4">
+            <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-2xs flex flex-col md:flex-row min-h-[580px]">
+              {/* THREADS SIDEBAR */}
+              <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col bg-gray-50/50">
+                <div className="p-3.5 border-b border-gray-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-xs uppercase tracking-wider text-gray-700">Visitor Threads</h3>
+                      <p className="text-[11px] text-gray-400">{chatSessions.length} active sessions</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fetchChatMessages(true)}
+                      disabled={loadingChat}
+                      className="p-1.5 rounded-lg border border-gray-200 hover:bg-white text-gray-500 hover:text-black transition cursor-pointer"
+                      title="Refresh chat messages"
+                    >
+                      <RefreshCw size={13} className={loadingChat ? "animate-spin" : ""} />
+                    </button>
+                  </div>
+
+                  {/* ACTIVE / RESOLVED FILTER TABS */}
+                  <div className="grid grid-cols-3 gap-1 bg-gray-200/70 p-1 rounded-xl text-[11px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setChatStatusFilter("all")}
+                      className={`py-1 rounded-lg transition cursor-pointer text-center ${
+                        chatStatusFilter === "all" ? "bg-white text-black shadow-2xs" : "text-gray-500 hover:text-black"
+                      }`}
+                    >
+                      All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChatStatusFilter("active")}
+                      className={`py-1 rounded-lg transition cursor-pointer text-center ${
+                        chatStatusFilter === "active" ? "bg-white text-emerald-700 shadow-2xs font-extrabold" : "text-gray-500 hover:text-black"
+                      }`}
+                    >
+                      Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChatStatusFilter("resolved")}
+                      className={`py-1 rounded-lg transition cursor-pointer text-center ${
+                        chatStatusFilter === "resolved" ? "bg-white text-gray-700 shadow-2xs" : "text-gray-500 hover:text-black"
+                      }`}
+                    >
+                      Resolved
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Filter conversations..."
+                      value={chatSearchQuery}
+                      onChange={(e) => setChatSearchQuery(e.target.value)}
+                      className="w-full pl-7 pr-2.5 py-1 text-xs bg-white border border-gray-200 rounded-lg outline-none focus:border-black"
+                    />
+                  </div>
+                </div>
+
+                {/* THREAD LIST */}
+                <div className="flex-1 overflow-y-auto divide-y divide-gray-100 max-h-[520px]">
+                  {chatSessions.length === 0 ? (
+                    <div className="p-8 text-center text-gray-400">
+                      <MessageSquare size={24} className="mx-auto mb-2 text-gray-300" />
+                      <p className="text-xs font-semibold">No chats found</p>
+                      <p className="text-[11px] mt-1 text-gray-400">
+                        {chatStatusFilter !== "all" 
+                          ? `No ${chatStatusFilter} conversations right now.`
+                          : "When visitors chat on the site, their live messages will appear here."}
+                      </p>
+                    </div>
+                  ) : (
+                    chatSessions.map((session) => {
+                      const isActive = (activeSession?.sessionId === session.sessionId);
+                      const isResolved = session.status === "resolved";
+                      return (
+                        <button
+                          key={session.sessionId}
+                          type="button"
+                          onClick={() => setActiveSessionId(session.sessionId)}
+                          className={`w-full text-left p-3.5 transition cursor-pointer flex flex-col gap-1.5 ${
+                            isActive
+                              ? "bg-white border-l-4 border-l-black shadow-2xs"
+                              : "hover:bg-white/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-bold text-xs text-gray-900 truncate">
+                                {session.senderName}
+                              </span>
+                              {isResolved && (
+                                <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.2 rounded font-semibold shrink-0">
+                                  Resolved
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-gray-400 shrink-0">
+                              {session.lastMessageAt ? new Date(session.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                            </span>
+                          </div>
+
+                          {session.senderContact && (
+                            <div className="flex items-center gap-1 text-[11px] text-blue-600 font-semibold truncate">
+                              {session.senderContact.includes("@") ? <Mail size={10} /> : <Phone size={10} />}
+                              <span className="truncate">{session.senderContact}</span>
+                            </div>
+                          )}
+
+                          <p className="text-xs text-gray-500 truncate line-clamp-1">
+                            {session.lastMessage}
+                          </p>
+
+                          <div className="flex items-center justify-between pt-0.5 text-[10px] text-gray-400">
+                            <span>{session.messageCount} msgs</span>
+                            {session.unreadCount > 0 && (
+                              <span className="bg-emerald-500 text-white font-bold px-1.5 py-0.2 rounded-full text-[9px]">
+                                {session.unreadCount} new
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* CONVERSATION & REPLY PANE */}
+              <div className="flex-1 flex flex-col bg-white">
+                {activeSession ? (
+                  <>
+                    {/* CONVERSATION HEADER */}
+                    <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3 bg-white">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-sm text-gray-900">{activeSession.senderName}</h3>
+                          {activeSession.senderContact ? (
+                            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                              Verified Lead
+                            </span>
+                          ) : (
+                            <span className="bg-gray-100 text-gray-600 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                              Anonymous Visitor
+                            </span>
+                          )}
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                            activeSession.status === "resolved" 
+                              ? "bg-gray-100 text-gray-600 border-gray-200" 
+                              : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          }`}>
+                            {activeSession.status === "resolved" ? "Resolved" : "Active Thread"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                          {activeSession.senderContact && (
+                            <span className="text-gray-700 font-medium">Contact: {activeSession.senderContact}</span>
+                          )}
+                          {activeSession.clientIp && (
+                            <span>IP: {activeSession.clientIp}</span>
+                          )}
+                          <span className="font-mono text-[10px] text-gray-400">Session: {activeSession.sessionId.slice(0, 10)}</span>
+                        </div>
+                      </div>
+
+                      {/* QUICK ACTION BUTTONS */}
+                      <div className="flex items-center gap-1.5">
+                        {/* Toggle Resolved */}
+                        <button
+                          type="button"
+                          onClick={() => toggleThreadResolveStatus(activeSession.sessionId, activeSession.status)}
+                          className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                            activeSession.status === "resolved"
+                              ? "bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
+                              : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200"
+                          }`}
+                          title="Toggle resolved state"
+                        >
+                          <CheckCircle2 size={13} />
+                          <span>{activeSession.status === "resolved" ? "Reopen" : "Mark Resolved"}</span>
+                        </button>
+
+                        {/* WhatsApp Button */}
+                        {activeSession.senderContact && !activeSession.senderContact.includes("@") && (
+                          <a
+                            href={`https://wa.me/${activeSession.senderContact.replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition"
+                          >
+                            <MessageCircle size={12} />
+                            <span>WhatsApp</span>
+                          </a>
+                        )}
+
+                        {/* Email Button */}
+                        {activeSession.senderContact && activeSession.senderContact.includes("@") && (
+                          <a
+                            href={`mailto:${activeSession.senderContact}`}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200"
+                          >
+                            <Mail size={12} />
+                            <span>Email</span>
+                          </a>
+                        )}
+
+                        {/* Delete Thread */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteChatSession(activeSession.sessionId)}
+                          className="p-1.5 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 transition cursor-pointer"
+                          title="Delete this chat thread"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* MESSAGES THREAD */}
+                    <div className="flex-1 p-4 md:p-6 space-y-3.5 overflow-y-auto max-h-[420px] bg-gray-50/40">
+                      {activeSession.messages.map((msg) => {
+                        const isAdmin = msg.sender === "admin";
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex flex-col ${isAdmin ? "items-end" : "items-start"}`}
+                          >
+                            <div className="flex items-center gap-1.5 mb-1 px-1">
+                              <span className="text-[10px] font-bold text-gray-500">
+                                {isAdmin ? "Admin Ti2A" : (msg.sender_name || activeSession.senderName)}
+                              </span>
+                              <span className="text-[9px] text-gray-400">
+                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <div
+                              className={`p-3.5 rounded-2xl text-xs sm:text-sm max-w-[85%] whitespace-pre-wrap leading-relaxed shadow-2xs ${
+                                isAdmin
+                                  ? "bg-black text-white rounded-tr-xs"
+                                  : "bg-white text-gray-900 border border-gray-200 rounded-tl-xs"
+                              }`}
+                            >
+                              {msg.message && <p>{msg.message}</p>}
+
+                              {/* Screenshot Attachment Viewer */}
+                              {msg.image_url && (
+                                <div 
+                                  onClick={() => setActiveAdminLightboxImg(msg.image_url || null)}
+                                  className="mt-2 rounded-xl overflow-hidden border border-gray-300 bg-black/5 cursor-pointer hover:opacity-90 transition max-w-sm"
+                                >
+                                  <img 
+                                    src={msg.image_url} 
+                                    alt="Screenshot attached by visitor"
+                                    className="max-h-52 w-full object-cover" 
+                                  />
+                                  <div className="p-1.5 bg-black/80 text-white text-[10px] font-bold text-center flex items-center justify-center gap-1">
+                                    <ExternalLink size={11} />
+                                    <span>Click to view full screenshot</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* ADMIN REPLY BOX */}
+                    <form onSubmit={handleSendAdminReply} className="p-3.5 border-t border-gray-200 bg-white">
+                      {/* CANNED QUICK REPLIES BAR */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-2 text-[11px] border-b border-gray-100">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
+                          <Lightbulb size={12} className="text-amber-500" />
+                          Quick Canned:
+                        </span>
+                        {CANNED_REPLIES.map((c, cIdx) => (
+                          <button
+                            key={cIdx}
+                            type="button"
+                            onClick={() => setReplyText(c.text)}
+                            className="px-2.5 py-1 bg-gray-100 hover:bg-black hover:text-white rounded-lg text-gray-700 font-semibold transition shrink-0 cursor-pointer shadow-2xs"
+                            title={c.text}
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex items-end gap-2">
+                        <textarea
+                          rows={2}
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder={`Reply directly to ${activeSession.senderName} as Admin Ti2A...`}
+                          className="flex-1 p-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm outline-none focus:border-black bg-gray-50 resize-none"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                              e.preventDefault();
+                              handleSendAdminReply(e);
+                            }
+                          }}
+                        />
+                        <button
+                          type="submit"
+                          disabled={sendingReply || !replyText.trim()}
+                          className="bg-black hover:bg-gray-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition disabled:opacity-40 cursor-pointer flex items-center gap-1.5 shrink-0 h-10"
+                        >
+                          {sendingReply ? (
+                            <RefreshCw size={13} className="animate-spin" />
+                          ) : (
+                            <Send size={13} />
+                          )}
+                          <span>Send</span>
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px] text-gray-400 mt-1 px-1">
+                        <span>Visitor will see this reply live when they open their chat bubble.</span>
+                        <span>Press Ctrl+Enter to send</span>
+                      </div>
+                    </form>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-400">
+                    <MessageSquare size={36} className="text-gray-300 mb-2" />
+                    <p className="text-sm font-bold text-gray-700">No Thread Selected</p>
+                    <p className="text-xs text-gray-400 mt-1">Select a visitor conversation on the left to read and reply.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ADMIN LIGHTBOX MODAL */}
+            {activeAdminLightboxImg && (
+              <div 
+                onClick={() => setActiveAdminLightboxImg(null)}
+                className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in duration-200"
+              >
+                <div className="relative max-w-4xl max-h-[90vh] bg-black rounded-2xl overflow-hidden p-2 shadow-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setActiveAdminLightboxImg(null)}
+                    className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-white hover:text-black transition cursor-pointer"
+                  >
+                    <X size={18} />
+                  </button>
+                  <img 
+                    src={activeAdminLightboxImg} 
+                    alt="Screenshot full size" 
+                    className="max-h-[85vh] max-w-full object-contain rounded-xl"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: INQUIRIES */}
         {activeTab === "inbox" && (
           <div className="space-y-4">
             {/* TOOLBAR */}

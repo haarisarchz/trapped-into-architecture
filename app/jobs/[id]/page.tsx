@@ -82,7 +82,7 @@ export default async function JobDetailsPage({
 
   const { data: company } = await supabase
     .from("companies")
-    .select("slug, phone, email, website")
+    .select("slug, phone, email, website, whatsapp")
     .eq("firm_name", job?.firm_name || "")
     .maybeSingle();
 
@@ -154,25 +154,32 @@ export default async function JobDetailsPage({
   const hasExperience = !isIntern && expRaw.trim().length > 0;
   const hasSource = job.source && job.source.trim();
     
-    // Auto-extract contact details for older jobs
-    const phoneRegex = /(?:\+?91|0)?\s*([6-9]\d{9})/g;
+    // Auto-extract contact details for older jobs (WhatsApp, phone, email)
+    const fullTextToScan = [job.job_description, job.source, cleanDescription].filter(Boolean).join(" ");
+    const phoneRegex = /(?:whatsapp|contact|phone|ph|call|mobile)?[:\s-]*?(?:\+?91[\s-]*)?([6-9]\d{4}[\s-]?\d{5})/gi;
+    const simplePhoneRegex = /(?:\+?91|0)?\s*([6-9]\d{9})/g;
     const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
     
     let extractedPhones = [];
     let match;
-    while ((match = phoneRegex.exec(cleanDescription)) !== null) {
-      extractedPhones.push(match[1]);
+    while ((match = phoneRegex.exec(fullTextToScan)) !== null) {
+      const cleanDigits = match[1].replace(/\D/g, "");
+      if (cleanDigits.length === 10 && !extractedPhones.includes(cleanDigits)) extractedPhones.push(cleanDigits);
+    }
+    while ((match = simplePhoneRegex.exec(fullTextToScan)) !== null) {
+      const cleanDigits = match[1].replace(/\D/g, "");
+      if (cleanDigits.length === 10 && !extractedPhones.includes(cleanDigits)) extractedPhones.push(cleanDigits);
     }
     const fallbackPhone = extractedPhones.length > 0 ? extractedPhones[0] : null;
     
     let extractedEmails = [];
-    while ((match = emailRegex.exec(cleanDescription)) !== null) {
+    while ((match = emailRegex.exec(fullTextToScan)) !== null) {
       extractedEmails.push(match[1]);
     }
     const fallbackEmail = extractedEmails.length > 0 ? extractedEmails[0] : null;
     
     const displayEmail = job.application_email || company?.email || fallbackEmail;
-    const displayPhone = company?.phone || fallbackPhone;
+    const displayPhone = job.whatsapp || job.phone || company?.whatsapp || company?.phone || fallbackPhone;
       const phoneArray = displayPhone ? String(displayPhone).split(',').map((p: string) => p.trim()).filter(Boolean) : [];
     
 
@@ -423,6 +430,7 @@ export default async function JobDetailsPage({
                         position={job.position}
                         applyLink={job.apply_link}
                         displayEmail={displayEmail}
+                        displayPhone={displayPhone}
                         isExpired={isExpired}
                       />
                     </div>

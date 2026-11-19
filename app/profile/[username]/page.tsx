@@ -29,6 +29,8 @@ import PersonalInfoTab from "@/components/profile/PersonalInfoTab";
 import EducationSection from "@/components/profile/EducationSection";
 import ExperienceSection from "@/components/profile/ExperienceSection";
 import ProfileSettingsTab from "@/components/profile/ProfileSettingsTab";
+import SmartApplyDocumentsCard from "@/components/profile/SmartApplyDocumentsCard";
+import AutomaticMailContentEditor from "@/components/profile/AutomaticMailContentEditor";
 import {
   calculateProfileCompletion,
   calculateTotalExperience,
@@ -53,6 +55,29 @@ export default function ProfilePage() {
   const [savedSubTab, setSavedSubTab] = useState<"jobs" | "colleges">("jobs");
   const [favoriteCompanies, setFavoriteCompanies] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+
+  // Warn if leaving the page during an active upload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isUploadingDoc) {
+        e.preventDefault();
+        e.returnValue = "A file is currently uploading. If you leave now, the upload will be cancelled.";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isUploadingDoc]);
+
+  const handleTabChange = (tab: "details" | "saved" | "companies" | "settings") => {
+    if (isUploadingDoc && tab !== activeTab) {
+      if (!confirm("A document is currently uploading. Switching tabs may interrupt your upload. Are you sure you want to navigate away?")) {
+        return;
+      }
+    }
+    setActiveTab(tab);
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -108,6 +133,17 @@ export default function ProfilePage() {
           likes_count: profile.likes_count || 0,
           email_verified: Boolean(profile.email_verified || profile.is_email_verified),
           phone_verified: Boolean(profile.phone_verified || profile.is_phone_verified),
+          // TI2A Smart Apply fields
+          resume_url: profile.resume_url || "",
+          resume_name: profile.resume_name || "",
+          resume_size: profile.resume_size || 0,
+          portfolio_file_url: profile.portfolio_file_url || "",
+          portfolio_file_name: profile.portfolio_file_name || "",
+          portfolio_file_size: profile.portfolio_file_size || 0,
+          docs_uploaded_at: profile.docs_uploaded_at || null,
+          docs_expires_at: profile.docs_expires_at || null,
+          custom_mail_subject: profile.custom_mail_subject || null,
+          custom_mail_body: profile.custom_mail_body || null,
         };
 
         setUser(formattedUser);
@@ -368,7 +404,7 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex gap-2 flex-wrap">
             {/* TAB 1: Profile Details */}
             <button
-              onClick={() => setActiveTab("details")}
+              onClick={() => handleTabChange("details")}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "details"
                   ? "bg-black text-white shadow-sm"
@@ -381,7 +417,7 @@ export default function ProfilePage() {
 
             {/* TAB 2: Saved Jobs */}
             <button
-              onClick={() => setActiveTab("saved")}
+              onClick={() => handleTabChange("saved")}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "saved"
                   ? "bg-black text-white shadow-sm"
@@ -405,7 +441,7 @@ export default function ProfilePage() {
 
             {/* TAB 3: Favourite Companies */}
             <button
-              onClick={() => setActiveTab("companies")}
+              onClick={() => handleTabChange("companies")}
               className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                 activeTab === "companies"
                   ? "bg-black text-white shadow-sm"
@@ -430,7 +466,7 @@ export default function ProfilePage() {
             {/* TAB 4: Settings & Privacy (Visible to Profile Owner) */}
             {isOwner && (
               <button
-                onClick={() => setActiveTab("settings")}
+                onClick={() => handleTabChange("settings")}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
                   activeTab === "settings"
                     ? "bg-black text-white shadow-sm"
@@ -450,7 +486,25 @@ export default function ProfilePage() {
                 user={user}
                 isOwner={isOwner}
                 onUserUpdate={handleUserUpdate}
+                isUploadingDoc={isUploadingDoc}
               />
+
+              {/* TI2A SMART APPLY DOCUMENTS (Resume & Portfolio) */}
+              <SmartApplyDocumentsCard
+                user={user}
+                isOwner={isOwner}
+                onUserUpdate={handleUserUpdate}
+                onUploadStateChange={setIsUploadingDoc}
+              />
+
+              {/* TI2A SMART APPLY AUTOMATIC MAIL CONTENT EDITOR (Owner only) */}
+              {isOwner && (
+                <AutomaticMailContentEditor
+                  user={user}
+                  isOwner={isOwner}
+                  onUserUpdate={handleUserUpdate}
+                />
+              )}
 
               {/* Work Experience with cumulative duration & roles (or Private Notice) */}
               {(!isOwner && user.hide_experience) ? (
@@ -469,6 +523,8 @@ export default function ProfilePage() {
                   isOwner={isOwner}
                   experiences={experiences}
                   onExperiencesChange={setExperiences}
+                  onUploadStateChange={setIsUploadingDoc}
+                  badgeTier={completion.badgeTier}
                 />
               )}
 

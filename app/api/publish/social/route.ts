@@ -370,9 +370,17 @@ export async function POST(req: Request) {
             break;
           }
           case "linkedin": {
-            const urn = process.env.LINKEDIN_ORGANIZATION_URN || process.env.LINKEDIN_PERSON_URN;
+            const rawUrn = process.env.LINKEDIN_ORGANIZATION_URN || process.env.LINKEDIN_PERSON_URN;
             const token = process.env.LINKEDIN_ACCESS_TOKEN;
-            if (!urn || !token) throw new Error("Missing LinkedIn credentials.");
+            if (!rawUrn || !token) throw new Error("Missing LinkedIn credentials.");
+
+            const trimmedUrn = rawUrn.trim();
+            let authorUrn = trimmedUrn;
+            if (!authorUrn.startsWith("urn:li:")) {
+              authorUrn = process.env.LINKEDIN_ORGANIZATION_URN
+                ? `urn:li:organization:${trimmedUrn}`
+                : `urn:li:person:${trimmedUrn}`;
+            }
 
             const titleText = batchJobs.length === 1 
               ? `${batchJobs[0].position} at ${batchJobs[0].firm_name}` 
@@ -381,12 +389,12 @@ export async function POST(req: Request) {
             const liRes = await fetch("https://api.linkedin.com/v2/ugcPosts", {
               method: "POST",
               headers: {
-                "Authorization": `Bearer ${token}`,
+                "Authorization": `Bearer ${token.trim()}`,
                 "X-Restli-Protocol-Version": "2.0.0",
                 "Content-Type": "application/json"
               },
               body: JSON.stringify({
-                author: `urn:li:organization:${urn}`,
+                author: authorUrn,
                 lifecycleState: "PUBLISHED",
                 specificContent: {
                   "com.linkedin.ugc.ShareContent": {

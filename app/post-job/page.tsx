@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import ImageUploader from "@/components/ImageUploader";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
+import { trackEvent } from "@/utils/analytics";
 import Link from "next/link";
 import {
   Building2,
@@ -120,6 +121,21 @@ function PostJobContent() {
   useEffect(() => {
     initUser();
   }, [initialCompanySlug]);
+
+  useEffect(() => {
+    if (!loading) {
+      trackEvent("post_job_view");
+      if (!currentUser) {
+        trackEvent("post_job_blocked_unauth");
+      } else if (!isAdmin && userCompletion < 66) {
+        trackEvent("post_job_blocked_tier", { completion: userCompletion });
+      } else if (companies.length === 0 && !isAdmin) {
+        trackEvent("post_job_blocked_nocompany");
+      } else {
+        trackEvent("post_job_form_unlocked");
+      }
+    }
+  }, [loading, currentUser, isAdmin, userCompletion, companies.length]);
 
   const initUser = async () => {
     setLoading(true);
@@ -289,6 +305,11 @@ function PostJobContent() {
       return;
     }
 
+    trackEvent("post_job_submit", {
+      position: position.trim(),
+      company: selectedCompany?.firm_name,
+    });
+
     setSubmitting(true);
 
     try {
@@ -343,6 +364,11 @@ function PostJobContent() {
       }
 
       setSubmittedJob(resData.data);
+      trackEvent("post_job_success", {
+        position: position.trim(),
+        company: selectedCompany?.firm_name,
+        job_id: resData.data?.id,
+      });
     } catch (err: any) {
       console.error("Error submitting job:", err);
       setErrorMessage(err.message || "Failed to submit job. Please check all fields.");

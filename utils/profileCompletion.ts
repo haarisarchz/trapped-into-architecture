@@ -34,6 +34,9 @@ export interface ExperienceEntry {
   start_date: string;
   end_date?: string;
   is_current?: boolean;
+  certificate_url?: string;
+  certificate_name?: string;
+  certificate_size?: number;
 }
 
 /**

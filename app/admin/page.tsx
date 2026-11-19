@@ -179,174 +179,186 @@ if (loading) {
 
       {/* SIDEBAR */}
 
-      <aside className="flex w-full md:w-64 lg:w-72 bg-black text-white md:sticky md:top-0 md:h-screen p-4 flex-col justify-between gap-3 overflow-y-auto">
+      <aside className="flex w-full md:w-64 lg:w-72 bg-black text-white md:sticky md:top-0 md:h-screen p-4 flex-col gap-3 shrink-0 overflow-hidden">
 
-        <div>
+        {/* WEBSITE NAME & TITLE (FIXED AT TOP) */}
+        <div className="shrink-0 mb-1">
 
-          {/* WEBSITE NAME */}
+          <h1 className="text-xl font-bold tracking-tight text-white">
+            Trapped Into Architecture
+          </h1>
 
-          <div className="mb-3.5">
+          <p className="text-xs text-gray-400 mt-0.5 font-medium tracking-wide">
+            Admin Panel
+          </p>
 
-            <h1 className="text-xl font-bold tracking-tight text-white">
-              Trapped Into Architecture
-            </h1>
+        </div>
 
-            <p className="text-xs text-gray-400 mt-0.5 font-medium tracking-wide">
-              Admin Panel
-            </p>
+        {/* SCROLLABLE MENU (Middle section that scrolls independently) */}
+        <div className="space-y-1.5 flex-1 overflow-y-auto min-h-0 pr-1.5 dark-admin-scrollbar">
+          
+          {/* ADMIN ACTIVITY */}
+          <button
+            onClick={() => router.push("/admin/activity")}
+            className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition text-white font-bold text-sm"
+          >
+            Admin Activity
+          </button>
 
-          </div>
-
-          {/* MENU */}
-
-          <div className="space-y-1.5 flex-1">
-            
-            {/* ADMIN ACTIVITY */}
+          {/* JOBS DASHBOARD */}
+          <div>
             <button
-              onClick={() => router.push("/admin/activity")}
-              className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition text-white font-bold text-sm"
+              onClick={() => setIsJobMenuOpen(!isJobMenuOpen)}
+              className="w-full flex items-center justify-between px-3.5 py-2 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition text-sm"
             >
-              Admin Activity
+              <span>Job Dashboard</span>
+              {isJobMenuOpen ? <Minus size={15} /> : <Plus size={15} />}
             </button>
 
-            {/* JOBS DASHBOARD */}
+            {isJobMenuOpen && (
+              <div className="mt-1 space-y-0.5 pl-2.5 border-l border-gray-800 ml-2">
+                <button
+                  onClick={() => router.push("/admin")}
+                  className="w-full text-left px-3 py-1.5 rounded-lg bg-gray-800 transition text-[13px] font-medium text-white"
+                >
+                  Job Dashboard
+                </button>
+                <button
+                  onClick={() => router.push("/admin/jobs")}
+                  className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
+                >
+                  Manage Jobs
+                </button>
+                <button
+                  onClick={() => router.push("/admin/add-job")}
+                  className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
+                >
+                  Add New Job
+                </button>
+                <button
+                  onClick={() => router.push("/admin/companies")}
+                  className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white flex items-center justify-between"
+                >
+                  <span>Manage Companies</span>
+                  {pendingClaimsCount > 0 && (
+                    <span className="bg-gray-800 text-gray-300 border border-gray-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
+                      {pendingClaimsCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* DATABASE DASHBOARD */}
+          {(userRole === "ceo" || userRole === "superadmin") && (
             <div>
               <button
-                onClick={() => setIsJobMenuOpen(!isJobMenuOpen)}
+                onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
                 className="w-full flex items-center justify-between px-3.5 py-2 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition text-sm"
               >
-                <span>Job Dashboard</span>
-                {isJobMenuOpen ? <Minus size={15} /> : <Plus size={15} />}
+                <span>Database Dashboard</span>
+                {isDbMenuOpen ? <Minus size={15} /> : <Plus size={15} />}
               </button>
 
-              {isJobMenuOpen && (
+              {isDbMenuOpen && (
                 <div className="mt-1 space-y-0.5 pl-2.5 border-l border-gray-800 ml-2">
                   <button
-                    onClick={() => router.push("/admin")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg bg-gray-800 transition text-[13px] font-medium text-white"
-                  >
-                    Job Dashboard
-                  </button>
-                  <button
-                    onClick={() => router.push("/admin/jobs")}
+                    onClick={() => router.push("/admin/catalog")}
                     className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
                   >
-                    Manage Jobs
+                    Architecture Catalog
                   </button>
                   <button
-                    onClick={() => router.push("/admin/add-job")}
+                    onClick={() => router.push("/admin/quizzes")}
                     className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
                   >
-                    Add New Job
-                  </button>
-                  <button
-                    onClick={() => router.push("/admin/companies")}
-                    className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white flex items-center justify-between"
-                  >
-                    <span>Manage Companies</span>
-                    {pendingClaimsCount > 0 && (
-                      <span className="bg-gray-800 text-gray-300 border border-gray-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none">
-                        {pendingClaimsCount}
-                      </span>
-                    )}
+                    Manage Quizzes
                   </button>
                 </div>
               )}
             </div>
+          )}
 
-            {/* DATABASE DASHBOARD */}
-            {(userRole === "ceo" || userRole === "superadmin") && (
-              <div>
+          {/* INSTITUTIONS (SUPERADMIN & CEO ONLY) */}
+          {(userRole === "ceo" || userRole === "superadmin") && (
+            <button
+              onClick={() => router.push("/admin/institutions")}
+              className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white flex items-center justify-between"
+            >
+              <span>Institutions</span>
+              <span className="text-[10px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-full font-semibold">COA</span>
+            </button>
+          )}
+
+          {/* STANDALONE MENUS */}
+          <div className="space-y-1.5 pt-1">
+            <button
+              onClick={() => router.push("/admin/news-feed")}
+              className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white flex items-center justify-between"
+            >
+              <span>News Feed & Approvals</span>
+              <span className="text-[10px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-full font-semibold">Feed</span>
+            </button>
+            <button
+              onClick={() => router.push("/admin/analytics")}
+              className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
+            >
+              Analytics
+            </button>
+            {userRole === "ceo" && (
+              <>
                 <button
-                  onClick={() => setIsDbMenuOpen(!isDbMenuOpen)}
-                  className="w-full flex items-center justify-between px-3.5 py-2 bg-gray-900 rounded-xl text-white font-bold hover:bg-gray-800 transition text-sm"
+                  onClick={() => router.push("/admin/users")}
+                  className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
                 >
-                  <span>Database Dashboard</span>
-                  {isDbMenuOpen ? <Minus size={15} /> : <Plus size={15} />}
+                  Users
                 </button>
-
-                {isDbMenuOpen && (
-                  <div className="mt-1 space-y-0.5 pl-2.5 border-l border-gray-800 ml-2">
-                    <button
-                      onClick={() => router.push("/admin/catalog")}
-                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
-                    >
-                      Architecture Catalog
-                    </button>
-                    <button
-                      onClick={() => router.push("/admin/quizzes")}
-                      className="w-full text-left px-3 py-1.5 rounded-lg hover:bg-gray-800 transition text-[13px] font-medium text-gray-200 hover:text-white"
-                    >
-                      Manage Quizzes
-                    </button>
-                  </div>
-                )}
-              </div>
+                <button
+                  onClick={() => router.push("/admin/contact")}
+                  className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
+                >
+                  Contact &amp; Suggestions
+                </button>
+                <button
+                  onClick={() => router.push("/admin/mails")}
+                  className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white whitespace-nowrap"
+                >
+                  Mail &amp; WhatsApp Center
+                </button>
+              </>
             )}
-
-            {/* INSTITUTIONS (SUPERADMIN & CEO ONLY) */}
             {(userRole === "ceo" || userRole === "superadmin") && (
               <button
-                onClick={() => router.push("/admin/institutions")}
+                onClick={() => router.push("/admin/subscriptions")}
                 className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white flex items-center justify-between"
               >
-                <span>Institutions</span>
-                <span className="text-[10px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-full font-semibold">COA</span>
+                <span>Subscriptions</span>
+                <span className="text-[10px] bg-white/10 text-gray-300 px-1.5 py-0.5 rounded-full font-semibold">Alerts</span>
               </button>
             )}
-
-            {/* STANDALONE MENUS */}
-            <div className="space-y-1.5 pt-1">
-              <button
-                onClick={() => router.push("/admin/news-feed")}
-                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-amber-400 flex items-center justify-between"
-              >
-                <span>News Feed & Approvals</span>
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full font-semibold">Feed</span>
-              </button>
-              <button
-                onClick={() => router.push("/admin/analytics")}
-                className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
-              >
-                Analytics
-              </button>
-              {userRole === "ceo" && (
-                <>
-                  <button
-                    onClick={() => router.push("/admin/users")}
-                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
-                  >
-                    Users
-                  </button>
-                  <button
-                    onClick={() => router.push("/admin/contact")}
-                    className="w-full text-left px-3.5 py-2 rounded-xl bg-gray-900 hover:bg-gray-800 transition font-bold text-sm text-white"
-                  >
-                    Contact
-                  </button>
-                </>
-              )}
-            </div>
-
-            <button
-              onClick={() => window.open("/jobs", "_blank")}
-              className="w-full mt-3 bg-white text-black py-2 rounded-xl font-bold text-xs hover:bg-gray-200 transition"
-            >
-              Visit Jobs Page
-            </button>
-
           </div>
 
         </div>
 
-        {/* WEBSITE BUTTON */}
+        {/* FIXED BOTTOM ACTION BUTTONS (Pinned at bottom, never scroll) */}
+        <div className="shrink-0 pt-3 border-t border-gray-900 space-y-2">
 
-        <a
-          href="https://www.trappedintoarchitecture.com/" target="_blank" rel="noopener noreferrer"
-          className="border border-gray-800 rounded-xl px-3 py-2 hover:bg-gray-900 transition text-center block w-full text-xs text-gray-300 hover:text-white"
-        >
-          View Website
-        </a>
+          <button
+            onClick={() => window.open("/jobs", "_blank")}
+            className="w-full bg-white text-black py-2.5 px-3 rounded-xl font-bold text-sm hover:bg-gray-200 transition text-center shadow-xs flex items-center justify-center cursor-pointer"
+          >
+            Visit Jobs Page
+          </button>
+
+          <a
+            href="https://www.trappedintoarchitecture.com/" target="_blank" rel="noopener noreferrer"
+            className="w-full border border-gray-700 bg-gray-900/90 hover:bg-gray-800 transition text-center py-2.5 px-3 rounded-xl font-bold text-sm text-white flex items-center justify-center cursor-pointer"
+          >
+            Visit Website
+          </a>
+
+        </div>
 
       </aside>
 

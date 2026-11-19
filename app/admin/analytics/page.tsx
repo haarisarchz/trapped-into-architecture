@@ -1,6 +1,25 @@
 "use client";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { 
+  Sparkles, 
+  MapPin, 
+  ArrowRight, 
+  ArrowDown, 
+  UserPlus, 
+  Building2, 
+  Bell, 
+  ShieldCheck, 
+  Trophy, 
+  Lock, 
+  CheckCircle2, 
+  TrendingDown, 
+  TrendingUp, 
+  Flame, 
+  Zap,
+  Info 
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getClubbedPositionInfo } from "@/utils/positionNormalize";
@@ -384,6 +403,15 @@ export default function AnalyticsPage() {
   const [selectedConversionMetric, setSelectedConversionMetric] = useState<
     "applyClicks" | "emailClicks" | "contactClicks" | "shareClicks" | "saveClicks"
   >("applyClicks");
+  const [isCeoOrSuper, setIsCeoOrSuper] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("currentUser") || "null");
+      const role = (stored?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      setIsCeoOrSuper(role === "ceo" || role === "superadmin");
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -430,10 +458,10 @@ export default function AnalyticsPage() {
   return (
     <main className="min-h-screen bg-gray-50 text-black font-sans">
       <Navbar />
-      <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 py-10">
+      <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
         
         {/* STICKY HEADER & TIMELINE CONTROLS */}
-        <div className="sticky top-0 z-40 bg-gray-50/95 backdrop-blur-md py-3.5 mb-8 -mx-6 px-6 lg:-mx-8 lg:px-8 border-b border-gray-200/80 shadow-xs transition-all">
+        <div className="sticky top-0 z-40 bg-gray-50/95 backdrop-blur-md py-2.5 mb-4 sm:mb-5 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-gray-200/80 shadow-xs transition-all">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div className="flex items-center gap-3">
               <AdminQuickMenu />
@@ -508,7 +536,7 @@ export default function AnalyticsPage() {
               </div>
             )}
 
-            <div className={`space-y-6 transition-opacity duration-300 ${loading ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
+            <div className={`space-y-4 sm:space-y-5 transition-opacity duration-300 ${loading ? "opacity-30 pointer-events-none" : "opacity-100"}`}>
             
             {/* OVERVIEW METRICS WITH VERTICAL BAR SPARKLINES & INTERACTIVE CHART */}
             <div className="space-y-4">
@@ -834,103 +862,226 @@ export default function AnalyticsPage() {
               )}
             </div>
 
-            {/* CANDIDATE CONVERSIONS & ACTIONS */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+            {/* CANDIDATE CONVERSIONS, ACTIONS & FUNNELS */}
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm space-y-4 sm:space-y-5">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pb-3.5 border-b border-gray-100">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <span>⚡ Candidate Conversions &amp; Actions</span>
-                    <InfoTooltip text="High-intent hiring actions taken by candidates on job listings during this timeframe." />
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span>⚡ Candidate Conversions, Actions &amp; Funnels</span>
+                    <InfoTooltip text="High-intent hiring actions taken by candidates on job listings, multi-step visitor conversion funnels, and engaged platform listings." />
                   </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Direct candidate interactions within the selected time period</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Direct hiring actions, full-funnel visitor journeys, and top engaged listings</p>
                 </div>
                 <span className="text-xs font-semibold px-3 py-1 bg-green-100 text-green-800 rounded-full w-fit">
                   Live Tracking Active
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
-                    Apply Clicks
-                    <InfoTooltip text="Number of times candidates clicked to apply directly on an external employer portal or company career site." />
-                  </span>
-                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.applyClicks || 0}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">External link applications</p>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
-                    Email Now
-                    <InfoTooltip text="Direct email inquiries initiated by candidates to employers using the built-in email application button." />
-                  </span>
-                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.emailClicks || 0}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">Direct email inquiries</p>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
-                    WhatsApp / Call
-                    <InfoTooltip text="Direct contact actions where candidates opened WhatsApp or called hiring studios directly." />
-                  </span>
-                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.contactClicks || 0}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">Direct studio inquiries</p>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
-                      Job Shares
-                      <InfoTooltip text="Number of times candidates shared job listing links with colleagues, friends, or across social platforms." />
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2.5 flex items-center gap-1.5">
+                  <span>Direct Candidate Actions</span>
+                  <span className="text-[10px] font-normal text-gray-400 font-mono">(6 KPIs)</span>
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                      Apply Clicks
+                      <InfoTooltip text="Number of times candidates clicked to apply directly on an external employer portal or company career site." />
                     </span>
-                    {(data.conversions?.candidateSharesCount > 0 || data.conversions?.unregisteredSharesCount > 0) && (
-                      <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded" title="Candidate vs Unregistered Breakdown">
-                        {data.conversions.candidateSharesCount || 0} user · {data.conversions.unregisteredSharesCount || 0} unregistered
+                    <p className="text-2xl font-bold text-gray-900">{data.conversions?.applyClicks || 0}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">External link applications</p>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                      Email Now
+                      <InfoTooltip text="Direct email inquiries initiated by candidates to employers using the built-in email application button." />
+                    </span>
+                    <p className="text-2xl font-bold text-gray-900">{data.conversions?.emailClicks || 0}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">Direct email inquiries</p>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                      WhatsApp / Call
+                      <InfoTooltip text="Direct contact actions where candidates opened WhatsApp or called hiring studios directly." />
+                    </span>
+                    <p className="text-2xl font-bold text-gray-900">{data.conversions?.contactClicks || 0}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">Direct studio inquiries</p>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                        Job Shares
+                        <InfoTooltip text="Number of times candidates shared job listing links with colleagues, friends, or across social platforms." />
                       </span>
-                    )}
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.shareClicks || 0}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    {days === 'lifetime' || days === 'all' 
-                      ? 'All-time lifetime shares' 
-                      : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · ${data.conversions?.totalLifetimeShares || 0} all-time`}
-                  </p>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
-                    Saved Jobs
-                    <InfoTooltip text="Bookmarks saved by candidates to their personal profile to track or apply later." />
-                  </span>
-                  <p className="text-2xl font-bold text-gray-900">{data.conversions?.saveClicks || 0}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    {days === 'lifetime' || days === 'all' 
-                      ? 'All-time lifetime bookmarks' 
-                      : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · ${data.conversions?.totalLifetimeSaves || 0} all-time`}
-                  </p>
-                </div>
-
-                <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100/90 flex flex-col justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center mb-1">
-                      Guest Register Prompt
-                      <InfoTooltip text="Unregistered visitors who clicked to register for an account after encountering job interaction prompts." />
-                    </span>
-                    <div className="flex items-baseline gap-1.5">
-                      <p className="text-2xl font-black text-purple-950">{data.conversions?.guestRegisterClicks || 0}</p>
-                      <span className="text-xs font-bold text-purple-700">clicked</span>
+                      {(data.conversions?.candidateSharesCount > 0 || data.conversions?.unregisteredSharesCount > 0) && (
+                        <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded" title="Candidate vs Unregistered Breakdown">
+                          {data.conversions.candidateSharesCount || 0} user · {data.conversions.unregisteredSharesCount || 0} unregistered
+                        </span>
+                      )}
                     </div>
+                    <p className="text-2xl font-bold text-gray-900">{data.conversions?.shareClicks || 0}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {days === 'lifetime' || days === 'all' 
+                        ? 'All-time lifetime shares' 
+                        : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · ${data.conversions?.totalLifetimeShares || 0} all-time`}
+                    </p>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-purple-200/50 text-[11px] text-purple-900/80 flex items-center justify-between">
-                    <span>{data.conversions?.guestPopupViews || 0} shown</span>
-                    <span className="font-bold font-mono">
-                      {((data.conversions?.guestPopupViews || 0) > 0 
-                        ? (((data.conversions?.guestRegisterClicks || 0) / (data.conversions?.guestPopupViews || 1)) * 100).toFixed(1) 
-                        : '0.0')}% conversion
+
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center mb-1">
+                      Saved Jobs
+                      <InfoTooltip text="Bookmarks saved by candidates to their personal profile to track or apply later." />
                     </span>
+                    <p className="text-2xl font-bold text-gray-900">{data.conversions?.saveClicks || 0}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {days === 'lifetime' || days === 'all' 
+                        ? 'All-time lifetime bookmarks' 
+                        : `${days === '1h' ? 'Last 60 mins' : days === '1' ? 'Last 24 hours' : days === '7' ? 'Last 7 days' : 'In period'} · ${data.conversions?.totalLifetimeSaves || 0} all-time`}
+                    </p>
+                  </div>
+
+                  <div className="bg-purple-50/60 p-4 rounded-xl border border-purple-100/90 flex flex-col justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center mb-1">
+                        Guest Register Prompt
+                        <InfoTooltip text="Unregistered visitors who clicked to register for an account after encountering job interaction prompts." />
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <p className="text-2xl font-black text-purple-950">{data.conversions?.guestRegisterClicks || 0}</p>
+                        <span className="text-xs font-bold text-purple-700">clicked</span>
+                      </div>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-purple-200/50 text-[11px] text-purple-900/80 flex items-center justify-between">
+                      <span>{data.conversions?.guestPopupViews || 0} shown</span>
+                      <span className="font-bold font-mono">
+                        {((data.conversions?.guestPopupViews || 0) > 0 
+                          ? (((data.conversions?.guestRegisterClicks || 0) / (data.conversions?.guestPopupViews || 1)) * 100).toFixed(1) 
+                          : '0.0')}% conversion
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* CONVERSION & DROP-OFF FUNNELS (5 COMPACT CARDS MATCHING ACTION CARDS) */}
+              {(() => {
+                const funnels = data.conversions?.funnels || {};
+                const reg = funnels.registration || {};
+                const post = funnels.postJob || {};
+                const sub = funnels.subscriptions || {};
+                const claim = funnels.claimStudio || {};
+                const quiz = funnels.quizzes || {};
+
+                return (
+                  <div className="pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                        <span>Conversion &amp; Drop-off Funnels</span>
+                        <span className="text-[10px] font-normal text-gray-400 font-mono">(5 Pipelines)</span>
+                      </p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                        Drop-off Rates &amp; Completions
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+                      {/* CARD 1: REGISTRATION */}
+                      <div className="bg-purple-50/50 p-4 rounded-xl border border-purple-100/90 flex flex-col justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-purple-900 uppercase tracking-wider flex items-center mb-1">
+                            Registration Funnel
+                            <InfoTooltip text="Tracks candidate registration from intent clicks across navbar/guest prompts to verified account creation." />
+                          </span>
+                          <div className="flex items-baseline gap-1.5">
+                            <p className="text-2xl font-black text-purple-950">{reg.actualProfiles || 0}</p>
+                            <span className="text-xs font-bold text-purple-700">created</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-purple-200/50 text-[11px] text-purple-900/80 flex items-center justify-between">
+                          <span>{reg.intentClicks || 0} intent clicks</span>
+                          <span className="font-bold font-mono text-purple-800">{reg.dropOffRate || 0}% drop</span>
+                        </div>
+                      </div>
+
+                      {/* CARD 2: POST A JOB */}
+                      <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100/90 flex flex-col justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center mb-1">
+                            Post a Job Funnel
+                            <InfoTooltip text="Tracks employers starting a job post vs published vacancies after passing login, tier, and firm gates." />
+                          </span>
+                          <div className="flex items-baseline gap-1.5">
+                            <p className="text-2xl font-black text-amber-950">{post.published || 0}</p>
+                            <span className="text-xs font-bold text-amber-700">published</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-amber-200/50 text-[11px] text-amber-900/80 flex items-center justify-between">
+                          <span>{post.totalInterest || 0} intent clicks</span>
+                          <span className="font-bold font-mono text-amber-800">{post.dropOffRate || 0}% drop</span>
+                        </div>
+                      </div>
+
+                      {/* CARD 3: ALERTS & SUBSCRIPTIONS */}
+                      <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100/90 flex flex-col justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center mb-1">
+                            Alerts &amp; Subscriptions
+                            <InfoTooltip text="Candidate clicks on job alert / briefing subscriptions vs verified audience leads." />
+                          </span>
+                          <div className="flex items-baseline gap-1.5">
+                            <p className="text-2xl font-black text-emerald-950">{sub.completedSubscriptions || 0}</p>
+                            <span className="text-xs font-bold text-emerald-700">subscribers</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-emerald-200/50 text-[11px] text-emerald-900/80 flex items-center justify-between">
+                          <span>{sub.alertClicks || 0} subscribe clicks</span>
+                          <span className="font-bold font-mono text-emerald-800">{sub.dropOffRate || 0}% drop</span>
+                        </div>
+                      </div>
+
+                      {/* CARD 4: STUDIO CLAIMS */}
+                      <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100/90 flex flex-col justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center mb-1">
+                            Studio Claims
+                            <InfoTooltip text="Firm owners clicking 'Claim this Studio' vs submitted proof of ownership." />
+                          </span>
+                          <div className="flex items-baseline gap-1.5">
+                            <p className="text-2xl font-black text-blue-950">{claim.submits || 0}</p>
+                            <span className="text-xs font-bold text-blue-700">claimed</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-blue-200/50 text-[11px] text-blue-900/80 flex items-center justify-between">
+                          <span>{claim.claimClicks || 0} claim clicks</span>
+                          <span className="font-bold font-mono text-blue-800">{claim.dropOffRate || 0}% drop</span>
+                        </div>
+                      </div>
+
+                      {/* CARD 5: QUIZZES */}
+                      <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-100/90 flex flex-col justify-between">
+                        <div>
+                          <span className="text-xs font-bold text-rose-900 uppercase tracking-wider flex items-center mb-1">
+                            Quizzes Pipeline
+                            <InfoTooltip text="Candidate quiz plays started vs final scorecards reached." />
+                          </span>
+                          <div className="flex items-baseline gap-1.5">
+                            <p className="text-2xl font-black text-rose-950">{quiz.completions || 0}</p>
+                            <span className="text-xs font-bold text-rose-700">completed</span>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-rose-200/50 text-[11px] text-rose-900/80 flex items-center justify-between">
+                          <span>{quiz.starts || 0} plays started</span>
+                          <span className="font-bold font-mono text-rose-800">{quiz.completionRate || 0}% finished</span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* TOP SHARED & RECENT LISTINGS (WITH VIEW TOGGLE & LOCATION) */}
               {(() => {
@@ -946,7 +1097,7 @@ export default function AnalyticsPage() {
                 });
 
                 return (
-                  <div className="mt-6 pt-5 border-t border-gray-100">
+                  <div className="mt-4 pt-4 border-t border-gray-100">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                       <div className="flex items-center gap-2">
                         <div className="flex bg-gray-100 p-1 rounded-xl text-xs font-semibold">
@@ -1037,10 +1188,10 @@ export default function AnalyticsPage() {
             </div>
 
             {/* CANDIDATE ON-SITE SEARCHES & UNMET DEMAND */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                     <span>🔍 Candidate Search Demand &amp; Missing Jobs</span>
                     <InfoTooltip text="Live search logs capturing the exact job roles, software, and locations candidates are looking for on the jobs board." />
                   </h2>
@@ -1053,10 +1204,10 @@ export default function AnalyticsPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
                 {/* Top Search Keywords */}
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
+                <div className="bg-gray-50 p-3.5 sm:p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
                     <span className="flex items-center">
                       Top Keywords Searched
@@ -1064,14 +1215,14 @@ export default function AnalyticsPage() {
                     </span>
                     <span className="text-[10px] text-gray-400 font-normal">Hits</span>
                   </h4>
-                  <p className="text-[10px] text-gray-500 mb-3">Job titles &amp; software searched on the jobs page</p>
+                  <p className="text-[10px] text-gray-500 mb-2.5">Job titles &amp; software searched on the jobs page</p>
                   {(!data.searches?.topKeywords || data.searches.topKeywords.length === 0) ? (
                     <div className="py-4 text-center">
                       <p className="text-xs text-gray-400 italic">No keyword searches logged in this period yet.</p>
                       <p className="text-[10px] text-gray-400 mt-1">Live logger active — searches on /jobs will appear here automatically.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {data.searches.topKeywords.map((k: any, i: number) => {
                         const club = getClubbedPositionInfo(k.keyword);
                         return (
@@ -1096,7 +1247,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Top Searched Cities */}
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200/60">
+                <div className="bg-gray-50 p-3.5 sm:p-4 rounded-xl border border-gray-200/60">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
                     <span className="flex items-center">
                       Top Locations Filtered
@@ -1104,14 +1255,14 @@ export default function AnalyticsPage() {
                     </span>
                     <span className="text-[10px] text-gray-400 font-normal">Filters</span>
                   </h4>
-                  <p className="text-[10px] text-gray-500 mb-3">Cities candidates filtered by on the jobs page</p>
+                  <p className="text-[10px] text-gray-500 mb-2.5">Cities candidates filtered by on the jobs page</p>
                   {(!data.searches?.topCities || data.searches.topCities.length === 0) ? (
                     <div className="py-4 text-center">
                       <p className="text-xs text-gray-400 italic">No location filters used in this period yet.</p>
                       <p className="text-[10px] text-gray-400 mt-1">Live logger active — city filters on /jobs will appear here automatically.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {data.searches.topCities.map((c: any, i: number) => (
                         <div key={i} className="flex justify-between items-center text-xs">
                           <span className="font-semibold text-gray-800 truncate max-w-[180px]">📍 {c.city}</span>
@@ -1123,7 +1274,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Unmet Demand (Zero Result Searches) */}
-                <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200/90">
+                <div className="bg-amber-50/70 p-3.5 sm:p-4 rounded-xl border border-amber-200/90">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900 mb-1 flex items-center justify-between">
                     <span className="flex items-center">
                       <span>⚠️ Missing Jobs (0 Results Found)</span>
@@ -1131,7 +1282,7 @@ export default function AnalyticsPage() {
                     </span>
                     <span className="text-[10px] bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded font-bold">Market Demand</span>
                   </h4>
-                  <p className="text-[10px] text-amber-700 mb-3">Roles candidates searched for where NO jobs were found. Post these next!</p>
+                  <p className="text-[10px] text-amber-700 mb-2.5">Roles candidates searched for where NO jobs were found. Post these next!</p>
                   
                   {(!data.searches?.zeroResults || data.searches.zeroResults.length === 0) ? (
                     <div className="py-4 text-center">
@@ -1139,7 +1290,7 @@ export default function AnalyticsPage() {
                       <p className="text-[10px] text-amber-700/60 mt-1">When someone searches for a role with 0 results, it flags here.</p>
                     </div>
                   ) : (
-                    <div className="space-y-2.5">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {data.searches.zeroResults.map((z: any, i: number) => (
                         <div key={i} className="flex justify-between items-center text-xs bg-white/80 p-2 rounded-lg border border-amber-200/50">
                           <div className="truncate pr-2">
@@ -1160,10 +1311,10 @@ export default function AnalyticsPage() {
 
             {/* GOOGLE SEARCH CONSOLE (SEO KEYWORDS & SEARCH RANKINGS) */}
             {gscData && gscData.connected ? (
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                       <span>🔎 Google Search Console (SEO Keywords &amp; Google Rankings)</span>
                       <InfoTooltip text="Search engine performance on Google Search: impressions, clicks, CTR, and search ranking." />
                       <span className="text-[10px] bg-green-100 text-green-800 font-bold px-2 py-0.5 rounded-full">Connected</span>
@@ -1189,32 +1340,32 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* 4 Macro SEO Badges */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-blue-50/60 border border-blue-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-blue-700 uppercase tracking-wider">Google Clicks</p>
-                    <p className="text-2xl font-bold text-blue-900 mt-1">{gscData.totals?.clicks?.toLocaleString() || 0}</p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4">
+                  <div className="bg-blue-50/60 border border-blue-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Google Clicks</p>
+                    <p className="text-xl sm:text-2xl font-black text-blue-900 mt-0.5">{gscData.totals?.clicks?.toLocaleString() || 0}</p>
                     <p className="text-[10px] text-blue-600 mt-0.5">Direct visitors from Google</p>
                   </div>
-                  <div className="bg-purple-50/60 border border-purple-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-purple-700 uppercase tracking-wider">Google Impressions</p>
-                    <p className="text-2xl font-bold text-purple-900 mt-1">{gscData.totals?.impressions?.toLocaleString() || 0}</p>
+                  <div className="bg-purple-50/60 border border-purple-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-purple-700 uppercase tracking-wider">Google Impressions</p>
+                    <p className="text-xl sm:text-2xl font-black text-purple-900 mt-0.5">{gscData.totals?.impressions?.toLocaleString() || 0}</p>
                     <p className="text-[10px] text-purple-600 mt-0.5">Times seen in Google search</p>
                   </div>
-                  <div className="bg-emerald-50/60 border border-emerald-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-emerald-700 uppercase tracking-wider">Average CTR</p>
-                    <p className="text-2xl font-bold text-emerald-900 mt-1">{gscData.totals?.ctr || "0%"}</p>
+                  <div className="bg-emerald-50/60 border border-emerald-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Average CTR</p>
+                    <p className="text-xl sm:text-2xl font-black text-emerald-900 mt-0.5">{gscData.totals?.ctr || "0%"}</p>
                     <p className="text-[10px] text-emerald-600 mt-0.5">Click-through percentage</p>
                   </div>
-                  <div className="bg-amber-50/60 border border-amber-100 p-4 rounded-xl">
-                    <p className="text-[11px] font-medium text-amber-700 uppercase tracking-wider">Average Position</p>
-                    <p className="text-2xl font-bold text-amber-900 mt-1">#{gscData.totals?.position || 0}</p>
+                  <div className="bg-amber-50/60 border border-amber-100 p-3 sm:p-3.5 rounded-xl">
+                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Average Position</p>
+                    <p className="text-xl sm:text-2xl font-black text-amber-900 mt-0.5">#{gscData.totals?.position || 0}</p>
                     <p className="text-[10px] text-amber-600 mt-0.5">Average Google search rank</p>
                   </div>
                 </div>
 
                 {/* Content Tables */}
                 {gscTab === "keywords" ? (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-64 overflow-y-auto pr-1">
                     <table className="w-full text-left text-sm">
                       <thead>
                         <tr className="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -1273,7 +1424,7 @@ export default function AnalyticsPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto max-h-64 overflow-y-auto pr-1">
                     <table className="w-full text-left text-sm">
                       <thead>
                         <tr className="border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -1433,31 +1584,31 @@ export default function AnalyticsPage() {
 
             {/* CANDIDATE APPLICATION & CONVERSION FUNNEL */}
             {data.funnel && (
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                       <span>🎯 Candidate Conversion &amp; Drop-off Funnel</span>
                     </h2>
                     <p className="text-xs text-gray-500 mt-0.5">
                       Track the step-by-step candidate journey from first arrival to applied vacancy, identifying where candidates drop off
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-100 self-start">
+                  <div className="flex items-center gap-3 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-100 self-start">
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Overall Conversion</p>
-                      <p className="text-lg font-bold text-emerald-600">{data.funnel.overallConversionRate}</p>
+                      <p className="text-base sm:text-lg font-bold text-emerald-600">{data.funnel.overallConversionRate}</p>
                     </div>
-                    <div className="w-px h-8 bg-gray-200" />
+                    <div className="w-px h-7 bg-gray-200" />
                     <div>
                       <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">View-to-Apply Rate</p>
-                      <p className="text-lg font-bold text-blue-600">{data.funnel.jobToApplyRate}</p>
+                      <p className="text-base sm:text-lg font-bold text-blue-600">{data.funnel.jobToApplyRate}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* 4-Step Funnel Visual Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {data.funnel.steps.map((step: any, idx: number) => {
                     const stepColors = [
                       { bg: "bg-blue-50/60", border: "border-blue-100", bar: "bg-blue-600", text: "text-blue-700", badge: "bg-blue-100 text-blue-800" },
@@ -1467,7 +1618,7 @@ export default function AnalyticsPage() {
                     ][idx] || { bg: "bg-gray-50", border: "border-gray-100", bar: "bg-gray-600", text: "text-gray-700", badge: "bg-gray-100 text-gray-800" };
 
                     return (
-                      <div key={step.id} className={`p-4 rounded-xl border ${stepColors.border} ${stepColors.bg} flex flex-col justify-between relative`}>
+                      <div key={step.id} className={`p-3.5 sm:p-4 rounded-xl border ${stepColors.border} ${stepColors.bg} flex flex-col justify-between relative`}>
                         <div>
                           <div className="flex justify-between items-center mb-2">
                             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-gray-400">Step {step.id}</span>
@@ -1503,14 +1654,14 @@ export default function AnalyticsPage() {
             )}
 
             {/* 2-COLUMN GRID: FIRMS LEADERBOARD & EXPERIENCE RADAR */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
               
               {/* FIRMS DEMAND LEADERBOARD */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[410px]">
                 <div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>🏢 Top Architecture Firms Leaderboard</span>
                         <InfoTooltip text="Architectural practices ranked by candidate engagement, job views, shares, and saved listings." />
                       </h3>
@@ -1525,16 +1676,16 @@ export default function AnalyticsPage() {
                       <button 
                         type="button"
                         onClick={() => setFirmLeaderboardMode("trending")} 
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${firmLeaderboardMode === "trending" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
-                        🕒 Recent / Trending
+                        🕒 Trending
                       </button>
                       <button 
                         type="button"
                         onClick={() => setFirmLeaderboardMode("overall")} 
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${firmLeaderboardMode === "overall" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
-                        🏆 Overall (All-Time)
+                        🏆 All-Time
                       </button>
                     </div>
                   </div>
@@ -1546,7 +1697,7 @@ export default function AnalyticsPage() {
 
                     if (!displayedFirms || displayedFirms.length === 0) {
                       return (
-                        <div className="py-10 text-center bg-gray-50/60 rounded-xl border border-dashed border-gray-200 my-4">
+                        <div className="py-8 text-center bg-gray-50/60 rounded-xl border border-dashed border-gray-200 my-3">
                           <p className="text-gray-600 text-xs font-semibold">No candidate shares or saves recorded for firms in this timeframe.</p>
                           <p className="text-gray-400 text-[11px] mt-1">Switch to <strong>Overall (All-Time)</strong> to see which firms candidates engaged with most.</p>
                           <button 
@@ -1561,7 +1712,7 @@ export default function AnalyticsPage() {
                     }
 
                     return (
-                      <div className="divide-y divide-gray-100 overflow-y-auto pr-1 max-h-[350px]">
+                      <div className="divide-y divide-gray-100 overflow-y-auto pr-1 max-h-[290px]">
                         {displayedFirms.map((firm: any, i: number) => {
                           const rankMedals = ["🥇", "🥈", "🥉"];
                           const isTrendingActive = firmLeaderboardMode === "trending";
@@ -1615,11 +1766,11 @@ export default function AnalyticsPage() {
               </div>
 
               {/* EXPERIENCE LEVEL DEMAND VS SUPPLY RADAR */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[460px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[410px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
                         <span>⚖️ Experience Level Demand vs. Supply</span>
                         <InfoTooltip text="Compares candidate search volume (demand) against available posted vacancies (supply) across career seniority tiers." />
                       </h3>
@@ -1632,7 +1783,7 @@ export default function AnalyticsPage() {
                   {(!data.experienceGap || data.experienceGap.length === 0) ? (
                     <p className="text-xs text-gray-400 italic py-8 text-center">No experience data available for this period.</p>
                   ) : (
-                    <div className="space-y-2.5 overflow-y-auto pr-1 max-h-[350px]">
+                    <div className="space-y-2.5 overflow-y-auto pr-1 max-h-[290px]">
                       {data.experienceGap.map((tier: any, i: number) => {
                         const isShortage = tier.statusColor === "amber";
                         const isSurplus = tier.statusColor === "blue";
@@ -1683,10 +1834,10 @@ export default function AnalyticsPage() {
             </div>
 
             {/* DETAILED TABLES */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
               
               {/* TOP PAGES & ENTRY DOORS */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[440px]">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div className="flex bg-gray-100 p-1 rounded-full text-xs shrink-0">
                     <button 
@@ -1821,7 +1972,7 @@ export default function AnalyticsPage() {
               </div>
 
               {/* TRAFFIC SOURCES & REFERRALS (OUTSIDE TRAFFIC VS INSIDE NAVIGATION) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[520px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-[440px]">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                   <div>
                     <h3 className="text-lg font-bold flex items-center">
@@ -2000,18 +2151,18 @@ export default function AnalyticsPage() {
               </div>
 
               {/* ACQUISITION CHANNELS (LEVELED WITH COUNTRIES) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>Acquisition Channels</span>
                         <InfoTooltip text="High-level marketing channel breakdown (Organic Search, Direct, Social Media, Referrals)." />
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5">High-level audience discovery mix</p>
                     </div>
                   </div>
-                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[270px]">
+                  <div className="space-y-3 overflow-y-auto pr-1 max-h-[235px]">
                     {(!data.channels || data.channels.length === 0) && <p className="text-gray-400 text-sm">No channel data available.</p>}
                     {data.channels && (() => {
                       const maxCh = Math.max(...data.channels.map((c: any) => Number(c.sessions) || 0));
@@ -2045,11 +2196,11 @@ export default function AnalyticsPage() {
               </div>
 
               {/* COUNTRIES & CITIES (LEVELED WITH ACQUISITION CHANNELS & SCROLLABLE) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[380px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>{geoTab === "countries" ? "Countries" : "Top Cities"}</span>
                         <InfoTooltip text={geoTab === "countries" ? "Geographic countries where candidate traffic originates based on visitor IP." : "Specific cities where visitor traffic originates."} />
                       </h3>
@@ -2061,21 +2212,21 @@ export default function AnalyticsPage() {
                       <button
                         type="button"
                         onClick={() => setGeoTab("countries")}
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "countries" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${geoTab === "countries" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
                         🌍 Countries
                       </button>
                       <button
                         type="button"
                         onClick={() => setGeoTab("cities")}
-                        className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${geoTab === "cities" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
+                        className={`px-2.5 py-1 rounded-lg transition cursor-pointer text-xs ${geoTab === "cities" ? "bg-white shadow text-black" : "text-gray-500 hover:text-black"}`}
                       >
                         🏙️ Cities
                       </button>
                     </div>
                   </div>
 
-                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[270px]">
+                  <div className="space-y-3 overflow-y-auto pr-2 max-h-[235px]">
                     {geoTab === "countries" ? (
                       <>
                         {(!data.countries || data.countries.length === 0) && <p className="text-gray-400 text-sm">No country data available.</p>}
@@ -2108,18 +2259,18 @@ export default function AnalyticsPage() {
               </div>
 
               {/* DEVICES (LEVELED WITH BROWSERS) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[300px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>Devices</span>
                         <InfoTooltip text="Device hardware used by visitors (Desktop computers, Mobile smartphones, Tablets)." />
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5">Visitor platform breakdown</p>
                     </div>
                   </div>
-                  <div className="space-y-3.5 overflow-y-auto pr-1 max-h-[230px]">
+                  <div className="space-y-3 overflow-y-auto pr-1 max-h-[195px]">
                     {!data.devices || data.devices.length === 0 ? <p className="text-gray-400 text-sm">No device data available.</p> : null}
                     {data.devices && data.devices.map((item: any, i: number) => (
                       <div key={i} className="text-sm">
@@ -2135,18 +2286,18 @@ export default function AnalyticsPage() {
               </div>
 
               {/* BROWSERS (LEVELED WITH DEVICES & SCROLLABLE) */}
-              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[340px]">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between h-[300px]">
                 <div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center mb-3">
                     <div>
-                      <h3 className="text-lg font-bold flex items-center">
+                      <h3 className="text-base sm:text-lg font-bold flex items-center">
                         <span>Browsers</span>
                         <InfoTooltip text="Web browsers used by visitors to access the website (Chrome, Safari, Edge, Firefox, etc.)." />
                       </h3>
                       <p className="text-xs text-gray-400 mt-0.5">Browser client distribution</p>
                     </div>
                   </div>
-                  <div className="space-y-3.5 overflow-y-auto pr-2 max-h-[230px]">
+                  <div className="space-y-3 overflow-y-auto pr-2 max-h-[195px]">
                     {(!data.browsers || data.browsers.length === 0) && <p className="text-gray-400 text-sm">No browser data available.</p>}
                     {data.browsers && data.browsers.map((item: any, i: number) => (
                       <div key={i} className="text-sm">

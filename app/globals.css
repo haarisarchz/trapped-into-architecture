@@ -75,3 +75,24 @@ body {
   scrollbar-color: #94a3b8 #f1f5f9;
 }
 
+/* Visible High-Contrast Scrollbar for Admin Sidebar */
+.dark-admin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.dark-admin-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+}
+.dark-admin-scrollbar::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 9999px;
+}
+.dark-admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f3f4f6;
+}
+.dark-admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af rgba(255, 255, 255, 0.08);
+}
+
+

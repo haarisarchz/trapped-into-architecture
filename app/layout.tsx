@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GuestEngagementSlider from "@/components/GuestEngagementSlider";
+import SmartApplyExpiryBanner from "@/components/SmartApplyExpiryBanner";
+import FloatingAdminChat from "@/components/chat/FloatingAdminChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +67,19 @@ export const metadata: Metadata = {
     description: "Find verified architecture jobs, internships, and top architectural firms across India.",
     images: ["https://trappedintoarchitecture.com/og-image.png"]
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/favicon-48x48.png", type: "image/png", sizes: "48x48" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+  },
 };
 
 
@@ -85,7 +100,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   "name": "Trapped Into Architecture",
   "url": "https://trappedintoarchitecture.com",
-  "logo": "https://trappedintoarchitecture.com/logo.png"
+  "logo": "https://trappedintoarchitecture.com/icon-512.png"
 };
 
 export default function RootLayout({
@@ -147,6 +162,8 @@ export default function RootLayout({
         />
         {children}
         <GuestEngagementSlider />
+        <SmartApplyExpiryBanner />
+        <FloatingAdminChat />
       </body>
     </html>
   );

@@ -4,10 +4,11 @@ import Footer from "@/components/Footer";
 import LocationJobsView from "@/components/LocationJobsView";
 import { supabase } from "@/lib/supabase";
 import { generateJobUrl } from "@/utils/jobUrl";
+import { getWhatsAppChannelForLocation, isCoreMetro } from "@/lib/channels";
 import Link from "next/link";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { MapPin, ArrowRight, Bell } from "lucide-react";
+import { MapPin, ArrowRight, Bell, MessageCircle, Sparkles } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -57,21 +58,30 @@ export default async function CityJobsPage({
 }) {
   const { city } = await params;
   const cityName = formatSlug(city);
+  const isMetro = isCoreMetro(city);
 
-  // Fetch all jobs in this city (including outdated/expired so directory history is complete)
-  const { data: jobs } = await supabase
-    .from("jobs")
-    .select("*")
-    .eq("status", "published")
-    .ilike("city", `%${cityName}%`)
-    .order("posted_date", { ascending: false });
+  // Fetch all published jobs in this city (including outdated/expired so directory history is complete)
+  const [{ data: jobs }, { data: settings }] = await Promise.all([
+    supabase
+      .from("jobs")
+      .select("*")
+      .eq("status", "published")
+      .ilike("city", `%${cityName}%`)
+      .order("posted_date", { ascending: false }),
+    supabase
+      .from("site_settings")
+      .select("whatsapp_channel_url")
+      .eq("id", "global")
+      .single(),
+  ]);
 
-  // If a city has 0 jobs, immediately redirect to the main directory
-  if (!jobs || jobs.length === 0) {
+  // If a city has 0 jobs and is NOT a core metro hub, redirect to the main directory
+  if ((!jobs || jobs.length === 0) && !isMetro) {
     redirect("/jobs");
   }
 
-  const activeJobs = jobs;
+  const activeJobs = jobs || [];
+  const waChannel = getWhatsAppChannelForLocation(cityName, settings?.whatsapp_channel_url);
 
   const itemListSchema = {
     "@context": "https://schema.org",
@@ -94,21 +104,21 @@ export default async function CityJobsPage({
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://trappedintoarchitecture.com"
+        "item": "https://trappedintoarchitecture.com",
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "Architecture Jobs",
-        "item": "https://trappedintoarchitecture.com/jobs"
+        "item": "https://trappedintoarchitecture.com/jobs",
       },
       {
         "@type": "ListItem",
         "position": 3,
         "name": `${cityName} Jobs`,
-        "item": `https://trappedintoarchitecture.com/jobs/city/${encodeURIComponent(city.toLowerCase())}`
-      }
-    ]
+        "item": `https://trappedintoarchitecture.com/jobs/city/${encodeURIComponent(city.toLowerCase())}`,
+      },
+    ],
   };
 
   return (
@@ -137,21 +147,22 @@ export default async function CityJobsPage({
           <span className="text-black font-semibold">{cityName}</span>
         </nav>
 
-        {/* TOP SECTION: HERO ON LEFT + WHATSAPP BANNER ON RIGHT */}
+        {/* TOP SECTION: HERO ON LEFT + DUAL WHATSAPP BANNER ON RIGHT */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
-          
           {/* HERO BANNER (LEFT 2 COLUMNS) */}
-          <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm flex flex-col justify-between">
+          <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-xs flex flex-col justify-between">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-xs font-semibold text-gray-700 mb-3">
                 <MapPin size={14} className="text-red-500" />
-                <span>City Directory</span>
+                <span>{isMetro ? "Core Metro Directory" : "City Directory"}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">
                 Architect and Interior Designer Jobs in {cityName}
               </h1>
               <p className="text-gray-600 mt-2 text-sm sm:text-base leading-relaxed">
-                Discover jobs in {cityName}: Senior Architect, Junior Architect, Junior Interior Designer, Senior Interior Designer, Draftsperson, and 3D Visualizer openings.
+                {activeJobs.length > 0
+                  ? `Discover jobs in ${cityName}: Senior Architect, Junior Architect, Junior Interior Designer, Senior Interior Designer, Draftsperson, and 3D Visualizer openings.`
+                  : `Explore architectural and interior design career openings in ${cityName}. We continuously index new vacancies from leading architecture studios in ${cityName}.`}
               </p>
             </div>
 
@@ -169,32 +180,44 @@ export default async function CityJobsPage({
             </div>
           </div>
 
-          {/* WHATSAPP SUBSCRIPTION CTA BANNER (RIGHT COLUMN) */}
-          <div className="bg-gradient-to-br from-emerald-950 to-green-900 rounded-3xl p-6 sm:p-7 text-white shadow-sm flex flex-col justify-between border border-emerald-800">
+          {/* DUAL WHATSAPP SUBSCRIPTION CTA BANNER (RIGHT COLUMN) */}
+          <div className="bg-gradient-to-br from-emerald-950 via-emerald-900 to-green-950 rounded-3xl p-6 sm:p-7 text-white shadow-sm flex flex-col justify-between border border-emerald-800">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-200 rounded-full text-xs font-semibold mb-3">
                 <Bell size={13} className="animate-pulse" />
-                <span>WhatsApp Job Alerts</span>
+                <span>WhatsApp Job Network</span>
               </div>
               <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-snug">
-                Get Architect and Interior Designer Jobs on WhatsApp
+                Never Miss a Job in {cityName}
               </h2>
               <p className="text-emerald-100/90 text-xs sm:text-sm mt-2 leading-relaxed">
-                Get personalized notifications in your WhatsApp directly. Choose your experience and salary preferences.
+                Join our official WhatsApp channel for instant daily broadcasts, or customize personal WhatsApp alerts for {cityName}.
               </p>
             </div>
 
-            <div className="mt-6 pt-4 border-t border-emerald-800/80">
+            <div className="mt-6 pt-4 border-t border-emerald-800/80 flex flex-col gap-2.5">
+              {/* BUTTON 1: INSTANT BROADCASTS (WhatsApp Channel) */}
+              <a
+                href={waChannel.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-md group"
+              >
+                <MessageCircle size={16} className="text-emerald-950" />
+                <span>{waChannel.isSpecific ? `Join ${waChannel.name}` : `Join WhatsApp Channel`}</span>
+                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              </a>
+
+              {/* BUTTON 2: PERSONALIZED CITY ALERTS */}
               <Link
                 href={`/subscriptions?city=${encodeURIComponent(cityName)}`}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold rounded-xl text-xs sm:text-sm transition shadow-md"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-900/90 hover:bg-emerald-800 border border-emerald-500/40 text-emerald-100 font-semibold rounded-xl text-xs sm:text-sm transition hover:text-white"
               >
-                <span>Subscribe for WhatsApp Alerts</span>
-                <ArrowRight size={14} />
+                <Bell size={14} />
+                <span>Get {cityName} Job Alerts</span>
               </Link>
             </div>
           </div>
-
         </div>
 
         {/* FULL FILTER & VIEW SYSTEM */}

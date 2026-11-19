@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
+import { trackEvent } from "@/utils/analytics";
 import { 
   Check, 
   Zap, 
@@ -127,10 +128,25 @@ export default function SubscriptionsPage() {
     };
 
     loadProfileData();
+
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const c = sp.get("city");
+      const s = sp.get("state");
+      if (c) setLocation(decodeURIComponent(c));
+      else if (s) setLocation(decodeURIComponent(s));
+    }
   }, []);
 
   // Handle Candidate Alert Subscription Click (Requires Silver: >= 45% or tier != bronze)
   const handleSeekerAlertClick = (title: string, rate: string, freq: "daily" | "instant") => {
+    trackEvent("subscribe_alert_click", {
+      plan: title,
+      rate,
+      frequency: freq,
+      type: "candidate_alerts",
+    });
+
     if (!user) {
       window.dispatchEvent(new CustomEvent("openAuth", { detail: "login" }));
       return;
@@ -162,6 +178,12 @@ export default function SubscriptionsPage() {
 
   // Handle Employer Boost Click (Requires Gold: >= 66% or studio owner)
   const handleEmployerBoostClick = (title: string, rate: string) => {
+    trackEvent("subscribe_alert_click", {
+      plan: title,
+      rate,
+      type: "employer_boost",
+    });
+
     if (!user) {
       window.dispatchEvent(new CustomEvent("openAuth", { detail: "login" }));
       return;
@@ -190,9 +212,39 @@ export default function SubscriptionsPage() {
     setModalOpen(true);
   };
 
-  const handleModalSubmit = (e: React.FormEvent) => {
+  const handleModalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSuccess(true);
+
+    try {
+      await supabase.from("contact_inquiries").insert([
+        {
+          name: user?.full_name || profile?.full_name || "Subscriber",
+          email: email || user?.email || "subscriber@example.com",
+          phone: whatsapp || profile?.phone || null,
+          subject: "SUBSCRIBE_JOB_ALERTS",
+          message: JSON.stringify({
+            plan: selectedPlan.title,
+            type: selectedPlan.type,
+            rate: selectedPlan.rate,
+            role,
+            experience,
+            location,
+            frequency,
+            billingCycle,
+          }),
+          is_read: false,
+        },
+      ]);
+
+      trackEvent("subscribe_alert_success", {
+        plan: selectedPlan.title,
+        type: selectedPlan.type,
+      });
+    } catch (err) {
+      console.warn("Could not save alert subscription inquiry:", err);
+    }
+
     setTimeout(() => {
       setModalOpen(false);
       setIsSuccess(false);

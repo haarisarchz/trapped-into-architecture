@@ -39,7 +39,7 @@ export default function GuestEngagementSlider() {
       const rawCount = sessionStorage.getItem("ti2a_slider_session_shows");
       const shownCount = rawCount ? parseInt(rawCount, 10) : 0;
 
-      // Max 2 shows per session ("Show in first 20s. If they stay for long, show it one more time. That's it.")
+      // Max 2 shows per session
       if (shownCount >= 2) return;
 
       if (shownCount === 0) {
@@ -121,6 +121,10 @@ export default function GuestEngagementSlider() {
       source: "guest_slider_popup",
       category: "conversion",
     });
+    trackGaEvent("register_intent_click", {
+      source: "guest_slider",
+      category: "conversion",
+    });
 
     // Trigger registration modal in Navbar
     if (typeof window !== "undefined") {
@@ -135,56 +139,90 @@ export default function GuestEngagementSlider() {
   return (
     <div
       role="dialog"
-      aria-label="Register for free"
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 max-w-sm w-[calc(100%-2rem)] sm:w-full bg-white rounded-3xl p-4 sm:p-5 shadow-2xl border border-gray-200 transition-all animate-in fade-in slide-in-from-bottom-6 duration-300 text-left"
+      aria-label="Unlock more features on Trapped Into Architecture"
+      className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 z-40 sm:w-[420px] max-w-[calc(100vw-1.5rem)] bg-[#14161d] border border-[#282c38] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-300 text-left overflow-hidden text-slate-100"
     >
+      {/* ARCHITECTURAL AMBER ACCENT RULER */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
+
       {/* CLOSE BUTTON */}
       <button
         onClick={handleDismiss}
         aria-label="Close prompt"
-        className="absolute top-3.5 right-3.5 text-gray-400 hover:text-black p-1 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+        className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 w-7 h-7 flex items-center justify-center rounded-lg bg-[#1f232d] border border-[#2d3340] text-gray-400 hover:text-white transition cursor-pointer"
       >
-        <X size={16} />
+        <X size={14} />
       </button>
 
-      <div className="flex items-start gap-3.5">
-        {/* MEDAL BADGE */}
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-100 to-amber-200 text-amber-900 flex items-center justify-center text-xl shrink-0 border border-amber-300 shadow-xs">
-          🥉
+      {/* TOPMOST BADGE */}
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[9.5px] sm:text-[10.5px] font-extrabold uppercase tracking-wider bg-amber-500/15 border border-amber-500/35 text-amber-300 mb-1.5 sm:mb-2">
+        <Sparkles size={11} className="text-amber-400" />
+        <span>Unlock More Features</span>
+      </div>
+
+      {/* HEADLINE */}
+      <h4 className="text-[13.5px] sm:text-base font-extrabold text-white leading-tight mb-2.5 sm:mb-3 pr-6">
+        {isJobPage ? (
+          <>
+            Save Opening &amp;{" "}
+            <span className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
+              Apply in 1-Click
+            </span>
+          </>
+        ) : (
+          <>
+            Join{" "}
+            <span className="bg-gradient-to-r from-amber-300 to-amber-500 bg-clip-text text-transparent">
+              10,000+ Architects
+            </span>{" "}
+            &amp; Students across India
+          </>
+        )}
+      </h4>
+
+      {/* 2-COLUMN STRUCTURED FEATURE CHIPS (COMPACT & MOBILE-OPTIMIZED) */}
+      <div className="grid grid-cols-2 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#1c202a] border border-[#2a303e] px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[10.5px] sm:text-xs font-semibold text-slate-200">
+          <span className="text-[12px] sm:text-[13px] shrink-0">🏛️</span>
+          <span className="truncate">Create / Claim Firms</span>
         </div>
-
-        <div className="flex-1 pr-4">
-          <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 mb-1">
-            <Sparkles size={11} className="text-amber-700" />
-            <span>Bronze Member Perk</span>
-          </div>
-
-          <h4 className="text-sm font-extrabold text-gray-900 leading-tight">
-            {isJobPage ? "Bookmark this opening?" : "Unlock Free Architect Dossier"}
-          </h4>
-
-          <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-            {isJobPage
-              ? "Create your free architectural dossier to save jobs, get your Bronze Medal (+20% Score), and receive direct recruiter alerts."
-              : "Register free in 15s to claim your Bronze Medal (+20% Score), save openings, and apply to India's top studios."}
-          </p>
-
-          <div className="flex items-center gap-2 mt-3.5">
-            <button
-              onClick={handleRegisterClick}
-              className="bg-black hover:bg-neutral-800 text-white font-extrabold text-xs px-4 py-2 rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
-            >
-              <span>Register Free (15s)</span>
-              <ArrowRight size={13} />
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="text-xs text-gray-500 hover:text-gray-900 font-bold px-2 py-1.5 cursor-pointer"
-            >
-              Later
-            </button>
-          </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#1c202a] border border-[#2a303e] px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[10.5px] sm:text-xs font-semibold text-slate-200">
+          <span className="text-[12px] sm:text-[13px] shrink-0">📢</span>
+          <span className="truncate">Post Job Openings</span>
         </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#1c202a] border border-[#2a303e] px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[10.5px] sm:text-xs font-semibold text-slate-200">
+          <span className="text-[12px] sm:text-[13px] shrink-0">✨</span>
+          <span className="truncate">Enrich Profile &amp; Bio</span>
+        </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#1c202a] border border-[#2a303e] px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[10.5px] sm:text-xs font-semibold text-slate-200">
+          <span className="text-[12px] sm:text-[13px] shrink-0">🎯</span>
+          <span className="truncate">Architecture Quizzes</span>
+        </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#1c202a] border border-[#2a303e] px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[10.5px] sm:text-xs font-semibold text-slate-200">
+          <span className="text-[12px] sm:text-[13px] shrink-0">🔖</span>
+          <span className="truncate">Bookmark Openings</span>
+        </div>
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-amber-500/10 border border-amber-500/30 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[10.5px] sm:text-xs font-bold text-amber-300">
+          <span className="text-[12px] sm:text-[13px] shrink-0">⚡</span>
+          <span className="truncate">&amp; Much More</span>
+        </div>
+      </div>
+
+      {/* ACTIONS */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        <button
+          onClick={handleRegisterClick}
+          className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs sm:text-sm py-2 sm:py-2.5 px-3.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer"
+        >
+          <span>Register Free in 15s</span>
+          <ArrowRight size={14} />
+        </button>
+        <button
+          onClick={handleDismiss}
+          className="text-xs text-slate-400 hover:text-white font-bold px-2 py-1.5 cursor-pointer transition shrink-0"
+        >
+          Later
+        </button>
       </div>
     </div>
   );

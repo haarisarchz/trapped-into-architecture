@@ -67,44 +67,10 @@ export default function InteractiveHome({
   const [companyTab, setCompanyTab] = useState<"latest" | "most-jobs">("latest");
   const displayCompanies = (companyTab === "most-jobs" ? mostJobsCompanies : recentCompanies).slice(0, 6);
 
-  // Suggestion Box State
-  const [suggestionText, setSuggestionText] = useState("");
-  const [suggestionSender, setSuggestionSender] = useState("");
-  const [suggestionStatus, setSuggestionStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [expandedSocial, setExpandedSocial] = useState<"whatsapp" | "telegram" | null>(null);
 
   const whatsappChannels = parseChannels(siteSettings?.whatsapp_channel_url, DEFAULT_WHATSAPP_CHANNELS);
   const telegramChannels = parseChannels(siteSettings?.website_url, DEFAULT_TELEGRAM_CHANNELS);
-
-  const handleSuggestionSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!suggestionText.trim()) return;
-
-    setSuggestionStatus("submitting");
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: suggestionSender.trim() || "Anonymous Architect",
-          email: "suggestion@trappedintoarchitecture.com",
-          subject: "💡 Homepage Suggestion Box Submission",
-          message: suggestionText.trim()
-        })
-      });
-
-      if (res.ok) {
-        setSuggestionStatus("success");
-        setSuggestionText("");
-        setSuggestionSender("");
-        setTimeout(() => setSuggestionStatus("idle"), 4000);
-      } else {
-        setSuggestionStatus("error");
-      }
-    } catch (err) {
-      setSuggestionStatus("error");
-    }
-  };
 
   // Handler for Post a Job CTA (Auth trigger or direct route)
   const handlePostJobClick = (e: React.MouseEvent) => {
@@ -670,68 +636,9 @@ export default function InteractiveHome({
         </div>
       </section>
 
-      {/* 8. SUGGESTION BOX & MULTI-CHANNEL COMMUNITY */}
+      {/* 8. MULTI-CHANNEL COMMUNITY */}
       <section className="py-8 md:py-10 px-4 sm:px-6 lg:px-12 bg-gray-50 w-full">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-          
-          {/* Suggestion Box Form */}
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col shadow-2xs">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 text-xs font-semibold mb-2">
-                💡 COMMUNITY VOICE
-              </div>
-              <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1">Suggestion Box</h3>
-              <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-4">
-                Missing a studio? Want a new salary filter or feature? Tell us what you need.
-              </p>
-            </div>
-
-            <form onSubmit={handleSuggestionSubmit} className="space-y-3">
-              <input 
-                type="text"
-                value={suggestionSender}
-                onChange={(e) => setSuggestionSender(e.target.value)}
-                placeholder="Your name or studio (optional)..."
-                className="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400"
-              />
-              <div>
-                <textarea 
-                  rows={2}
-                  maxLength={1000}
-                  value={suggestionText}
-                  onChange={(e) => setSuggestionText(e.target.value)}
-                  required
-                  placeholder="Type your suggestion here..."
-                  className="w-full text-xs sm:text-sm p-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-gray-400 resize-none max-h-28 overflow-y-auto"
-                />
-                <div className="flex items-center justify-between text-[11px] text-gray-400 mt-1 px-1">
-                  <span>Scroll for more text</span>
-                  <span>{suggestionText.length}/1000</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-gray-400">
-                  {suggestionStatus === "success" ? (
-                    <span className="text-emerald-600 font-semibold">✓ Suggestion received! Thank you.</span>
-                  ) : suggestionStatus === "error" ? (
-                    <span className="text-red-500">Failed to submit. Please try again.</span>
-                  ) : (
-                    <Link href="/contact?subject=Platform+Suggestion" className="hover:text-black underline">
-                      Or send via Contact Form &rarr;
-                    </Link>
-                  )}
-                </span>
-                <button 
-                  type="submit" 
-                  disabled={suggestionStatus === "submitting"}
-                  className="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition disabled:opacity-50 cursor-pointer"
-                >
-                  {suggestionStatus === "submitting" ? "Sending..." : "Send Suggestion"}
-                </button>
-              </div>
-            </form>
-          </div>
-
+        <div className="max-w-2xl mx-auto">
           {/* Followers & Community Channels (WhatsApp & Telegram Ecosystem) */}
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-gray-200 flex flex-col shadow-2xs">
             <div>

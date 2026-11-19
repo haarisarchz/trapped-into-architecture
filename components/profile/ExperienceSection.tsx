@@ -1,16 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock, Search, Check, ShieldCheck, Sparkles, ExternalLink, X } from "lucide-react";
+import { Briefcase, Plus, Pencil, Trash2, Calendar, MapPin, Building2, Clock, Search, Check, ShieldCheck, Sparkles, ExternalLink, X, FileText, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { ExperienceEntry, calculateTotalExperience } from "@/utils/profileCompletion";
+import { ExperienceEntry, calculateTotalExperience, BadgeTier } from "@/utils/profileCompletion";
 import { ORGANIZATION_TYPES } from "@/utils/institutionsData";
+import UploadSuccessDialog from "./UploadSuccessDialog";
 
 interface ExperienceSectionProps {
   userId: string;
   isOwner: boolean;
   experiences: ExperienceEntry[];
   onExperiencesChange: (newExp: ExperienceEntry[]) => void;
+  onUploadStateChange?: (isUploading: boolean) => void;
+  badgeTier?: BadgeTier;
 }
 
 interface OrgSuggestion {
@@ -29,6 +32,8 @@ export default function ExperienceSection({
   isOwner,
   experiences,
   onExperiencesChange,
+  onUploadStateChange,
+  badgeTier = "bronze",
 }: ExperienceSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -45,6 +50,52 @@ export default function ExperienceSection({
   const [endDate, setEndDate] = useState("");
   const [isCurrent, setIsCurrent] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
+  const [certificateName, setCertificateName] = useState<string | null>(null);
+  const [certificateSize, setCertificateSize] = useState<number | null>(null);
+  const [uploadingCert, setUploadingCert] = useState(false);
+  const [certProgress, setCertProgress] = useState(0);
+
+  // Combined certificate storage calculations: 4 MB standard, +5 MB for Platinum (9 MB total)
+  const isPlatinumOrAbove = badgeTier === "platinum" || badgeTier === "diamond";
+  const maxCombinedCertBytes = isPlatinumOrAbove ? 9 * 1024 * 1024 : 4 * 1024 * 1024;
+  const maxCombinedCertMb = isPlatinumOrAbove ? 9 : 4;
+
+  const totalCertificatesUsedBytes = experiences.reduce(
+    (sum, exp) => sum + (exp.certificate_size || 0),
+    0
+  );
+
+  const otherCertificatesBytes = experiences
+    .filter((exp) => exp.id !== editingId)
+    .reduce((sum, exp) => sum + (exp.certificate_size || 0), 0);
+
+  // Success dialog state
+  const [successDialog, setSuccessDialog] = useState<{
+    isOpen: boolean;
+    fileName: string;
+    fileSizeFormatted: string;
+  }>({
+    isOpen: false,
+    fileName: "",
+    fileSizeFormatted: "",
+  });
+
+  // Track upload state & warn before unloading
+  useEffect(() => {
+    if (onUploadStateChange) {
+      onUploadStateChange(uploadingCert);
+    }
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (uploadingCert) {
+        e.preventDefault();
+        e.returnValue = "A file is currently uploading. If you leave now, the upload will be cancelled.";
+        return e.returnValue;
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [uploadingCert, onUploadStateChange]);
 
   // Autocomplete State
   const [orgSuggestions, setOrgSuggestions] = useState<OrgSuggestion[]>([]);
@@ -225,6 +276,151 @@ export default function ExperienceSection({
     }
   };
 
+  const handleCertificateUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check PDF only
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+
+    if (!isPdf) {
+      alert("Only PDF files are accepted for Experience Certificate. Please select a valid PDF file.");
+      e.target.value = "";
+      return;
+    }
+
+    // Check combined certificate storage limit across all experiences
+    const totalAfterUpload = otherCertificatesBytes + file.size;
+
+    if (totalAfterUpload > maxCombinedCertBytes) {
+      const remainingBytes = Math.max(0, maxCombinedCertBytes - otherCertificatesBytes);
+      const remainingMb = (remainingBytes / (1024 * 1024)).toFixed(2);
+      const usedMb = (otherCertificatesBytes / (1024 * 1024)).toFixed(2);
+      const fileMb = (file.size / (1024 * 1024)).toFixed(2);
+      const limitLabel = isPlatinumOrAbove ? "9 MB (Platinum Tier: 4MB + 5MB bonus)" : "4 MB";
+
+      alert(
+        `Combined Experience Certificates storage limit exceeded!\n\n` +
+        `• Total Allowed Storage: ${limitLabel}\n` +
+        `• Currently Used across other certificates: ${usedMb} MB\n` +
+        `• Remaining Space: ${remainingMb} MB\n` +
+        `• Selected File: ${fileMb} MB\n\n` +
+        (isPlatinumOrAbove
+          ? `Please compress your PDF to ${remainingMb} MB or less.`
+          : `Please compress your PDF to ${remainingMb} MB or less, or reach Platinum Tier (85% profile completion) to unlock +5 MB extra certificate storage (9 MB total)!`)
+      );
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingCert(true);
+    setCertProgress(5);
+
+    try {
+      // Upload using XMLHttpRequest for real progress
+      const uploadWithProgress = (fileToUpload: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          const formData = new FormData();
+          formData.append("file", fileToUpload);
+          formData.append("folder", "/experience-certificates");
+
+          xhr.upload.onprogress = (ev) => {
+            if (ev.lengthComputable) {
+              const pct = Math.min(95, Math.round((ev.loaded / ev.total) * 100));
+              setCertProgress(pct);
+            }
+          };
+
+          xhr.onload = async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const res = JSON.parse(xhr.responseText);
+                if (res.url) {
+                  setCertProgress(100);
+                  resolve(res.url);
+                  return;
+                }
+              } catch (err) {}
+            }
+
+            // Fallback to Supabase Storage
+            try {
+              const ext = fileToUpload.name.split(".").pop() || "pdf";
+              const fn = `cert-${userId}-${Date.now()}.${ext}`;
+              const { error: upErr } = await supabase.storage
+                .from("applicant-docs")
+                .upload(fn, fileToUpload, { upsert: true });
+
+              if (upErr) throw upErr;
+
+              const { data: pubData } = supabase.storage
+                .from("applicant-docs")
+                .getPublicUrl(fn);
+
+              setCertProgress(100);
+              resolve(pubData.publicUrl);
+            } catch (fallbackErr: any) {
+              reject(new Error(xhr.responseText || fallbackErr.message || "Failed to upload certificate"));
+            }
+          };
+
+          xhr.onerror = async () => {
+            try {
+              const ext = fileToUpload.name.split(".").pop() || "pdf";
+              const fn = `cert-${userId}-${Date.now()}.${ext}`;
+              const { error: upErr } = await supabase.storage
+                .from("applicant-docs")
+                .upload(fn, fileToUpload, { upsert: true });
+
+              if (upErr) throw upErr;
+
+              const { data: pubData } = supabase.storage
+                .from("applicant-docs")
+                .getPublicUrl(fn);
+
+              setCertProgress(100);
+              resolve(pubData.publicUrl);
+            } catch (fallbackErr: any) {
+              reject(fallbackErr);
+            }
+          };
+
+          xhr.open("POST", "/api/upload");
+          xhr.send(formData);
+        });
+      };
+
+      const uploadedUrl = await uploadWithProgress(file);
+
+      setCertificateUrl(uploadedUrl);
+      setCertificateName(file.name);
+      setCertificateSize(file.size);
+
+      // Show Upload Success Dialog
+      setSuccessDialog({
+        isOpen: true,
+        fileName: file.name,
+        fileSizeFormatted: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      });
+    } catch (err: any) {
+      console.error("Certificate upload error:", err);
+      alert(err.message || "Failed to upload certificate");
+    } finally {
+      setUploadingCert(false);
+      setCertProgress(0);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveCertificate = () => {
+    setCertificateUrl(null);
+    setCertificateName(null);
+    setCertificateSize(null);
+  };
+
   const resetForm = () => {
     setFirmName("");
     setOrganizationType(ORGANIZATION_TYPES[0]);
@@ -236,6 +432,9 @@ export default function ExperienceSection({
     setEndDate("");
     setIsCurrent(false);
     setSelectedOrgId(null);
+    setCertificateUrl(null);
+    setCertificateName(null);
+    setCertificateSize(null);
     setEditingId(null);
   };
 
@@ -256,6 +455,9 @@ export default function ExperienceSection({
     setEndDate(entry.end_date || "");
     setIsCurrent(Boolean(entry.is_current));
     setSelectedOrgId((entry as any).company_id || null);
+    setCertificateUrl(entry.certificate_url || null);
+    setCertificateName(entry.certificate_name || null);
+    setCertificateSize(entry.certificate_size || null);
     setModalOpen(true);
   };
 
@@ -275,6 +477,9 @@ export default function ExperienceSection({
         start_date: startDate,
         end_date: isCurrent ? null : endDate || null,
         is_current: isCurrent,
+        certificate_url: certificateUrl,
+        certificate_name: certificateName,
+        certificate_size: certificateSize,
       };
 
       if (selectedOrgId) {
@@ -382,6 +587,62 @@ export default function ExperienceSection({
         </div>
       </div>
 
+      {/* Cumulative Experience Certificates Storage Bar */}
+      {isOwner && (
+        <div className="bg-white border border-gray-200/80 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
+              <FileText size={18} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-bold text-gray-900">
+                  Combined Experience Certificates Storage
+                </p>
+                {isPlatinumOrAbove ? (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                    💎 Platinum Perk: 9 MB (4MB + 5MB bonus)
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                    Combined Limit: 4 MB
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Total across all companies:{" "}
+                <span className="font-bold text-gray-800">
+                  {(totalCertificatesUsedBytes / (1024 * 1024)).toFixed(2)} MB
+                </span>{" "}
+                of <span className="font-bold text-gray-800">{maxCombinedCertMb} MB</span> used
+                {!isPlatinumOrAbove && (
+                  <span className="text-amber-700 ml-1 font-medium">
+                    (Reach Platinum tier to unlock +5 MB bonus)
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+          {/* Progress Mini Bar */}
+          <div className="w-full sm:w-36">
+            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden border border-gray-200">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  totalCertificatesUsedBytes > maxCombinedCertBytes * 0.9
+                    ? "bg-red-500"
+                    : totalCertificatesUsedBytes > maxCombinedCertBytes * 0.7
+                    ? "bg-amber-500"
+                    : "bg-blue-600"
+                }`}
+                style={{
+                  width: `${Math.min(100, (totalCertificatesUsedBytes / maxCombinedCertBytes) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Experience List */}
       {sortedExperiences.length === 0 ? (
         <div className="bg-white border border-gray-200/80 rounded-2xl p-10 text-center">
@@ -448,6 +709,22 @@ export default function ExperienceSection({
                     <p className="mt-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 whitespace-pre-wrap leading-relaxed">
                       {exp.role_description}
                     </p>
+                  )}
+
+                  {/* Certificate Link if attached */}
+                  {exp.certificate_url && (
+                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold">
+                      <FileText size={13} />
+                      <a
+                        href={exp.certificate_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline flex items-center gap-1"
+                      >
+                        <span>{exp.certificate_name || "Experience Certificate"}</span>
+                        <ExternalLink size={11} />
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>
@@ -689,21 +966,107 @@ export default function ExperienceSection({
                 />
               </div>
 
+              {/* Experience Certificate Attachment (Combined 4 MB, or 9 MB for Platinum) */}
+              <div className="p-4 rounded-xl border border-gray-200 bg-gray-50/70">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} className="text-blue-600" />
+                    <span className="text-xs font-bold text-gray-800">Experience Certificate</span>
+                    {isPlatinumOrAbove && (
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-100 border border-purple-200 px-1.5 py-0.5 rounded">
+                        💎 +5MB Platinum Perk
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-gray-500 font-semibold">
+                    {otherCertificatesBytes > 0
+                      ? `${(otherCertificatesBytes / (1024 * 1024)).toFixed(2)} MB of ${maxCombinedCertMb} MB combined used`
+                      : `Max ${maxCombinedCertMb} MB combined limit (PDF only)`}
+                  </span>
+                </div>
+
+                {certificateUrl ? (
+                  <div className="bg-white p-2.5 rounded-lg border border-gray-200 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-700 truncate max-w-[200px]">
+                      {certificateName || "Certificate.pdf"}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <a
+                        href={certificateUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline p-1"
+                      >
+                        Preview
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCertificate}
+                        disabled={uploadingCert}
+                        className="text-xs text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className={`flex items-center justify-center gap-2 bg-white hover:bg-gray-100 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg border border-gray-300 cursor-pointer transition ${uploadingCert ? "opacity-60 pointer-events-none" : ""}`}>
+                    <Upload size={13} />
+                    <span>
+                      {uploadingCert
+                        ? `Uploading (${certProgress}%)...`
+                        : `Attach Experience Certificate (PDF - ${maxCombinedCertMb}MB Combined Limit)`}
+                    </span>
+                    <input
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={handleCertificateUpload}
+                      disabled={uploadingCert}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+
+                {/* Platinum perk encouragement if not yet platinum */}
+                {!isPlatinumOrAbove && (
+                  <p className="text-[10px] text-amber-700 mt-2 font-medium">
+                    Tip: Platinum members unlock +5 MB extra certificate storage (9 MB total across all firms).
+                  </p>
+                )}
+
+                {/* PROGRESS BAR NEAR CERTIFICATE SECTION */}
+                {uploadingCert && (
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <div className="flex items-center justify-between text-xs font-bold text-blue-900 mb-1.5">
+                      <span>Uploading Certificate...</span>
+                      <span>{certProgress}%</span>
+                    </div>
+                    <div className="w-full bg-blue-200/70 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-150"
+                        style={{ width: `${certProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Action Buttons */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-black transition"
+                  disabled={uploadingCert}
+                  className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-black transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition"
+                  disabled={submitting || uploadingCert}
+                  className="bg-black hover:bg-gray-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition cursor-pointer disabled:opacity-50"
                 >
-                  {submitting ? "Saving..." : editingId ? "Update Experience" : "Save Experience"}
+                  {submitting ? "Saving..." : uploadingCert ? "Uploading..." : editingId ? "Update Experience" : "Add Experience"}
                 </button>
               </div>
             </form>
@@ -838,6 +1201,15 @@ export default function ExperienceSection({
           </div>
         </div>
       )}
+
+      {/* UPLOAD SUCCESS DIALOG MODAL */}
+      <UploadSuccessDialog
+        isOpen={successDialog.isOpen}
+        onClose={() => setSuccessDialog({ ...successDialog, isOpen: false })}
+        fileName={successDialog.fileName}
+        fileType="Experience Certificate"
+        fileSizeFormatted={successDialog.fileSizeFormatted}
+      />
     </div>
   );
 }
