@@ -7,7 +7,7 @@ import { trackEvent } from "@/utils/analytics";
 import { 
   Trophy, Play, Clock, HelpCircle, Users, Sparkles, 
   ArrowRight, ArrowDown, Filter, ChevronRight, Award, Flame, Search, Lock, 
-  CheckCircle2, XCircle, SlidersHorizontal, LayoutGrid, List, Zap, BookOpen, ShieldCheck, X
+  CheckCircle2, XCircle, SlidersHorizontal, LayoutGrid, List, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle
 } from "lucide-react";
 
 export default function QuizzesHubPage() {
@@ -24,9 +24,21 @@ export default function QuizzesHubPage() {
   const [modalMode, setModalMode] = useState<"challenge" | "practice">("challenge");
   const [modalDifficulty, setModalDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [modalCount, setModalCount] = useState<number>(10);
+  const [showGoldPerkNotice, setShowGoldPerkNotice] = useState<boolean>(false);
 
-  // Auth state
+  // Auth state & Gold Tier status
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
+
+  // Dynamic time estimate helper per question count & difficulty
+  const getTimeEstimate = (count: number, diff: "easy" | "medium" | "hard") => {
+    const perQ = diff === "easy" ? 24 : diff === "medium" ? 18 : 12;
+    const totalSecs = count * perQ;
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    if (mins === 0) return `${secs}s`;
+    return secs === 0 ? `${mins} mins` : `${mins}m ${secs}s`;
+  };
 
   // Leaderboard state
   const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<"easy" | "medium" | "hard">("medium");
@@ -38,7 +50,14 @@ export default function QuizzesHubPage() {
     // Check if user is logged in
     const stored = localStorage.getItem("currentUser");
     if (stored) {
-      try { setCurrentUser(JSON.parse(stored)); } catch (e) {}
+      try { 
+        const parsed = JSON.parse(stored);
+        setCurrentUser(parsed);
+        const tier = (parsed.tier || parsed.user_metadata?.tier || "").toLowerCase();
+        const completion = typeof parsed.completion === "number" ? parsed.completion : 0;
+        const isGold = ["gold", "platinum", "diamond"].includes(tier) || completion >= 66 || parsed.role === "admin" || parsed.is_gold === true;
+        setIsGoldTier(isGold);
+      } catch (e) {}
     }
     fetchQuizzes();
   }, []);
@@ -700,22 +719,22 @@ export default function QuizzesHubPage() {
                   <ShieldCheck size={14} className="text-blue-600" /> Rules &amp; Scoring Mechanics
                 </h3>
 
-                <div className="space-y-1.5 text-gray-600 leading-normal text-[11px]">
+                <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-gray-900">🟢 Easy:</span>
-                    <span>10s/Q &bull; 1 pt per correct answer &bull; Obvious iconic choices.</span>
+                    <span className="font-black text-emerald-700 shrink-0">🟢 Easy (Beginner):</span>
+                    <span>24s/Q &bull; 1 pt per correct answer &bull; Obvious iconic choices.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-gray-900">🟡 Medium:</span>
-                    <span>15s/Q &bull; 2 pts per correct answer &bull; Subtle architectural distractors.</span>
+                    <span className="font-black text-amber-700 shrink-0">🟡 Medium (Intermediate):</span>
+                    <span>18s/Q &bull; 2 pts per correct answer &bull; Subtle architectural distractors.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-gray-900">🔴 Hard:</span>
-                    <span>20s/Q &bull; 5 pts per correct answer &bull; Same studio / movement deep cuts.</span>
+                    <span className="font-black text-rose-700 shrink-0">🔴 Hard (Advanced):</span>
+                    <span>12s/Q &bull; 5 pts per correct answer &bull; Same studio / movement deep cuts.</span>
                   </div>
-                  <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-700 font-semibold">
-                    <span>⚡ Modes:</span>
-                    <span><strong>Practice:</strong> Instant answer clues &bull; <strong>Challenge:</strong> Countdown timer + points.</span>
+                  <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
+                    <span className="font-black">⚡ Modes:</span>
+                    <span><strong>Practice (Gold Tier):</strong> Instant answers after each question &bull; <strong>Challenge:</strong> Countdown timer + points.</span>
                   </div>
                 </div>
               </div>
@@ -727,137 +746,229 @@ export default function QuizzesHubPage() {
 
         {/* START QUIZ CUSTOMIZATION MODAL (MODES & DIFFICULTY) */}
         {setupModalQuiz && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl border border-gray-200 max-w-md w-full p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-3xl border border-gray-200 max-w-lg w-full p-6 sm:p-7 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 my-8">
               
               <button
                 type="button"
-                onClick={() => setSetupModalQuiz(null)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition cursor-pointer"
+                onClick={() => {
+                  setSetupModalQuiz(null);
+                  setShowGoldPerkNotice(false);
+                }}
+                className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition cursor-pointer"
+                aria-label="Close setup modal"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
 
-              <div className="mb-4">
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">
-                  Quiz Setup
-                </span>
-                <h3 className="text-base sm:text-lg font-black text-gray-900 mt-1">
+              <div className="mb-5 pr-8">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                    {setupModalQuiz.category || "Quiz Arena"}
+                  </span>
+                  <span className="text-xs font-mono text-gray-400 font-bold">
+                    {setupModalQuiz.quiz_questions?.[0]?.count || 65} Questions Available
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-gray-950 leading-tight">
                   {setupModalQuiz.title}
                 </h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Choose your preferred game mode, difficulty, and question round length.
+                <p className="text-xs text-gray-500 mt-1">
+                  Customize your game mode, difficulty pace, and question round length.
                 </p>
               </div>
 
-              {/* 1. Mode Selection: Practice vs Challenge */}
-              <div className="mb-4">
-                <label className="text-[11px] font-black uppercase tracking-wider text-gray-600 block mb-1.5">
-                  1. Game Mode
+              {/* 1. Game Mode Selection */}
+              <div className="mb-5">
+                <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
+                  <span>1. Game Mode</span>
+                  <span className="text-[11px] font-normal text-gray-400 lowercase">select your play style</span>
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Challenge Mode */}
                   <button
                     type="button"
-                    onClick={() => setModalMode("challenge")}
-                    className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    onClick={() => {
+                      setModalMode("challenge");
+                      setShowGoldPerkNotice(false);
+                    }}
+                    className={`p-3.5 rounded-2xl border text-left transition cursor-pointer relative ${
                       modalMode === "challenge" 
-                        ? "bg-black text-white border-black shadow-xs" 
-                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                        ? "bg-amber-500/10 border-amber-500 text-gray-950 ring-2 ring-amber-500/30 shadow-xs" 
+                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 text-xs font-black">
-                      <Zap size={13} className={modalMode === "challenge" ? "text-amber-400" : "text-amber-600"} />
-                      <span>Challenge Mode</span>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                        <Zap size={11} className="text-amber-600 fill-amber-500" /> Competitive Play
+                      </span>
+                      {modalMode === "challenge" && (
+                        <CheckCircle2 size={16} className="text-amber-600 shrink-0" />
+                      )}
                     </div>
-                    <p className={`text-[10px] mt-1 ${modalMode === "challenge" ? "text-gray-300" : "text-gray-500"}`}>
-                      Continuous timer, official points, and scorecard.
+                    <h4 className="text-sm font-black text-gray-900 mb-1">
+                      Challenge Mode
+                    </h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Continuous timer, official leaderboard points, and performance scorecard.
                     </p>
                   </button>
 
+                  {/* Practice Mode (Gold Tier Exclusive) */}
                   <button
                     type="button"
-                    onClick={() => setModalMode("practice")}
-                    className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    onClick={() => {
+                      if (!isGoldTier) {
+                        setShowGoldPerkNotice(true);
+                      } else {
+                        setModalMode("practice");
+                        setShowGoldPerkNotice(false);
+                      }
+                    }}
+                    className={`p-3.5 rounded-2xl border text-left transition cursor-pointer relative ${
                       modalMode === "practice" 
-                        ? "bg-blue-600 text-white border-blue-600 shadow-xs" 
-                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                        ? "bg-purple-500/10 border-purple-500 text-gray-950 ring-2 ring-purple-500/30 shadow-xs" 
+                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 text-xs font-black">
-                      <BookOpen size={13} className={modalMode === "practice" ? "text-white" : "text-blue-600"} />
-                      <span>Practice Mode</span>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-300 flex items-center gap-1">
+                        <Crown size={11} className="text-purple-700 fill-purple-600" /> Gold Tier Benefit
+                      </span>
+                      {modalMode === "practice" && (
+                        <CheckCircle2 size={16} className="text-purple-600 shrink-0" />
+                      )}
                     </div>
-                    <p className={`text-[10px] mt-1 ${modalMode === "practice" ? "text-blue-100" : "text-gray-500"}`}>
-                      Instant answer reveal and tectonic architectural clues.
+                    <h4 className="text-sm font-black text-gray-900 mb-1 flex items-center gap-1.5">
+                      Practice Mode
+                      {!isGoldTier && <Lock size={12} className="text-amber-600" />}
+                    </h4>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Instant answers after each question with relaxed, self-paced exploration.
                     </p>
                   </button>
                 </div>
+
+                {/* Inline Gold Tier Notification if user clicked Practice without Gold */}
+                {showGoldPerkNotice && (
+                  <div className="mt-2.5 p-3 rounded-2xl bg-amber-50/90 border border-amber-300 text-xs text-amber-950 flex items-start gap-2.5 animate-in fade-in">
+                    <Crown size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-bold">
+                        Practice Mode is an exclusive benefit for Gold Tier members (66%+ profile completion).
+                      </p>
+                      <p className="text-amber-800 text-[11px] leading-relaxed">
+                        Challenge Mode is fully unlocked and ready for you right now with real-time scoring!
+                      </p>
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModalMode("challenge");
+                            setShowGoldPerkNotice(false);
+                          }}
+                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold cursor-pointer"
+                        >
+                          Play Challenge Mode
+                        </button>
+                        <Link
+                          href="/badges-and-perks"
+                          className="text-[11px] font-bold text-amber-900 underline hover:text-amber-950"
+                        >
+                          Learn About Gold Perks &rarr;
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* 2. Difficulty Selection: Easy / Medium / Hard */}
-              <div className="mb-4">
-                <label className="text-[11px] font-black uppercase tracking-wider text-gray-600 block mb-1.5">
-                  2. Difficulty Tier
+              {/* 2. Difficulty Tier Selection */}
+              <div className="mb-5">
+                <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
+                  <span>2. Difficulty Tier</span>
+                  <span className="text-[11px] font-normal text-gray-400 lowercase">adjusts allotted time per question</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "easy", label: "🟢 Easy", desc: "Classic" },
-                    { id: "medium", label: "🟡 Medium", desc: "Confusing" },
-                    { id: "hard", label: "🔴 Hard", desc: "Advanced" }
-                  ].map(d => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => setModalDifficulty(d.id as any)}
-                      className={`p-2.5 rounded-2xl border text-center transition cursor-pointer ${
-                        modalDifficulty === d.id 
-                          ? "bg-gray-900 text-white border-gray-900 font-black shadow-xs" 
-                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 font-bold"
-                      }`}
-                    >
-                      <span className="text-xs block">{d.label}</span>
-                      <span className="text-[9px] opacity-75">{d.desc}</span>
-                    </button>
-                  ))}
+                    { id: "easy", icon: "🟢", label: "Easy", sub: "Beginner", time: "24s / question", activeClass: "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
+                    { id: "medium", icon: "🟡", label: "Medium", sub: "Intermediate", time: "18s / question", activeClass: "border-amber-600 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
+                    { id: "hard", icon: "🔴", label: "Hard", sub: "Advanced", time: "12s / question", activeClass: "border-rose-600 bg-rose-50/70 text-rose-950 ring-2 ring-rose-500/20" }
+                  ].map(d => {
+                    const isSelected = modalDifficulty === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => setModalDifficulty(d.id as any)}
+                        className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                          isSelected 
+                            ? `${d.activeClass} font-black shadow-xs` 
+                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
+                        }`}
+                      >
+                        <span className="text-xs font-black flex items-center gap-1 mb-0.5">
+                          <span>{d.icon}</span> {d.label}
+                        </span>
+                        <span className={`text-[11px] font-bold ${isSelected ? "text-gray-900" : "text-gray-500"}`}>
+                          {d.sub}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-mono mt-0.5">
+                          {d.time}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* 3. Round Length: 10 Qs / 20 Qs / All Qs */}
+              {/* 3. Round Length: Dynamic Time Estimate by Difficulty */}
               <div className="mb-6">
-                <label className="text-[11px] font-black uppercase tracking-wider text-gray-600 block mb-1.5">
-                  3. Questions Count
+                <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
+                  <span>3. Questions Count</span>
+                  <span className="text-[11px] font-normal text-gray-400 lowercase">dynamic time for {modalDifficulty}</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { count: 10, label: "10 Questions", time: "~3 mins" },
-                    { count: 20, label: "20 Questions", time: "~6 mins" },
-                    { count: setupModalQuiz.quiz_questions?.[0]?.count || 65, label: `All (${setupModalQuiz.quiz_questions?.[0]?.count || 65})`, time: "Full Round" }
-                  ].map(c => (
-                    <button
-                      key={c.count}
-                      type="button"
-                      onClick={() => setModalCount(c.count)}
-                      className={`p-2.5 rounded-2xl border text-center transition cursor-pointer ${
-                        modalCount === c.count 
-                          ? "bg-blue-600 text-white border-blue-600 font-black shadow-xs" 
-                          : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100 font-bold"
-                      }`}
-                    >
-                      <span className="text-xs block">{c.label}</span>
-                      <span className="text-[9px] opacity-75">{c.time}</span>
-                    </button>
-                  ))}
+                    { count: 10, label: "10 Questions" },
+                    { count: 20, label: "20 Questions" },
+                    { count: setupModalQuiz.quiz_questions?.[0]?.count || 65, label: `All (${setupModalQuiz.quiz_questions?.[0]?.count || 65})` }
+                  ].map(c => {
+                    const isSelected = modalCount === c.count;
+                    const dynamicTime = getTimeEstimate(c.count, modalDifficulty);
+                    return (
+                      <button
+                        key={c.count}
+                        type="button"
+                        onClick={() => setModalCount(c.count)}
+                        className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                          isSelected 
+                            ? "bg-blue-600 text-white border-blue-600 font-black shadow-xs ring-2 ring-blue-500/20" 
+                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60 font-semibold"
+                        }`}
+                      >
+                        <span className="text-xs block font-black">{c.label}</span>
+                        <span className={`text-[11px] font-mono mt-0.5 ${isSelected ? "text-blue-100 font-bold" : "text-gray-500"}`}>
+                          ⏱ {dynamicTime}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Start Quiz Button */}
+              {/* Launch Quiz Button */}
               <Link
                 href={`/quizzes/${setupModalQuiz.slug}?mode=${modalMode}&difficulty=${modalDifficulty}&count=${modalCount}&autostart=1`}
-                onClick={() => setSetupModalQuiz(null)}
-                className="w-full py-3 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-lg transition cursor-pointer"
+                onClick={() => {
+                  setSetupModalQuiz(null);
+                  setShowGoldPerkNotice(false);
+                }}
+                className="w-full py-3.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition cursor-pointer"
               >
-                <span>Start Quiz</span>
-                <ArrowRight size={14} />
+                <span>Launch Quiz ({modalCount} Qs &bull; {getTimeEstimate(modalCount, modalDifficulty)})</span>
+                <ArrowRight size={16} />
               </Link>
 
             </div>
