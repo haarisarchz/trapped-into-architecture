@@ -175,48 +175,46 @@ export default function QuizzesHubPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50/70 pt-[72px] pb-12">
+      <div className="min-h-screen bg-gray-50/70 pt-[66px] pb-12">
         
-        {/* COMPACT CLEAN HEADER (FULL-SPREAD ACROSS WIDESCREEN) */}
+        {/* COMPACT CLEAN HEADER (GAPS MINIMIZED, BOLD HEADING, FEATURE BUBBLES) */}
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3.5">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               
-              {/* Title & Hashtag Pills */}
+              {/* Title & Colorful Strength Bubbles */}
               <div>
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-950 tracking-tight leading-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-950 tracking-tight leading-tight">
                   Architecture Quizzes &amp; Knowledge Arena
                 </h1>
 
-                {/* Hashtag Pills */}
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-gray-600">
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
-                    #65+ Masterworks
+                {/* Platform Strength Badges (Vibrant Bubbles, No Hash Tags) */}
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs font-bold">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span> Multiple Modes (Practice &amp; Challenge)
                   </span>
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
-                    #100+ Master Architects
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span> Live Rankings &amp; Leaderboards
                   </span>
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
-                    #High-Res Architectural Photos
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Shareable Verified Scorecards
                   </span>
-                  <span className="bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded-md text-gray-700 transition">
-                    #Floor Plans &amp; Tectonic Clues
-                  </span>
-                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-black border border-blue-200">
-                    #Instant Practice &amp; Challenge Modes
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 shadow-2xs font-bold">
+                    <span className="w-2 h-2 rounded-full bg-blue-500"></span> 65+ Masterworks &amp; High-Res Photos
                   </span>
                 </div>
               </div>
 
-              {/* Crowd & Catalog Stats */}
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="px-3 py-1.5 rounded-xl bg-black text-white text-center shadow-xs">
-                  <span className="text-sm sm:text-base font-black block leading-none">7</span>
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-gray-300">Active Quizzes</span>
+              {/* Balanced Catalog Stats Card (Proportionate Duo) */}
+              <div className="flex items-center gap-2.5 shrink-0 bg-gray-50 border border-gray-200 p-1.5 sm:p-2 rounded-2xl shadow-2xs self-start lg:self-center">
+                <div className="px-3.5 py-1.5 rounded-xl bg-black text-white text-center">
+                  <span className="text-base sm:text-lg font-black block leading-none">7</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-300">Active Quizzes</span>
                 </div>
-                <div className="px-3 py-1.5 rounded-xl bg-amber-400 text-amber-950 text-center shadow-xs">
-                  <span className="text-sm sm:text-base font-black block leading-none">455</span>
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-900">Questions Available</span>
+                <div className="h-7 w-px bg-gray-200"></div>
+                <div className="px-3.5 py-1.5 rounded-xl bg-amber-400 text-amber-950 text-center">
+                  <span className="text-base sm:text-lg font-black block leading-none">455</span>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900">Total Questions</span>
                 </div>
               </div>
 
@@ -224,39 +222,43 @@ export default function QuizzesHubPage() {
           </div>
         </div>
 
-        {/* COMMON FULL-WIDTH TOOLBAR (SEARCH + CATEGORIES SPAN ACROSS LEFT & RIGHT LAYOUTS) */}
-        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-3.5 pb-2">
+        {/* COMMON FULL-WIDTH TOOLBAR (SEARCH + SORT BY + VIEW BY + CATEGORIES) */}
+        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-2">
           <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-3.5 shadow-xs space-y-2.5">
             
-            {/* Top Row: High-Contrast Search Bar with Dedicated Search Button, Sort By, and View By */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="relative flex-1">
+            {/* Top Row: Compact Search Bar + Separated "Sort by:" + "View by:" */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              
+              {/* 1. Compact Sized Search Bar */}
+              <div className="relative w-full md:w-80 lg:w-96">
                 <div className="relative w-full flex items-center">
                   <Search size={15} className="absolute left-3.5 text-gray-500 pointer-events-none" />
                   <input 
                     type="text"
-                    placeholder="Search architecture quizzes, architects, or buildings..."
+                    placeholder="Search quizzes, architects..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-22 py-2 text-xs font-medium border-2 border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white text-gray-900 shadow-2xs transition"
+                    className="w-full pl-9 pr-20 py-2 text-xs font-medium border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black bg-white text-gray-900 shadow-2xs transition"
                   />
                   <button
                     type="button"
-                    className="absolute right-1 px-3.5 py-1.5 bg-black hover:bg-gray-800 text-white rounded-lg text-xs font-black shadow-xs transition cursor-pointer"
+                    className="absolute right-1 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-lg text-xs font-black shadow-xs transition cursor-pointer"
                   >
                     Search
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Sort By Dropdown */}
-                <div className="flex items-center gap-1.5 text-xs text-gray-600 font-bold">
-                  <span className="hidden sm:inline text-[11px] uppercase tracking-wider">Sort:</span>
+              {/* 2. Controls Group with Explicit Labels and Clear Gaps */}
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                
+                {/* Sort By Dropdown with clear label */}
+                <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200">
+                  <span className="text-xs font-extrabold text-gray-500">Sort by:</span>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="text-xs font-bold bg-gray-100 hover:bg-gray-200 border-none rounded-xl px-2.5 py-2 text-gray-800 focus:outline-none cursor-pointer transition"
+                    className="text-xs font-black bg-transparent border-none text-gray-900 focus:outline-none cursor-pointer pr-1"
                   >
                     <option value="most_played">🔥 Most Played</option>
                     <option value="newest">✨ Newly Added</option>
@@ -264,29 +266,31 @@ export default function QuizzesHubPage() {
                   </select>
                 </div>
 
-                {/* View By Toggle: Image View vs Text View */}
-                <div className="flex items-center bg-gray-100 p-1 rounded-xl">
-                  <button
-                    onClick={() => setViewMode("image")}
-                    className={`p-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                      viewMode === "image" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
-                    }`}
-                    title="Image View"
-                  >
-                    <LayoutGrid size={13} />
-                    <span className="text-[11px] hidden sm:inline">Image</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode("text")}
-                    className={`p-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
-                      viewMode === "text" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
-                    }`}
-                    title="Text View"
-                  >
-                    <List size={13} />
-                    <span className="text-[11px] hidden sm:inline">Text</span>
-                  </button>
+                {/* View By Toggle with explicit "View by:" text */}
+                <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200">
+                  <span className="text-xs font-extrabold text-gray-500">View by:</span>
+                  <div className="flex items-center bg-gray-200/70 p-0.5 rounded-lg">
+                    <button
+                      onClick={() => setViewMode("image")}
+                      className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                        viewMode === "image" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black"
+                      }`}
+                    >
+                      <LayoutGrid size={13} />
+                      <span>Image</span>
+                    </button>
+                    <button
+                      onClick={() => setViewMode("text")}
+                      className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                        viewMode === "text" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black"
+                      }`}
+                    >
+                      <List size={13} />
+                      <span>Text</span>
+                    </button>
+                  </div>
                 </div>
+
               </div>
             </div>
 
@@ -427,54 +431,60 @@ export default function QuizzesHubPage() {
                   })}
                 </div>
               ) : (
-                /* 2. TEXT VIEW (Clean Rows with Play (Different Modes) & Quick Play) */
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden divide-y divide-gray-100 shadow-xs">
+                /* 2. REDESIGNED TEXT VIEW (Distinct Standalone Cards, Roomy Height, Bold Headings) */
+                <div className="space-y-3.5">
                   {filteredAndSortedQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 65;
                     const playsCount = quiz.quiz_scores?.[0]?.count || 0;
                     const featuredImg = getFeaturedQuizImage(quiz.slug, quiz.cover_image);
 
                     return (
-                      <div key={quiz.id} className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50/60 transition group">
-                        <div className="flex items-start gap-3 min-w-0">
-                          <img 
-                            referrerPolicy="no-referrer"
-                            src={featuredImg} 
-                            alt={quiz.title} 
-                            className="w-14 h-14 rounded-xl object-cover shrink-0 border border-gray-200 group-hover:scale-105 transition"
-                            onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
-                          />
-                          <div className="min-w-0">
-                            <span className="text-[9px] font-extrabold uppercase tracking-wider text-blue-600 block">
-                              {quiz.category}
-                            </span>
-                            <h3 className="text-xs sm:text-sm font-black text-gray-900 truncate group-hover:text-blue-600 transition">
+                      <div 
+                        key={quiz.id} 
+                        className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs hover:border-black hover:shadow-md transition duration-200 group"
+                      >
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-gray-900 border border-gray-200 shrink-0">
+                            <img 
+                              referrerPolicy="no-referrer"
+                              src={featuredImg} 
+                              alt={quiz.title} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                              onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                                {quiz.category}
+                              </span>
+                              <span className="text-[11px] font-mono text-gray-400 font-bold">
+                                {questionCount} Questions &bull; {playsCount} Plays
+                              </span>
+                            </div>
+                            <h3 className="text-base sm:text-lg font-black text-gray-950 truncate leading-snug group-hover:text-blue-600 transition">
                               {quiz.title}
                             </h3>
-                            <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
-                              {quiz.description || "Visual quiz challenge."}
+                            <p className="text-xs text-gray-600 line-clamp-1 mt-1 leading-relaxed">
+                              {quiz.description || "Interactive architecture visual challenge."}
                             </p>
-                            <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-400 font-mono">
-                              <span>{questionCount} Qs</span>
-                              <span>•</span>
-                              <span>{playsCount} plays</span>
-                            </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2.5 shrink-0 self-stretch sm:self-center pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                           <button
                             type="button"
                             onClick={() => setSetupModalQuiz(quiz)}
-                            className="px-3.5 py-2 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                            className="flex-1 sm:flex-none px-4 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
                           >
-                            <Play size={12} fill="currentColor" /> Play (Different Modes)
+                            <Play size={13} fill="currentColor" /> Play (Different Modes)
                           </button>
                           <Link 
                             href={`/quizzes/${quiz.slug}?autostart=1`}
-                            className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition"
+                            className="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center justify-center gap-1 transition shrink-0"
+                            title="1-Click Instant Play (10 Questions)"
                           >
-                            <Zap size={12} fill="currentColor" /> Quick Play
+                            <Zap size={13} fill="currentColor" /> Quick Play
                           </Link>
                         </div>
                       </div>
@@ -634,6 +644,10 @@ export default function QuizzesHubPage() {
                         (currentUser.name && entry.display_name === currentUser.name)
                       );
 
+                      const displayUsername = entry.display_name?.startsWith("@") 
+                        ? entry.display_name 
+                        : `@${entry.display_name || "Architect"}`;
+
                       return (
                         <div 
                           key={idx}
@@ -654,7 +668,9 @@ export default function QuizzesHubPage() {
                             </span>
                             <div className="min-w-0">
                               <p className="text-xs font-bold text-gray-900 truncate flex items-center gap-1">
-                                <span>{entry.display_name}</span>
+                                <span className={isCurrentUserEntry ? "text-blue-900 font-black" : ""}>
+                                  {displayUsername}
+                                </span>
                                 {isCurrentUserEntry && (
                                   <span className="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
                                     YOU
@@ -666,7 +682,9 @@ export default function QuizzesHubPage() {
                               </p>
                             </div>
                           </div>
-                          <span className="text-xs font-mono font-extrabold text-blue-600 shrink-0">
+                          <span className={`text-xs font-mono font-extrabold shrink-0 ${
+                            isCurrentUserEntry ? "text-blue-700" : "text-blue-600"
+                          }`}>
                             {entry.points} PTS
                           </span>
                         </div>

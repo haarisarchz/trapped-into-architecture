@@ -67,6 +67,7 @@ export default function FloatingAdminChat() {
   const [visitorName, setVisitorName] = useState("");
   const [visitorContact, setVisitorContact] = useState("");
   const [isSavingContact, setIsSavingContact] = useState(false);
+  const [isGuestSliderVisible, setIsGuestSliderVisible] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
