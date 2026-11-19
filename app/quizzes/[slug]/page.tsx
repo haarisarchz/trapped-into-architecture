@@ -81,6 +81,7 @@ export default function QuizPlayPage() {
   const [visitedQuestions, setVisitedQuestions] = useState<Record<number, boolean>>({ 0: true });
   const [fillInput, setFillInput] = useState("");
   const [practiceFeedback, setPracticeFeedback] = useState<Record<number, { isSubmitted: boolean; isCorrect: boolean }>>({});
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   // Continuous Total Timer & Duration State
   const [totalAllottedTime, setTotalAllottedTime] = useState<number>(180); // in seconds
@@ -232,27 +233,49 @@ export default function QuizPlayPage() {
     try {
       let query = supabase
         .from("quiz_scores")
-        .select("id, display_name, points, score, total_questions, difficulty, time_taken_seconds, created_at, user_id, quiz_id")
+        .select("id, display_name, points, score, total_questions, difficulty, time_taken_seconds, created_at, user_id, guest_session_id, quiz_id")
         .eq("difficulty", leaderboardDifficulty);
 
       if (leaderboardScope === "quiz" && quiz?.id) {
         query = query.eq("quiz_id", quiz.id);
       }
 
-      // Fetch top 30 to sort accurately in memory by Accuracy %, then questions, then time
-      const { data, error } = await query.limit(40);
+      const { data, error } = await query.limit(50);
       if (error) throw error;
 
       if (data) {
-        const ranked = [...data].sort((a, b) => {
-          const accA = (a.score / (a.total_questions || 10)) * 100;
-          const accB = (b.score / (b.total_questions || 10)) * 100;
-          if (accB !== accA) return accB - accA; // Higher accuracy first
-          if ((b.total_questions || 0) !== (a.total_questions || 0)) {
-            return (b.total_questions || 0) - (a.total_questions || 0); // More questions completed
+        // Distinguish real participants from namesake/seed entries
+        // Namesake rows have user_id === null AND guest_session_id === null
+        const realParticipants = data.filter(e => e.user_id !== null || (e.guest_session_id !== null && !e.display_name?.startsWith("Architect_#anon")));
+        const seedParticipants = data.filter(e => e.user_id === null && e.guest_session_id === null);
+
+        // RULE: Once every category/difficulty has 5 or more real participants, the pre-loaded namesake entries completely disappear!
+        let activeBoard: any[] = [];
+        if (realParticipants.length >= 5) {
+          activeBoard = realParticipants;
+        } else {
+          // If fewer than 5 real participants, show all real participants first, then fill remaining spots with seed entries up to 5 total
+          const remainingSlots = Math.max(0, 5 - realParticipants.length);
+          activeBoard = [...realParticipants, ...seedParticipants.slice(0, remainingSlots)];
+        }
+
+        const ranked = activeBoard.map(entry => {
+          const acc = (entry.total_questions || 10) > 0 
+            ? Math.round(((entry.score || 0) / (entry.total_questions || 10)) * 100) 
+            : 0;
+          return { ...entry, acc };
+        }).sort((a, b) => {
+          if (b.acc !== a.acc) return b.acc - a.acc; // Higher accuracy first
+          // If equal accuracy, real users rank higher than seed
+          const aIsReal = a.user_id !== null || a.guest_session_id !== null;
+          const bIsReal = b.user_id !== null || b.guest_session_id !== null;
+          if (aIsReal !== bIsReal) return aIsReal ? -1 : 1;
+          if ((b.points || 0) !== (a.points || 0)) {
+            return (b.points || 0) - (a.points || 0); // Higher points
           }
-          return (a.time_taken_seconds || 9999) - (b.time_taken_seconds || 9999); // Faster time
+          return (a.time_taken_seconds || 9999) - (b.time_taken_seconds || 9999);
         });
+
         setLeaderboard(ranked);
       }
     } catch (err) {
@@ -295,9 +318,13 @@ export default function QuizPlayPage() {
   }, [gameStarted, isGameOver, gameMode]);
 
   // Start game handler: prepares question pool and computes continuous allotted time
-  const handleStartGame = () => {
+  const handleStartGame = (overrideDiff?: Difficulty, overrideCount?: number, overrideMode?: GameMode) => {
+    const activeDiff = overrideDiff || difficulty;
+    const activeCount = overrideCount || questionCountChoice;
+    const activeMode = overrideMode || gameMode;
+
     const pool = allQuestionsPool.length > 0 ? allQuestionsPool : questions;
-    const targeted = getQuestionsForGameDifficulty(pool, difficulty, questionCountChoice);
+    const targeted = getQuestionsForGameDifficulty(pool, activeDiff, activeCount);
     const sampled = shuffleArray(targeted).map(q => ({
       ...q,
       options: shuffleArray(q.options || [])
@@ -305,11 +332,14 @@ export default function QuizPlayPage() {
 
     setQuestions(sampled);
     setGameStarted(true);
+    setGameMode(activeMode);
+    setDifficulty(activeDiff);
+    setQuestionCountChoice(activeCount);
     trackEvent("quiz_start_click", {
       quiz_slug: slug,
       quiz_title: quiz?.title,
-      difficulty,
-      game_mode: gameMode,
+      difficulty: activeDiff,
+      game_mode: activeMode,
       question_count: sampled.length,
     });
     setIsGameOver(false);
@@ -326,7 +356,7 @@ export default function QuizPlayPage() {
     // Easy: 30s per question (10Q = 5m, 20Q = 10m, 40Q = 20m)
     // Medium: 18s per question (10Q = 3m, 20Q = 6m, 40Q = 12m)
     // Hard: 12s per question (10Q = 2m, 20Q = 4m, 40Q = 8m)
-    const perQuestionSeconds = difficulty === "easy" ? 30 : difficulty === "medium" ? 18 : 12;
+    const perQuestionSeconds = activeDiff === "easy" ? 30 : activeDiff === "medium" ? 18 : 12;
     const totalAllotted = sampled.length * perQuestionSeconds;
     setTotalAllottedTime(totalAllotted);
     setTimerSeconds(totalAllotted);
@@ -337,9 +367,25 @@ export default function QuizPlayPage() {
   useEffect(() => {
     const autostart = searchParams.get("autostart");
     if ((autostart === "1" || autostart === "true") && allQuestionsPool.length > 0 && !gameStarted && !isGameOver) {
-      handleStartGame();
+      const qMode = (searchParams.get("mode") as GameMode) || gameMode;
+      const qDiff = (searchParams.get("difficulty") as Difficulty) || difficulty;
+      const qCount = parseInt(searchParams.get("count") || "", 10) || questionCountChoice;
+      handleStartGame(qDiff, qCount, qMode);
     }
   }, [allQuestionsPool, searchParams]);
+
+  // Synchronized image loading & next image preloading
+  useEffect(() => {
+    setImageLoaded(false);
+    if (questions[currentIndex + 1]?.media_url) {
+      const img1 = new Image();
+      img1.src = questions[currentIndex + 1].media_url;
+    }
+    if (questions[currentIndex + 2]?.media_url) {
+      const img2 = new Image();
+      img2.src = questions[currentIndex + 2].media_url;
+    }
+  }, [currentIndex, questions]);
 
   const handleTimeExpired = () => {
     finishGame(true);
@@ -1034,6 +1080,42 @@ export default function QuizPlayPage() {
                     </div>
                   </div>
 
+                  {/* REGISTERED USER: AUTOMATIC SCORECARD UPDATE CONFIRMATION */}
+                  {currentUser && (
+                    <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-green-50 border-2 border-emerald-300 rounded-3xl p-5 sm:p-6 text-left mb-8 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shadow-xs shrink-0">
+                            ✓
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-950 border border-emerald-300">
+                                🌟 Official Scoreboard Updated
+                              </span>
+                              <span className="text-xs font-bold text-emerald-800">
+                                {difficulty.toUpperCase()} MODE
+                              </span>
+                            </div>
+                            <h3 className="text-sm sm:text-base font-black text-gray-950 mt-1">
+                              Recorded under @{currentUser.username || currentUser.name || currentUser.displayName || "Architect"}
+                            </h3>
+                            <p className="text-xs text-emerald-800 mt-0.5">
+                              Your {resultsSummary.totalPoints} PTS and {resultsSummary.accuracyPercentage}% Accuracy have been posted to the live leaderboard.
+                            </p>
+                          </div>
+                        </div>
+
+                        <a 
+                          href="#leaderboard-section" 
+                          className="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl transition shadow-xs text-center shrink-0"
+                        >
+                          View Your Rank in Leaderboard →
+                        </a>
+                      </div>
+                    </div>
+                  )}
+
                   {/* GUEST PARTICIPATION BRIDGE (Item 13: Full Results Visible + Clear Call to Action) */}
                   {!currentUser && (
                     <div className="bg-gradient-to-r from-amber-50/80 via-orange-50/60 to-indigo-50/60 border-2 border-amber-300 rounded-3xl p-6 text-left mb-8 shadow-xs">
@@ -1135,73 +1217,196 @@ export default function QuizPlayPage() {
                     </div>
                   </div>
 
-                  {/* QUESTION-BY-QUESTION REVIEW ACCORDION */}
+                  {/* ANSWERS & PHOTO REVIEW SECTION */}
                   <div className="mb-8 text-left">
-                    <button
-                      onClick={() => setShowQuestionReview(!showQuestionReview)}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-2xl border border-gray-200 transition text-xs font-extrabold text-gray-900"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Eye size={15} /> Question-by-Question Review ({questions.length} Questions)
-                      </span>
-                      {showQuestionReview ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
-
-                    {showQuestionReview && (
-                      <div className="mt-3 space-y-3">
-                        {questions.map((q, idx) => {
-                          const userAns = userAnswers[idx];
-                          const correct = isAnswerCorrect(q, userAns);
-                          const wasSkipped = skippedQuestions[idx];
-
-                          return (
-                            <div 
-                              key={idx} 
-                              className={`p-4 rounded-2xl border text-xs ${
-                                correct ? "bg-emerald-50/50 border-emerald-200" :
-                                wasSkipped ? "bg-amber-50/50 border-amber-200" :
-                                "bg-red-50/50 border-red-200"
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div>
-                                  <span className="font-mono text-[10px] text-gray-400 block mb-1">
-                                    Question {idx + 1} • {getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases)} mode
-                                  </span>
-                                  <p className="font-bold text-gray-900">
-                                    {q.question_text}
-                                  </p>
-                                </div>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0 ${
-                                  correct ? "bg-emerald-100 text-emerald-800" :
-                                  wasSkipped ? "bg-amber-100 text-amber-800" :
-                                  "bg-red-100 text-red-800"
-                                }`}>
-                                  {correct ? "✓ Correct" : wasSkipped ? "⏭ Skipped" : "✗ Incorrect"}
+                    <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-xs">
+                      {/* Accordion Header */}
+                      <button
+                        onClick={() => setShowQuestionReview(!showQuestionReview)}
+                        className="w-full flex items-center justify-between p-4 sm:p-5 bg-gradient-to-r from-gray-50 to-white hover:bg-gray-100/80 transition text-xs font-black text-gray-900 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center text-xs shrink-0 shadow-xs">
+                            {currentUser ? <BookOpen size={16} /> : <Lock size={15} className="text-amber-400" />}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-black">Answers ({questions.length} Questions)</span>
+                              {currentUser ? (
+                                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200">
+                                  ✓ Member Access
                                 </span>
-                              </div>
-
-                              <div className="mt-2 text-[11px] grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <p className="text-gray-600">
-                                  Your Answer: <strong className={correct ? "text-emerald-700" : "text-red-700"}>
-                                    {userAns || (wasSkipped ? "(Skipped)" : "(Unanswered)")}
-                                  </strong>
-                                </p>
-                                <p className="text-gray-600">
-                                  Correct Answer: <strong className="text-gray-900">{q.correct_answer}</strong>
-                                </p>
-                              </div>
-
-                              {q.explanation_clue && (
-                                <p className="mt-2 text-[11px] text-gray-600 bg-white/70 p-2 rounded-xl border border-gray-100 italic">
-                                  💡 {q.explanation_clue}
-                                </p>
+                              ) : (
+                                <span className="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                                  <Lock size={10} /> Members Only
+                                </span>
                               )}
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                            <p className="text-[11px] font-medium text-gray-500 mt-0.5">
+                              {currentUser 
+                                ? "Click to view full photo comparisons, correct answers, and architectural tectonic clues."
+                                : "Register or log in to view detailed photo solutions and correct answers."}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-500 shrink-0">
+                          <span className="text-[11px] font-bold hidden sm:inline">
+                            {showQuestionReview ? "Hide Answers" : "View Answers"}
+                          </span>
+                          {showQuestionReview ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                        </div>
+                      </button>
+
+                      {showQuestionReview && (
+                        <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50/50">
+                          {/* If user is NOT logged in: Show Registration / Login Paywall Card */}
+                          {!currentUser ? (
+                            <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-6 sm:p-8 text-center max-w-xl mx-auto shadow-sm">
+                              <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center mx-auto mb-4 shadow-xs">
+                                <Lock size={26} />
+                              </div>
+                              
+                              <h4 className="text-base sm:text-lg font-black text-gray-900 mb-1">
+                                Unlock Detailed Answers & Building Photo Solutions
+                              </h4>
+                              <p className="text-xs text-gray-600 leading-relaxed max-w-md mx-auto mb-5">
+                                Full question-by-question architectural answers, high-resolution building photos, and tectonic clues are reserved for registered Trapped Into Architecture members.
+                              </p>
+
+                              {/* Perks */}
+                              <div className="bg-gray-50 rounded-xl p-3.5 mb-5 text-left text-xs space-y-1.5 border border-gray-100">
+                                <div className="flex items-center gap-2 text-gray-700 font-semibold">
+                                  <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                                  <span>Side-by-side photo comparison for every landmark & masterwork</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-700 font-semibold">
+                                  <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                                  <span>Curated tectonic clues, architect studio facts, and design years</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-700 font-semibold">
+                                  <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                                  <span>Save your official score and claim your place on the verified leaderboard</span>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => window.dispatchEvent(new CustomEvent('openAuth', { detail: 'register' }))}
+                                  className="w-full sm:w-auto px-6 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black shadow-md transition cursor-pointer"
+                                >
+                                  Create Free Account
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => window.dispatchEvent(new CustomEvent('openAuth', { detail: 'login' }))}
+                                  className="w-full sm:w-auto px-6 py-2.5 bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 rounded-xl text-xs font-bold transition cursor-pointer"
+                                >
+                                  Log In
+                                </button>
+                              </div>
+                              <p className="text-[10px] text-gray-400 mt-3">
+                                100% Free for architecture students, graduates, and professionals.
+                              </p>
+                            </div>
+                          ) : (
+                            /* Registered Member: Full Question-by-Question Photo & Answer Review */
+                            <div className="space-y-4">
+                              {questions.map((q, idx) => {
+                                const userAns = userAnswers[idx];
+                                const correct = isAnswerCorrect(q, userAns);
+                                const wasSkipped = skippedQuestions[idx];
+
+                                return (
+                                  <div 
+                                    key={idx} 
+                                    className={`bg-white rounded-2xl border p-4 sm:p-5 transition shadow-2xs ${
+                                      correct ? "border-emerald-200 ring-1 ring-emerald-100" :
+                                      wasSkipped ? "border-amber-200 ring-1 ring-amber-100" :
+                                      "border-red-200 ring-1 ring-red-100"
+                                    }`}
+                                  >
+                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                                      
+                                      {/* Building Image Thumbnail */}
+                                      {q.media_url ? (
+                                        <div className="md:col-span-4 rounded-xl overflow-hidden bg-gray-900 border border-gray-200 relative aspect-video sm:aspect-4/3 max-h-48 group">
+                                          <img 
+                                            referrerPolicy="no-referrer"
+                                            src={q.media_url} 
+                                            alt={q.question_text || "Building image"} 
+                                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                            onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
+                                          />
+                                          <div className="absolute top-2 left-2 bg-black/75 backdrop-blur-xs text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded-md">
+                                            Q{idx + 1}
+                                          </div>
+                                        </div>
+                                      ) : null}
+
+                                      {/* Question Details & Answers */}
+                                      <div className={q.media_url ? "md:col-span-8" : "md:col-span-12"}>
+                                        <div className="flex items-start justify-between gap-3 mb-2">
+                                          <span className="font-mono text-[10px] font-extrabold uppercase tracking-wider text-gray-400">
+                                            Question {idx + 1} of {questions.length} • {getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases)} Mode
+                                          </span>
+                                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
+                                            correct ? "bg-emerald-100 text-emerald-800 border border-emerald-300" :
+                                            wasSkipped ? "bg-amber-100 text-amber-800 border border-amber-300" :
+                                            "bg-red-100 text-red-800 border border-red-300"
+                                          }`}>
+                                            {correct ? "✓ Correct" : wasSkipped ? "⏭ Skipped" : "✗ Incorrect"}
+                                          </span>
+                                        </div>
+
+                                        <h5 className="text-xs sm:text-sm font-bold text-gray-900 mb-3">
+                                          {q.question_text}
+                                        </h5>
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
+                                          {/* User Answer */}
+                                          <div className={`p-2.5 rounded-xl border ${
+                                            correct 
+                                              ? "bg-emerald-50/70 border-emerald-200 text-emerald-900" 
+                                              : "bg-red-50/70 border-red-200 text-red-900"
+                                          }`}>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider block opacity-75">
+                                              Your Selection:
+                                            </span>
+                                            <strong className="font-black text-xs">
+                                              {userAns || (wasSkipped ? "(Skipped)" : "(Unanswered)")}
+                                            </strong>
+                                          </div>
+
+                                          {/* Correct Answer */}
+                                          <div className="p-2.5 rounded-xl border bg-gray-50 border-gray-200 text-gray-900">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider block text-gray-500">
+                                              Correct Answer:
+                                            </span>
+                                            <strong className="font-black text-xs text-emerald-700">
+                                              {q.correct_answer}
+                                            </strong>
+                                          </div>
+                                        </div>
+
+                                        {/* Explanation / Clue */}
+                                        {q.explanation_clue && (
+                                          <div className="text-[11px] text-gray-600 bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/60 flex items-start gap-1.5">
+                                            <span className="text-amber-600 shrink-0">💡</span>
+                                            <span><strong>Tectonic Fact:</strong> {q.explanation_clue}</span>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Actions */}
@@ -1284,18 +1489,20 @@ export default function QuizPlayPage() {
                     </div>
 
                     {/* QUESTION NAVIGATION PALETTE (Answered, Skipped, Unvisited, Current) */}
-                    <div className="mb-5 p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                      <div className="flex items-center justify-between text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">
-                        <span>Question Palette</span>
+                    <div className="mb-5 p-3.5 bg-gray-50 rounded-2xl border border-gray-200">
+                      <div className="flex items-center justify-between text-[11px] font-extrabold text-gray-500 uppercase tracking-wider mb-2.5">
+                        <span className="flex items-center gap-1.5 text-gray-700">
+                          <span>📋</span> Question Palette ({currentIndex + 1}/{questions.length})
+                        </span>
                         <div className="flex items-center gap-3 font-semibold text-[10px]">
-                          <span className="flex items-center gap-1">
-                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" /> Answered
+                          <span className="flex items-center gap-1.5 text-gray-800">
+                            <span className="w-2.5 h-2.5 rounded-full bg-slate-900 inline-block" /> Answered
                           </span>
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1.5 text-amber-800">
                             <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" /> Skipped
                           </span>
-                          <span className="flex items-center gap-1">
-                            <span className="w-2.5 h-2.5 rounded-full bg-gray-300 inline-block" /> Unvisited
+                          <span className="flex items-center gap-1.5 text-gray-500">
+                            <span className="w-2.5 h-2.5 rounded-full bg-white border border-gray-300 inline-block" /> Unvisited
                           </span>
                         </div>
                       </div>
@@ -1306,22 +1513,23 @@ export default function QuizPlayPage() {
                           const hasAnswer = !!userAnswers[idx];
                           const isSkipped = skippedQuestions[idx];
 
-                          let btnClass = "bg-white text-gray-600 border-gray-200 hover:border-gray-400";
+                          let btnClass = "bg-white text-gray-700 border-gray-300 hover:border-gray-500 font-semibold";
                           if (hasAnswer) {
-                            btnClass = "bg-emerald-500 text-white border-emerald-600 font-extrabold";
+                            btnClass = "bg-slate-900 text-white border-slate-900 font-black shadow-xs";
                           } else if (isSkipped) {
-                            btnClass = "bg-amber-100 text-amber-800 border-amber-400 font-bold";
+                            btnClass = "bg-amber-100 text-amber-900 border-amber-400 font-bold";
                           }
 
                           if (isCurrent) {
-                            btnClass += " ring-2 ring-black scale-105 z-10 font-black";
+                            btnClass += " ring-2 ring-blue-600 ring-offset-1 scale-105 z-10 font-black";
                           }
 
                           return (
                             <button
                               key={idx}
                               onClick={() => jumpToQuestion(idx)}
-                              className={`w-7 h-7 rounded-lg text-[11px] border flex items-center justify-center transition shrink-0 ${btnClass}`}
+                              className={`w-7 h-7 rounded-lg text-[11px] border flex items-center justify-center transition shrink-0 cursor-pointer ${btnClass}`}
+                              title={`Question ${idx + 1}: ${hasAnswer ? "Answered" : isSkipped ? "Skipped" : "Unvisited"}`}
                             >
                               {idx + 1}
                             </button>
@@ -1332,12 +1540,20 @@ export default function QuizPlayPage() {
 
                     {/* Question Image Photo */}
                     {currentQ.media_url && (
-                      <div className="mb-4 rounded-2xl overflow-hidden max-h-72 bg-gray-900 border border-gray-200 flex items-center justify-center shadow-xs">
+                      <div className="relative mb-4 rounded-2xl overflow-hidden min-h-[200px] max-h-72 bg-gray-900 border border-gray-200 flex items-center justify-center shadow-xs">
+                        {!imageLoaded && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-gray-400 animate-pulse z-10">
+                            <span className="w-7 h-7 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin mb-2"></span>
+                            <span className="text-xs font-mono font-bold text-gray-300">Loading masterwork photo...</span>
+                          </div>
+                        )}
                         <img referrerPolicy="no-referrer"
                           src={currentQ.media_url} 
                           alt="Question photo" 
-                          className="w-full h-full object-contain max-h-72"
+                          className={`w-full h-full object-contain max-h-72 transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                          onLoad={() => setImageLoaded(true)}
                           onError={(e) => {
+                            setImageLoaded(true);
                             (e.target as HTMLElement).style.display = "none";
                           }}
                         />
@@ -1349,37 +1565,46 @@ export default function QuizPlayPage() {
                       {currentQ.question_text}
                     </h2>
 
-                    {/* Multiple-Choice Answer Options */}
+                    {/* Multiple-Choice Answer Options - Synchronized with Image Loading */}
                     {currentQ.question_type === "choose" && currentQ.options && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                        {currentQ.options.map((opt, optIdx) => {
-                          const isSelected = userAnswers[currentIndex] === opt;
-                          const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
-                          const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
+                        {!imageLoaded && currentQ.media_url ? (
+                          [1, 2, 3, 4].map((placeholderIdx) => (
+                            <div key={placeholderIdx} className="p-3.5 rounded-2xl border border-gray-200 bg-gray-100 animate-pulse flex items-center justify-between">
+                              <div className="h-4 bg-gray-300 rounded w-2/3"></div>
+                              <div className="w-4 h-4 rounded-full bg-gray-200"></div>
+                            </div>
+                          ))
+                        ) : (
+                          currentQ.options.map((opt, optIdx) => {
+                            const isSelected = userAnswers[currentIndex] === opt;
+                            const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
+                            const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
 
-                          let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
-                          if (isSelected) {
-                            optionClass = "bg-black text-white border-black shadow-xs font-bold";
-                          }
-                          if (showPracticeCorrect) {
-                            optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
-                          } else if (showPracticeWrong) {
-                            optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
-                          }
+                            let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
+                            if (isSelected) {
+                              optionClass = "bg-black text-white border-black shadow-xs font-bold";
+                            }
+                            if (showPracticeCorrect) {
+                              optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
+                            } else if (showPracticeWrong) {
+                              optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
+                            }
 
-                          return (
-                            <button
-                              key={optIdx}
-                              onClick={() => handleSelectAnswer(opt)}
-                              className={`p-3.5 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between ${optionClass}`}
-                            >
-                              <span>{opt}</span>
-                              {isSelected && <Check size={16} />}
-                              {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600" />}
-                              {showPracticeWrong && <XCircle size={16} className="text-red-600" />}
-                            </button>
-                          );
-                        })}
+                            return (
+                              <button
+                                key={optIdx}
+                                onClick={() => handleSelectAnswer(opt)}
+                                className={`p-3.5 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between ${optionClass}`}
+                              >
+                                <span>{opt}</span>
+                                {isSelected && <Check size={16} />}
+                                {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600" />}
+                                {showPracticeWrong && <XCircle size={16} className="text-red-600" />}
+                              </button>
+                            );
+                          })
+                        )}
                       </div>
                     )}
 
@@ -1571,7 +1796,7 @@ export default function QuizPlayPage() {
             <div className="lg:col-span-4 flex flex-col gap-6 sticky top-[96px]">
 
               {/* 3-TIER LIVE LEADERBOARD (EASY / MEDIUM / HARD) */}
-              <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-xs">
+              <div id="leaderboard-section" className="bg-white rounded-3xl border border-gray-200 p-6 shadow-xs scroll-mt-28">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
                     <Trophy size={18} className="text-amber-500" /> Leaderboard
@@ -1639,15 +1864,25 @@ export default function QuizPlayPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {leaderboard.slice(0, 6).map((entry, idx) => {
+                    {leaderboard.slice(0, 10).map((entry, idx) => {
                       const acc = entry.total_questions > 0 
                         ? Math.round((entry.score / entry.total_questions) * 100) 
                         : 0;
 
+                      const isCurrentUserEntry = currentUser && (
+                        entry.user_id === currentUser.id || 
+                        (currentUser.username && entry.display_name === currentUser.username) ||
+                        (currentUser.name && entry.display_name === currentUser.name)
+                      );
+
                       return (
                         <div 
                           key={idx}
-                          className="flex items-center justify-between p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition"
+                          className={`flex items-center justify-between p-2.5 rounded-xl border transition ${
+                            isCurrentUserEntry 
+                              ? "bg-blue-50/90 border-blue-400 ring-1 ring-blue-300 shadow-xs" 
+                              : "border-gray-100 hover:bg-gray-50"
+                          }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
@@ -1659,15 +1894,24 @@ export default function QuizPlayPage() {
                               {idx + 1}
                             </span>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-gray-900 truncate">
-                                {entry.display_name}
+                              <p className="text-xs font-bold text-gray-900 truncate flex items-center gap-1.5">
+                                <span className={isCurrentUserEntry ? "text-blue-900 font-black" : ""}>
+                                  {entry.display_name}
+                                </span>
+                                {isCurrentUserEntry && (
+                                  <span className="bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-md">
+                                    YOU
+                                  </span>
+                                )}
                               </p>
                               <p className="text-[10px] text-gray-400 uppercase font-mono">
                                 {entry.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{acc}% Acc</span>
                               </p>
                             </div>
                           </div>
-                          <span className="text-xs font-mono font-extrabold text-blue-600 shrink-0">
+                          <span className={`text-xs font-mono font-extrabold shrink-0 ${
+                            isCurrentUserEntry ? "text-blue-700" : "text-blue-600"
+                          }`}>
                             {entry.points} PTS
                           </span>
                         </div>
