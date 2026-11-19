@@ -24,15 +24,16 @@ export default function QuizzesHubPage() {
   const [modalMode, setModalMode] = useState<"challenge" | "practice">("challenge");
   const [modalDifficulty, setModalDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [modalCount, setModalCount] = useState<number>(10);
-  const [showGoldPerkNotice, setShowGoldPerkNotice] = useState<boolean>(false);
+  const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
 
   // Auth state & Gold Tier status
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
 
-  // Dynamic time estimate helper per question count & difficulty
+  // Dynamic time estimate helper per question count & difficulty:
+  // Hard: 10s/Q, Medium: 15s/Q, Easy: 20s/Q
   const getTimeEstimate = (count: number, diff: "easy" | "medium" | "hard") => {
-    const perQ = diff === "easy" ? 24 : diff === "medium" ? 18 : 12;
+    const perQ = diff === "easy" ? 20 : diff === "medium" ? 15 : 10;
     const totalSecs = count * perQ;
     const mins = Math.floor(totalSecs / 60);
     const secs = totalSecs % 60;
@@ -761,15 +762,15 @@ export default function QuizzesHubPage() {
                 <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-emerald-700 shrink-0">🟢 Easy (Beginner):</span>
-                    <span>24s/Q &bull; 1 pt per correct answer &bull; Obvious iconic choices.</span>
+                    <span>20s/Q &bull; 1 pt per correct answer &bull; Obvious iconic choices.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-amber-700 shrink-0">🟡 Medium (Intermediate):</span>
-                    <span>18s/Q &bull; 2 pts per correct answer &bull; Subtle architectural distractors.</span>
+                    <span>15s/Q &bull; 2 pts per correct answer &bull; Subtle architectural distractors.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-rose-700 shrink-0">🔴 Hard (Advanced):</span>
-                    <span>12s/Q &bull; 5 pts per correct answer &bull; Same studio / movement deep cuts.</span>
+                    <span>10s/Q &bull; 5 pts per correct answer &bull; Same studio / movement deep cuts.</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
                     <span className="font-black">⚡ Modes:</span>
@@ -792,7 +793,7 @@ export default function QuizzesHubPage() {
                 type="button"
                 onClick={() => {
                   setSetupModalQuiz(null);
-                  setShowGoldPerkNotice(false);
+                  setShowGoldModal(false);
                 }}
                 className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition cursor-pointer"
                 aria-label="Close setup modal"
@@ -830,7 +831,6 @@ export default function QuizzesHubPage() {
                     type="button"
                     onClick={() => {
                       setModalMode("challenge");
-                      setShowGoldPerkNotice(false);
                     }}
                     className={`p-3.5 rounded-2xl border text-left transition cursor-pointer relative ${
                       modalMode === "challenge" 
@@ -859,10 +859,9 @@ export default function QuizzesHubPage() {
                     type="button"
                     onClick={() => {
                       if (!isGoldTier) {
-                        setShowGoldPerkNotice(true);
+                        setShowGoldModal(true);
                       } else {
                         setModalMode("practice");
-                        setShowGoldPerkNotice(false);
                       }
                     }}
                     className={`p-3.5 rounded-2xl border text-left transition cursor-pointer relative ${
@@ -888,39 +887,6 @@ export default function QuizzesHubPage() {
                     </p>
                   </button>
                 </div>
-
-                {/* Inline Gold Tier Notification if user clicked Practice without Gold */}
-                {showGoldPerkNotice && (
-                  <div className="mt-2.5 p-3 rounded-2xl bg-amber-50/90 border border-amber-300 text-xs text-amber-950 flex items-start gap-2.5 animate-in fade-in">
-                    <Crown size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p className="font-bold">
-                        Practice Mode is an exclusive benefit for Gold Tier members (66%+ profile completion).
-                      </p>
-                      <p className="text-amber-800 text-[11px] leading-relaxed">
-                        Challenge Mode is fully unlocked and ready for you right now with real-time scoring!
-                      </p>
-                      <div className="flex items-center gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setModalMode("challenge");
-                            setShowGoldPerkNotice(false);
-                          }}
-                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold cursor-pointer"
-                        >
-                          Play Challenge Mode
-                        </button>
-                        <Link
-                          href="/badges-and-perks"
-                          className="text-[11px] font-bold text-amber-900 underline hover:text-amber-950"
-                        >
-                          Learn About Gold Perks &rarr;
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* 2. Difficulty Tier Selection */}
@@ -931,9 +897,9 @@ export default function QuizzesHubPage() {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "easy", icon: "🟢", label: "Easy", sub: "Beginner", time: "24s / question", activeClass: "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
-                    { id: "medium", icon: "🟡", label: "Medium", sub: "Intermediate", time: "18s / question", activeClass: "border-amber-600 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
-                    { id: "hard", icon: "🔴", label: "Hard", sub: "Advanced", time: "12s / question", activeClass: "border-rose-600 bg-rose-50/70 text-rose-950 ring-2 ring-rose-500/20" }
+                    { id: "easy", icon: "🟢", label: "Easy", sub: "Beginner", time: "20s / question", activeClass: "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
+                    { id: "medium", icon: "🟡", label: "Medium", sub: "Intermediate", time: "15s / question", activeClass: "border-amber-600 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
+                    { id: "hard", icon: "🔴", label: "Hard", sub: "Advanced", time: "10s / question", activeClass: "border-rose-600 bg-rose-50/70 text-rose-950 ring-2 ring-rose-500/20" }
                   ].map(d => {
                     const isSelected = modalDifficulty === d.id;
                     return (
@@ -1002,13 +968,69 @@ export default function QuizzesHubPage() {
                 href={`/quizzes/${setupModalQuiz.slug}?mode=${modalMode}&difficulty=${modalDifficulty}&count=${modalCount}&autostart=1`}
                 onClick={() => {
                   setSetupModalQuiz(null);
-                  setShowGoldPerkNotice(false);
+                  setShowGoldModal(false);
                 }}
                 className="w-full py-3.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition cursor-pointer"
               >
                 <span>Launch Quiz ({modalCount} Qs &bull; {getTimeEstimate(modalCount, modalDifficulty)})</span>
                 <ArrowRight size={16} />
               </Link>
+
+            </div>
+          </div>
+        )}
+
+        {/* SEPARATE DEDICATED POPUP MODAL FOR GOLD TIER BENEFIT */}
+        {showGoldModal && (
+          <div className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-white rounded-3xl border border-gray-200 max-w-sm sm:max-w-md w-full p-6 sm:p-7 shadow-2xl relative text-center">
+              
+              {/* Close Button 'X' */}
+              <button
+                type="button"
+                onClick={() => setShowGoldModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition cursor-pointer"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center mx-auto mb-3.5 shadow-md ring-4 ring-amber-100">
+                <Crown size={24} className="fill-white" />
+              </div>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full inline-block mb-2">
+                👑 Gold Tier Exclusive
+              </span>
+
+              <h3 className="text-lg sm:text-xl font-black text-gray-950 mb-2 leading-snug">
+                Practice Mode Available Only for GOLD Tier Members
+              </h3>
+
+              <p className="text-xs text-gray-600 leading-relaxed mb-6 px-1">
+                Practice Mode provides <strong>instant answer reveals</strong> after each question with relaxed, self-paced architectural exploration. Register or complete your profile to <strong>Gold Tier (66%+ completion)</strong> to unlock this feature!
+              </p>
+
+              <div className="space-y-3">
+                <Link
+                  href="/profile"
+                  onClick={() => setShowGoldModal(false)}
+                  className="w-full py-3.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition cursor-pointer"
+                >
+                  <span>Register / Login to Unlock</span>
+                  <ArrowRight size={16} />
+                </Link>
+
+                <div>
+                  <Link
+                    href="/badges-and-perks"
+                    onClick={() => setShowGoldModal(false)}
+                    className="text-xs font-bold text-amber-900 hover:text-amber-950 underline underline-offset-2 transition"
+                  >
+                    Learn About GOLD Perks &rarr;
+                  </Link>
+                </div>
+              </div>
 
             </div>
           </div>

@@ -353,10 +353,10 @@ export default function QuizPlayPage() {
     setShowQuestionReview(false);
 
     // Allotted time per question:
-    // Easy (Beginner): 24s/Q (10Q = 4m, 20Q = 8m, 65Q = 26m)
-    // Medium (Intermediate): 18s/Q (10Q = 3m, 20Q = 6m, 65Q = 19m 30s)
-    // Hard (Advanced): 12s/Q (10Q = 2m, 20Q = 4m, 65Q = 13m)
-    const perQuestionSeconds = activeDiff === "easy" ? 24 : activeDiff === "medium" ? 18 : 12;
+    // Easy (Beginner): 20s/Q (10Q = 3m 20s, 20Q = 6m 40s, 65Q = 21m 40s)
+    // Medium (Intermediate): 15s/Q (10Q = 2m 30s, 20Q = 5m, 65Q = 16m 15s)
+    // Hard (Advanced): 10s/Q (10Q = 1m 40s, 20Q = 3m 20s, 65Q = 10m 50s)
+    const perQuestionSeconds = activeDiff === "easy" ? 20 : activeDiff === "medium" ? 15 : 10;
     const totalAllotted = sampled.length * perQuestionSeconds;
     setTotalAllottedTime(totalAllotted);
     setTimerSeconds(totalAllotted);
