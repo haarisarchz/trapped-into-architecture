@@ -325,10 +325,10 @@ export default function QuizzesHubPage() {
                     className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
                       viewMode === "editorial" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
                     }`}
-                    title="Editorial Split Layout"
+                    title="Balanced Split Layout"
                   >
                     <LayoutList size={13} />
-                    <span>Editorial</span>
+                    <span>Balance</span>
                   </button>
                   <button
                     onClick={() => setViewMode("text")}
@@ -493,7 +493,7 @@ export default function QuizzesHubPage() {
                   })}
                 </div>
               ) : viewMode === "editorial" ? (
-                /* 2. EDITORIAL STUDIO SPLIT VIEW (Dedicated Architectural Photo Left, Content & Actions Right) */
+                /* 2. BALANCED SPLIT VIEW (Dedicated Architectural Photo Left, Content & Actions Right) */
                 <div className="space-y-4">
                   {filteredAndSortedQuizzes.map(quiz => {
                     const questionCount = quiz.quiz_questions?.[0]?.count || 65;
