@@ -157,6 +157,27 @@ export default function QuizzesHubPage() {
     }
   };
 
+  const getSimplifiedQuizDescription = (slug: string, rawDesc?: string) => {
+    switch (slug) {
+      case "iconic-world-landmarks-guess-the-building":
+        return "Identify world-renowned masterworks from real photographs.";
+      case "master-architects-who-designed-it":
+        return "Match legendary structures with their master architects and studios.";
+      case "where-in-the-world-guess-the-city-country":
+        return "Pinpoint the cities and countries of iconic architectural marvels.";
+      case "timeline-challenge-when-was-it-built":
+        return "Order landmark constructions chronologically across history.";
+      case "architectural-styles-and-movements":
+        return "Classify Brutalism, Bauhaus, Deconstructivism, and modern forms.";
+      case "architectural-detective-guess-the-clues":
+        return "Deduce the building from structural details, materials, and plans.";
+      case "architects-oeuvre-pair-the-masterpieces":
+        return "Recognize the distinctive oeuvres and signatures of master architects.";
+      default:
+        return rawDesc || "Test your architectural visual recall across legendary world projects.";
+    }
+  };
+
   const categories = [
     { id: "all", label: "🌟 All Quizzes (7)" },
     { id: "Guess the Building", label: "🏛️ Guess the Building" },
@@ -194,10 +215,10 @@ export default function QuizzesHubPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50/70 pt-[66px] pb-12">
+      <div className="min-h-screen bg-[#f3f5f8] text-slate-900 pt-[66px] pb-12">
         
         {/* COMPACT CLEAN HEADER (GAPS MINIMIZED, BOLD HEADING, FEATURE BUBBLES) */}
-        <div className="bg-white border-b border-gray-200">
+        <div className="bg-white border-b border-gray-200/80 shadow-xs">
           <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3.5">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               
@@ -241,112 +262,123 @@ export default function QuizzesHubPage() {
           </div>
         </div>
 
-        {/* COMMON FULL-WIDTH TOOLBAR (SEARCH + SORT BY + VIEW BY + CATEGORIES) */}
-        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-2">
-          <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-3.5 shadow-xs space-y-2.5">
+        {/* TOOLBAR SECTION: TWO SEPARATE WHITE BOXES FOR SEARCH CONTROLS & CATEGORY FILTERS */}
+        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 space-y-2.5">
+          
+          {/* BOX 1: SEARCH BAR + SORT BY + VIEW BY (DEDICATED SEPARATE WHITE BOX) */}
+          <div className="bg-white rounded-2xl border border-gray-200/90 p-3 sm:p-3.5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
             
-            {/* Top Row: Compact Search Bar + Separated "Sort by:" + "View by:" */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* 1. Compact Sized Search Bar */}
+            <div className="relative w-full md:w-80 lg:w-96">
+              <div className="relative w-full flex items-center">
+                <Search size={15} className="absolute left-3.5 text-gray-400 pointer-events-none" />
+                <input 
+                  type="text"
+                  placeholder="Search quizzes, architects, buildings..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-20 py-2 text-xs font-semibold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black bg-white text-gray-900 shadow-2xs transition"
+                />
+                <button
+                  type="button"
+                  className="absolute right-1 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-lg text-xs font-black shadow-xs transition cursor-pointer"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Controls Group with Explicit Labels and Clear Gaps */}
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
               
-              {/* 1. Compact Sized Search Bar */}
-              <div className="relative w-full md:w-80 lg:w-96">
-                <div className="relative w-full flex items-center">
-                  <Search size={15} className="absolute left-3.5 text-gray-500 pointer-events-none" />
-                  <input 
-                    type="text"
-                    placeholder="Search quizzes, architects..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-20 py-2 text-xs font-medium border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black bg-white text-gray-900 shadow-2xs transition"
-                  />
+              {/* Sort By Dropdown with clear label */}
+              <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="text-xs font-black bg-transparent border-none text-gray-900 focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="most_played">🔥 Most Played</option>
+                  <option value="newest">✨ Newly Added</option>
+                  <option value="oldest">⏳ Oldest Quiz</option>
+                </select>
+              </div>
+
+              {/* View By Toggle with explicit "View by:" text */}
+              <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
+                <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">View by:</span>
+                <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg">
                   <button
-                    type="button"
-                    className="absolute right-1 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-lg text-xs font-black shadow-xs transition cursor-pointer"
+                    onClick={() => setViewMode("image")}
+                    className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                      viewMode === "image" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
+                    }`}
                   >
-                    Search
+                    <LayoutGrid size={13} />
+                    <span>Image</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode("text")}
+                    className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                      viewMode === "text" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black font-semibold"
+                    }`}
+                  >
+                    <List size={13} />
+                    <span>Text</span>
                   </button>
                 </div>
               </div>
 
-              {/* 2. Controls Group with Explicit Labels and Clear Gaps */}
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
-                
-                {/* Sort By Dropdown with clear label */}
-                <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200">
-                  <span className="text-xs font-extrabold text-gray-500">Sort by:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="text-xs font-black bg-transparent border-none text-gray-900 focus:outline-none cursor-pointer pr-1"
-                  >
-                    <option value="most_played">🔥 Most Played</option>
-                    <option value="newest">✨ Newly Added</option>
-                    <option value="oldest">⏳ Oldest Quiz</option>
-                  </select>
-                </div>
-
-                {/* View By Toggle with explicit "View by:" text */}
-                <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200">
-                  <span className="text-xs font-extrabold text-gray-500">View by:</span>
-                  <div className="flex items-center bg-gray-200/70 p-0.5 rounded-lg">
-                    <button
-                      onClick={() => setViewMode("image")}
-                      className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                        viewMode === "image" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black"
-                      }`}
-                    >
-                      <LayoutGrid size={13} />
-                      <span>Image</span>
-                    </button>
-                    <button
-                      onClick={() => setViewMode("text")}
-                      className={`px-2.5 py-1 rounded-md text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                        viewMode === "text" ? "bg-white text-black shadow-xs" : "text-gray-600 hover:text-black"
-                      }`}
-                    >
-                      <List size={13} />
-                      <span>Text</span>
-                    </button>
-                  </div>
-                </div>
-
-              </div>
             </div>
+          </div>
 
-            {/* Category Pills (Tags Common Across Width) */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100">
+          {/* BOX 2: CATEGORY FILTER PILLS (DEDICATED SEPARATE WHITE BOX) */}
+          <div className="bg-white rounded-2xl border border-gray-200/90 p-2.5 sm:p-3 shadow-sm">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none flex-wrap">
+              <span className="text-[11px] font-black uppercase tracking-wider text-gray-400 mr-1 hidden sm:inline">Categories:</span>
               {categories.map(c => (
                 <button
                   key={c.id}
                   onClick={() => setActiveCategory(c.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition shadow-2xs cursor-pointer shrink-0 ${
                     activeCategory === c.id 
                       ? "bg-black text-white scale-102" 
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      : "bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold"
                   }`}
                 >
                   {c.label}
                 </button>
               ))}
             </div>
-
           </div>
+
         </div>
 
         {/* MAIN BODY: 66% (Left / Center) vs 33% (Right Sidebar) - START AT SAME BASELINE */}
-        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12">
+        <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             {/* LEFT 66% (8 COLS): 2-COLUMN QUIZ CARDS */}
             <div className="lg:col-span-8">
               
-              {/* Header Label Differentiating Left Layout */}
-              <div className="flex items-center justify-between mb-2.5 px-1">
-                <span className="text-[11px] font-black uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
-                  <span>🏛️</span> Active Architecture Quizzes ({filteredAndSortedQuizzes.length})
-                </span>
-                <span className="text-[10px] text-gray-400 font-mono">
-                  Select a Quiz or Play Quick
+              {/* PROMINENT HIGH-CONTRAST SECTION HEADING */}
+              <div className="flex items-center justify-between mb-3.5 pb-2 border-b-2 border-gray-200/80 px-1">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight flex items-center gap-2">
+                      <span>🏛️</span> Active Architecture Quizzes
+                    </h2>
+                    <span className="bg-gray-900 text-white text-xs font-black px-2.5 py-0.5 rounded-full">
+                      {filteredAndSortedQuizzes.length} Available
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 font-medium mt-0.5">
+                    Select any visual quiz challenge or launch with your custom time rules
+                  </p>
+                </div>
+                <span className="text-xs font-mono font-bold text-gray-400 hidden sm:inline">
+                  Page 1 of 1
                 </span>
               </div>
 
@@ -414,8 +446,8 @@ export default function QuizzesHubPage() {
                             <h3 className="text-sm sm:text-base font-black text-gray-900 group-hover:text-blue-600 transition mb-1 leading-snug">
                               {quiz.title}
                             </h3>
-                            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3">
-                              {quiz.description || "Test your architectural visual recall across legendary world projects and master architects."}
+                            <p className="text-xs font-medium text-gray-600 line-clamp-1 leading-relaxed mb-3">
+                              {getSimplifiedQuizDescription(quiz.slug, quiz.description)}
                             </p>
                           </div>
                         </div>
@@ -484,8 +516,8 @@ export default function QuizzesHubPage() {
                             <h3 className="text-base sm:text-lg font-black text-gray-950 truncate leading-snug group-hover:text-blue-600 transition">
                               {quiz.title}
                             </h3>
-                            <p className="text-xs text-gray-600 line-clamp-1 mt-1 leading-relaxed">
-                              {quiz.description || "Interactive architecture visual challenge."}
+                            <p className="text-xs font-medium text-gray-600 line-clamp-1 mt-1 leading-relaxed">
+                              {getSimplifiedQuizDescription(quiz.slug, quiz.description)}
                             </p>
                           </div>
                         </div>
@@ -514,65 +546,72 @@ export default function QuizzesHubPage() {
 
             </div>
 
-            {/* RIGHT 33% (4 COLS): LIVE DEMO (LINES UP HORIZONTALLY AS CARD 3) + LEADERBOARD + RULES */}
+            {/* RIGHT 33% (4 COLS): LIVE DEMO (BLACK BOX WRAPPER) + LEADERBOARD + RULES */}
             <div className="lg:col-span-4 space-y-4">
               
-              {/* Header Label Differentiating Right Layout */}
-              <div className="flex items-center justify-between mb-2.5 px-1">
-                <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
-                  <Sparkles size={13} className="text-amber-500" /> Interactive Arena Demo
-                </span>
-                <span className="text-[10px] font-mono text-gray-400 font-bold">
-                  1-Min Preview
+              {/* PROMINENT HIGH-CONTRAST SECTION HEADING */}
+              <div className="flex items-center justify-between mb-3.5 pb-2 border-b-2 border-gray-200/80 px-1">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight flex items-center gap-2">
+                      <Sparkles size={20} className="text-amber-500" /> Interactive Arena Demo
+                    </h2>
+                  </div>
+                  <p className="text-xs text-gray-500 font-medium mt-0.5">
+                    Live 1-minute question demo &amp; arena leaderboard
+                  </p>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">
+                  Live Preview
                 </span>
               </div>
 
-              {/* 1. LIVE SAMPLE DEMO (MATCHES TOP ROW HEIGHT WITH QUIZ CARDS) */}
-              <div className="bg-gradient-to-br from-slate-950 via-gray-900 to-black p-4 sm:p-5 rounded-2xl text-white shadow-xl border-2 border-emerald-500/30 relative overflow-hidden ring-1 ring-emerald-500/20">
-                <div className="flex items-center justify-between mb-2.5 border-b border-white/10 pb-2">
+              {/* 1. ARCHITECTURAL "BLACK BOX" CONTAINER FOR THE INTERACTIVE DEMO */}
+              <div className="bg-gradient-to-br from-slate-950 via-[#0d121c] to-black p-5 rounded-3xl text-white shadow-xl border-2 border-emerald-500/40 relative overflow-hidden ring-1 ring-emerald-500/30">
+                <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400">
-                      Try Me &bull; Live Question
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400">
+                      Try Me &bull; Live Question Demo
                     </span>
                   </div>
-                  <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-bold">
                     Easy Sample
                   </span>
                 </div>
 
                 {/* Sample Photo */}
-                <div className="relative rounded-xl overflow-hidden h-36 bg-gray-800 mb-2.5 border border-white/10">
+                <div className="relative rounded-xl overflow-hidden h-40 bg-gray-900 mb-3 border border-white/10 shadow-inner">
                   <img 
                     referrerPolicy="no-referrer" 
                     src="/quizzes/fallingwater-kaufmann-residence.jpg" 
                     alt="Fallingwater" 
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-2 left-2 bg-black/80 backdrop-blur-md px-2 py-0.5 rounded-lg text-[9px] font-bold text-white border border-white/20">
+                  <div className="absolute bottom-2 left-2 bg-black/85 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-white border border-white/20">
                     📍 Mill Run, Pennsylvania
                   </div>
                 </div>
 
-                <p className="text-xs font-bold text-gray-200 mb-2.5">
+                <p className="text-xs font-bold text-gray-200 mb-3 leading-snug">
                   Which master architect designed the cantilevered terraces of &quot;Fallingwater&quot;?
                 </p>
 
                 {/* Four Options: Green Pre-checked Answer */}
-                <div className="grid grid-cols-2 gap-1.5 mb-2.5">
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Frank Lloyd Wright")}
-                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-emerald-500/25 border-emerald-500 text-emerald-300 font-extrabold"
+                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-emerald-500/25 border-emerald-500 text-emerald-300 font-extrabold shadow-sm"
                   >
                     <span className="truncate">Frank Lloyd Wright</span>
-                    <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+                    <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Le Corbusier")}
-                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
+                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
                   >
                     <span className="truncate">Le Corbusier</span>
                   </button>
@@ -580,7 +619,7 @@ export default function QuizzesHubPage() {
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Mies van der Rohe")}
-                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
+                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
                   >
                     <span className="truncate">Mies van der Rohe</span>
                   </button>
@@ -588,21 +627,21 @@ export default function QuizzesHubPage() {
                   <button
                     type="button"
                     onClick={() => setDemoSelected("Louis Kahn")}
-                    className="p-2 rounded-xl border text-[11px] text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
+                    className="p-2.5 rounded-xl border text-xs text-left transition flex items-center justify-between cursor-pointer bg-white/5 border-white/10 text-gray-400 opacity-60"
                   >
                     <span className="truncate">Louis Kahn</span>
                   </button>
                 </div>
 
-                <div className="p-1.5 rounded-lg mb-2.5 text-[10px] font-bold text-center bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <div className="p-2 rounded-xl mb-3 text-xs font-bold text-center bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                   ✓ Correct! Designed 1935 over a waterfall in Mill Run, PA.
                 </div>
 
                 <Link 
                   href="/quizzes/iconic-world-landmarks-guess-the-building?autostart=1"
-                  className="w-full py-2.5 bg-white text-black hover:bg-gray-100 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition shadow-sm"
+                  className="w-full py-3 bg-white text-black hover:bg-gray-100 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition shadow-md"
                 >
-                  Play Full Quiz (65 Masterworks) <ArrowRight size={13} />
+                  Play Full Quiz (65 Masterworks) <ArrowRight size={14} />
                 </Link>
               </div>
 
