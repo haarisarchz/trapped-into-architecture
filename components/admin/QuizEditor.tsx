@@ -64,6 +64,10 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filterDifficulty, setFilterDifficulty] = useState<"all" | QuestionDifficulty>("all");
   const [zoomImageUrl, setZoomImageUrl] = useState<{ url: string; title: string } | null>(null);
+  
+  // Staged difficulty changes & retained items in active filter
+  const [pendingDiff, setPendingDiff] = useState<Record<number, QuestionDifficulty>>({});
+  const [retainedInFilter, setRetainedInFilter] = useState<Record<number, boolean>>({});
 
   // 1-Click Generator Configuration
   const [questionCol, setQuestionCol] = useState<"building_photo" | "architect_photo" | "building_name" | "puzzle_clues">("building_photo");
@@ -152,9 +156,55 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     });
   };
 
-  // Update difficulty for a specific question
+  // Update difficulty for a specific question immediately
   const updateQuestionDifficulty = (index: number, diff: QuestionDifficulty) => {
     updateQuestion(index, { difficulty: diff });
+  };
+
+  // Stage pending difficulty selection (requires tick mark confirmation)
+  const handleSelectDifficulty = (originalIndex: number, diff: QuestionDifficulty) => {
+    const current = questions[originalIndex]?.difficulty || "medium";
+    if (current === diff) {
+      setPendingDiff(prev => {
+        const next = { ...prev };
+        delete next[originalIndex];
+        return next;
+      });
+      return;
+    }
+    setPendingDiff(prev => ({ ...prev, [originalIndex]: diff }));
+  };
+
+  // Confirm and apply staged difficulty change via tick mark
+  const confirmDifficultyChange = (originalIndex: number) => {
+    const targetDiff = pendingDiff[originalIndex];
+    if (!targetDiff) return;
+
+    updateQuestion(originalIndex, { difficulty: targetDiff });
+    setRetainedInFilter(prev => ({ ...prev, [originalIndex]: true }));
+    setPendingDiff(prev => {
+      const next = { ...prev };
+      delete next[originalIndex];
+      return next;
+    });
+    setToastMsg({ text: `Question moved to ${targetDiff.toUpperCase()} (${targetDiff === "easy" ? "100" : targetDiff === "medium" ? "200" : "500"} pts)!`, type: "success" });
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  // Cancel staged difficulty change
+  const cancelDifficultyChange = (originalIndex: number) => {
+    setPendingDiff(prev => {
+      const next = { ...prev };
+      delete next[originalIndex];
+      return next;
+    });
+  };
+
+  // Filter change helper: switches filter and clears retained items
+  const handleFilterChange = (newFilter: "all" | QuestionDifficulty) => {
+    setFilterDifficulty(newFilter);
+    setRetainedInFilter({});
+    setPendingDiff({});
   };
 
   // Update option text
@@ -444,7 +494,11 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
   const filteredQuestionsWithOriginalIndices = questions
     .map((q, idx) => ({ q, originalIndex: idx }))
-    .filter(({ q }) => filterDifficulty === "all" || q.difficulty === filterDifficulty);
+    .filter(({ q, originalIndex }) => {
+      if (filterDifficulty === "all") return true;
+      if (retainedInFilter[originalIndex]) return true;
+      return q.difficulty === filterDifficulty;
+    });
 
   if (loading) {
     return (
@@ -701,7 +755,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                 📝 Questions Management ({questions.length})
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">
-                Adjust difficulty (Easy 1 pt, Medium 2 pts, Hard 5 pts), enlarge photos, edit prompts, and reorder questions.
+                Adjust difficulty (Easy 100 pts, Medium 200 pts, Hard 500 pts), enlarge photos, edit prompts, and reorder questions.
               </p>
             </div>
 
@@ -727,46 +781,50 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
           {/* Difficulty Breakdown Badges & Filter Tabs */}
           <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-extrabold text-gray-700">Filter View:</span>
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
                 <button
-                  onClick={() => setFilterDifficulty("all")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                  type="button"
+                  onClick={() => handleFilterChange("all")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                     filterDifficulty === "all" ? "bg-white text-black shadow-xs font-extrabold" : "text-gray-600 hover:text-black"
                   }`}
                 >
                   All ({questions.length})
                 </button>
                 <button
-                  onClick={() => setFilterDifficulty("easy")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                  type="button"
+                  onClick={() => handleFilterChange("easy")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                     filterDifficulty === "easy" ? "bg-emerald-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-emerald-700"
                   }`}
                 >
-                  🟢 Easy ({countEasy})
+                  🟢 Easy • 100 pts ({countEasy})
                 </button>
                 <button
-                  onClick={() => setFilterDifficulty("medium")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                  type="button"
+                  onClick={() => handleFilterChange("medium")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                     filterDifficulty === "medium" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-700"
                   }`}
                 >
-                  🟡 Medium ({countMedium})
+                  🟡 Medium • 200 pts ({countMedium})
                 </button>
                 <button
-                  onClick={() => setFilterDifficulty("hard")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                  type="button"
+                  onClick={() => handleFilterChange("hard")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                     filterDifficulty === "hard" ? "bg-red-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-red-700"
                   }`}
                 >
-                  🔴 Hard ({countHard})
+                  🔴 Hard • 500 pts ({countHard})
                 </button>
               </div>
             </div>
 
-            <div className="text-[11px] font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
-              Scoring: Easy = 1 pt • Medium = 2 pts • Hard = 5 pts
+            <div className="text-[11px] font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
+              Scoring: <span className="text-emerald-700 font-black">Easy = 100 pts</span> • <span className="text-amber-700 font-black">Medium = 200 pts</span> • <span className="text-rose-700 font-black">Hard = 500 pts</span>
             </div>
           </div>
         </div>
@@ -802,62 +860,108 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
           <div className="space-y-5">
             {filteredQuestionsWithOriginalIndices.map(({ q, originalIndex }) => {
               const currentDiff = q.difficulty || "medium";
+              const stagedDiff = pendingDiff[originalIndex];
+              const hasPending = stagedDiff !== undefined && stagedDiff !== currentDiff;
+              const isRetained = filterDifficulty !== "all" && retainedInFilter[originalIndex] && currentDiff !== filterDifficulty;
 
               return (
                 <div 
                   key={originalIndex} 
                   className={`bg-white rounded-3xl border p-5 sm:p-6 shadow-xs transition duration-200 hover:shadow-md ${
-                    currentDiff === "easy" ? "border-emerald-200/80 hover:border-emerald-400" :
-                    currentDiff === "hard" ? "border-red-200/80 hover:border-red-400" :
-                    "border-amber-200/80 hover:border-amber-400"
+                    hasPending
+                      ? "ring-2 ring-black border-black/50 shadow-sm"
+                      : isRetained
+                      ? "border-amber-400 bg-amber-50/20"
+                      : currentDiff === "easy" ? "border-emerald-200/80 hover:border-emerald-400" :
+                      currentDiff === "hard" ? "border-red-200/80 hover:border-red-400" :
+                      "border-amber-200/80 hover:border-amber-400"
                   }`}
                 >
                   
                   {/* TOP ROW: Question #, Interactive Difficulty Selector & Actions */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-gray-100">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <span className="w-8 h-8 rounded-full bg-black text-white text-xs font-black flex items-center justify-center shrink-0 shadow-xs">
                         {originalIndex + 1}
                       </span>
 
-                      {/* 🟢🟡🔴 MANUAL DIFFICULTY SELECTOR BUTTONS */}
-                      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                        <button
-                          type="button"
-                          onClick={() => updateQuestionDifficulty(originalIndex, "easy")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                            currentDiff === "easy"
-                              ? "bg-emerald-600 text-white shadow-xs font-extrabold"
-                              : "text-gray-600 hover:text-black hover:bg-white/60"
-                          }`}
-                          title="Set as Easy (1 point for player)"
-                        >
-                          <span>🟢</span> Easy (1 pt)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateQuestionDifficulty(originalIndex, "medium")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                            currentDiff === "medium"
-                              ? "bg-amber-500 text-black shadow-xs font-black"
-                              : "text-gray-600 hover:text-black hover:bg-white/60"
-                          }`}
-                          title="Set as Medium (2 points for player)"
-                        >
-                          <span>🟡</span> Medium (2 pts)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateQuestionDifficulty(originalIndex, "hard")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                            currentDiff === "hard"
-                              ? "bg-red-600 text-white shadow-xs font-extrabold"
-                              : "text-gray-600 hover:text-black hover:bg-white/60"
-                          }`}
-                          title="Set as Hard (5 points for player)"
-                        >
-                          <span>🔴</span> Hard (5 pts)
-                        </button>
+                      {/* 🟢🟡🔴 MANUAL DIFFICULTY SELECTOR WITH TICK MARK CONFIRMATION */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/80">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDifficulty(originalIndex, "easy")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                              hasPending && stagedDiff === "easy"
+                                ? "bg-emerald-500 text-white ring-2 ring-emerald-600 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && currentDiff === "easy"
+                                ? "bg-emerald-600 text-white shadow-xs font-extrabold"
+                                : "text-gray-600 hover:text-black hover:bg-white/70"
+                            }`}
+                            title="Select Easy (100 points)"
+                          >
+                            <span>🟢</span> Easy (100 pts)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDifficulty(originalIndex, "medium")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                              hasPending && stagedDiff === "medium"
+                                ? "bg-amber-500 text-black ring-2 ring-amber-600 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && currentDiff === "medium"
+                                ? "bg-amber-500 text-black shadow-xs font-black"
+                                : "text-gray-600 hover:text-black hover:bg-white/70"
+                            }`}
+                            title="Select Medium (200 points)"
+                          >
+                            <span>🟡</span> Medium (200 pts)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDifficulty(originalIndex, "hard")}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                              hasPending && stagedDiff === "hard"
+                                ? "bg-red-600 text-white ring-2 ring-red-700 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && currentDiff === "hard"
+                                ? "bg-red-600 text-white shadow-xs font-extrabold"
+                                : "text-gray-600 hover:text-black hover:bg-white/70"
+                            }`}
+                            title="Select Hard (500 points)"
+                          >
+                            <span>🔴</span> Hard (500 pts)
+                          </button>
+                        </div>
+
+                        {/* TICK MARK CONFIRMATION BUTTON (Appears upon selecting a different difficulty) */}
+                        {hasPending && (
+                          <div className="flex items-center gap-1 animate-in fade-in zoom-in-95 duration-150">
+                            <button
+                              type="button"
+                              onClick={() => confirmDifficultyChange(originalIndex)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black shadow-md transition cursor-pointer hover:scale-105 active:scale-95"
+                              title="Click tick mark to apply this difficulty change"
+                            >
+                              <Check size={14} className="stroke-[3] text-emerald-400" />
+                              <span>Apply {stagedDiff?.toUpperCase()} ✓</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => cancelDifficultyChange(originalIndex)}
+                              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                              title="Cancel change"
+                            >
+                              <X size={15} />
+                            </button>
+                          </div>
+                        )}
+
+                        {/* RETAINED NOTICE IF QUESTION WAS MOVED OUT OF CURRENT FILTER TAB */}
+                        {isRetained && (
+                          <span className="text-[11px] font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                            <span>✓ Moved to {currentDiff.toUpperCase()}</span>
+                            <span className="text-gray-600 font-normal">(Kept in view so you don&apos;t lose it)</span>
+                          </span>
+                        )}
                       </div>
                     </div>
 
