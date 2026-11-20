@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     const cleanPayload = {
       ...payload,
       author_id: userId,
-      status: isInternalAdmin && payload.status ? payload.status : "pending_review",
+      status: payload.status === "draft" ? "draft" : (isInternalAdmin && payload.status ? payload.status : "pending_review"),
       posted_date: payload.posted_date || new Date().toISOString(),
     };
 
