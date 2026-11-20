@@ -123,7 +123,7 @@ const FAMOUS_BUILDINGS = [
     difficulty: "easy",
     photo_slug: "centre-pompidou",
     wiki_page: "Centre_Georges_Pompidou",
-    image_fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Centre_Georges-Pompidou_Paris.jpg/1280px-Centre_Georges-Pompidou_Paris.jpg",
+    image_fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Paris_-_Centre_Georges_Pompidou.jpg/1280px-Paris_-_Centre_Georges_Pompidou.jpg",
     puzzle_clues: "1. Revolutionized architecture by placing all escalators, elevators, and ductwork on the outside.\n2. Services are color-coded: blue for air conditioning, green for water, red for circulation, and yellow for electrical.\n3. Named after the French President who commissioned this cultural hub in Beaubourg.",
     distractors: ["Lloyd's Building", "Grand Louvre Pyramid", "The Shard"],
     architect_distractors: ["Norman Foster", "Jean Nouvel", "I. M. Pei"]

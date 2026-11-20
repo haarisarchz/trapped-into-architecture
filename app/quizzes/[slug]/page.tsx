@@ -10,7 +10,7 @@ import {
   CheckCircle2, XCircle, Share2, MessageCircle, Copy, 
   RotateCcw, Sparkles, Award, ShieldAlert, Flame, Zap,
   ChevronRight, Building2, Briefcase, BookOpen, GraduationCap,
-  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp, SlidersHorizontal, Crown, X
+  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp, SlidersHorizontal, Crown, X, ZoomIn
 } from "lucide-react";
 import { 
   getQuestionsForGameDifficulty, 
@@ -88,6 +88,7 @@ export default function QuizPlayPage() {
   const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
   const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
   const [isTimerDisabled, setIsTimerDisabled] = useState<boolean>(false);
+  const [zoomImageUrl, setZoomImageUrl] = useState<{ url: string; title: string } | null>(null);
 
   // Continuous Total Timer & Duration State
   const [totalAllottedTime, setTotalAllottedTime] = useState<number>(180); // in seconds
@@ -1770,12 +1771,16 @@ export default function QuizPlayPage() {
                                       
                                       {/* Building Image Thumbnail */}
                                       {q.media_url ? (
-                                        <div className="md:col-span-4 rounded-xl overflow-hidden bg-gray-900 border border-gray-200 relative aspect-video sm:aspect-4/3 max-h-48 group">
+                                        <div 
+                                          onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || "Building photo" })}
+                                          className="md:col-span-4 rounded-xl overflow-hidden bg-slate-950 border border-gray-200 relative aspect-video sm:aspect-4/3 max-h-48 group cursor-pointer flex items-center justify-center shadow-2xs"
+                                          title="Click to view full photo"
+                                        >
                                           <img 
                                             referrerPolicy="no-referrer"
                                             src={q.media_url} 
                                             alt={q.question_text || "Building image"} 
-                                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                            className="w-full h-full object-contain p-1 group-hover:scale-105 transition duration-300"
                                             onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
                                           />
                                           <div className="absolute top-2 left-2 bg-black/75 backdrop-blur-xs text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded-md">
@@ -2014,100 +2019,123 @@ export default function QuizPlayPage() {
                       </div>
                     </div>
 
-                    {/* Question Image Photo */}
-                    {currentQ.media_url && (
-                      <div className="relative mb-4 rounded-2xl overflow-hidden min-h-[220px] max-h-72 bg-gray-900 border border-gray-200 flex items-center justify-center shadow-xs">
-                        {!imageLoaded && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 text-gray-300 z-10 p-4 text-center">
-                            <span className="w-8 h-8 rounded-full border-3 border-amber-400 border-t-transparent animate-spin mb-2.5"></span>
-                            <span className="text-xs font-bold text-white tracking-wide">Loading architectural photo...</span>
-                            <span className="text-[11px] font-mono text-amber-300 font-bold mt-1 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                              ⏱️ Timer is paused until photo appears
-                            </span>
-                          </div>
-                        )}
-                        <img 
-                          referrerPolicy="no-referrer"
-                          src={currentQ.media_url} 
-                          alt="Question photo" 
-                          className={`w-full h-full object-contain max-h-72 transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                          onLoad={handleImageLoaded}
-                          onError={(e) => {
-                            handleImageLoaded();
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-                      </div>
-                    )}
-
                     {/* Question Prompt */}
-                    <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 leading-snug">
+                    <h2 className="text-base sm:text-lg font-black text-gray-900 mb-4 leading-snug">
                       {currentQ.question_text}
                     </h2>
 
-                    {/* Multiple-Choice Answer Options - Synchronized with Image Loading */}
-                    {currentQ.question_type === "choose" && currentQ.options && (
-                      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
-                        {currentQ.options.map((opt, optIdx) => {
-                          const isSelected = userAnswers[currentIndex] === opt;
-                          const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
-                          const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
-
-                          let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
-                          if (isSelected) {
-                            optionClass = "bg-black text-white border-black shadow-xs font-bold";
-                          }
-                          if (showPracticeCorrect) {
-                            optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
-                          } else if (showPracticeWrong) {
-                            optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
-                          }
-
-                          return (
-                            <button
-                              key={optIdx}
-                              onClick={() => handleSelectAnswer(opt)}
-                              disabled={!isQuestionReady}
-                              className={`p-3.5 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between cursor-pointer ${optionClass}`}
-                            >
-                              <span>{opt}</span>
-                              {isSelected && <Check size={16} />}
-                              {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600" />}
-                              {showPracticeWrong && <XCircle size={16} className="text-red-600" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Fill Up / Missing Letters */}
-                    {currentQ.question_type !== "choose" && (
-                      <div className={`mb-6 transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
-                        <form 
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            if (fillInput.trim()) handleSelectAnswer(fillInput.trim());
-                          }}
-                          className="flex gap-2"
-                        >
-                          <input 
-                            type="text"
-                            placeholder="Type the exact name or architect..."
-                            value={fillInput}
-                            disabled={!isQuestionReady}
-                            onChange={(e) => setFillInput(e.target.value)}
-                            className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-black bg-white"
-                          />
-                          <button
-                            type="submit"
-                            disabled={!fillInput.trim() || !isQuestionReady}
-                            className="px-5 py-3 bg-black hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                    {/* Active Question Content: Media + Options in unified balanced layout */}
+                    <div className={`grid grid-cols-1 ${currentQ.media_url ? 'md:grid-cols-12 gap-5' : 'gap-4'} mb-6 items-stretch`}>
+                      
+                      {/* Left: Question Architectural Photo (Matches height of answers, un-cropped natural aspect ratio) */}
+                      {currentQ.media_url && (
+                        <div className="md:col-span-5 flex flex-col">
+                          <div 
+                            onClick={() => setZoomImageUrl({ url: currentQ.media_url, title: currentQ.question_text || "Architectural Landmark" })}
+                            className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 flex items-center justify-center shadow-xs group cursor-pointer flex-1 min-h-[230px] max-h-[350px] md:max-h-[380px] p-2"
+                            title="Click to inspect full photo"
                           >
-                            Save
-                          </button>
-                        </form>
+                            {!imageLoaded && (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 text-gray-300 z-10 p-4 text-center">
+                                <span className="w-8 h-8 rounded-full border-3 border-amber-400 border-t-transparent animate-spin mb-2.5"></span>
+                                <span className="text-xs font-bold text-white tracking-wide">Loading architectural photo...</span>
+                                <span className="text-[11px] font-mono text-amber-300 font-bold mt-1 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                                  ⏱️ Timer is paused until photo appears
+                                </span>
+                              </div>
+                            )}
+                            <img 
+                              referrerPolicy="no-referrer"
+                              src={currentQ.media_url} 
+                              alt="Question photo" 
+                              className={`w-full h-full object-contain transition-all duration-200 group-hover:scale-[1.02] ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                              onLoad={handleImageLoaded}
+                              onError={(e) => {
+                                handleImageLoaded();
+                                (e.target as HTMLElement).style.display = "none";
+                              }}
+                            />
+                            <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-[10px] text-gray-300 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                              <ZoomIn size={11} /> Click to enlarge
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Right: Answer Choices (Height-matched alongside photo) */}
+                      <div className={`${currentQ.media_url ? 'md:col-span-7' : 'w-full'} flex flex-col justify-center`}>
+                        {currentQ.question_type === "choose" && currentQ.options && (
+                          <div className={`grid grid-cols-1 ${currentQ.media_url ? 'gap-2.5' : 'sm:grid-cols-2 gap-3'} transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+                            {currentQ.options.map((opt, optIdx) => {
+                              const isSelected = userAnswers[currentIndex] === opt;
+                              const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
+                              const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
+
+                              let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
+                              if (isSelected) {
+                                optionClass = "bg-black text-white border-black shadow-xs font-bold";
+                              }
+                              if (showPracticeCorrect) {
+                                optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
+                              } else if (showPracticeWrong) {
+                                optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
+                              }
+
+                              return (
+                                <button
+                                  key={optIdx}
+                                  onClick={() => handleSelectAnswer(opt)}
+                                  disabled={!isQuestionReady}
+                                  className={`p-3.5 sm:p-4 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between cursor-pointer shadow-2xs ${optionClass}`}
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <span className={`w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 border ${
+                                      isSelected ? "bg-white text-black border-white" : "bg-gray-100 text-gray-600 border-gray-200"
+                                    }`}>
+                                      {String.fromCharCode(65 + optIdx)}
+                                    </span>
+                                    <span className="font-semibold truncate">{opt}</span>
+                                  </div>
+                                  {isSelected && <Check size={16} className="shrink-0" />}
+                                  {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />}
+                                  {showPracticeWrong && <XCircle size={16} className="text-red-600 shrink-0" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Fill Up / Missing Letters */}
+                        {currentQ.question_type !== "choose" && (
+                          <div className={`transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+                            <form 
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                if (fillInput.trim()) handleSelectAnswer(fillInput.trim());
+                              }}
+                              className="flex gap-2"
+                            >
+                              <input 
+                                type="text"
+                                placeholder="Type the exact name or architect..."
+                                value={fillInput}
+                                disabled={!isQuestionReady}
+                                onChange={(e) => setFillInput(e.target.value)}
+                                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-black bg-white"
+                              />
+                              <button
+                                type="submit"
+                                disabled={!fillInput.trim() || !isQuestionReady}
+                                className="px-5 py-3 bg-black hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                              >
+                                Save
+                              </button>
+                            </form>
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                    </div>
 
                     {/* PRACTICE MODE IMMEDIATE TRIVIA FEEDBACK */}
                     {gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && (
@@ -2443,6 +2471,42 @@ export default function QuizPlayPage() {
 
         </div>
       </div>
+
+      {/* FULL-SIZE IMAGE ZOOM LIGHTBOX MODAL */}
+      {zoomImageUrl && (
+        <div 
+          onClick={() => setZoomImageUrl(null)}
+          className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer animate-in fade-in duration-150"
+        >
+          <div 
+            onClick={e => e.stopPropagation()} 
+            className="relative bg-gray-950 border border-white/20 rounded-3xl overflow-hidden max-w-4xl max-h-[85vh] flex flex-col shadow-2xl"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-black/60">
+              <p className="text-sm font-bold text-white truncate pr-4">
+                {zoomImageUrl.title || "Full Resolution Architectural Photograph"}
+              </p>
+              <button 
+                onClick={() => setZoomImageUrl(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer shrink-0"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-3 flex-1 flex items-center justify-center overflow-auto bg-black">
+              <img 
+                referrerPolicy="no-referrer"
+                src={zoomImageUrl.url} 
+                alt="Enlarged view" 
+                className="max-h-[72vh] w-auto object-contain rounded-xl"
+              />
+            </div>
+            <div className="p-3 bg-gray-950/90 text-center text-xs text-gray-400 border-t border-white/10">
+              High-resolution photograph for visual architecture identification &amp; analysis
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* SEPARATE DEDICATED POPUP MODAL FOR GOLD TIER BENEFIT */}
       {showGoldModal && (

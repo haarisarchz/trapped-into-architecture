@@ -1013,13 +1013,14 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                       {q.media_url ? (
                         <div 
                           onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || "Clue Photo" })}
-                          className="relative h-44 sm:h-48 w-full rounded-2xl overflow-hidden border border-gray-200 bg-gray-900 group cursor-pointer shadow-xs hover:border-black transition"
+                          className="relative h-48 sm:h-52 w-full rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 group cursor-pointer shadow-xs hover:border-black transition flex items-center justify-center p-1.5"
+                          title="Click to view full photo in original aspect ratio"
                         >
                           <img 
                             referrerPolicy="no-referrer"
                             src={q.media_url} 
                             alt="Clue preview" 
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = "none";
                             }}
