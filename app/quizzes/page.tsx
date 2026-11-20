@@ -753,15 +753,15 @@ export default function QuizzesHubPage() {
                 <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-emerald-700 shrink-0">🟢 Easy (Beginner):</span>
-                    <span>20s/Q &bull; 1 pt per correct answer &bull; Obvious iconic choices.</span>
+                    <span>20s/Q &bull; 100 pts per correct answer &bull; Obvious iconic choices.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-amber-700 shrink-0">🟡 Medium (Intermediate):</span>
-                    <span>15s/Q &bull; 2 pts per correct answer &bull; Subtle architectural distractors.</span>
+                    <span>15s/Q &bull; 200 pts per correct answer &bull; Subtle architectural distractors.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-rose-700 shrink-0">🔴 Hard (Advanced):</span>
-                    <span>10s/Q &bull; 5 pts per correct answer &bull; Same studio / movement deep cuts.</span>
+                    <span>10s/Q &bull; 500 pts per correct answer &bull; Same studio / movement deep cuts.</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
                     <span className="font-black">⚡ Modes:</span>

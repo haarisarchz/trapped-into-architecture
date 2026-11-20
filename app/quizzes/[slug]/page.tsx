@@ -483,13 +483,13 @@ export default function QuizPlayPage() {
     return false;
   };
 
-  // Base Points formula: Easy = 1 pt, Medium = 2 pts, Hard = 5 pts
+  // Base Points formula: Easy = 100 pts, Medium = 200 pts, Hard = 500 pts
   const getQuestionBasePoints = (q: Question) => {
     const qDiff = (getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases) || difficulty) as Difficulty;
-    if (qDiff === "easy") return 1;
-    if (qDiff === "medium") return 2;
-    if (qDiff === "hard") return 5;
-    return 1;
+    if (qDiff === "easy") return 100;
+    if (qDiff === "medium") return 200;
+    if (qDiff === "hard") return 500;
+    return 100;
   };
 
   // Select or change answer
@@ -554,10 +554,11 @@ export default function QuizPlayPage() {
     const incorrectCount = questions.length - correctCount - skippedCount - unansweredCount;
     const accuracyPercentage = questions.length > 0 ? Math.round((correctCount / questions.length) * 1000) / 10 : 0;
 
-    // Proportional speed bonus (Challenge Mode only, not timed out, and at least 50% accuracy)
+    // Proportional speed bonus (Challenge Mode only, not timed out, and at least 1 correct)
+    // Up to +300 for Easy, +400 for Medium, +500 for Hard based on time remaining
     let timeBonus = 0;
     if (gameMode === "challenge" && !timedOut && correctCount > 0) {
-      const maxBonus = difficulty === "easy" ? 10 : difficulty === "medium" ? 15 : 20;
+      const maxBonus = difficulty === "easy" ? 300 : difficulty === "medium" ? 400 : 500;
       timeBonus = Math.max(0, Math.floor(maxBonus * (timerSeconds / totalAllottedTime)));
     }
 
@@ -1519,15 +1520,15 @@ export default function QuizPlayPage() {
 
                         {qDiff === "easy" ? (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 flex items-center gap-1 border border-emerald-200">
-                            🟢 Famous Landmark (1 pt)
+                            🟢 Famous Landmark (100 pts)
                           </span>
                         ) : qDiff === "hard" ? (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 flex items-center gap-1 border border-red-200">
-                            🔴 Advanced Tectonic (5 pts)
+                            🔴 Advanced Tectonic (500 pts)
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 flex items-center gap-1 border border-amber-200">
-                            🟡 Syllabus Classic (2 pts)
+                            🟡 Syllabus Classic (200 pts)
                           </span>
                         )}
 
