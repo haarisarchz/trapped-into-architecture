@@ -82,6 +82,9 @@ export default function QuizPlayPage() {
   const [fillInput, setFillInput] = useState("");
   const [practiceFeedback, setPracticeFeedback] = useState<Record<number, { isSubmitted: boolean; isCorrect: boolean }>>({});
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isQuestionReady, setIsQuestionReady] = useState(false);
+  const isQuestionReadyRef = useRef(false);
+  const fallbackWatchdogRef = useRef<NodeJS.Timeout | null>(null);
 
   // Continuous Total Timer & Duration State
   const [totalAllottedTime, setTotalAllottedTime] = useState<number>(180); // in seconds
@@ -219,6 +222,16 @@ export default function QuizPlayPage() {
         }));
         setAllQuestionsPool(formatted);
         setQuestions(formatted);
+
+        // Immediate background preloading of initial questions
+        if (typeof window !== "undefined") {
+          formatted.slice(0, 8).forEach(q => {
+            if (q.media_url) {
+              const preload = new Image();
+              preload.src = q.media_url;
+            }
+          });
+        }
       }
     } catch (err) {
       console.warn("Error fetching quiz:", err);
@@ -294,13 +307,17 @@ export default function QuizPlayPage() {
     }
 
     // Session stopwatch (runs across both Practice and Challenge modes)
+    // ONLY increments when question is ready (photo loaded)
     sessionStopwatchRef.current = setInterval(() => {
+      if (!isQuestionReadyRef.current) return;
       setTotalTimeElapsed(prev => prev + 1);
     }, 1000);
 
     // Continuous Countdown Timer (Challenge Mode Only)
+    // ONLY decrements when question is ready (photo loaded)
     if (gameMode === "challenge") {
       totalTimerRef.current = setInterval(() => {
+        if (!isQuestionReadyRef.current) return;
         setTimerSeconds(prev => {
           if (prev <= 1) {
             handleTimeExpired();
@@ -352,6 +369,28 @@ export default function QuizPlayPage() {
     setResultsSummary(null);
     setShowQuestionReview(false);
 
+    // Preload ALL questions in this round immediately so all question transitions are instant
+    if (typeof window !== "undefined") {
+      sampled.forEach(q => {
+        if (q.media_url) {
+          const img = new Image();
+          img.src = q.media_url;
+        }
+      });
+    }
+
+    // Set initial question readiness for Question 0
+    const firstQHasImage = Boolean(sampled[0]?.media_url);
+    if (!firstQHasImage) {
+      setImageLoaded(true);
+      setIsQuestionReady(true);
+      isQuestionReadyRef.current = true;
+    } else {
+      setImageLoaded(false);
+      setIsQuestionReady(false);
+      isQuestionReadyRef.current = false;
+    }
+
     // Allotted time per question:
     // Easy (Beginner): 20s/Q (10Q = 3m 20s, 20Q = 6m 40s, 65Q = 21m 40s)
     // Medium (Intermediate): 15s/Q (10Q = 2m 30s, 20Q = 5m, 65Q = 16m 15s)
@@ -374,18 +413,58 @@ export default function QuizPlayPage() {
     }
   }, [allQuestionsPool, searchParams]);
 
-  // Synchronized image loading & next image preloading
+  // Synchronized question readiness, image loading, and aggressive queue preloading
   useEffect(() => {
-    setImageLoaded(false);
-    if (questions[currentIndex + 1]?.media_url) {
-      const img1 = new Image();
-      img1.src = questions[currentIndex + 1].media_url;
+    if (!gameStarted || isGameOver) return;
+    const currentQ = questions[currentIndex];
+    if (!currentQ) return;
+
+    if (fallbackWatchdogRef.current) {
+      clearTimeout(fallbackWatchdogRef.current);
     }
-    if (questions[currentIndex + 2]?.media_url) {
-      const img2 = new Image();
-      img2.src = questions[currentIndex + 2].media_url;
+
+    if (!currentQ.media_url) {
+      setImageLoaded(true);
+      setIsQuestionReady(true);
+      isQuestionReadyRef.current = true;
+    } else {
+      setImageLoaded(false);
+      setIsQuestionReady(false);
+      isQuestionReadyRef.current = false;
+
+      // Safety fallback: if an image takes > 2.8s (e.g. slow/failed network), 
+      // automatically unpause the timer and allow interaction so user is never stuck
+      fallbackWatchdogRef.current = setTimeout(() => {
+        setImageLoaded(true);
+        setIsQuestionReady(true);
+        isQuestionReadyRef.current = true;
+      }, 2800);
+
+      // Preload next 3 questions ahead in queue
+      for (let i = 1; i <= 3; i++) {
+        const nextQ = questions[currentIndex + i];
+        if (nextQ?.media_url) {
+          const img = new Image();
+          img.src = nextQ.media_url;
+        }
+      }
     }
-  }, [currentIndex, questions]);
+
+    return () => {
+      if (fallbackWatchdogRef.current) {
+        clearTimeout(fallbackWatchdogRef.current);
+      }
+    };
+  }, [currentIndex, questions, gameStarted, isGameOver]);
+
+  const handleImageLoaded = () => {
+    if (fallbackWatchdogRef.current) {
+      clearTimeout(fallbackWatchdogRef.current);
+    }
+    setImageLoaded(true);
+    setIsQuestionReady(true);
+    isQuestionReadyRef.current = true;
+  };
 
   const handleTimeExpired = () => {
     finishGame(true);
@@ -1463,25 +1542,37 @@ export default function QuizPlayPage() {
                       <div className="flex items-center gap-2.5">
                         {gameMode === "challenge" ? (
                           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold shadow-xs transition ${
-                            timerSeconds <= 30
+                            !isQuestionReady
+                              ? "bg-amber-100 text-amber-900 border border-amber-300"
+                              : timerSeconds <= 30
                               ? "bg-red-600 text-white animate-pulse"
                               : timerSeconds <= 60
                               ? "bg-amber-500 text-black"
                               : "bg-gray-900 text-white"
                           }`}>
-                            <Clock size={12} className={timerSeconds <= 30 ? "text-white" : "text-emerald-400"} />
+                            <Clock size={12} className={!isQuestionReady ? "text-amber-600 animate-spin" : timerSeconds <= 30 ? "text-white" : "text-emerald-400"} />
                             <span>{formatTime(timerSeconds)}</span>
+                            {!isQuestionReady && (
+                              <span className="text-[10px] font-sans font-black bg-amber-200 text-amber-950 px-1.5 py-0.5 rounded-full uppercase ml-0.5">
+                                Paused • Photo Loading
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-mono font-bold">
-                            <Clock size={12} className="text-gray-400" />
+                            <Clock size={12} className={!isQuestionReady ? "text-amber-600 animate-spin" : "text-gray-400"} />
                             <span>{formatTime(totalTimeElapsed)}</span>
+                            {!isQuestionReady && (
+                              <span className="text-[10px] font-sans font-bold text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded-full ml-1">
+                                Paused
+                              </span>
+                            )}
                           </div>
                         )}
 
                         <button
                           onClick={() => finishGame(false)}
-                          className="text-[11px] font-extrabold text-red-600 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition"
+                          className="text-[11px] font-extrabold text-red-600 hover:text-red-700 hover:bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 transition cursor-pointer"
                         >
                           Finish Quiz
                         </button>
@@ -1540,20 +1631,24 @@ export default function QuizPlayPage() {
 
                     {/* Question Image Photo */}
                     {currentQ.media_url && (
-                      <div className="relative mb-4 rounded-2xl overflow-hidden min-h-[200px] max-h-72 bg-gray-900 border border-gray-200 flex items-center justify-center shadow-xs">
+                      <div className="relative mb-4 rounded-2xl overflow-hidden min-h-[220px] max-h-72 bg-gray-900 border border-gray-200 flex items-center justify-center shadow-xs">
                         {!imageLoaded && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-gray-400 animate-pulse z-10">
-                            <span className="w-7 h-7 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin mb-2"></span>
-                            <span className="text-xs font-mono font-bold text-gray-300">Loading masterwork photo...</span>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 text-gray-300 z-10 p-4 text-center">
+                            <span className="w-8 h-8 rounded-full border-3 border-amber-400 border-t-transparent animate-spin mb-2.5"></span>
+                            <span className="text-xs font-bold text-white tracking-wide">Loading architectural photo...</span>
+                            <span className="text-[11px] font-mono text-amber-300 font-bold mt-1 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                              ⏱️ Timer is paused until photo appears
+                            </span>
                           </div>
                         )}
-                        <img referrerPolicy="no-referrer"
+                        <img 
+                          referrerPolicy="no-referrer"
                           src={currentQ.media_url} 
                           alt="Question photo" 
-                          className={`w-full h-full object-contain max-h-72 transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                          onLoad={() => setImageLoaded(true)}
+                          className={`w-full h-full object-contain max-h-72 transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                          onLoad={handleImageLoaded}
                           onError={(e) => {
-                            setImageLoaded(true);
+                            handleImageLoaded();
                             (e.target as HTMLElement).style.display = "none";
                           }}
                         />
@@ -1567,50 +1662,42 @@ export default function QuizPlayPage() {
 
                     {/* Multiple-Choice Answer Options - Synchronized with Image Loading */}
                     {currentQ.question_type === "choose" && currentQ.options && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                        {!imageLoaded && currentQ.media_url ? (
-                          [1, 2, 3, 4].map((placeholderIdx) => (
-                            <div key={placeholderIdx} className="p-3.5 rounded-2xl border border-gray-200 bg-gray-100 animate-pulse flex items-center justify-between">
-                              <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-                              <div className="w-4 h-4 rounded-full bg-gray-200"></div>
-                            </div>
-                          ))
-                        ) : (
-                          currentQ.options.map((opt, optIdx) => {
-                            const isSelected = userAnswers[currentIndex] === opt;
-                            const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
-                            const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
+                      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+                        {currentQ.options.map((opt, optIdx) => {
+                          const isSelected = userAnswers[currentIndex] === opt;
+                          const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
+                          const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
 
-                            let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
-                            if (isSelected) {
-                              optionClass = "bg-black text-white border-black shadow-xs font-bold";
-                            }
-                            if (showPracticeCorrect) {
-                              optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
-                            } else if (showPracticeWrong) {
-                              optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
-                            }
+                          let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
+                          if (isSelected) {
+                            optionClass = "bg-black text-white border-black shadow-xs font-bold";
+                          }
+                          if (showPracticeCorrect) {
+                            optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
+                          } else if (showPracticeWrong) {
+                            optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
+                          }
 
-                            return (
-                              <button
-                                key={optIdx}
-                                onClick={() => handleSelectAnswer(opt)}
-                                className={`p-3.5 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between ${optionClass}`}
-                              >
-                                <span>{opt}</span>
-                                {isSelected && <Check size={16} />}
-                                {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600" />}
-                                {showPracticeWrong && <XCircle size={16} className="text-red-600" />}
-                              </button>
-                            );
-                          })
-                        )}
+                          return (
+                            <button
+                              key={optIdx}
+                              onClick={() => handleSelectAnswer(opt)}
+                              disabled={!isQuestionReady}
+                              className={`p-3.5 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between cursor-pointer ${optionClass}`}
+                            >
+                              <span>{opt}</span>
+                              {isSelected && <Check size={16} />}
+                              {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600" />}
+                              {showPracticeWrong && <XCircle size={16} className="text-red-600" />}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
 
                     {/* Fill Up / Missing Letters */}
                     {currentQ.question_type !== "choose" && (
-                      <div className="mb-6">
+                      <div className={`mb-6 transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
                         <form 
                           onSubmit={(e) => {
                             e.preventDefault();
@@ -1622,13 +1709,14 @@ export default function QuizPlayPage() {
                             type="text"
                             placeholder="Type the exact name or architect..."
                             value={fillInput}
+                            disabled={!isQuestionReady}
                             onChange={(e) => setFillInput(e.target.value)}
                             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-xs sm:text-sm focus:outline-none focus:border-black bg-white"
                           />
                           <button
                             type="submit"
-                            disabled={!fillInput.trim()}
-                            className="px-5 py-3 bg-black hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition"
+                            disabled={!fillInput.trim() || !isQuestionReady}
+                            className="px-5 py-3 bg-black hover:bg-gray-800 disabled:opacity-40 text-white rounded-xl text-xs font-bold transition cursor-pointer"
                           >
                             Save
                           </button>
