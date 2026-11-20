@@ -111,6 +111,7 @@ function PostJobContent() {
   const [flyerUrl, setFlyerUrl] = useState("");
   const [applicationEmail, setApplicationEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [customLocations, setCustomLocations] = useState<string>("");
   const [applyLink, setApplyLink] = useState("");
 
   // Submission State
@@ -344,7 +345,7 @@ function PostJobContent() {
         application_email: applicationEmail.trim() || null,
         apply_link: applyLink.trim() || null,
         image: flyerUrl || null,
-        city: selectedCompany.city || null,
+        city: customLocations.trim() || selectedCompany.city || null,
         state: selectedCompany.state || null,
         area: selectedCompany.neighborhood || null,
         organization_type: selectedCompany.organization_type || "Architecture Firm",
@@ -409,7 +410,7 @@ function PostJobContent() {
         application_email: applicationEmail.trim() || null,
         apply_link: applyLink.trim() || null,
         image: flyerUrl || null,
-        city: selectedCompany?.city || null,
+        city: customLocations.trim() || selectedCompany?.city || null,
         state: selectedCompany?.state || null,
         organization_type: selectedCompany?.organization_type || "Architecture Firm",
         status: "draft",
@@ -929,7 +930,28 @@ function PostJobContent() {
             {/* Workplace & Employment Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Job Location(s) (Optional override / Multi-city)
+                  </label>
+                  <span className="text-[11px] text-gray-400">
+                    Leave empty to use studio headquarter ({selectedCompany?.city || "Headquarter"})
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={customLocations}
+                  onChange={(e) => setCustomLocations(e.target.value)}
+                  placeholder="e.g. Chennai, Bengaluru (Splits automatically into separate city posts!)"
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-300 text-sm font-medium focus:border-black focus:outline-none transition bg-white"
+                />
+                <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
+                  💡 <strong>Multi-Location Feature:</strong> If hiring across multiple branches (e.g. <em>Chennai, Bengaluru</em>), enter them separated by commas. The system will automatically publish distinct city listings for search engines, and bundle them into a single consolidated WhatsApp broadcast!
+                </p>
+              </div>
+
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                   Workplace Type
                 </label>
                 <div className="grid grid-cols-3 gap-2">
