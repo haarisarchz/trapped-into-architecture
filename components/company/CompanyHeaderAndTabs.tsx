@@ -220,6 +220,24 @@ export default function CompanyHeaderAndTabs({
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [isAuthChoiceModalOpen, setIsAuthChoiceModalOpen] = useState(false);
   const [showEditConfirmModal, setShowEditConfirmModal] = useState(false);
+  const [connectedTeam, setConnectedTeam] = useState<any[]>([]);
+  const [loadingTeam, setLoadingTeam] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "team" && company?.id) {
+      setLoadingTeam(true);
+      supabase
+        .from("profile_experiences")
+        .select("id, position, is_current, start_date, end_date, user_id, profiles(id, full_name, username, avatar_url, role, headline, badge_tier)")
+        .eq("company_id", company.id)
+        .order("is_current", { ascending: false })
+        .then(({ data }) => {
+          setConnectedTeam(data || []);
+          setLoadingTeam(false);
+        })
+        .catch(() => setLoadingTeam(false));
+    }
+  }, [activeTab, company?.id]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -897,17 +915,68 @@ export default function CompanyHeaderAndTabs({
               Core leadership, principal architects, and team members associated with this practice.
             </p>
 
-            {company.principal_architect ? (
-              <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50/70 flex items-center gap-4 max-w-md">
-                <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-base shrink-0">
-                  {company.principal_architect.charAt(0)}
+            {/* 1. Official Studio Leadership & Connected Members */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+              {company.principal_architect && (
+                <div className="p-4 rounded-2xl border border-gray-200 bg-gradient-to-br from-amber-50/50 to-orange-50/30 flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center font-extrabold text-base shrink-0 shadow-xs">
+                    {company.principal_architect.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-bold text-gray-900 text-sm truncate">{company.principal_architect}</h4>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">CEO / Head</span>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate">Principal Architect</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-gray-900 text-sm">{company.principal_architect}</h4>
-                  <p className="text-xs text-gray-500">Principal Architect / Leadership</p>
-                </div>
-              </div>
-            ) : null}
+              )}
+
+              {connectedTeam.map((mem: any) => {
+                const prof = mem.profiles;
+                if (!prof) return null;
+                const isLeader = /principal|founder|ceo|partner|director|head|lead/i.test(mem.position || "");
+                return (
+                  <Link
+                    key={mem.id}
+                    href={`/profile/${prof.username || prof.id}`}
+                    className="p-4 rounded-2xl border border-gray-200 bg-white hover:border-black hover:shadow-md transition flex items-center gap-3.5 group"
+                  >
+                    {prof.avatar_url ? (
+                      <img
+                        src={prof.avatar_url}
+                        alt={prof.full_name || "Architect"}
+                        className="w-12 h-12 rounded-full object-cover border border-gray-200 shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gray-100 text-gray-700 font-bold flex items-center justify-center text-base shrink-0">
+                        {(prof.full_name || "A").charAt(0)}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-bold text-gray-900 text-sm group-hover:text-blue-600 truncate transition">
+                          {prof.full_name || prof.username || "Team Member"}
+                        </h4>
+                        {isLeader && (
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
+                            Verified Leader
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-600 truncate">{mem.position || "Architect"}</p>
+                      {mem.is_current && (
+                        <span className="text-[10px] text-gray-400 font-medium">Currently here</span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {loadingTeam && (
+              <div className="py-4 text-center text-xs text-gray-400">Loading studio team members...</div>
+            )}
 
             {/* CONNECT INVITATION */}
             <div className="mt-6 p-6 rounded-2xl border border-dashed border-gray-300 text-center flex flex-col items-center">
