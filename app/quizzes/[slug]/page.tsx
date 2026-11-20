@@ -10,7 +10,7 @@ import {
   CheckCircle2, XCircle, Share2, MessageCircle, Copy, 
   RotateCcw, Sparkles, Award, ShieldAlert, Flame, Zap,
   ChevronRight, Building2, Briefcase, BookOpen, GraduationCap,
-  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp, SlidersHorizontal
+  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp, SlidersHorizontal, Crown, X
 } from "lucide-react";
 import { 
   getQuestionsForGameDifficulty, 
@@ -85,6 +85,9 @@ export default function QuizPlayPage() {
   const [isQuestionReady, setIsQuestionReady] = useState(false);
   const isQuestionReadyRef = useRef(false);
   const fallbackWatchdogRef = useRef<NodeJS.Timeout | null>(null);
+  const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
+  const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
+  const [isTimerDisabled, setIsTimerDisabled] = useState<boolean>(false);
 
   // Continuous Total Timer & Duration State
   const [totalAllottedTime, setTotalAllottedTime] = useState<number>(180); // in seconds
@@ -137,6 +140,10 @@ export default function QuizPlayPage() {
       try { 
         parsedUser = JSON.parse(stored);
         setCurrentUser(parsedUser);
+        const tier = (parsedUser.tier || parsedUser.user_metadata?.tier || "").toLowerCase();
+        const completion = typeof parsedUser.completion === "number" ? parsedUser.completion : 0;
+        const isGold = ["gold", "platinum", "diamond"].includes(tier) || completion >= 66 || parsedUser.role === "admin" || parsedUser.is_gold === true;
+        setIsGoldTier(isGold);
       } catch (e) {}
     }
 
@@ -307,9 +314,9 @@ export default function QuizPlayPage() {
     }
 
     // Session stopwatch (runs across both Practice and Challenge modes)
-    // ONLY increments when question is ready (photo loaded)
+    // ONLY increments when question is ready (photo loaded) and timer is not disabled
     sessionStopwatchRef.current = setInterval(() => {
-      if (!isQuestionReadyRef.current) return;
+      if (!isQuestionReadyRef.current || isTimerDisabled) return;
       setTotalTimeElapsed(prev => prev + 1);
     }, 1000);
 
@@ -332,7 +339,7 @@ export default function QuizPlayPage() {
       if (totalTimerRef.current) clearInterval(totalTimerRef.current);
       if (sessionStopwatchRef.current) clearInterval(sessionStopwatchRef.current);
     };
-  }, [gameStarted, isGameOver, gameMode]);
+  }, [gameStarted, isGameOver, gameMode, isTimerDisabled]);
 
   // Start game handler: prepares question pool and computes continuous allotted time
   const handleStartGame = (overrideDiff?: Difficulty, overrideCount?: number, overrideMode?: GameMode) => {
@@ -392,10 +399,10 @@ export default function QuizPlayPage() {
     }
 
     // Allotted time per question:
-    // Easy (Beginner): 20s/Q (10Q = 3m 20s, 20Q = 6m 40s, 65Q = 21m 40s)
-    // Medium (Intermediate): 15s/Q (10Q = 2m 30s, 20Q = 5m, 65Q = 16m 15s)
-    // Hard (Advanced): 10s/Q (10Q = 1m 40s, 20Q = 3m 20s, 65Q = 10m 50s)
-    const perQuestionSeconds = activeDiff === "easy" ? 20 : activeDiff === "medium" ? 15 : 10;
+    // Easy (Beginner): 15s/Q (10Q = 2m 30s)
+    // Medium (Intermediate): 10s/Q (10Q = 1m 40s)
+    // Hard (Advanced): 5s/Q (10Q = 50s!)
+    const perQuestionSeconds = activeDiff === "easy" ? 15 : activeDiff === "medium" ? 10 : 5;
     const totalAllotted = sampled.length * perQuestionSeconds;
     setTotalAllottedTime(totalAllotted);
     setTimerSeconds(totalAllotted);
@@ -685,95 +692,434 @@ export default function QuizPlayPage() {
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
-  // Client-side HTML5 Canvas Scorecard Generator (Instant high-res PNG download)
-  const downloadScorecardImage = () => {
+  // Client-side HTML5 Canvas Scorecard Generator (9:16 WhatsApp Status & Stories - 1080x1920)
+  const downloadScorecardImage = async () => {
     setGeneratingScorecard(true);
     try {
       const canvas = document.createElement("canvas");
-      canvas.width = 1200;
-      canvas.height = 630;
+      canvas.width = 1080;
+      canvas.height = 1920;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Dark Architectural Gradient Background
-      const bgGrad = ctx.createLinearGradient(0, 0, 1200, 630);
-      bgGrad.addColorStop(0, "#090D16");
-      bgGrad.addColorStop(0.5, "#0F172A");
-      bgGrad.addColorStop(1, "#030712");
+      const roundRect = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill?: string, stroke?: string, lineWidth: number = 1.5) => {
+        c.beginPath();
+        c.roundRect(x, y, w, h, r);
+        if (fill) {
+          c.fillStyle = fill;
+          c.fill();
+        }
+        if (stroke) {
+          c.strokeStyle = stroke;
+          c.lineWidth = lineWidth;
+          c.stroke();
+        }
+      };
+
+      // 1. Blueprint Deep Gradient Background
+      const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1920);
+      bgGrad.addColorStop(0, "#040915");
+      bgGrad.addColorStop(0.25, "#061327");
+      bgGrad.addColorStop(0.65, "#081730");
+      bgGrad.addColorStop(1, "#03060E");
       ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1200, 630);
+      ctx.fillRect(0, 0, 1080, 1920);
 
-      // Gold Accent Outer Border
-      ctx.strokeStyle = "#F59E0B";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(30, 30, 1140, 570);
+      // 2. Technical Blueprint Grid
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.04)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= 1080; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 1920);
+        ctx.stroke();
+      }
+      for (let y = 0; y <= 1920; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1080, y);
+        ctx.stroke();
+      }
 
-      // Top Brand Header
-      ctx.fillStyle = "#F3F4F6";
-      ctx.font = "bold 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("TRAPPED INTO ARCHITECTURE", 60, 85);
+      // 3. Top Wireframe Accent Lines
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.12)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(40, 120);
+      ctx.lineTo(160, 40);
+      ctx.lineTo(260, 40);
+      ctx.lineTo(340, 120);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(740, 120);
+      ctx.lineTo(820, 40);
+      ctx.lineTo(920, 40);
+      ctx.lineTo(1040, 120);
+      ctx.stroke();
+
+      // 4. Isometric 3D Monogram Logo (Red 'A' & Green 'T')
+      const cx = 540;
+      // Green 'T'
+      ctx.fillStyle = "#10B981";
+      ctx.beginPath();
+      ctx.moveTo(cx - 38, 48);
+      ctx.lineTo(cx - 6, 32);
+      ctx.lineTo(cx - 6, 75);
+      ctx.lineTo(cx - 38, 90);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#059669";
+      ctx.beginPath();
+      ctx.moveTo(cx - 6, 32);
+      ctx.lineTo(cx + 6, 38);
+      ctx.lineTo(cx + 6, 82);
+      ctx.lineTo(cx - 6, 75);
+      ctx.closePath();
+      ctx.fill();
+
+      // Red 'A'
+      ctx.fillStyle = "#EF4444";
+      ctx.beginPath();
+      ctx.moveTo(cx + 8, 38);
+      ctx.lineTo(cx + 42, 55);
+      ctx.lineTo(cx + 42, 98);
+      ctx.lineTo(cx + 8, 82);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#DC2626";
+      ctx.beginPath();
+      ctx.moveTo(cx + 42, 55);
+      ctx.lineTo(cx + 28, 48);
+      ctx.lineTo(cx - 6, 32);
+      ctx.lineTo(cx + 8, 38);
+      ctx.closePath();
+      ctx.fill();
+
+      // 5. Brand Header
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "900 32px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("TRAPPED INTO ARCHITECTURE", 540, 142);
 
       ctx.fillStyle = "#F59E0B";
-      ctx.font = "bold 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("TI2A ARCHITECTURE CHALLENGE ARENA", 60, 115);
+      ctx.font = "bold 17px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("— India's Complete Architecture Career & Learning Ecosystem —", 540, 175);
 
-      // Quiz Title
+      // 6. Viral Challenge Heading
       ctx.fillStyle = "#FFFFFF";
-      ctx.font = "900 42px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      const displayTitle = quiz?.title || "Iconic World Landmarks";
-      ctx.fillText(displayTitle.slice(0, 42), 60, 185);
+      ctx.font = "800 36px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Think you know architecture?", 540, 245);
 
-      // Player Name
-      const playerName = currentUser?.displayName || currentUser?.fullName || currentUser?.username || `Architect #${guestId.slice(-4)}`;
-      ctx.fillStyle = "#93C5FD";
-      ctx.font = "bold 22px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText(`Player: ${playerName} • Mode: ${difficulty.toUpperCase()}`, 60, 225);
+      const titleGrad = ctx.createLinearGradient(300, 0, 780, 0);
+      titleGrad.addColorStop(0, "#F59E0B");
+      titleGrad.addColorStop(1, "#EA580C");
+      ctx.fillStyle = titleGrad;
+      ctx.font = "italic 900 70px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("BEAT MY SCORE!", 540, 318);
 
-      // 4 Metric Score Boxes
-      const boxes = [
-        { label: "ACCURACY", val: `${resultsSummary?.accuracyPercentage || 0}%`, col: "#10B981" },
-        { label: "BASE SCORE", val: `${resultsSummary?.correctCount || 0} / ${resultsSummary?.totalQuestions || 10}`, col: "#60A5FA" },
-        { label: "TIME BONUS", val: `+${resultsSummary?.timeBonus || 0} PTS`, col: "#F59E0B" },
-        { label: "TOTAL POINTS", val: `${resultsSummary?.totalPoints || 0} PTS`, col: "#EC4899" }
-      ];
+      // Active Quiz Title Pill
+      const displayTitle = quiz?.title || "Famous Buildings & Architects Quiz";
+      roundRect(ctx, 200, 355, 680, 50, 25, "rgba(245, 158, 11, 0.12)", "rgba(245, 158, 11, 0.6)", 2);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 21px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(displayTitle.slice(0, 48), 540, 388);
 
-      boxes.forEach((b, i) => {
-        const x = 60 + i * 275;
-        const y = 270;
-        ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-        ctx.lineWidth = 1.5;
+      // 7. Hero Centerpiece (Flanked Cards + Fiery Sunburst Circle)
+      // Left Flanked Card (Time)
+      roundRect(ctx, 75, 510, 245, 165, 22, "rgba(15, 23, 42, 0.9)", "rgba(56, 189, 248, 0.35)", 2);
+      ctx.fillStyle = "#94A3B8";
+      ctx.font = "bold 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Completed in", 197, 565);
+
+      ctx.fillStyle = "#F59E0B";
+      ctx.font = "900 30px 'JetBrains Mono', monospace";
+      ctx.fillText(`${formatTime(resultsSummary?.totalTimeElapsed || 0)} mins`, 197, 615);
+
+      // Right Flanked Card (Points & Mode)
+      roundRect(ctx, 760, 510, 245, 165, 22, "rgba(15, 23, 42, 0.9)", "rgba(56, 189, 248, 0.35)", 2);
+      ctx.fillStyle = "#94A3B8";
+      ctx.font = "bold 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Score Earned:", 882, 555);
+
+      ctx.fillStyle = "#38BDF8";
+      ctx.font = "900 28px 'JetBrains Mono', monospace";
+      ctx.fillText(`${resultsSummary?.totalPoints || 0} PTS`, 882, 600);
+
+      ctx.fillStyle = "#F59E0B";
+      ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(`${difficulty.toUpperCase()} MODE`, 882, 635);
+
+      // Central Fiery Sunburst Portal (Radius 135 at x=540, y=592)
+      const sunburstGlow = ctx.createRadialGradient(540, 592, 40, 540, 592, 210);
+      sunburstGlow.addColorStop(0, "rgba(245, 158, 11, 0.55)");
+      sunburstGlow.addColorStop(0.65, "rgba(234, 88, 12, 0.25)");
+      sunburstGlow.addColorStop(1, "transparent");
+      ctx.fillStyle = sunburstGlow;
+      ctx.beginPath();
+      ctx.arc(540, 592, 210, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer Gold Double Rings
+      ctx.strokeStyle = "#F59E0B";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(540, 592, 135, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(254, 243, 199, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(540, 592, 126, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Dark Inner Disc
+      ctx.fillStyle = "#060E1C";
+      ctx.beginPath();
+      ctx.arc(540, 592, 123, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Circle Content
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "900 76px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(`${resultsSummary?.correctCount || 0} / ${resultsSummary?.totalQuestions || 10}`, 540, 572);
+
+      ctx.fillStyle = "#F59E0B";
+      ctx.font = "900 50px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(`${resultsSummary?.accuracyPercentage || 0}%`, 540, 630);
+
+      ctx.fillStyle = "#CBD5E1";
+      ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Accuracy", 540, 665);
+
+      // 8. Angled Golden-Orange Speech Ribbon Banner
+      const ribY = 755;
+      const ribGrad = ctx.createLinearGradient(80, ribY, 1000, ribY);
+      ribGrad.addColorStop(0, "#D97706");
+      ribGrad.addColorStop(0.5, "#F59E0B");
+      ribGrad.addColorStop(1, "#EA580C");
+
+      ctx.fillStyle = ribGrad;
+      ctx.beginPath();
+      ctx.moveTo(85, ribY + 12);
+      ctx.lineTo(995, ribY);
+      ctx.lineTo(1015, ribY + 80);
+      ctx.lineTo(65, ribY + 92);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 23px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(`I named ${resultsSummary?.correctCount || 0} out of ${resultsSummary?.totalQuestions || 10} iconic buildings before time ran out!`, 540, ribY + 42);
+
+      ctx.fillStyle = "#FEF3C7";
+      ctx.font = "900 23px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Can your Arch IQ beat mine?", 540, ribY + 74);
+
+      // 9. Architectural Metric Scale Ruler Divider
+      const ruleY = 880;
+      ctx.strokeStyle = "rgba(100, 116, 139, 0.45)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(75, ruleY);
+      ctx.lineTo(1005, ruleY);
+      ctx.stroke();
+
+      const step = (1005 - 75) / 10;
+      for (let i = 0; i <= 10; i++) {
+        const tx = 75 + i * step;
         ctx.beginPath();
-        ctx.roundRect(x, y, 250, 130, 16);
-        ctx.fill();
+        ctx.moveTo(tx, ruleY - 14);
+        ctx.lineTo(tx, ruleY + 14);
         ctx.stroke();
 
-        ctx.fillStyle = "#9CA3AF";
-        ctx.font = "bold 13px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        ctx.fillText(b.label, x + 20, y + 40);
+        if (i < 10) {
+          ctx.beginPath();
+          ctx.moveTo(tx + step / 2, ruleY - 7);
+          ctx.lineTo(tx + step / 2, ruleY + 7);
+          ctx.stroke();
+        }
 
-        ctx.fillStyle = b.col;
-        ctx.font = "900 34px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-        ctx.fillText(b.val, x + 20, y + 90);
+        ctx.fillStyle = "#64748B";
+        ctx.font = "bold 15px 'JetBrains Mono', monospace";
+        ctx.fillText(i === 10 ? "10m" : `${i}`, tx, ruleY + 34);
+      }
+
+      // 10. Ecosystem Directory Header
+      ctx.fillStyle = "#F59E0B";
+      ctx.font = "bold 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("— Explore Everything on —", 540, 955);
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "900 34px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("Trapped Into Architecture", 540, 995);
+
+      // 11. 6 Platform Ecosystem Cards (2 Columns x 3 Rows)
+      const ecoCards = [
+        {
+          title: "Jobs & Internships",
+          tag: "Smart Apply",
+          desc: "(1-Click Portfolio Submission & Studio Hiring)",
+          x: 75,
+          y: 1040
+        },
+        {
+          title: "Compare & Search Colleges",
+          tag: "Verified",
+          desc: "(Side-by-Side CoA Approved Intake & Fees)",
+          x: 555,
+          y: 1040
+        },
+        {
+          title: "Architecture Studios & Firms",
+          tag: "Directory",
+          desc: "(Verified Firm Culture & Recruiter Profiles)",
+          x: 75,
+          y: 1190
+        },
+        {
+          title: "Daily Architecture Quizzes",
+          tag: "Arena",
+          desc: "(Visual Recall, Arena Rankings & GATE Prep)",
+          x: 555,
+          y: 1190
+        },
+        {
+          title: "Architect & Student Profiles",
+          tag: "Network",
+          desc: "(Showcase Portfolios & Get Discovered)",
+          x: 75,
+          y: 1340
+        },
+        {
+          title: "Post Jobs & Discover Talent",
+          tag: "Recruit",
+          desc: "(Studio Outreach & Recruiter Dashboard)",
+          x: 555,
+          y: 1340
+        }
+      ];
+
+      ecoCards.forEach((c) => {
+        roundRect(ctx, c.x, c.y, 450, 120, 20, "rgba(15, 23, 42, 0.8)", "rgba(56, 189, 248, 0.22)", 1.5);
+        ctx.textAlign = "left";
+
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "bold 20px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillText(c.title, c.x + 24, c.y + 44);
+
+        // Small Gold Tag
+        roundRect(ctx, c.x + 24, c.y + 54, 90, 24, 6, "rgba(245, 158, 11, 0.15)", "rgba(245, 158, 11, 0.5)", 1);
+        ctx.fillStyle = "#F59E0B";
+        ctx.font = "bold 12px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillText(c.tag, c.x + 36, c.y + 70);
+
+        ctx.fillStyle = "#94A3B8";
+        ctx.font = "14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        ctx.fillText(c.desc, c.x + 24, c.y + 98);
       });
 
-      // Bottom Challenge Banner
-      ctx.fillStyle = "#FEF3C7";
-      ctx.font = "900 26px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("CAN YOU BEAT MY SCORE?", 60, 480);
+      // 12. Bottom CTA & QR Code Footer
+      const footY = 1550;
+      // Left: QR Code Box
+      roundRect(ctx, 75, footY, 230, 230, 20, "#FFFFFF", "#F59E0B", 3);
+      
+      // Load dynamic QR code from public API
+      const challengeUrl = getChallengeShareUrl();
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=${encodeURIComponent(challengeUrl)}`;
 
-      ctx.fillStyle = "#D1D5DB";
-      ctx.font = "16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("Take the live architecture challenge at trappedintoarchitecture.com/quizzes", 60, 515);
+      await new Promise<void>((resolve) => {
+        const qr = new Image();
+        qr.crossOrigin = "anonymous";
+        qr.onload = () => {
+          ctx.drawImage(qr, 95, footY + 20, 190, 190);
+          resolve();
+        };
+        qr.onerror = () => {
+          // Fallback stylized architectural QR pattern
+          ctx.fillStyle = "#0F172A";
+          ctx.fillRect(100, footY + 25, 180, 180);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(115, footY + 40, 50, 50);
+          ctx.fillRect(215, footY + 40, 50, 50);
+          ctx.fillRect(115, footY + 140, 50, 50);
+          ctx.fillStyle = "#0F172A";
+          ctx.fillRect(125, footY + 50, 30, 30);
+          ctx.fillRect(225, footY + 50, 30, 30);
+          ctx.fillRect(125, footY + 150, 30, 30);
+          resolve();
+        };
+        qr.src = qrApiUrl;
+        setTimeout(resolve, 800); // 800ms safety timeout
+      });
 
-      ctx.fillStyle = "#6B7280";
-      ctx.font = "14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText("Discover Architecture Jobs • Student Internships • Top Studios • GATE Preparation", 60, 555);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#F59E0B";
+      ctx.font = "bold 15px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("SCAN TO PLAY & BEAT SCORE", 190, footY + 260);
 
-      // Export as PNG
+      // Right: CTA Buttons & WhatsApp Badge
+      ctx.textAlign = "left";
+      const btnX = 345;
+
+      // Play Quiz Now Button Pill
+      const btnGrad = ctx.createLinearGradient(btnX, 0, btnX + 400, 0);
+      btnGrad.addColorStop(0, "#F59E0B");
+      btnGrad.addColorStop(1, "#EA580C");
+      roundRect(ctx, btnX, footY + 10, 420, 66, 33, btnGrad);
+
+      ctx.fillStyle = "#050B14";
+      ctx.font = "900 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("PLAY QUIZ NOW →", btnX + 75, footY + 52);
+
+      // Web URL
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 23px 'JetBrains Mono', monospace";
+      ctx.fillText("www.trappedintoarchitecture.com/quizzes", btnX, footY + 120);
+
+      // WhatsApp Community Badge
+      roundRect(ctx, btnX, footY + 145, 590, 56, 28, "#059669");
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText("🟢 Join 15,000+ Architects & Students on WhatsApp", btnX + 35, footY + 180);
+
+      // 13. Bottom City Skyline Silhouette
+      ctx.fillStyle = "#02050B";
+      ctx.beginPath();
+      ctx.moveTo(0, 1920);
+      ctx.lineTo(0, 1880);
+      ctx.lineTo(80, 1880);
+      ctx.lineTo(80, 1850);
+      ctx.lineTo(130, 1850);
+      ctx.lineTo(130, 1890);
+      ctx.lineTo(240, 1890);
+      ctx.lineTo(240, 1835);
+      ctx.lineTo(310, 1835);
+      ctx.lineTo(310, 1875);
+      ctx.lineTo(440, 1875);
+      ctx.lineTo(440, 1820);
+      ctx.lineTo(500, 1795); // Tower spire
+      ctx.lineTo(560, 1820);
+      ctx.lineTo(560, 1870);
+      ctx.lineTo(700, 1870);
+      ctx.lineTo(700, 1845);
+      ctx.lineTo(770, 1845);
+      ctx.lineTo(770, 1890);
+      ctx.lineTo(900, 1890);
+      ctx.lineTo(900, 1855);
+      ctx.lineTo(970, 1855);
+      ctx.lineTo(970, 1880);
+      ctx.lineTo(1080, 1880);
+      ctx.lineTo(1080, 1920);
+      ctx.closePath();
+      ctx.fill();
+
+      // 14. Export High-Res PNG
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `ti2a-architecture-scorecard-${difficulty}.png`;
+      link.download = `ti2a-architecture-scorecard-story-${difficulty}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -935,7 +1281,7 @@ export default function QuizPlayPage() {
                         ⚡ Quick Start Recommended
                       </span>
                       <span className="text-xs font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full">
-                        10 Questions &bull; Challenge Mode &bull; Medium Difficulty &bull; 3 Min Timer
+                        10 Questions &bull; Challenge Mode &bull; Medium (10s/Q &bull; 1m 40s)
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 mb-5 max-w-md mx-auto">
@@ -1035,9 +1381,9 @@ export default function QuizPlayPage() {
                               <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                                 🟢 Easy Mode
                               </p>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">Famous & Viral Landmarks</p>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">Famous &amp; Viral Landmarks</p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                Recognizable icons (Sydney Opera, Fallingwater). 1 Pt/Q • 30s pace.
+                                Recognizable world icons. 100 Pts/Q • 15s/Q pace.
                               </p>
                             </button>
 
@@ -1052,9 +1398,9 @@ export default function QuizPlayPage() {
                               <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
                                 🟡 Medium Mode
                               </p>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">Syllabus Classics & Milestones</p>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">Syllabus Classics &amp; Milestones</p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                Core architecture syllabus icons (Salk Institute). 2 Pts/Q • 18s pace.
+                                Core architecture syllabus icons. 200 Pts/Q • 10s/Q pace.
                               </p>
                             </button>
 
@@ -1071,7 +1417,7 @@ export default function QuizPlayPage() {
                               </p>
                               <p className="text-[11px] font-bold text-gray-800 mt-1">Advanced Tectonic Masterpieces</p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                Challenging structural feats & niche works. 5 Pts/Q • 12s pace.
+                                Challenging structural feats. 500 Pts/Q • 5s/Q lightning pace!
                               </p>
                             </button>
                           </div>
@@ -1084,9 +1430,21 @@ export default function QuizPlayPage() {
                           </label>
                           <div className="grid grid-cols-3 gap-3">
                             {[
-                              { count: 10, label: "10 Questions", time: difficulty === "easy" ? "5m" : difficulty === "medium" ? "3m" : "2m" },
-                              { count: 20, label: "20 Questions", time: difficulty === "easy" ? "10m" : difficulty === "medium" ? "6m" : "4m" },
-                              { count: 40, label: "40 Questions", time: difficulty === "easy" ? "20m" : difficulty === "medium" ? "12m" : "8m" }
+                              { 
+                                count: 10, 
+                                label: "10 Questions", 
+                                time: difficulty === "easy" ? "2m 30s" : difficulty === "medium" ? "1m 40s" : "50s" 
+                              },
+                              { 
+                                count: 20, 
+                                label: "20 Questions", 
+                                time: difficulty === "easy" ? "5m" : difficulty === "medium" ? "3m 20s" : "1m 40s" 
+                              },
+                              { 
+                                count: 40, 
+                                label: "40 Questions", 
+                                time: difficulty === "easy" ? "10m" : difficulty === "medium" ? "6m 40s" : "3m 20s" 
+                              }
                             ].map(item => (
                               <button
                                 key={item.count}
@@ -1248,13 +1606,15 @@ export default function QuizPlayPage() {
                     </p>
                     
                     <div className="flex flex-wrap items-center justify-center gap-2.5">
-                      {/* 1. Download High-Res Canvas Scorecard */}
+                      {/* 1. Download High-Res Canvas Scorecard (9:16 WhatsApp Status) */}
                       <button
                         onClick={downloadScorecardImage}
                         disabled={generatingScorecard}
-                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-extrabold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs"
+                        className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-extrabold rounded-xl text-xs transition flex items-center gap-2 shadow-xs cursor-pointer"
+                        title="Download 9:16 vertical scorecard formatted for WhatsApp Status and Instagram Stories"
                       >
-                        <Download size={14} /> {generatingScorecard ? "Generating..." : "Download Scorecard (PNG)"}
+                        <Download size={15} /> 
+                        <span>{generatingScorecard ? "Generating Status Scorecard..." : "📱 Download Scorecard (WhatsApp Status & Stories)"}</span>
                       </button>
 
                       {/* 2. WhatsApp Share */}
@@ -1559,15 +1919,39 @@ export default function QuizPlayPage() {
                               </span>
                             )}
                           </div>
+                        ) : isTimerDisabled ? (
+                          <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-full text-xs font-bold shadow-2xs">
+                            <Crown size={12} className="text-amber-600" />
+                            <span>♾️ Untimed Study Mode</span>
+                          </div>
                         ) : (
-                          <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-mono font-bold">
-                            <Clock size={12} className={!isQuestionReady ? "text-amber-600 animate-spin" : "text-gray-400"} />
-                            <span>{formatTime(totalTimeElapsed)}</span>
-                            {!isQuestionReady && (
-                              <span className="text-[10px] font-sans font-bold text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded-full ml-1">
-                                Paused
-                              </span>
-                            )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-mono font-bold">
+                              <Clock size={12} className={!isQuestionReady ? "text-amber-600 animate-spin" : "text-gray-400"} />
+                              <span>{formatTime(totalTimeElapsed)}</span>
+                              {!isQuestionReady && (
+                                <span className="text-[10px] font-sans font-bold text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded-full ml-1">
+                                  Paused
+                                </span>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (isGoldTier) {
+                                  setIsTimerDisabled(true);
+                                } else {
+                                  setShowGoldModal(true);
+                                }
+                              }}
+                              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/10 via-orange-500/15 to-amber-500/10 hover:from-amber-500/20 hover:to-orange-500/20 border border-amber-400/50 text-amber-900 text-[10px] font-bold transition cursor-pointer shadow-2xs animate-pulse"
+                              title="Click to remove timer for untimed practice"
+                            >
+                              <Crown size={12} className="text-amber-600 shrink-0" />
+                              <span className="font-extrabold hover:underline">Want untimed study? Remove Timer</span>
+                              <span className="px-1.5 py-0.2 bg-amber-300 text-amber-950 rounded font-black text-[9px] uppercase">Gold</span>
+                            </button>
                           </div>
                         )}
 
@@ -2059,6 +2443,62 @@ export default function QuizPlayPage() {
 
         </div>
       </div>
+
+      {/* SEPARATE DEDICATED POPUP MODAL FOR GOLD TIER BENEFIT */}
+      {showGoldModal && (
+        <div className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl border border-gray-200 max-w-sm sm:max-w-md w-full p-6 sm:p-7 shadow-2xl relative text-center">
+            
+            {/* Close Button 'X' */}
+            <button
+              type="button"
+              onClick={() => setShowGoldModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition cursor-pointer"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center mx-auto mb-3.5 shadow-md ring-4 ring-amber-100">
+              <Crown size={24} className="fill-white" />
+            </div>
+
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full inline-block mb-2">
+              👑 Gold Tier Exclusive
+            </span>
+
+            <h3 className="text-lg sm:text-xl font-black text-gray-950 mb-2 leading-snug">
+              Untimed Study Mode is a GOLD Tier Perk
+            </h3>
+
+            <p className="text-xs text-gray-600 leading-relaxed mb-6 px-1">
+              Practice without any countdown or timer pressure! Relax and study architectural masterpieces at your own pace with untimed learning. Register or complete your profile to <strong>Gold Tier (66%+ completion)</strong> to unlock untimed study!
+            </p>
+
+            <div className="space-y-3">
+              <Link
+                href="/profile"
+                onClick={() => setShowGoldModal(false)}
+                className="w-full py-3.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition cursor-pointer"
+              >
+                <span>Register / Login to Unlock</span>
+                <ArrowRight size={16} />
+              </Link>
+
+              <div>
+                <Link
+                  href="/badges-and-perks"
+                  onClick={() => setShowGoldModal(false)}
+                  className="text-xs font-bold text-amber-900 hover:text-amber-950 underline underline-offset-2 transition"
+                >
+                  Learn About GOLD Perks &rarr;
+                </Link>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </>
   );
 }

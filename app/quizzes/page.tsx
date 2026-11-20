@@ -32,9 +32,9 @@ export default function QuizzesHubPage() {
   const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
 
   // Dynamic time estimate helper per question count & difficulty:
-  // Hard: 10s/Q, Medium: 15s/Q, Easy: 20s/Q
+  // Easy: 15s/Q, Medium: 10s/Q, Hard: 5s/Q
   const getTimeEstimate = (count: number, diff: "easy" | "medium" | "hard") => {
-    const perQ = diff === "easy" ? 20 : diff === "medium" ? 15 : 10;
+    const perQ = diff === "easy" ? 15 : diff === "medium" ? 10 : 5;
     const totalSecs = count * perQ;
     const mins = Math.floor(totalSecs / 60);
     const secs = totalSecs % 60;
@@ -753,15 +753,15 @@ export default function QuizzesHubPage() {
                 <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-emerald-700 shrink-0">🟢 Easy (Beginner):</span>
-                    <span>20s/Q &bull; 100 pts per correct answer &bull; Obvious iconic choices.</span>
+                    <span>15s/Q &bull; 100 pts per correct answer &bull; Obvious iconic choices.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-amber-700 shrink-0">🟡 Medium (Intermediate):</span>
-                    <span>15s/Q &bull; 200 pts per correct answer &bull; Subtle architectural distractors.</span>
+                    <span>10s/Q &bull; 200 pts per correct answer &bull; Subtle architectural distractors.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-rose-700 shrink-0">🔴 Hard (Advanced):</span>
-                    <span>10s/Q &bull; 500 pts per correct answer &bull; Same studio / movement deep cuts.</span>
+                    <span>5s/Q &bull; 500 pts per correct answer &bull; Rapid instinct round!</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
                     <span className="font-black">⚡ Modes:</span>
