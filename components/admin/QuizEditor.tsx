@@ -1342,22 +1342,6 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   Architecture Master • 300 pts ({countMaster})
                 </button>
               </div>
-
-              {/* Select All Visible Toggle */}
-              {filteredQuestionsWithOriginalIndices.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => handleSelectAllVisible(filteredQuestionsWithOriginalIndices.map(x => x.originalIndex))}
-                  className="px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-xs font-bold text-gray-700 flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
-                >
-                  {filteredQuestionsWithOriginalIndices.length > 0 && filteredQuestionsWithOriginalIndices.every(x => selectedIndices[x.originalIndex]) ? (
-                    <CheckSquare size={14} className="text-black" />
-                  ) : (
-                    <Square size={14} className="text-gray-400" />
-                  )}
-                  <span>Select All Visible ({filteredQuestionsWithOriginalIndices.length})</span>
-                </button>
-              )}
             </div>
 
             {/* Right: View Mode Toggle AND Common Apply Button */}
@@ -1418,46 +1402,6 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
           </div>
         </div>
 
-        {/* STICKY BULK BATCH ACTION BAR (Visible when questions are selected) */}
-        {Object.values(selectedIndices).filter(Boolean).length > 0 && (
-          <div className="sticky top-20 z-30 bg-gray-950 text-white p-3.5 sm:p-4 rounded-2xl shadow-xl border border-gray-700 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 mb-5">
-            <div className="flex items-center gap-2.5">
-              <span className="w-6 h-6 rounded-full bg-amber-400 text-black font-black text-xs flex items-center justify-center">
-                {Object.values(selectedIndices).filter(Boolean).length}
-              </span>
-              <span className="text-xs font-extrabold text-white">
-                questions selected for batch update
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={() => handleBulkSetCategory("popular")}
-                className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-black transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <Check size={13} className="stroke-[3]" />
-                <span>Set to Popular (100 pts)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleBulkSetCategory("master")}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-black transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <Check size={13} className="stroke-[3]" />
-                <span>Set to Architecture Master (300 pts)</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleDeselectAll}
-                className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                Deselect
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* QUESTIONS LIST */}
         {filteredQuestionsWithOriginalIndices.length === 0 ? (
           <div className="bg-white rounded-3xl border-2 border-dashed border-gray-300 p-12 text-center text-gray-400">
@@ -1502,12 +1446,6 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   }`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleToggleSelectQuestion(originalIndex)}
-                      className="w-4 h-4 rounded text-black border-gray-300 focus:ring-black cursor-pointer shrink-0"
-                    />
                     <span className="w-6 h-6 rounded-full bg-black text-white text-[11px] font-black flex items-center justify-center shrink-0">
                       {originalIndex + 1}
                     </span>
@@ -1642,15 +1580,9 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   }`}
                 >
                   
-                  {/* TOP ROW: Checkbox, Question #, Interactive Difficulty Selector & Actions */}
+                  {/* TOP ROW: Question #, Interactive Difficulty Selector & Actions */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-gray-100">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(selectedIndices[originalIndex])}
-                        onChange={() => handleToggleSelectQuestion(originalIndex)}
-                        className="w-4 h-4 rounded text-black border-gray-300 focus:ring-black cursor-pointer shrink-0"
-                      />
                       <span className="w-8 h-8 rounded-full bg-black text-white text-xs font-black flex items-center justify-center shrink-0 shadow-xs">
                         {originalIndex + 1}
                       </span>
