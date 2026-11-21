@@ -31,7 +31,7 @@ interface Question {
 }
 
 type GameMode = "challenge" | "practice";
-type Difficulty = "easy" | "medium" | "hard";
+type Difficulty = "popular" | "master" | "easy" | "medium" | "hard";
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -62,14 +62,14 @@ export default function QuizPlayPage() {
 
   // Pre-game config states
   const [gameMode, setGameMode] = useState<GameMode>("challenge");
-  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [difficulty, setDifficulty] = useState<Difficulty>("popular");
   const [gameStarted, setGameStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [showCustomOptions, setShowCustomOptions] = useState(false);
 
   // Sidebar: Leaderboard & other quizzes
   const [leaderboardScope, setLeaderboardScope] = useState<"quiz" | "overall">("quiz");
-  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<Difficulty>("medium");
+  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<Difficulty>("popular");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
   const [otherQuizzes, setOtherQuizzes] = useState<any[]>([]);
@@ -252,10 +252,14 @@ export default function QuizPlayPage() {
   const fetchLeaderboard = async () => {
     setLoadingLeaderboard(true);
     try {
+      const diffValues = (leaderboardDifficulty === "master" || leaderboardDifficulty === "hard")
+        ? ["master", "hard"]
+        : ["popular", "easy", "medium"];
+
       let query = supabase
         .from("quiz_scores")
         .select("id, display_name, points, score, total_questions, difficulty, time_taken_seconds, created_at, user_id, guest_session_id, quiz_id")
-        .eq("difficulty", leaderboardDifficulty);
+        .in("difficulty", diffValues);
 
       if (leaderboardScope === "quiz" && quiz?.id) {
         query = query.eq("quiz_id", quiz.id);
@@ -400,10 +404,10 @@ export default function QuizPlayPage() {
     }
 
     // Allotted time per question:
-    // Easy (Beginner): 15s/Q (10Q = 2m 30s)
-    // Medium (Intermediate): 10s/Q (10Q = 1m 40s)
-    // Hard (Advanced): 5s/Q (10Q = 50s!)
-    const perQuestionSeconds = activeDiff === "easy" ? 15 : activeDiff === "medium" ? 10 : 5;
+    // Popular & Iconic: 15s/Q (10Q = 2m 30s)
+    // Deep Master: 5s/Q (10Q = 50s lightning pace!)
+    const isMaster = activeDiff === "master" || activeDiff === "hard";
+    const perQuestionSeconds = isMaster ? 5 : 15;
     const totalAllotted = sampled.length * perQuestionSeconds;
     setTotalAllottedTime(totalAllotted);
     setTimerSeconds(totalAllotted);
@@ -491,12 +495,10 @@ export default function QuizPlayPage() {
     return false;
   };
 
-  // Base Points formula: Easy = 100 pts, Medium = 200 pts, Hard = 500 pts
+  // Base Points formula: Popular & Iconic = 100 pts, Deep Master = 300 pts
   const getQuestionBasePoints = (q: Question) => {
-    const qDiff = (getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases) || difficulty) as Difficulty;
-    if (qDiff === "easy") return 100;
-    if (qDiff === "medium") return 200;
-    if (qDiff === "hard") return 500;
+    const qDiff = getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases);
+    if (qDiff === "master") return 300;
     return 100;
   };
 
@@ -563,10 +565,11 @@ export default function QuizPlayPage() {
     const accuracyPercentage = questions.length > 0 ? Math.round((correctCount / questions.length) * 1000) / 10 : 0;
 
     // Proportional speed bonus (Challenge Mode only, not timed out, and at least 1 correct)
-    // Up to +300 for Easy, +400 for Medium, +500 for Hard based on time remaining
+    // Up to +300 for Popular & Iconic, +500 for Deep Master based on time remaining
     let timeBonus = 0;
     if (gameMode === "challenge" && !timedOut && correctCount > 0) {
-      const maxBonus = difficulty === "easy" ? 300 : difficulty === "medium" ? 400 : 500;
+      const isMaster = difficulty === "master" || difficulty === "hard";
+      const maxBonus = isMaster ? 500 : 300;
       timeBonus = Math.max(0, Math.floor(maxBonus * (timerSeconds / totalAllottedTime)));
     }
 
@@ -851,7 +854,8 @@ export default function QuizPlayPage() {
 
       ctx.fillStyle = "#F59E0B";
       ctx.font = "bold 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-      ctx.fillText(`${difficulty.toUpperCase()} MODE`, 882, 635);
+      const displayTier = (difficulty === "master" || difficulty === "hard") ? "DEEP MASTER" : "POPULAR & ICONIC";
+      ctx.fillText(`${displayTier} MODE`, 882, 635);
 
       // Central Fiery Sunburst Portal (Radius 135 at x=540, y=592)
       const sunburstGlow = ctx.createRadialGradient(540, 592, 40, 540, 592, 210);
@@ -1365,60 +1369,43 @@ export default function QuizPlayPage() {
                           </div>
                         </div>
 
-                        {/* Step 2: Select Difficulty Mode */}
+                        {/* Step 2: Select Difficulty Mode (2-Tier System) */}
                         <div>
                           <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
                             2. Select Difficulty Mode:
                           </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button
-                              onClick={() => setDifficulty("easy")}
-                              className={`p-3.5 rounded-2xl border text-left transition ${
-                                difficulty === "easy" 
-                                  ? "bg-emerald-50 border-emerald-500 shadow-xs ring-1 ring-emerald-500" 
+                              onClick={() => setDifficulty("popular")}
+                              className={`p-4 rounded-2xl border text-left transition ${
+                                difficulty === "popular" || difficulty === "easy" || difficulty === "medium"
+                                  ? "bg-amber-50/80 border-amber-500 shadow-xs ring-2 ring-amber-500/20" 
                                   : "bg-white border-gray-200 hover:border-gray-300"
                               }`}
                             >
-                              <p className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                                🟢 Easy Mode
+                              <p className="text-xs font-black text-amber-900 uppercase tracking-wider">
+                                Popular &amp; Iconic
                               </p>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">Famous &amp; Viral Landmarks</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                Recognizable world icons. 100 Pts/Q • 15s/Q pace.
+                              <p className="text-[12px] font-bold text-gray-800 mt-1">Famous &amp; Recognizable Landmarks</p>
+                              <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">
+                                Globally celebrated world icons. 100 Pts/Q • 15s/Q pace.
                               </p>
                             </button>
 
                             <button
-                              onClick={() => setDifficulty("medium")}
-                              className={`p-3.5 rounded-2xl border text-left transition ${
-                                difficulty === "medium" 
-                                  ? "bg-amber-50 border-amber-500 shadow-xs ring-1 ring-amber-500" 
+                              onClick={() => setDifficulty("master")}
+                              className={`p-4 rounded-2xl border text-left transition ${
+                                difficulty === "master" || difficulty === "hard"
+                                  ? "bg-blue-50/80 border-blue-600 shadow-xs ring-2 ring-blue-500/20" 
                                   : "bg-white border-gray-200 hover:border-gray-300"
                               }`}
                             >
-                              <p className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
-                                🟡 Medium Mode
+                              <p className="text-xs font-black text-blue-900 uppercase tracking-wider">
+                                Deep Master
                               </p>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">Syllabus Classics &amp; Milestones</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                Core architecture syllabus icons. 200 Pts/Q • 10s/Q pace.
-                              </p>
-                            </button>
-
-                            <button
-                              onClick={() => setDifficulty("hard")}
-                              className={`p-3.5 rounded-2xl border text-left transition ${
-                                difficulty === "hard" 
-                                  ? "bg-red-50 border-red-500 shadow-xs ring-1 ring-red-500" 
-                                  : "bg-white border-gray-200 hover:border-gray-300"
-                              }`}
-                            >
-                              <p className="text-xs font-bold text-red-800 flex items-center gap-1.5">
-                                🔴 Hard Mode
-                              </p>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">Advanced Tectonic Masterpieces</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                Challenging structural feats. 500 Pts/Q • 5s/Q lightning pace!
+                              <p className="text-[12px] font-bold text-gray-800 mt-1">Advanced Tectonic Masterpieces</p>
+                              <p className="text-[11px] text-gray-500 mt-0.5 leading-tight">
+                                Structural feats &amp; deep syllabus. 300 Pts/Q • 5s/Q lightning pace!
                               </p>
                             </button>
                           </div>
@@ -1434,17 +1421,17 @@ export default function QuizPlayPage() {
                               { 
                                 count: 10, 
                                 label: "10 Questions", 
-                                time: difficulty === "easy" ? "2m 30s" : difficulty === "medium" ? "1m 40s" : "50s" 
+                                time: (difficulty === "master" || difficulty === "hard") ? "50s" : "2m 30s" 
                               },
                               { 
                                 count: 20, 
                                 label: "20 Questions", 
-                                time: difficulty === "easy" ? "5m" : difficulty === "medium" ? "3m 20s" : "1m 40s" 
+                                time: (difficulty === "master" || difficulty === "hard") ? "1m 40s" : "5m" 
                               },
                               { 
-                                count: 40, 
-                                label: "40 Questions", 
-                                time: difficulty === "easy" ? "10m" : difficulty === "medium" ? "6m 40s" : "3m 20s" 
+                                count: 50, 
+                                label: "50 Questions", 
+                                time: (difficulty === "master" || difficulty === "hard") ? "4m 10s" : "12m 30s" 
                               }
                             ].map(item => (
                               <button
@@ -1883,17 +1870,13 @@ export default function QuizPlayPage() {
                           Question {currentIndex + 1} of {questions.length}
                         </span>
 
-                        {qDiff === "easy" ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 flex items-center gap-1 border border-emerald-200">
-                            🟢 Famous Landmark (100 pts)
-                          </span>
-                        ) : qDiff === "hard" ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-800 flex items-center gap-1 border border-red-200">
-                            🔴 Advanced Tectonic (500 pts)
+                        {qDiff === "master" || qDiff === "hard" ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-900 flex items-center gap-1 border border-blue-200 uppercase tracking-wide">
+                            Deep Master (300 pts)
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800 flex items-center gap-1 border border-amber-200">
-                            🟡 Syllabus Classic (200 pts)
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 flex items-center gap-1 border border-amber-200 uppercase tracking-wide">
+                            Popular &amp; Iconic (100 pts)
                           </span>
                         )}
 
@@ -2327,31 +2310,27 @@ export default function QuizPlayPage() {
                   </button>
                 </div>
 
-                {/* 3 Difficulty Tabs: Easy / Medium / Hard */}
-                <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-4">
+                {/* 2-Tier Tabs: Popular & Iconic / Deep Master */}
+                <div className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1 rounded-xl mb-4">
                   <button
-                    onClick={() => setLeaderboardDifficulty("easy")}
-                    className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardDifficulty === "easy" ? "bg-white text-emerald-800 shadow-xs" : "text-gray-500 hover:text-black"
+                    onClick={() => setLeaderboardDifficulty("popular")}
+                    className={`py-1.5 text-xs font-black rounded-lg transition ${
+                      leaderboardDifficulty === "popular" || leaderboardDifficulty === "easy" || leaderboardDifficulty === "medium"
+                        ? "bg-white text-amber-900 shadow-xs" 
+                        : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    🟢 Easy
+                    Popular &amp; Iconic
                   </button>
                   <button
-                    onClick={() => setLeaderboardDifficulty("medium")}
-                    className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardDifficulty === "medium" ? "bg-white text-amber-800 shadow-xs" : "text-gray-500 hover:text-black"
+                    onClick={() => setLeaderboardDifficulty("master")}
+                    className={`py-1.5 text-xs font-black rounded-lg transition ${
+                      leaderboardDifficulty === "master" || leaderboardDifficulty === "hard"
+                        ? "bg-white text-blue-900 shadow-xs" 
+                        : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    🟡 Medium
-                  </button>
-                  <button
-                    onClick={() => setLeaderboardDifficulty("hard")}
-                    className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardDifficulty === "hard" ? "bg-white text-red-800 shadow-xs" : "text-gray-500 hover:text-black"
-                    }`}
-                  >
-                    🔴 Hard
+                    Deep Master
                   </button>
                 </div>
 

@@ -23,7 +23,7 @@ export default function QuizzesHubPage() {
   // Start Quiz Setup Modal state
   const [setupModalQuiz, setSetupModalQuiz] = useState<any | null>(null);
   const [modalMode, setModalMode] = useState<"challenge" | "practice">("challenge");
-  const [modalDifficulty, setModalDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [modalDifficulty, setModalDifficulty] = useState<string>("popular");
   const [modalCount, setModalCount] = useState<number>(10);
   const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
 
@@ -31,10 +31,11 @@ export default function QuizzesHubPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
 
-  // Dynamic time estimate helper per question count & difficulty:
-  // Easy: 15s/Q, Medium: 10s/Q, Hard: 5s/Q
-  const getTimeEstimate = (count: number, diff: "easy" | "medium" | "hard") => {
-    const perQ = diff === "easy" ? 15 : diff === "medium" ? 10 : 5;
+  // Dynamic time estimate helper per question count & 2-tier difficulty:
+  // Popular & Iconic: 15s/Q, Deep Master: 5s/Q
+  const getTimeEstimate = (count: number, diff: string) => {
+    const isMaster = diff === "master" || diff === "hard";
+    const perQ = isMaster ? 5 : 15;
     const totalSecs = count * perQ;
     const mins = Math.floor(totalSecs / 60);
     const secs = totalSecs % 60;
@@ -42,8 +43,8 @@ export default function QuizzesHubPage() {
     return secs === 0 ? `${mins} mins` : `${mins}m ${secs}s`;
   };
 
-  // Leaderboard state
-  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  // Leaderboard state (2-tier system: "popular" & "master")
+  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<string>("popular");
   const [leaderboardQuizFilter, setLeaderboardQuizFilter] = useState<string>("all");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
@@ -91,10 +92,14 @@ export default function QuizzesHubPage() {
   const fetchLeaderboard = async () => {
     setLoadingLeaderboard(true);
     try {
+      const diffValues = (leaderboardDifficulty === "master" || leaderboardDifficulty === "hard")
+        ? ["master", "hard"]
+        : ["popular", "easy", "medium"];
+
       let query = supabase
         .from("quiz_scores")
         .select("id, display_name, points, score, total_questions, difficulty, time_taken_seconds, created_at, user_id, guest_session_id, quiz_id")
-        .eq("difficulty", leaderboardDifficulty);
+        .in("difficulty", diffValues);
 
       if (leaderboardQuizFilter !== "all") {
         query = query.eq("quiz_id", leaderboardQuizFilter);
@@ -648,31 +653,27 @@ export default function QuizzesHubPage() {
                   </span>
                 </div>
 
-                {/* Difficulty Tabs: Easy / Medium / Hard */}
-                <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-2.5">
+                {/* 2-Tier Tabs: Popular & Iconic / Deep Master */}
+                <div className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1 rounded-xl mb-2.5">
                   <button
-                    onClick={() => setLeaderboardDifficulty("easy")}
-                    className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardDifficulty === "easy" ? "bg-white text-emerald-800 shadow-xs" : "text-gray-500 hover:text-black"
+                    onClick={() => setLeaderboardDifficulty("popular")}
+                    className={`py-1.5 text-xs font-black rounded-lg transition ${
+                      leaderboardDifficulty === "popular" || leaderboardDifficulty === "easy" || leaderboardDifficulty === "medium"
+                        ? "bg-white text-amber-900 shadow-xs" 
+                        : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    🟢 Easy
+                    Popular &amp; Iconic
                   </button>
                   <button
-                    onClick={() => setLeaderboardDifficulty("medium")}
-                    className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardDifficulty === "medium" ? "bg-white text-amber-800 shadow-xs" : "text-gray-500 hover:text-black"
+                    onClick={() => setLeaderboardDifficulty("master")}
+                    className={`py-1.5 text-xs font-black rounded-lg transition ${
+                      leaderboardDifficulty === "master" || leaderboardDifficulty === "hard"
+                        ? "bg-white text-blue-900 shadow-xs" 
+                        : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    🟡 Medium
-                  </button>
-                  <button
-                    onClick={() => setLeaderboardDifficulty("hard")}
-                    className={`py-1 text-xs font-bold rounded-lg transition ${
-                      leaderboardDifficulty === "hard" ? "bg-white text-red-800 shadow-xs" : "text-gray-500 hover:text-black"
-                    }`}
-                  >
-                    🔴 Hard
+                    Deep Master
                   </button>
                 </div>
 
@@ -752,20 +753,16 @@ export default function QuizzesHubPage() {
 
                 <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-emerald-700 shrink-0">🟢 Easy (Beginner):</span>
-                    <span>15s/Q &bull; 100 pts per correct answer &bull; Obvious iconic choices.</span>
+                    <span className="font-black text-amber-800 shrink-0">Popular &amp; Iconic:</span>
+                    <span>15s/Q &bull; 100 pts per correct answer &bull; Globally recognized architectural icons &amp; viral landmarks.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-amber-700 shrink-0">🟡 Medium (Intermediate):</span>
-                    <span>10s/Q &bull; 200 pts per correct answer &bull; Subtle architectural distractors.</span>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <span className="font-black text-rose-700 shrink-0">🔴 Hard (Advanced):</span>
-                    <span>5s/Q &bull; 500 pts per correct answer &bull; Rapid instinct round!</span>
+                    <span className="font-black text-blue-800 shrink-0">Deep Master:</span>
+                    <span>5s/Q &bull; 300 pts per correct answer &bull; Advanced tectonic milestones, structural feats &amp; deep syllabus. Lightning instinct pace!</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
                     <span className="font-black">⚡ Modes:</span>
-                    <span><strong>Practice (Gold Tier):</strong> Instant answers after each question &bull; <strong>Challenge:</strong> Countdown timer + points.</span>
+                    <span><strong>Practice:</strong> Instant answers revealed with zero timer &bull; <strong>Challenge:</strong> Continuous countdown timer + speed bonus + arena rankings.</span>
                   </div>
                 </div>
               </div>
@@ -886,26 +883,25 @@ export default function QuizzesHubPage() {
                   <span>2. Difficulty Tier</span>
                   <span className="text-[11px] font-normal text-gray-400 lowercase">adjusts allotted time per question</span>
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   {[
-                    { id: "easy", icon: "🟢", label: "Easy", sub: "Beginner", time: "20s / question", activeClass: "border-emerald-600 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
-                    { id: "medium", icon: "🟡", label: "Medium", sub: "Intermediate", time: "15s / question", activeClass: "border-amber-600 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
-                    { id: "hard", icon: "🔴", label: "Hard", sub: "Advanced", time: "10s / question", activeClass: "border-rose-600 bg-rose-50/70 text-rose-950 ring-2 ring-rose-500/20" }
+                    { id: "popular", label: "Popular & Iconic", sub: "Famous Landmarks", time: "15s / Q • 100 Pts", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
+                    { id: "master", label: "Deep Master", sub: "Tectonic Feats", time: "5s / Q • 300 Pts", activeClass: "border-blue-600 bg-blue-50/70 text-blue-950 ring-2 ring-blue-500/20" }
                   ].map(d => {
-                    const isSelected = modalDifficulty === d.id;
+                    const isSelected = modalDifficulty === d.id || (d.id === "popular" && (modalDifficulty === "easy" || modalDifficulty === "medium")) || (d.id === "master" && modalDifficulty === "hard");
                     return (
                       <button
                         key={d.id}
                         type="button"
-                        onClick={() => setModalDifficulty(d.id as any)}
-                        className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                        onClick={() => setModalDifficulty(d.id)}
+                        className={`p-3.5 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                           isSelected 
                             ? `${d.activeClass} font-black shadow-xs` 
                             : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
                         }`}
                       >
-                        <span className="text-xs font-black flex items-center gap-1 mb-0.5">
-                          <span>{d.icon}</span> {d.label}
+                        <span className="text-xs font-black uppercase tracking-wider mb-0.5">
+                          {d.label}
                         </span>
                         <span className={`text-[11px] font-bold ${isSelected ? "text-gray-900" : "text-gray-500"}`}>
                           {d.sub}

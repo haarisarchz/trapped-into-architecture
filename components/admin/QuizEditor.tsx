@@ -487,17 +487,17 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     }
   };
 
-  // Difficulty counts
-  const countEasy = questions.filter(q => q.difficulty === "easy").length;
-  const countMedium = questions.filter(q => q.difficulty === "medium").length;
-  const countHard = questions.filter(q => q.difficulty === "hard").length;
+  // 2-Tier Difficulty counts (Popular & Iconic vs Deep Master)
+  const countPopular = questions.filter(q => q.difficulty === "popular" || q.difficulty === "easy" || q.difficulty === "medium").length;
+  const countMaster = questions.filter(q => q.difficulty === "master" || q.difficulty === "hard").length;
 
   const filteredQuestionsWithOriginalIndices = questions
     .map((q, idx) => ({ q, originalIndex: idx }))
     .filter(({ q, originalIndex }) => {
       if (filterDifficulty === "all") return true;
       if (retainedInFilter[originalIndex]) return true;
-      return q.difficulty === filterDifficulty;
+      const qTier = (q.difficulty === "master" || q.difficulty === "hard") ? "master" : "popular";
+      return qTier === filterDifficulty;
     });
 
   if (loading) {
@@ -795,36 +795,27 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleFilterChange("easy")}
+                  onClick={() => handleFilterChange("popular")}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                    filterDifficulty === "easy" ? "bg-emerald-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-emerald-700"
+                    filterDifficulty === "popular" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-800"
                   }`}
                 >
-                  🟢 Easy • 100 pts ({countEasy})
+                  Popular &amp; Iconic • 100 pts ({countPopular})
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleFilterChange("medium")}
+                  onClick={() => handleFilterChange("master")}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                    filterDifficulty === "medium" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-700"
+                    filterDifficulty === "master" ? "bg-blue-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-blue-800"
                   }`}
                 >
-                  🟡 Medium • 200 pts ({countMedium})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFilterChange("hard")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                    filterDifficulty === "hard" ? "bg-red-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-red-700"
-                  }`}
-                >
-                  🔴 Hard • 500 pts ({countHard})
+                  Deep Master • 300 pts ({countMaster})
                 </button>
               </div>
             </div>
 
             <div className="text-[11px] font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
-              Scoring: <span className="text-emerald-700 font-black">Easy = 100 pts</span> • <span className="text-amber-700 font-black">Medium = 200 pts</span> • <span className="text-rose-700 font-black">Hard = 500 pts</span>
+              Scoring: <span className="text-amber-800 font-black">Popular &amp; Iconic = 100 pts</span> • <span className="text-blue-800 font-black">Deep Master = 300 pts</span>
             </div>
           </div>
         </div>
@@ -885,50 +876,36 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         {originalIndex + 1}
                       </span>
 
-                      {/* 🟢🟡🔴 MANUAL DIFFICULTY SELECTOR WITH TICK MARK CONFIRMATION */}
+                      {/* MANUAL 2-TIER DIFFICULTY SELECTOR WITH TICK MARK CONFIRMATION */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/80">
                           <button
                             type="button"
-                            onClick={() => handleSelectDifficulty(originalIndex, "easy")}
+                            onClick={() => handleSelectDifficulty(originalIndex, "popular")}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                              hasPending && stagedDiff === "easy"
-                                ? "bg-emerald-500 text-white ring-2 ring-emerald-600 ring-offset-1 font-black shadow-xs"
-                                : !hasPending && currentDiff === "easy"
-                                ? "bg-emerald-600 text-white shadow-xs font-extrabold"
-                                : "text-gray-600 hover:text-black hover:bg-white/70"
-                            }`}
-                            title="Select Easy (100 points)"
-                          >
-                            <span>🟢</span> Easy (100 pts)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectDifficulty(originalIndex, "medium")}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                              hasPending && stagedDiff === "medium"
+                              hasPending && (stagedDiff === "popular" || stagedDiff === "easy" || stagedDiff === "medium")
                                 ? "bg-amber-500 text-black ring-2 ring-amber-600 ring-offset-1 font-black shadow-xs"
-                                : !hasPending && currentDiff === "medium"
+                                : !hasPending && (currentDiff === "popular" || currentDiff === "easy" || currentDiff === "medium")
                                 ? "bg-amber-500 text-black shadow-xs font-black"
                                 : "text-gray-600 hover:text-black hover:bg-white/70"
                             }`}
-                            title="Select Medium (200 points)"
+                            title="Select Popular & Iconic (100 points)"
                           >
-                            <span>🟡</span> Medium (200 pts)
+                            Popular &amp; Iconic (100 pts)
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleSelectDifficulty(originalIndex, "hard")}
+                            onClick={() => handleSelectDifficulty(originalIndex, "master")}
                             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                              hasPending && stagedDiff === "hard"
-                                ? "bg-red-600 text-white ring-2 ring-red-700 ring-offset-1 font-black shadow-xs"
-                                : !hasPending && currentDiff === "hard"
-                                ? "bg-red-600 text-white shadow-xs font-extrabold"
+                              hasPending && (stagedDiff === "master" || stagedDiff === "hard")
+                                ? "bg-blue-600 text-white ring-2 ring-blue-700 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && (currentDiff === "master" || currentDiff === "hard")
+                                ? "bg-blue-600 text-white shadow-xs font-extrabold"
                                 : "text-gray-600 hover:text-black hover:bg-white/70"
                             }`}
-                            title="Select Hard (500 points)"
+                            title="Select Deep Master (300 points)"
                           >
-                            <span>🔴</span> Hard (500 pts)
+                            Deep Master (300 pts)
                           </button>
                         </div>
 
@@ -942,7 +919,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                               title="Click tick mark to apply this difficulty change"
                             >
                               <Check size={14} className="stroke-[3] text-emerald-400" />
-                              <span>Apply {stagedDiff?.toUpperCase()} ✓</span>
+                              <span>Apply {stagedDiff === "master" ? "DEEP MASTER" : "POPULAR & ICONIC"} ✓</span>
                             </button>
                             <button
                               type="button"
@@ -1166,8 +1143,8 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
             <p className="text-sm font-bold text-gray-900">
               {questions.length} Questions Ready
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              🟢 {countEasy} Easy • 🟡 {countMedium} Medium • 🔴 {countHard} Hard
+            <p className="text-xs text-gray-500 mt-0.5 font-bold">
+              <span className="text-amber-800">{countPopular} Popular &amp; Iconic</span> • <span className="text-blue-800">{countMaster} Deep Master</span>
             </p>
           </div>
 
