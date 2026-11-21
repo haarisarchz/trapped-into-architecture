@@ -6,7 +6,7 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Save, Sparkles, UploadCloud, 
   Loader2, CheckCircle2, ArrowLeft, Image as ImageIcon, HelpCircle, Eye, RefreshCw, Wand2,
   ZoomIn, X, Check, Filter, AlertCircle, CheckSquare, Square, LayoutList, Grid, Layers,
-  ChevronDown, ChevronUp, Search
+  ChevronDown, ChevronUp, Search, RotateCcw
 } from "lucide-react";
 import { getQuestionDifficulty, QuestionDifficulty } from "@/lib/quizDifficulty";
 
@@ -22,6 +22,7 @@ interface Question {
   accepted_aliases: string[];
   explanation_clue: string;
   difficulty?: QuestionDifficulty;
+  is_removed?: boolean;
 }
 
 interface QuizEditorProps {
@@ -63,7 +64,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
   // Questions State
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [filterDifficulty, setFilterDifficulty] = useState<"all" | QuestionDifficulty>("all");
+  const [filterDifficulty, setFilterDifficulty] = useState<"all" | QuestionDifficulty | "removed">("all");
   const [zoomImageUrl, setZoomImageUrl] = useState<{ url: string; title: string } | null>(null);
   
   // Staged difficulty changes & retained items in active filter
@@ -123,17 +124,18 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
       if (quesData && quesData.length > 0) {
         setQuestions(quesData.map(q => {
-          const explicitDiff = Array.isArray(q.accepted_aliases)
-            ? q.accepted_aliases.find((a: string) => typeof a === "string" && a.startsWith("diff:"))?.split(":")[1]
-            : null;
-          const resolvedDiff = (explicitDiff as QuestionDifficulty) || getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases);
+          const cleanAliases = Array.isArray(q.accepted_aliases) ? q.accepted_aliases : [];
+          const isRemoved = (q as any).is_removed === true || cleanAliases.some((a: string) => typeof a === "string" && (a === "status:removed" || a === "archived:true"));
+          const explicitDiff = cleanAliases.find((a: string) => typeof a === "string" && a.startsWith("diff:"))?.split(":")[1];
+          const resolvedDiff = (explicitDiff as QuestionDifficulty) || getQuestionDifficulty(q.correct_answer || q.question_text || "", cleanAliases);
 
           return {
             ...q,
             question_type: (q.question_type as any) || "choose",
             options: Array.isArray(q.options) ? q.options : [],
-            accepted_aliases: Array.isArray(q.accepted_aliases) ? q.accepted_aliases : [],
-            difficulty: resolvedDiff || "medium"
+            accepted_aliases: cleanAliases,
+            difficulty: resolvedDiff || "medium",
+            is_removed: isRemoved
           };
         }));
       }
@@ -238,7 +240,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   };
 
   // Filter change helper: switches filter and clears retained items
-  const handleFilterChange = (newFilter: "all" | QuestionDifficulty) => {
+  const handleFilterChange = (newFilter: "all" | QuestionDifficulty | "removed") => {
     setFilterDifficulty(newFilter);
     setRetainedInFilter({});
     setPendingDiff({});
@@ -672,9 +674,34 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     }
   };
 
+  // Soft delete: marks question as removed so it moves to "Removed Questions" pool
   const removeQuestion = (idx: number) => {
-    const updated = questions.filter((_, i) => i !== idx).map((q, i) => ({ ...q, order_index: i + 1 }));
-    setQuestions(updated);
+    setQuestions(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], is_removed: true };
+      return copy;
+    });
+    setToastMsg({ text: "Question moved to 'Removed Questions'. You can restore it anytime.", type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Restore question back to active quiz
+  const restoreQuestion = (idx: number) => {
+    setQuestions(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], is_removed: false };
+      return copy;
+    });
+    setToastMsg({ text: "Question restored back to active quiz!", type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Permanently delete question from database
+  const permanentlyDeleteQuestion = (idx: number) => {
+    if (!confirm("Are you sure you want to permanently delete this question from the database? This cannot be undone.")) return;
+    setQuestions(prev => prev.filter((_, i) => i !== idx));
+    setToastMsg({ text: "Question permanently deleted.", type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
   };
 
   const handleSaveQuiz = async (publishState?: boolean) => {
@@ -746,7 +773,11 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
         const questionsToInsert = activeQuestions.map((q, idx) => {
           const diffVal = q.difficulty || "medium";
-          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:") && a !== "status:removed" && a !== "archived:true");
+          const finalAliases = [`diff:${diffVal}`, ...cleanAliases];
+          if (q.is_removed) {
+            finalAliases.push("status:removed");
+          }
 
           return {
             quiz_id: activeQuizId,
@@ -757,7 +788,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
             media_url: q.media_url.trim(),
             options: q.options || [],
             correct_answer: q.correct_answer.trim(),
-            accepted_aliases: [`diff:${diffVal}`, ...cleanAliases],
+            accepted_aliases: finalAliases,
             explanation_clue: (q.explanation_clue || "").trim()
           };
         });
@@ -782,17 +813,26 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     }
   };
 
-  // 2-Tier Difficulty counts (Popular & Iconic vs Deep Master)
-  const countPopular = questions.filter(q => q.difficulty === "popular" || q.difficulty === "easy" || q.difficulty === "medium").length;
-  const countMaster = questions.filter(q => q.difficulty === "master" || q.difficulty === "hard").length;
+  // Active vs. Removed counts
+  const countRemoved = questions.filter(q => q.is_removed).length;
+  const countActive = questions.filter(q => !q.is_removed).length;
+  const countPopular = questions.filter(q => !q.is_removed && (q.difficulty === "popular" || q.difficulty === "easy" || q.difficulty === "medium")).length;
+  const countMaster = questions.filter(q => !q.is_removed && (q.difficulty === "master" || q.difficulty === "hard")).length;
 
   const filteredQuestionsWithOriginalIndices = questions
     .map((q, idx) => ({ q, originalIndex: idx }))
     .filter(({ q, originalIndex }) => {
-      // 1. Difficulty category filter
-      if (filterDifficulty !== "all" && !retainedInFilter[originalIndex]) {
-        const qTier = (q.difficulty === "master" || q.difficulty === "hard") ? "master" : "popular";
-        if (qTier !== filterDifficulty) return false;
+      // 1. Removed status filter
+      if (filterDifficulty === "removed") {
+        if (!q.is_removed) return false;
+      } else {
+        if (q.is_removed) return false;
+
+        // Difficulty category filter
+        if (filterDifficulty !== "all" && !retainedInFilter[originalIndex]) {
+          const qTier = (q.difficulty === "master" || q.difficulty === "hard") ? "master" : "popular";
+          if (qTier !== filterDifficulty) return false;
+        }
       }
 
       // 2. Question text, answer & options search query filter
@@ -1321,7 +1361,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                     filterDifficulty === "all" ? "bg-white text-black shadow-xs font-extrabold" : "text-gray-600 hover:text-black"
                   }`}
                 >
-                  All ({questions.length})
+                  All ({countActive})
                 </button>
                 <button
                   type="button"
@@ -1340,6 +1380,20 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   }`}
                 >
                   Architecture Master • 300 pts ({countMaster})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange("removed")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    filterDifficulty === "removed" ? "bg-gray-900 text-white shadow-xs font-extrabold" : "text-gray-500 hover:text-red-700"
+                  }`}
+                >
+                  <span>🗑️ Removed Questions</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    countRemoved > 0 ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                  }`}>
+                    {countRemoved}
+                  </span>
                 </button>
               </div>
             </div>
@@ -1543,14 +1597,35 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                       >
                         <ArrowDown size={14} />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeQuestion(originalIndex)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                        title="Delete Question"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {q.is_removed ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => restoreQuestion(originalIndex)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer"
+                            title="Add Back to Quiz"
+                          >
+                            <RotateCcw size={12} /> Restore
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => permanentlyDeleteQuestion(originalIndex)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Permanently Delete Question"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(originalIndex)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                          title="Remove question from this quiz (moves to Removed pool)"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1673,16 +1748,52 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                       >
                         <ArrowDown size={16} />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeQuestion(originalIndex)}
-                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition ml-2"
-                        title="Delete Question"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {q.is_removed ? (
+                        <div className="flex items-center gap-2 ml-2">
+                          <button
+                            type="button"
+                            onClick={() => restoreQuestion(originalIndex)}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                            title="Add Back to Quiz"
+                          >
+                            <RotateCcw size={14} /> Add Back to Quiz
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => permanentlyDeleteQuestion(originalIndex)}
+                            className="p-1.5 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Permanently Delete Question from Database"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(originalIndex)}
+                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition ml-2 cursor-pointer"
+                          title="Remove question from this quiz (moves to Removed pool)"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
+
+                  {q.is_removed && (
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-xs font-bold text-amber-900">
+                      <div className="flex items-center gap-2">
+                        <span>⚠️ This question is excluded from the active quiz. It remains safely saved in the database.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => restoreQuestion(originalIndex)}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs transition shrink-0 cursor-pointer"
+                      >
+                        <RotateCcw size={12} /> Add Back to Quiz
+                      </button>
+                    </div>
+                  )}
 
                   {/* BODY: IMAGE PREVIEW (LARGE) & EDITABLE FIELDS */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">

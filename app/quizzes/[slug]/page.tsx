@@ -95,6 +95,10 @@ export default function QuizPlayPage() {
   const [timerSeconds, setTimerSeconds] = useState<number>(180);
   const [totalTimeElapsed, setTotalTimeElapsed] = useState<number>(0);
 
+  // Clues & Catalog Metadata for progressive hints
+  const [unlockedClues, setUnlockedClues] = useState<Record<number, { location?: boolean; architect?: boolean }>>({});
+  const [catalogMap, setCatalogMap] = useState<Record<string, { city?: string; country?: string; architect?: string; opened_year?: any; architectural_style?: string; puzzle_clues?: string }>>({});
+
   // Results State
   const [resultsSummary, setResultsSummary] = useState<{
     attemptId: string | null;
@@ -110,6 +114,7 @@ export default function QuizPlayPage() {
     totalTimeElapsed: number;
     totalAllottedTime: number;
     timedOut: boolean;
+    cluesUsed?: number;
   } | null>(null);
 
   const [showQuestionReview, setShowQuestionReview] = useState(false);
@@ -196,7 +201,8 @@ export default function QuizPlayPage() {
     try {
       const [
         { data: qData, error: qErr },
-        { data: oqData }
+        { data: oqData },
+        { data: catData }
       ] = await Promise.all([
         supabase
           .from("quizzes")
@@ -208,12 +214,34 @@ export default function QuizPlayPage() {
           .select("id, title, slug, category, cover_image, quiz_questions(count)")
           .eq("is_published", true)
           .neq("slug", slug)
-          .limit(4)
+          .limit(4),
+        supabase
+          .from("architecture_catalog")
+          .select("data")
       ]);
 
       if (qErr || !qData) throw new Error("Quiz not found");
       setQuiz(qData);
       if (oqData) setOtherQuizzes(oqData);
+
+      if (catData) {
+        const cmap: Record<string, any> = {};
+        catData.forEach((row: any) => {
+          const d = row.data || {};
+          const name = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+          if (name) {
+            cmap[name] = {
+              city: d.city,
+              country: d.country,
+              architect: d.architect,
+              opened_year: d.opened_year,
+              architectural_style: d.architectural_style,
+              puzzle_clues: d.puzzle_clues
+            };
+          }
+        });
+        setCatalogMap(cmap);
+      }
 
       const { data: quesData } = await supabase
         .from("quiz_questions")
@@ -222,7 +250,14 @@ export default function QuizPlayPage() {
         .order("order_index", { ascending: true });
 
       if (quesData) {
-        const formatted = quesData.map(q => ({
+        // Exclude removed/archived questions from active gameplay
+        const activeOnly = quesData.filter(q => {
+          const aliases = Array.isArray(q.accepted_aliases) ? q.accepted_aliases : [];
+          const isRemoved = (q as any).is_removed === true || aliases.some((a: string) => typeof a === "string" && (a === "status:removed" || a === "archived:true"));
+          return !isRemoved;
+        });
+
+        const formatted = activeOnly.map(q => ({
           ...q,
           question_type: (q.question_type as any) || "choose",
           options: Array.isArray(q.options) ? q.options : [],
@@ -512,6 +547,54 @@ export default function QuizPlayPage() {
     return 100;
   };
 
+  // Dynamic Clue Resolver from Catalog & Question Metadata
+  const getQuestionClues = (q: Question) => {
+    if (!q) return { location: "Global Architectural Heritage", architect: "Master Architect / Pioneer Studio" };
+
+    const targetKey = normalize(q.correct_answer || "");
+    const qTextNorm = normalize(q.question_text || "");
+
+    // 1. Look up in catalogMap
+    let match = Object.entries(catalogMap).find(([k]) => {
+      const kNorm = normalize(k);
+      return kNorm === targetKey || targetKey.includes(kNorm) || kNorm.includes(targetKey) || qTextNorm.includes(kNorm);
+    })?.[1];
+
+    let locationText = "";
+    let architectText = "";
+
+    if (match) {
+      if (match.city || match.country) {
+        locationText = [match.city, match.country].filter(Boolean).join(", ");
+      }
+      if (match.architect) {
+        architectText = `${match.architect}${match.opened_year ? ' (Opened ' + match.opened_year + ')' : ''}${match.architectural_style ? ' • ' + match.architectural_style : ''}`;
+      }
+    }
+
+    if (!locationText && q.explanation_clue) {
+      locationText = q.explanation_clue;
+    }
+    if (!architectText && q.explanation_clue) {
+      architectText = q.explanation_clue;
+    }
+
+    return {
+      location: locationText || "International Architectural Landmark",
+      architect: architectText || "Celebrated Master Architect"
+    };
+  };
+
+  const handleUnlockClue = (type: "location" | "architect") => {
+    setUnlockedClues(prev => ({
+      ...prev,
+      [currentIndex]: {
+        ...(prev[currentIndex] || {}),
+        [type]: true
+      }
+    }));
+  };
+
   // Select or change answer
   const handleSelectAnswer = (selected: string) => {
     const currentQ = questions[currentIndex];
@@ -558,12 +641,19 @@ export default function QuizPlayPage() {
     let baseScore = 0;
     let skippedCount = 0;
     let unansweredCount = 0;
+    let totalCluesUsed = 0;
 
     questions.forEach((q, idx) => {
       const ans = userAnswers[idx];
+      const clues = unlockedClues[idx] || {};
+      const cluesCount = (clues.location ? 1 : 0) + (clues.architect ? 1 : 0);
+      totalCluesUsed += cluesCount;
+
       if (isAnswerCorrect(q, ans)) {
         correctCount++;
-        baseScore += getQuestionBasePoints(q);
+        const base = getQuestionBasePoints(q);
+        const earned = Math.round(base * (cluesCount === 2 ? (1 / 3) : cluesCount === 1 ? (2 / 3) : 1));
+        baseScore += earned;
       } else if (skippedQuestions[idx]) {
         skippedCount++;
       } else if (!ans) {
@@ -648,7 +738,8 @@ export default function QuizPlayPage() {
       totalQuestions: questions.length,
       totalTimeElapsed,
       totalAllottedTime,
-      timedOut
+      timedOut,
+      cluesUsed: totalCluesUsed
     });
 
     trackEvent("quiz_complete", {
@@ -1509,8 +1600,8 @@ export default function QuizPlayPage() {
                   </h2>
                   <p className="text-xs text-gray-500 mt-1">Here is your verified performance breakdown</p>
 
-                  {/* 4 Score Metric Cards */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-6">
+                  {/* 5 Score Metric Cards */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 my-6">
                     <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Accuracy</p>
                       <p className="text-2xl font-black text-emerald-700 mt-1">{resultsSummary.accuracyPercentage}%</p>
@@ -1523,13 +1614,19 @@ export default function QuizPlayPage() {
                       <p className="text-[10px] text-blue-600 font-medium mt-0.5">{resultsSummary.baseScore} Base + {resultsSummary.timeBonus} Bonus</p>
                     </div>
 
+                    <div className="bg-purple-50/70 p-4 rounded-2xl border border-purple-200">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-purple-800">Clues Used</p>
+                      <p className="text-2xl font-black text-purple-700 mt-1">{resultsSummary.cluesUsed || 0}</p>
+                      <p className="text-[10px] text-purple-600 font-medium mt-0.5">{(resultsSummary.cluesUsed || 0) === 0 ? "Pure Run ✨" : "Assisted"}</p>
+                    </div>
+
                     <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Speed Bonus</p>
                       <p className="text-2xl font-black text-amber-600 mt-1">+{resultsSummary.timeBonus} PTS</p>
                       <p className="text-[10px] text-amber-600 font-medium mt-0.5">Based on pace</p>
                     </div>
 
-                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200 col-span-2 sm:col-span-1">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Total Time</p>
                       <p className="text-2xl font-black text-gray-900 mt-1 font-mono">{formatTime(resultsSummary.totalTimeElapsed)}</p>
                       <p className="text-[10px] text-gray-400 font-medium mt-0.5">
@@ -2045,10 +2142,79 @@ export default function QuizPlayPage() {
                       </div>
                     </div>
 
-                    {/* Question Prompt */}
-                    <h2 className="text-base sm:text-lg font-black text-gray-900 mb-4 leading-snug">
-                      {currentQ.question_text}
-                    </h2>
+                    {/* Question Prompt & Pinned Header Clue Ribbon (Option C) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                      <h2 className="text-base sm:text-lg font-black text-gray-900 leading-snug flex-1">
+                        {currentQ.question_text}
+                      </h2>
+
+                      {/* CLUE RIBBON BUTTONS (Option C: Pinned Header Ribbon) */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleUnlockClue("location")}
+                          disabled={Boolean(unlockedClues[currentIndex]?.location)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
+                            unlockedClues[currentIndex]?.location
+                              ? "bg-blue-100 text-blue-900 border border-blue-300 font-extrabold cursor-default"
+                              : "bg-blue-50 hover:bg-blue-100 text-blue-950 border border-blue-200 cursor-pointer"
+                          }`}
+                          title="Reveal Location Hint (-1/3 potential points)"
+                        >
+                          <span>📍</span>
+                          <span>{unlockedClues[currentIndex]?.location ? "Location Revealed" : "Location Clue"}</span>
+                          {!unlockedClues[currentIndex]?.location && (
+                            <span className="text-[10px] text-blue-700 font-extrabold bg-blue-100 px-1.5 py-0.2 rounded-md">
+                              -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
+                            </span>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleUnlockClue("architect")}
+                          disabled={Boolean(unlockedClues[currentIndex]?.architect)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
+                            unlockedClues[currentIndex]?.architect
+                              ? "bg-purple-100 text-purple-900 border border-purple-300 font-extrabold cursor-default"
+                              : "bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 cursor-pointer"
+                          }`}
+                          title="Reveal Architect Hint (-1/3 potential points)"
+                        >
+                          <span>👤</span>
+                          <span>{unlockedClues[currentIndex]?.architect ? "Architect Revealed" : "Architect Clue"}</span>
+                          {!unlockedClues[currentIndex]?.architect && (
+                            <span className="text-[10px] text-purple-700 font-extrabold bg-purple-100 px-1.5 py-0.2 rounded-md">
+                              -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* REVEALED CLUES DISPLAY (Positioned above photo, 100% visible, zero photo obstruction!) */}
+                    {(unlockedClues[currentIndex]?.location || unlockedClues[currentIndex]?.architect) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 animate-in fade-in slide-in-from-top-1 duration-150">
+                        {unlockedClues[currentIndex]?.location && (
+                          <div className="p-3 bg-blue-50/90 border border-blue-200 rounded-xl flex items-center gap-2 text-xs font-bold text-blue-950 shadow-2xs">
+                            <span className="text-base">📍</span>
+                            <div>
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block">Location Hint:</span>
+                              <span>{getQuestionClues(currentQ).location}</span>
+                            </div>
+                          </div>
+                        )}
+                        {unlockedClues[currentIndex]?.architect && (
+                          <div className="p-3 bg-purple-50/90 border border-purple-200 rounded-xl flex items-center gap-2 text-xs font-bold text-purple-950 shadow-2xs">
+                            <span className="text-base">👤</span>
+                            <div>
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block">Architect / Era Hint:</span>
+                              <span>{getQuestionClues(currentQ).architect}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Active Question Content: Media + Options in unified balanced layout */}
                     <div className={`grid grid-cols-1 ${currentQ.media_url ? 'md:grid-cols-12 gap-5' : 'gap-4'} mb-6 items-stretch`}>
