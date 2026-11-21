@@ -2,6 +2,7 @@
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import QuizEditor from "@/components/admin/QuizEditor";
@@ -181,12 +182,12 @@ export default function AdminQuizzesPage() {
 
             {!setupRequired && !loading && (
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setIsCreatingNew(true)}
+                <Link 
+                  href="/admin/quizzes/new"
                   className="flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm"
                 >
                   <Plus size={16} /> Create New Quiz
-                </button>
+                </Link>
                 <AdminQuickMenu />
               </div>
             )}
@@ -293,12 +294,12 @@ export default function AdminQuizzesPage() {
                   <p className="text-xs text-gray-500 mb-6">
                     Create your first quiz! You can import questions, photos, and answers directly from the Architecture Catalog with 1 click.
                   </p>
-                  <button 
-                    onClick={() => setIsCreatingNew(true)}
-                    className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm"
+                  <Link 
+                    href="/admin/quizzes/new"
+                    className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm inline-block"
                   >
                     + Create First Quiz
-                  </button>
+                  </Link>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -394,12 +395,12 @@ export default function AdminQuizzesPage() {
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            <button 
-                              onClick={() => setEditingQuizId(quiz.id)}
+                            <Link 
+                              href={`/admin/quizzes/edit/${quiz.id}`}
                               className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1 border border-gray-200"
                             >
                               <Edit2 size={13} /> Edit
-                            </button>
+                            </Link>
 
                             <a 
                               href={`/quizzes/${quiz.slug}`}
