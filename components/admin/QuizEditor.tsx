@@ -6,7 +6,7 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Save, Sparkles, UploadCloud, 
   Loader2, CheckCircle2, ArrowLeft, Image as ImageIcon, HelpCircle, Eye, RefreshCw, Wand2,
   ZoomIn, X, Check, Filter, AlertCircle, CheckSquare, Square, LayoutList, Grid, Layers,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, Search
 } from "lucide-react";
 import { getQuestionDifficulty, QuestionDifficulty } from "@/lib/quizDifficulty";
 
@@ -75,6 +75,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   const [questionViewMode, setQuestionViewMode] = useState<"detailed" | "compact">("detailed");
   const [showGeneratorAccordion, setShowGeneratorAccordion] = useState<boolean>(false);
   const [syncingDatabase, setSyncingDatabase] = useState<boolean>(false);
+  const [questionSearchQuery, setQuestionSearchQuery] = useState<string>("");
 
   // 1-Click Generator Configuration
   const [questionCol, setQuestionCol] = useState<"building_photo" | "architect_photo" | "building_name" | "puzzle_clues">("building_photo");
@@ -205,6 +206,35 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       delete next[originalIndex];
       return next;
     });
+  };
+
+  // ⚡ Apply all staged category changes across all questions at once (Common Apply)
+  const applyAllStagedChanges = () => {
+    const pendingKeys = Object.keys(pendingDiff).map(k => parseInt(k, 10));
+    if (pendingKeys.length === 0) return;
+
+    setQuestions(prev => prev.map((q, idx) => {
+      const targetDiff = pendingDiff[idx];
+      if (!targetDiff) return q;
+      const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+      return {
+        ...q,
+        difficulty: targetDiff,
+        accepted_aliases: [`diff:${targetDiff}`, ...cleanAliases]
+      };
+    }));
+
+    // Retain questions in active filter so they do not disappear unexpectedly
+    setRetainedInFilter(prev => {
+      const updated = { ...prev };
+      pendingKeys.forEach(k => { updated[k] = true; });
+      return updated;
+    });
+
+    const count = pendingKeys.length;
+    setPendingDiff({});
+    setToastMsg({ text: `✓ Applied category changes to ${count} question(s)!`, type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
   };
 
   // Filter change helper: switches filter and clears retained items
@@ -663,13 +693,31 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
     setSaving(true);
     try {
+      // Auto-commit any pending category selections
+      let activeQuestions = [...questions];
+      const pendingKeys = Object.keys(pendingDiff).map(k => parseInt(k, 10));
+      if (pendingKeys.length > 0) {
+        activeQuestions = activeQuestions.map((q, idx) => {
+          const targetDiff = pendingDiff[idx];
+          if (!targetDiff) return q;
+          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+          return {
+            ...q,
+            difficulty: targetDiff,
+            accepted_aliases: [`diff:${targetDiff}`, ...cleanAliases]
+          };
+        });
+        setQuestions(activeQuestions);
+        setPendingDiff({});
+      }
+
       const pub = publishState !== undefined ? publishState : isPublished;
       const quizPayload = {
         title: title.trim(),
         slug: slug.trim().toLowerCase(),
         description: description.trim(),
         category,
-        cover_image: coverImage.trim() || questions[0]?.media_url || "",
+        cover_image: coverImage.trim() || activeQuestions[0]?.media_url || "",
         is_published: pub,
         updated_at: new Date().toISOString()
       };
@@ -696,7 +744,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       if (activeQuizId) {
         await supabase.from("quiz_questions").delete().eq("quiz_id", activeQuizId);
 
-        const questionsToInsert = questions.map((q, idx) => {
+        const questionsToInsert = activeQuestions.map((q, idx) => {
           const diffVal = q.difficulty || "medium";
           const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
 
@@ -741,10 +789,25 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   const filteredQuestionsWithOriginalIndices = questions
     .map((q, idx) => ({ q, originalIndex: idx }))
     .filter(({ q, originalIndex }) => {
-      if (filterDifficulty === "all") return true;
-      if (retainedInFilter[originalIndex]) return true;
-      const qTier = (q.difficulty === "master" || q.difficulty === "hard") ? "master" : "popular";
-      return qTier === filterDifficulty;
+      // 1. Difficulty category filter
+      if (filterDifficulty !== "all" && !retainedInFilter[originalIndex]) {
+        const qTier = (q.difficulty === "master" || q.difficulty === "hard") ? "master" : "popular";
+        if (qTier !== filterDifficulty) return false;
+      }
+
+      // 2. Question text, answer & options search query filter
+      if (questionSearchQuery.trim()) {
+        const term = questionSearchQuery.toLowerCase().trim();
+        const text = (q.question_text || "").toLowerCase();
+        const ans = (q.correct_answer || "").toLowerCase();
+        const clue = (q.explanation_clue || "").toLowerCase();
+        const opts = (q.options || []).join(" ").toLowerCase();
+        const numStr = String(originalIndex + 1);
+        const matches = text.includes(term) || ans.includes(term) || clue.includes(term) || opts.includes(term) || numStr === term;
+        if (!matches) return false;
+      }
+
+      return true;
     });
 
   if (loading) {
@@ -1176,83 +1239,108 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       {/* STEP 3: QUESTIONS LIST & INLINE DIFFICULTY / TEXT EDITOR */}
       <div className="mb-6">
         
-        {/* Section Header with Difficulty Breakdown & Filters */}
-        <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-xs mb-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* STICKY Section Header with Difficulty Breakdown, Search, Controls & Common Apply */}
+        <div className="sticky top-2 z-30 bg-white/95 backdrop-blur-md rounded-3xl border border-gray-200/90 p-4 sm:p-5 shadow-lg mb-5 transition-all">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+            
+            {/* Title & Question Count */}
             <div>
               <h3 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
                 📝 Questions Management ({questions.length})
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Categorize into Popular (100 pts) vs Architecture Master (300 pts), sync with database, enlarge photos, and edit options.
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Popular (100 pts) vs Architecture Master (300 pts)
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Real-time Search Input */}
+            <div className="relative flex-1 min-w-[200px] max-w-sm w-full">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search questions, landmarks, answers..."
+                value={questionSearchQuery}
+                onChange={e => setQuestionSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-7 py-2 text-xs font-medium border border-gray-200 bg-gray-50/80 rounded-xl focus:outline-none focus:border-black focus:bg-white transition"
+              />
+              {questionSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setQuestionSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
+                  title="Clear search"
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            {/* Top Action Controls: DB Sync, Add, Quick Save */}
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={handleUpdateFromCatalog}
                 disabled={syncingDatabase}
-                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
                 title="Update building photos, trivia clues, and categories from database"
               >
                 {syncingDatabase ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
-                <span>{syncingDatabase ? "Updating..." : "Update from Database"}</span>
+                <span className="hidden sm:inline">{syncingDatabase ? "Updating..." : "Update DB"}</span>
               </button>
 
               <button
+                type="button"
                 onClick={addBlankQuestion}
-                className="px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                className="px-3.5 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
-                <Plus size={14} /> Add Question
+                <Plus size={14} /> <span className="hidden sm:inline">Add Question</span>
               </button>
-              {questions.length > 0 && (
-                <button 
-                  onClick={() => {
-                    if (confirm("Are you sure you want to clear all questions?")) setQuestions([]);
-                  }} 
-                  className="px-3 py-2 text-xs text-red-600 hover:bg-red-50 border border-red-200 rounded-xl font-bold transition cursor-pointer"
-                >
-                  Clear All
-                </button>
-              )}
+
+              <button
+                type="button"
+                onClick={() => handleSaveQuiz(undefined)}
+                disabled={saving}
+                className="px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-extrabold rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                title="Save all changes to database"
+              >
+                {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                <span>Save</span>
+              </button>
             </div>
           </div>
 
-          {/* Difficulty Breakdown Badges, Filter Tabs & View Mode Switcher */}
-          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black uppercase tracking-wider text-gray-700">Category:</span>
-                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => handleFilterChange("all")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      filterDifficulty === "all" ? "bg-white text-black shadow-xs font-extrabold" : "text-gray-600 hover:text-black"
-                    }`}
-                  >
-                    All ({questions.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFilterChange("popular")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                      filterDifficulty === "popular" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-800"
-                    }`}
-                  >
-                    Popular • 100 pts ({countPopular})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFilterChange("master")}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                      filterDifficulty === "master" ? "bg-blue-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-blue-800"
-                    }`}
-                  >
-                    Architecture Master • 300 pts ({countMaster})
-                  </button>
-                </div>
+          {/* Difficulty Breakdown Badges, Filter Tabs, Common Apply Button & View Mode */}
+          <div className="mt-3.5 pt-3.5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-xs font-black uppercase tracking-wider text-gray-700">Filter:</span>
+              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange("all")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    filterDifficulty === "all" ? "bg-white text-black shadow-xs font-extrabold" : "text-gray-600 hover:text-black"
+                  }`}
+                >
+                  All ({questions.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange("popular")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                    filterDifficulty === "popular" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-800"
+                  }`}
+                >
+                  Popular • 100 pts ({countPopular})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange("master")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                    filterDifficulty === "master" ? "bg-blue-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-blue-800"
+                  }`}
+                >
+                  Architecture Master • 300 pts ({countMaster})
+                </button>
               </div>
 
               {/* Select All Visible Toggle */}
@@ -1272,34 +1360,61 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
               )}
             </div>
 
-            {/* View Mode Toggle: Detailed vs Compact */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase tracking-wider text-gray-500">View:</span>
-              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setQuestionViewMode("detailed")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                    questionViewMode === "detailed" ? "bg-white text-black shadow-xs font-black" : "text-gray-500 hover:text-black"
-                  }`}
-                  title="Detailed View with all 4 multiple-choice options and clues"
-                >
-                  <LayoutList size={13} />
-                  <span>Detailed</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQuestionViewMode("compact")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                    questionViewMode === "compact" ? "bg-white text-black shadow-xs font-black" : "text-gray-500 hover:text-black"
-                  }`}
-                  title="Compact Quick Review without option clutter"
-                >
-                  <Grid size={13} />
-                  <span>Compact</span>
-                </button>
+            {/* Right: View Mode Toggle AND Common Apply Button */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* ⚡ COMMON APPLY BUTTON (Appears when there are staged category selections) */}
+              {Object.keys(pendingDiff).length > 0 && (
+                <div className="flex items-center gap-1.5 animate-in fade-in zoom-in-95">
+                  <button
+                    type="button"
+                    onClick={applyAllStagedChanges}
+                    className="px-3.5 py-1.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer ring-2 ring-amber-400/80 hover:scale-105 active:scale-95"
+                    title="Apply all staged category changes"
+                  >
+                    <Check size={14} className="stroke-[3] text-emerald-400" />
+                    <span>Apply All Changes ({Object.keys(pendingDiff).length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingDiff({})}
+                    className="px-2 py-1 text-xs text-gray-500 hover:text-red-600 rounded-lg transition font-bold cursor-pointer"
+                    title="Cancel all staged category changes"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {/* View Mode Toggle: Detailed vs Compact */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black uppercase tracking-wider text-gray-500">View:</span>
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setQuestionViewMode("detailed")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      questionViewMode === "detailed" ? "bg-white text-black shadow-xs font-black" : "text-gray-500 hover:text-black"
+                    }`}
+                    title="Detailed View with all 4 multiple-choice options and clues"
+                  >
+                    <LayoutList size={13} />
+                    <span>Detailed</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuestionViewMode("compact")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      questionViewMode === "compact" ? "bg-white text-black shadow-xs font-black" : "text-gray-500 hover:text-black"
+                    }`}
+                    title="Compact Quick Review without option clutter"
+                  >
+                    <Grid size={13} />
+                    <span>Compact</span>
+                  </button>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -1425,7 +1540,11 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         type="button"
                         onClick={() => handleSelectDifficulty(originalIndex, "popular")}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                          !isMaster ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-500 hover:text-black"
+                          hasPending && (stagedDiff === "popular" || stagedDiff === "easy" || stagedDiff === "medium")
+                            ? "bg-amber-500 text-black ring-2 ring-amber-600 font-black shadow-xs"
+                            : !hasPending && (!isMaster)
+                            ? "bg-amber-500 text-black shadow-xs font-black"
+                            : "text-gray-500 hover:text-black hover:bg-white/70"
                         }`}
                       >
                         Popular (100)
@@ -1434,12 +1553,38 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         type="button"
                         onClick={() => handleSelectDifficulty(originalIndex, "master")}
                         className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                          isMaster ? "bg-blue-600 text-white shadow-xs font-extrabold" : "text-gray-500 hover:text-black"
+                          hasPending && (stagedDiff === "master" || stagedDiff === "hard")
+                            ? "bg-blue-600 text-white ring-2 ring-blue-700 font-black shadow-xs"
+                            : !hasPending && (isMaster)
+                            ? "bg-blue-600 text-white shadow-xs font-extrabold"
+                            : "text-gray-500 hover:text-black hover:bg-white/70"
                         }`}
                       >
                         Master (300)
                       </button>
                     </div>
+
+                    {hasPending && (
+                      <div className="flex items-center gap-1 animate-in fade-in">
+                        <button
+                          type="button"
+                          onClick={() => confirmDifficultyChange(originalIndex)}
+                          className="px-2 py-1 rounded-lg bg-black hover:bg-gray-800 text-white text-[10px] font-black flex items-center gap-1 shadow-xs transition cursor-pointer"
+                          title="Apply this change"
+                        >
+                          <Check size={11} className="stroke-[3] text-emerald-400" />
+                          <span>Apply</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => cancelDifficultyChange(originalIndex)}
+                          className="p-1 text-gray-400 hover:text-black rounded transition cursor-pointer"
+                          title="Cancel"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-1">
                       <button

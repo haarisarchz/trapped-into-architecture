@@ -71,7 +71,7 @@ export default function AdminQuizzesPage() {
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [sortBy, setSortBy] = useState<string>("latest_added");
+  const [sortBy, setSortBy] = useState<string>("latest_modified");
   const [searchFilter, setSearchFilter] = useState<string>("");
 
   const checkAccessAndDatabase = async () => {
@@ -256,9 +256,9 @@ export default function AdminQuizzesPage() {
                     onChange={(e) => setSortBy(e.target.value)}
                     className="text-xs font-bold border border-gray-200 bg-gray-50 rounded-xl px-3 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-black cursor-pointer"
                   >
+                    <option value="latest_modified">Latest Modified (Default)</option>
                     <option value="latest_added">Latest Added</option>
                     <option value="oldest_added">Oldest Added</option>
-                    <option value="latest_modified">Latest Modified</option>
                     <option value="most_questions">Most Questions</option>
                     <option value="alphabetical">Title (A - Z)</option>
                   </select>
