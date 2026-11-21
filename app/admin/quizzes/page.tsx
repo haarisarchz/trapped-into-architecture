@@ -71,6 +71,8 @@ export default function AdminQuizzesPage() {
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("latest_added");
+  const [searchFilter, setSearchFilter] = useState<string>("");
 
   const checkAccessAndDatabase = async () => {
     setLoading(true);
@@ -245,6 +247,42 @@ export default function AdminQuizzesPage() {
                 </div>
               </div>
 
+              {/* QUIZZES LIST HEADER & SORT TOOLBAR */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-gray-700">Sort By:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="text-xs font-bold border border-gray-200 bg-gray-50 rounded-xl px-3 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-black cursor-pointer"
+                  >
+                    <option value="latest_added">Latest Added</option>
+                    <option value="oldest_added">Oldest Added</option>
+                    <option value="latest_modified">Latest Modified</option>
+                    <option value="most_questions">Most Questions</option>
+                    <option value="alphabetical">Title (A - Z)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search quiz title..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="text-xs border border-gray-200 bg-gray-50 rounded-xl px-3 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-black w-48 sm:w-64"
+                  />
+                  {searchFilter && (
+                    <button
+                      onClick={() => setSearchFilter("")}
+                      className="text-xs text-gray-400 hover:text-black font-bold"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* QUIZZES LIST */}
               {quizzes.length === 0 ? (
                 <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center max-w-lg mx-auto my-8">
@@ -264,9 +302,35 @@ export default function AdminQuizzesPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {quizzes.map((quiz) => {
-                    const questionCount = quiz.quiz_questions?.[0]?.count || 0;
-                    const playsCount = quiz.quiz_scores?.[0]?.count || 0;
+                  {[...quizzes]
+                    .filter(q => {
+                      if (!searchFilter) return true;
+                      const term = searchFilter.toLowerCase();
+                      return (q.title || "").toLowerCase().includes(term) || (q.category || "").toLowerCase().includes(term);
+                    })
+                    .sort((a, b) => {
+                      if (sortBy === "latest_added") {
+                        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+                      }
+                      if (sortBy === "oldest_added") {
+                        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+                      }
+                      if (sortBy === "latest_modified") {
+                        return new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime();
+                      }
+                      if (sortBy === "most_questions") {
+                        const countA = a.quiz_questions?.[0]?.count || 0;
+                        const countB = b.quiz_questions?.[0]?.count || 0;
+                        return countB - countA;
+                      }
+                      if (sortBy === "alphabetical") {
+                        return (a.title || "").localeCompare(b.title || "");
+                      }
+                      return 0;
+                    })
+                    .map((quiz) => {
+                      const questionCount = quiz.quiz_questions?.[0]?.count || 0;
+                      const playsCount = quiz.quiz_scores?.[0]?.count || 0;
 
                     return (
                       <div 

@@ -1,13 +1,14 @@
-export type LegacyDifficulty = "easy" | "medium" | "hard";
-export type QuestionDifficulty = "popular" | "master";
-export type AnyDifficulty = QuestionDifficulty | LegacyDifficulty;
+export type QuestionCategory = "popular" | "master";
+export type GameDifficulty = "easy" | "medium" | "hard";
+export type AnyDifficulty = QuestionCategory | GameDifficulty;
+export type QuestionDifficulty = QuestionCategory | "easy" | "medium" | "hard";
 
 /**
- * Architectural Landmark 2-Tier Classification
- * - Popular & Iconic: Globally famous landmarks, viral pop-culture icons, and foundation architectural masterpieces (100 PTS • 15s/Q).
- * - Deep Master: Advanced tectonic feats, structural innovations, deep syllabus monographs, and Pritzker milestones (300 PTS • 5s/Q lightning pace).
+ * Architectural Landmark Categorization (2 Categories):
+ * - Popular: Globally famous landmarks, viral pop-culture icons, and foundation architectural masterpieces.
+ * - Architecture Master: Advanced tectonic feats, structural innovations, deep syllabus monographs, and Pritzker milestones.
  */
-export const BUILDING_DIFFICULTY_MAP: Record<string, QuestionDifficulty> = {
+export const BUILDING_DIFFICULTY_MAP: Record<string, QuestionCategory> = {
   // === POPULAR & ICONIC (40 Globally Famous, Pop Culture & Foundation Masterpieces) ===
   "Fallingwater (Kaufmann Residence)": "popular",
   "Sydney Opera House": "popular",
@@ -50,7 +51,7 @@ export const BUILDING_DIFFICULTY_MAP: Record<string, QuestionDifficulty> = {
   "City of Arts and Sciences": "popular",
   "Palace of Assembly (Chandigarh Capitol Complex)": "popular",
 
-  // === DEEP MASTER (25 Advanced Tectonic, Deep Architectural Theory & Syllabus Masterpieces) ===
+  // === ARCHITECTURE MASTER (25 Advanced Tectonic, Deep Architectural Theory & Syllabus Masterpieces) ===
   "Robie House (Frederick C. Robie House)": "master",
   "Row House in Sumiyoshi (Azuma House)": "master",
   "Chichu Art Museum": "master",
@@ -79,35 +80,9 @@ export const BUILDING_DIFFICULTY_MAP: Record<string, QuestionDifficulty> = {
 };
 
 /**
- * Normalize any legacy string ("easy" | "medium" | "hard") into the 2-tier system ("popular" | "master")
+ * Resolve individual question category: "popular" or "master"
  */
-export function normalizeDifficulty(diff?: string | null): QuestionDifficulty {
-  if (!diff) return "popular";
-  const lower = diff.toLowerCase().trim();
-  if (lower === "master" || lower === "hard") return "master";
-  return "popular";
-}
-
-export function getDifficultyLabel(diff?: string | null): string {
-  const norm = normalizeDifficulty(diff);
-  return norm === "master" ? "Deep Master" : "Popular & Iconic";
-}
-
-export function getDifficultyPoints(diff?: string | null): number {
-  const norm = normalizeDifficulty(diff);
-  return norm === "master" ? 300 : 100;
-}
-
-export function getDifficultySeconds(diff?: string | null): number {
-  const norm = normalizeDifficulty(diff);
-  return norm === "master" ? 5 : 15;
-}
-
-/**
- * Resolve difficulty for any question based on explicit tag or building name/correct answer
- */
-export function getQuestionDifficulty(identifier: string, acceptedAliases?: string[]): QuestionDifficulty {
-  // 1. Check if acceptedAliases contains explicit tag: "diff:popular" | "diff:master" | "diff:easy" | "diff:medium" | "diff:hard"
+export function getQuestionDifficulty(identifier: string, acceptedAliases?: string[]): QuestionCategory {
   if (acceptedAliases && Array.isArray(acceptedAliases)) {
     const tag = acceptedAliases.find(a => typeof a === "string" && a.startsWith("diff:"));
     if (tag) {
@@ -134,37 +109,88 @@ export function getQuestionDifficulty(identifier: string, acceptedAliases?: stri
   return "popular";
 }
 
+export function getQuestionCategoryLabel(category: QuestionCategory | string): string {
+  return category === "master" ? "Architecture Master" : "Popular";
+}
+
+export function getQuestionCategoryPoints(category: QuestionCategory | string): number {
+  return category === "master" ? 300 : 100;
+}
+
+function shuffle<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 /**
- * Filter and prioritize question pool according to selected game difficulty
+ * Sample questions for game difficulty:
+ * - Easy: 100% Popular questions.
+ * - Medium: 50% Popular + 50% Architecture Master.
+ * - Hard: 75% Architecture Master + 25% Popular questions.
  */
 export function getQuestionsForGameDifficulty<T extends { correct_answer?: string; question_text?: string; accepted_aliases?: string[] }>(
   allQuestions: T[],
-  chosenDifficulty: AnyDifficulty | string,
+  chosenDifficulty: GameDifficulty | string,
   requestedCount: number
 ): T[] {
   if (!allQuestions || allQuestions.length === 0) return [];
-  const normalized = normalizeDifficulty(chosenDifficulty);
 
-  // Categorize questions into 2 tiers
-  const popularQuestions: T[] = [];
-  const masterQuestions: T[] = [];
+  // Categorize questions into the 2 categories
+  const popularPool: T[] = [];
+  const masterPool: T[] = [];
 
   for (const q of allQuestions) {
     const textToMatch = q.correct_answer || q.question_text || "";
     const diff = getQuestionDifficulty(textToMatch, q.accepted_aliases);
-    if (diff === "master") masterQuestions.push(q);
-    else popularQuestions.push(q);
+    if (diff === "master") masterPool.push(q);
+    else popularPool.push(q);
   }
 
-  let targetedPool: T[] = [];
+  const shuffledPopular = shuffle(popularPool);
+  const shuffledMaster = shuffle(masterPool);
 
-  if (normalized === "popular") {
-    // Popular mode: strictly prioritize Popular & Iconic landmarks first
-    targetedPool = [...popularQuestions, ...masterQuestions];
+  const total = requestedCount === 999 ? allQuestions.length : Math.min(requestedCount, allQuestions.length);
+
+  let targetPopularCount = 0;
+  let targetMasterCount = 0;
+
+  const diffLower = (chosenDifficulty || "medium").toLowerCase().trim();
+
+  if (diffLower === "easy") {
+    // 100% Popular questions
+    targetPopularCount = total;
+    targetMasterCount = 0;
+  } else if (diffLower === "hard") {
+    // 75% Architecture Master + 25% Popular
+    targetMasterCount = Math.round(total * 0.75);
+    targetPopularCount = total - targetMasterCount;
   } else {
-    // Master mode: strictly prioritize Deep Master tectonic landmarks first
-    targetedPool = [...masterQuestions, ...popularQuestions];
+    // Medium (Default): 50% Popular + 50% Architecture Master
+    targetPopularCount = Math.round(total * 0.5);
+    targetMasterCount = total - targetPopularCount;
   }
 
-  return targetedPool.slice(0, requestedCount === 999 ? targetedPool.length : Math.min(requestedCount, targetedPool.length));
+  // Draw from pools
+  const selectedPopular = shuffledPopular.slice(0, targetPopularCount);
+  const selectedMaster = shuffledMaster.slice(0, targetMasterCount);
+
+  // Fallback if one pool doesn't have enough questions
+  const currentTotal = selectedPopular.length + selectedMaster.length;
+  if (currentTotal < total) {
+    const needed = total - currentTotal;
+    if (selectedPopular.length < targetPopularCount) {
+      const remainingMaster = shuffledMaster.slice(targetMasterCount, targetMasterCount + needed);
+      selectedMaster.push(...remainingMaster);
+    } else {
+      const remainingPopular = shuffledPopular.slice(targetPopularCount, targetPopularCount + needed);
+      selectedPopular.push(...remainingPopular);
+    }
+  }
+
+  // Interleave questions randomly for round playback
+  return shuffle([...selectedPopular, ...selectedMaster]);
 }

@@ -23,7 +23,7 @@ export default function QuizzesHubPage() {
   // Start Quiz Setup Modal state
   const [setupModalQuiz, setSetupModalQuiz] = useState<any | null>(null);
   const [modalMode, setModalMode] = useState<"challenge" | "practice">("challenge");
-  const [modalDifficulty, setModalDifficulty] = useState<string>("popular");
+  const [modalDifficulty, setModalDifficulty] = useState<string>("medium");
   const [modalCount, setModalCount] = useState<number>(10);
   const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
 
@@ -31,11 +31,14 @@ export default function QuizzesHubPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
 
-  // Dynamic time estimate helper per question count & 2-tier difficulty:
-  // Popular & Iconic: 15s/Q, Deep Master: 5s/Q
+  // Dynamic time estimate helper per question count & game difficulty:
+  // Easy: 15s/Q (100% Popular), Medium: 10s/Q (50/50 Blend), Hard: 5s/Q (75% Master)
   const getTimeEstimate = (count: number, diff: string) => {
-    const isMaster = diff === "master" || diff === "hard";
-    const perQ = isMaster ? 5 : 15;
+    let perQ = 10;
+    const diffLower = (diff || "medium").toLowerCase();
+    if (diffLower === "easy" || diffLower === "popular") perQ = 15;
+    else if (diffLower === "hard" || diffLower === "master") perQ = 5;
+    else perQ = 10;
     const totalSecs = count * perQ;
     const mins = Math.floor(totalSecs / 60);
     const secs = totalSecs % 60;
@@ -43,8 +46,8 @@ export default function QuizzesHubPage() {
     return secs === 0 ? `${mins} mins` : `${mins}m ${secs}s`;
   };
 
-  // Leaderboard state (2-tier system: "popular" & "master")
-  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<string>("popular");
+  // Leaderboard state (3-tier game difficulty: "easy", "medium", "hard")
+  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<string>("medium");
   const [leaderboardQuizFilter, setLeaderboardQuizFilter] = useState<string>("all");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
@@ -92,9 +95,14 @@ export default function QuizzesHubPage() {
   const fetchLeaderboard = async () => {
     setLoadingLeaderboard(true);
     try {
-      const diffValues = (leaderboardDifficulty === "master" || leaderboardDifficulty === "hard")
-        ? ["master", "hard"]
-        : ["popular", "easy", "medium"];
+      let diffValues = ["medium"];
+      if (leaderboardDifficulty === "easy") {
+        diffValues = ["easy", "popular"];
+      } else if (leaderboardDifficulty === "hard") {
+        diffValues = ["hard", "master"];
+      } else {
+        diffValues = ["medium"];
+      }
 
       let query = supabase
         .from("quiz_scores")
@@ -653,27 +661,37 @@ export default function QuizzesHubPage() {
                   </span>
                 </div>
 
-                {/* 2-Tier Tabs: Popular & Iconic / Deep Master */}
-                <div className="grid grid-cols-2 gap-1.5 bg-gray-100 p-1 rounded-xl mb-2.5">
+                {/* 3-Tier Difficulty Tabs: Easy / Medium / Hard */}
+                <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-2.5">
                   <button
-                    onClick={() => setLeaderboardDifficulty("popular")}
+                    onClick={() => setLeaderboardDifficulty("easy")}
                     className={`py-1.5 text-xs font-black rounded-lg transition ${
-                      leaderboardDifficulty === "popular" || leaderboardDifficulty === "easy" || leaderboardDifficulty === "medium"
+                      leaderboardDifficulty === "easy" || leaderboardDifficulty === "popular"
+                        ? "bg-white text-emerald-900 shadow-xs" 
+                        : "text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    Easy
+                  </button>
+                  <button
+                    onClick={() => setLeaderboardDifficulty("medium")}
+                    className={`py-1.5 text-xs font-black rounded-lg transition ${
+                      leaderboardDifficulty === "medium"
                         ? "bg-white text-amber-900 shadow-xs" 
                         : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    Popular &amp; Iconic
+                    Medium
                   </button>
                   <button
-                    onClick={() => setLeaderboardDifficulty("master")}
+                    onClick={() => setLeaderboardDifficulty("hard")}
                     className={`py-1.5 text-xs font-black rounded-lg transition ${
-                      leaderboardDifficulty === "master" || leaderboardDifficulty === "hard"
+                      leaderboardDifficulty === "hard" || leaderboardDifficulty === "master"
                         ? "bg-white text-blue-900 shadow-xs" 
                         : "text-gray-500 hover:text-black"
                     }`}
                   >
-                    Deep Master
+                    Hard
                   </button>
                 </div>
 
@@ -753,16 +771,20 @@ export default function QuizzesHubPage() {
 
                 <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-amber-800 shrink-0">Popular &amp; Iconic:</span>
-                    <span>15s/Q &bull; 100 pts per correct answer &bull; Globally recognized architectural icons &amp; viral landmarks.</span>
+                    <span className="font-black text-emerald-800 shrink-0">Easy Mode:</span>
+                    <span>15s/Q &bull; 100% Popular Landmarks &bull; Foundation icons &amp; world-famous structures.</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-blue-800 shrink-0">Deep Master:</span>
-                    <span>5s/Q &bull; 300 pts per correct answer &bull; Advanced tectonic milestones, structural feats &amp; deep syllabus. Lightning instinct pace!</span>
+                    <span className="font-black text-amber-800 shrink-0">Medium Mode:</span>
+                    <span>10s/Q &bull; 50% Popular + 50% Masterworks &bull; Balanced architectural challenge.</span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="font-black text-blue-800 shrink-0">Hard Mode:</span>
+                    <span>5s/Q &bull; 75% Architecture Master + 25% Popular &bull; Advanced tectonic milestones. Lightning instinct pace!</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
                     <span className="font-black">⚡ Modes:</span>
-                    <span><strong>Practice:</strong> Instant answers revealed with zero timer &bull; <strong>Challenge:</strong> Continuous countdown timer + speed bonus + arena rankings.</span>
+                    <span><strong>Practice:</strong> Immediate feedback &amp; trivia &bull; <strong>Challenge:</strong> Continuous countdown timer + speed bonus + live leaderboard ranks.</span>
                   </div>
                 </div>
               </div>
@@ -881,20 +903,21 @@ export default function QuizzesHubPage() {
               <div className="mb-5">
                 <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
                   <span>2. Difficulty Tier</span>
-                  <span className="text-[11px] font-normal text-gray-400 lowercase">adjusts allotted time per question</span>
+                  <span className="text-[11px] font-normal text-gray-400 lowercase">adjusts question mix &amp; timer pace</span>
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "popular", label: "Popular & Iconic", sub: "Famous Landmarks", time: "15s / Q • 100 Pts", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
-                    { id: "master", label: "Deep Master", sub: "Tectonic Feats", time: "5s / Q • 300 Pts", activeClass: "border-blue-600 bg-blue-50/70 text-blue-950 ring-2 ring-blue-500/20" }
+                    { id: "easy", label: "Easy", sub: "100% Popular", time: "15s / Q", activeClass: "border-emerald-500 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
+                    { id: "medium", label: "Medium", sub: "50/50 Blend", time: "10s / Q", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
+                    { id: "hard", label: "Hard", sub: "75% Master", time: "5s / Q Fast", activeClass: "border-blue-600 bg-blue-50/70 text-blue-950 ring-2 ring-blue-500/20" }
                   ].map(d => {
-                    const isSelected = modalDifficulty === d.id || (d.id === "popular" && (modalDifficulty === "easy" || modalDifficulty === "medium")) || (d.id === "master" && modalDifficulty === "hard");
+                    const isSelected = modalDifficulty === d.id || (d.id === "easy" && modalDifficulty === "popular") || (d.id === "hard" && modalDifficulty === "master");
                     return (
                       <button
                         key={d.id}
                         type="button"
                         onClick={() => setModalDifficulty(d.id)}
-                        className={`p-3.5 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                        className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                           isSelected 
                             ? `${d.activeClass} font-black shadow-xs` 
                             : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
@@ -903,7 +926,7 @@ export default function QuizzesHubPage() {
                         <span className="text-xs font-black uppercase tracking-wider mb-0.5">
                           {d.label}
                         </span>
-                        <span className={`text-[11px] font-bold ${isSelected ? "text-gray-900" : "text-gray-500"}`}>
+                        <span className={`text-[10px] font-bold ${isSelected ? "text-gray-900" : "text-gray-500"}`}>
                           {d.sub}
                         </span>
                         <span className="text-[10px] text-gray-400 font-mono mt-0.5">
