@@ -74,7 +74,6 @@ export default function AdminQuizzesPage() {
   const [copied, setCopied] = useState(false);
   const [sortBy, setSortBy] = useState<string>("latest_modified");
   const [searchFilter, setSearchFilter] = useState<string>("");
-  const [totalRemoved, setTotalRemoved] = useState<number>(0);
 
   const checkAccessAndDatabase = async () => {
     setLoading(true);
@@ -115,19 +114,6 @@ export default function AdminQuizzesPage() {
       .order("created_at", { ascending: false });
 
     if (data) setQuizzes(data);
-
-    try {
-      const { count: remCount } = await supabase
-        .from("quiz_questions")
-        .select("*", { count: "exact", head: true })
-        .contains("accepted_aliases", JSON.stringify(["status:removed"]));
-      if (remCount !== null && remCount !== undefined) {
-        setTotalRemoved(remCount);
-      }
-    } catch (e) {
-      console.warn("Removed questions count note:", e);
-    }
-
     setLoading(false);
   };
 
@@ -241,7 +227,7 @@ export default function AdminQuizzesPage() {
           ) : (
             <>
               {/* STATS OVERVIEW CARDS */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 my-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 my-6">
                 <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Total Quizzes</p>
                   <p className="text-2xl font-extrabold text-gray-900 mt-1">{quizzes.length}</p>
@@ -259,11 +245,6 @@ export default function AdminQuizzesPage() {
                 <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Total Plays</p>
                   <p className="text-2xl font-extrabold text-purple-600 mt-1">{totalPlays}</p>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400">Removed Repository</p>
-                  <p className="text-2xl font-extrabold text-red-600 mt-1">{totalRemoved}</p>
-                  <p className="text-[10px] font-medium text-gray-400 mt-0.5">Reusable across all quizzes</p>
                 </div>
               </div>
 
