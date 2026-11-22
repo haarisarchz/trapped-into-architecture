@@ -1240,13 +1240,15 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
               onChange={e => setCategory(e.target.value)}
               className="w-full px-3.5 py-2.5 text-xs font-semibold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
             >
-              <option value="Iconic Landmarks">🏛️ Iconic Landmarks</option>
-              <option value="Architects & Studios">📐 Architects & Studios</option>
-              <option value="World Geography">🌍 World Geography</option>
-              <option value="History & Chronology">⏳ History & Chronology</option>
+              <option value="Iconic Buildings">🏛️ Iconic Buildings</option>
+              <option value="Master Architects">📐 Master Architects</option>
+              <option value="Building Geography">🌍 Building Geography</option>
               <option value="Styles & Theory">🎨 Styles & Theory</option>
               <option value="Architects & Portfolios">👥 Architects & Portfolios</option>
               <option value="Detective Trivia">🔍 Detective Trivia</option>
+              <option value="Iconic Landmarks">🏛️ Iconic Landmarks</option>
+              <option value="Architects & Studios">📐 Architects & Studios</option>
+              <option value="World Geography">🌍 World Geography</option>
               <option value="Guess the Building">🏛️ Guess the Building</option>
               <option value="Architects & Firms">📐 Architects & Firms</option>
               <option value="History & Milestones">⏳ History & Milestones</option>

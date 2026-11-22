@@ -201,18 +201,16 @@ export default function QuizzesHubPage() {
     "iconic-world-landmarks-guess-the-building": "🏛️ Building Identification",
     "master-architects-who-designed-it": "📐 Architect Identification",
     "where-in-the-world-guess-the-city-country": "🌍 Location Identification",
-    "timeline-challenge-when-was-it-built": "⏳ Year Identification",
     "architectural-styles-and-movements": "🎨 Style Classification",
     "architects-oeuvre-pair-the-masterpieces": "👥 Portfolio Matching",
     "architectural-detective-guess-the-clues": "🕵️ Forensic Deduction"
   };
 
   const categories = [
-    { id: "all", label: "🌟 All Quizzes (7)" },
-    { id: "Iconic Landmarks", label: "🏛️ Iconic Landmarks" },
-    { id: "Architects & Studios", label: "📐 Architects & Studios" },
-    { id: "World Geography", label: "🌍 World Geography" },
-    { id: "History & Chronology", label: "⏳ History & Chronology" },
+    { id: "all", label: "🌟 All Quizzes (6)" },
+    { id: "Iconic Buildings", label: "🏛️ Iconic Buildings" },
+    { id: "Master Architects", label: "📐 Master Architects" },
+    { id: "Building Geography", label: "🌍 Building Geography" },
     { id: "Styles & Theory", label: "🎨 Styles & Theory" },
     { id: "Architects & Portfolios", label: "👥 Master Portfolios" },
     { id: "Detective Trivia", label: "🔍 Detective Trivia" }
