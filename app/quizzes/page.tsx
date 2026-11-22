@@ -197,15 +197,25 @@ export default function QuizzesHubPage() {
     }
   };
 
+  const formatTagMap: Record<string, string> = {
+    "iconic-world-landmarks-guess-the-building": "🏛️ Building Identification",
+    "master-architects-who-designed-it": "📐 Architect Identification",
+    "where-in-the-world-guess-the-city-country": "🌍 Location Identification",
+    "timeline-challenge-when-was-it-built": "⏳ Year Identification",
+    "architectural-styles-and-movements": "🎨 Style Classification",
+    "architects-oeuvre-pair-the-masterpieces": "👥 Portfolio Matching",
+    "architectural-detective-guess-the-clues": "🕵️ Forensic Deduction"
+  };
+
   const categories = [
     { id: "all", label: "🌟 All Quizzes (7)" },
-    { id: "Guess the Building", label: "🏛️ Guess the Building" },
-    { id: "Architects & Firms", label: "📐 Architects & Firms" },
+    { id: "Iconic Landmarks", label: "🏛️ Iconic Landmarks" },
+    { id: "Architects & Studios", label: "📐 Architects & Studios" },
     { id: "World Geography", label: "🌍 World Geography" },
-    { id: "History & Milestones", label: "⏳ History & Timeline" },
-    { id: "History & Theory", label: "🎨 Styles & Theory" },
-    { id: "Architecture Trivia", label: "🔍 Clues & Detective" },
-    { id: "Architects & Portfolios", label: "👥 Master Portfolios" }
+    { id: "History & Chronology", label: "⏳ History & Chronology" },
+    { id: "Styles & Theory", label: "🎨 Styles & Theory" },
+    { id: "Architects & Portfolios", label: "👥 Master Portfolios" },
+    { id: "Detective Trivia", label: "🔍 Detective Trivia" }
   ];
 
   // Filter & Sort
@@ -424,7 +434,7 @@ export default function QuizzesHubPage() {
                           
                           <div className="absolute top-3 left-3 z-10">
                             <span className="bg-black/85 backdrop-blur-md text-white text-[10px] font-extrabold px-3 py-1 rounded-full border border-white/20 shadow-md">
-                              {quiz.category}
+                              {formatTagMap[quiz.slug] || quiz.category}
                             </span>
                           </div>
 

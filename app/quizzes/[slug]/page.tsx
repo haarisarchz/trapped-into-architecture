@@ -229,15 +229,22 @@ export default function QuizPlayPage() {
         catData.forEach((row: any) => {
           const d = row.data || {};
           const name = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+          const photo = (d.building_photo || "").toLowerCase().trim();
+          const entry = {
+            building_name: d.building_name || d.display_name || d.base_building_name,
+            city: d.city,
+            country: d.country,
+            architect: d.architect,
+            opened_year: d.opened_year,
+            architectural_style: d.architectural_style,
+            puzzle_clues: d.puzzle_clues,
+            building_photo: d.building_photo
+          };
           if (name) {
-            cmap[name] = {
-              city: d.city,
-              country: d.country,
-              architect: d.architect,
-              opened_year: d.opened_year,
-              architectural_style: d.architectural_style,
-              puzzle_clues: d.puzzle_clues
-            };
+            cmap[name] = entry;
+          }
+          if (photo) {
+            cmap[photo] = entry;
           }
         });
         setCatalogMap(cmap);
@@ -547,41 +554,153 @@ export default function QuizPlayPage() {
     return 100;
   };
 
-  // Dynamic Clue Resolver from Catalog & Question Metadata
+  // Dynamic Clue Resolver from Catalog & Question Metadata (Context-Aware per Quiz Type)
   const getQuestionClues = (q: Question) => {
-    if (!q) return { location: "Global Architectural Heritage", architect: "Master Architect / Pioneer Studio" };
+    const defaultClue1 = {
+      label: "Location Clue",
+      revealedLabel: "Location Revealed",
+      bannerTitle: "Location Hint:",
+      icon: "📍",
+      text: "International Architectural Landmark",
+      badgeColor: "blue"
+    };
+    const defaultClue2 = {
+      label: "Architect Clue",
+      revealedLabel: "Architect Revealed",
+      bannerTitle: "Architect / Era Hint:",
+      icon: "👤",
+      text: "Celebrated Master Architect",
+      badgeColor: "purple"
+    };
 
-    const targetKey = normalize(q.correct_answer || "");
-    const qTextNorm = normalize(q.question_text || "");
-
-    // 1. Look up in catalogMap
-    let match = Object.entries(catalogMap).find(([k]) => {
-      const kNorm = normalize(k);
-      return kNorm === targetKey || targetKey.includes(kNorm) || kNorm.includes(targetKey) || qTextNorm.includes(kNorm);
-    })?.[1];
-
-    let locationText = "";
-    let architectText = "";
-
-    if (match) {
-      if (match.city || match.country) {
-        locationText = [match.city, match.country].filter(Boolean).join(", ");
-      }
-      if (match.architect) {
-        architectText = `${match.architect}${match.opened_year ? ' (Opened ' + match.opened_year + ')' : ''}${match.architectural_style ? ' • ' + match.architectural_style : ''}`;
-      }
+    if (!q) {
+      return {
+        clue1: defaultClue1,
+        clue2: defaultClue2,
+        location: defaultClue1.text,
+        architect: defaultClue2.text
+      };
     }
 
-    if (!locationText && q.explanation_clue) {
-      locationText = q.explanation_clue;
+    // 1. Primary lookup by media_url (100% exact match across all 65 catalog buildings)
+    let match = q.media_url ? catalogMap[q.media_url.toLowerCase().trim()] : null;
+
+    // 2. Secondary fallback lookup by answer or text
+    if (!match) {
+      const targetKey = normalize(q.correct_answer || "");
+      const qTextNorm = normalize(q.question_text || "");
+      match = Object.entries(catalogMap).find(([k]) => {
+        const kNorm = normalize(k);
+        return kNorm === targetKey || targetKey.includes(kNorm) || kNorm.includes(targetKey) || qTextNorm.includes(kNorm);
+      })?.[1];
     }
-    if (!architectText && q.explanation_clue) {
-      architectText = q.explanation_clue;
+
+    const bName = match?.building_name || match?.display_name || "Iconic Architectural Landmark";
+    const loc = (match?.city || match?.country) 
+      ? [match.city, match.country].filter(Boolean).join(", ") 
+      : (q.explanation_clue || "Global Landmark");
+    const arch = match?.architect
+      ? `${match.architect}${match.opened_year ? ' (Opened ' + match.opened_year + ')' : ''}${match.architectural_style ? ' • ' + match.architectural_style : ''}`
+      : (q.explanation_clue || "Celebrated Master Architect");
+
+    let clue1 = {
+      label: "Location Clue",
+      revealedLabel: "Location Revealed",
+      bannerTitle: "Location Hint:",
+      icon: "📍",
+      text: loc,
+      badgeColor: "blue"
+    };
+
+    let clue2 = {
+      label: "Architect & Era Clue",
+      revealedLabel: "Architect Revealed",
+      bannerTitle: "Architect & Era Hint:",
+      icon: "👤",
+      text: arch,
+      badgeColor: "purple"
+    };
+
+    // Quiz-specific clue customization (Zero spoilers!)
+    if (slug === "master-architects-who-designed-it") {
+      // In Master Architects: Architect is the TARGET ANSWER. Clues must be Location & Building Name!
+      clue1 = {
+        label: "Location Clue",
+        revealedLabel: "Location Revealed",
+        bannerTitle: "Location Hint:",
+        icon: "📍",
+        text: loc,
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Building Name Clue",
+        revealedLabel: "Building Name Revealed",
+        bannerTitle: "Building Name Hint:",
+        icon: "🏛️",
+        text: bName,
+        badgeColor: "purple"
+      };
+    } else if (slug === "where-in-the-world-guess-the-city-country") {
+      // In Where in the World: Location is the TARGET ANSWER. Clues are Building Name & Architect!
+      clue1 = {
+        label: "Building Name Clue",
+        revealedLabel: "Building Name Revealed",
+        bannerTitle: "Building Name Hint:",
+        icon: "🏛️",
+        text: bName,
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Architect & Era Clue",
+        revealedLabel: "Architect Revealed",
+        bannerTitle: "Architect & Era Hint:",
+        icon: "👤",
+        text: arch,
+        badgeColor: "purple"
+      };
+    } else if (slug === "timeline-challenge-when-was-it-built") {
+      // In Timeline: Year is the TARGET ANSWER.
+      clue1 = {
+        label: "Location Clue",
+        revealedLabel: "Location Revealed",
+        bannerTitle: "Location Hint:",
+        icon: "📍",
+        text: loc,
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Building & Architect Clue",
+        revealedLabel: "Building & Architect Revealed",
+        bannerTitle: "Building & Architect Hint:",
+        icon: "🏛️",
+        text: `${bName}${match?.architect ? ' by ' + match.architect : ''}`,
+        badgeColor: "purple"
+      };
+    } else if (slug === "architectural-styles-and-movements") {
+      // In Styles: Style is the TARGET ANSWER.
+      clue1 = {
+        label: "Landmark & Location Clue",
+        revealedLabel: "Landmark & Location Revealed",
+        bannerTitle: "Landmark & Location Hint:",
+        icon: "🏛️",
+        text: `${bName}${loc ? ', ' + loc : ''}`,
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Architect & Era Clue",
+        revealedLabel: "Architect Revealed",
+        bannerTitle: "Architect & Era Hint:",
+        icon: "👤",
+        text: arch,
+        badgeColor: "purple"
+      };
     }
 
     return {
-      location: locationText || "International Architectural Landmark",
-      architect: architectText || "Celebrated Master Architect"
+      clue1,
+      clue2,
+      location: clue1.text,
+      architect: clue2.text
     };
   };
 
@@ -2148,73 +2267,85 @@ export default function QuizPlayPage() {
                         {currentQ.question_text}
                       </h2>
 
-                      {/* CLUE RIBBON BUTTONS (Option C: Pinned Header Ribbon) */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleUnlockClue("location")}
-                          disabled={Boolean(unlockedClues[currentIndex]?.location)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
-                            unlockedClues[currentIndex]?.location
-                              ? "bg-blue-100 text-blue-900 border border-blue-300 font-extrabold cursor-default"
-                              : "bg-blue-50 hover:bg-blue-100 text-blue-950 border border-blue-200 cursor-pointer"
-                          }`}
-                          title="Reveal Location Hint (-1/3 potential points)"
-                        >
-                          <span>📍</span>
-                          <span>{unlockedClues[currentIndex]?.location ? "Location Revealed" : "Location Clue"}</span>
-                          {!unlockedClues[currentIndex]?.location && (
-                            <span className="text-[10px] text-blue-700 font-extrabold bg-blue-100 px-1.5 py-0.2 rounded-md">
-                              -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
-                            </span>
-                          )}
-                        </button>
+                      {/* CLUE RIBBON BUTTONS (Option C: Pinned Header Ribbon - Dynamic Context-Aware) */}
+                      {(() => {
+                        const cluesInfo = getQuestionClues(currentQ);
+                        return (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleUnlockClue("location")}
+                              disabled={Boolean(unlockedClues[currentIndex]?.location)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
+                                unlockedClues[currentIndex]?.location
+                                  ? "bg-blue-100 text-blue-900 border border-blue-300 font-extrabold cursor-default"
+                                  : "bg-blue-50 hover:bg-blue-100 text-blue-950 border border-blue-200 cursor-pointer"
+                              }`}
+                              title={`Reveal ${cluesInfo.clue1.label} (-1/3 potential points)`}
+                            >
+                              <span>{cluesInfo.clue1.icon}</span>
+                              <span>{unlockedClues[currentIndex]?.location ? cluesInfo.clue1.revealedLabel : cluesInfo.clue1.label}</span>
+                              {!unlockedClues[currentIndex]?.location && (
+                                <span className="text-[10px] text-blue-700 font-extrabold bg-blue-100 px-1.5 py-0.2 rounded-md">
+                                  -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
+                                </span>
+                              )}
+                            </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleUnlockClue("architect")}
-                          disabled={Boolean(unlockedClues[currentIndex]?.architect)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
-                            unlockedClues[currentIndex]?.architect
-                              ? "bg-purple-100 text-purple-900 border border-purple-300 font-extrabold cursor-default"
-                              : "bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 cursor-pointer"
-                          }`}
-                          title="Reveal Architect Hint (-1/3 potential points)"
-                        >
-                          <span>👤</span>
-                          <span>{unlockedClues[currentIndex]?.architect ? "Architect Revealed" : "Architect Clue"}</span>
-                          {!unlockedClues[currentIndex]?.architect && (
-                            <span className="text-[10px] text-purple-700 font-extrabold bg-purple-100 px-1.5 py-0.2 rounded-md">
-                              -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
-                            </span>
-                          )}
-                        </button>
-                      </div>
+                            <button
+                              type="button"
+                              onClick={() => handleUnlockClue("architect")}
+                              disabled={Boolean(unlockedClues[currentIndex]?.architect)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
+                                unlockedClues[currentIndex]?.architect
+                                  ? "bg-purple-100 text-purple-900 border border-purple-300 font-extrabold cursor-default"
+                                  : "bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 cursor-pointer"
+                              }`}
+                              title={`Reveal ${cluesInfo.clue2.label} (-1/3 potential points)`}
+                            >
+                              <span>{cluesInfo.clue2.icon}</span>
+                              <span>{unlockedClues[currentIndex]?.architect ? cluesInfo.clue2.revealedLabel : cluesInfo.clue2.label}</span>
+                              {!unlockedClues[currentIndex]?.architect && (
+                                <span className="text-[10px] text-purple-700 font-extrabold bg-purple-100 px-1.5 py-0.2 rounded-md">
+                                  -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
+                                </span>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* REVEALED CLUES DISPLAY (Positioned above photo, 100% visible, zero photo obstruction!) */}
-                    {(unlockedClues[currentIndex]?.location || unlockedClues[currentIndex]?.architect) && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 animate-in fade-in slide-in-from-top-1 duration-150">
-                        {unlockedClues[currentIndex]?.location && (
-                          <div className="p-3 bg-blue-50/90 border border-blue-200 rounded-xl flex items-center gap-2 text-xs font-bold text-blue-950 shadow-2xs">
-                            <span className="text-base">📍</span>
-                            <div>
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block">Location Hint:</span>
-                              <span>{getQuestionClues(currentQ).location}</span>
+                    {(() => {
+                      const cluesInfo = getQuestionClues(currentQ);
+                      const showClue1 = Boolean(unlockedClues[currentIndex]?.location);
+                      const showClue2 = Boolean(unlockedClues[currentIndex]?.architect);
+                      if (!showClue1 && !showClue2) return null;
+
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 animate-in fade-in slide-in-from-top-1 duration-150">
+                          {showClue1 && (
+                            <div className="p-3 bg-blue-50/90 border border-blue-200 rounded-xl flex items-center gap-2 text-xs font-bold text-blue-950 shadow-2xs">
+                              <span className="text-base">{cluesInfo.clue1.icon}</span>
+                              <div>
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block">{cluesInfo.clue1.bannerTitle}</span>
+                                <span>{cluesInfo.clue1.text}</span>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {unlockedClues[currentIndex]?.architect && (
-                          <div className="p-3 bg-purple-50/90 border border-purple-200 rounded-xl flex items-center gap-2 text-xs font-bold text-purple-950 shadow-2xs">
-                            <span className="text-base">👤</span>
-                            <div>
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block">Architect / Era Hint:</span>
-                              <span>{getQuestionClues(currentQ).architect}</span>
+                          )}
+                          {showClue2 && (
+                            <div className="p-3 bg-purple-50/90 border border-purple-200 rounded-xl flex items-center gap-2 text-xs font-bold text-purple-950 shadow-2xs">
+                              <span className="text-base">{cluesInfo.clue2.icon}</span>
+                              <div>
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block">{cluesInfo.clue2.bannerTitle}</span>
+                                <span>{cluesInfo.clue2.text}</span>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* Active Question Content: Media + Options in unified balanced layout */}
                     <div className={`grid grid-cols-1 ${currentQ.media_url ? 'md:grid-cols-12 gap-5' : 'gap-4'} mb-6 items-stretch`}>
