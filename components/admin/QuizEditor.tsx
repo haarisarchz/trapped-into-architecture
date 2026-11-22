@@ -2172,10 +2172,47 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                           const qPhoto = (q.media_url || "").toLowerCase().trim();
                           const cat = catalogRows.find(c => {
                             const d = c.data || {};
-                            const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
                             const photo = (d.building_photo || "").toLowerCase().trim();
-                            return (qPhoto && photo === qPhoto) || (bName && ans.includes(bName)) || (bName && bName.includes(ans));
+                            if (qPhoto && photo && (photo === qPhoto || qPhoto.includes(photo) || photo.includes(qPhoto))) return true;
+                            const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+                            if (bName && (ans.includes(bName) || bName.includes(ans))) return true;
+                            const arch = (d.architect || "").toLowerCase().trim();
+                            if (arch && (ans.includes(arch) || arch.includes(ans))) return true;
+                            return false;
                           })?.data;
+
+                          const isMasterArchitects = 
+                            category === "Master Architects" || 
+                            slug.includes("master-architect") || 
+                            (title || "").toLowerCase().includes("master architect");
+
+                          const isGeographyQuiz = 
+                            category === "Building Geography" || 
+                            slug.includes("geography") || 
+                            slug.includes("where-in-the-world");
+
+                          // 1st Clue and 2nd Clue config per quiz type
+                          let clue1Label = "📍 Clue 1 (Location):";
+                          let clue1Value = (cat?.city || cat?.country) ? `${cat.city || ""}${cat.city && cat.country ? ", " : ""}${cat.country || ""}` : "City, Country";
+
+                          let clue2Label = "🏛️ Clue 2 (Architect / Movement):";
+                          let clue2Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
+
+                          if (isMasterArchitects) {
+                            // In Master Architects quiz: First clue is Location, Second clue is Building Name!
+                            clue1Label = "📍 Clue 1 (Location):";
+                            clue1Value = (cat?.city || cat?.country) ? `${cat.city || ""}${cat.city && cat.country ? ", " : ""}${cat.country || ""}` : "City, Country";
+
+                            clue2Label = "🏛️ Clue 2 (Building Name):";
+                            clue2Value = cat?.building_name || cat?.display_name ? `${cat.building_name || cat.display_name}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Iconic Architectural Landmark";
+                          } else if (isGeographyQuiz) {
+                            // In Geography quiz: First clue is Building Name, Second clue is Architect
+                            clue1Label = "🏛️ Clue 1 (Building Name):";
+                            clue1Value = cat?.building_name || cat?.display_name || "Iconic Architectural Landmark";
+
+                            clue2Label = "👤 Clue 2 (Architect):";
+                            clue2Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
+                          }
 
                           return (
                             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex flex-col justify-between h-full">
@@ -2190,15 +2227,15 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                               <div className="flex flex-col gap-2 text-[11px] flex-1 justify-center">
                                 <div className="p-2.5 bg-blue-50/90 border border-blue-200/90 rounded-lg text-blue-950 flex items-center justify-between gap-2 shadow-2xs">
                                   <span className="font-extrabold flex items-center gap-1 text-blue-900 shrink-0">
-                                    <span>📍 Clue 1 (Location):</span>
+                                    <span>{clue1Label}</span>
                                   </span>
-                                  <p className="font-bold truncate text-right">{cat?.city || "City"}, {cat?.country || "Country"}</p>
+                                  <p className="font-bold truncate text-right">{clue1Value}</p>
                                 </div>
                                 <div className="p-2.5 bg-purple-50/90 border border-purple-200/90 rounded-lg text-purple-950 flex items-center justify-between gap-2 shadow-2xs">
                                   <span className="font-extrabold flex items-center gap-1 text-purple-900 shrink-0">
-                                    <span>🏛️ Clue 2 (Architect / Movement):</span>
+                                    <span>{clue2Label}</span>
                                   </span>
-                                  <p className="font-bold truncate text-right">{cat?.architect || "Visionary Architect"} {cat?.opened_year ? `(${cat.opened_year})` : ""}</p>
+                                  <p className="font-bold truncate text-right">{clue2Value}</p>
                                 </div>
                               </div>
                             </div>

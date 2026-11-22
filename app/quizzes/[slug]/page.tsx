@@ -639,7 +639,12 @@ export default function QuizPlayPage() {
     };
 
     // Quiz-specific clue customization (Zero spoilers!)
-    if (slug === "master-architects-who-designed-it") {
+    const isMasterArchitects = 
+      slug === "master-architects-who-designed-it" || 
+      (quiz?.category || "").toLowerCase().includes("master architect") || 
+      (quiz?.title || "").toLowerCase().includes("master architect");
+
+    if (isMasterArchitects) {
       // In Master Architects: Architect is the TARGET ANSWER. Clues must be Location & Building Name!
       clue1 = {
         label: "Location Clue",
