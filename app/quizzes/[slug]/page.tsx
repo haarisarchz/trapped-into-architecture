@@ -101,7 +101,7 @@ export default function QuizPlayPage() {
 
   // Clues & Catalog Metadata for progressive hints
   const [unlockedClues, setUnlockedClues] = useState<Record<number, { location?: boolean; architect?: boolean }>>({});
-  const [catalogMap, setCatalogMap] = useState<Record<string, { city?: string; country?: string; architect?: string; opened_year?: any; architectural_style?: string; puzzle_clues?: string }>>({});
+  const [catalogMap, setCatalogMap] = useState<Record<string, { building_name?: string; base_building_name?: string; display_name?: string; city?: string; country?: string; architect?: string; opened_year?: any; architectural_style?: string; puzzle_clues?: string; building_photo?: string }>>({});
 
   // Results State
   const [resultsSummary, setResultsSummary] = useState<{
@@ -233,9 +233,12 @@ export default function QuizPlayPage() {
         catData.forEach((row: any) => {
           const d = row.data || {};
           const name = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+          const baseName = (d.base_building_name || (d.building_name ? d.building_name.split(',')[0].trim() : '')).toLowerCase().trim();
           const photo = (d.building_photo || "").toLowerCase().trim();
+          const cleanBase = d.base_building_name || (d.building_name ? d.building_name.split(',')[0].trim() : (d.display_name ? d.display_name.split(',')[0].trim() : ''));
           const entry = {
             building_name: d.building_name || d.display_name || d.base_building_name,
+            base_building_name: cleanBase,
             city: d.city,
             country: d.country,
             architect: d.architect,
@@ -246,6 +249,9 @@ export default function QuizPlayPage() {
           };
           if (name) {
             cmap[name] = entry;
+          }
+          if (baseName) {
+            cmap[baseName] = entry;
           }
           if (photo) {
             cmap[photo] = entry;
@@ -613,6 +619,7 @@ export default function QuizPlayPage() {
     }
 
     const bName = match?.building_name || match?.display_name || "Iconic Architectural Landmark";
+    const cleanBuildingName = match?.base_building_name || (match?.building_name ? match.building_name.split(',')[0].trim() : '') || (match?.display_name ? match.display_name.split(',')[0].trim() : '') || "Iconic Architectural Landmark";
     const loc = (match?.city || match?.country) 
       ? [match.city, match.country].filter(Boolean).join(", ") 
       : (q.explanation_clue || "Global Landmark");
@@ -644,6 +651,13 @@ export default function QuizPlayPage() {
       (quiz?.category || "").toLowerCase().includes("master architect") || 
       (quiz?.title || "").toLowerCase().includes("master architect");
 
+    const isGeographyQuiz = 
+      slug === "where-in-the-world-guess-the-city-country" || 
+      (quiz?.category || "").toLowerCase().includes("geography") || 
+      (quiz?.title || "").toLowerCase().includes("geography") ||
+      slug.includes("where-in-the-world") ||
+      slug.includes("geography");
+
     if (isMasterArchitects) {
       // In Master Architects: Architect is the TARGET ANSWER. Clues must be Location & Building Name!
       clue1 = {
@@ -662,14 +676,14 @@ export default function QuizPlayPage() {
         text: bName,
         badgeColor: "purple"
       };
-    } else if (slug === "where-in-the-world-guess-the-city-country") {
-      // In Where in the World: Location is the TARGET ANSWER. Clues are Building Name & Architect!
+    } else if (isGeographyQuiz) {
+      // In Building Geography: Location is the TARGET ANSWER. Clue 1 must ONLY be the Building Name (strictly NO location revealed!), Clue 2 is Architect & Era!
       clue1 = {
         label: "Building Name Clue",
         revealedLabel: "Building Name Revealed",
         bannerTitle: "Building Name Hint:",
         icon: "🏛️",
-        text: bName,
+        text: cleanBuildingName,
         badgeColor: "blue"
       };
       clue2 = {

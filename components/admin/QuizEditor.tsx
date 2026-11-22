@@ -2189,7 +2189,14 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                           const isGeographyQuiz = 
                             category === "Building Geography" || 
                             slug.includes("geography") || 
-                            slug.includes("where-in-the-world");
+                            slug.includes("where-in-the-world") ||
+                            (title || "").toLowerCase().includes("geography");
+
+                          const cleanBaseBuildingName = 
+                            cat?.base_building_name || 
+                            (cat?.building_name ? cat.building_name.split(',')[0].trim() : '') || 
+                            (cat?.display_name ? cat.display_name.split(',')[0].trim() : '') || 
+                            "Iconic Architectural Landmark";
 
                           // 1st Clue and 2nd Clue config per quiz type
                           let clue1Label = "📍 Clue 1 (Location):";
@@ -2206,11 +2213,11 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                             clue2Label = "🏛️ Clue 2 (Building Name):";
                             clue2Value = cat?.building_name || cat?.display_name ? `${cat.building_name || cat.display_name}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Iconic Architectural Landmark";
                           } else if (isGeographyQuiz) {
-                            // In Geography quiz: First clue is Building Name, Second clue is Architect
+                            // In Geography quiz: First clue is Building Name (strictly NO location revealed!), Second clue is Architect
                             clue1Label = "🏛️ Clue 1 (Building Name):";
-                            clue1Value = cat?.building_name || cat?.display_name || "Iconic Architectural Landmark";
+                            clue1Value = cleanBaseBuildingName;
 
-                            clue2Label = "👤 Clue 2 (Architect):";
+                            clue2Label = "👤 Clue 2 (Architect & Era):";
                             clue2Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
                           }
 
