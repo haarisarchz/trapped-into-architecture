@@ -107,6 +107,7 @@ export async function POST(req: Request) {
           if (loc.area) locCopy.area = loc.area;
 
           expandedPayloads.push({
+            id: locCopy.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : undefined),
             ...locCopy,
             author_id: userId,
             status: locCopy.status === "draft" ? "draft" : (isInternalAdmin && locCopy.status ? locCopy.status : "pending_review"),
@@ -117,6 +118,7 @@ export async function POST(req: Request) {
         const itemCopy = { ...item };
         delete itemCopy.locations;
         expandedPayloads.push({
+          id: itemCopy.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : undefined),
           ...itemCopy,
           author_id: userId,
           status: itemCopy.status === "draft" ? "draft" : (isInternalAdmin && itemCopy.status ? itemCopy.status : "pending_review"),

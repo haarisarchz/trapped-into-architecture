@@ -1656,7 +1656,7 @@ const handleSchedule = async () => {
     let jobData = null;
 
     const publicJobs = positions.map(pos => ({
-      ...(pos.id ? { id: pos.id } : {}),
+      id: pos.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : undefined),
       firm_name: firmName,
       company_id: currentCompanyId,
       organization_type: organizationType || "Architecture Firm",
