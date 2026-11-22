@@ -23,6 +23,10 @@ interface Question {
   explanation_clue: string;
   difficulty?: QuestionDifficulty;
   is_removed?: boolean;
+  quiz_id?: string;
+  source?: "this_quiz" | "other_quiz";
+  source_quiz_id?: string;
+  source_quiz_title?: string;
 }
 
 interface QuizEditorProps {
@@ -67,6 +71,11 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   const [filterDifficulty, setFilterDifficulty] = useState<"all" | QuestionDifficulty | "removed">("all");
   const [zoomImageUrl, setZoomImageUrl] = useState<{ url: string; title: string } | null>(null);
   
+  // Global Removed Questions Pool (Shared across ALL quizzes)
+  const [globalRemovedQuestions, setGlobalRemovedQuestions] = useState<Question[]>([]);
+  const [removedSourceFilter, setRemovedSourceFilter] = useState<"all" | "this_quiz" | "other_quizzes">("all");
+  const [loadingRemovedPool, setLoadingRemovedPool] = useState<boolean>(false);
+  
   // Staged difficulty changes & retained items in active filter
   const [pendingDiff, setPendingDiff] = useState<Record<number, QuestionDifficulty>>({});
   const [retainedInFilter, setRetainedInFilter] = useState<Record<number, boolean>>({});
@@ -96,10 +105,53 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   useEffect(() => {
     loadCatalogRows();
     loadAllQuizzesList();
+    loadGlobalRemovedPool();
     if (quizId) {
       loadQuizData();
     }
   }, [quizId]);
+
+  const loadGlobalRemovedPool = async () => {
+    setLoadingRemovedPool(true);
+    try {
+      const { data, error } = await supabase
+        .from("quiz_questions")
+        .select("*, quizzes(id, title)")
+        .contains("accepted_aliases", JSON.stringify(["status:removed"]))
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        const mapped: Question[] = data.map(q => {
+          const cleanAliases = Array.isArray(q.accepted_aliases) ? q.accepted_aliases : [];
+          const explicitDiff = cleanAliases.find((a: string) => typeof a === "string" && a.startsWith("diff:"))?.split(":")[1];
+          const resolvedDiff = (explicitDiff as QuestionDifficulty) || getQuestionDifficulty(q.correct_answer || q.question_text || "", cleanAliases);
+
+          return {
+            id: q.id,
+            quiz_id: q.quiz_id,
+            source_quiz_id: q.quiz_id,
+            source_quiz_title: q.quizzes?.title || "Other Quiz",
+            order_index: q.order_index || 1,
+            question_type: (q.question_type as any) || "choose",
+            question_text: q.question_text || "",
+            media_type: q.media_type || (q.media_url ? "image" : "none"),
+            media_url: q.media_url || "",
+            options: Array.isArray(q.options) ? q.options : [],
+            correct_answer: q.correct_answer || "",
+            accepted_aliases: cleanAliases,
+            explanation_clue: q.explanation_clue || "",
+            difficulty: resolvedDiff || "medium",
+            is_removed: true
+          };
+        });
+        setGlobalRemovedQuestions(mapped);
+      }
+    } catch (err) {
+      console.error("Error loading global removed questions pool:", err);
+    } finally {
+      setLoadingRemovedPool(false);
+    }
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -697,33 +749,133 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   };
 
   // Soft delete: marks question as removed so it moves to "Removed Questions" pool
-  const removeQuestion = (idx: number) => {
+  const removeQuestion = async (idx: number) => {
+    const targetQ = questions[idx];
+    if (!targetQ) return;
+
+    const cleanAliases = (targetQ.accepted_aliases || []).filter(a => typeof a === "string" && a !== "status:removed" && a !== "archived:true");
+    const updatedAliases = [...cleanAliases, "status:removed"];
+
     setQuestions(prev => {
       const copy = [...prev];
-      copy[idx] = { ...copy[idx], is_removed: true };
+      copy[idx] = { ...copy[idx], is_removed: true, accepted_aliases: updatedAliases };
       return copy;
     });
-    setToastMsg({ text: "Question moved to 'Removed Questions'. You can restore it anytime.", type: "success" });
+
+    // If question has an ID in Supabase, update immediately
+    if (targetQ.id) {
+      try {
+        await supabase
+          .from("quiz_questions")
+          .update({ accepted_aliases: updatedAliases })
+          .eq("id", targetQ.id);
+
+        setGlobalRemovedQuestions(prev => {
+          if (prev.some(x => x.id === targetQ.id)) return prev;
+          return [{
+            ...targetQ,
+            quiz_id: quizId,
+            source_quiz_id: quizId,
+            source_quiz_title: title || "This Quiz",
+            is_removed: true,
+            accepted_aliases: updatedAliases
+          }, ...prev];
+        });
+      } catch (err) {
+        console.warn("DB remove question notice:", err);
+      }
+    }
+
+    setIsDirty(true);
+    setToastMsg({ text: "Question moved to 'Removed Questions' repository (accessible across all quizzes).", type: "success" });
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  // Restore question back to active quiz
-  const restoreQuestion = (idx: number) => {
-    setQuestions(prev => {
-      const copy = [...prev];
-      copy[idx] = { ...copy[idx], is_removed: false };
-      return copy;
-    });
-    setToastMsg({ text: "Question restored back to active quiz!", type: "success" });
+  // Restore question back into current quiz from the pool (works for questions from this quiz OR other quizzes!)
+  const handleRestoreQuestion = async (targetQ: Question) => {
+    const cleanAliases = (targetQ.accepted_aliases || []).filter(a => typeof a === "string" && a !== "status:removed" && a !== "archived:true");
+
+    const existingIndex = questions.findIndex(x => (targetQ.id && x.id === targetQ.id) || (x.correct_answer === targetQ.correct_answer && x.media_url === targetQ.media_url));
+
+    if (existingIndex >= 0) {
+      setQuestions(prev => {
+        const copy = [...prev];
+        copy[existingIndex] = {
+          ...copy[existingIndex],
+          is_removed: false,
+          accepted_aliases: cleanAliases
+        };
+        return copy;
+      });
+    } else {
+      // Append from other quiz
+      const newQuestion: Question = {
+        ...targetQ,
+        id: targetQ.id,
+        quiz_id: quizId,
+        order_index: questions.filter(x => !x.is_removed).length + 1,
+        is_removed: false,
+        accepted_aliases: cleanAliases
+      };
+      setQuestions(prev => [...prev, newQuestion]);
+    }
+
+    // Remove from globalRemovedQuestions pool state
+    if (targetQ.id) {
+      setGlobalRemovedQuestions(prev => prev.filter(x => x.id !== targetQ.id));
+    }
+
+    // Persist to Supabase if targetQ has an ID and current quizId exists
+    if (targetQ.id && quizId) {
+      try {
+        await supabase
+          .from("quiz_questions")
+          .update({
+            quiz_id: quizId,
+            accepted_aliases: cleanAliases,
+            order_index: questions.filter(x => !x.is_removed).length + 1
+          })
+          .eq("id", targetQ.id);
+      } catch (err) {
+        console.warn("DB restore update notice:", err);
+      }
+    }
+
+    setIsDirty(true);
+    setToastMsg({ text: `✓ Restored "${targetQ.correct_answer}" to this quiz!`, type: "success" });
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Legacy restore by index for compatibility
+  const restoreQuestion = (idx: number) => {
+    const q = questions[idx];
+    if (q) handleRestoreQuestion(q);
   };
 
   // Permanently delete question from database
-  const permanentlyDeleteQuestion = (idx: number) => {
-    if (!confirm("Are you sure you want to permanently delete this question from the database? This cannot be undone.")) return;
-    setQuestions(prev => prev.filter((_, i) => i !== idx));
-    setToastMsg({ text: "Question permanently deleted.", type: "success" });
+  const handlePermanentlyDeleteRemoved = async (targetQ: Question) => {
+    if (!confirm(`Are you sure you want to permanently delete "${targetQ.correct_answer || targetQ.question_text}" from the database? This cannot be undone.`)) return;
+
+    if (targetQ.id) {
+      try {
+        await supabase.from("quiz_questions").delete().eq("id", targetQ.id);
+      } catch (err) {
+        console.error("DB delete notice:", err);
+      }
+      setGlobalRemovedQuestions(prev => prev.filter(x => x.id !== targetQ.id));
+      setQuestions(prev => prev.filter(x => x.id !== targetQ.id));
+    } else {
+      setQuestions(prev => prev.filter(x => x !== targetQ));
+    }
+
+    setToastMsg({ text: "Question permanently deleted from database.", type: "success" });
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Legacy permanently delete by index for compatibility
+  const permanentlyDeleteQuestion = (idx: number) => {
+    const q = questions[idx];
+    if (q) handlePermanentlyDeleteRemoved(q);
   };
 
   const handleSaveQuiz = async (publishState?: boolean) => {
@@ -791,6 +943,18 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
       // Sync Questions with explicit difficulty tag in accepted_aliases
       if (activeQuizId) {
+        // If any restored question was originally registered under another quiz, clean up its old record
+        const transferredIds = activeQuestions
+          .filter(q => q.id && q.source_quiz_id && q.source_quiz_id !== activeQuizId)
+          .map(q => q.id as string);
+        if (transferredIds.length > 0) {
+          try {
+            await supabase.from("quiz_questions").delete().in("id", transferredIds);
+          } catch (e) {
+            console.warn("Transferred questions cleanup note:", e);
+          }
+        }
+
         await supabase.from("quiz_questions").delete().eq("quiz_id", activeQuizId);
 
         const questionsToInsert = activeQuestions.map((q, idx) => {
@@ -836,29 +1000,73 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     }
   };
 
+  // -------------------------------------------------------------
+  // Removed Questions Pool Calculation (Cross-Quiz Universal Pool)
+  // -------------------------------------------------------------
+  const thisQuizRemoved = questions.filter(q => q.is_removed);
+  const thisQuizActiveIds = new Set(questions.filter(q => !q.is_removed && q.id).map(q => q.id));
+  const thisQuizRemovedIds = new Set(thisQuizRemoved.filter(q => q.id).map(q => q.id));
+
+  // Global removed questions originating from other quizzes
+  const otherQuizzesRemoved = globalRemovedQuestions.filter(gq => {
+    if (gq.id && (thisQuizActiveIds.has(gq.id) || thisQuizRemovedIds.has(gq.id))) return false;
+    if (gq.quiz_id && quizId && gq.quiz_id === quizId) return false;
+    return true;
+  });
+
+  // Combined universal pool of all removed questions
+  const allRemovedPool: (Question & { source: "this_quiz" | "other_quiz" })[] = [
+    ...thisQuizRemoved.map(q => ({
+      ...q,
+      source: "this_quiz" as const,
+      source_quiz_title: title || "This Quiz"
+    })),
+    ...otherQuizzesRemoved.map(q => ({
+      ...q,
+      source: "other_quiz" as const
+    }))
+  ];
+
   // Active vs. Removed counts
-  const countRemoved = questions.filter(q => q.is_removed).length;
+  const countRemoved = allRemovedPool.length;
   const countActive = questions.filter(q => !q.is_removed).length;
   const countPopular = questions.filter(q => !q.is_removed && (q.difficulty === "popular" || q.difficulty === "easy")).length;
   const count5050 = questions.filter(q => !q.is_removed && (q.difficulty === "50-50" || q.difficulty === "medium")).length;
   const countMaster = questions.filter(q => !q.is_removed && (q.difficulty === "master" || q.difficulty === "hard")).length;
 
+  // Filtered Removed Pool (for "removed" tab)
+  const filteredRemovedPool = allRemovedPool.filter(q => {
+    // 1. Source filter (All vs This Quiz vs Other Quizzes)
+    if (removedSourceFilter === "this_quiz" && q.source !== "this_quiz") return false;
+    if (removedSourceFilter === "other_quizzes" && q.source !== "other_quiz") return false;
+
+    // 2. Search filter
+    if (questionSearchQuery.trim()) {
+      const term = questionSearchQuery.toLowerCase().trim();
+      const text = (q.question_text || "").toLowerCase();
+      const ans = (q.correct_answer || "").toLowerCase();
+      const clue = (q.explanation_clue || "").toLowerCase();
+      const opts = (q.options || []).join(" ").toLowerCase();
+      const srcTitle = (q.source_quiz_title || "").toLowerCase();
+      const matches = text.includes(term) || ans.includes(term) || clue.includes(term) || opts.includes(term) || srcTitle.includes(term);
+      if (!matches) return false;
+    }
+
+    return true;
+  });
+
+  // Active Questions for active filters
   const filteredQuestionsWithOriginalIndices = questions
     .map((q, idx) => ({ q, originalIndex: idx }))
     .filter(({ q, originalIndex }) => {
-      // 1. Removed status filter
-      if (filterDifficulty === "removed") {
-        if (!q.is_removed) return false;
-      } else {
-        if (q.is_removed) return false;
+      if (q.is_removed) return false;
 
-        // Difficulty category filter
-        if (filterDifficulty !== "all" && !retainedInFilter[originalIndex]) {
-          const rawDiff = q.difficulty || "popular";
-          const qTier = (rawDiff === "master" || rawDiff === "hard") ? "master" :
-                        (rawDiff === "50-50" || rawDiff === "medium") ? "50-50" : "popular";
-          if (qTier !== filterDifficulty) return false;
-        }
+      // Difficulty category filter
+      if (filterDifficulty !== "all" && filterDifficulty !== "removed" && !retainedInFilter[originalIndex]) {
+        const rawDiff = q.difficulty || "popular";
+        const qTier = (rawDiff === "master" || rawDiff === "hard") ? "master" :
+                      (rawDiff === "50-50" || rawDiff === "medium") ? "50-50" : "popular";
+        if (qTier !== filterDifficulty) return false;
       }
 
       // 2. Question text, answer & options search query filter
@@ -1555,7 +1763,316 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         </div>
 
         {/* QUESTIONS LIST */}
-        {filteredQuestionsWithOriginalIndices.length === 0 ? (
+        {filterDifficulty === "removed" ? (
+          /* UNIVERSAL CROSS-QUIZ REMOVED QUESTIONS REPOSITORY */
+          <div className="space-y-4">
+            {/* Repository Header Banner */}
+            <div className="p-5 bg-gradient-to-r from-gray-900 to-slate-900 text-white rounded-3xl border border-gray-800 shadow-md">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-base font-extrabold flex items-center gap-2">
+                    <span>🗑️ Universal Removed Questions Repository</span>
+                    <span className="text-xs bg-red-500 text-white px-2.5 py-0.5 rounded-full font-black">
+                      {filteredRemovedPool.length} Questions
+                    </span>
+                  </h4>
+                  <p className="text-xs text-gray-300 mt-1 max-w-2xl leading-relaxed">
+                    Questions removed from any quiz remain preserved in this repository across all quizzes. You can preview, verify, and revert any question into this active quiz with 1 click.
+                  </p>
+                </div>
+
+                {/* Sub-Filters: All | From This Quiz | Other Quizzes */}
+                <div className="flex items-center gap-1.5 bg-gray-800/90 p-1 rounded-2xl border border-gray-700/80 shrink-0 self-start md:self-center">
+                  <button
+                    type="button"
+                    onClick={() => setRemovedSourceFilter("all")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      removedSourceFilter === "all" ? "bg-white text-black font-black shadow-xs" : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    All Repository ({allRemovedPool.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRemovedSourceFilter("this_quiz")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      removedSourceFilter === "this_quiz" ? "bg-white text-black font-black shadow-xs" : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    This Quiz ({thisQuizRemoved.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRemovedSourceFilter("other_quizzes")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      removedSourceFilter === "other_quizzes" ? "bg-white text-black font-black shadow-xs" : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    Other Quizzes ({otherQuizzesRemoved.length})
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {loadingRemovedPool ? (
+              <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center text-gray-500 flex flex-col items-center gap-2">
+                <Loader2 className="animate-spin text-black" size={24} />
+                <span className="text-xs font-bold">Loading removed questions pool from database...</span>
+              </div>
+            ) : filteredRemovedPool.length === 0 ? (
+              <div className="bg-white rounded-3xl border-2 border-dashed border-gray-300 p-12 text-center text-gray-500">
+                <p className="text-base font-bold text-gray-800 mb-1">No removed questions found</p>
+                <p className="text-xs text-gray-500 mb-4">
+                  {questionSearchQuery 
+                    ? `No removed questions match "${questionSearchQuery}". Try clearing your search.` 
+                    : removedSourceFilter === "this_quiz"
+                    ? "No questions have been removed from this specific quiz yet."
+                    : "No removed questions in this filter view."}
+                </p>
+                {questionSearchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setQuestionSearchQuery("")}
+                    className="px-4 py-2 bg-black text-white text-xs font-bold rounded-xl"
+                  >
+                    Clear Search
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setRemovedSourceFilter("all")}
+                    className="px-4 py-2 bg-black text-white text-xs font-bold rounded-xl"
+                  >
+                    View All Removed Questions
+                  </button>
+                )}
+              </div>
+            ) : questionViewMode === "compact" ? (
+              /* COMPACT VIEW FOR REMOVED QUESTIONS */
+              <div className="space-y-2.5">
+                {filteredRemovedPool.map((q, rIdx) => {
+                  const isMaster = q.difficulty === "master" || q.difficulty === "hard";
+                  return (
+                    <div
+                      key={q.id || rIdx}
+                      className="bg-white rounded-2xl border border-red-200/80 p-3 shadow-xs hover:border-red-400 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <span className="w-7 h-7 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                          R{rIdx + 1}
+                        </span>
+                        {q.media_url ? (
+                          <div
+                            onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || q.question_text })}
+                            className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-100 shrink-0 cursor-zoom-in relative group/th"
+                            title="Click to preview photo"
+                          >
+                            <img src={q.media_url} alt="" className="w-full h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                            <ImageIcon size={16} />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                            {q.source === "this_quiz" ? (
+                              <span className="text-[10px] font-black bg-red-100 text-red-800 px-2 py-0.5 rounded-md border border-red-200">
+                                🗑️ From this quiz
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-black bg-purple-100 text-purple-900 px-2 py-0.5 rounded-md border border-purple-200 truncate max-w-[220px]" title={q.source_quiz_title}>
+                                📦 From: {q.source_quiz_title}
+                              </span>
+                            )}
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${isMaster ? "bg-blue-100 text-blue-900" : "bg-amber-100 text-amber-900"}`}>
+                              {isMaster ? "Master (300)" : "Popular (100)"}
+                            </span>
+                          </div>
+                          <p className="text-xs font-semibold text-gray-800 truncate" title={q.question_text}>
+                            {q.question_text}
+                          </p>
+                          <p className="text-xs text-gray-900 font-extrabold mt-0.5 truncate">
+                            Target Ans: <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{q.correct_answer || "(No answer set)"}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreQuestion(q)}
+                          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                          title="Restore question into this active quiz"
+                        >
+                          <RotateCcw size={13} /> Revert to Quiz
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handlePermanentlyDeleteRemoved(q)}
+                          className="p-1.5 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                          title="Permanently Delete Question from Database"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* DETAILED VIEW FOR REMOVED QUESTIONS */
+              <div className="space-y-5">
+                {filteredRemovedPool.map((q, rIdx) => {
+                  const isMaster = q.difficulty === "master" || q.difficulty === "hard";
+                  return (
+                    <div
+                      key={q.id || rIdx}
+                      className="bg-white rounded-3xl border border-red-200/90 p-5 sm:p-6 shadow-xs hover:shadow-md transition"
+                    >
+                      {/* Top Row: Index, Source Badge & Restore Button */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 mb-4 border-b border-gray-100">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="w-8 h-8 rounded-full bg-red-600 text-white text-xs font-black flex items-center justify-center shrink-0 shadow-xs">
+                            R{rIdx + 1}
+                          </span>
+                          {q.source === "this_quiz" ? (
+                            <span className="text-xs font-black bg-red-100 text-red-800 px-3 py-1 rounded-xl border border-red-200 flex items-center gap-1">
+                              <span>🗑️ Removed from this quiz</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs font-black bg-purple-100 text-purple-900 px-3 py-1 rounded-xl border border-purple-200 flex items-center gap-1">
+                              <span>📦 Original Quiz:</span>
+                              <span className="underline decoration-purple-400">{q.source_quiz_title}</span>
+                            </span>
+                          )}
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-xl border ${isMaster ? "bg-blue-50 text-blue-900 border-blue-200" : "bg-amber-50 text-amber-900 border-amber-200"}`}>
+                            {isMaster ? "Architecture Master (300 pts)" : "Popular (100 pts)"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleRestoreQuestion(q)}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
+                            title="Revert and add this question back into the active quiz"
+                          >
+                            <RotateCcw size={14} /> Revert / Restore to this Quiz
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handlePermanentlyDeleteRemoved(q)}
+                            className="p-2 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                            title="Permanently Delete Question from Database"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Info Notice Banner */}
+                      <div className="mb-4 p-3 bg-red-50/70 border border-red-200 rounded-2xl flex items-center justify-between gap-3 text-xs font-bold text-red-900">
+                        <div className="flex items-center gap-2">
+                          <span>⚠️ Currently excluded from active play. Click <strong>&quot;Revert / Restore to this Quiz&quot;</strong> to activate it here.</span>
+                        </div>
+                      </div>
+
+                      {/* Content Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                        {/* Clue Photo */}
+                        <div className="md:col-span-4 flex flex-col gap-2">
+                          <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center justify-between">
+                            <span>Clue Photograph</span>
+                            {q.media_url && (
+                              <span className="text-[10px] text-blue-600 font-bold flex items-center gap-0.5">
+                                <ZoomIn size={11} /> Click to Enlarge
+                              </span>
+                            )}
+                          </label>
+
+                          {q.media_url ? (
+                            <div
+                              onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || "Clue Photo" })}
+                              className="relative h-48 sm:h-52 w-full rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 group cursor-pointer shadow-xs hover:border-black transition flex items-center justify-center p-1.5"
+                              title="Click to view full photo"
+                            >
+                              <img
+                                referrerPolicy="no-referrer"
+                                src={q.media_url}
+                                alt="Clue preview"
+                                className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1.5 backdrop-blur-[2px]">
+                                <ZoomIn size={18} /> View Full Photo
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="h-44 w-full rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-gray-400 p-4 text-center">
+                              <ImageIcon size={28} className="mb-1 text-gray-300" />
+                              <span className="text-xs font-medium">No Image URL</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Prompt & Options */}
+                        <div className="md:col-span-8 flex flex-col gap-3">
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                              Question Prompt:
+                            </label>
+                            <p className="text-sm font-bold text-gray-900 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                              {q.question_text}
+                            </p>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                              Options:
+                            </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {(q.options || []).map((opt, oIdx) => {
+                                const isCorrect = opt === q.correct_answer;
+                                return (
+                                  <div
+                                    key={oIdx}
+                                    className={`p-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
+                                      isCorrect
+                                        ? "bg-emerald-50 border-emerald-400 text-emerald-950 ring-1 ring-emerald-400"
+                                        : "bg-gray-50/80 border-gray-200 text-gray-700"
+                                    }`}
+                                  >
+                                    <span>{opt}</span>
+                                    {isCorrect && (
+                                      <span className="text-[10px] font-black text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-300">
+                                        ✓ Correct
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {q.explanation_clue && (
+                            <div>
+                              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                                💡 Architectural Trivia / Facts:
+                              </label>
+                              <p className="text-xs text-gray-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                                {q.explanation_clue}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : filteredQuestionsWithOriginalIndices.length === 0 ? (
           <div className="bg-white rounded-3xl border-2 border-dashed border-gray-300 p-12 text-center text-gray-400">
             <p className="text-base font-bold text-gray-700 mb-1">
               {questions.length === 0 ? "No questions in this quiz yet" : "No questions match the selected difficulty filter"}
