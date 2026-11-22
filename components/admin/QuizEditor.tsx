@@ -559,17 +559,18 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         const cleanAnswer = (q.correct_answer || "").toLowerCase().trim();
         const cleanPhoto = (q.media_url || "").toLowerCase().trim();
 
-        let match = catalogByName.get(cleanAnswer);
-        if (!match) {
+        // 1. Primary ground-truth match by landmark photo (100% unique per building)
+        let match = cleanPhoto ? catalogByImage.get(cleanPhoto) : null;
+        if (!match && cleanAnswer) {
+          match = catalogByName.get(cleanAnswer);
+        }
+        if (!match && cleanAnswer) {
           for (const [key, val] of catalogByName.entries()) {
-            if (cleanAnswer.includes(key) || key.includes(cleanAnswer)) {
+            if (cleanAnswer === key || key.startsWith(cleanAnswer)) {
               match = val;
               break;
             }
           }
-        }
-        if (!match && cleanPhoto) {
-          match = catalogByImage.get(cleanPhoto);
         }
 
         if (match) {
@@ -2170,16 +2171,21 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         {(() => {
                           const ans = (q.correct_answer || "").toLowerCase().trim();
                           const qPhoto = (q.media_url || "").toLowerCase().trim();
-                          const cat = catalogRows.find(c => {
-                            const d = c.data || {};
-                            const photo = (d.building_photo || "").toLowerCase().trim();
-                            if (qPhoto && photo && (photo === qPhoto || qPhoto.includes(photo) || photo.includes(qPhoto))) return true;
-                            const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
-                            if (bName && (ans.includes(bName) || bName.includes(ans))) return true;
-                            const arch = (d.architect || "").toLowerCase().trim();
-                            if (arch && (ans.includes(arch) || arch.includes(ans))) return true;
-                            return false;
+
+                          // 1. Primary ground-truth match by landmark photo (100% unique per building across all 65 catalog entries)
+                          let cat = catalogRows.find(c => {
+                            const photo = (c.data?.building_photo || "").toLowerCase().trim();
+                            return qPhoto && photo && (photo === qPhoto || qPhoto.endsWith(photo) || photo.endsWith(qPhoto));
                           })?.data;
+
+                          // 2. Secondary fallback by exact building name if photo is missing or non-matching
+                          if (!cat && ans) {
+                            cat = catalogRows.find(c => {
+                              const d = c.data || {};
+                              const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+                              return bName && (bName === ans || bName.startsWith(ans));
+                            })?.data;
+                          }
 
                           const isMasterArchitects = 
                             category === "Master Architects" || 
