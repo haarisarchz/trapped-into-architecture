@@ -2149,58 +2149,63 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         </div>
                       )}
 
-                      {/* Explanation Trivia Clue */}
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                          💡 Architectural Trivia / Facts (Revealed in Practice Mode & Review):
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={q.explanation_clue || ""}
-                          onChange={e => updateQuestion(originalIndex, { explanation_clue: e.target.value })}
-                          className="w-full px-3 py-1.5 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:border-black bg-gray-50/50"
-                          placeholder="Architectural style, location trivia, design significance..."
-                        />
+                      {/* 2-COLUMN BOTTOM ROW: TRIVIA / FACTS (LEFT 50%) & GAMEPLAY CLUES ONE-BY-ONE BELOW (RIGHT 50%) */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch mt-1">
+                        
+                        {/* LEFT (HALF WIDTH): ARCHITECTURAL TRIVIA / FACTS TEXTAREA */}
+                        <div className="flex flex-col h-full">
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                            💡 Architectural Trivia / Facts (Practice &amp; Review):
+                          </label>
+                          <textarea
+                            rows={4}
+                            value={q.explanation_clue || ""}
+                            onChange={e => updateQuestion(originalIndex, { explanation_clue: e.target.value })}
+                            className="w-full flex-1 min-h-[110px] px-3.5 py-2.5 text-xs text-gray-800 border border-gray-200 rounded-xl focus:outline-none focus:border-black bg-gray-50/60 leading-relaxed resize-y font-medium"
+                            placeholder="Architectural style, location trivia, design significance..."
+                          />
+                        </div>
+
+                        {/* RIGHT (HALF WIDTH): LIVE GAMEPLAY CLUES ONE-BY-ONE BELOW */}
+                        {(() => {
+                          const ans = (q.correct_answer || "").toLowerCase().trim();
+                          const qPhoto = (q.media_url || "").toLowerCase().trim();
+                          const cat = catalogRows.find(c => {
+                            const d = c.data || {};
+                            const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+                            const photo = (d.building_photo || "").toLowerCase().trim();
+                            return (qPhoto && photo === qPhoto) || (bName && ans.includes(bName)) || (bName && bName.includes(ans));
+                          })?.data;
+
+                          return (
+                            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-extrabold text-slate-800 flex items-center gap-1.5 text-[11px]">
+                                  <span>🔍 Live Gameplay Clues (Catalog Preview):</span>
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-mono">
+                                  Auto-resolved for players
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-2 text-[11px] flex-1 justify-center">
+                                <div className="p-2.5 bg-blue-50/90 border border-blue-200/90 rounded-lg text-blue-950 flex items-center justify-between gap-2 shadow-2xs">
+                                  <span className="font-extrabold flex items-center gap-1 text-blue-900 shrink-0">
+                                    <span>📍 Clue 1 (Location):</span>
+                                  </span>
+                                  <p className="font-bold truncate text-right">{cat?.city || "City"}, {cat?.country || "Country"}</p>
+                                </div>
+                                <div className="p-2.5 bg-purple-50/90 border border-purple-200/90 rounded-lg text-purple-950 flex items-center justify-between gap-2 shadow-2xs">
+                                  <span className="font-extrabold flex items-center gap-1 text-purple-900 shrink-0">
+                                    <span>🏛️ Clue 2 (Architect / Movement):</span>
+                                  </span>
+                                  <p className="font-bold truncate text-right">{cat?.architect || "Visionary Architect"} {cat?.opened_year ? `(${cat.opened_year})` : ""}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                       </div>
-
-                      {/* READ-ONLY LIVE CLUE INSPECTION BOX */}
-                      {(() => {
-                        const ans = (q.correct_answer || "").toLowerCase().trim();
-                        const qPhoto = (q.media_url || "").toLowerCase().trim();
-                        const cat = catalogRows.find(c => {
-                          const d = c.data || {};
-                          const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
-                          const photo = (d.building_photo || "").toLowerCase().trim();
-                          return (qPhoto && photo === qPhoto) || (bName && ans.includes(bName)) || (bName && bName.includes(ans));
-                        })?.data;
-
-                        return (
-                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs mt-1">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
-                                <span>🔍 Live Gameplay Clues (Read-Only Preview from Catalog):</span>
-                              </span>
-                              <span className="text-[10px] text-gray-500 font-mono">
-                                Auto-resolved for players
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                              <div className="p-2 bg-blue-50/80 border border-blue-200/80 rounded-lg text-blue-950">
-                                <span className="font-extrabold flex items-center gap-1 text-blue-900">
-                                  <span>📍 Clue 1 (Location):</span>
-                                </span>
-                                <p className="mt-0.5 font-medium">{cat?.city || "City"}, {cat?.country || "Country"}</p>
-                              </div>
-                              <div className="p-2 bg-purple-50/80 border border-purple-200/80 rounded-lg text-purple-950">
-                                <span className="font-extrabold flex items-center gap-1 text-purple-900">
-                                  <span>🏛️ Clue 2 (Architect / Movement):</span>
-                                </span>
-                                <p className="mt-0.5 font-medium">{cat?.architect || "Visionary Architect"} {cat?.opened_year ? `(${cat.opened_year})` : ""}</p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })()}
 
                     </div>
 
