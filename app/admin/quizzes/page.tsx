@@ -118,6 +118,14 @@ export default function AdminQuizzesPage() {
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const editId = params.get("edit");
+      if (editId) {
+        router.replace(`/admin/quizzes/edit/${editId}`);
+        return;
+      }
+    }
     checkAccessAndDatabase();
   }, []);
 

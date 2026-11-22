@@ -1016,7 +1016,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   onClick={() => {
                     if (!prevQ) return;
                     if (isDirty) setPendingNavUrl(prevQ.id);
-                    else router.push(`/admin/quizzes?edit=${prevQ.id}`);
+                    else router.push(`/admin/quizzes/edit/${prevQ.id}`);
                   }}
                   className="px-2.5 py-1 text-xs font-bold rounded-lg border border-gray-200 hover:border-gray-400 bg-white disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 transition cursor-pointer"
                   title={prevQ ? `Previous Quiz: ${prevQ.title}` : "No previous quiz"}
@@ -1035,7 +1035,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   onClick={() => {
                     if (!nextQ) return;
                     if (isDirty) setPendingNavUrl(nextQ.id);
-                    else router.push(`/admin/quizzes?edit=${nextQ.id}`);
+                    else router.push(`/admin/quizzes/edit/${nextQ.id}`);
                   }}
                   className="px-2.5 py-1 text-xs font-bold rounded-lg border border-gray-200 hover:border-gray-400 bg-white disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 transition cursor-pointer"
                   title={nextQ ? `Next Quiz: ${nextQ.title}` : "No next quiz"}
@@ -2319,7 +2319,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   } else if (dest.startsWith("/")) {
                     router.push(dest);
                   } else {
-                    router.push(`/admin/quizzes?edit=${dest}`);
+                    router.push(`/admin/quizzes/edit/${dest}`);
                   }
                 }}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl cursor-pointer"
