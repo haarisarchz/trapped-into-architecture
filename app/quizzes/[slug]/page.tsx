@@ -14,8 +14,11 @@ import {
 } from "lucide-react";
 import { 
   getQuestionsForGameDifficulty, 
-  getQuestionDifficulty 
+  getQuestionDifficulty,
+  getGameDifficultyPoints,
+  getGameDifficultyClueDeduction
 } from "@/lib/quizDifficulty";
+import QuizRulesModal from "@/components/QuizRulesModal";
 
 interface Question {
   id: string;
@@ -57,7 +60,7 @@ export default function QuizPlayPage() {
   const [quiz, setQuiz] = useState<any>(null);
   const [allQuestionsPool, setAllQuestionsPool] = useState<Question[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [questionCountChoice, setQuestionCountChoice] = useState<number>(10);
+  const [questionCountChoice, setQuestionCountChoice] = useState<number>(20);
   const [loading, setLoading] = useState(true);
 
   // Pre-game config states
@@ -66,6 +69,7 @@ export default function QuizPlayPage() {
   const [gameStarted, setGameStarted] = useState(false);
   const [isGameOver, setIsGameOver] = useState(false);
   const [showCustomOptions, setShowCustomOptions] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
 
   // Sidebar: Leaderboard & other quizzes
   const [leaderboardScope, setLeaderboardScope] = useState<"quiz" | "overall">("quiz");
@@ -401,9 +405,10 @@ export default function QuizPlayPage() {
 
     const pool = allQuestionsPool.length > 0 ? allQuestionsPool : questions;
     const targeted = getQuestionsForGameDifficulty(pool, activeDiff, activeCount);
-    const sampled = shuffleArray(targeted).map(q => ({
+    const shouldShuffleChoices = (activeDiff || "").toLowerCase() !== "easy" && (activeDiff || "").toLowerCase() !== "popular";
+    const sampled = targeted.map(q => ({
       ...q,
-      options: shuffleArray(q.options || [])
+      options: shouldShuffleChoices ? shuffleArray(q.options || []) : (q.options || [])
     }));
 
     setQuestions(sampled);
@@ -439,7 +444,8 @@ export default function QuizPlayPage() {
     }
 
     // Set initial question readiness for Question 0
-    const firstQHasImage = Boolean(sampled[0]?.media_url);
+    const isArchitectOeuvre = slug === "architects-oeuvre-pair-the-masterpieces";
+    const firstQHasImage = !isArchitectOeuvre && Boolean(sampled[0]?.media_url);
     if (!firstQHasImage) {
       setImageLoaded(true);
       setIsQuestionReady(true);
@@ -487,7 +493,7 @@ export default function QuizPlayPage() {
       clearTimeout(fallbackWatchdogRef.current);
     }
 
-    if (!currentQ.media_url) {
+    if (slug === "architects-oeuvre-pair-the-masterpieces" || !currentQ.media_url) {
       setImageLoaded(true);
       setIsQuestionReady(true);
       isQuestionReadyRef.current = true;
@@ -547,11 +553,22 @@ export default function QuizPlayPage() {
     return false;
   };
 
-  // Base Points formula: Popular & Iconic = 100 pts, Deep Master = 300 pts
-  const getQuestionBasePoints = (q: Question) => {
-    const qDiff = getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases);
-    if (qDiff === "master") return 300;
-    return 100;
+  // Base Points formula: Strictly based on Game Difficulty (Easy = 150 pts, Medium = 300 pts, Hard = 450 pts)
+  const getQuestionBasePoints = (_q?: Question) => {
+    return getGameDifficultyPoints(difficulty);
+  };
+
+  // Option building photo resolver for Architect's Portfolio Quiz
+  const getBuildingPhotoForOption = (optName: string): string | null => {
+    if (!optName) return null;
+    const clean = optName.toLowerCase().trim();
+    if (catalogMap[clean]?.building_photo) return catalogMap[clean].building_photo || null;
+    for (const [key, val] of Object.entries(catalogMap)) {
+      if (val?.building_photo && (clean.includes(key) || key.includes(clean))) {
+        return val.building_photo;
+      }
+    }
+    return null;
   };
 
   // Dynamic Clue Resolver from Catalog & Question Metadata (Context-Aware per Quiz Type)
@@ -770,8 +787,9 @@ export default function QuizPlayPage() {
 
       if (isAnswerCorrect(q, ans)) {
         correctCount++;
-        const base = getQuestionBasePoints(q);
-        const earned = Math.round(base * (cluesCount === 2 ? (1 / 3) : cluesCount === 1 ? (2 / 3) : 1));
+        const base = getGameDifficultyPoints(difficulty);
+        const deductionPerClue = getGameDifficultyClueDeduction(difficulty);
+        const earned = Math.max(0, base - (cluesCount * deductionPerClue));
         baseScore += earned;
       } else if (skippedQuestions[idx]) {
         skippedCount++;
@@ -1413,8 +1431,17 @@ export default function QuizPlayPage() {
               </span>
             </div>
 
-            {/* Platform Cross-Links */}
+            {/* Platform Cross-Links & Rules Button */}
             <div className="flex flex-wrap items-center gap-2 font-bold text-[11px]">
+              <button
+                type="button"
+                onClick={() => setShowRulesModal(true)}
+                className="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-950 rounded-full border border-amber-300 shadow-2xs transition flex items-center gap-1.5 cursor-pointer font-black"
+                title="View How to Play & Scoring Rules"
+              >
+                <BookOpen size={13} className="text-amber-600" />
+                <span>How to Play &amp; Rules</span>
+              </button>
               <Link 
                 href="/jobs" 
                 className="px-3 py-1.5 bg-white hover:bg-gray-100 text-gray-700 rounded-full border border-gray-200 shadow-2xs transition flex items-center gap-1.5"
@@ -1500,26 +1527,36 @@ export default function QuizPlayPage() {
                     {quiz.description || "Test your architectural visual recall, beat the continuous countdown timer, and claim your spot on the official leaderboard."}
                   </p>
 
-                  {/* PROMINENT QUICK START SECTION (Item 12: Sensible Defaults: Challenge Mode, Medium, 10 Questions) */}
+                  {/* PROMINENT QUICK START SECTION */}
                   <div className="bg-gradient-to-b from-amber-50/90 to-orange-50/40 border-2 border-amber-400 rounded-3xl p-6 sm:p-8 mb-6 text-center shadow-xs">
                     <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
                       <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-black text-white rounded-full">
                         ⚡ Quick Start Recommended
                       </span>
                       <span className="text-xs font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full">
-                        10 Questions &bull; Challenge Mode &bull; Medium (10s/Q &bull; 1m 40s)
+                        20 Questions &bull; Challenge Mode &bull; Medium (10s/Q &bull; 3m 20s &bull; 300 Pts/Q)
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 mb-5 max-w-md mx-auto">
                       Jump straight into the quiz challenge with standard tournament settings and earn your spot on the leaderboard.
                     </p>
-                    <button
-                      onClick={handleStartGame}
-                      className="w-full sm:w-auto px-10 py-4 bg-black hover:bg-gray-800 text-white text-base font-extrabold rounded-2xl transition shadow-lg flex items-center justify-center gap-2.5 mx-auto cursor-pointer"
-                    >
-                      <Play size={18} fill="currentColor" />
-                      <span>Quick Start Quiz</span>
-                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        onClick={() => handleStartGame("medium", 20, "challenge")}
+                        className="w-full sm:w-auto px-10 py-4 bg-black hover:bg-gray-800 text-white text-base font-extrabold rounded-2xl transition shadow-lg flex items-center justify-center gap-2.5 cursor-pointer"
+                      >
+                        <Play size={18} fill="currentColor" />
+                        <span>Quick Start Quiz</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowRulesModal(true)}
+                        className="w-full sm:w-auto px-5 py-4 bg-white hover:bg-gray-50 text-gray-900 text-xs font-bold rounded-2xl transition border border-gray-300 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                      >
+                        <BookOpen size={15} className="text-amber-500" />
+                        <span>How to Play &amp; Rules</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* ADVANCED CUSTOMIZATION TOGGLE */}
@@ -1598,37 +1635,53 @@ export default function QuizPlayPage() {
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <button
                               type="button"
-                              onClick={() => setDifficulty("easy")}
+                              onClick={() => {
+                                setDifficulty("easy");
+                                if (questionCountChoice > 20) setQuestionCountChoice(10);
+                              }}
                               className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
                                 difficulty === "easy" || difficulty === "popular"
                                   ? "bg-emerald-50/90 border-emerald-500 shadow-xs ring-2 ring-emerald-500/20" 
                                   : "bg-white border-gray-200 hover:border-gray-300"
                               }`}
                             >
-                              <p className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                                Easy Mode
-                              </p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                                  🟢 Easy Mode
+                                </p>
+                                <span className="text-[10px] font-black bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full">
+                                  150 PTS/Q
+                                </span>
+                              </div>
                               <p className="text-[11px] font-bold text-gray-800 mt-1">100% Popular Landmarks</p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                15s/Q • 100 Pts/Q • Globally famous world icons.
+                                15s/Q • No Choice Shuffle • Clue deduction: -50 pts
                               </p>
                             </button>
 
                             <button
                               type="button"
-                              onClick={() => setDifficulty("medium")}
+                              onClick={() => {
+                                setDifficulty("medium");
+                                if (questionCountChoice < 20) setQuestionCountChoice(20);
+                              }}
                               className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
                                 difficulty === "medium"
                                   ? "bg-amber-50/90 border-amber-500 shadow-xs ring-2 ring-amber-500/20" 
                                   : "bg-white border-gray-200 hover:border-gray-300"
                               }`}
                             >
-                              <p className="text-xs font-black text-amber-950 uppercase tracking-wider">
-                                Medium Mode
-                              </p>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">50% Popular + 50% Master</p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-amber-950 uppercase tracking-wider">
+                                  🟡 Medium Mode
+                                </p>
+                                <span className="text-[10px] font-black bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full">
+                                  300 PTS/Q
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">50-50 + Balanced Mix</p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                10s/Q • 100–300 Pts • Balanced test of recall.
+                                10s/Q • Shuffled Choices • Clue deduction: -100 pts
                               </p>
                             </button>
 
@@ -1637,60 +1690,71 @@ export default function QuizPlayPage() {
                               onClick={() => setDifficulty("hard")}
                               className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
                                 difficulty === "hard" || difficulty === "master"
-                                  ? "bg-blue-50/90 border-blue-600 shadow-xs ring-2 ring-blue-500/20" 
+                                  ? "bg-purple-50/90 border-purple-600 shadow-xs ring-2 ring-purple-500/20" 
                                   : "bg-white border-gray-200 hover:border-gray-300"
                               }`}
                             >
-                              <p className="text-xs font-black text-blue-950 uppercase tracking-wider">
-                                Hard Mode
-                              </p>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">75% Master + 25% Popular</p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-purple-950 uppercase tracking-wider">
+                                  🔴 Hard Mode
+                                </p>
+                                <span className="text-[10px] font-black bg-purple-200/80 text-purple-900 px-2 py-0.5 rounded-full">
+                                  450 PTS/Q
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">Architecture Master Pool</p>
                               <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                5s/Q • 100–300 Pts • Lightning instinct pace!
+                                5s/Q • Sequential Clue Lock 🔒 • Clue deduction: -150 pts
                               </p>
                             </button>
                           </div>
                         </div>
 
-                        {/* Step 3: Select Round Length */}
+                        {/* Step 3: Select Round Length (Strictly dynamically conditioned on selected difficulty) */}
                         <div>
                           <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
                             3. Round Length (Questions):
                           </label>
-                          <div className="grid grid-cols-3 gap-3">
-                            {[
-                              { 
-                                count: 10, 
-                                label: "10 Questions", 
-                                time: (difficulty === "hard" || difficulty === "master") ? "50s" : (difficulty === "easy" || difficulty === "popular") ? "2m 30s" : "1m 40s"
-                              },
-                              { 
-                                count: 20, 
-                                label: "20 Questions", 
-                                time: (difficulty === "hard" || difficulty === "master") ? "1m 40s" : (difficulty === "easy" || difficulty === "popular") ? "5m" : "3m 20s"
-                              },
-                              { 
-                                count: 50, 
-                                label: "50 Questions", 
-                                time: (difficulty === "hard" || difficulty === "master") ? "4m 10s" : (difficulty === "easy" || difficulty === "popular") ? "12m 30s" : "8m 20s"
-                              }
-                            ].map(item => (
-                              <button
-                                key={item.count}
-                                type="button"
-                                onClick={() => setQuestionCountChoice(item.count)}
-                                className={`p-3 rounded-2xl border text-center transition cursor-pointer ${
-                                  questionCountChoice === item.count
-                                    ? "bg-black text-white border-black shadow-xs"
-                                    : "bg-white text-gray-800 border-gray-200 hover:border-gray-300"
-                                }`}
-                              >
-                                <p className="text-xs font-bold">{item.label}</p>
-                                <p className={`text-[10px] mt-0.5 ${questionCountChoice === item.count ? "text-gray-300" : "text-gray-400"}`}>
-                                  {gameMode === "challenge" ? `Time: ${item.time}` : "Untimed"}
-                                </p>
-                              </button>
-                            ))}
+                          <div className={`grid gap-3 ${
+                            difficulty === "easy" || difficulty === "popular" ? "grid-cols-2" :
+                            difficulty === "medium" ? "grid-cols-2" : "grid-cols-3"
+                          }`}>
+                            {(() => {
+                              const isEasy = difficulty === "easy" || difficulty === "popular";
+                              const isMedium = difficulty === "medium";
+                              const countOptions = isEasy ? [
+                                { count: 10, label: "10 Questions", time: "2m 30s", desc: "100% Popular" },
+                                { count: 20, label: "20 Questions", time: "5m 00s", desc: "Popular + 50-50" }
+                              ] : isMedium ? [
+                                { count: 20, label: "20 Questions", time: "3m 20s", desc: "All 50-50 + Split" },
+                                { count: 50, label: "50 Questions", time: "8m 20s", desc: "Full Balanced Marathon" }
+                              ] : [
+                                { count: 10, label: "10 Questions", time: "50s", desc: "100% Master" },
+                                { count: 20, label: "20 Questions", time: "1m 40s", desc: "100% Master" },
+                                { count: 50, label: "50 Questions", time: "4m 10s", desc: "75% Master • 15% 50-50 • 10% Pop" }
+                              ];
+
+                              return countOptions.map(item => (
+                                <button
+                                  key={item.count}
+                                  type="button"
+                                  onClick={() => setQuestionCountChoice(item.count)}
+                                  className={`p-3 rounded-2xl border text-center transition cursor-pointer ${
+                                    questionCountChoice === item.count
+                                      ? "bg-black text-white border-black shadow-xs font-bold"
+                                      : "bg-white text-gray-800 border-gray-200 hover:border-gray-300"
+                                  }`}
+                                >
+                                  <p className="text-xs font-bold">{item.label}</p>
+                                  <p className={`text-[10px] mt-0.5 ${questionCountChoice === item.count ? "text-gray-300" : "text-gray-400"}`}>
+                                    {gameMode === "challenge" ? `Time: ${item.time}` : "Untimed"}
+                                  </p>
+                                  <p className={`text-[9px] mt-0.5 font-medium ${questionCountChoice === item.count ? "text-amber-300" : "text-gray-500"}`}>
+                                    {item.desc}
+                                  </p>
+                                </button>
+                              ));
+                            })()}
                           </div>
                         </div>
 
@@ -2267,47 +2331,66 @@ export default function QuizPlayPage() {
                         {currentQ.question_text}
                       </h2>
 
-                      {/* CLUE RIBBON BUTTONS (Option C: Pinned Header Ribbon - Dynamic Context-Aware) */}
+                      {/* CLUE RIBBON BUTTONS (Option C: Pinned Header Ribbon - Dynamic Context-Aware & Strict Hard Lock) */}
                       {(() => {
                         const cluesInfo = getQuestionClues(currentQ);
+                        const isHard = difficulty === "hard" || difficulty === "master";
+                        const clue1Revealed = Boolean(unlockedClues[currentIndex]?.location);
+                        const clue2Revealed = Boolean(unlockedClues[currentIndex]?.architect);
+                        const clue2Locked = isHard && !clue1Revealed;
+                        const deduction = getGameDifficultyClueDeduction(difficulty);
+
                         return (
                           <div className="flex items-center gap-2 shrink-0">
+                            {/* Clue 1: Location */}
                             <button
                               type="button"
                               onClick={() => handleUnlockClue("location")}
-                              disabled={Boolean(unlockedClues[currentIndex]?.location)}
+                              disabled={clue1Revealed}
                               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
-                                unlockedClues[currentIndex]?.location
+                                clue1Revealed
                                   ? "bg-blue-100 text-blue-900 border border-blue-300 font-extrabold cursor-default"
                                   : "bg-blue-50 hover:bg-blue-100 text-blue-950 border border-blue-200 cursor-pointer"
                               }`}
-                              title={`Reveal ${cluesInfo.clue1.label} (-1/3 potential points)`}
+                              title={`Reveal ${cluesInfo.clue1.label} (-${deduction} pts)`}
                             >
                               <span>{cluesInfo.clue1.icon}</span>
-                              <span>{unlockedClues[currentIndex]?.location ? cluesInfo.clue1.revealedLabel : cluesInfo.clue1.label}</span>
-                              {!unlockedClues[currentIndex]?.location && (
+                              <span>{clue1Revealed ? cluesInfo.clue1.revealedLabel : cluesInfo.clue1.label}</span>
+                              {!clue1Revealed && (
                                 <span className="text-[10px] text-blue-700 font-extrabold bg-blue-100 px-1.5 py-0.2 rounded-md">
-                                  -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
+                                  -{deduction} pts
                                 </span>
                               )}
                             </button>
 
+                            {/* Clue 2: Architect (Strict Lock on Hard Mode) */}
                             <button
                               type="button"
-                              onClick={() => handleUnlockClue("architect")}
-                              disabled={Boolean(unlockedClues[currentIndex]?.architect)}
+                              onClick={() => {
+                                if (clue2Locked) return;
+                                handleUnlockClue("architect");
+                              }}
+                              disabled={clue2Revealed || clue2Locked}
                               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
-                                unlockedClues[currentIndex]?.architect
+                                clue2Revealed
                                   ? "bg-purple-100 text-purple-900 border border-purple-300 font-extrabold cursor-default"
+                                  : clue2Locked
+                                  ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed opacity-75"
                                   : "bg-purple-50 hover:bg-purple-100 text-purple-950 border border-purple-200 cursor-pointer"
                               }`}
-                              title={`Reveal ${cluesInfo.clue2.label} (-1/3 potential points)`}
+                              title={
+                                clue2Locked 
+                                  ? "🔒 Locked: On Hard Mode, reveal Clue 1 (Location) first!" 
+                                  : `Reveal ${cluesInfo.clue2.label} (-${deduction} pts)`
+                              }
                             >
-                              <span>{cluesInfo.clue2.icon}</span>
-                              <span>{unlockedClues[currentIndex]?.architect ? cluesInfo.clue2.revealedLabel : cluesInfo.clue2.label}</span>
-                              {!unlockedClues[currentIndex]?.architect && (
-                                <span className="text-[10px] text-purple-700 font-extrabold bg-purple-100 px-1.5 py-0.2 rounded-md">
-                                  -{Math.round(getQuestionBasePoints(currentQ) * (1 / 3))} pts
+                              <span>{clue2Locked ? "🔒" : cluesInfo.clue2.icon}</span>
+                              <span>{clue2Revealed ? cluesInfo.clue2.revealedLabel : clue2Locked ? "Clue 2 (Locked)" : cluesInfo.clue2.label}</span>
+                              {!clue2Revealed && (
+                                <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-md ${
+                                  clue2Locked ? "text-gray-500 bg-gray-200" : "text-purple-700 bg-purple-100"
+                                }`}>
+                                  -{deduction} pts
                                 </span>
                               )}
                             </button>
@@ -2347,97 +2430,185 @@ export default function QuizPlayPage() {
                       );
                     })()}
 
-                    {/* Active Question Content: Media + Options in unified balanced layout */}
-                    <div className={`grid grid-cols-1 ${currentQ.media_url ? 'md:grid-cols-12 gap-5' : 'gap-4'} mb-6 items-stretch`}>
-                      
-                      {/* Left: Question Architectural Photo (Matches height of answers, un-cropped natural aspect ratio) */}
-                      {currentQ.media_url && (
-                        <div className="md:col-span-5 flex flex-col">
-                          <div 
-                            onClick={() => setZoomImageUrl({ url: currentQ.media_url, title: currentQ.question_text || "Architectural Landmark" })}
-                            className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 flex items-center justify-center shadow-xs group cursor-pointer flex-1 min-h-[230px] max-h-[350px] md:max-h-[380px] p-2"
-                            title="Click to inspect full photo"
-                          >
-                            {!imageLoaded && (
-                              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 text-gray-300 z-10 p-4 text-center">
-                                <span className="w-8 h-8 rounded-full border-3 border-amber-400 border-t-transparent animate-spin mb-2.5"></span>
-                                <span className="text-xs font-bold text-white tracking-wide">Loading architectural photo...</span>
-                                <span className="text-[11px] font-mono text-amber-300 font-bold mt-1 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                                  ⏱️ Timer is paused until photo appears
-                                </span>
-                              </div>
-                            )}
-                            <img 
-                              referrerPolicy="no-referrer"
-                              src={currentQ.media_url} 
-                              alt="Question photo" 
-                              className={`w-full h-full object-contain transition-all duration-200 group-hover:scale-[1.02] ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                              onLoad={handleImageLoaded}
-                              onError={(e) => {
-                                handleImageLoaded();
-                                (e.target as HTMLElement).style.display = "none";
-                              }}
-                            />
-                            <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-[10px] text-gray-300 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                              <ZoomIn size={11} /> Click to enlarge
+                    {/* Active Question Content: Distinct Photo Card layout for Architect's Oeuvre / Portfolio Quiz */}
+                    {(() => {
+                      const isArchitectOeuvre = slug === "architects-oeuvre-pair-the-masterpieces";
+
+                      if (isArchitectOeuvre && currentQ.question_type === "choose" && currentQ.options) {
+                        return (
+                          <div className="mb-6">
+                            <p className="text-xs font-extrabold text-gray-700 mb-3 flex items-center gap-1.5">
+                              <span>🏛️ Inspect the architectural portfolio and select the matching masterpiece:</span>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                              {currentQ.options.map((opt, optIdx) => {
+                                const isSelected = userAnswers[currentIndex] === opt;
+                                const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
+                                const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
+                                const optPhoto = getBuildingPhotoForOption(opt);
+
+                                let cardClass = "border-gray-200 hover:border-gray-400 bg-white hover:bg-gray-50/50";
+                                if (isSelected) {
+                                  cardClass = "border-black ring-2 ring-black bg-gray-50/60 shadow-md";
+                                }
+                                if (showPracticeCorrect) {
+                                  cardClass = "border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/60 shadow-sm";
+                                } else if (showPracticeWrong) {
+                                  cardClass = "border-red-500 ring-2 ring-red-500 bg-red-50/60 shadow-sm";
+                                }
+
+                                return (
+                                  <div
+                                    key={optIdx}
+                                    onClick={() => handleSelectAnswer(opt)}
+                                    className={`rounded-2xl border p-3 flex flex-col justify-between transition cursor-pointer shadow-2xs group ${cardClass}`}
+                                  >
+                                    {/* Option Photo Container */}
+                                    <div className="relative w-full h-40 sm:h-44 rounded-xl overflow-hidden bg-slate-950 mb-2.5 flex items-center justify-center">
+                                      {optPhoto ? (
+                                        <>
+                                          <img
+                                            referrerPolicy="no-referrer"
+                                            src={optPhoto}
+                                            alt={opt}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setZoomImageUrl({ url: optPhoto, title: opt });
+                                            }}
+                                            className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/75 hover:bg-black text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 opacity-0 group-hover:opacity-100 transition"
+                                            title="Click to view full photo"
+                                          >
+                                            <ZoomIn size={12} />
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <div className="flex flex-col items-center justify-center text-gray-500 p-4">
+                                          <Building2 size={28} className="mb-1 text-gray-400" />
+                                          <span className="text-[11px] font-medium text-gray-400">Architectural Masterpiece</span>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* Option Label and Selected / Correct Icon */}
+                                    <div className="flex items-center justify-between gap-2 pt-1">
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <span className={`w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 border ${
+                                          isSelected ? "bg-black text-white border-black" : "bg-gray-100 text-gray-700 border-gray-200"
+                                        }`}>
+                                          {String.fromCharCode(65 + optIdx)}
+                                        </span>
+                                        <span className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                                          {opt}
+                                        </span>
+                                      </div>
+                                      {isSelected && <Check size={16} className="text-black shrink-0" />}
+                                      {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />}
+                                      {showPracticeWrong && <XCircle size={16} className="text-red-600 shrink-0" />}
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
-                        </div>
-                      )}
+                        );
+                      }
 
-                      {/* Right: Answer Choices (Height-matched alongside photo) */}
-                      <div className={`${currentQ.media_url ? 'md:col-span-7' : 'w-full'} flex flex-col justify-center`}>
-                        {currentQ.question_type === "choose" && currentQ.options && (
-                          <div className={`grid grid-cols-1 ${currentQ.media_url ? 'gap-2.5' : 'sm:grid-cols-2 gap-3'} transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
-                            {currentQ.options.map((opt, optIdx) => {
-                              const isSelected = userAnswers[currentIndex] === opt;
-                              const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
-                              const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
-
-                              let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
-                              if (isSelected) {
-                                optionClass = "bg-black text-white border-black shadow-xs font-bold";
-                              }
-                              if (showPracticeCorrect) {
-                                optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
-                              } else if (showPracticeWrong) {
-                                optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
-                              }
-
-                              return (
-                                <button
-                                  key={optIdx}
-                                  onClick={() => handleSelectAnswer(opt)}
-                                  disabled={!isQuestionReady}
-                                  className={`p-3.5 sm:p-4 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between cursor-pointer shadow-2xs ${optionClass}`}
-                                >
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <span className={`w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 border ${
-                                      isSelected ? "bg-white text-black border-white" : "bg-gray-100 text-gray-600 border-gray-200"
-                                    }`}>
-                                      {String.fromCharCode(65 + optIdx)}
+                      // Standard Quiz Layout: Left Question Image + Right Answer Options
+                      return (
+                        <div className={`grid grid-cols-1 ${currentQ.media_url ? 'md:grid-cols-12 gap-5' : 'gap-4'} mb-6 items-stretch`}>
+                          
+                          {/* Left: Question Architectural Photo (Matches height of answers, un-cropped natural aspect ratio) */}
+                          {currentQ.media_url && (
+                            <div className="md:col-span-5 flex flex-col">
+                              <div 
+                                onClick={() => setZoomImageUrl({ url: currentQ.media_url, title: currentQ.question_text || "Architectural Landmark" })}
+                                className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 flex items-center justify-center shadow-xs group cursor-pointer flex-1 min-h-[230px] max-h-[350px] md:max-h-[380px] p-2"
+                                title="Click to inspect full photo"
+                              >
+                                {!imageLoaded && (
+                                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 text-gray-300 z-10 p-4 text-center">
+                                    <span className="w-8 h-8 rounded-full border-3 border-amber-400 border-t-transparent animate-spin mb-2.5"></span>
+                                    <span className="text-xs font-bold text-white tracking-wide">Loading architectural photo...</span>
+                                    <span className="text-[11px] font-mono text-amber-300 font-bold mt-1 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                                      ⏱️ Timer is paused until photo appears
                                     </span>
-                                    <span className="font-semibold truncate">{opt}</span>
                                   </div>
-                                  {isSelected && <Check size={16} className="shrink-0" />}
-                                  {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />}
-                                  {showPracticeWrong && <XCircle size={16} className="text-red-600 shrink-0" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
+                                )}
+                                <img 
+                                  referrerPolicy="no-referrer"
+                                  src={currentQ.media_url} 
+                                  alt="Question photo" 
+                                  className={`w-full h-full object-contain transition-all duration-200 group-hover:scale-[1.02] ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                  onLoad={handleImageLoaded}
+                                  onError={(e) => {
+                                    handleImageLoaded();
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                                <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-[10px] text-gray-300 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
+                                  <ZoomIn size={11} /> Click to enlarge
+                                </div>
+                              </div>
+                            </div>
+                          )}
 
-                        {/* Fill Up / Missing Letters */}
-                        {currentQ.question_type !== "choose" && (
-                          <div className={`transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
-                            <form 
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                if (fillInput.trim()) handleSelectAnswer(fillInput.trim());
-                              }}
-                              className="flex gap-2"
-                            >
+                          {/* Right: Answer Choices (Height-matched alongside photo) */}
+                          <div className={`${currentQ.media_url ? 'md:col-span-7' : 'w-full'} flex flex-col justify-center`}>
+                            {currentQ.question_type === "choose" && currentQ.options && (
+                              <div className={`grid grid-cols-1 ${currentQ.media_url ? 'gap-2.5' : 'sm:grid-cols-2 gap-3'} transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+                                {currentQ.options.map((opt, optIdx) => {
+                                  const isSelected = userAnswers[currentIndex] === opt;
+                                  const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
+                                  const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
+
+                                  let optionClass = "bg-white border-gray-200 hover:border-gray-400 hover:bg-gray-50/60 text-gray-800";
+                                  if (isSelected) {
+                                    optionClass = "bg-black text-white border-black shadow-xs font-bold";
+                                  }
+                                  if (showPracticeCorrect) {
+                                    optionClass = "bg-emerald-50 border-emerald-500 text-emerald-900 font-bold ring-1 ring-emerald-500";
+                                  } else if (showPracticeWrong) {
+                                    optionClass = "bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500";
+                                  }
+
+                                  return (
+                                    <button
+                                      key={optIdx}
+                                      onClick={() => handleSelectAnswer(opt)}
+                                      disabled={!isQuestionReady}
+                                      className={`p-3.5 sm:p-4 rounded-2xl border text-left text-xs sm:text-sm transition flex items-center justify-between cursor-pointer shadow-2xs ${optionClass}`}
+                                    >
+                                      <div className="flex items-center gap-2.5 min-w-0">
+                                        <span className={`w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 border ${
+                                          isSelected ? "bg-white text-black border-white" : "bg-gray-100 text-gray-600 border-gray-200"
+                                        }`}>
+                                          {String.fromCharCode(65 + optIdx)}
+                                        </span>
+                                        <span className="font-semibold truncate">{opt}</span>
+                                      </div>
+                                      {isSelected && <Check size={16} className="shrink-0" />}
+                                      {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />}
+                                      {showPracticeWrong && <XCircle size={16} className="text-red-600 shrink-0" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Fill Up / Missing Letters */}
+                            {currentQ.question_type !== "choose" && (
+                              <div className={`transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+                                <form 
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    if (fillInput.trim()) handleSelectAnswer(fillInput.trim());
+                                  }}
+                                  className="flex gap-2"
+                                >
                               <input 
                                 type="text"
                                 placeholder="Type the exact name or architect..."
@@ -2459,6 +2630,8 @@ export default function QuizPlayPage() {
                       </div>
 
                     </div>
+                  );
+                })()}
 
                     {/* PRACTICE MODE IMMEDIATE TRIVIA FEEDBACK */}
                     {gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && (
@@ -2895,6 +3068,12 @@ export default function QuizPlayPage() {
           </div>
         </div>
       )}
+
+      {/* HOW TO PLAY & OFFICIAL SCORING RULES POPUP MODAL */}
+      <QuizRulesModal 
+        isOpen={showRulesModal} 
+        onClose={() => setShowRulesModal(false)} 
+      />
     </>
   );
 }

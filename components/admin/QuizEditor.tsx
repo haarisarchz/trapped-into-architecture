@@ -6,7 +6,7 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Save, Sparkles, UploadCloud, 
   Loader2, CheckCircle2, ArrowLeft, Image as ImageIcon, HelpCircle, Eye, RefreshCw, Wand2,
   ZoomIn, X, Check, Filter, AlertCircle, CheckSquare, Square, LayoutList, Grid, Layers,
-  ChevronDown, ChevronUp, Search, RotateCcw
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search, RotateCcw
 } from "lucide-react";
 import { getQuestionDifficulty, QuestionDifficulty } from "@/lib/quizDifficulty";
 
@@ -71,6 +71,11 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   const [pendingDiff, setPendingDiff] = useState<Record<number, QuestionDifficulty>>({});
   const [retainedInFilter, setRetainedInFilter] = useState<Record<number, boolean>>({});
 
+  // Navigation, unsaved changes & dirty tracking
+  const [allQuizzes, setAllQuizzes] = useState<{ id: string; title: string; slug: string }[]>([]);
+  const [isDirty, setIsDirty] = useState<boolean>(false);
+  const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
+
   // Bulk Selection & View Mode
   const [selectedIndices, setSelectedIndices] = useState<Record<number, boolean>>({});
   const [questionViewMode, setQuestionViewMode] = useState<"detailed" | "compact">("detailed");
@@ -90,10 +95,27 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
   useEffect(() => {
     loadCatalogRows();
+    loadAllQuizzesList();
     if (quizId) {
       loadQuizData();
     }
   }, [quizId]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  const loadAllQuizzesList = async () => {
+    const { data } = await supabase.from("quizzes").select("id, title, slug").order("created_at", { ascending: true });
+    if (data) setAllQuizzes(data);
+  };
 
   const loadCatalogRows = async () => {
     const { data } = await supabase.from("architecture_catalog").select("*").limit(100);
@@ -800,6 +822,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       }
 
       setIsPublished(pub);
+      setIsDirty(false);
       setToastMsg({ text: `Quiz saved successfully! (${pub ? "Published Live" : "Saved as Draft"})`, type: "success" });
       setTimeout(() => {
         if (onBack) onBack();
@@ -816,7 +839,8 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
   // Active vs. Removed counts
   const countRemoved = questions.filter(q => q.is_removed).length;
   const countActive = questions.filter(q => !q.is_removed).length;
-  const countPopular = questions.filter(q => !q.is_removed && (q.difficulty === "popular" || q.difficulty === "easy" || q.difficulty === "medium")).length;
+  const countPopular = questions.filter(q => !q.is_removed && (q.difficulty === "popular" || q.difficulty === "easy")).length;
+  const count5050 = questions.filter(q => !q.is_removed && (q.difficulty === "50-50" || q.difficulty === "medium")).length;
   const countMaster = questions.filter(q => !q.is_removed && (q.difficulty === "master" || q.difficulty === "hard")).length;
 
   const filteredQuestionsWithOriginalIndices = questions
@@ -830,7 +854,9 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
         // Difficulty category filter
         if (filterDifficulty !== "all" && !retainedInFilter[originalIndex]) {
-          const qTier = (q.difficulty === "master" || q.difficulty === "hard") ? "master" : "popular";
+          const rawDiff = q.difficulty || "popular";
+          const qTier = (rawDiff === "master" || rawDiff === "hard") ? "master" :
+                        (rawDiff === "50-50" || rawDiff === "medium") ? "50-50" : "popular";
           if (qTier !== filterDifficulty) return false;
         }
       }
@@ -900,12 +926,67 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200">
-        <button 
-          onClick={onBack ? onBack : () => router.push("/admin/quizzes")}
-          className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-black transition"
-        >
-          <ArrowLeft size={16} /> Back to Quizzes Hub
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button 
+            type="button"
+            onClick={() => {
+              if (isDirty) {
+                setPendingNavUrl("back");
+              } else if (onBack) {
+                onBack();
+              } else {
+                router.push("/admin/quizzes");
+              }
+            }}
+            className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-black transition cursor-pointer"
+          >
+            <ArrowLeft size={16} /> Back to Quizzes Hub
+          </button>
+
+          {allQuizzes.length > 0 && (() => {
+            const currentIdx = allQuizzes.findIndex(q => q.id === quizId);
+            const prevQ = currentIdx > 0 ? allQuizzes[currentIdx - 1] : null;
+            const nextQ = currentIdx >= 0 && currentIdx < allQuizzes.length - 1 ? allQuizzes[currentIdx + 1] : null;
+
+            return (
+              <div className="flex items-center gap-1.5 pl-3 border-l border-gray-200">
+                <button
+                  type="button"
+                  disabled={!prevQ}
+                  onClick={() => {
+                    if (!prevQ) return;
+                    if (isDirty) setPendingNavUrl(prevQ.id);
+                    else router.push(`/admin/quizzes?edit=${prevQ.id}`);
+                  }}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg border border-gray-200 hover:border-gray-400 bg-white disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 transition cursor-pointer"
+                  title={prevQ ? `Previous Quiz: ${prevQ.title}` : "No previous quiz"}
+                >
+                  <ChevronLeft size={14} />
+                  <span>Prev Quiz</span>
+                </button>
+
+                <span className="text-[11px] font-mono text-gray-400 px-1">
+                  {currentIdx >= 0 ? `${currentIdx + 1} / ${allQuizzes.length}` : ""}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={!nextQ}
+                  onClick={() => {
+                    if (!nextQ) return;
+                    if (isDirty) setPendingNavUrl(nextQ.id);
+                    else router.push(`/admin/quizzes?edit=${nextQ.id}`);
+                  }}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg border border-gray-200 hover:border-gray-400 bg-white disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 transition cursor-pointer"
+                  title={nextQ ? `Next Quiz: ${nextQ.title}` : "No next quiz"}
+                >
+                  <span>Next Quiz</span>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            );
+          })()}
+        </div>
 
         <div className="flex items-center gap-2">
           {isPublished ? (
@@ -1361,7 +1442,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
           <div className="mt-3.5 pt-3.5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="text-xs font-black uppercase tracking-wider text-gray-700">Filter:</span>
-              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleFilterChange("all")}
@@ -1378,16 +1459,25 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                     filterDifficulty === "popular" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-800"
                   }`}
                 >
-                  Popular • 100 pts ({countPopular})
+                  Popular ({countPopular})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange("50-50")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                    filterDifficulty === "50-50" ? "bg-blue-600 text-white shadow-xs font-black" : "text-gray-600 hover:text-blue-800"
+                  }`}
+                >
+                  50-50 ({count5050})
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFilterChange("master")}
                   className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                    filterDifficulty === "master" ? "bg-blue-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-blue-800"
+                    filterDifficulty === "master" ? "bg-purple-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-purple-800"
                   }`}
                 >
-                  Architecture Master • 300 pts ({countMaster})
+                  Architecture Master ({countMaster})
                 </button>
                 <button
                   type="button"
@@ -1670,36 +1760,50 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         {originalIndex + 1}
                       </span>
 
-                      {/* MANUAL 2-TIER DIFFICULTY SELECTOR WITH TICK MARK CONFIRMATION */}
+                      {/* MANUAL 3-TIER DIFFICULTY SELECTOR WITH TICK MARK CONFIRMATION */}
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/80">
                           <button
                             type="button"
                             onClick={() => handleSelectDifficulty(originalIndex, "popular")}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                              hasPending && (stagedDiff === "popular" || stagedDiff === "easy" || stagedDiff === "medium")
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                              hasPending && (stagedDiff === "popular" || stagedDiff === "easy")
                                 ? "bg-amber-500 text-black ring-2 ring-amber-600 ring-offset-1 font-black shadow-xs"
-                                : !hasPending && (currentDiff === "popular" || currentDiff === "easy" || currentDiff === "medium")
+                                : !hasPending && (currentDiff === "popular" || currentDiff === "easy")
                                 ? "bg-amber-500 text-black shadow-xs font-black"
                                 : "text-gray-600 hover:text-black hover:bg-white/70"
                             }`}
-                            title="Select Popular & Iconic (100 points)"
+                            title="Set as Popular"
                           >
-                            Popular &amp; Iconic (100 pts)
+                            Popular
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDifficulty(originalIndex, "50-50")}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                              hasPending && (stagedDiff === "50-50" || stagedDiff === "medium")
+                                ? "bg-blue-600 text-white ring-2 ring-blue-700 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && (currentDiff === "50-50" || currentDiff === "medium")
+                                ? "bg-blue-600 text-white shadow-xs font-black"
+                                : "text-gray-600 hover:text-black hover:bg-white/70"
+                            }`}
+                            title="Set as 50-50 Intermediate"
+                          >
+                            50-50
                           </button>
                           <button
                             type="button"
                             onClick={() => handleSelectDifficulty(originalIndex, "master")}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                               hasPending && (stagedDiff === "master" || stagedDiff === "hard")
-                                ? "bg-blue-600 text-white ring-2 ring-blue-700 ring-offset-1 font-black shadow-xs"
+                                ? "bg-purple-600 text-white ring-2 ring-purple-700 ring-offset-1 font-black shadow-xs"
                                 : !hasPending && (currentDiff === "master" || currentDiff === "hard")
-                                ? "bg-blue-600 text-white shadow-xs font-extrabold"
+                                ? "bg-purple-600 text-white shadow-xs font-extrabold"
                                 : "text-gray-600 hover:text-black hover:bg-white/70"
                             }`}
-                            title="Select Deep Master (300 points)"
+                            title="Set as Architecture Master"
                           >
-                            Deep Master (300 pts)
+                            Master
                           </button>
                         </div>
 
@@ -1713,7 +1817,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                               title="Click tick mark to apply this difficulty change"
                             >
                               <Check size={14} className="stroke-[3] text-emerald-400" />
-                              <span>Apply {stagedDiff === "master" ? "DEEP MASTER" : "POPULAR & ICONIC"} ✓</span>
+                              <span>Apply {stagedDiff?.toUpperCase()} ✓</span>
                             </button>
                             <button
                               type="button"
@@ -1954,6 +2058,45 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         />
                       </div>
 
+                      {/* READ-ONLY LIVE CLUE INSPECTION BOX */}
+                      {(() => {
+                        const ans = (q.correct_answer || "").toLowerCase().trim();
+                        const qPhoto = (q.media_url || "").toLowerCase().trim();
+                        const cat = catalogRows.find(c => {
+                          const d = c.data || {};
+                          const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+                          const photo = (d.building_photo || "").toLowerCase().trim();
+                          return (qPhoto && photo === qPhoto) || (bName && ans.includes(bName)) || (bName && bName.includes(ans));
+                        })?.data;
+
+                        return (
+                          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs mt-1">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                                <span>🔍 Live Gameplay Clues (Read-Only Preview from Catalog):</span>
+                              </span>
+                              <span className="text-[10px] text-gray-500 font-mono">
+                                Auto-resolved for players
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                              <div className="p-2 bg-blue-50/80 border border-blue-200/80 rounded-lg text-blue-950">
+                                <span className="font-extrabold flex items-center gap-1 text-blue-900">
+                                  <span>📍 Clue 1 (Location):</span>
+                                </span>
+                                <p className="mt-0.5 font-medium">{cat?.city || "City"}, {cat?.country || "Country"}</p>
+                              </div>
+                              <div className="p-2 bg-purple-50/80 border border-purple-200/80 rounded-lg text-purple-950">
+                                <span className="font-extrabold flex items-center gap-1 text-purple-900">
+                                  <span>🏛️ Clue 2 (Architect / Movement):</span>
+                                </span>
+                                <p className="mt-0.5 font-medium">{cat?.architect || "Visionary Architect"} {cat?.opened_year ? `(${cat.opened_year})` : ""}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                     </div>
 
                   </div>
@@ -1974,7 +2117,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
               {questions.length} Questions Ready
             </p>
             <p className="text-xs text-gray-500 mt-0.5 font-bold">
-              <span className="text-amber-800">{countPopular} Popular &amp; Iconic</span> • <span className="text-blue-800">{countMaster} Deep Master</span>
+              <span className="text-amber-800">{countPopular} Popular</span> • <span className="text-blue-800">{count5050} 50-50</span> • <span className="text-purple-800">{countMaster} Master</span>
             </p>
           </div>
 
@@ -2032,6 +2175,49 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         }`}>
           <CheckCircle2 size={16} />
           <span>{toastMsg.text}</span>
+        </div>
+      )}
+
+      {/* UNSAVED CHANGES CONFIRMATION MODAL */}
+      {pendingNavUrl && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl border border-gray-200 max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-3 text-amber-600">
+              <AlertCircle size={24} />
+              <h3 className="text-base font-black text-gray-950">Unsaved Changes</h3>
+            </div>
+            <p className="text-xs text-gray-600 mb-5 leading-relaxed">
+              You have modified this quiz without saving. If you navigate to another quiz now, any unsaved adjustments will be discarded.
+            </p>
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setPendingNavUrl(null)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Stay on Page
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const dest = pendingNavUrl;
+                  setPendingNavUrl(null);
+                  setIsDirty(false);
+                  if (dest === "back") {
+                    if (onBack) onBack();
+                    else router.push("/admin/quizzes");
+                  } else if (dest.startsWith("/")) {
+                    router.push(dest);
+                  } else {
+                    router.push(`/admin/quizzes?edit=${dest}`);
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Discard &amp; Leave
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

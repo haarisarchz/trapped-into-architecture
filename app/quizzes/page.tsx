@@ -9,6 +9,7 @@ import {
   ArrowRight, ArrowDown, Filter, ChevronLeft, ChevronRight, Award, Flame, Search, Lock, 
   CheckCircle2, XCircle, SlidersHorizontal, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle
 } from "lucide-react";
+import QuizRulesModal from "@/components/QuizRulesModal";
 
 export default function QuizzesHubPage() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -24,8 +25,9 @@ export default function QuizzesHubPage() {
   const [setupModalQuiz, setSetupModalQuiz] = useState<any | null>(null);
   const [modalMode, setModalMode] = useState<"challenge" | "practice">("challenge");
   const [modalDifficulty, setModalDifficulty] = useState<string>("medium");
-  const [modalCount, setModalCount] = useState<number>(10);
+  const [modalCount, setModalCount] = useState<number>(20);
   const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
+  const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
 
   // Auth state & Gold Tier status
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -369,7 +371,7 @@ export default function QuizzesHubPage() {
             <div className="lg:col-span-8">
               
               {/* PROMINENT HIGH-CONTRAST SECTION HEADING */}
-              <div className="flex items-center justify-between mb-3.5 pb-2 border-b-2 border-gray-200/80 px-1">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3.5 pb-2 border-b-2 border-gray-200/80 px-1">
                 <div>
                   <div className="flex items-center gap-2">
                     <h2 className="text-xl sm:text-2xl font-black text-gray-950 tracking-tight flex items-center gap-2">
@@ -383,9 +385,20 @@ export default function QuizzesHubPage() {
                     Select any visual quiz challenge or launch with your custom time rules
                   </p>
                 </div>
-                <span className="text-xs font-mono font-bold text-gray-500 hidden sm:inline bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200">
-                  Page {currentPage} of {totalPages}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowRulesModal(true)}
+                    className="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-950 rounded-xl border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+                    title="View Quiz Rules & Scoring Mechanics"
+                  >
+                    <BookOpen size={13} className="text-amber-600" />
+                    <span>How to Play &amp; Rules</span>
+                  </button>
+                  <span className="text-xs font-mono font-bold text-gray-500 hidden sm:inline bg-gray-100 px-2.5 py-1 rounded-lg border border-gray-200">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                </div>
               </div>
 
               {loading ? (
@@ -773,27 +786,44 @@ export default function QuizzesHubPage() {
 
               {/* 3. RULES & SCORING MECHANICS */}
               <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs text-xs space-y-2.5">
-                <h3 className="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
-                  <ShieldCheck size={14} className="text-blue-600" /> Rules &amp; Scoring Mechanics
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
+                    <ShieldCheck size={14} className="text-blue-600" /> Rules &amp; Scoring Mechanics
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowRulesModal(true)}
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-2 cursor-pointer"
+                  >
+                    Full Guide &rarr;
+                  </button>
+                </div>
 
                 <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-emerald-800 shrink-0">Easy Mode:</span>
-                    <span>15s/Q &bull; 100% Popular Landmarks &bull; Foundation icons &amp; world-famous structures.</span>
+                    <span className="font-black text-emerald-800 shrink-0">🟢 Easy:</span>
+                    <span>150 Pts &bull; 15s/Q &bull; 100% Popular Landmarks &bull; -50 pts/clue &bull; No Choice Shuffle</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-amber-800 shrink-0">Medium Mode:</span>
-                    <span>10s/Q &bull; 50% Popular + 50% Masterworks &bull; Balanced architectural challenge.</span>
+                    <span className="font-black text-amber-800 shrink-0">🟡 Medium:</span>
+                    <span>300 Pts &bull; 10s/Q &bull; 50-50 + Balanced Mix &bull; -100 pts/clue &bull; Shuffled Choices</span>
                   </div>
                   <div className="flex items-start gap-1.5">
-                    <span className="font-black text-blue-800 shrink-0">Hard Mode:</span>
-                    <span>5s/Q &bull; 75% Architecture Master + 25% Popular &bull; Advanced tectonic milestones. Lightning instinct pace!</span>
+                    <span className="font-black text-purple-800 shrink-0">🔴 Hard:</span>
+                    <span>450 Pts &bull; 5s/Q &bull; Master Pool &bull; -150 pts/clue &bull; Sequential Clue Lock 🔒</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
                     <span className="font-black">⚡ Modes:</span>
-                    <span><strong>Practice:</strong> Immediate feedback &amp; trivia &bull; <strong>Challenge:</strong> Continuous countdown timer + speed bonus + live leaderboard ranks.</span>
+                    <span><strong>Practice:</strong> Untimed learning &bull; <strong>Challenge:</strong> Continuous countdown + Leaderboard.</span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowRulesModal(true)}
+                    className="w-full mt-2 py-2 px-3 bg-black hover:bg-gray-800 text-white rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-xs"
+                  >
+                    <BookOpen size={13} className="text-amber-400" />
+                    <span>View Complete Tournament Rules &amp; Clues Guide</span>
+                  </button>
                 </div>
               </div>
 
@@ -911,20 +941,24 @@ export default function QuizzesHubPage() {
               <div className="mb-5">
                 <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
                   <span>2. Difficulty Tier</span>
-                  <span className="text-[11px] font-normal text-gray-400 lowercase">adjusts question mix &amp; timer pace</span>
+                  <span className="text-[11px] font-normal text-gray-400 lowercase">adjusts points, question mix &amp; pace</span>
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "easy", label: "Easy", sub: "100% Popular", time: "15s / Q", activeClass: "border-emerald-500 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
-                    { id: "medium", label: "Medium", sub: "50/50 Blend", time: "10s / Q", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
-                    { id: "hard", label: "Hard", sub: "75% Master", time: "5s / Q Fast", activeClass: "border-blue-600 bg-blue-50/70 text-blue-950 ring-2 ring-blue-500/20" }
+                    { id: "easy", label: "🟢 Easy", pts: "150 PTS", sub: "100% Popular", time: "15s / Q", activeClass: "border-emerald-500 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
+                    { id: "medium", label: "🟡 Medium", pts: "300 PTS", sub: "50-50 Blend", time: "10s / Q", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
+                    { id: "hard", label: "🔴 Hard", pts: "450 PTS", sub: "Master Pool", time: "5s / Q", activeClass: "border-purple-600 bg-purple-50/70 text-purple-950 ring-2 ring-purple-500/20" }
                   ].map(d => {
                     const isSelected = modalDifficulty === d.id || (d.id === "easy" && modalDifficulty === "popular") || (d.id === "hard" && modalDifficulty === "master");
                     return (
                       <button
                         key={d.id}
                         type="button"
-                        onClick={() => setModalDifficulty(d.id)}
+                        onClick={() => {
+                          setModalDifficulty(d.id);
+                          if (d.id === "easy" && modalCount > 20) setModalCount(10);
+                          if (d.id === "medium" && modalCount < 20) setModalCount(20);
+                        }}
                         className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                           isSelected 
                             ? `${d.activeClass} font-black shadow-xs` 
@@ -933,6 +967,11 @@ export default function QuizzesHubPage() {
                       >
                         <span className="text-xs font-black uppercase tracking-wider mb-0.5">
                           {d.label}
+                        </span>
+                        <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-md mb-0.5 ${
+                          isSelected ? "bg-black/10 text-gray-900" : "bg-gray-100 text-gray-700"
+                        }`}>
+                          {d.pts}
                         </span>
                         <span className={`text-[10px] font-bold ${isSelected ? "text-gray-900" : "text-gray-500"}`}>
                           {d.sub}
@@ -952,33 +991,59 @@ export default function QuizzesHubPage() {
                   <span>3. Questions Count</span>
                   <span className="text-[11px] font-normal text-gray-400 lowercase">dynamic time for {modalDifficulty}</span>
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { count: 10, label: "10 Questions" },
-                    { count: 20, label: "20 Questions" },
-                    { count: setupModalQuiz.quiz_questions?.[0]?.count || 65, label: `All (${setupModalQuiz.quiz_questions?.[0]?.count || 65})` }
-                  ].map(c => {
-                    const isSelected = modalCount === c.count;
-                    const dynamicTime = getTimeEstimate(c.count, modalDifficulty);
-                    return (
-                      <button
-                        key={c.count}
-                        type="button"
-                        onClick={() => setModalCount(c.count)}
-                        className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
-                          isSelected 
-                            ? "bg-blue-600 text-white border-blue-600 font-black shadow-xs ring-2 ring-blue-500/20" 
-                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60 font-semibold"
-                        }`}
-                      >
-                        <span className="text-xs block font-black">{c.label}</span>
-                        <span className={`text-[11px] font-mono mt-0.5 ${isSelected ? "text-blue-100 font-bold" : "text-gray-500"}`}>
-                          ⏱ {dynamicTime}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div className={`grid gap-2 ${
+                  modalDifficulty === "easy" || modalDifficulty === "popular" ? "grid-cols-2" :
+                  modalDifficulty === "medium" ? "grid-cols-2" : "grid-cols-3"
+                }`}>
+                  {(() => {
+                    const isEasy = modalDifficulty === "easy" || modalDifficulty === "popular";
+                    const isMedium = modalDifficulty === "medium";
+                    const countItems = isEasy ? [
+                      { count: 10, label: "10 Questions" },
+                      { count: 20, label: "20 Questions" }
+                    ] : isMedium ? [
+                      { count: 20, label: "20 Questions" },
+                      { count: 50, label: "50 Questions" }
+                    ] : [
+                      { count: 10, label: "10 Questions" },
+                      { count: 20, label: "20 Questions" },
+                      { count: 50, label: "50 Questions" }
+                    ];
+
+                    return countItems.map(c => {
+                      const isSelected = modalCount === c.count;
+                      const dynamicTime = getTimeEstimate(c.count, modalDifficulty);
+                      return (
+                        <button
+                          key={c.count}
+                          type="button"
+                          onClick={() => setModalCount(c.count)}
+                          className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                            isSelected 
+                              ? "bg-blue-600 text-white border-blue-600 font-black shadow-xs ring-2 ring-blue-500/20" 
+                              : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60 font-semibold"
+                          }`}
+                        >
+                          <span className="text-xs block font-black">{c.label}</span>
+                          <span className={`text-[11px] font-mono mt-0.5 ${isSelected ? "text-blue-100 font-bold" : "text-gray-500"}`}>
+                            ⏱ {dynamicTime}
+                          </span>
+                        </button>
+                      );
+                    });
+                  })()}
                 </div>
+              </div>
+
+              {/* View Rules Link */}
+              <div className="mb-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowRulesModal(true)}
+                  className="text-xs font-bold text-amber-900 hover:text-amber-950 underline underline-offset-2 flex items-center justify-center gap-1 mx-auto"
+                >
+                  <BookOpen size={13} /> Read How to Play &amp; Scoring Rules
+                </button>
               </div>
 
               {/* Launch Quiz Button */}
@@ -1053,6 +1118,12 @@ export default function QuizzesHubPage() {
             </div>
           </div>
         )}
+
+        {/* HOW TO PLAY & OFFICIAL SCORING RULES POPUP MODAL */}
+        <QuizRulesModal 
+          isOpen={showRulesModal} 
+          onClose={() => setShowRulesModal(false)} 
+        />
 
       </div>
     </>
