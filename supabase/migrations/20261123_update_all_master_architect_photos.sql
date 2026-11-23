@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Migration: Add Permissive RLS Policy and Link 17 Master Architect Portraits
+-- Migration: Add Permissive RLS Policy and Link All 32 Master Architect Portraits
 -- Date: 23 November 2026
 -- ==============================================================================
 
@@ -33,7 +33,7 @@ CREATE POLICY "Admins can manage catalog columns"
   USING (true)
   WITH CHECK (true);
 
--- 2. Link 17 Architect Photos across all matching catalog entries
+-- 2. Link All 32 Architect Photos across all active catalog entries
 -- Frank Lloyd Wright
 UPDATE public.architecture_catalog
 SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/frank-lloyd-wright.jpg"')
@@ -118,6 +118,81 @@ WHERE data->>'architect' ILIKE '%Nouvel%';
 UPDATE public.architecture_catalog
 SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/philip-johnson.jpg"')
 WHERE data->>'architect' ILIKE '%Philip Johnson%' AND data->>'architect' NOT ILIKE '%Mies van der Rohe%';
+
+-- Charles Correa
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/charles-correa.jpg"')
+WHERE data->>'architect' ILIKE '%Correa%';
+
+-- Louis Kahn
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/louis-kahn.jpg"')
+WHERE data->>'architect' ILIKE '%Kahn%';
+
+-- Alvar Aalto
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/alvar-aalto.jpg"')
+WHERE data->>'architect' ILIKE '%Aalto%';
+
+-- Jørn Utzon
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/jorn-utzon.jpg"')
+WHERE data->>'architect' ILIKE '%Utzon%';
+
+-- Laurie Baker
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/laurie-baker.jpg"')
+WHERE data->>'architect' ILIKE '%Baker%';
+
+-- Peter Zumthor
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/peter-zumthor.jpg"')
+WHERE data->>'architect' ILIKE '%Zumthor%';
+
+-- Toyo Ito
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/toyo-ito.jpg"')
+WHERE data->>'architect' ILIKE '%Toyo Ito%' OR data->>'architect' ILIKE '%Toyoo Itō%';
+
+-- Kenzō Tange
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/kenzo-tange.jpg"')
+WHERE data->>'architect' ILIKE '%Tange%';
+
+-- Raj Rewal
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/raj-rewal.jpg"')
+WHERE data->>'architect' ILIKE '%Rewal%';
+
+-- Jacques Herzog & Pierre de Meuron
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/herzog-de-meuron.jpg"')
+WHERE data->>'architect' ILIKE '%Herzog%';
+
+-- Richard Rogers
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/richard-rogers.jpg"')
+WHERE data->>'architect' ILIKE '%Richard Rogers%' AND data->>'architect' NOT ILIKE '%Renzo Piano%';
+
+-- SANAA (Kazuyo Sejima & Ryue Nishizawa)
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/sanaa-sejima-nishizawa.jpg"')
+WHERE data->>'architect' ILIKE '%SANAA%' OR data->>'architect' ILIKE '%Sejima%';
+
+-- Fariborz Sahba
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/fariborz-sahba.jpg"')
+WHERE data->>'architect' ILIKE '%Sahba%';
+
+-- Roger Anger
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/roger-anger.jpg"')
+WHERE data->>'architect' ILIKE '%Anger%';
+
+-- Frei Otto
+UPDATE public.architecture_catalog
+SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{architect_photo}', '"/architect-photos/frei-otto.jpg"')
+WHERE data->>'architect' ILIKE '%Frei Otto%';
 
 -- 3. Also mark the 5 deleted buildings as removed
 UPDATE public.architecture_catalog
