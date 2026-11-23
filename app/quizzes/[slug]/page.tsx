@@ -93,6 +93,7 @@ export default function QuizPlayPage() {
   const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
   const [isTimerDisabled, setIsTimerDisabled] = useState<boolean>(false);
   const [zoomImageUrl, setZoomImageUrl] = useState<{ url: string; title: string } | null>(null);
+  const [pressedZoomImage, setPressedZoomImage] = useState<string | null>(null);
 
   // Continuous Total Timer & Duration State
   const [totalAllottedTime, setTotalAllottedTime] = useState<number>(180); // in seconds
@@ -450,8 +451,11 @@ export default function QuizPlayPage() {
     }
 
     // Set initial question readiness for Question 0
-    const isArchitectOeuvre = slug === "architects-oeuvre-pair-the-masterpieces";
-    const firstQHasImage = !isArchitectOeuvre && Boolean(sampled[0]?.media_url);
+    const noPromptImage = 
+      slug === "visual-recognition-match-architect-building-photo" || 
+      slug === "architects-portfolio-match-celebrated-project-name" || 
+      slug === "architects-oeuvre-pair-the-masterpieces";
+    const firstQHasImage = !noPromptImage && Boolean(sampled[0]?.media_url);
     if (!firstQHasImage) {
       setImageLoaded(true);
       setIsQuestionReady(true);
@@ -499,7 +503,13 @@ export default function QuizPlayPage() {
       clearTimeout(fallbackWatchdogRef.current);
     }
 
-    if (slug === "architects-oeuvre-pair-the-masterpieces" || !currentQ.media_url) {
+    const hasNoPromptPhoto = 
+      slug === "visual-recognition-match-architect-building-photo" || 
+      slug === "architects-portfolio-match-celebrated-project-name" || 
+      slug === "architects-oeuvre-pair-the-masterpieces" || 
+      !currentQ.media_url;
+
+    if (hasNoPromptPhoto) {
       setImageLoaded(true);
       setIsQuestionReady(true);
       isQuestionReadyRef.current = true;
@@ -567,6 +577,7 @@ export default function QuizPlayPage() {
   // Option building photo resolver for Architect's Portfolio Quiz
   const getBuildingPhotoForOption = (optName: string): string | null => {
     if (!optName) return null;
+    if (optName.startsWith('/')) return optName;
     const clean = optName.toLowerCase().trim();
     if (catalogMap[clean]?.building_photo) return catalogMap[clean].building_photo || null;
     for (const [key, val] of Object.entries(catalogMap)) {
@@ -593,7 +604,8 @@ export default function QuizPlayPage() {
       bannerTitle: "Architect / Era Hint:",
       icon: "👤",
       text: "Celebrated Master Architect",
-      badgeColor: "purple"
+      badgeColor: "purple",
+      isPhoto: false as boolean | undefined
     };
 
     if (!q) {
@@ -605,8 +617,11 @@ export default function QuizPlayPage() {
       };
     }
 
-    // 1. Primary lookup by media_url (100% exact match across all 65 catalog buildings)
+    // 1. Primary lookup by media_url or correct_answer (100% exact match across catalog)
     let match = q.media_url ? catalogMap[q.media_url.toLowerCase().trim()] : null;
+    if (!match && q.correct_answer) {
+      match = catalogMap[q.correct_answer.toLowerCase().trim()] || null;
+    }
 
     // 2. Secondary fallback lookup by answer or text
     if (!match) {
@@ -642,7 +657,8 @@ export default function QuizPlayPage() {
       bannerTitle: "Architect & Era Hint:",
       icon: "👤",
       text: arch,
-      badgeColor: "purple"
+      badgeColor: "purple",
+      isPhoto: false as boolean | undefined
     };
 
     // Quiz-specific clue customization (Zero spoilers!)
@@ -674,7 +690,8 @@ export default function QuizPlayPage() {
         bannerTitle: "Building Name Hint:",
         icon: "🏛️",
         text: bName,
-        badgeColor: "purple"
+        badgeColor: "purple",
+      isPhoto: false as boolean | undefined
       };
     } else if (isGeographyQuiz) {
       // In Building Geography: Location is the TARGET ANSWER. Clue 1 must ONLY be the Building Name (strictly NO location revealed!), Clue 2 is Architect & Era!
@@ -692,7 +709,8 @@ export default function QuizPlayPage() {
         bannerTitle: "Architect & Era Hint:",
         icon: "👤",
         text: arch,
-        badgeColor: "purple"
+        badgeColor: "purple",
+      isPhoto: false as boolean | undefined
       };
     } else if (slug === "timeline-challenge-when-was-it-built") {
       // In Timeline: Year is the TARGET ANSWER.
@@ -710,25 +728,70 @@ export default function QuizPlayPage() {
         bannerTitle: "Building & Architect Hint:",
         icon: "🏛️",
         text: `${bName}${match?.architect ? ' by ' + match.architect : ''}`,
-        badgeColor: "purple"
+        badgeColor: "purple",
+      isPhoto: false as boolean | undefined
       };
     } else if (slug === "architectural-styles-and-movements") {
-      // In Styles: Style is the TARGET ANSWER.
+      // In Styles: Clue 1 is Architect who designed it. Clue 2 is Building Name & Location with Country.
       clue1 = {
-        label: "Landmark & Location Clue",
-        revealedLabel: "Landmark & Location Revealed",
-        bannerTitle: "Landmark & Location Hint:",
-        icon: "🏛️",
-        text: `${bName}${loc ? ', ' + loc : ''}`,
+        label: "Architect Clue",
+        revealedLabel: "Architect Revealed",
+        bannerTitle: "Architect Hint:",
+        icon: "👤",
+        text: match?.architect || "Master Architect",
         badgeColor: "blue"
       };
       clue2 = {
-        label: "Architect & Era Clue",
-        revealedLabel: "Architect Revealed",
-        bannerTitle: "Architect & Era Hint:",
-        icon: "👤",
-        text: arch,
-        badgeColor: "purple"
+        label: "Building & Location Clue",
+        revealedLabel: "Building & Location Revealed",
+        bannerTitle: "Building & Location Hint:",
+        icon: "📍",
+        text: `${bName}${loc ? ', ' + loc : ''}`,
+        badgeColor: "purple",
+      isPhoto: false as boolean | undefined
+      };
+    } else if (
+      slug === "visual-recognition-match-architect-building-photo" ||
+      slug === "architects-oeuvre-pair-the-masterpieces"
+    ) {
+      // In Visual Recognition: Choices are 4 photos. Clue 1 is Location. Clue 2 is Building Name.
+      clue1 = {
+        label: "Location Clue",
+        revealedLabel: "Location Revealed",
+        bannerTitle: "Location Hint:",
+        icon: "📍",
+        text: loc || "International Landmark",
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Building Name Clue",
+        revealedLabel: "Building Name Revealed",
+        bannerTitle: "Building Name Hint:",
+        icon: "🏛️",
+        text: bName || cleanBuildingName,
+        badgeColor: "purple",
+      isPhoto: false as boolean | undefined
+      };
+    } else if (slug === "architects-portfolio-match-celebrated-project-name") {
+      // In Architect's Portfolio: Choices are 4 names. Clue 1 is Location. Clue 2 is Building Photo.
+      const photoUrl = match?.building_photo || q.media_url;
+      clue1 = {
+        label: "Location Clue",
+        revealedLabel: "Location Revealed",
+        bannerTitle: "Location Hint:",
+        icon: "📍",
+        text: loc || "International Landmark",
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Building Photo Clue",
+        revealedLabel: "Building Photo Revealed",
+        bannerTitle: "Building Photo Hint:",
+        icon: "📷",
+        text: photoUrl,
+        isPhoto: true,
+        badgeColor: "purple",
+      isPhoto: false as boolean | undefined
       };
     }
 
@@ -2437,38 +2500,69 @@ export default function QuizPlayPage() {
                             </div>
                           )}
                           {showClue2 && (
-                            <div className="p-3 bg-purple-50/90 border border-purple-200 rounded-xl flex items-center gap-2 text-xs font-bold text-purple-950 shadow-2xs">
-                              <span className="text-base">{cluesInfo.clue2.icon}</span>
-                              <div>
-                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block">{cluesInfo.clue2.bannerTitle}</span>
-                                <span>{cluesInfo.clue2.text}</span>
-                              </div>
+                            <div className="p-3 bg-purple-50/90 border border-purple-200 rounded-xl flex items-center gap-3 text-xs font-bold text-purple-950 shadow-2xs">
+                              {cluesInfo.clue2.isPhoto && cluesInfo.clue2.text ? (
+                                <div className="flex items-center gap-3 w-full">
+                                  <div 
+                                    className="relative w-16 h-14 sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-slate-900 shrink-0 cursor-pointer border border-purple-300 group select-none"
+                                    onMouseDown={() => setPressedZoomImage(cluesInfo.clue2.text)}
+                                    onMouseUp={() => setPressedZoomImage(null)}
+                                    onMouseLeave={() => setPressedZoomImage(null)}
+                                    onTouchStart={() => setPressedZoomImage(cluesInfo.clue2.text)}
+                                    onTouchEnd={() => setPressedZoomImage(null)}
+                                  >
+                                    <img src={cluesInfo.clue2.text} alt="Building Clue" className="w-full h-full object-cover" />
+                                    <span className="absolute bottom-0.5 right-0.5 bg-black/80 text-[8px] text-white px-1 py-0.2 rounded font-bold">Zoom</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block">{cluesInfo.clue2.bannerTitle}</span>
+                                    <span className="text-xs text-purple-900 font-bold block">{cluesInfo.clue2.label}</span>
+                                    <span className="text-[10px] text-purple-700 font-medium">Press &amp; hold photo to zoom details</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <span className="text-base">{cluesInfo.clue2.icon}</span>
+                                  <div>
+                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block">{cluesInfo.clue2.bannerTitle}</span>
+                                    <span>{cluesInfo.clue2.text}</span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
                       );
                     })()}
 
-                    {/* Active Question Content: Distinct Photo Card layout for Architect's Oeuvre / Portfolio Quiz */}
+                    {/* Active Question Content: Distinct 4-Photo Choice Grid for Visual Recognition Quiz */}
                     {(() => {
-                      const isArchitectOeuvre = slug === "architects-oeuvre-pair-the-masterpieces";
+                      const isVisualRecognition = 
+                        slug === "visual-recognition-match-architect-building-photo" || 
+                        slug === "architects-oeuvre-pair-the-masterpieces";
 
-                      if (isArchitectOeuvre && currentQ.question_type === "choose" && currentQ.options) {
+                      if (isVisualRecognition && currentQ.question_type === "choose" && currentQ.options) {
                         return (
                           <div className="mb-6">
-                            <p className="text-xs font-extrabold text-gray-700 mb-3 flex items-center gap-1.5">
-                              <span>🏛️ Inspect the architectural portfolio and select the matching masterpiece:</span>
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-xs font-extrabold text-gray-800 flex items-center gap-1.5">
+                                <span>🏛️ Inspect the 4 building photos below and choose the matching design:</span>
+                              </p>
+                              <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md hidden sm:inline-block">
+                                💡 Press &amp; hold any photo to zoom
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
                               {currentQ.options.map((opt, optIdx) => {
                                 const isSelected = userAnswers[currentIndex] === opt;
                                 const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
                                 const showPracticeWrong = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && isSelected && !practiceFeedback[currentIndex]?.isCorrect;
-                                const optPhoto = getBuildingPhotoForOption(opt);
+                                const optPhoto = opt;
+                                const bInfo = catalogMap[opt.toLowerCase().trim()];
 
                                 let cardClass = "border-gray-200 hover:border-gray-400 bg-white hover:bg-gray-50/50";
                                 if (isSelected) {
-                                  cardClass = "border-black ring-2 ring-black bg-gray-50/60 shadow-md";
+                                  cardClass = "border-black ring-2 ring-black bg-gray-50 shadow-md";
                                 }
                                 if (showPracticeCorrect) {
                                   cardClass = "border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/60 shadow-sm";
@@ -2480,54 +2574,62 @@ export default function QuizPlayPage() {
                                   <div
                                     key={optIdx}
                                     onClick={() => handleSelectAnswer(opt)}
-                                    className={`rounded-2xl border p-3 flex flex-col justify-between transition cursor-pointer shadow-2xs group ${cardClass}`}
+                                    className={`rounded-2xl border-2 p-2 sm:p-2.5 flex flex-col justify-between transition cursor-pointer shadow-xs group select-none ${cardClass}`}
                                   >
-                                    {/* Option Photo Container */}
-                                    <div className="relative w-full h-40 sm:h-44 rounded-xl overflow-hidden bg-slate-950 mb-2.5 flex items-center justify-center">
-                                      {optPhoto ? (
-                                        <>
-                                          <img
-                                            referrerPolicy="no-referrer"
-                                            src={optPhoto}
-                                            alt={opt}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                                          />
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setZoomImageUrl({ url: optPhoto, title: opt });
-                                            }}
-                                            className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/75 hover:bg-black text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 opacity-0 group-hover:opacity-100 transition"
-                                            title="Click to view full photo"
-                                          >
-                                            <ZoomIn size={12} />
-                                          </button>
-                                        </>
-                                      ) : (
-                                        <div className="flex flex-col items-center justify-center text-gray-500 p-4">
-                                          <Building2 size={28} className="mb-1 text-gray-400" />
-                                          <span className="text-[11px] font-medium text-gray-400">Architectural Masterpiece</span>
+                                    {/* Option Photo Container with Press-and-Hold Zoom */}
+                                    <div
+                                      className="relative w-full aspect-4/3 rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center cursor-pointer"
+                                      onMouseDown={() => setPressedZoomImage(optPhoto)}
+                                      onMouseUp={() => setPressedZoomImage(null)}
+                                      onMouseLeave={() => setPressedZoomImage(null)}
+                                      onTouchStart={() => setPressedZoomImage(optPhoto)}
+                                      onTouchEnd={() => setPressedZoomImage(null)}
+                                    >
+                                      <img
+                                        referrerPolicy="no-referrer"
+                                        src={optPhoto}
+                                        alt={`Choice ${String.fromCharCode(65 + optIdx)}`}
+                                        className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                        draggable={false}
+                                      />
+                                      <div className={`absolute top-2 left-2 w-7 h-7 rounded-lg text-xs font-black flex items-center justify-center shrink-0 border ${
+                                        isSelected ? "bg-black text-white border-black" : "bg-black/75 text-white border-white/20 backdrop-blur-xs"
+                                      }`}>
+                                        {String.fromCharCode(65 + optIdx)}
+                                      </div>
+                                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md bg-black/80 text-white text-[10px] font-bold backdrop-blur-xs flex items-center gap-1 opacity-70 group-hover:opacity-100 transition pointer-events-none">
+                                        <ZoomIn size={10} /> Hold to Zoom
+                                      </div>
+                                      {isSelected && (
+                                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shadow">
+                                          <Check size={14} />
+                                        </div>
+                                      )}
+                                      {showPracticeCorrect && (
+                                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow">
+                                          <CheckCircle2 size={16} />
+                                        </div>
+                                      )}
+                                      {showPracticeWrong && (
+                                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow">
+                                          <XCircle size={16} />
                                         </div>
                                       )}
                                     </div>
 
-                                    {/* Option Label and Selected / Correct Icon */}
-                                    <div className="flex items-center justify-between gap-2 pt-1">
-                                      <div className="flex items-center gap-2.5 min-w-0">
-                                        <span className={`w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0 border ${
-                                          isSelected ? "bg-black text-white border-black" : "bg-gray-100 text-gray-700 border-gray-200"
-                                        }`}>
-                                          {String.fromCharCode(65 + optIdx)}
+                                    {/* Reveal building name when submitted in practice mode */}
+                                    {(showPracticeCorrect || showPracticeWrong) && bInfo?.building_name && (
+                                      <div className="pt-2 px-1 text-center">
+                                        <span className="text-xs font-extrabold text-gray-900 block truncate">
+                                          {bInfo.building_name}
                                         </span>
-                                        <span className="text-xs sm:text-sm font-bold text-gray-900 truncate">
-                                          {opt}
-                                        </span>
+                                        {bInfo.city && (
+                                          <span className="text-[10px] text-gray-500 block truncate">
+                                            {bInfo.city}, {bInfo.country}
+                                          </span>
+                                        )}
                                       </div>
-                                      {isSelected && <Check size={16} className="text-black shrink-0" />}
-                                      {showPracticeCorrect && <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />}
-                                      {showPracticeWrong && <XCircle size={16} className="text-red-600 shrink-0" />}
-                                    </div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -3027,6 +3129,25 @@ export default function QuizPlayPage() {
             </div>
             <div className="p-3 bg-gray-950/90 text-center text-xs text-gray-400 border-t border-white/10">
               High-resolution photograph for visual architecture identification &amp; analysis
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK PRESS-AND-HOLD ZOOM OVERLAY */}
+      {pressedZoomImage && (
+        <div 
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/85 backdrop-blur-xs p-4 pointer-events-none animate-in fade-in duration-100"
+        >
+          <div className="relative max-w-xl max-h-[82vh] rounded-2xl overflow-hidden border-2 border-white/40 shadow-2xl bg-black flex flex-col items-center">
+            <img 
+              referrerPolicy="no-referrer"
+              src={pressedZoomImage} 
+              alt="Zoomed preview" 
+              className="w-full h-auto max-h-[75vh] object-contain select-none"
+            />
+            <div className="py-2 px-4 bg-black/90 w-full text-center text-white/90 text-xs font-bold border-t border-white/10">
+              Release to close preview
             </div>
           </div>
         </div>
