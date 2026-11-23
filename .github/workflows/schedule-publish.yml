@@ -1,9 +1,9 @@
 name: Publish Scheduled Jobs
 
 on:
-  # schedule:
-  #   # Temporarily disabled to prevent duplicate posting loops
-  #   - cron: '*/5 * * * *'
+  schedule:
+    # Runs every 5 minutes to publish scheduled jobs safely
+    - cron: '*/5 * * * *'
   # Allows you to trigger it manually from the GitHub Actions tab for testing
   workflow_dispatch: 
 
