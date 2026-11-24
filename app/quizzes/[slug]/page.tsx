@@ -605,6 +605,7 @@ export default function QuizPlayPage() {
       icon: "👤",
       text: "Celebrated Master Architect",
       badgeColor: "purple",
+      revealedSubtext: undefined as string | undefined,
       isPhoto: false as boolean | undefined
     };
 
@@ -658,6 +659,7 @@ export default function QuizPlayPage() {
       icon: "👤",
       text: arch,
       badgeColor: "purple",
+      revealedSubtext: undefined as string | undefined,
       isPhoto: false as boolean | undefined
     };
 
@@ -790,8 +792,39 @@ export default function QuizPlayPage() {
         icon: "📷",
         text: photoUrl,
         isPhoto: true,
-        badgeColor: "purple",
-      isPhoto: false as boolean | undefined
+        badgeColor: "purple"
+      };
+    } else if (
+      slug === "the-visionaries-faces-of-architecture" ||
+      slug.includes("visionar") ||
+      (quiz?.category || "").toLowerCase().includes("visionar") ||
+      (quiz?.title || "").toLowerCase().includes("visionar") ||
+      (quiz?.title || "").toLowerCase().includes("portrait")
+    ) {
+      // In The Visionaries: Target is the Architect's Portrait photo.
+      // Explanation clue format: "Nationality & Era || Signature Landmark, Location || Photo URL"
+      const parts = (q.explanation_clue || "").split("||").map((s: string) => s.trim());
+      const eraNationality = parts[0] || (match?.architectural_style ? `${match.architectural_style} Master` : "Celebrated Modern Master");
+      const signatureBuilding = parts[1] || `${bName}${loc ? ', ' + loc : ''}`;
+      const buildingPhoto = parts[2] || match?.building_photo || "";
+
+      clue1 = {
+        label: "Era & Style Clue",
+        revealedLabel: "Era & Style Revealed",
+        bannerTitle: "Era & Movement Hint:",
+        icon: "🌐",
+        text: eraNationality,
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Celebrated Project Clue",
+        revealedLabel: "Celebrated Project Revealed",
+        bannerTitle: "Masterpiece Hint:",
+        icon: "🏛️",
+        text: buildingPhoto,
+        revealedSubtext: `Designed: ${signatureBuilding}`,
+        isPhoto: Boolean(buildingPhoto),
+        badgeColor: "purple"
       };
     }
 
@@ -1798,23 +1831,43 @@ export default function QuizPlayPage() {
                             3. Round Length (Questions):
                           </label>
                           <div className={`grid gap-3 ${
-                            difficulty === "easy" || difficulty === "popular" ? "grid-cols-2" :
-                            difficulty === "medium" ? "grid-cols-2" : "grid-cols-3"
+                            (() => {
+                              const totalAvailable = allQuestionsPool.length > 0 ? allQuestionsPool.length : 60;
+                              const isCompactPool = totalAvailable <= 35;
+                              const isEasy = difficulty === "easy" || difficulty === "popular";
+                              const isMedium = difficulty === "medium";
+                              return isEasy ? "grid-cols-2" : (isMedium && !isCompactPool) ? "grid-cols-2" : "grid-cols-3";
+                            })()
                           }`}>
                             {(() => {
                               const isEasy = difficulty === "easy" || difficulty === "popular";
                               const isMedium = difficulty === "medium";
+                              const totalAvailable = allQuestionsPool.length > 0 ? allQuestionsPool.length : 60;
+                              const isCompactPool = totalAvailable <= 35;
+
                               const countOptions = isEasy ? [
                                 { count: 10, label: "10 Questions", time: "2m 30s", desc: "100% Popular" },
-                                { count: 20, label: "20 Questions", time: "5m 00s", desc: "Popular + 50-50" }
-                              ] : isMedium ? [
-                                { count: 20, label: "20 Questions", time: "3m 20s", desc: "All 50-50 + Split" },
-                                { count: 50, label: "50 Questions", time: "8m 20s", desc: "Full Balanced Marathon" }
-                              ] : [
-                                { count: 10, label: "10 Questions", time: "50s", desc: "100% Master" },
-                                { count: 20, label: "20 Questions", time: "1m 40s", desc: "100% Master" },
-                                { count: 50, label: "50 Questions", time: "4m 10s", desc: "75% Master • 15% 50-50 • 10% Pop" }
-                              ];
+                                { count: Math.min(20, totalAvailable), label: `${Math.min(20, totalAvailable)} Questions`, time: "5m 00s", desc: "Popular + 50-50" }
+                              ] : isMedium ? (
+                                isCompactPool ? [
+                                  { count: 10, label: "10 Questions", time: "1m 40s", desc: "Popular & 50-50" },
+                                  { count: 20, label: "20 Questions", time: "3m 20s", desc: "All 50-50 + Split" },
+                                  { count: totalAvailable, label: `All (${totalAvailable} Qs)`, time: `${Math.floor((totalAvailable * 10) / 60)}m ${(totalAvailable * 10) % 60}s`, desc: "Full Master Roster" }
+                                ] : [
+                                  { count: 20, label: "20 Questions", time: "3m 20s", desc: "All 50-50 + Split" },
+                                  { count: 50, label: "50 Questions", time: "8m 20s", desc: "Full Balanced Marathon" }
+                                ]
+                              ) : (
+                                isCompactPool ? [
+                                  { count: 10, label: "10 Questions", time: "50s", desc: "100% Master" },
+                                  { count: 20, label: "20 Questions", time: "1m 40s", desc: "100% Master" },
+                                  { count: totalAvailable, label: `All (${totalAvailable} Qs)`, time: `${Math.floor((totalAvailable * 5) / 60)}m ${(totalAvailable * 5) % 60}s`, desc: "Full Master Roster" }
+                                ] : [
+                                  { count: 10, label: "10 Questions", time: "50s", desc: "100% Master" },
+                                  { count: 20, label: "20 Questions", time: "1m 40s", desc: "100% Master" },
+                                  { count: 50, label: "50 Questions", time: "4m 10s", desc: "75% Master • 15% 50-50 • 10% Pop" }
+                                ]
+                              );
 
                               return countOptions.map(item => (
                                 <button
@@ -2516,7 +2569,7 @@ export default function QuizPlayPage() {
                                   </div>
                                   <div>
                                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 block">{cluesInfo.clue2.bannerTitle}</span>
-                                    <span className="text-xs text-purple-900 font-bold block">{cluesInfo.clue2.label}</span>
+                                    <span className="text-xs text-purple-900 font-bold block">{(cluesInfo.clue2 as any).revealedSubtext || cluesInfo.clue2.revealedLabel || cluesInfo.clue2.label}</span>
                                     <span className="text-[10px] text-purple-700 font-medium">Press &amp; hold photo to zoom details</span>
                                   </div>
                                 </div>
@@ -2647,8 +2700,13 @@ export default function QuizPlayPage() {
                             <div className="md:col-span-5 flex flex-col">
                               <div 
                                 onClick={() => setZoomImageUrl({ url: currentQ.media_url, title: currentQ.question_text || "Architectural Landmark" })}
-                                className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 flex items-center justify-center shadow-xs group cursor-pointer flex-1 min-h-[230px] max-h-[350px] md:max-h-[380px] p-2"
-                                title="Click to inspect full photo"
+                                onMouseDown={() => setPressedZoomImage(currentQ.media_url)}
+                                onMouseUp={() => setPressedZoomImage(null)}
+                                onMouseLeave={() => setPressedZoomImage(null)}
+                                onTouchStart={() => setPressedZoomImage(currentQ.media_url)}
+                                onTouchEnd={() => setPressedZoomImage(null)}
+                                className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 flex items-center justify-center shadow-xs group cursor-pointer flex-1 min-h-[230px] max-h-[350px] md:max-h-[380px] p-2 select-none"
+                                title="Press & hold or click to inspect photo"
                               >
                                 {!imageLoaded && (
                                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 text-gray-300 z-10 p-4 text-center">
@@ -2671,7 +2729,7 @@ export default function QuizPlayPage() {
                                   }}
                                 />
                                 <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-[10px] text-gray-300 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
-                                  <ZoomIn size={11} /> Click to enlarge
+                                  <ZoomIn size={11} /> Hold to zoom • Click to enlarge
                                 </div>
                               </div>
                             </div>
