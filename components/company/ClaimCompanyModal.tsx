@@ -72,8 +72,7 @@ export default function ClaimCompanyModal({
                 if (prof.username) setUserUsername(prof.username);
                 const { data: edus } = await supabase.from('profile_educations').select("*").eq("user_id", prof.id);
                 const { data: exps } = await supabase.from('profile_experiences').select("*").eq("user_id", prof.id);
-                const { data: projs } = await supabase.from('projects').select("*").eq("user_id", prof.id);
-                const completion = calculateProfileCompletion(prof, edus || [], exps || [], projs || []);
+                const completion = calculateProfileCompletion(prof, edus || [], exps || []);
                 setUserCompletion(completion.percentage);
               }
             });

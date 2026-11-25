@@ -314,7 +314,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         const updates = indicesToUpdate.map(async (origIdx) => {
           const q = questions[origIdx];
           if (!q?.id) return;
-          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
           await supabase
             .from("quiz_questions")
             .update({
@@ -593,7 +593,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
           // Sync category tag
           const resolvedDiff = (match.difficulty as QuestionDifficulty) || getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases);
-          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
           
           if (wasChanged || q.difficulty !== resolvedDiff) {
             updatedDetailsCount++;
@@ -626,7 +626,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         return bName && !existingAnswers.has(bName) && !existingAnswers.has(baseName);
       });
 
-      let finalQuestions = updatedQuestions;
+      let finalQuestions: any[] = updatedQuestions;
       let newlyAddedCount = 0;
 
       if (missingCatalogRows.length > 0) {
@@ -635,7 +635,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         );
         if (shouldAdd) {
           const allAnswerValues = Array.from(new Set(latestCatalog.map(r => r.data?.building_name).filter(Boolean)));
-          const newQuestions: Question[] = missingCatalogRows.map((row, idx) => {
+          const newQuestions: any[] = missingCatalogRows.map((row, idx) => {
             const d = row.data || {};
             const targetAnswer = d.building_name || d.display_name || "Architectural Landmark";
             const distractors = allAnswerValues
@@ -671,7 +671,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         await supabase.from("quiz_questions").delete().eq("quiz_id", quizId);
         const questionsToInsert = finalQuestions.map((q, idx) => {
           const diffVal = q.difficulty || "medium";
-          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
           return {
             quiz_id: quizId,
             order_index: idx + 1,
@@ -810,7 +810,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         activeQuestions = activeQuestions.map((q, idx) => {
           const targetDiff = pendingDiff[idx];
           if (!targetDiff) return q;
-          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
           return {
             ...q,
             difficulty: targetDiff,
@@ -1643,32 +1643,6 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                 ? "Click 'Generate Questions' above or 'Add Question' to start." 
                 : filterDifficulty === "removed"
                 ? "Any question you remove using the trash icon will appear here so you can restore it anytime."
-                : "Switch filter to 'All' to view your questions."}
-            </p>
-            {questions.length === 0 ? (
-              <button
-                onClick={generateQuizFromDatabase}
-                className="px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl shadow-xs"
-              >
-                Auto-Generate from Catalog
-              </button>
-            ) : (
-              <button
-                onClick={() => setFilterDifficulty("all")}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl"
-              >
-                Show All Questions
-              </button>
-            )}
-          </div>
-        ) : questionViewMode === "compact" ? (
-          <div className="bg-white rounded-3xl border-2 border-dashed border-gray-300 p-12 text-center text-gray-400">
-            <p className="text-base font-bold text-gray-700 mb-1">
-              {questions.length === 0 ? "No questions in this quiz yet" : "No questions match the selected difficulty filter"}
-            </p>
-            <p className="text-xs text-gray-500 mb-4">
-              {questions.length === 0 
-                ? "Click 'Generate Questions' above or 'Add Question' to start." 
                 : "Switch filter to 'All' to view your questions."}
             </p>
             {questions.length === 0 ? (

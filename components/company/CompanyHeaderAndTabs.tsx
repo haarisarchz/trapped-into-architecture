@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import {
   Building2,
   Globe,
@@ -226,16 +227,20 @@ export default function CompanyHeaderAndTabs({
   useEffect(() => {
     if (activeTab === "team" && company?.id) {
       setLoadingTeam(true);
-      supabase
-        .from("profile_experiences")
-        .select("id, position, is_current, start_date, end_date, user_id, profiles(id, full_name, username, avatar_url, role, headline, badge_tier)")
-        .eq("company_id", company.id)
-        .order("is_current", { ascending: false })
-        .then(({ data }) => {
+      (async () => {
+        try {
+          const { data } = await supabase
+            .from("profile_experiences")
+            .select("id, position, is_current, start_date, end_date, user_id, profiles(id, full_name, username, avatar_url, role, headline, badge_tier)")
+            .eq("company_id", company.id)
+            .order("is_current", { ascending: false });
           setConnectedTeam(data || []);
+        } catch (e) {
+          // ignore
+        } finally {
           setLoadingTeam(false);
-        })
-        .catch(() => setLoadingTeam(false));
+        }
+      })();
     }
   }, [activeTab, company?.id]);
   const [isAdmin, setIsAdmin] = useState(false);

@@ -119,6 +119,8 @@ export default function Navbar() {
     const fetchNotifs = async () => {
       if (!currentUser) return;
       const role = (currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      const isCeoOrSuper = ["ceo", "superadmin", "admin"].includes(role);
+      const isJobAdmin = role === "jobadmin";
       const notifs: any[] = [];
 
       let userId = currentUser.id;
@@ -136,6 +138,14 @@ export default function Navbar() {
         const { data: pData } = await supabase.from("profiles").select("*").eq("email", currentUser.email).maybeSingle();
         userProf = pData;
         if (userProf) userId = userProf.id;
+      }
+
+      // Sync cross-device read timestamp from profile
+      if (userProf?.notifications_last_read) {
+        const dbLastRead = new Date(userProf.notifications_last_read);
+        if (!isNaN(dbLastRead.getTime())) {
+          setLastRead((prev) => (!prev || dbLastRead > prev ? dbLastRead : prev));
+        }
       }
 
       // A. Member Milestone Level-Up Notifications (Silver 45%, Gold 66%, Platinum 81%, Diamond 91%)
@@ -156,30 +166,46 @@ export default function Navbar() {
           if (percentage >= 91) {
             notifs.push({
               id: `member-tier-diamond-${userId}`,
-              message: `👑 Diamond Rank Unlocked (${percentage}%)! Your profile is among the top 1% of architecture professionals.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "👑",
+              message: `Diamond Rank Unlocked (${percentage}%)! Your profile is among the top 1% of architecture professionals.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           } else if (percentage >= 81) {
             notifs.push({
               id: `member-tier-platinum-${userId}`,
-              message: `💎 Platinum Member Unlocked (${percentage}%)! You receive priority recommendations and exclusive alerts.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "💎",
+              message: `Platinum Member Unlocked (${percentage}%)! You receive priority recommendations and exclusive alerts.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           } else if (percentage >= 66) {
             notifs.push({
               id: `member-tier-gold-${userId}`,
-              message: `🏆 Gold Member Unlocked (${percentage}%)! You can now publish job openings and feature your profile.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "🏆",
+              message: `Gold Member Unlocked (${percentage}%)! You can now publish job openings and feature your profile.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           } else if (percentage >= 45) {
             notifs.push({
               id: `member-tier-silver-${userId}`,
-              message: `🥈 Silver Member Unlocked (${percentage}%)! You can now claim existing studios or register a new practice.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "🥈",
+              message: `Silver Member Unlocked (${percentage}%)! You can now claim existing studios or register a new practice.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           }
         } catch (e) {
@@ -201,9 +227,13 @@ export default function Navbar() {
             if (compLvl.score >= 45) {
               notifs.push({
                 id: `comp-tier-${c.id}-${compLvl.tier}`,
-                message: `${compLvl.icon} ${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.tier === 'gold' || compLvl.tier === 'platinum' || compLvl.tier === 'diamond' ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
+                category: "growth",
+                categoryLabel: "Studio Milestone",
+                icon: compLvl.icon,
+                message: `${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.tier === 'gold' || compLvl.tier === 'platinum' || compLvl.tier === 'diamond' ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
                 time: compTime,
-                link: compLvl.isInstitution ? `/institutions/${c.slug}` : `/companies/${c.slug}`
+                link: compLvl.isInstitution ? `/institutions/${c.slug}` : `/companies/${c.slug}`,
+                actionText: "View Studio →"
               });
             }
           });
@@ -227,16 +257,24 @@ export default function Navbar() {
             if (j.status === "published") {
               notifs.push({
                 id: `job-pub-${j.id}`,
-                message: `✅ Your job listing for "${j.position}" at ${j.firm_name} has been approved and published!`,
+                category: "dispatches",
+                categoryLabel: "Published",
+                icon: "✅",
+                message: `Your job listing for "${j.position}" at ${j.firm_name} has been approved and published!`,
                 time: jTime,
-                link: `/jobs`
+                link: `/jobs`,
+                actionText: "View Job →"
               });
             } else if (j.status === "rejected") {
               notifs.push({
                 id: `job-rej-${j.id}`,
-                message: `⚠️ Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
+                category: "dispatches",
+                categoryLabel: "Needs Revision",
+                icon: "⚠️",
+                message: `Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
                 time: jTime,
-                link: `/post-job`
+                link: `/post-job`,
+                actionText: "Resubmit →"
               });
             }
           });
@@ -245,143 +283,315 @@ export default function Navbar() {
         }
       }
       
-      // 1. CEO Instagram Notifs
-      if (role === "ceo") {
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data } = await supabase.from('jobs')
-          .select('id, firm_name, position, posted_date, status')
-          .eq('status', 'published')
-          .gte('posted_date', yesterday)
-          .order('posted_date', { ascending: false });
-          
-        if (data) {
-            const groupedJobs: Record<string, any> = {};
-            data.forEach((job: any) => {
-              if (!groupedJobs[job.firm_name]) {
-                groupedJobs[job.firm_name] = job;
-              }
-            });
-            Object.values(groupedJobs).forEach((job: any) => {
-              notifs.push({
-                id: job.id + '-pub',
-                message: `${job.firm_name} hiring post is successfully published on the website`,
-                time: job.posted_date,
-                link: null
-              });
-            });
-          }
-      }
-      
-      // 2. Admin/Superadmin/CEO/JobAdmin missing logo notifs
-      if (["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes(role)) {
-        let userId = currentUser.id;
-        if (!userId && currentUser.username) {
-          const { data: pData } = await supabase.from("profiles").select("id").eq("username", currentUser.username).maybeSingle();
-          if (pData) userId = pData.id;
-        }
-        
-        if (userId) {
-          // Fetch missing logos only for companies created by the logged-in user
-          const { data: noLogoComps } = await supabase
-            .from("companies")
-            .select("id, firm_name, created_at, logo_url")
-            .eq("created_by", userId);
-            
-          if (noLogoComps) {
-            const missingLogos = noLogoComps.filter((c: any) => !c.logo_url || c.logo_url.trim() === "");
-            const now = new Date();
-
-            // First 3 days: notify for each individual company
-            const recentMissing = missingLogos.filter((comp: any) => {
-              const createdDate = new Date(comp.created_at || now);
-              const ageDays = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-              return ageDays <= 3;
-            });
-
-            recentMissing.forEach((comp: any) => {
-              notifs.push({
-                id: comp.id + '-logo',
-                message: `The company you added (${comp.firm_name}) is missing a logo. Please add one.`,
-                time: comp.created_at || now.toISOString(),
-                link: `/admin/companies?filter=missing-logo`
-              });
-            });
-
-            // Older than 3 days: notify weekly on Sundays as a digest
-            const olderMissing = missingLogos.filter((comp: any) => {
-              const createdDate = new Date(comp.created_at || now);
-              const ageDays = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-              return ageDays > 3;
-            });
-
-            const isSunday = now.getDay() === 0;
-            if (isSunday && olderMissing.length > 0) {
-              const count = olderMissing.length;
-              const names = olderMissing.slice(0, 2).map((c: any) => c.firm_name).join(', ');
-              const extra = count > 2 ? ` and ${count - 2} other${count - 2 > 1 ? 's' : ''}` : '';
-              notifs.push({
-                id: 'sunday-digest-missing-logos-' + now.toISOString().split('T')[0],
-                message: `Weekly Reminder: You have ${count} ${count === 1 ? 'company' : 'companies'} (${names}${extra}) missing logos. Please upload them.`,
-                time: (function(){ const d = new Date(); d.setHours(9, 0, 0, 0); return d.toISOString(); })(),
-                link: `/admin/companies?filter=missing-logo`
-              });
-            }
-          }
-        }
-      }
-      
-      // 3. User activities, Email dispatches & Studio requests for CEO & Admins
-      if (["ceo", "superadmin", "admin", "jobadmin"].includes(role)) {
+      // D. CEO & Super Admin Action-Oriented Notifications (Approvals, Replies, Growth, Dispatches)
+      if (isCeoOrSuper) {
+        // 1. Studio Claim Requests (Pending) -> Needs Approval
         try {
-          const { data: emailLogs } = await supabase
-            .from("contact_inquiries")
-            .select("id, name, email, subject, message, created_at")
-            .in("subject", [
-              "NOTIFIED_COMPANY_JOB_POSTING",
-              "COMPANY_JOB_EMAIL_SENT",
-              "COMPANY_JOB_EMAIL_PENDING",
-              "NEW_USER_REGISTERED",
-              "USER_VERIFIED",
-              "USER_PHONE_VERIFIED",
-              "STUDIO_CLAIM_REQUEST",
-              "NEW_STUDIO_REGISTERED",
-            ])
+          const { data: claims } = await supabase
+            .from("company_claim_requests")
+            .select("id, company_name, company_slug, requester_name, work_email, created_at, status")
+            .eq("status", "pending")
             .order("created_at", { ascending: false })
-            .limit(30);
+            .limit(15);
 
-          (emailLogs || []).forEach((log: any) => {
-            let icon = "✉️";
-            let link: string | null = `/admin/jobs`;
-
-            if (log.subject === "COMPANY_JOB_EMAIL_PENDING") {
-              icon = "⏳";
-              link = "/admin/jobs";
-            } else if (log.subject === "NEW_USER_REGISTERED") {
-              icon = "👤";
-              link = "/admin/users";
-            } else if (log.subject === "USER_VERIFIED") {
-              icon = "🔒";
-              link = "/admin/users";
-            } else if (log.subject === "USER_PHONE_VERIFIED") {
-              icon = "📱";
-              link = "/admin/users";
-            } else if (log.subject === "STUDIO_CLAIM_REQUEST") {
-              icon = "🏛️";
-              link = "/admin/claims";
-            } else if (log.subject === "NEW_STUDIO_REGISTERED") {
-              icon = "🏢";
-              link = "/admin/companies";
-            }
-
+          (claims || []).forEach((cl: any) => {
             notifs.push({
-              id: `email-log-${log.id}`,
-              message: `${icon} ${log.message}`,
-              time: log.created_at,
-              link,
+              id: `claim-${cl.id}`,
+              category: "approvals",
+              categoryLabel: "Needs Approval",
+              icon: "🏛️",
+              message: `Studio Claim Request: ${cl.requester_name || "An architect"} requested ownership of ${cl.company_name}.`,
+              time: cl.created_at,
+              link: `/admin/companies?tab=claims`,
+              actionText: "Review Claim →"
             });
           });
         } catch (err) {
-          console.warn("Failed to fetch email logs for notifications:", err);
+          console.warn("Error fetching claim requests for notifs:", err);
+        }
+
+        // 2. Pending Candidate Job Submissions -> Needs Approval
+        try {
+          const { data: pendingJobs } = await supabase
+            .from("jobs")
+            .select("id, firm_name, position, created_at, posted_date, status")
+            .eq("status", "pending")
+            .order("created_at", { ascending: false })
+            .limit(10);
+
+          (pendingJobs || []).forEach((pj: any) => {
+            notifs.push({
+              id: `pending-job-${pj.id}`,
+              category: "approvals",
+              categoryLabel: "Needs Approval",
+              icon: "📝",
+              message: `Candidate Job Review: New opening for "${pj.position}" at ${pj.firm_name} is awaiting approval.`,
+              time: pj.created_at || pj.posted_date || new Date().toISOString(),
+              link: `/admin/jobs`,
+              actionText: "Review Job →"
+            });
+          });
+        } catch (err) {
+          console.warn("Error fetching pending jobs for notifs:", err);
+        }
+
+        // 3. Visitor Contact Inquiries, Suggestions, New Users & Emails
+        try {
+          const { data: contactMsgs } = await supabase
+            .from("contact_inquiries")
+            .select("id, name, email, subject, message, created_at, is_read")
+            .order("created_at", { ascending: false })
+            .limit(40);
+
+          const SYSTEM_SUBJECTS = new Set([
+            "NOTIFIED_COMPANY_JOB_POSTING",
+            "COMPANY_JOB_EMAIL_SENT",
+            "COMPANY_JOB_EMAIL_PENDING",
+            "NEW_USER_REGISTERED",
+            "USER_VERIFIED",
+            "USER_PHONE_VERIFIED",
+            "STUDIO_CLAIM_REQUEST",
+            "NEW_STUDIO_REGISTERED",
+          ]);
+
+          (contactMsgs || []).forEach((log: any) => {
+            const subj = (log.subject || "").trim();
+
+            if (!SYSTEM_SUBJECTS.has(subj) && !subj.startsWith("[Direct Chat]")) {
+              const preview = log.message ? (log.message.length > 70 ? log.message.slice(0, 70) + "..." : log.message) : "";
+              notifs.push({
+                id: `inquiry-${log.id}`,
+                category: "replies",
+                categoryLabel: "Needs Reply",
+                icon: "💬",
+                message: `${log.name ? log.name + ': ' : ''}"${subj}" — ${preview}`,
+                time: log.created_at,
+                link: `/admin/contact?tab=inbox`,
+                actionText: "Reply in Inbox →"
+              });
+            } else if (subj === "NEW_STUDIO_REGISTERED") {
+              notifs.push({
+                id: `studio-reg-${log.id}`,
+                category: "approvals",
+                categoryLabel: "Needs Approval",
+                icon: "🏢",
+                message: log.message,
+                time: log.created_at,
+                link: `/admin/companies?tab=submissions`,
+                actionText: "Review Studio →"
+              });
+            } else if (subj === "NEW_USER_REGISTERED") {
+              notifs.push({
+                id: `growth-reg-${log.id}`,
+                category: "growth",
+                categoryLabel: "Growth & Users",
+                icon: "👤",
+                message: log.message,
+                time: log.created_at,
+                link: `/admin/users`,
+                actionText: "View Users →"
+              });
+            } else if (subj === "USER_VERIFIED") {
+              notifs.push({
+                id: `growth-verif-${log.id}`,
+                category: "growth",
+                categoryLabel: "Growth & Users",
+                icon: "🔒",
+                message: log.message,
+                time: log.created_at,
+                link: `/admin/users`,
+                actionText: "View Users →"
+              });
+            } else if (subj === "USER_PHONE_VERIFIED") {
+              notifs.push({
+                id: `growth-phone-${log.id}`,
+                category: "growth",
+                categoryLabel: "Growth & Users",
+                icon: "📱",
+                message: log.message,
+                time: log.created_at,
+                link: `/admin/users`,
+                actionText: "View Users →"
+              });
+            } else if (subj === "COMPANY_JOB_EMAIL_PENDING" || subj === "COMPANY_JOB_EMAIL_SENT" || subj === "NOTIFIED_COMPANY_JOB_POSTING") {
+              notifs.push({
+                id: `dispatch-email-${log.id}`,
+                category: "dispatches",
+                categoryLabel: "Dispatches",
+                icon: subj === "COMPANY_JOB_EMAIL_PENDING" ? "⏳" : "✉️",
+                message: log.message,
+                time: log.created_at,
+                link: `/admin/mails`,
+                actionText: "View Dispatches →"
+              });
+            }
+          });
+        } catch (err) {
+          console.warn("Failed to fetch contact inquiries for notifications:", err);
+        }
+
+        // 4. Live Visitor Direct Chats (Unread) -> Needs Reply
+        try {
+          const { data: directChats } = await supabase
+            .from("chat_messages")
+            .select("id, session_id, message, sender, is_read, created_at")
+            .eq("sender", "visitor")
+            .eq("is_read", false)
+            .order("created_at", { ascending: false })
+            .limit(20);
+
+          if (directChats && directChats.length > 0) {
+            const sessionMap: Record<string, any> = {};
+            directChats.forEach((m: any) => {
+              if (!sessionMap[m.session_id]) {
+                sessionMap[m.session_id] = m;
+              }
+            });
+
+            Object.values(sessionMap).forEach((chat: any) => {
+              const preview = chat.message ? (chat.message.length > 65 ? chat.message.slice(0, 65) + "..." : chat.message) : "New visitor message";
+              notifs.push({
+                id: `chat-${chat.session_id}`,
+                category: "replies",
+                categoryLabel: "Needs Reply",
+                icon: "⚡",
+                message: `Live Visitor Chat: "${preview}"`,
+                time: chat.created_at,
+                link: `/admin/contact?tab=chat&session=${chat.session_id}`,
+                actionText: "Open Live Chat →"
+              });
+            });
+          }
+        } catch (err) {
+          // chat_messages might be optional or fallback
+        }
+
+        // 5. Site-Wide Published Jobs Feed (Past 48 Hours)
+        try {
+          const yesterday = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+          const { data: pubJobs } = await supabase
+            .from('jobs')
+            .select('id, firm_name, position, posted_date, status')
+            .eq('status', 'published')
+            .gte('posted_date', yesterday)
+            .order('posted_date', { ascending: false })
+            .limit(10);
+
+          (pubJobs || []).forEach((j: any) => {
+            notifs.push({
+              id: `pub-job-${j.id}`,
+              category: "dispatches",
+              categoryLabel: "Job Published",
+              icon: "🚀",
+              message: `${j.firm_name} hiring post for "${j.position}" is published on website.`,
+              time: j.posted_date || new Date().toISOString(),
+              link: `/jobs`,
+              actionText: "View Opening →"
+            });
+          });
+        } catch (err) {
+          console.warn("Failed to fetch published jobs for CEO notifs:", err);
+        }
+      }
+
+      // E. Job Admin Exclusive Notifications (Published Posts + Weekly Earnings Digest)
+      if (isJobAdmin && userId) {
+        // 1. Published jobs authored by this Job Admin
+        try {
+          const { data: myPublishedJobs } = await supabase
+            .from("jobs")
+            .select("id, firm_name, position, posted_date, status, updated_at")
+            .eq("author_id", userId)
+            .eq("status", "published")
+            .order("posted_date", { ascending: false })
+            .limit(10);
+
+          (myPublishedJobs || []).forEach((j: any) => {
+            notifs.push({
+              id: `jobadmin-pub-${j.id}`,
+              category: "dispatches",
+              categoryLabel: "Published",
+              icon: "✅",
+              message: `Your job listing for "${j.position}" at ${j.firm_name} is published live!`,
+              time: j.posted_date || j.updated_at || new Date().toISOString(),
+              link: `/jobs`,
+              actionText: "View Job →"
+            });
+          });
+        } catch (err) {
+          console.warn("Error fetching jobadmin published jobs:", err);
+        }
+
+        // 2. Weekly Motivational Activity & Earnings Summary
+        try {
+          const now = new Date();
+          const currentDay = now.getDay();
+          const diffToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
+
+          const thisMonday = new Date(now);
+          thisMonday.setDate(now.getDate() + diffToMonday);
+          thisMonday.setHours(0, 0, 0, 0);
+
+          const lastMonday = new Date(thisMonday);
+          lastMonday.setDate(thisMonday.getDate() - 7);
+
+          const lastSunday = new Date(thisMonday);
+          lastSunday.setMilliseconds(-1);
+
+          const threeWeeksAgo = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: recentJobs } = await supabase
+            .from("jobs")
+            .select("id, posted_date, created_at, status")
+            .eq("author_id", userId)
+            .eq("status", "published")
+            .gte("posted_date", threeWeeksAgo);
+
+          let rupeesPerPost = 10;
+          try {
+            const { data: st } = await supabase.from("site_settings").select("rupees_per_post").single();
+            if (st?.rupees_per_post) rupeesPerPost = st.rupees_per_post;
+          } catch (e) {}
+
+          let thisWeekCount = 0;
+          let lastWeekCount = 0;
+
+          (recentJobs || []).forEach((j: any) => {
+            const pDate = new Date(j.posted_date || j.created_at);
+            if (pDate >= thisMonday) {
+              thisWeekCount++;
+            } else if (pDate >= lastMonday && pDate <= lastSunday) {
+              lastWeekCount++;
+            }
+          });
+
+          const thisWeekEarned = thisWeekCount * rupeesPerPost;
+          const lastWeekEarned = lastWeekCount * rupeesPerPost;
+
+          let motivationMsg = "";
+          if (thisWeekCount > lastWeekCount) {
+            const pct = Math.round(((thisWeekCount - lastWeekCount) / Math.max(lastWeekCount, 1)) * 100);
+            motivationMsg = `💼 Weekly Summary: You posted ${thisWeekCount} jobs this week and earned ₹${thisWeekEarned}! (Last week: ${lastWeekCount} jobs, ₹${lastWeekEarned} — 🔥 +${pct}% increase!). Keep up the great momentum!`;
+          } else if (thisWeekCount < lastWeekCount) {
+            motivationMsg = `💼 Weekly Summary: You posted ${thisWeekCount} jobs this week and earned ₹${thisWeekEarned}. (Last week: ${lastWeekCount} jobs, ₹${lastWeekEarned}). A fresh week is here — let's boost your postings and earnings!`;
+          } else if (thisWeekCount > 0) {
+            motivationMsg = `💼 Weekly Summary: You posted ${thisWeekCount} jobs this week and earned ₹${thisWeekEarned}. Steady posting performance!`;
+          } else {
+            motivationMsg = `💼 Weekly Kickoff: You haven't posted any jobs yet this week (Last week: ${lastWeekCount} jobs, ₹${lastWeekEarned}). Post openings to earn ₹${rupeesPerPost} per post!`;
+          }
+
+          const weekNumber = Math.ceil((((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000) + 1) / 7);
+          notifs.push({
+            id: `jobadmin-weekly-${now.getFullYear()}-w${weekNumber}`,
+            category: "growth",
+            categoryLabel: "Weekly Earnings",
+            icon: "💼",
+            message: motivationMsg,
+            time: thisMonday.toISOString(),
+            link: `/admin/activity`,
+            actionText: "View My Activity & Earnings →"
+          });
+        } catch (err) {
+          console.warn("Error calculating weekly activity digest for Job Admin:", err);
         }
       }
 
@@ -392,18 +602,38 @@ export default function Navbar() {
   }, [currentUser]);
 
   const handleBellClick = () => {
-    setShowNotif(!showNotif);
+    const nextShow = !showNotif;
+    setShowNotif(nextShow);
     setCalloutDismissed(true);
     if (!showNotif) {
       const now = new Date();
       setLastRead(now);
       localStorage.setItem("notifLastRead", now.toISOString());
+      if (currentUser?.id) {
+        supabase
+          .from("profiles")
+          .update({ notifications_last_read: now.toISOString() })
+          .eq("id", currentUser.id)
+          .then(() => {})
+          .catch(() => {});
+      }
     }
   };
 
   const unreadNotifs = notifications.filter(n => !lastRead || new Date(n.time) > lastRead);
   const hasUnread = unreadNotifs.length > 0;
   const unreadCount = unreadNotifs.length;
+
+  const approvalCount = notifications.filter((n) => n.category === "approvals").length;
+  const replyCount = notifications.filter((n) => n.category === "replies").length;
+  const growthCount = notifications.filter((n) => n.category === "growth").length;
+  const dispatchCount = notifications.filter((n) => n.category === "dispatches").length;
+
+  const isCeoOrSuper = ["ceo", "superadmin", "admin"].includes(userRoleNormalized);
+  const displayedNotifs =
+    isCeoOrSuper && notifActiveTab !== "all"
+      ? notifications.filter((n) => n.category === notifActiveTab)
+      : notifications;
 
   const timeAgo = (dateStr: string) => {
     if (!dateStr) return '';
@@ -416,6 +646,200 @@ export default function Navbar() {
     const days = Math.floor(hrs / 24);
     return `${days} day${days !== 1 ? 's' : ''} ago`;
   };
+
+  const renderNotificationDropdown = () => (
+    <div className="absolute right-0 top-10 mt-2 w-[340px] sm:w-[400px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-[999] text-black animate-in fade-in zoom-in-95 duration-150">
+      {/* Header */}
+      <div className="p-3.5 sm:p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-gray-950 text-base">Notifications</span>
+          {unreadCount > 0 && (
+            <span className="bg-red-600 text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full">
+              {unreadCount} new
+            </span>
+          )}
+        </div>
+        {notifications.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              setLastRead(now);
+              localStorage.setItem("notifLastRead", now.toISOString());
+              if (currentUser?.id) {
+                supabase
+                  .from("profiles")
+                  .update({ notifications_last_read: now.toISOString() })
+                  .eq("id", currentUser.id)
+                  .then(() => {})
+                  .catch(() => {});
+              }
+            }}
+            className="text-xs font-semibold text-gray-500 hover:text-black transition cursor-pointer"
+          >
+            Mark all as read
+          </button>
+        )}
+      </div>
+
+      {/* Filter Tabs for CEO & Super Admin */}
+      {isCeoOrSuper && (
+        <div className="flex items-center gap-1.5 p-2 bg-gray-100/70 border-b border-gray-200/70 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("all")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer ${
+              notifActiveTab === "all"
+                ? "bg-black text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            All ({notifications.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("approvals")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "approvals"
+                ? "bg-amber-600 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>🚨 Approvals</span>
+            {approvalCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "approvals"
+                    ? "bg-amber-800 text-white"
+                    : "bg-amber-100 text-amber-800 font-extrabold"
+                }`}
+              >
+                {approvalCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("replies")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "replies"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>💬 Replies</span>
+            {replyCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "replies"
+                    ? "bg-blue-800 text-white"
+                    : "bg-blue-100 text-blue-800 font-extrabold"
+                }`}
+              >
+                {replyCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("growth")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "growth"
+                ? "bg-emerald-700 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>🎉 Growth</span>
+            {growthCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "growth"
+                    ? "bg-emerald-900 text-white"
+                    : "bg-emerald-100 text-emerald-800 font-extrabold"
+                }`}
+              >
+                {growthCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("dispatches")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "dispatches"
+                ? "bg-zinc-800 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>📢 Dispatches</span>
+            {dispatchCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "dispatches"
+                    ? "bg-zinc-950 text-white"
+                    : "bg-gray-200 text-gray-800 font-extrabold"
+                }`}
+              >
+                {dispatchCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Notification Items List */}
+      <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-100">
+        {displayedNotifs.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 text-sm">
+            No notifications in this category
+          </div>
+        ) : (
+          displayedNotifs.map((n: any) => {
+            const isItemUnread = !lastRead || new Date(n.time) > lastRead;
+            return (
+              <div
+                key={n.id}
+                onClick={() => {
+                  if (n.link) {
+                    router.push(n.link);
+                    setShowNotif(false);
+                  }
+                }}
+                className={`p-3.5 transition text-left cursor-pointer group flex items-start gap-3 ${
+                  isItemUnread ? "bg-blue-50/40 hover:bg-blue-50/80" : "hover:bg-gray-50"
+                }`}
+              >
+                <div className="text-xl shrink-0 mt-0.5">{n.icon || "🔔"}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    {n.categoryLabel && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
+                        {n.categoryLabel}
+                      </span>
+                    )}
+                    <span className="text-[11px] text-gray-400 shrink-0 font-medium">
+                      {timeAgo(n.time)}
+                    </span>
+                  </div>
+                  <p className="text-[13px] font-medium leading-snug text-gray-900 group-hover:text-black">
+                    {n.message}
+                  </p>
+                  {n.actionText && (
+                    <div className="mt-1.5 text-xs font-bold text-blue-600 group-hover:text-black group-hover:underline flex items-center gap-1">
+                      <span>{n.actionText}</span>
+                    </div>
+                  )}
+                </div>
+                {isItemUnread && (
+                  <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0 mt-2" />
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
 
 useEffect(() => {
     supabase.from("site_settings").select("logo_url").eq("id", "global").maybeSingle().then(({data}) => {
@@ -755,32 +1179,7 @@ useEffect(() => {
               </div>
             )}
 
-            {showNotif && (
-              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
-                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
-                  ) : (
-                    notifications.map((n: any) => (
-                      <div 
-                        key={n.id} 
-                        className={`p-4 border-b border-gray-50 flex flex-col gap-1 transition text-left ${n.link ? 'cursor-pointer hover:bg-gray-100' : 'hover:bg-gray-50'}`}
-                        onClick={() => {
-                          if (n.link) {
-                            router.push(n.link);
-                            setShowNotif(false);
-                          }
-                        }}
-                      >
-                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+            {showNotif && renderNotificationDropdown()}
           </div>
         )}
       </div>
@@ -1031,32 +1430,7 @@ useEffect(() => {
               </div>
             )}
 
-            {showNotif && (
-              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
-                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
-                  ) : (
-                    notifications.map((n: any) => (
-                      <div 
-                        key={n.id} 
-                        className={`p-4 border-b border-gray-50 flex flex-col gap-1 transition text-left ${n.link ? 'cursor-pointer hover:bg-gray-100' : 'hover:bg-gray-50'}`}
-                        onClick={() => {
-                          if (n.link) {
-                            router.push(n.link);
-                            setShowNotif(false);
-                          }
-                        }}
-                      >
-                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+            {showNotif && renderNotificationDropdown()}
           </div>
         )}
 

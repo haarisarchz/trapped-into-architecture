@@ -32,7 +32,7 @@ interface ChatMsg {
 const QUICK_STARTERS = [
   { text: "🔍 Looking for Architecture Jobs", prompt: "Hi! I am looking for verified architecture jobs in Chennai / Bangalore. Can you guide me?" },
   { text: "🏢 Want to Post a Job / Hire", prompt: "Hello, I want to post an architecture job opening for my studio." },
-  { text: "📁 Portfolio & Resume Guidance", prompt: "Hi Admin Ti2A, I need guidance regarding portfolio reviews and architecture applications." },
+  { text: "📁 Portfolio & Resume Guidance", prompt: "Hi! I need guidance regarding portfolio reviews and architecture applications." },
   { text: "💡 Platform Query / Feedback", prompt: "Hi! I have a question regarding Trapped Into Architecture features." }
 ];
 
@@ -296,29 +296,27 @@ export default function FloatingAdminChat() {
     }
   };
 
-  // Handle saving contact in Stage 2
+  // Handle saving visitor name in Stage 2
   const handleSaveContact = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!visitorName.trim() && !visitorContact.trim()) || !sessionId) return;
+    if (!visitorName.trim() || !sessionId) return;
 
     setIsSavingContact(true);
     try {
-      if (visitorName.trim()) localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
-      if (visitorContact.trim()) localStorage.setItem("ti2a_chat_visitor_contact", visitorContact.trim());
+      localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
 
       await fetch("/api/chat", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          senderName: visitorName.trim() || null,
-          senderContact: visitorContact.trim() || null
+          senderName: visitorName.trim(),
         })
       });
 
       setHasProvidedContact(true);
     } catch (err) {
-      console.warn("Error updating visitor info:", err);
+      console.warn("Error updating visitor name:", err);
     } finally {
       setIsSavingContact(false);
     }
@@ -360,10 +358,10 @@ export default function FloatingAdminChat() {
 
             <div className="text-left pr-2">
               <p className="text-xs font-bold text-gray-900 leading-tight">
-                Hi, how can I help you?
+                Hi, how can we help you?
               </p>
               <p className="text-[11px] text-gray-500 mt-0.5">
-                I am admin Ti2A • Online
+                Trapped Into Architecture • Online
               </p>
             </div>
 
@@ -396,12 +394,12 @@ export default function FloatingAdminChat() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-xs sm:text-sm text-white">Admin Ti2A</h3>
+                  <h3 className="font-bold text-xs sm:text-sm text-white">Trapped Into Architecture</h3>
                   <ShieldCheck size={14} className="text-emerald-400" />
                 </div>
                 <p className="text-[10px] sm:text-[11px] text-gray-400 flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Active Now • Verified Architecture Advisor
+                  Active Now • Architecture Community
                 </p>
               </div>
             </div>
@@ -437,14 +435,14 @@ export default function FloatingAdminChat() {
           {/* CHAT MESSAGE STREAM */}
           <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-slate-50/50 text-xs">
             
-            {/* INITIAL ADMIN GREETING BUBBLE */}
+            {/* INITIAL GREETING BUBBLE */}
             <div className="flex items-start gap-2">
               <div className="w-7 h-7 rounded-full bg-black text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                 Ti2A
               </div>
               <div className="bg-white p-3 rounded-2xl rounded-tl-sm border border-gray-200 text-gray-800 shadow-2xs max-w-[85%] leading-relaxed">
-                <p className="font-semibold text-gray-900 mb-0.5">Admin Ti2A</p>
-                Hi, how can I help you? I am admin Ti2A. Looking for job drops, firm details, portfolio advice, or have a suggestion?
+                <p className="font-semibold text-gray-900 mb-0.5">Ti2A Support</p>
+                Hi! How can we help you today? Looking for verified job drops, firm details, portfolio advice, or have a suggestion?
               </div>
             </div>
 
@@ -515,7 +513,7 @@ export default function FloatingAdminChat() {
               );
             })}
 
-            {/* STAGE 2: GENTLE NAME & CONTACT CAPTURE PROMPT (Appears after 1st visitor query) */}
+            {/* STAGE 2: GENTLE NAME CAPTURE PROMPT (Appears after 1st visitor query) */}
             {showContactCapture && (
               <div className="bg-white border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs animate-in fade-in duration-300">
                 <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-1">
@@ -523,22 +521,15 @@ export default function FloatingAdminChat() {
                   <span>What should we call you?</span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-normal mb-2.5">
-                  Please share your name so Admin Ar. Haaris can address you properly and reply back:
+                  Please share your name so we can address you properly:
                 </p>
                 <form onSubmit={handleSaveContact} className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Your Name (e.g. Ar. Priya Sharma)"
+                    placeholder="Your Name (e.g. Priya Sharma)"
                     required
                     value={visitorName}
                     onChange={(e) => setVisitorName(e.target.value)}
-                    className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-black"
-                  />
-                  <input
-                    type="text"
-                    placeholder="WhatsApp number or Email (optional)"
-                    value={visitorContact}
-                    onChange={(e) => setVisitorContact(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-black"
                   />
                   <div className="flex items-center justify-between pt-1">
@@ -558,6 +549,20 @@ export default function FloatingAdminChat() {
                     </button>
                   </div>
                 </form>
+
+                <div className="mt-2.5 pt-2 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-[10px] text-gray-500">Need instant support?</span>
+                  <a
+                    href="https://wa.me/918608609661?text=Hi%20Ti2A%2C%20I%20have%20an%20inquiry"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 transition"
+                  >
+                    <MessageCircle size={12} className="text-emerald-600" />
+                    <span>Contact us on WhatsApp</span>
+                    <ArrowRight size={11} />
+                  </a>
+                </div>
               </div>
             )}
 

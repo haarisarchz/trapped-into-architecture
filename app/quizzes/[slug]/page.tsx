@@ -619,7 +619,7 @@ export default function QuizPlayPage() {
     }
 
     // 1. Primary lookup by media_url or correct_answer (100% exact match across catalog)
-    let match = q.media_url ? catalogMap[q.media_url.toLowerCase().trim()] : null;
+    let match: any = q.media_url ? catalogMap[q.media_url.toLowerCase().trim()] : null;
     if (!match && q.correct_answer) {
       match = catalogMap[q.correct_answer.toLowerCase().trim()] || null;
     }
@@ -643,7 +643,7 @@ export default function QuizPlayPage() {
       ? `${match.architect}${match.opened_year ? ' (Opened ' + match.opened_year + ')' : ''}${match.architectural_style ? ' • ' + match.architectural_style : ''}`
       : (q.explanation_clue || "Celebrated Master Architect");
 
-    let clue1 = {
+    let clue1: any = {
       label: "Location Clue",
       revealedLabel: "Location Revealed",
       bannerTitle: "Location Hint:",
@@ -652,7 +652,7 @@ export default function QuizPlayPage() {
       badgeColor: "blue"
     };
 
-    let clue2 = {
+    let clue2: any = {
       label: "Architect & Era Clue",
       revealedLabel: "Architect Revealed",
       bannerTitle: "Architect & Era Hint:",
@@ -1060,7 +1060,7 @@ export default function QuizPlayPage() {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const roundRect = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill?: string, stroke?: string, lineWidth: number = 1.5) => {
+      const roundRect = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill?: string | CanvasGradient, stroke?: string, lineWidth: number = 1.5) => {
         c.beginPath();
         c.roundRect(x, y, w, h, r);
         if (fill) {
@@ -1895,7 +1895,7 @@ export default function QuizPlayPage() {
 
                         <div className="pt-2 text-center">
                           <button
-                            onClick={handleStartGame}
+                            onClick={() => handleStartGame()}
                             className="w-full sm:w-auto px-8 py-3 bg-black hover:bg-gray-800 text-white text-sm font-extrabold rounded-2xl transition shadow-md flex items-center justify-center gap-2 mx-auto cursor-pointer"
                           >
                             <Play size={15} fill="currentColor" />
@@ -2302,7 +2302,7 @@ export default function QuizPlayPage() {
                   {/* Actions */}
                   <div className="flex items-center justify-center gap-3">
                     <button
-                      onClick={handleStartGame}
+                      onClick={() => handleStartGame()}
                       className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5"
                     >
                       <RotateCcw size={14} /> Play Again
