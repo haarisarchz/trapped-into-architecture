@@ -1807,11 +1807,9 @@ useEffect(() => {
             });
             const data = await res.json();
             if (res.ok && data.success) {
-              if (identityInput && data.username) {
-                identityInput.value = data.username;
-              }
               alert(
-                `🎉 Account Found!\n\nYour username is: @${data.username}\n\nWe have also sent your username to ${email}.\nWe've filled your username into the login box so you can enter your password and log in!`
+                data.message ||
+                  "If an account is associated with this email, your username has been sent to your inbox. Please check your email."
               );
             } else {
               alert(

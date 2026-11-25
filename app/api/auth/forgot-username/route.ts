@@ -96,11 +96,11 @@ export async function POST(req: Request) {
       }
     }
 
+    // Always return generic success message to prevent account enumeration / privacy leaks
     return NextResponse.json({
       success: true,
-      username: profile.username,
-      fullName: displayName,
-      message: `Your username is @${profile.username}. We have also emailed it to ${cleanEmail}.`,
+      message:
+        "If an account is associated with this email address, we have sent your username to your inbox. Please check your email.",
     });
   } catch (err: any) {
     console.error("Forgot username route error:", err);

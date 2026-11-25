@@ -79,10 +79,12 @@ export default function QuizzesHubPage() {
           .select("id", { count: "exact", head: true })
           .is("user_id", null)
           .eq("guest_session_id", gid)
-          .then(({ count }) => {
-            if (typeof count === "number") setUnclaimedScoresCount(count);
-          })
-          .catch(() => {});
+          .then(
+            ({ count }) => {
+              if (typeof count === "number") setUnclaimedScoresCount(count);
+            },
+            () => {}
+          );
       }
     }
     fetchQuizzes();
