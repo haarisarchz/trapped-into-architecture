@@ -515,6 +515,31 @@ export default function FloatingAdminChat() {
               );
             })}
 
+            {/* RESPONSE TIME & WHATSAPP QUICK ASSISTANCE CARD (Appears after visitor message) */}
+            {messages.some(m => m.sender === "visitor") && (
+              <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl p-3 text-emerald-950 shadow-2xs animate-in fade-in duration-300">
+                <div className="flex items-center gap-1.5 text-emerald-900 font-bold text-xs mb-1">
+                  <MessageCircle size={13} className="text-emerald-700" />
+                  <span>Looking for a quick reply?</span>
+                </div>
+                <p className="text-[11px] text-emerald-900/90 leading-relaxed">
+                  It may take some time for Admin to reply here. For an instant response or immediate guidance, please contact Admin directly on WhatsApp:
+                </p>
+                <div className="mt-2">
+                  <a
+                    href="https://wa.me/918608609661?text=Hi%20Admin%20Ti2A%2C%20I%20have%20an%20inquiry%20from%20the%20website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-xs"
+                  >
+                    <MessageCircle size={12} />
+                    <span>Chat on WhatsApp (+91 8608609661)</span>
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
+              </div>
+            )}
+
             {/* STAGE 2: CONTACT CAPTURE & REGISTRATION PROMPT (Appears after 1st visitor query) */}
             {showContactCapture && (
               <div className="bg-white border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs animate-in fade-in duration-300">

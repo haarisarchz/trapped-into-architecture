@@ -525,17 +525,48 @@ export default function ContactSettingsPage() {
     }
   };
 
-  const CANNED_REPLIES = [
-    { label: "Ask Details to Register", text: "Hi! Could you please share your name and WhatsApp number or email so Admin can register your profile and assist you?" },
-    { label: "Ask for Name", text: "Hi! What should we call you? Please share your name so Admin can address you properly." },
-    { label: "Contact on WhatsApp", text: "Hi! You can also reach out to Admin directly on WhatsApp here: https://wa.me/918608609661" },
-    { label: "Register Profile", text: "Hi! You can create your free verified profile at https://trappedintoarchitecture.com/profile to bookmark vacancies, apply with 1-click, and get direct WhatsApp job alerts!" },
-    { label: "Jobs Search", text: "Hi! You can browse and filter all active architecture vacancies across Chennai, Bangalore, and all India at https://trappedintoarchitecture.com/jobs" },
-    { label: "Post a Job", text: "Hello! Architecture studios can post verified openings and internship drops directly at https://trappedintoarchitecture.com/post-a-job" },
-    { label: "WhatsApp Channel", text: "Join our official WhatsApp channel for instant city-wise architectural job alerts: https://whatsapp.com/channel/0029Vaz1p0kCRs1uBTCWpJ2X" },
-    { label: "Portfolio Guidance", text: "Feel free to share your Google Drive / Behance portfolio link or paste screenshots here for guidance!" },
-    { label: "Studio Hiring", text: "For urgent studio recruitment or hiring multiple architects, Admin can assist you directly on WhatsApp at https://wa.me/918608609661" }
-  ];
+  const getCannedReplies = (name?: string | null) => {
+    const raw = (name || "").trim();
+    const isGeneric = !raw || /^visitor\b|^guest\b/i.test(raw);
+    const displayName = isGeneric ? "" : raw;
+    const greeting = displayName ? `Hi ${displayName}, thanks for reaching out! ` : "Hi! Thanks for reaching out! ";
+    const hiName = displayName ? `Hi ${displayName}! ` : "Hi! ";
+
+    return [
+      { 
+        label: "👋 Welcome & Jobs / WhatsApp", 
+        text: `${greeting}You can explore all our latest verified architecture openings at https://trappedintoarchitecture.com/jobs or contact Admin directly on WhatsApp at +91 8608609661 for fast assistance.` 
+      },
+      { 
+        label: "🌍 Dubai / Gulf Jobs", 
+        text: `${hiName}Currently our portal is concentrated on verified architecture jobs across India. If you are specifically looking for Dubai / Gulf architecture opportunities, please contact Admin directly on WhatsApp at https://wa.me/918608609661 and we can guide you!` 
+      },
+      { 
+        label: "⚡ Fast WhatsApp Reply", 
+        text: `${hiName}It may take some time for Admin to reply here on the website. For an instant response and direct updates, please message Admin on WhatsApp: https://wa.me/918608609661` 
+      },
+      { 
+        label: "📝 Ask Details to Register", 
+        text: `Hi! Could you please share your name and WhatsApp number or email so Admin can register your verified profile and assist you directly?` 
+      },
+      { 
+        label: "⭐ Register Free Profile", 
+        text: `${hiName}You can create your free verified profile at https://trappedintoarchitecture.com/profile to bookmark vacancies, apply with 1-click, and get direct WhatsApp job alerts!` 
+      },
+      { 
+        label: "🔍 Browse India Jobs", 
+        text: `${hiName}You can browse and filter all active architecture vacancies across Chennai, Bangalore, Mumbai, Delhi, and all India at https://trappedintoarchitecture.com/jobs` 
+      },
+      { 
+        label: "🏢 Post a Job / Hire", 
+        text: `Hello! Architecture studios can post verified openings and internship drops directly at https://trappedintoarchitecture.com/post-a-job` 
+      },
+      { 
+        label: "🤝 Studio Hiring Support", 
+        text: `For urgent studio recruitment or hiring multiple architects, Admin can assist you directly on WhatsApp at https://wa.me/918608609661` 
+      }
+    ];
+  };
 
   // Sync ref with state to prevent stale closure during polling
   useEffect(() => {
@@ -1209,9 +1240,9 @@ export default function ContactSettingsPage() {
                       <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-2 text-[11px] border-b border-gray-100">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
                           <Lightbulb size={12} className="text-amber-500" />
-                          Quick Canned:
+                          1-Click Replies:
                         </span>
-                        {CANNED_REPLIES.map((c, cIdx) => (
+                        {getCannedReplies(activeSession.senderName).map((c, cIdx) => (
                           <button
                             key={cIdx}
                             type="button"
