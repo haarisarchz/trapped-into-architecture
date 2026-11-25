@@ -1787,16 +1787,20 @@ useEffect(() => {
           const identityInput = document.getElementById(
             "login-identity"
           ) as HTMLInputElement | null;
-          let email = identityInput?.value?.trim() || "";
+          const currentVal = identityInput?.value?.trim() || "";
+          const initialEmail = currentVal.includes("@") ? currentVal : "";
 
-          // If no email entered in login box or does not contain @, prompt user
+          const promptMessage =
+            "💡 Tip: You can also log in directly using your Email ID and Password without your username!\n\n" +
+            "If you still want to recover your @username, enter your registered email address below and we will email it to you:";
+
+          const prompted = prompt(promptMessage, initialEmail);
+          if (!prompted) return;
+          const email = prompted.trim();
+
           if (!email || !email.includes("@")) {
-            const prompted = prompt(
-              "Enter your registered email address to recover your username:",
-              email.includes("@") ? email : ""
-            );
-            if (!prompted) return;
-            email = prompted.trim();
+            alert("Please enter a valid email address.");
+            return;
           }
 
           try {
@@ -1808,8 +1812,7 @@ useEffect(() => {
             const data = await res.json();
             if (res.ok && data.success) {
               alert(
-                data.message ||
-                  "If an account is associated with this email, your username has been sent to your inbox. Please check your email."
+                "📧 If an account is associated with this email address, we have sent your username to your inbox.\n\n💡 Remember: You can also log in right now using your Email ID and Password!"
               );
             } else {
               alert(

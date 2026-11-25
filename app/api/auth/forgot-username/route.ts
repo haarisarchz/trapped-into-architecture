@@ -79,6 +79,10 @@ export async function POST(req: Request) {
                   <div class="username-text">@${profile.username}</div>
                 </div>
 
+                <p style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #166534; line-height: 1.5; margin: 16px 0;">
+                  💡 <strong>Pro-Tip:</strong> You don't need your username to sign in! You can always log in directly using your email (<strong>${cleanEmail}</strong>) and password.
+                </p>
+
                 <a href="https://www.trappedintoarchitecture.com" class="btn">Log In to Your Account</a>
 
                 <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">If you did not request this, you can safely ignore this email.</p>
