@@ -974,7 +974,20 @@ export default function QuizPlayPage() {
     // Save to official database if Challenge Mode
     if (gameMode === "challenge") {
       try {
-        const displayName = currentUser?.name || currentUser?.username || `Architect_#${guestId.slice(-4)}`;
+        let displayName = currentUser?.displayName || currentUser?.name || currentUser?.username;
+        if (!displayName) {
+          try {
+            const { count } = await supabase
+              .from("quiz_scores")
+              .select("*", { count: "exact", head: true })
+              .is("user_id", null);
+            const num = String((count || 0) + 1).padStart(3, "0");
+            displayName = `Guest User #${num}`;
+          } catch (e) {
+            displayName = `Guest User #${Math.floor(100 + Math.random() * 900)}`;
+          }
+        }
+
         const { data: scoreRow, error: scoreErr } = await supabase
           .from("quiz_scores")
           .insert([{
