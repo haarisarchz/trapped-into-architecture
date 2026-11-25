@@ -161,8 +161,36 @@ export default function QuizPlayPage() {
     // Check if there is a pending guest attempt to claim on login
     checkAndClaimPendingAttempt(parsedUser);
 
+    // If the user recently completed this quiz, restore scorecard state so reload never wipes it
+    try {
+      const lastResultStr = localStorage.getItem(`ti2a_last_result_${slug}`);
+      if (lastResultStr) {
+        const lastResult = JSON.parse(lastResultStr);
+        if (lastResult?.summary && Date.now() - (lastResult.timestamp || 0) < 2 * 3600 * 1000) {
+          setResultsSummary(lastResult.summary);
+          setIsGameOver(true);
+        }
+      }
+    } catch (e) {}
+
     fetchQuizData();
   }, [slug]);
+
+  // Listen for login event from Navbar to link scores seamlessly without page reload
+  useEffect(() => {
+    const handleAuthLogin = (e: any) => {
+      const stored = localStorage.getItem("currentUser");
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          setCurrentUser(user);
+          checkAndClaimPendingAttempt(user);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener("ti2a-auth-login", handleAuthLogin);
+    return () => window.removeEventListener("ti2a-auth-login", handleAuthLogin);
+  }, [slug, guestId]);
 
   // Sync leaderboard when scope, difficulty tab, or quiz changes
   useEffect(() => {
@@ -171,31 +199,42 @@ export default function QuizPlayPage() {
 
   // Claim pending attempt if user just logged in
   const checkAndClaimPendingAttempt = async (user: any) => {
-    if (!user) return;
+    if (!user || !user.id) return;
     try {
       const pendingStr = localStorage.getItem("pending_quiz_attempt");
-      if (!pendingStr) return;
-      const pending = JSON.parse(pendingStr);
+      let pending: any = null;
+      if (pendingStr) {
+        try { pending = JSON.parse(pendingStr); } catch (e) {}
+      }
 
-      if (pending && pending.attemptId && pending.guestSessionId) {
-        const displayName = user.displayName || user.fullName || user.username || "Architect";
-        const { error } = await supabase
-          .from("quiz_scores")
-          .update({
-            user_id: user.id,
-            display_name: displayName
-          })
-          .eq("id", pending.attemptId)
-          .eq("guest_session_id", pending.guestSessionId)
-          .is("user_id", null);
+      const activeGuestId = pending?.guestSessionId || guestId || localStorage.getItem("quiz_guest_id");
+      if (!activeGuestId) return;
 
-        if (!error) {
-          localStorage.removeItem("pending_quiz_attempt");
-          setPendingClaimNotice(
-            `🎉 Welcome ${displayName}! Your quiz score of ${pending.totalPoints || pending.points || 0} PTS was successfully linked to your account and entered onto the official leaderboard!`
-          );
-          fetchLeaderboard();
-        }
+      const displayName = user.displayName || user.fullName || user.username || "Architect";
+
+      // Claim quiz attempt in database
+      let query = supabase
+        .from("quiz_scores")
+        .update({
+          user_id: user.id,
+          display_name: displayName,
+        })
+        .is("user_id", null);
+
+      if (pending?.attemptId) {
+        query = query.eq("id", pending.attemptId);
+      } else {
+        query = query.eq("guest_session_id", activeGuestId);
+      }
+
+      const { error } = await query;
+
+      if (!error) {
+        localStorage.removeItem("pending_quiz_attempt");
+        setPendingClaimNotice(
+          `🎉 Welcome ${displayName}! Your quiz score was successfully linked to your account and entered onto the official leaderboard!`
+        );
+        fetchLeaderboard();
       }
     } catch (e) {
       console.warn("Failed claiming pending quiz attempt:", e);
@@ -439,6 +478,9 @@ export default function QuizPlayPage() {
     setFillInput("");
     setResultsSummary(null);
     setShowQuestionReview(false);
+    try {
+      localStorage.removeItem(`ti2a_last_result_${slug}`);
+    } catch (e) {}
 
     // Preload ALL questions in this round immediately so all question transitions are instant
     if (typeof window !== "undefined") {
@@ -954,7 +996,7 @@ export default function QuizPlayPage() {
         }
 
         // If guest, preserve pending attempt in localStorage so they can claim it upon registration
-        if (!currentUser && savedAttemptId) {
+        if (!currentUser) {
           localStorage.setItem("pending_quiz_attempt", JSON.stringify({
             attemptId: savedAttemptId,
             guestSessionId: guestId,
@@ -977,7 +1019,7 @@ export default function QuizPlayPage() {
       }
     }
 
-    setResultsSummary({
+    const summaryObj = {
       attemptId: savedAttemptId,
       baseScore,
       timeBonus,
@@ -992,7 +1034,26 @@ export default function QuizPlayPage() {
       totalAllottedTime,
       timedOut,
       cluesUsed: totalCluesUsed
-    });
+    };
+
+    setResultsSummary(summaryObj);
+
+    // Save scorecard to localStorage so page refresh or login never loses the score
+    try {
+      localStorage.setItem(`ti2a_last_result_${slug}`, JSON.stringify({
+        summary: summaryObj,
+        timestamp: Date.now()
+      }));
+
+      // Strip ?autostart=1 from URL so any future reload does not restart a new quiz automatically
+      if (typeof window !== "undefined" && window.location.search.includes("autostart")) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("autostart");
+        window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+      }
+    } catch (saveErr) {
+      console.warn("Failed caching quiz result in storage:", saveErr);
+    }
 
     trackEvent("quiz_complete", {
       quiz_slug: slug,

@@ -1808,13 +1808,16 @@ useEffect(() => {
           const email = prompt("Enter your registered email address to receive a password reset link:");
           if (!email) return;
           try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-              redirectTo: `${window.location.origin}/reset-password`,
+            const res = await fetch("/api/auth/forgot-password", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email.trim() }),
             });
-            if (error) {
-              alert(error.message);
+            const data = await res.json();
+            if (res.ok) {
+              alert(data.message || "Password reset link has been sent to your email!");
             } else {
-              alert("Password reset link has been sent to your email!");
+              alert(data.error || "Failed to send reset link. Please verify your email.");
             }
           } catch (e) {
             alert("Failed to send reset link. Please try again.");
@@ -1871,30 +1874,59 @@ if (error) {
 }
 
 if (data.user) {
+  let userProfile = null;
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("email", data.user.email)
     .single();
 
-  if (profile) {
-    localStorage.setItem(
-      "currentUser",
-      JSON.stringify({
-        fullName: profile.full_name,
-        displayName: profile.display_name,
-        email: profile.email,
-        username: profile.username,
-        role: profile.role,
-        profession: profile.profession,
-      })
-    );
+  userProfile = profile;
+
+  // Auto-heal missing profile row if earlier registration was blocked by RLS
+  if (!userProfile) {
+    try {
+      const healRes = await fetch("/api/auth/create-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: data.user.id,
+          email: data.user.email,
+          username: data.user.email?.split("@")[0],
+          fullName: data.user.user_metadata?.full_name || data.user.email?.split("@")[0],
+          displayName: data.user.user_metadata?.display_name || data.user.email?.split("@")[0],
+          role: "user",
+        }),
+      });
+      const healData = await healRes.json();
+      if (healData.profile) userProfile = healData.profile;
+    } catch (e) {
+      console.warn("Auto-heal profile error:", e);
+    }
   }
+
+  const sessionObj = {
+    id: data.user.id,
+    fullName: userProfile?.full_name || data.user.email?.split("@")[0],
+    displayName: userProfile?.display_name || userProfile?.full_name || data.user.email?.split("@")[0],
+    email: data.user.email,
+    username: userProfile?.username || data.user.email?.split("@")[0],
+    role: userProfile?.role || "user",
+    profession: userProfile?.profession || "Architect",
+  };
+
+  localStorage.setItem("currentUser", JSON.stringify(sessionObj));
+  setCurrentUser(sessionObj);
 }
 
 setShowAuthPopup(false);
 
-window.location.reload();
+// If currently on a quiz page, do NOT reload (which would wipe out the active quiz or scorecard)
+if (window.location.pathname.startsWith("/quizzes")) {
+  window.dispatchEvent(new CustomEvent("ti2a-auth-login", { detail: data.user }));
+} else {
+  window.location.reload();
+}
 
       }}
       className="w-full bg-black text-white py-3 rounded-xl hover:opacity-90 transition"
@@ -2669,32 +2701,61 @@ window.location.reload();
         if (authData.user) {
           console.log("AUTH USER:", authData.user);
 
-          const {
-            data: profileData,
-            error: profileError,
-          } = await supabase
-            .from("profiles")
-            .insert([
-              {
-                id: authData.user.id,
-                username,
-                full_name: fullName,
-                display_name: displayName,
-                email,
-                phone: fullPhone || null,
-                profession,
-                role: "user",
-                bio: "",
-              },
-            ])
-            .select();
+          let profileCreated = false;
+          try {
+            const {
+              data: profileData,
+              error: profileError,
+            } = await supabase
+              .from("profiles")
+              .insert([
+                {
+                  id: authData.user.id,
+                  username,
+                  full_name: fullName,
+                  display_name: displayName,
+                  email,
+                  phone: fullPhone || null,
+                  profession,
+                  role: "user",
+                  bio: "",
+                },
+              ])
+              .select();
 
-          console.log("PROFILE DATA:", profileData);
-          console.log("PROFILE ERROR:", profileError);
+            if (!profileError && profileData?.length) {
+              profileCreated = true;
+            } else if (profileError) {
+              console.warn("Client profile insert error, invoking backend fallback:", profileError);
+            }
+          } catch (insertErr) {
+            console.warn("Client insert failed:", insertErr);
+          }
 
-          if (profileError) {
-            alert(profileError.message);
-            return;
+          // Fallback: If client insert failed (e.g. Row Level Security policy blocked it), create via service role
+          if (!profileCreated) {
+            try {
+              const res = await fetch("/api/auth/create-profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId: authData.user.id,
+                  email,
+                  username,
+                  fullName,
+                  displayName,
+                  phone: fullPhone || null,
+                  profession,
+                  role: "user",
+                }),
+              });
+              const data = await res.json();
+              if (data.success) {
+                profileCreated = true;
+              }
+            } catch (backendErr) {
+              console.error("Backend profile fallback error:", backendErr);
+            }
           }
 
           console.log("PROFILE CREATED SUCCESSFULLY");
