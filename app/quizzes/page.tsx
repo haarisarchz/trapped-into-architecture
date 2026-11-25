@@ -32,6 +32,7 @@ export default function QuizzesHubPage() {
   // Auth state & Gold Tier status
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
+  const [pendingScore, setPendingScore] = useState<any>(null);
 
   // Dynamic time estimate helper per question count & game difficulty:
   // Easy: 15s/Q (100% Popular), Medium: 10s/Q (50/50 Blend), Hard: 5s/Q (75% Master)
@@ -68,6 +69,17 @@ export default function QuizzesHubPage() {
       } catch (e) {}
     }
     fetchQuizzes();
+
+    // Check for pending unclaimed quiz attempt in localStorage
+    try {
+      const pStr = localStorage.getItem("pending_quiz_attempt");
+      if (pStr) {
+        const pObj = JSON.parse(pStr);
+        if (pObj && pObj.totalPoints) {
+          setPendingScore(pObj);
+        }
+      }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
@@ -258,6 +270,35 @@ export default function QuizzesHubPage() {
   return (
     <>
       <Navbar />
+
+      {/* GUEST UNCLAIMED SCORE RECOVERY BANNER */}
+      {!currentUser && pendingScore && (
+        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white px-4 py-3 shadow-md border-b border-amber-500">
+          <div className="max-w-[1440px] 2xl:max-w-[1560px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🏆</span>
+              <div>
+                <p className="text-xs sm:text-sm font-black">
+                  You scored <span className="bg-white/20 px-2 py-0.5 rounded-lg text-white font-mono">{pendingScore.totalPoints} PTS</span> ({pendingScore.accuracy || 0}% Accuracy) in &quot;{pendingScore.quizTitle || "Architecture Challenge"}&quot;!
+                </p>
+                <p className="text-[11px] text-amber-100 font-medium">
+                  Log in or create a free account to transfer your score to your permanent profile and claim your rank on the leaderboard.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('openAuth', { detail: 'register' }))}
+                className="px-4 py-2 bg-black hover:bg-gray-900 text-white text-xs font-black rounded-xl transition shadow-xs cursor-pointer"
+              >
+                Claim Score &amp; Join Leaderboard →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-[#f3f5f8] text-slate-900 pt-[66px] pb-12">
         
         {/* COMPACT CLEAN HEADER (GAPS MINIMIZED, BOLD HEADING, FEATURE BUBBLES) */}
