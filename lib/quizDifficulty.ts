@@ -215,10 +215,10 @@ export function getQuestionsForGameDifficulty<T extends { correct_answer?: strin
       ];
       const remaining = total - selected.length;
       selected.push(...shuffledPopular.slice(0, remaining));
-      // Fallback if still under total
+      // Fallback if still under total: fill from any remaining questions in master, 50-50, or popular
       if (selected.length < total) {
-        const leftMaster = shuffledMaster.slice(targetMaster);
-        selected.push(...leftMaster.slice(0, total - selected.length));
+        const leftPool = [...shuffledMaster, ...shuffled5050, ...shuffledPopular].filter(q => !selected.includes(q));
+        selected.push(...leftPool.slice(0, total - selected.length));
       }
     }
   } else {

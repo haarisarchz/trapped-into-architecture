@@ -173,6 +173,8 @@ export default function QuizzesHubPage() {
         return "/quizzes/guggenheim-museum-bilbao.jpg";
       case "architects-oeuvre-pair-the-masterpieces":
         return "/quizzes/salk-institute.jpg";
+      case "the-visionaries-faces-of-architecture":
+        return "/architect-photos/le-corbusier.jpg";
       default:
         return fallbackCover || "/quizzes/fallingwater-kaufmann-residence.jpg";
     }
@@ -194,6 +196,8 @@ export default function QuizzesHubPage() {
         return "Deduce the building from structural details, materials, and plans.";
       case "architects-oeuvre-pair-the-masterpieces":
         return "Recognize the distinctive oeuvres and signatures of master architects.";
+      case "the-visionaries-faces-of-architecture":
+        return "Identify celebrated world master architects from their iconic portrait photographs.";
       default:
         return rawDesc || "Test your architectural visual recall across legendary world projects.";
     }
@@ -205,6 +209,7 @@ export default function QuizzesHubPage() {
     "where-in-the-world-guess-the-city-country": "🌍 Location Identification",
     "architectural-styles-and-movements": "🎨 Style Classification",
     "architects-oeuvre-pair-the-masterpieces": "👥 Portfolio Matching",
+    "the-visionaries-faces-of-architecture": "👤 Portrait Recognition",
     "architectural-detective-guess-the-clues": "🕵️ Forensic Deduction"
   };
 
@@ -483,7 +488,11 @@ export default function QuizzesHubPage() {
                           <div className="pt-3.5 mt-3 border-t border-gray-100 flex items-center gap-2.5">
                             <button
                               type="button"
-                              onClick={() => setSetupModalQuiz(quiz)}
+                              onClick={() => {
+                                const total = quiz.quiz_questions?.[0]?.count || 60;
+                                if (modalCount > total) setModalCount(total);
+                                setSetupModalQuiz(quiz);
+                              }}
                               className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
                             >
                               <Play size={13} fill="currentColor" />
@@ -956,8 +965,10 @@ export default function QuizzesHubPage() {
                         type="button"
                         onClick={() => {
                           setModalDifficulty(d.id);
+                          const totalAvailable = setupModalQuiz?.quiz_questions?.[0]?.count || 60;
                           if (d.id === "easy" && modalCount > 20) setModalCount(10);
-                          if (d.id === "medium" && modalCount < 20) setModalCount(20);
+                          if (d.id === "medium" && modalCount < 20 && totalAvailable > 35) setModalCount(20);
+                          if (modalCount > totalAvailable) setModalCount(totalAvailable);
                         }}
                         className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                           isSelected 
@@ -992,23 +1003,42 @@ export default function QuizzesHubPage() {
                   <span className="text-[11px] font-normal text-gray-400 lowercase">dynamic time for {modalDifficulty}</span>
                 </label>
                 <div className={`grid gap-2 ${
-                  modalDifficulty === "easy" || modalDifficulty === "popular" ? "grid-cols-2" :
-                  modalDifficulty === "medium" ? "grid-cols-2" : "grid-cols-3"
+                  (() => {
+                    const totalAvailable = setupModalQuiz?.quiz_questions?.[0]?.count || 60;
+                    const isCompactPool = totalAvailable <= 35;
+                    const isEasy = modalDifficulty === "easy" || modalDifficulty === "popular";
+                    const isMedium = modalDifficulty === "medium";
+                    return isEasy ? "grid-cols-2" : (isMedium && !isCompactPool) ? "grid-cols-2" : "grid-cols-3";
+                  })()
                 }`}>
                   {(() => {
+                    const totalAvailable = setupModalQuiz?.quiz_questions?.[0]?.count || 60;
+                    const isCompactPool = totalAvailable <= 35;
                     const isEasy = modalDifficulty === "easy" || modalDifficulty === "popular";
                     const isMedium = modalDifficulty === "medium";
                     const countItems = isEasy ? [
                       { count: 10, label: "10 Questions" },
-                      { count: 20, label: "20 Questions" }
-                    ] : isMedium ? [
-                      { count: 20, label: "20 Questions" },
-                      { count: 50, label: "50 Questions" }
-                    ] : [
-                      { count: 10, label: "10 Questions" },
-                      { count: 20, label: "20 Questions" },
-                      { count: 50, label: "50 Questions" }
-                    ];
+                      { count: Math.min(20, totalAvailable), label: `${Math.min(20, totalAvailable)} Questions` }
+                    ] : isMedium ? (
+                      isCompactPool ? [
+                        { count: 10, label: "10 Questions" },
+                        { count: 20, label: "20 Questions" },
+                        { count: totalAvailable, label: `All (${totalAvailable} Qs)` }
+                      ] : [
+                        { count: 20, label: "20 Questions" },
+                        { count: 50, label: "50 Questions" }
+                      ]
+                    ) : (
+                      isCompactPool ? [
+                        { count: 10, label: "10 Questions" },
+                        { count: 20, label: "20 Questions" },
+                        { count: totalAvailable, label: `All (${totalAvailable} Qs)` }
+                      ] : [
+                        { count: 10, label: "10 Questions" },
+                        { count: 20, label: "20 Questions" },
+                        { count: 50, label: "50 Questions" }
+                      ]
+                    );
 
                     return countItems.map(c => {
                       const isSelected = modalCount === c.count;

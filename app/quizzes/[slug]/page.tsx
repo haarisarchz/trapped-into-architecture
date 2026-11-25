@@ -2564,7 +2564,7 @@ export default function QuizPlayPage() {
                                     onTouchStart={() => setPressedZoomImage(cluesInfo.clue2.text)}
                                     onTouchEnd={() => setPressedZoomImage(null)}
                                   >
-                                    <img src={cluesInfo.clue2.text} alt="Building Clue" className="w-full h-full object-cover" />
+                                    <img key={`clue2-img-${currentIndex}-${cluesInfo.clue2.text}`} src={cluesInfo.clue2.text} alt="Building Clue" className="w-full h-full object-cover" />
                                     <span className="absolute bottom-0.5 right-0.5 bg-black/80 text-[8px] text-white px-1 py-0.2 rounded font-bold">Zoom</span>
                                   </div>
                                   <div>
@@ -2697,8 +2697,9 @@ export default function QuizPlayPage() {
                           
                           {/* Left: Question Architectural Photo (Matches height of answers, un-cropped natural aspect ratio) */}
                           {currentQ.media_url && (
-                            <div className="md:col-span-5 flex flex-col">
+                            <div key={`photo-col-${currentQ.id || currentIndex}-${currentQ.media_url}`} className="md:col-span-5 flex flex-col">
                               <div 
+                                key={`photo-box-${currentQ.id || currentIndex}-${currentQ.media_url}`}
                                 onClick={() => setZoomImageUrl({ url: currentQ.media_url, title: currentQ.question_text || "Architectural Landmark" })}
                                 onMouseDown={() => setPressedZoomImage(currentQ.media_url)}
                                 onMouseUp={() => setPressedZoomImage(null)}
@@ -2718,14 +2719,14 @@ export default function QuizPlayPage() {
                                   </div>
                                 )}
                                 <img 
+                                  key={`photo-img-${currentQ.id || currentIndex}-${currentQ.media_url}`}
                                   referrerPolicy="no-referrer"
                                   src={currentQ.media_url} 
                                   alt="Question photo" 
-                                  className={`w-full h-full object-contain transition-all duration-200 group-hover:scale-[1.02] ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                  className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-[1.02]"
                                   onLoad={handleImageLoaded}
-                                  onError={(e) => {
+                                  onError={() => {
                                     handleImageLoaded();
-                                    (e.target as HTMLElement).style.display = "none";
                                   }}
                                 />
                                 <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-[10px] text-gray-300 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
