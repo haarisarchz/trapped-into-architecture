@@ -83,6 +83,7 @@ interface Subscriber {
   message?: string;
   created_at: string;
   is_read?: boolean;
+  sourceType?: "guest_briefing" | "guest_alerts" | "registered_user";
 }
 
 export default function SubscriptionsHubPage() {
@@ -103,7 +104,7 @@ export default function SubscriptionsHubPage() {
 
   // Filters for Subscribers
   const [subSearch, setSubSearch] = useState("");
-  const [subFilter, setSubFilter] = useState<"all" | "briefing" | "alerts">("all");
+  const [subFilter, setSubFilter] = useState<"all" | "briefing" | "registered" | "alerts">("all");
 
   // Filters for SEO Pages
   const [pageSearch, setPageSearch] = useState("");
@@ -151,18 +152,68 @@ export default function SubscriptionsHubPage() {
   const fetchData = async () => {
     setLoadingData(true);
     try {
-      // A. Fetch Subscribers from contact_inquiries
+      // A. Fetch Unsubscribed Emails List
+      const { data: unsubList } = await supabase
+        .from("contact_inquiries")
+        .select("email")
+        .in("subject", ["UNSUBSCRIBE_WEEKLY_DIGEST", "UNSUBSCRIBE_FORTNIGHTLY_BRIEFING"]);
+
+      const unsubscribedSet = new Set(
+        (unsubList || []).map((u) => (u.email || "").trim().toLowerCase()).filter(Boolean)
+      );
+
+      // B. Fetch Guest Subscribers from contact_inquiries
       const { data: inquiries, error: inqErr } = await supabase
         .from("contact_inquiries")
         .select("*")
         .or("subject.eq.SUBSCRIBE_FORTNIGHTLY_BRIEFING,subject.eq.SUBSCRIBE_JOB_ALERTS,subject.ilike.SUBSCRIBE%")
         .order("created_at", { ascending: false });
 
-      if (inquiries) {
-        setSubscribers(inquiries);
-      }
+      const guestList: Subscriber[] = (inquiries || [])
+        .filter((item) => {
+          const em = (item.email || "").trim().toLowerCase();
+          return !unsubscribedSet.has(em);
+        })
+        .map((item) => ({
+          ...item,
+          sourceType: item.subject === "SUBSCRIBE_FORTNIGHTLY_BRIEFING" ? "guest_briefing" : "guest_alerts"
+        }));
 
-      // B. Fetch Published Jobs to compute live count per city and state
+      // C. Fetch Registered Users from profiles who have valid email and haven't unsubscribed
+      const { data: profiles, error: profErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, username, email, phone, role, created_at")
+        .not("email", "is", null);
+
+      const existingEmails = new Set(guestList.map((g) => (g.email || "").trim().toLowerCase()));
+
+      const registeredList: Subscriber[] = (profiles || [])
+        .filter((p) => {
+          const em = (p.email || "").trim().toLowerCase();
+          return (
+            em &&
+            em.includes("@") &&
+            !em.endsWith(".invalid") &&
+            !em.endsWith(".local") &&
+            !unsubscribedSet.has(em) &&
+            !existingEmails.has(em)
+          );
+        })
+        .map((p) => ({
+          id: p.id,
+          name: p.full_name || p.username || "Registered Architect",
+          email: p.email,
+          phone: p.phone || undefined,
+          subject: "REGISTERED_PROFILE_BRIEFING",
+          message: `Registered Account (${p.role || "Architect"}). Receives 1st & 15th Fortnightly Briefing.`,
+          created_at: p.created_at || new Date().toISOString(),
+          sourceType: "registered_user"
+        }));
+
+      // Combine both sources
+      setSubscribers([...guestList, ...registeredList]);
+
+      // D. Fetch Published Jobs to compute live count per city and state
       const { data: jobs, error: jobsErr } = await supabase
         .from("jobs")
         .select("id, city, state, status")
@@ -229,7 +280,7 @@ export default function SubscriptionsHubPage() {
         `"${(s.name || "").replace(/"/g, '""')}"`,
         `"${s.email || ""}"`,
         `"${s.phone || ""}"`,
-        `"${s.subject === "SUBSCRIBE_FORTNIGHTLY_BRIEFING" ? "Fortnightly Briefing" : "Job Alerts"}"`,
+        `"${s.sourceType === "registered_user" ? "Registered Account" : (s.subject === "SUBSCRIBE_FORTNIGHTLY_BRIEFING" ? "Fortnightly Briefing" : "Job Alerts")}"`,
         `"${pref}"`,
         `"${new Date(s.created_at).toLocaleDateString()}"`,
       ].join(",");
@@ -391,7 +442,8 @@ export default function SubscriptionsHubPage() {
   // KPI Calculations
   const totalSubscribers = subscribers.length;
   const briefingSubscribers = subscribers.filter((s) => s.subject === "SUBSCRIBE_FORTNIGHTLY_BRIEFING").length;
-  const alertSubscribers = subscribers.filter((s) => s.subject !== "SUBSCRIBE_FORTNIGHTLY_BRIEFING").length;
+  const registeredSubscribers = subscribers.filter((s) => s.sourceType === "registered_user").length;
+  const alertSubscribers = subscribers.filter((s) => s.sourceType === "guest_alerts").length;
   const totalSeoPages = allSeoPages.length;
   const activeLandingPagesCount = allSeoPages.filter((p) => p.activeJobs >= 5 || p.isMetro).length;
 
@@ -400,7 +452,8 @@ export default function SubscriptionsHubPage() {
     return subscribers.filter((s) => {
       // Type Filter
       if (subFilter === "briefing" && s.subject !== "SUBSCRIBE_FORTNIGHTLY_BRIEFING") return false;
-      if (subFilter === "alerts" && s.subject === "SUBSCRIBE_FORTNIGHTLY_BRIEFING") return false;
+      if (subFilter === "registered" && s.sourceType !== "registered_user") return false;
+      if (subFilter === "alerts" && s.sourceType !== "guest_alerts") return false;
 
       // Text Search
       if (!subSearch.trim()) return true;
@@ -494,14 +547,14 @@ export default function SubscriptionsHubPage() {
           {/* Card 1: Total Subscribers */}
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Subscribers</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Audience</span>
               <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
                 <Users size={16} />
               </div>
             </div>
             <div className="mt-3">
               <span className="text-3xl font-black text-slate-900">{totalSubscribers}</span>
-              <p className="text-[11px] text-slate-500 mt-1">Verified candidate &amp; visitor alerts</p>
+              <p className="text-[11px] text-slate-500 mt-1">Briefing &amp; job alert recipients</p>
             </div>
           </div>
 
@@ -514,22 +567,22 @@ export default function SubscriptionsHubPage() {
               </div>
             </div>
             <div className="mt-3">
-              <span className="text-3xl font-black text-slate-900">{briefingSubscribers}</span>
-              <p className="text-[11px] text-blue-600 font-semibold mt-1">Dispatches 1st &amp; 15th every month</p>
+              <span className="text-3xl font-black text-slate-900">{briefingSubscribers + registeredSubscribers}</span>
+              <p className="text-[11px] text-blue-600 font-semibold mt-1">Dispatches 1st &amp; 15th ({briefingSubscribers} guest + {registeredSubscribers} accounts)</p>
             </div>
           </div>
 
-          {/* Card 3: WhatsApp & Job Alerts */}
+          {/* Card 3: Registered Architect Profiles */}
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Job Alerts (WhatsApp)</span>
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <MessageCircle size={16} />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Registered Accounts</span>
+              <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                <Users size={16} />
               </div>
             </div>
             <div className="mt-3">
-              <span className="text-3xl font-black text-slate-900">{alertSubscribers}</span>
-              <p className="text-[11px] text-emerald-600 font-semibold mt-1">Instant drops &amp; daily digests</p>
+              <span className="text-3xl font-black text-slate-900">{registeredSubscribers}</span>
+              <p className="text-[11px] text-purple-600 font-semibold mt-1">Active verified candidate profiles</p>
             </div>
           </div>
 
@@ -602,7 +655,7 @@ export default function SubscriptionsHubPage() {
                     subFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  All ({subscribers.length})
+                  All Active ({subscribers.length})
                 </button>
                 <button
                   onClick={() => setSubFilter("briefing")}
@@ -611,6 +664,14 @@ export default function SubscriptionsHubPage() {
                   }`}
                 >
                   Fortnightly Briefing ({briefingSubscribers})
+                </button>
+                <button
+                  onClick={() => setSubFilter("registered")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer ${
+                    subFilter === "registered" ? "bg-purple-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  Registered Accounts ({registeredSubscribers})
                 </button>
                 <button
                   onClick={() => setSubFilter("alerts")}
@@ -660,7 +721,12 @@ export default function SubscriptionsHubPage() {
                               <div className="text-xs text-slate-500">{s.email}</div>
                             </td>
                             <td className="py-3.5 px-4">
-                              {isBriefing ? (
+                              {s.sourceType === "registered_user" ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                  <Users size={12} />
+                                  <span>Registered Profile</span>
+                                </span>
+                              ) : isBriefing ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                   <Mail size={12} />
                                   <span>Briefing (1st &amp; 15th)</span>
