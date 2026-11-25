@@ -296,27 +296,29 @@ export default function FloatingAdminChat() {
     }
   };
 
-  // Handle saving visitor name in Stage 2
+  // Handle saving contact & registering details in Stage 2
   const handleSaveContact = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!visitorName.trim() || !sessionId) return;
+    if (!visitorContact.trim() || !sessionId) return;
 
     setIsSavingContact(true);
     try {
-      localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
+      if (visitorName.trim()) localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
+      if (visitorContact.trim()) localStorage.setItem("ti2a_chat_visitor_contact", visitorContact.trim());
 
       await fetch("/api/chat", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          senderName: visitorName.trim(),
+          senderName: visitorName.trim() || null,
+          senderContact: visitorContact.trim()
         })
       });
 
       setHasProvidedContact(true);
     } catch (err) {
-      console.warn("Error updating visitor name:", err);
+      console.warn("Error updating visitor contact:", err);
     } finally {
       setIsSavingContact(false);
     }
@@ -358,10 +360,10 @@ export default function FloatingAdminChat() {
 
             <div className="text-left pr-2">
               <p className="text-xs font-bold text-gray-900 leading-tight">
-                Hi, how can we help you?
+                Hi, how can I help you?
               </p>
               <p className="text-[11px] text-gray-500 mt-0.5">
-                Trapped Into Architecture • Online
+                Admin Ti2A • Online
               </p>
             </div>
 
@@ -394,12 +396,12 @@ export default function FloatingAdminChat() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-xs sm:text-sm text-white">Trapped Into Architecture</h3>
+                  <h3 className="font-bold text-xs sm:text-sm text-white">Admin Ti2A</h3>
                   <ShieldCheck size={14} className="text-emerald-400" />
                 </div>
                 <p className="text-[10px] sm:text-[11px] text-gray-400 flex items-center gap-1.5 mt-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Active Now • Architecture Community
+                  Active Now • Verified Architecture Advisor
                 </p>
               </div>
             </div>
@@ -441,8 +443,8 @@ export default function FloatingAdminChat() {
                 Ti2A
               </div>
               <div className="bg-white p-3 rounded-2xl rounded-tl-sm border border-gray-200 text-gray-800 shadow-2xs max-w-[85%] leading-relaxed">
-                <p className="font-semibold text-gray-900 mb-0.5">Ti2A Support</p>
-                Hi! How can we help you today? Looking for verified job drops, firm details, portfolio advice, or have a suggestion?
+                <p className="font-semibold text-gray-900 mb-0.5">Admin Ti2A</p>
+                Hi, how can I help you? I am Admin Ti2A. Looking for job drops, firm details, portfolio advice, or have a suggestion?
               </div>
             </div>
 
@@ -513,23 +515,30 @@ export default function FloatingAdminChat() {
               );
             })}
 
-            {/* STAGE 2: GENTLE NAME CAPTURE PROMPT (Appears after 1st visitor query) */}
+            {/* STAGE 2: CONTACT CAPTURE & REGISTRATION PROMPT (Appears after 1st visitor query) */}
             {showContactCapture && (
               <div className="bg-white border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs animate-in fade-in duration-300">
                 <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-1">
                   <ShieldCheck size={14} className="text-emerald-600" />
-                  <span>What should we call you?</span>
+                  <span>Save this chat &amp; register profile</span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-normal mb-2.5">
-                  Please share your name so we can address you properly:
+                  Please share your details so Admin can contact you back and save your conversation for registration:
                 </p>
                 <form onSubmit={handleSaveContact} className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Your Name (e.g. Priya Sharma)"
-                    required
+                    placeholder="Your Name (e.g. Ar. Priya Sharma)"
                     value={visitorName}
                     onChange={(e) => setVisitorName(e.target.value)}
+                    className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-black"
+                  />
+                  <input
+                    type="text"
+                    placeholder="WhatsApp number or Email"
+                    required
+                    value={visitorContact}
+                    onChange={(e) => setVisitorContact(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-black"
                   />
                   <div className="flex items-center justify-between pt-1">
@@ -538,20 +547,20 @@ export default function FloatingAdminChat() {
                       onClick={() => setDismissedContactPrompt(true)}
                       className="text-[11px] text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
-                      Continue as Guest
+                      Skip for now
                     </button>
                     <button
                       type="submit"
                       disabled={isSavingContact}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition cursor-pointer"
                     >
-                      {isSavingContact ? "Saving..." : "Save My Name"}
+                      {isSavingContact ? "Saving..." : "Save Details"}
                     </button>
                   </div>
                 </form>
 
                 <div className="mt-2.5 pt-2 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-[10px] text-gray-500">Need instant support?</span>
+                  <span className="text-[10px] text-gray-500">Need instant direct chat?</span>
                   <a
                     href="https://wa.me/918608609661?text=Hi%20Ti2A%2C%20I%20have%20an%20inquiry"
                     target="_blank"
