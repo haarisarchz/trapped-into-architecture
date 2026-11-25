@@ -19,6 +19,7 @@ import {
   getGameDifficultyClueDeduction
 } from "@/lib/quizDifficulty";
 import QuizRulesModal from "@/components/QuizRulesModal";
+import GuestGateModal from "@/components/quizzes/GuestGateModal";
 
 interface Question {
   id: string;
@@ -130,6 +131,8 @@ export default function QuizPlayPage() {
   // User state
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [guestId, setGuestId] = useState("");
+  const [showGuestGateModal, setShowGuestGateModal] = useState(false);
+  const [unclaimedScoresCount, setUnclaimedScoresCount] = useState(0);
 
   // Refs for timers
   const totalTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -161,6 +164,19 @@ export default function QuizPlayPage() {
     // Check if there is a pending guest attempt to claim on login
     checkAndClaimPendingAttempt(parsedUser);
 
+    if (!parsedUser && gid) {
+      // Query unclaimed guest scores for this browser
+      supabase
+        .from("quiz_scores")
+        .select("id", { count: "exact", head: true })
+        .is("user_id", null)
+        .eq("guest_session_id", gid)
+        .then(({ count }) => {
+          if (typeof count === "number") setUnclaimedScoresCount(count);
+        })
+        .catch(() => {});
+    }
+
     // If the user recently completed this quiz, restore scorecard state so reload never wipes it
     try {
       const lastResultStr = localStorage.getItem(`ti2a_last_result_${slug}`);
@@ -179,6 +195,7 @@ export default function QuizPlayPage() {
   // Listen for login event from Navbar to link scores seamlessly without page reload
   useEffect(() => {
     const handleAuthLogin = (e: any) => {
+      setShowGuestGateModal(false);
       const stored = localStorage.getItem("currentUser");
       if (stored) {
         try {
@@ -454,6 +471,18 @@ export default function QuizPlayPage() {
 
   // Start game handler: prepares question pool and computes continuous allotted time
   const handleStartGame = (overrideDiff?: Difficulty, overrideCount?: number, overrideMode?: GameMode) => {
+    // 2-Game Free Guest Limit Enforcement: Unregistered players get exactly 2 free games
+    if (!currentUser) {
+      const plays = Math.max(
+        parseInt(localStorage.getItem("tia_guest_plays_count") || "0", 10),
+        unclaimedScoresCount
+      );
+      if (plays >= 2) {
+        setShowGuestGateModal(true);
+        return;
+      }
+    }
+
     const activeDiff = overrideDiff || difficulty;
     const activeCount = overrideCount || questionCountChoice;
     const activeMode = overrideMode || gameMode;
@@ -1021,8 +1050,12 @@ export default function QuizPlayPage() {
           savedAttemptId = scoreRow.id;
         }
 
-        // If guest, preserve pending attempt in localStorage so they can claim it upon registration
+        // If guest, track plays and preserve pending attempt in localStorage so they can claim it upon registration
         if (!currentUser) {
+          const nextPlays = parseInt(localStorage.getItem("tia_guest_plays_count") || "0", 10) + 1;
+          localStorage.setItem("tia_guest_plays_count", String(nextPlays));
+          setUnclaimedScoresCount(prev => prev + 1);
+
           localStorage.setItem("pending_quiz_attempt", JSON.stringify({
             attemptId: savedAttemptId,
             guestSessionId: guestId,
@@ -3193,17 +3226,7 @@ export default function QuizPlayPage() {
                   </div>
                 )}
 
-                <div className="mt-5 pt-3 border-t border-gray-100 flex flex-col gap-2 text-center">
-                  {currentUser && (
-                    <button
-                      type="button"
-                      onClick={() => checkAndClaimPendingAttempt(currentUser)}
-                      className="text-[11px] text-gray-500 hover:text-black flex items-center justify-center gap-1.5 transition cursor-pointer font-bold py-1 px-2.5 rounded-lg hover:bg-gray-100"
-                      title="Sync and link any scores played as a guest on this device"
-                    >
-                      <RotateCcw size={12} /> Sync / Claim Guest Scores
-                    </button>
-                  )}
+                <div className="mt-5 pt-3 border-t border-gray-100 text-center">
                   <Link href="/quizzes" className="text-xs font-bold text-gray-600 hover:text-black flex items-center justify-center gap-1 transition">
                     View All Quizzes & High Scores →
                   </Link>
@@ -3369,6 +3392,13 @@ export default function QuizPlayPage() {
       <QuizRulesModal 
         isOpen={showRulesModal} 
         onClose={() => setShowRulesModal(false)} 
+      />
+
+      {/* 2-GAME GUEST LIMIT REGISTRATION GATE MODAL */}
+      <GuestGateModal
+        isOpen={showGuestGateModal}
+        onClose={() => setShowGuestGateModal(false)}
+        savedScoresCount={unclaimedScoresCount}
       />
     </>
   );

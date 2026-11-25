@@ -968,13 +968,18 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-  const handleOpenAuth = (e) => {
-    setAuthTab(e.detail);
-    setShowAuthPopup(true);
-  };
-  window.addEventListener('openAuth', handleOpenAuth);
-  return () => window.removeEventListener('openAuth', handleOpenAuth);
-}, []);
+    const handleOpenAuth = (e: any) => {
+      const tab = e?.detail === "login" ? "login" : "register";
+      setAuthTab(tab);
+      setShowAuthPopup(true);
+    };
+    window.addEventListener('openAuth', handleOpenAuth);
+    window.addEventListener('open-auth', handleOpenAuth);
+    return () => {
+      window.removeEventListener('openAuth', handleOpenAuth);
+      window.removeEventListener('open-auth', handleOpenAuth);
+    };
+  }, []);
 
 useEffect(() => {
     let isMounted = true;

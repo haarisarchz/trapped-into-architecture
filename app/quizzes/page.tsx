@@ -10,6 +10,7 @@ import {
   CheckCircle2, XCircle, SlidersHorizontal, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle
 } from "lucide-react";
 import QuizRulesModal from "@/components/QuizRulesModal";
+import GuestGateModal from "@/components/quizzes/GuestGateModal";
 
 export default function QuizzesHubPage() {
   const [quizzes, setQuizzes] = useState<any[]>([]);
@@ -28,6 +29,8 @@ export default function QuizzesHubPage() {
   const [modalCount, setModalCount] = useState<number>(20);
   const [showGoldModal, setShowGoldModal] = useState<boolean>(false);
   const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
+  const [showGuestGateModal, setShowGuestGateModal] = useState<boolean>(false);
+  const [unclaimedScoresCount, setUnclaimedScoresCount] = useState<number>(0);
 
   // Auth state & Gold Tier status
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -67,6 +70,20 @@ export default function QuizzesHubPage() {
         const isGold = ["gold", "platinum", "diamond"].includes(tier) || completion >= 66 || parsed.role === "admin" || parsed.is_gold === true;
         setIsGoldTier(isGold);
       } catch (e) {}
+    } else {
+      // Query unclaimed guest scores for this browser session
+      const gid = localStorage.getItem("quiz_guest_id");
+      if (gid) {
+        supabase
+          .from("quiz_scores")
+          .select("id", { count: "exact", head: true })
+          .is("user_id", null)
+          .eq("guest_session_id", gid)
+          .then(({ count }) => {
+            if (typeof count === "number") setUnclaimedScoresCount(count);
+          })
+          .catch(() => {});
+      }
     }
     fetchQuizzes();
 
@@ -80,6 +97,23 @@ export default function QuizzesHubPage() {
         }
       }
     } catch (e) {}
+  }, []);
+
+  // Listen for login event from Navbar to update auth state and dismiss guest modal
+  useEffect(() => {
+    const handleAuthLogin = () => {
+      setShowGuestGateModal(false);
+      const stored = localStorage.getItem("currentUser");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          setCurrentUser(parsed);
+          fetchLeaderboard();
+        } catch (e) {}
+      }
+    };
+    window.addEventListener("ti2a-auth-login", handleAuthLogin);
+    return () => window.removeEventListener("ti2a-auth-login", handleAuthLogin);
   }, []);
 
   useEffect(() => {
@@ -530,6 +564,16 @@ export default function QuizzesHubPage() {
                             <button
                               type="button"
                               onClick={() => {
+                                if (!currentUser) {
+                                  const plays = Math.max(
+                                    parseInt(localStorage.getItem("tia_guest_plays_count") || "0", 10),
+                                    unclaimedScoresCount
+                                  );
+                                  if (plays >= 2) {
+                                    setShowGuestGateModal(true);
+                                    return;
+                                  }
+                                }
                                 const total = quiz.quiz_questions?.[0]?.count || 60;
                                 if (modalCount > total) setModalCount(total);
                                 setSetupModalQuiz(quiz);
@@ -540,15 +584,28 @@ export default function QuizzesHubPage() {
                               <span>Play (Different Modes)</span>
                             </button>
 
-                            <Link 
-                              href={`/quizzes/${quiz.slug}?autostart=1`}
-                              onClick={() => trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "quick_play" })}
-                              className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition shrink-0"
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                if (!currentUser) {
+                                  const plays = Math.max(
+                                    parseInt(localStorage.getItem("tia_guest_plays_count") || "0", 10),
+                                    unclaimedScoresCount
+                                  );
+                                  if (plays >= 2) {
+                                    setShowGuestGateModal(true);
+                                    return;
+                                  }
+                                }
+                                trackEvent("quiz_start_click", { slug: quiz.slug, title: quiz.title, source: "quick_play" });
+                                window.location.href = `/quizzes/${quiz.slug}?autostart=1`;
+                              }}
+                              className="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-black flex items-center gap-1 transition shrink-0 cursor-pointer"
                               title="1-Click Instant Play (10 Questions)"
                             >
                               <Zap size={13} fill="currentColor" />
                               <span>Quick Play</span>
-                            </Link>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1118,17 +1175,29 @@ export default function QuizzesHubPage() {
               </div>
 
               {/* Launch Quiz Button */}
-              <Link
-                href={`/quizzes/${setupModalQuiz.slug}?mode=${modalMode}&difficulty=${modalDifficulty}&count=${modalCount}&autostart=1`}
+              <button
+                type="button"
                 onClick={() => {
+                  if (!currentUser) {
+                    const plays = Math.max(
+                      parseInt(localStorage.getItem("tia_guest_plays_count") || "0", 10),
+                      unclaimedScoresCount
+                    );
+                    if (plays >= 2) {
+                      setSetupModalQuiz(null);
+                      setShowGuestGateModal(true);
+                      return;
+                    }
+                  }
                   setSetupModalQuiz(null);
                   setShowGoldModal(false);
+                  window.location.href = `/quizzes/${setupModalQuiz.slug}?mode=${modalMode}&difficulty=${modalDifficulty}&count=${modalCount}&autostart=1`;
                 }}
                 className="w-full py-3.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition cursor-pointer"
               >
                 <span>Launch Quiz ({modalCount} Qs &bull; {getTimeEstimate(modalCount, modalDifficulty)})</span>
                 <ArrowRight size={16} />
-              </Link>
+              </button>
 
             </div>
           </div>
@@ -1194,6 +1263,13 @@ export default function QuizzesHubPage() {
         <QuizRulesModal 
           isOpen={showRulesModal} 
           onClose={() => setShowRulesModal(false)} 
+        />
+
+        {/* 2-GAME GUEST LIMIT REGISTRATION GATE MODAL */}
+        <GuestGateModal
+          isOpen={showGuestGateModal}
+          onClose={() => setShowGuestGateModal(false)}
+          savedScoresCount={unclaimedScoresCount}
         />
 
       </div>
