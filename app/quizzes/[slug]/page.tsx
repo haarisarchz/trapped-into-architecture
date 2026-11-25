@@ -706,10 +706,20 @@ export default function QuizPlayPage() {
     };
 
     // Quiz-specific clue customization (Zero spoilers!)
+    const isVisionariesQuiz = 
+      slug === "the-visionaries-faces-of-architecture" ||
+      slug.includes("visionar") ||
+      (quiz?.category || "").toLowerCase().includes("visionar") ||
+      (quiz?.title || "").toLowerCase().includes("visionar") ||
+      (quiz?.title || "").toLowerCase().includes("portrait");
+
     const isMasterArchitects = 
-      slug === "master-architects-who-designed-it" || 
-      (quiz?.category || "").toLowerCase().includes("master architect") || 
-      (quiz?.title || "").toLowerCase().includes("master architect");
+      !isVisionariesQuiz && (
+        slug === "master-architects-who-designed-it" || 
+        slug === "master-architects-guess-the-creator" ||
+        (quiz?.category || "").toLowerCase().includes("master architect") || 
+        (quiz?.title || "").toLowerCase().includes("master architect")
+      );
 
     const isGeographyQuiz = 
       slug === "where-in-the-world-guess-the-city-country" || 
@@ -718,7 +728,33 @@ export default function QuizPlayPage() {
       slug.includes("where-in-the-world") ||
       slug.includes("geography");
 
-    if (isMasterArchitects) {
+    if (isVisionariesQuiz) {
+      // In The Visionaries: Target is the Architect's Portrait photo.
+      // Explanation clue format: "Nationality & Era || Signature Landmark, Location || Photo URL"
+      const parts = (q.explanation_clue || "").split("||").map((s: string) => s.trim());
+      const eraNationality = parts[0] || (match?.architectural_style ? `${match.architectural_style} Master` : "Celebrated Modern Master");
+      const signatureBuilding = parts[1] || `${bName}${loc ? ', ' + loc : ''}`;
+      const buildingPhoto = parts[2] || match?.building_photo || "";
+
+      clue1 = {
+        label: "Era & Style Clue",
+        revealedLabel: "Era & Style Revealed",
+        bannerTitle: "Era & Movement Hint:",
+        icon: "🌐",
+        text: eraNationality,
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Celebrated Project Clue",
+        revealedLabel: "Celebrated Project Revealed",
+        bannerTitle: "Masterpiece Hint:",
+        icon: "🏛️",
+        text: buildingPhoto,
+        revealedSubtext: `Designed: ${signatureBuilding}`,
+        isPhoto: Boolean(buildingPhoto),
+        badgeColor: "purple"
+      };
+    } else if (isMasterArchitects) {
       // In Master Architects: Architect is the TARGET ANSWER. Clues must be Location & Building Name!
       clue1 = {
         label: "Location Clue",
@@ -834,38 +870,6 @@ export default function QuizPlayPage() {
         icon: "📷",
         text: photoUrl,
         isPhoto: true,
-        badgeColor: "purple"
-      };
-    } else if (
-      slug === "the-visionaries-faces-of-architecture" ||
-      slug.includes("visionar") ||
-      (quiz?.category || "").toLowerCase().includes("visionar") ||
-      (quiz?.title || "").toLowerCase().includes("visionar") ||
-      (quiz?.title || "").toLowerCase().includes("portrait")
-    ) {
-      // In The Visionaries: Target is the Architect's Portrait photo.
-      // Explanation clue format: "Nationality & Era || Signature Landmark, Location || Photo URL"
-      const parts = (q.explanation_clue || "").split("||").map((s: string) => s.trim());
-      const eraNationality = parts[0] || (match?.architectural_style ? `${match.architectural_style} Master` : "Celebrated Modern Master");
-      const signatureBuilding = parts[1] || `${bName}${loc ? ', ' + loc : ''}`;
-      const buildingPhoto = parts[2] || match?.building_photo || "";
-
-      clue1 = {
-        label: "Era & Style Clue",
-        revealedLabel: "Era & Style Revealed",
-        bannerTitle: "Era & Movement Hint:",
-        icon: "🌐",
-        text: eraNationality,
-        badgeColor: "blue"
-      };
-      clue2 = {
-        label: "Celebrated Project Clue",
-        revealedLabel: "Celebrated Project Revealed",
-        bannerTitle: "Masterpiece Hint:",
-        icon: "🏛️",
-        text: buildingPhoto,
-        revealedSubtext: `Designed: ${signatureBuilding}`,
-        isPhoto: Boolean(buildingPhoto),
         badgeColor: "purple"
       };
     }
