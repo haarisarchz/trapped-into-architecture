@@ -1917,6 +1917,39 @@ if (data.user) {
 
   localStorage.setItem("currentUser", JSON.stringify(sessionObj));
   setCurrentUser(sessionObj);
+
+  // Global Score Recovery: Claim any pending guest quiz attempt in localStorage
+  try {
+    const pendingStr = localStorage.getItem("pending_quiz_attempt");
+    const guestId = localStorage.getItem("quiz_guest_id");
+    if (pendingStr || guestId) {
+      let pendingObj: any = null;
+      try { if (pendingStr) pendingObj = JSON.parse(pendingStr); } catch (e) {}
+
+      const activeGuestId = pendingObj?.guestSessionId || guestId;
+      if (activeGuestId) {
+        const displayName = sessionObj.displayName || sessionObj.fullName || sessionObj.username || "Architect";
+        let claimQuery = supabase
+          .from("quiz_scores")
+          .update({
+            user_id: data.user.id,
+            display_name: displayName,
+          })
+          .is("user_id", null);
+
+        if (pendingObj?.attemptId) {
+          claimQuery = claimQuery.eq("id", pendingObj.attemptId);
+        } else {
+          claimQuery = claimQuery.eq("guest_session_id", activeGuestId);
+        }
+
+        await claimQuery;
+        localStorage.removeItem("pending_quiz_attempt");
+      }
+    }
+  } catch (claimErr) {
+    console.warn("Global quiz score claim error:", claimErr);
+  }
 }
 
 setShowAuthPopup(false);
