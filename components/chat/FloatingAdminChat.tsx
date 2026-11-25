@@ -104,6 +104,20 @@ export default function FloatingAdminChat() {
     }
     setSessionId(sId);
 
+    // Auto-detect logged-in user profile if available
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (currentUser) {
+        const loggedName = currentUser.full_name || currentUser.username || "";
+        const loggedContact = currentUser.email || currentUser.phone || "";
+        if (loggedName) setVisitorName(loggedName);
+        if (loggedContact) {
+          setVisitorContact(loggedContact);
+          setHasProvidedContact(true);
+        }
+      }
+    } catch (e) {}
+
     const savedName = localStorage.getItem("ti2a_chat_visitor_name") || "";
     const savedContact = localStorage.getItem("ti2a_chat_visitor_contact") || "";
     if (savedName) setVisitorName(savedName);
@@ -285,26 +299,26 @@ export default function FloatingAdminChat() {
   // Handle saving contact in Stage 2
   const handleSaveContact = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!visitorContact.trim() || !sessionId) return;
+    if ((!visitorName.trim() && !visitorContact.trim()) || !sessionId) return;
 
     setIsSavingContact(true);
     try {
-      localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
-      localStorage.setItem("ti2a_chat_visitor_contact", visitorContact.trim());
+      if (visitorName.trim()) localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
+      if (visitorContact.trim()) localStorage.setItem("ti2a_chat_visitor_contact", visitorContact.trim());
 
       await fetch("/api/chat", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          senderName: visitorName.trim(),
-          senderContact: visitorContact.trim()
+          senderName: visitorName.trim() || null,
+          senderContact: visitorContact.trim() || null
         })
       });
 
       setHasProvidedContact(true);
     } catch (err) {
-      console.warn("Error updating contact:", err);
+      console.warn("Error updating visitor info:", err);
     } finally {
       setIsSavingContact(false);
     }
@@ -321,8 +335,8 @@ export default function FloatingAdminChat() {
   };
 
   const visitorMessageCount = messages.filter(m => m.sender === "visitor").length;
-  const showContactCapture = visitorMessageCount >= 2 && !hasProvidedContact && !dismissedContactPrompt;
-  const showRegisterNudge = visitorMessageCount >= 5;
+  const showContactCapture = visitorMessageCount >= 1 && !hasProvidedContact && !dismissedContactPrompt;
+  const showRegisterNudge = visitorMessageCount >= 4;
 
   return (
     <div className={`fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden ${isGuestSliderVisible && !isOpen ? "hidden sm:flex" : "flex"}`}>
@@ -501,28 +515,28 @@ export default function FloatingAdminChat() {
               );
             })}
 
-            {/* STAGE 2: GENTLE CONTACT CAPTURE PROMPT (Appears after 2+ queries) */}
+            {/* STAGE 2: GENTLE NAME & CONTACT CAPTURE PROMPT (Appears after 1st visitor query) */}
             {showContactCapture && (
               <div className="bg-white border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs animate-in fade-in duration-300">
                 <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-1">
                   <ShieldCheck size={14} className="text-emerald-600" />
-                  <span>Save this conversation</span>
+                  <span>What should we call you?</span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-normal mb-2.5">
-                  To ensure your chat is saved and we can reply back on WhatsApp or Email:
+                  Please share your name so Admin Ar. Haaris can address you properly and reply back:
                 </p>
                 <form onSubmit={handleSaveContact} className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Your Name (optional)"
+                    placeholder="Your Name (e.g. Ar. Priya Sharma)"
+                    required
                     value={visitorName}
                     onChange={(e) => setVisitorName(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-black"
                   />
                   <input
                     type="text"
-                    placeholder="WhatsApp number or Email"
-                    required
+                    placeholder="WhatsApp number or Email (optional)"
                     value={visitorContact}
                     onChange={(e) => setVisitorContact(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-black"
@@ -533,14 +547,14 @@ export default function FloatingAdminChat() {
                       onClick={() => setDismissedContactPrompt(true)}
                       className="text-[11px] text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
-                      Skip for now
+                      Continue as Guest
                     </button>
                     <button
                       type="submit"
                       disabled={isSavingContact}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition cursor-pointer"
                     >
-                      {isSavingContact ? "Saving..." : "Save Contact"}
+                      {isSavingContact ? "Saving..." : "Save My Name"}
                     </button>
                   </div>
                 </form>

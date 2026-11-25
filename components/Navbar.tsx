@@ -85,6 +85,7 @@ export default function Navbar() {
   const [showNotif, setShowNotif] = useState(false);
   const [calloutDismissed, setCalloutDismissed] = useState(false);
   const [lastRead, setLastRead] = useState<Date | null>(null);
+  const [notifActiveTab, setNotifActiveTab] = useState<"all" | "approvals" | "replies" | "growth" | "dispatches">("all");
 
   useEffect(() => {
     const handleClickOutside = (event: any) => {

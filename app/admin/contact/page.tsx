@@ -419,12 +419,21 @@ export default function ContactSettingsPage() {
       return;
     }
 
-    // Auto-redirect if accessed with ?tab=sent
+    // Auto-redirect or switch tab based on URL query params
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("tab") === "sent") {
+      const tabParam = urlParams.get("tab");
+      if (tabParam === "sent") {
         router.replace("/admin/mails");
         return;
+      }
+      if (tabParam === "inbox" || tabParam === "chat" || tabParam === "settings") {
+        setActiveTab(tabParam);
+      }
+      const sessionParam = urlParams.get("session");
+      if (sessionParam) {
+        setActiveSessionId(sessionParam);
+        activeSessionIdRef.current = sessionParam;
       }
     }
 
@@ -517,6 +526,8 @@ export default function ContactSettingsPage() {
   };
 
   const CANNED_REPLIES = [
+    { label: "Ask for Name & Contact", text: "Hi! Could you please share your name and WhatsApp number or email so our team can follow up with you directly?" },
+    { label: "Register Profile", text: "Hi! You can create your free verified profile at https://trappedintoarchitecture.com/profile to bookmark vacancies, apply with 1-click, and get direct WhatsApp job alerts!" },
     { label: "Jobs Search", text: "Hi! You can browse and filter all active architecture vacancies across Chennai, Bangalore, and all India at https://trappedintoarchitecture.com/jobs" },
     { label: "Post a Job", text: "Hello! Architecture studios can post verified openings and internship drops directly at https://trappedintoarchitecture.com/post-a-job" },
     { label: "WhatsApp Channel", text: "Join our official WhatsApp channel for instant city-wise architectural job alerts: https://whatsapp.com/channel/0029Vaz1p0kCRs1uBTCWpJ2X" },
