@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, ShieldCheck, RefreshCw, AlertCircle, ExternalLink, Maximize2, Search } from "lucide-react";
+import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, MailOpen, ShieldCheck, RefreshCw, AlertCircle, ExternalLink, Maximize2, Search } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
 import { trackEvent } from "@/utils/analytics";
@@ -87,6 +87,7 @@ export default function Navbar() {
   const [lastRead, setLastRead] = useState<Date | null>(null);
   const [notifActiveTab, setNotifActiveTab] = useState<"all" | "approvals" | "replies" | "growth" | "dispatches">("all");
   const [readNotifIds, setReadNotifIds] = useState<string[]>([]);
+  const [unreadNotifIds, setUnreadNotifIds] = useState<string[]>([]);
   const [showAllNotifsModal, setShowAllNotifsModal] = useState(false);
   const [notifModalSearch, setNotifModalSearch] = useState("");
 
@@ -119,6 +120,10 @@ export default function Navbar() {
     try {
       const storedIds = JSON.parse(localStorage.getItem("readNotifIds") || "[]");
       if (Array.isArray(storedIds)) setReadNotifIds(storedIds);
+    } catch (e) {}
+    try {
+      const unreadIds = JSON.parse(localStorage.getItem("unreadNotifIds") || "[]");
+      if (Array.isArray(unreadIds)) setUnreadNotifIds(unreadIds);
     } catch (e) {}
   }, []);
 
@@ -632,7 +637,9 @@ export default function Navbar() {
     localStorage.setItem("notifLastRead", now.toISOString());
     const allIds = notifications.map((n) => n.id);
     setReadNotifIds(allIds);
+    setUnreadNotifIds([]);
     localStorage.setItem("readNotifIds", JSON.stringify(allIds));
+    localStorage.removeItem("unreadNotifIds");
     if (currentUser?.id) {
       supabase
         .from("profiles")
@@ -643,8 +650,44 @@ export default function Navbar() {
     }
   };
 
+  const toggleReadStatus = (notifId: string) => {
+    const isCurrentlyUnread = isNotifUnread({ id: notifId });
+    if (isCurrentlyUnread) {
+      // Mark as READ
+      setUnreadNotifIds((prev) => {
+        const next = prev.filter((id) => id !== notifId);
+        localStorage.setItem("unreadNotifIds", JSON.stringify(next));
+        return next;
+      });
+      setReadNotifIds((prev) => {
+        if (prev.includes(notifId)) return prev;
+        const next = [...prev, notifId];
+        localStorage.setItem("readNotifIds", JSON.stringify(next));
+        return next;
+      });
+    } else {
+      // Mark as UNREAD
+      setReadNotifIds((prev) => {
+        const next = prev.filter((id) => id !== notifId);
+        localStorage.setItem("readNotifIds", JSON.stringify(next));
+        return next;
+      });
+      setUnreadNotifIds((prev) => {
+        if (prev.includes(notifId)) return prev;
+        const next = [...prev, notifId];
+        localStorage.setItem("unreadNotifIds", JSON.stringify(next));
+        return next;
+      });
+    }
+  };
+
   const handleNotificationClick = (n: any) => {
     if (n.id) {
+      setUnreadNotifIds((prev) => {
+        const next = prev.filter((id) => id !== n.id);
+        localStorage.setItem("unreadNotifIds", JSON.stringify(next));
+        return next;
+      });
       setReadNotifIds((prev) => {
         if (prev.includes(n.id)) return prev;
         const next = [...prev, n.id];
@@ -659,6 +702,7 @@ export default function Navbar() {
   };
 
   const isNotifUnread = (n: any) => {
+    if (unreadNotifIds.includes(n.id)) return true;
     if (readNotifIds.includes(n.id)) return false;
     if (!lastRead) return true;
     return new Date(n.time) > lastRead;
@@ -874,9 +918,26 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
-                {isItemUnread && (
-                  <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0 mt-2" />
-                )}
+                <div className="shrink-0 flex items-center gap-1 self-center mt-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleReadStatus(n.id);
+                    }}
+                    title={isItemUnread ? "Mark as read" : "Mark as unread"}
+                    className={`p-1 rounded-md transition cursor-pointer ${
+                      isItemUnread
+                        ? "text-blue-600 hover:bg-blue-100 hover:text-blue-800"
+                        : "text-gray-400 hover:bg-gray-200/70 hover:text-gray-700"
+                    }`}
+                  >
+                    {isItemUnread ? <MailOpen size={13} /> : <Mail size={13} />}
+                  </button>
+                  {isItemUnread && (
+                    <span className="w-2 h-2 rounded-full bg-blue-600" />
+                  )}
+                </div>
               </div>
             );
           })
@@ -2987,7 +3048,26 @@ window.location.reload();
                         </div>
                       </div>
 
-                      <div className="shrink-0 self-end sm:self-center">
+                      <div className="shrink-0 self-end sm:self-center flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleReadStatus(n.id);
+                          }}
+                          title={isItemUnread ? "Mark as read" : "Mark as unread"}
+                          className={`px-3 py-2 rounded-xl border transition cursor-pointer flex items-center gap-1.5 text-xs font-bold ${
+                            isItemUnread
+                              ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                              : "bg-white text-gray-500 border-gray-200 hover:text-black hover:bg-gray-100"
+                          }`}
+                        >
+                          {isItemUnread ? <MailOpen size={14} /> : <Mail size={14} />}
+                          <span className="hidden sm:inline">
+                            {isItemUnread ? "Mark Read" : "Mark Unread"}
+                          </span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => handleNotificationClick(n)}
