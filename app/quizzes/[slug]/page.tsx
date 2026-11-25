@@ -212,28 +212,36 @@ export default function QuizPlayPage() {
 
       const displayName = user.displayName || user.fullName || user.username || "Architect";
 
-      // Claim quiz attempt in database
-      let query = supabase
+      // 1. Claim ALL unlinked attempts from this device/browser session
+      const { data: claimedRows, error: claimErr } = await supabase
         .from("quiz_scores")
         .update({
           user_id: user.id,
           display_name: displayName,
         })
-        .is("user_id", null);
+        .is("user_id", null)
+        .eq("guest_session_id", activeGuestId)
+        .select("id");
 
+      // 2. Also claim pending attemptId if specified separately
       if (pending?.attemptId) {
-        query = query.eq("id", pending.attemptId);
-      } else {
-        query = query.eq("guest_session_id", activeGuestId);
+        await supabase
+          .from("quiz_scores")
+          .update({
+            user_id: user.id,
+            display_name: displayName,
+          })
+          .is("user_id", null)
+          .eq("id", pending.attemptId);
       }
 
-      const { error } = await query;
-
-      if (!error) {
+      if (!claimErr && (claimedRows && claimedRows.length > 0 || pending?.attemptId)) {
         localStorage.removeItem("pending_quiz_attempt");
         setPendingClaimNotice(
-          `🎉 Welcome ${displayName}! Your quiz score was successfully linked to your account and entered onto the official leaderboard!`
+          `🎉 Welcome ${displayName}! Your previous quiz scores from this browser have been successfully linked to your verified account!`
         );
+        fetchLeaderboard();
+      } else if (!claimErr) {
         fetchLeaderboard();
       }
     } catch (e) {
@@ -356,7 +364,8 @@ export default function QuizPlayPage() {
       let query = supabase
         .from("quiz_scores")
         .select("id, display_name, points, score, total_questions, difficulty, time_taken_seconds, created_at, user_id, guest_session_id, quiz_id")
-        .in("difficulty", diffValues);
+        .in("difficulty", diffValues)
+        .order("points", { ascending: false });
 
       if (leaderboardScope === "quiz" && quiz?.id) {
         query = query.eq("quiz_id", quiz.id);
@@ -3184,7 +3193,17 @@ export default function QuizPlayPage() {
                   </div>
                 )}
 
-                <div className="mt-5 pt-3 border-t border-gray-100 text-center">
+                <div className="mt-5 pt-3 border-t border-gray-100 flex flex-col gap-2 text-center">
+                  {currentUser && (
+                    <button
+                      type="button"
+                      onClick={() => checkAndClaimPendingAttempt(currentUser)}
+                      className="text-[11px] text-gray-500 hover:text-black flex items-center justify-center gap-1.5 transition cursor-pointer font-bold py-1 px-2.5 rounded-lg hover:bg-gray-100"
+                      title="Sync and link any scores played as a guest on this device"
+                    >
+                      <RotateCcw size={12} /> Sync / Claim Guest Scores
+                    </button>
+                  )}
                   <Link href="/quizzes" className="text-xs font-bold text-gray-600 hover:text-black flex items-center justify-center gap-1 transition">
                     View All Quizzes & High Scores →
                   </Link>

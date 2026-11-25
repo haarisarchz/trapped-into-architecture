@@ -1929,21 +1929,28 @@ if (data.user) {
       const activeGuestId = pendingObj?.guestSessionId || guestId;
       if (activeGuestId) {
         const displayName = sessionObj.displayName || sessionObj.fullName || sessionObj.username || "Architect";
-        let claimQuery = supabase
+        
+        // Claim all attempts matching this guest session
+        await supabase
           .from("quiz_scores")
           .update({
             user_id: data.user.id,
             display_name: displayName,
           })
-          .is("user_id", null);
+          .is("user_id", null)
+          .eq("guest_session_id", activeGuestId);
 
         if (pendingObj?.attemptId) {
-          claimQuery = claimQuery.eq("id", pendingObj.attemptId);
-        } else {
-          claimQuery = claimQuery.eq("guest_session_id", activeGuestId);
+          await supabase
+            .from("quiz_scores")
+            .update({
+              user_id: data.user.id,
+              display_name: displayName,
+            })
+            .is("user_id", null)
+            .eq("id", pendingObj.attemptId);
         }
 
-        await claimQuery;
         localStorage.removeItem("pending_quiz_attempt");
       }
     }
