@@ -2,10 +2,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, ShieldCheck, RefreshCw, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, ShieldCheck, RefreshCw, AlertCircle, ExternalLink, Maximize2, Search } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
 import { trackEvent } from "@/utils/analytics";
@@ -86,6 +86,9 @@ export default function Navbar() {
   const [calloutDismissed, setCalloutDismissed] = useState(false);
   const [lastRead, setLastRead] = useState<Date | null>(null);
   const [notifActiveTab, setNotifActiveTab] = useState<"all" | "approvals" | "replies" | "growth" | "dispatches">("all");
+  const [readNotifIds, setReadNotifIds] = useState<string[]>([]);
+  const [showAllNotifsModal, setShowAllNotifsModal] = useState(false);
+  const [notifModalSearch, setNotifModalSearch] = useState("");
 
   useEffect(() => {
     const handleClickOutside = (event: any) => {
@@ -113,6 +116,10 @@ export default function Navbar() {
   useEffect(() => {
     const stored = localStorage.getItem("notifLastRead");
     if (stored) setLastRead(new Date(stored));
+    try {
+      const storedIds = JSON.parse(localStorage.getItem("readNotifIds") || "[]");
+      if (Array.isArray(storedIds)) setReadNotifIds(storedIds);
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
@@ -337,11 +344,14 @@ export default function Navbar() {
 
         // 3. Visitor Contact Inquiries, Suggestions, New Users & Emails
         try {
+          const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
           const { data: contactMsgs } = await supabase
             .from("contact_inquiries")
             .select("id, name, email, subject, message, created_at, is_read")
             .order("created_at", { ascending: false })
-            .limit(40);
+            .limit(50);
 
           const SYSTEM_SUBJECTS = new Set([
             "NOTIFIED_COMPANY_JOB_POSTING",
@@ -356,6 +366,7 @@ export default function Navbar() {
 
           (contactMsgs || []).forEach((log: any) => {
             const subj = (log.subject || "").trim();
+            const logTime = new Date(log.created_at);
 
             if (!SYSTEM_SUBJECTS.has(subj) && !subj.startsWith("[Direct Chat]")) {
               const preview = log.message ? (log.message.length > 70 ? log.message.slice(0, 70) + "..." : log.message) : "";
@@ -381,49 +392,58 @@ export default function Navbar() {
                 actionText: "Review Studio →"
               });
             } else if (subj === "NEW_USER_REGISTERED") {
-              notifs.push({
-                id: `growth-reg-${log.id}`,
-                category: "growth",
-                categoryLabel: "Growth & Users",
-                icon: "👤",
-                message: log.message,
-                time: log.created_at,
-                link: `/admin/users`,
-                actionText: "View Users →"
-              });
+              if (logTime >= new Date(twoWeeksAgo)) {
+                notifs.push({
+                  id: `growth-reg-${log.id}`,
+                  category: "growth",
+                  categoryLabel: "Growth & Users",
+                  icon: "👤",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/users`,
+                  actionText: "View Users →"
+                });
+              }
             } else if (subj === "USER_VERIFIED") {
-              notifs.push({
-                id: `growth-verif-${log.id}`,
-                category: "growth",
-                categoryLabel: "Growth & Users",
-                icon: "🔒",
-                message: log.message,
-                time: log.created_at,
-                link: `/admin/users`,
-                actionText: "View Users →"
-              });
+              if (logTime >= new Date(twoWeeksAgo)) {
+                notifs.push({
+                  id: `growth-verif-${log.id}`,
+                  category: "growth",
+                  categoryLabel: "Growth & Users",
+                  icon: "🔒",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/users`,
+                  actionText: "View Users →"
+                });
+              }
             } else if (subj === "USER_PHONE_VERIFIED") {
-              notifs.push({
-                id: `growth-phone-${log.id}`,
-                category: "growth",
-                categoryLabel: "Growth & Users",
-                icon: "📱",
-                message: log.message,
-                time: log.created_at,
-                link: `/admin/users`,
-                actionText: "View Users →"
-              });
+              if (logTime >= new Date(twoWeeksAgo)) {
+                notifs.push({
+                  id: `growth-phone-${log.id}`,
+                  category: "growth",
+                  categoryLabel: "Growth & Users",
+                  icon: "📱",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/users`,
+                  actionText: "View Users →"
+                });
+              }
             } else if (subj === "COMPANY_JOB_EMAIL_PENDING" || subj === "COMPANY_JOB_EMAIL_SENT" || subj === "NOTIFIED_COMPANY_JOB_POSTING") {
-              notifs.push({
-                id: `dispatch-email-${log.id}`,
-                category: "dispatches",
-                categoryLabel: "Dispatches",
-                icon: subj === "COMPANY_JOB_EMAIL_PENDING" ? "⏳" : "✉️",
-                message: log.message,
-                time: log.created_at,
-                link: `/admin/mails`,
-                actionText: "View Dispatches →"
-              });
+              // 1 week retention for dispatches as requested
+              if (logTime >= new Date(oneWeekAgo)) {
+                notifs.push({
+                  id: `dispatch-email-${log.id}`,
+                  category: "dispatches",
+                  categoryLabel: "Dispatches",
+                  icon: subj === "COMPANY_JOB_EMAIL_PENDING" ? "⏳" : "✉️",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/mails`,
+                  actionText: "View Dispatches →"
+                });
+              }
             }
           });
         } catch (err) {
@@ -466,16 +486,16 @@ export default function Navbar() {
           // chat_messages might be optional or fallback
         }
 
-        // 5. Site-Wide Published Jobs Feed (Past 48 Hours)
+        // 5. Site-Wide Published Jobs Feed (Past 1 Week / 7 Days)
         try {
-          const yesterday = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+          const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
           const { data: pubJobs } = await supabase
             .from('jobs')
             .select('id, firm_name, position, posted_date, status')
             .eq('status', 'published')
-            .gte('posted_date', yesterday)
+            .gte('posted_date', oneWeekAgo)
             .order('posted_date', { ascending: false })
-            .limit(10);
+            .limit(30);
 
           (pubJobs || []).forEach((j: any) => {
             notifs.push({
@@ -602,25 +622,49 @@ export default function Navbar() {
   }, [currentUser]);
 
   const handleBellClick = () => {
-    const nextShow = !showNotif;
-    setShowNotif(nextShow);
+    setShowNotif(!showNotif);
     setCalloutDismissed(true);
-    if (!showNotif) {
-      const now = new Date();
-      setLastRead(now);
-      localStorage.setItem("notifLastRead", now.toISOString());
-      if (currentUser?.id) {
-        supabase
-          .from("profiles")
-          .update({ notifications_last_read: now.toISOString() })
-          .eq("id", currentUser.id)
-          .then(() => {})
-          .catch(() => {});
-      }
+  };
+
+  const markAllAsRead = () => {
+    const now = new Date();
+    setLastRead(now);
+    localStorage.setItem("notifLastRead", now.toISOString());
+    const allIds = notifications.map((n) => n.id);
+    setReadNotifIds(allIds);
+    localStorage.setItem("readNotifIds", JSON.stringify(allIds));
+    if (currentUser?.id) {
+      supabase
+        .from("profiles")
+        .update({ notifications_last_read: now.toISOString() })
+        .eq("id", currentUser.id)
+        .then(() => {})
+        .catch(() => {});
     }
   };
 
-  const unreadNotifs = notifications.filter(n => !lastRead || new Date(n.time) > lastRead);
+  const handleNotificationClick = (n: any) => {
+    if (n.id) {
+      setReadNotifIds((prev) => {
+        if (prev.includes(n.id)) return prev;
+        const next = [...prev, n.id];
+        localStorage.setItem("readNotifIds", JSON.stringify(next));
+        return next;
+      });
+    }
+    if (n.link) {
+      window.open(n.link, "_blank", "noopener,noreferrer");
+      setShowNotif(false);
+    }
+  };
+
+  const isNotifUnread = (n: any) => {
+    if (readNotifIds.includes(n.id)) return false;
+    if (!lastRead) return true;
+    return new Date(n.time) > lastRead;
+  };
+
+  const unreadNotifs = notifications.filter(isNotifUnread);
   const hasUnread = unreadNotifs.length > 0;
   const unreadCount = unreadNotifs.length;
 
@@ -634,6 +678,22 @@ export default function Navbar() {
     isCeoOrSuper && notifActiveTab !== "all"
       ? notifications.filter((n) => n.category === notifActiveTab)
       : notifications;
+
+  const modalFilteredNotifs = useMemo(() => {
+    let list = isCeoOrSuper && notifActiveTab !== "all"
+      ? notifications.filter((n) => n.category === notifActiveTab)
+      : notifications;
+
+    if (notifModalSearch.trim()) {
+      const q = notifModalSearch.toLowerCase().trim();
+      list = list.filter(
+        (n) =>
+          (n.message || "").toLowerCase().includes(q) ||
+          (n.categoryLabel || "").toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [notifications, notifActiveTab, isCeoOrSuper, notifModalSearch]);
 
   const timeAgo = (dateStr: string) => {
     if (!dateStr) return '';
@@ -662,19 +722,7 @@ export default function Navbar() {
         {notifications.length > 0 && (
           <button
             type="button"
-            onClick={() => {
-              const now = new Date();
-              setLastRead(now);
-              localStorage.setItem("notifLastRead", now.toISOString());
-              if (currentUser?.id) {
-                supabase
-                  .from("profiles")
-                  .update({ notifications_last_read: now.toISOString() })
-                  .eq("id", currentUser.id)
-                  .then(() => {})
-                  .catch(() => {});
-              }
-            }}
+            onClick={markAllAsRead}
             className="text-xs font-semibold text-gray-500 hover:text-black transition cursor-pointer"
           >
             Mark all as read
@@ -795,16 +843,11 @@ export default function Navbar() {
           </div>
         ) : (
           displayedNotifs.map((n: any) => {
-            const isItemUnread = !lastRead || new Date(n.time) > lastRead;
+            const isItemUnread = isNotifUnread(n);
             return (
               <div
                 key={n.id}
-                onClick={() => {
-                  if (n.link) {
-                    router.push(n.link);
-                    setShowNotif(false);
-                  }
-                }}
+                onClick={() => handleNotificationClick(n)}
                 className={`p-3.5 transition text-left cursor-pointer group flex items-start gap-3 ${
                   isItemUnread ? "bg-blue-50/40 hover:bg-blue-50/80" : "hover:bg-gray-50"
                 }`}
@@ -827,6 +870,7 @@ export default function Navbar() {
                   {n.actionText && (
                     <div className="mt-1.5 text-xs font-bold text-blue-600 group-hover:text-black group-hover:underline flex items-center gap-1">
                       <span>{n.actionText}</span>
+                      <ExternalLink size={11} className="inline-block" />
                     </div>
                   )}
                 </div>
@@ -837,6 +881,21 @@ export default function Navbar() {
             );
           })
         )}
+      </div>
+
+      {/* Footer: See All in Large Dialog Box */}
+      <div className="p-2.5 bg-gray-50/90 border-t border-gray-100 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => {
+            setShowNotif(false);
+            setShowAllNotifsModal(true);
+          }}
+          className="w-full py-2 px-3 text-center font-bold text-xs text-gray-800 hover:text-black bg-white hover:bg-gray-100 rounded-xl border border-gray-200 transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <Maximize2 size={13} />
+          <span>See All Notifications (Large Dialog)</span>
+        </button>
       </div>
     </div>
   );
@@ -2748,6 +2807,211 @@ window.location.reload();
                 className="py-3 px-5 rounded-xl bg-black hover:bg-gray-800 text-white font-bold text-xs sm:text-sm transition cursor-pointer"
               >
                 Get Started
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL DIALOG BOX: ALL NOTIFICATIONS & ACTIVITY CENTER */}
+      {showAllNotifsModal && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150"
+          onClick={() => setShowAllNotifsModal(false)}
+        >
+          <div 
+            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 text-black animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-gray-200 flex items-center justify-between bg-gray-50/80 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center shadow-md shrink-0">
+                  <Bell size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-black text-gray-900 leading-tight">Notification Center</h2>
+                    {unreadCount > 0 && (
+                      <span className="bg-red-600 text-white text-xs font-black px-2 py-0.5 rounded-full">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Comprehensive overview of all administrative requests, visitor inquiries, team dispatches, and user growth
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="text-xs font-bold px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 transition cursor-pointer"
+                  >
+                    Mark All as Read
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowAllNotifsModal(false)}
+                  className="w-9 h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 flex items-center justify-center text-gray-600 hover:text-black transition cursor-pointer"
+                  title="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="p-3 sm:p-4 bg-gray-100/60 border-b border-gray-200 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between shrink-0">
+              <div className="relative flex-1">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search notifications by keyword, firm, or user..."
+                  value={notifModalSearch}
+                  onChange={(e) => setNotifModalSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-black font-medium"
+                />
+              </div>
+
+              {isCeoOrSuper && (
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("all")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
+                      notifActiveTab === "all" ? "bg-black text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    All ({notifications.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("approvals")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "approvals" ? "bg-amber-600 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>🚨 Approvals</span>
+                    {approvalCount > 0 && <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-black">{approvalCount}</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("replies")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "replies" ? "bg-blue-600 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>💬 Replies</span>
+                    {replyCount > 0 && <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded-full font-black">{replyCount}</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("growth")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "growth" ? "bg-emerald-700 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>🎉 Growth</span>
+                    {growthCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-black">{growthCount}</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("dispatches")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "dispatches" ? "bg-zinc-800 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>📢 Dispatches</span>
+                    {dispatchCount > 0 && <span className="text-[10px] bg-gray-200 text-gray-800 px-1.5 py-0.2 rounded-full font-black">{dispatchCount}</span>}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Body (Scrollable List with Large Cards) */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
+              {modalFilteredNotifs.length === 0 ? (
+                <div className="py-16 text-center text-gray-400">
+                  <p className="text-base font-bold text-gray-600">No notifications match your filter</p>
+                  <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing your search keywords</p>
+                </div>
+              ) : (
+                modalFilteredNotifs.map((n: any) => {
+                  const isItemUnread = isNotifUnread(n);
+                  return (
+                    <div
+                      key={n.id}
+                      className={`p-4 sm:p-5 rounded-2xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                        isItemUnread
+                          ? "bg-blue-50/50 border-blue-200 shadow-xs"
+                          : "bg-white border-gray-200/80 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                        <div className="text-2xl shrink-0 mt-0.5">{n.icon || "🔔"}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                            {n.categoryLabel && (
+                              <span className="text-[11px] font-black uppercase tracking-wider text-gray-700 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md">
+                                {n.categoryLabel}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-400 font-medium">
+                              {new Date(n.time).toLocaleString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              })}
+                            </span>
+                            <span className="text-xs text-gray-300">•</span>
+                            <span className="text-xs text-gray-500 font-semibold">
+                              {timeAgo(n.time)}
+                            </span>
+                            {isItemUnread && (
+                              <span className="text-[10px] font-black uppercase bg-blue-600 text-white px-2 py-0.5 rounded-full ml-auto">
+                                New
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm sm:text-base font-medium text-gray-900 leading-snug">
+                            {n.message}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 self-end sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => handleNotificationClick(n)}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer whitespace-nowrap"
+                        >
+                          <span>{n.actionText || "Open in New Tab"}</span>
+                          <ExternalLink size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3.5 sm:p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500 shrink-0">
+              <span>Showing {modalFilteredNotifs.length} notification{modalFilteredNotifs.length !== 1 ? 's' : ''}</span>
+              <button
+                type="button"
+                onClick={() => setShowAllNotifsModal(false)}
+                className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition cursor-pointer"
+              >
+                Close Dialog
               </button>
             </div>
           </div>
