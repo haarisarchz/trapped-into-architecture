@@ -17,6 +17,23 @@ export async function POST(req: Request) {
     const origin = req.headers.get("origin") || "https://trappedintoarchitecture.com";
     const redirectTo = `${origin}/reset-password`;
 
+    // 0. Verify if account exists
+    const { data: profile, error: profileErr } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, username, email")
+      .ilike("email", cleanEmail)
+      .maybeSingle();
+
+    if (!profile) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `No account was found registered with "${cleanEmail}". Please check your email or click Register to create an account.`,
+        },
+        { status: 404 }
+      );
+    }
+
     // 1. Try to generate recovery link using Supabase Admin
     let resetLink: string | null = null;
     try {
@@ -38,7 +55,9 @@ export async function POST(req: Request) {
     if (resetLink && apiKey) {
       try {
         const resend = new Resend(apiKey);
-        const fromEmail = process.env.RESEND_FROM_EMAIL || "Trapped Into Architecture <onboarding@resend.dev>";
+        const fromEmail =
+          process.env.RESEND_FROM_EMAIL ||
+          "Trapped Into Architecture <notifications@trappedintoarchitecture.com>";
 
         await resend.emails.send({
           from: fromEmail,
@@ -51,9 +70,9 @@ export async function POST(req: Request) {
               <meta charset="utf-8">
               <style>
                 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 20px; }
-                .container { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 36px; border: 1px solid #e5e7eb; }
+                .container { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 20px; padding: 36px; border: 1px solid #e5e7eb; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
                 .logo { font-size: 20px; font-weight: 800; color: #000000; text-decoration: none; display: inline-block; margin-bottom: 24px; }
-                h1 { font-size: 24px; font-weight: 700; color: #111827; margin: 0 0 12px; }
+                h1 { font-size: 22px; font-weight: 700; color: #111827; margin: 0 0 12px; }
                 p { color: #4b5563; line-height: 1.6; font-size: 15px; margin: 0 0 18px; }
                 .btn { display: inline-block; width: 100%; box-sizing: border-box; text-align: center; background: #000000; color: #ffffff !important; padding: 14px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; text-decoration: none; margin-top: 14px; margin-bottom: 14px; }
                 .link-box { word-break: break-all; background: #f3f4f6; padding: 12px; border-radius: 8px; font-size: 12px; color: #6b7280; margin-top: 12px; }
@@ -64,7 +83,8 @@ export async function POST(req: Request) {
               <div class="container">
                 <a href="${origin}" class="logo">Trapped Into Architecture</a>
                 <h1>Reset Your Password</h1>
-                <p>We received a request to reset the password for your Trapped Into Architecture account.</p>
+                <p>Hello <strong>${profile.full_name || profile.username}</strong>,</p>
+                <p>We received a request to reset the password for your Trapped Into Architecture account (<strong>@${profile.username}</strong>).</p>
                 <p>Click the button below to set a new password. This link will expire in 24 hours.</p>
 
                 <a href="${resetLink}" class="btn">Set New Password</a>
@@ -98,8 +118,27 @@ export async function POST(req: Request) {
     });
 
     if (resetErr) {
+      console.error("Supabase resetPasswordForEmail error:", resetErr);
+      // Log inquiry for admin
+      try {
+        await supabaseAdmin.from("contact_inquiries").insert({
+          name: profile.full_name || profile.username,
+          email: cleanEmail,
+          subject: "PASSWORD_RESET_ATTEMPT",
+          message: `User requested password reset for @${profile.username}. Supabase SMTP status: ${resetErr.message}`,
+          is_read: false,
+        });
+      } catch (e) {
+        // non-fatal
+      }
+
+      const errorMessage =
+        resetErr.message === "Error sending recovery email"
+          ? "Supabase built-in mailer is temporarily rate-limited. An automated support request has been logged. In the meantime, try logging in with your Username or contact support@trappedintoarchitecture.com."
+          : resetErr.message || "Failed to send reset email. Please try again later.";
+
       return NextResponse.json(
-        { error: resetErr.message || "Failed to send reset email. Please try again." },
+        { error: errorMessage },
         { status: 400 }
       );
     }

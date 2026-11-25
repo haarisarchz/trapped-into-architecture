@@ -1779,19 +1779,40 @@ useEffect(() => {
       <button
         type="button"
         onClick={async () => {
-          const email = prompt("Enter your registered email address to recover your username:");
-          if (!email) return;
+          const identityInput = document.getElementById(
+            "login-identity"
+          ) as HTMLInputElement | null;
+          let email = identityInput?.value?.trim() || "";
+
+          // If no email entered in login box or does not contain @, prompt user
+          if (!email || !email.includes("@")) {
+            const prompted = prompt(
+              "Enter your registered email address to recover your username:",
+              email.includes("@") ? email : ""
+            );
+            if (!prompted) return;
+            email = prompted.trim();
+          }
+
           try {
             const res = await fetch("/api/auth/forgot-username", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: email.trim() }),
+              body: JSON.stringify({ email }),
             });
             const data = await res.json();
-            if (res.ok) {
-              alert(data.message || "Your username has been emailed to you.");
+            if (res.ok && data.success) {
+              if (identityInput && data.username) {
+                identityInput.value = data.username;
+              }
+              alert(
+                `🎉 Account Found!\n\nYour username is: @${data.username}\n\nWe have also sent your username to ${email}.\nWe've filled your username into the login box so you can enter your password and log in!`
+              );
             } else {
-              alert(data.error || "Could not retrieve username. Please verify your email.");
+              alert(
+                data.error ||
+                  "Could not retrieve username. Please verify your email address."
+              );
             }
           } catch (e) {
             alert("Error sending username reminder. Please try again.");
@@ -1805,19 +1826,38 @@ useEffect(() => {
       <button
         type="button"
         onClick={async () => {
-          const email = prompt("Enter your registered email address to receive a password reset link:");
-          if (!email) return;
+          const identityInput = document.getElementById(
+            "login-identity"
+          ) as HTMLInputElement | null;
+          let email = identityInput?.value?.trim() || "";
+
+          // If no email entered in login box or does not contain @, prompt user
+          if (!email || !email.includes("@")) {
+            const prompted = prompt(
+              "Enter your registered email address to receive a password reset link:",
+              email.includes("@") ? email : ""
+            );
+            if (!prompted) return;
+            email = prompted.trim();
+          }
+
           try {
             const res = await fetch("/api/auth/forgot-password", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email: email.trim() }),
+              body: JSON.stringify({ email }),
             });
             const data = await res.json();
-            if (res.ok) {
-              alert(data.message || "Password reset link has been sent to your email!");
+            if (res.ok && data.success) {
+              alert(
+                data.message ||
+                  "Password reset link has been sent to your email! Please check your inbox and spam folder."
+              );
             } else {
-              alert(data.error || "Failed to send reset link. Please verify your email.");
+              alert(
+                data.error ||
+                  "Failed to send reset link. Please verify your email."
+              );
             }
           } catch (e) {
             alert("Failed to send reset link. Please try again.");
@@ -1840,14 +1880,14 @@ useEffect(() => {
             document.getElementById(
               "login-identity"
             ) as HTMLInputElement
-          ).value;
+          )?.value?.trim();
 
         const password =
           (
             document.getElementById(
               "login-password"
             ) as HTMLInputElement
-          ).value;
+          )?.value;
 
         if (!identity || !password) {
 
@@ -1859,9 +1899,28 @@ useEffect(() => {
 
         }
 
+        // Support logging in via Email, Username (@username or username), or Phone
+        let resolvedEmail = identity;
+        if (!resolvedEmail.includes("@")) {
+          const cleanIdent = resolvedEmail.replace(/^@/, "").trim().toLowerCase();
+          try {
+            const { data: matchedProfile } = await supabase
+              .from("profiles")
+              .select("email")
+              .or(`username.ilike.${cleanIdent},phone.ilike.%${cleanIdent}%`)
+              .maybeSingle();
+
+            if (matchedProfile?.email) {
+              resolvedEmail = matchedProfile.email;
+            }
+          } catch (lookupErr) {
+            console.warn("Could not resolve username/phone to email:", lookupErr);
+          }
+        }
+
         const { data, error } =
   await supabase.auth.signInWithPassword({
-    email: identity,
+    email: resolvedEmail,
     password,
   });
 
