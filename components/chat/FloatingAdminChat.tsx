@@ -32,7 +32,7 @@ interface ChatMsg {
 const QUICK_STARTERS = [
   { text: "🔍 Looking for Architecture Jobs", prompt: "Hi! I am looking for verified architecture jobs in Chennai / Bangalore. Can you guide me?" },
   { text: "🏢 Want to Post a Job / Hire", prompt: "Hello, I want to post an architecture job opening for my studio." },
-  { text: "📁 Portfolio & Resume Guidance", prompt: "Hi Admin Ti2A, I need guidance regarding portfolio reviews and architecture applications." },
+  { text: "📁 Portfolio & Resume Guidance", prompt: "Hi! I need guidance regarding portfolio reviews and architecture applications." },
   { text: "💡 Platform Query / Feedback", prompt: "Hi! I have a question regarding Trapped Into Architecture features." }
 ];
 
@@ -67,6 +67,7 @@ export default function FloatingAdminChat() {
   const [visitorName, setVisitorName] = useState("");
   const [visitorContact, setVisitorContact] = useState("");
   const [isSavingContact, setIsSavingContact] = useState(false);
+  const [isGuestSliderVisible, setIsGuestSliderVisible] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +103,20 @@ export default function FloatingAdminChat() {
       localStorage.setItem("ti2a_chat_session_id", sId);
     }
     setSessionId(sId);
+
+    // Auto-detect logged-in user profile if available
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+      if (currentUser) {
+        const loggedName = currentUser.full_name || currentUser.username || "";
+        const loggedContact = currentUser.email || currentUser.phone || "";
+        if (loggedName) setVisitorName(loggedName);
+        if (loggedContact) {
+          setVisitorContact(loggedContact);
+          setHasProvidedContact(true);
+        }
+      }
+    } catch (e) {}
 
     const savedName = localStorage.getItem("ti2a_chat_visitor_name") || "";
     const savedContact = localStorage.getItem("ti2a_chat_visitor_contact") || "";
@@ -145,6 +160,22 @@ export default function FloatingAdminChat() {
     }, 6000);
     return () => clearInterval(interval);
   }, [isOpen, sessionId]);
+
+  // Listen to guest slider visibility to yield on mobile screens
+  useEffect(() => {
+    const handleSliderState = (e: any) => {
+      setIsGuestSliderVisible(!!e.detail?.visible);
+    };
+    window.addEventListener("ti2a_guest_slider_state", handleSliderState);
+    return () => window.removeEventListener("ti2a_guest_slider_state", handleSliderState);
+  }, []);
+
+  // When live chat opens, tell guest engagement slider to hide so it doesn't distract
+  useEffect(() => {
+    if (isOpen) {
+      window.dispatchEvent(new CustomEvent("ti2a_chat_opened"));
+    }
+  }, [isOpen]);
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
@@ -265,29 +296,29 @@ export default function FloatingAdminChat() {
     }
   };
 
-  // Handle saving contact in Stage 2
+  // Handle saving contact & registering details in Stage 2
   const handleSaveContact = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!visitorContact.trim() || !sessionId) return;
 
     setIsSavingContact(true);
     try {
-      localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
-      localStorage.setItem("ti2a_chat_visitor_contact", visitorContact.trim());
+      if (visitorName.trim()) localStorage.setItem("ti2a_chat_visitor_name", visitorName.trim());
+      if (visitorContact.trim()) localStorage.setItem("ti2a_chat_visitor_contact", visitorContact.trim());
 
       await fetch("/api/chat", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
-          senderName: visitorName.trim(),
+          senderName: visitorName.trim() || null,
           senderContact: visitorContact.trim()
         })
       });
 
       setHasProvidedContact(true);
     } catch (err) {
-      console.warn("Error updating contact:", err);
+      console.warn("Error updating visitor contact:", err);
     } finally {
       setIsSavingContact(false);
     }
@@ -304,11 +335,11 @@ export default function FloatingAdminChat() {
   };
 
   const visitorMessageCount = messages.filter(m => m.sender === "visitor").length;
-  const showContactCapture = visitorMessageCount >= 2 && !hasProvidedContact && !dismissedContactPrompt;
-  const showRegisterNudge = visitorMessageCount >= 5;
+  const showContactCapture = visitorMessageCount >= 1 && !hasProvidedContact && !dismissedContactPrompt;
+  const showRegisterNudge = visitorMessageCount >= 4;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden">
+    <div className={`fixed bottom-6 right-6 z-50 flex flex-col items-end print:hidden ${isGuestSliderVisible && !isOpen ? "hidden sm:flex" : "flex"}`}>
       
       {/* 1. FLOATING GREETING PILL (Visible when chat is closed) */}
       {!isOpen && showPromptPill && (
@@ -332,7 +363,7 @@ export default function FloatingAdminChat() {
                 Hi, how can I help you?
               </p>
               <p className="text-[11px] text-gray-500 mt-0.5">
-                I am admin Ti2A • Online
+                Admin Ti2A • Online
               </p>
             </div>
 
@@ -406,14 +437,14 @@ export default function FloatingAdminChat() {
           {/* CHAT MESSAGE STREAM */}
           <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-slate-50/50 text-xs">
             
-            {/* INITIAL ADMIN GREETING BUBBLE */}
+            {/* INITIAL GREETING BUBBLE */}
             <div className="flex items-start gap-2">
               <div className="w-7 h-7 rounded-full bg-black text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                 Ti2A
               </div>
               <div className="bg-white p-3 rounded-2xl rounded-tl-sm border border-gray-200 text-gray-800 shadow-2xs max-w-[85%] leading-relaxed">
                 <p className="font-semibold text-gray-900 mb-0.5">Admin Ti2A</p>
-                Hi, how can I help you? I am admin Ti2A. Looking for job drops, firm details, portfolio advice, or have a suggestion?
+                Hi, how can I help you? I am Admin Ti2A. Looking for job drops, firm details, portfolio advice, or have a suggestion?
               </div>
             </div>
 
@@ -484,20 +515,45 @@ export default function FloatingAdminChat() {
               );
             })}
 
-            {/* STAGE 2: GENTLE CONTACT CAPTURE PROMPT (Appears after 2+ queries) */}
+            {/* RESPONSE TIME & WHATSAPP QUICK ASSISTANCE CARD (Appears after visitor message) */}
+            {messages.some(m => m.sender === "visitor") && (
+              <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl p-3 text-emerald-950 shadow-2xs animate-in fade-in duration-300">
+                <div className="flex items-center gap-1.5 text-emerald-900 font-bold text-xs mb-1">
+                  <MessageCircle size={13} className="text-emerald-700" />
+                  <span>Looking for a quick reply?</span>
+                </div>
+                <p className="text-[11px] text-emerald-900/90 leading-relaxed">
+                  It may take some time for Admin to reply here. For an instant response or immediate guidance, please contact Admin directly on WhatsApp:
+                </p>
+                <div className="mt-2">
+                  <a
+                    href="https://wa.me/918608609661?text=Hi%20Admin%20Ti2A%2C%20I%20have%20an%20inquiry%20from%20the%20website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-xs"
+                  >
+                    <MessageCircle size={12} />
+                    <span>Chat on WhatsApp (+91 8608609661)</span>
+                    <ExternalLink size={11} />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* STAGE 2: CONTACT CAPTURE & REGISTRATION PROMPT (Appears after 1st visitor query) */}
             {showContactCapture && (
               <div className="bg-white border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs animate-in fade-in duration-300">
                 <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs mb-1">
                   <ShieldCheck size={14} className="text-emerald-600" />
-                  <span>Save this conversation</span>
+                  <span>Save this chat &amp; register profile</span>
                 </div>
                 <p className="text-[11px] text-gray-600 leading-normal mb-2.5">
-                  To ensure your chat is saved and we can reply back on WhatsApp or Email:
+                  Please share your details so Admin can contact you back and save your conversation for registration:
                 </p>
                 <form onSubmit={handleSaveContact} className="space-y-2">
                   <input
                     type="text"
-                    placeholder="Your Name (optional)"
+                    placeholder="Your Name (e.g. Ar. Priya Sharma)"
                     value={visitorName}
                     onChange={(e) => setVisitorName(e.target.value)}
                     className="w-full text-xs p-2 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:border-black"
@@ -523,10 +579,24 @@ export default function FloatingAdminChat() {
                       disabled={isSavingContact}
                       className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg transition cursor-pointer"
                     >
-                      {isSavingContact ? "Saving..." : "Save Contact"}
+                      {isSavingContact ? "Saving..." : "Save Details"}
                     </button>
                   </div>
                 </form>
+
+                <div className="mt-2.5 pt-2 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-[10px] text-gray-500">Need instant direct chat?</span>
+                  <a
+                    href="https://wa.me/918608609661?text=Hi%20Ti2A%2C%20I%20have%20an%20inquiry"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:text-emerald-800 transition"
+                  >
+                    <MessageCircle size={12} className="text-emerald-600" />
+                    <span>Contact us on WhatsApp</span>
+                    <ArrowRight size={11} />
+                  </a>
+                </div>
               </div>
             )}
 

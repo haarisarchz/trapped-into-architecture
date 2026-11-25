@@ -2,6 +2,7 @@
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import QuizEditor from "@/components/admin/QuizEditor";
@@ -71,6 +72,8 @@ export default function AdminQuizzesPage() {
   const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("latest_modified");
+  const [searchFilter, setSearchFilter] = useState<string>("");
 
   const checkAccessAndDatabase = async () => {
     setLoading(true);
@@ -115,6 +118,14 @@ export default function AdminQuizzesPage() {
   };
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const editId = params.get("edit");
+      if (editId) {
+        router.replace(`/admin/quizzes/edit/${editId}`);
+        return;
+      }
+    }
     checkAccessAndDatabase();
   }, []);
 
@@ -179,12 +190,12 @@ export default function AdminQuizzesPage() {
 
             {!setupRequired && !loading && (
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setIsCreatingNew(true)}
+                <Link 
+                  href="/admin/quizzes/new"
                   className="flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm"
                 >
                   <Plus size={16} /> Create New Quiz
-                </button>
+                </Link>
                 <AdminQuickMenu />
               </div>
             )}
@@ -245,6 +256,42 @@ export default function AdminQuizzesPage() {
                 </div>
               </div>
 
+              {/* QUIZZES LIST HEADER & SORT TOOLBAR */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-gray-700">Sort By:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="text-xs font-bold border border-gray-200 bg-gray-50 rounded-xl px-3 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-black cursor-pointer"
+                  >
+                    <option value="latest_modified">Latest Modified (Default)</option>
+                    <option value="latest_added">Latest Added</option>
+                    <option value="oldest_added">Oldest Added</option>
+                    <option value="most_questions">Most Questions</option>
+                    <option value="alphabetical">Title (A - Z)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search quiz title..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="text-xs border border-gray-200 bg-gray-50 rounded-xl px-3 py-1.5 focus:outline-hidden focus:ring-2 focus:ring-black w-48 sm:w-64"
+                  />
+                  {searchFilter && (
+                    <button
+                      onClick={() => setSearchFilter("")}
+                      className="text-xs text-gray-400 hover:text-black font-bold"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* QUIZZES LIST */}
               {quizzes.length === 0 ? (
                 <div className="bg-white rounded-3xl border border-gray-200 p-12 text-center max-w-lg mx-auto my-8">
@@ -255,18 +302,44 @@ export default function AdminQuizzesPage() {
                   <p className="text-xs text-gray-500 mb-6">
                     Create your first quiz! You can import questions, photos, and answers directly from the Architecture Catalog with 1 click.
                   </p>
-                  <button 
-                    onClick={() => setIsCreatingNew(true)}
-                    className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm"
+                  <Link 
+                    href="/admin/quizzes/new"
+                    className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-sm inline-block"
                   >
                     + Create First Quiz
-                  </button>
+                  </Link>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {quizzes.map((quiz) => {
-                    const questionCount = quiz.quiz_questions?.[0]?.count || 0;
-                    const playsCount = quiz.quiz_scores?.[0]?.count || 0;
+                  {[...quizzes]
+                    .filter(q => {
+                      if (!searchFilter) return true;
+                      const term = searchFilter.toLowerCase();
+                      return (q.title || "").toLowerCase().includes(term) || (q.category || "").toLowerCase().includes(term);
+                    })
+                    .sort((a, b) => {
+                      if (sortBy === "latest_added") {
+                        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+                      }
+                      if (sortBy === "oldest_added") {
+                        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+                      }
+                      if (sortBy === "latest_modified") {
+                        return new Date(b.updated_at || b.created_at || 0).getTime() - new Date(a.updated_at || a.created_at || 0).getTime();
+                      }
+                      if (sortBy === "most_questions") {
+                        const countA = a.quiz_questions?.[0]?.count || 0;
+                        const countB = b.quiz_questions?.[0]?.count || 0;
+                        return countB - countA;
+                      }
+                      if (sortBy === "alphabetical") {
+                        return (a.title || "").localeCompare(b.title || "");
+                      }
+                      return 0;
+                    })
+                    .map((quiz) => {
+                      const questionCount = quiz.quiz_questions?.[0]?.count || 0;
+                      const playsCount = quiz.quiz_scores?.[0]?.count || 0;
 
                     return (
                       <div 
@@ -330,12 +403,12 @@ export default function AdminQuizzesPage() {
 
                           {/* Actions */}
                           <div className="flex items-center gap-2">
-                            <button 
-                              onClick={() => setEditingQuizId(quiz.id)}
+                            <Link 
+                              href={`/admin/quizzes/edit/${quiz.id}`}
                               className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1 border border-gray-200"
                             >
                               <Edit2 size={13} /> Edit
-                            </button>
+                            </Link>
 
                             <a 
                               href={`/quizzes/${quiz.slug}`}

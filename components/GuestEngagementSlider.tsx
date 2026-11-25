@@ -77,6 +77,18 @@ export default function GuestEngagementSlider() {
     } catch (e) {}
   }, [pathname]);
 
+  useEffect(() => {
+    // Hide register popup immediately if user opens live chat
+    const handleChatOpened = () => {
+      setVisible(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("ti2a_guest_slider_state", { detail: { visible: false } }));
+      }
+    };
+    window.addEventListener("ti2a_chat_opened", handleChatOpened);
+    return () => window.removeEventListener("ti2a_chat_opened", handleChatOpened);
+  }, []);
+
   const triggerShow = (showNumber: number, source: string) => {
     try {
       const userStr = localStorage.getItem("currentUser");
@@ -84,6 +96,11 @@ export default function GuestEngagementSlider() {
 
       sessionStorage.setItem("ti2a_slider_session_shows", String(showNumber));
       setVisible(true);
+
+      // Notify other floating widgets (e.g. chat on mobile)
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("ti2a_guest_slider_state", { detail: { visible: true } }));
+      }
 
       // Track in GA4
       trackGaEvent("guest_popup_view", {
@@ -95,6 +112,9 @@ export default function GuestEngagementSlider() {
 
   const handleDismiss = () => {
     setVisible(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("ti2a_guest_slider_state", { detail: { visible: false } }));
+    }
     try {
       const rawCount = sessionStorage.getItem("ti2a_slider_session_shows");
       const shownCount = rawCount ? parseInt(rawCount, 10) : 1;
@@ -111,6 +131,9 @@ export default function GuestEngagementSlider() {
 
   const handleRegisterClick = () => {
     setVisible(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("ti2a_guest_slider_state", { detail: { visible: false } }));
+    }
     try {
       // Mark as completed for this session
       sessionStorage.setItem("ti2a_slider_session_shows", "2");
@@ -140,7 +163,7 @@ export default function GuestEngagementSlider() {
     <div
       role="dialog"
       aria-label="Unlock more features on Trapped Into Architecture"
-      className="fixed bottom-3 left-3 right-3 sm:left-auto sm:right-6 sm:bottom-6 z-40 sm:w-[420px] max-w-[calc(100vw-1.5rem)] bg-[#14161d] border border-[#282c38] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-300 text-left overflow-hidden text-slate-100"
+      className="fixed bottom-3 left-3 right-3 sm:left-6 sm:right-auto sm:bottom-6 z-40 sm:w-[400px] max-w-[calc(100vw-1.5rem)] bg-[#14161d] border border-[#282c38] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-6 duration-300 text-left overflow-hidden text-slate-100"
     >
       {/* ARCHITECTURAL AMBER ACCENT RULER */}
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />

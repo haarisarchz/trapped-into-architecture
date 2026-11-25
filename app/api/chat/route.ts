@@ -68,7 +68,9 @@ export async function GET(req: Request) {
           image_url: imgUrl,
           sender_name: inq.name !== "Anonymous Visitor" ? inq.name : null,
           sender_contact: inq.phone || (inq.email !== "chat@trappedintoarchitecture.com" && inq.email !== "admin@trappedintoarchitecture.com" ? inq.email : null),
-          created_at: inq.created_at
+          created_at: inq.created_at,
+          is_read: inq.is_read || false,
+          status: inq.is_read ? "resolved" : "active"
         };
       });
 
@@ -100,7 +102,9 @@ export async function GET(req: Request) {
           image_url: imgUrl,
           sender_name: inq.name !== "Anonymous Visitor" ? inq.name : null,
           sender_contact: inq.phone || (inq.email !== "chat@trappedintoarchitecture.com" && inq.email !== "admin@trappedintoarchitecture.com" ? inq.email : null),
-          created_at: inq.created_at
+          created_at: inq.created_at,
+          is_read: inq.is_read || false,
+          status: inq.is_read ? "resolved" : "active"
         };
       });
 
@@ -271,6 +275,8 @@ export async function PATCH(req: Request) {
         const inqUpdates: any = {};
         if (updates.sender_name) inqUpdates.name = updates.sender_name;
         if (updates.is_read !== undefined) inqUpdates.is_read = updates.is_read;
+        if (updates.status === "resolved") inqUpdates.is_read = true;
+        if (updates.status === "active") inqUpdates.is_read = false;
         if (updates.sender_contact) {
           if (updates.sender_contact.includes("@")) inqUpdates.email = updates.sender_contact;
           else inqUpdates.phone = updates.sender_contact;
@@ -278,7 +284,7 @@ export async function PATCH(req: Request) {
         await supabase
           .from("contact_inquiries")
           .update(inqUpdates)
-          .eq("subject", `[Direct Chat] ${sessionId}`);
+          .ilike("subject", `%${sessionId}%`);
       } catch (e) {}
     }
 
@@ -304,7 +310,7 @@ export async function DELETE(req: Request) {
       await supabase.from("contact_inquiries").delete().eq("id", messageId);
     } else if (sessionId) {
       await supabase.from("chat_messages").delete().eq("session_id", sessionId);
-      await supabase.from("contact_inquiries").delete().eq("subject", `[Direct Chat] ${sessionId}`);
+      await supabase.from("contact_inquiries").delete().ilike("subject", `%${sessionId}%`);
     }
 
     return NextResponse.json({ success: true });

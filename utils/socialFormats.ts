@@ -68,22 +68,35 @@ function formatExperienceText(rawExp: any, isIntern: boolean): string {
 export function formatWhatsAppPost(jobs: SocialJobItem[], jobUrl: string): string {
   const mainJob = jobs[0] || {};
   const firmName = mainJob.firm_name || "Unknown Firm";
-  const locParts = [mainJob.area || mainJob.neighborhood, mainJob.city, mainJob.state].filter(Boolean);
-  const location = locParts.length > 0 ? locParts.join(", ") : "Remote";
+
+  // Collect and deduplicate unique locations across all jobs in batch
+  const uniqueLocationsSet = new Set<string>();
+  jobs.forEach((j) => {
+    const parts = [j.area || j.neighborhood, j.city, j.state].filter(Boolean);
+    if (parts.length > 0) {
+      uniqueLocationsSet.add(parts.join(", "));
+    }
+  });
+
+  const uniqueLocations = Array.from(uniqueLocationsSet);
+  const locationLabel = uniqueLocations.length > 1 ? "LOCATIONS" : "LOCATION";
+  const formattedLocation = uniqueLocations.length > 0 ? uniqueLocations.join(" & ") : "Remote";
 
   let text = "";
 
   if (jobs.length > 1) {
-    text = `🏢 FIRM: ${firmName}\n📍 LOCATION: ${location}\n💼 POSITIONS:\n`;
+    text = `🏢 FIRM: ${firmName}\n📍 ${locationLabel}: ${formattedLocation}\n💼 POSITIONS:\n`;
     jobs.forEach((job, index) => {
       const isIntern = job.employment_type === "Internship" || job.position?.toLowerCase().includes("intern");
       const expText = formatExperienceText(job.experience, !!isIntern);
-      text += `${index + 1}. ${job.position || "Position"}${expText}\n`;
+      const jobLoc = [job.city, job.state].filter(Boolean).join(", ");
+      const locSuffix = uniqueLocations.length > 1 && jobLoc ? ` — ${jobLoc}` : "";
+      text += `${index + 1}. ${job.position || "Position"}${expText}${locSuffix}\n`;
     });
   } else {
     const isIntern = mainJob.employment_type === "Internship" || mainJob.position?.toLowerCase().includes("intern");
     const expText = formatExperienceText(mainJob.experience, !!isIntern);
-    text = `🏢 FIRM: ${firmName}\n📍 LOCATION: ${location}\n💼 POSITIONS: ${mainJob.position || "Position"}${expText}\n`;
+    text = `🏢 FIRM: ${firmName}\n📍 ${locationLabel}: ${formattedLocation}\n💼 POSITIONS: ${mainJob.position || "Position"}${expText}\n`;
   }
 
   // Append WhatsApp UTM tracking so GA reliably classifies the traffic as WhatsApp instead of Direct

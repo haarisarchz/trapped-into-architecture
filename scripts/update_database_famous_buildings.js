@@ -123,7 +123,7 @@ const FAMOUS_BUILDINGS = [
     difficulty: "easy",
     photo_slug: "centre-pompidou",
     wiki_page: "Centre_Georges_Pompidou",
-    image_fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Centre_Georges-Pompidou_Paris.jpg/1280px-Centre_Georges-Pompidou_Paris.jpg",
+    image_fallback: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Paris_-_Centre_Georges_Pompidou.jpg/1280px-Paris_-_Centre_Georges_Pompidou.jpg",
     puzzle_clues: "1. Revolutionized architecture by placing all escalators, elevators, and ductwork on the outside.\n2. Services are color-coded: blue for air conditioning, green for water, red for circulation, and yellow for electrical.\n3. Named after the French President who commissioned this cultural hub in Beaubourg.",
     distractors: ["Lloyd's Building", "Grand Louvre Pyramid", "The Shard"],
     architect_distractors: ["Norman Foster", "Jean Nouvel", "I. M. Pei"]
@@ -1058,20 +1058,23 @@ async function main() {
     console.warn("Delete note:", delCatErr.message);
   }
 
-  const catalogRows = FAMOUS_BUILDINGS.map(b => ({
-    is_locked: false,
-    data: {
-      building_name: b.building_name,
-      architect: b.architect,
-      city: b.city,
-      country: b.country,
-      opened_year: b.opened_year,
-      architectural_style: b.architectural_style,
-      difficulty: b.difficulty,
-      building_photo: `/quizzes/${b.photo_slug}.jpg`,
-      puzzle_clues: b.puzzle_clues
-    }
-  }));
+  const catalogRows = FAMOUS_BUILDINGS.map(b => {
+    const tier = (b.difficulty === 'hard' || b.difficulty === 'master') ? 'master' : 'popular';
+    return {
+      is_locked: false,
+      data: {
+        building_name: b.building_name,
+        architect: b.architect,
+        city: b.city,
+        country: b.country,
+        opened_year: b.opened_year,
+        architectural_style: b.architectural_style,
+        difficulty: tier,
+        building_photo: `/quizzes/${b.photo_slug}.jpg`,
+        puzzle_clues: b.puzzle_clues
+      }
+    };
+  });
 
   for (let i = 0; i < catalogRows.length; i += 20) {
     const chunk = catalogRows.slice(i, i + 20);
@@ -1096,6 +1099,7 @@ async function main() {
     const rawOpts = [b.building_name, ...b.distractors];
     // deterministic shuffle
     const shuffled = rawOpts.sort(() => (b.photo_slug.length % 2 === 0 ? 0.3 : -0.3));
+    const tier = (b.difficulty === 'hard' || b.difficulty === 'master') ? 'master' : 'popular';
 
     return {
       quiz_id: QUIZ_1_ID,
@@ -1106,7 +1110,7 @@ async function main() {
       media_url: `/quizzes/${b.photo_slug}.jpg`,
       options: shuffled,
       correct_answer: b.building_name,
-      accepted_aliases: [`diff:${b.difficulty}`, b.building_name],
+      accepted_aliases: [`diff:${tier}`, b.building_name],
       explanation_clue: b.puzzle_clues
     };
   });
@@ -1131,6 +1135,7 @@ async function main() {
   const quiz2Questions = FAMOUS_BUILDINGS.map((b, idx) => {
     const rawOpts = [b.architect, ...b.architect_distractors];
     const shuffled = rawOpts.sort(() => (b.photo_slug.length % 3 === 0 ? 0.4 : -0.4));
+    const tier = (b.difficulty === 'hard' || b.difficulty === 'master') ? 'master' : 'popular';
 
     return {
       quiz_id: QUIZ_2_ID,
@@ -1141,7 +1146,7 @@ async function main() {
       media_url: `/quizzes/${b.photo_slug}.jpg`,
       options: shuffled,
       correct_answer: b.architect,
-      accepted_aliases: [`diff:${b.difficulty}`, b.architect],
+      accepted_aliases: [`diff:${tier}`, b.architect],
       explanation_clue: b.puzzle_clues
     };
   });

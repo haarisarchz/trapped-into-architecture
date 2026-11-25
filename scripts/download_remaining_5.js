@@ -6,7 +6,7 @@ const targetFiles = [
   { slug: 'unite-dhabitation-marseille', file: "File:Unité d'habitation Marseille, France.jpg" },
   { slug: 'the-glass-house-philip-johnson', file: 'File:Philip Johnson Glass House The House.jpg' },
   { slug: 'lloyds-building-london', file: "File:London - The Lloyd's building (1).jpg" },
-  { slug: 'centre-pompidou', file: 'File:Centre Pompidou, Paris May 2004 001.jpg' },
+  { slug: 'centre-pompidou', file: 'File:Paris - Centre Georges Pompidou.jpg' },
   { slug: 'therme-vals-zumthor', file: 'File:2005-08-06-Therme-Vals-Peter-Zumthor 05.jpg' }
 ];
 

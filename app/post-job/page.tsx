@@ -111,10 +111,14 @@ function PostJobContent() {
   const [flyerUrl, setFlyerUrl] = useState("");
   const [applicationEmail, setApplicationEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [customLocations, setCustomLocations] = useState<string>("");
   const [applyLink, setApplyLink] = useState("");
 
   // Submission State
   const [submitting, setSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [publishCompanyWithDraft, setPublishCompanyWithDraft] = useState(true);
   const [submittedJob, setSubmittedJob] = useState<any | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -341,7 +345,7 @@ function PostJobContent() {
         application_email: applicationEmail.trim() || null,
         apply_link: applyLink.trim() || null,
         image: flyerUrl || null,
-        city: selectedCompany.city || null,
+        city: customLocations.trim() || selectedCompany.city || null,
         state: selectedCompany.state || null,
         area: selectedCompany.neighborhood || null,
         organization_type: selectedCompany.organization_type || "Architecture Firm",
@@ -374,6 +378,71 @@ function PostJobContent() {
       setErrorMessage(err.message || "Failed to submit job. Please check all fields.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSaveDraft = async (publishStudioNow: boolean) => {
+    if (!position.trim()) {
+      setErrorMessage("Please enter at least the job title / position to save draft.");
+      setShowDraftModal(false);
+      return;
+    }
+
+    setSavingDraft(true);
+    setErrorMessage(null);
+
+    try {
+      let finalDescription = description.trim() || `Draft vacancy for ${position}`;
+      const payload: any = {
+        firm_name: selectedCompany?.firm_name || "Draft Studio",
+        company_id: selectedCompany?.id || null,
+        author_id: userProfile?.id || currentUser?.id,
+        position: position.trim(),
+        role: role.trim() || position.trim(),
+        workplace_type: workplaceType,
+        employment_type: employmentType,
+        experience: experience,
+        salary: salary.trim() || null,
+        qualifications: qualifications.trim() || null,
+        skills_required: skills,
+        job_description: finalDescription,
+        application_type: "email",
+        application_email: applicationEmail.trim() || null,
+        apply_link: applyLink.trim() || null,
+        image: flyerUrl || null,
+        city: customLocations.trim() || selectedCompany?.city || null,
+        state: selectedCompany?.state || null,
+        organization_type: selectedCompany?.organization_type || "Architecture Firm",
+        status: "draft",
+        posted_date: new Date().toISOString(),
+      };
+
+      // If user chose to publish studio profile now
+      if (publishStudioNow && selectedCompany?.id) {
+        await supabase
+          .from("companies")
+          .update({ is_claimed: true, claimed_by: userProfile?.id || currentUser?.id })
+          .eq("id", selectedCompany.id);
+      }
+
+      const res = await fetch("/api/jobs/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          payload,
+          userId: userProfile?.id || currentUser?.id,
+        }),
+      });
+
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Failed to save draft.");
+
+      setShowDraftModal(false);
+      setSubmittedJob({ ...resData.data, isDraft: true, studioPublished: publishStudioNow });
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to save draft.");
+    } finally {
+      setSavingDraft(false);
     }
   };
 
@@ -861,7 +930,28 @@ function PostJobContent() {
             {/* Workplace & Employment Type */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Job Location(s) (Optional override / Multi-city)
+                  </label>
+                  <span className="text-[11px] text-gray-400">
+                    Leave empty to use studio headquarter ({selectedCompany?.city || "Headquarter"})
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={customLocations}
+                  onChange={(e) => setCustomLocations(e.target.value)}
+                  placeholder="e.g. Chennai, Bengaluru (Splits automatically into separate city posts!)"
+                  className="w-full px-4 py-3 rounded-2xl border border-gray-300 text-sm font-medium focus:border-black focus:outline-none transition bg-white"
+                />
+                <p className="text-[11px] text-gray-500 mt-1.5 leading-relaxed">
+                  💡 <strong>Multi-Location Feature:</strong> If hiring across multiple branches (e.g. <em>Chennai, Bengaluru</em>), enter them separated by commas. The system will automatically publish distinct city listings for search engines, and bundle them into a single consolidated WhatsApp broadcast!
+                </p>
+              </div>
+
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
                   Workplace Type
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -1142,15 +1232,27 @@ function PostJobContent() {
               const isCompGold = !selectedCompany || isAdmin || (compLvl && compLvl.score >= 66);
 
               return (
-                <button
-                  type="submit"
-                  disabled={submitting || !isCompGold}
-                  className={`w-full sm:w-auto font-bold text-sm px-8 py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 ${
-                    !isCompGold
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-black hover:bg-gray-800 text-white cursor-pointer disabled:opacity-50"
-                  }`}
-                >
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  {/* Save Draft Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowDraftModal(true)}
+                    disabled={savingDraft || submitting}
+                    className="w-full sm:w-auto font-bold text-sm px-6 py-4 rounded-2xl border-2 border-gray-300 hover:border-black text-gray-800 hover:text-black bg-white transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>💾 Save Draft</span>
+                  </button>
+
+                  {/* Submit / Publish Button */}
+                  <button
+                    type="submit"
+                    disabled={submitting || !isCompGold}
+                    className={`w-full sm:w-auto font-bold text-sm px-8 py-4 rounded-2xl transition shadow-md flex items-center justify-center gap-2 ${
+                      !isCompGold
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-black hover:bg-gray-800 text-white cursor-pointer disabled:opacity-50"
+                    }`}
+                  >
                   {submitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1168,12 +1270,65 @@ function PostJobContent() {
                     </>
                   )}
                 </button>
+                </div>
               );
             })()}
           </div>
         </form>
       </div>
 
+      {/* DRAFT DECISION MODAL: Save job as draft + publish studio profile? */}
+      {showDraftModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setShowDraftModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 border border-amber-200">
+              <ShieldCheck size={26} />
+            </div>
+
+            <h3 className="text-xl font-extrabold text-gray-900 mb-2">
+              Save Job Draft &amp; Publish Studio?
+            </h3>
+
+            <p className="text-xs text-gray-600 leading-relaxed mb-6">
+              Your job posting will be saved safely in your drafts. Would you like to publish your <strong>{selectedCompany?.firm_name || "Studio Profile"}</strong> to the TIA directory now so clients and architects can discover your practice?
+            </p>
+
+            <div className="space-y-3">
+              <button
+                type="button"
+                disabled={savingDraft}
+                onClick={() => handleSaveDraft(true)}
+                className="w-full py-3.5 px-5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              >
+                {savingDraft ? <span>Saving...</span> : <span>Yes, Publish Studio &amp; Save Job Draft</span>}
+              </button>
+
+              <button
+                type="button"
+                disabled={savingDraft}
+                onClick={() => handleSaveDraft(false)}
+                className="w-full py-3 px-5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer"
+              >
+                Save Both as Draft Only
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDraftModal(false)}
+                className="w-full py-2 text-xs text-gray-400 hover:text-black transition text-center"
+              >
+                Cancel / Return to Form
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </main>
   );

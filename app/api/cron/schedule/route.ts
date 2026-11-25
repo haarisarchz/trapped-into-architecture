@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function GET(req: Request) {
   try {
@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
     // Find all scheduled jobs whose posted_date is past or now
     const now = new Date().toISOString();
-    const { data: scheduledJobs, error } = await supabase
+    const { data: scheduledJobs, error } = await supabaseAdmin
       .from("jobs")
       .select("id, posted_date, status, firm_name, image, scheduled_at")
       .eq("status", "scheduled")
@@ -26,23 +26,40 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "No scheduled jobs to publish at this time." });
     }
 
-    // 1. Bulk update status to published for all due jobs
+    // 1. Bulk update status to published and record scheduled_at for all due jobs
     const allIds = scheduledJobs.map((j) => j.id);
-    const { error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabaseAdmin
       .from("jobs")
-      .update({ status: "published" })
-      .in("id", allIds);
+      .update({ 
+        status: "published",
+        scheduled_at: now
+      })
+      .in("id", allIds)
+      .select("id");
 
     if (updateError) {
       console.error("Failed to update status for scheduled jobs:", updateError);
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
+    // CRITICAL SAFEGUARD: Verify that database rows were actually updated.
+    // If Supabase RLS blocked the update, abort immediately to prevent infinite duplicate publishing loops!
+    if (!updatedRows || updatedRows.length === 0) {
+      console.error("CRITICAL: Failed to transition scheduled jobs to 'published' (0 rows updated). Aborting social publish to prevent duplicate loop.");
+      return NextResponse.json({
+        error: "Database RLS prevented updating job status to 'published'. Publishing aborted to prevent duplicate posts.",
+        scheduled_job_ids: allIds
+      }, { status: 500 });
+    }
+
+    const successfullyUpdatedIds = new Set(updatedRows.map(r => r.id));
+    const eligibleJobs = scheduledJobs.filter(j => successfullyUpdatedIds.has(j.id));
+
     // 2. Group jobs into distinct batches (same firm, same image, same posted_date)
     // Multi-position flyers share the same flyer image, firm, and schedule date.
     // They must be published to social media as a single grouped post, never once per position!
     const batchMap = new Map<string, any[]>();
-    for (const job of scheduledJobs) {
+    for (const job of eligibleJobs) {
       const normFirm = (job.firm_name || "").trim().toLowerCase();
       const normImg = (job.image || "").trim();
       const normDate = (job.posted_date || "").trim();
@@ -59,13 +76,6 @@ export async function GET(req: Request) {
 
     // 3. Trigger social publish EXACTLY ONCE per batch
     for (const [batchKey, batchJobs] of batchMap.entries()) {
-      // Check if any job in this batch was already marked as published
-      const alreadyPublished = batchJobs.some((j) => j.scheduled_at !== null);
-      if (alreadyPublished) {
-        console.log(`Cron: Batch ${batchKey} was already published to social media. Skipping.`);
-        continue;
-      }
-
       const triggerJobId = batchJobs[0].id;
       triggeredBatchJobIds.push(triggerJobId);
 
@@ -93,8 +103,8 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Successfully published ${allIds.length} job(s) across ${batchMap.size} distinct batch(es). Triggered ${triggeredBatchJobIds.length} social post(s).`,
-      published_jobs: allIds,
+      message: `Successfully published ${updatedRows.length} job(s) across ${batchMap.size} distinct batch(es). Triggered ${triggeredBatchJobIds.length} social post(s).`,
+      published_jobs: updatedRows.map(r => r.id),
       triggered_batch_job_ids: triggeredBatchJobIds
     });
   } catch (err: any) {

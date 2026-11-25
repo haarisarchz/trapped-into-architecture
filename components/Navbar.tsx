@@ -2,10 +2,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, ShieldCheck, RefreshCw, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Bell, Menu, X, ChevronDown, Check, ArrowRight, Mail, MailOpen, ShieldCheck, RefreshCw, AlertCircle, ExternalLink, Maximize2, Search } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { calculateCompanyLevel } from "@/utils/companyLevel";
 import { trackEvent } from "@/utils/analytics";
@@ -85,6 +85,11 @@ export default function Navbar() {
   const [showNotif, setShowNotif] = useState(false);
   const [calloutDismissed, setCalloutDismissed] = useState(false);
   const [lastRead, setLastRead] = useState<Date | null>(null);
+  const [notifActiveTab, setNotifActiveTab] = useState<"all" | "approvals" | "replies" | "growth" | "dispatches">("all");
+  const [readNotifIds, setReadNotifIds] = useState<string[]>([]);
+  const [unreadNotifIds, setUnreadNotifIds] = useState<string[]>([]);
+  const [showAllNotifsModal, setShowAllNotifsModal] = useState(false);
+  const [notifModalSearch, setNotifModalSearch] = useState("");
 
   useEffect(() => {
     const handleClickOutside = (event: any) => {
@@ -112,12 +117,22 @@ export default function Navbar() {
   useEffect(() => {
     const stored = localStorage.getItem("notifLastRead");
     if (stored) setLastRead(new Date(stored));
+    try {
+      const storedIds = JSON.parse(localStorage.getItem("readNotifIds") || "[]");
+      if (Array.isArray(storedIds)) setReadNotifIds(storedIds);
+    } catch (e) {}
+    try {
+      const unreadIds = JSON.parse(localStorage.getItem("unreadNotifIds") || "[]");
+      if (Array.isArray(unreadIds)) setUnreadNotifIds(unreadIds);
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
     const fetchNotifs = async () => {
       if (!currentUser) return;
       const role = (currentUser.role || "").toLowerCase().replace(/[\s_]+/g, "");
+      const isCeoOrSuper = ["ceo", "superadmin", "admin"].includes(role);
+      const isJobAdmin = role === "jobadmin";
       const notifs: any[] = [];
 
       let userId = currentUser.id;
@@ -135,6 +150,14 @@ export default function Navbar() {
         const { data: pData } = await supabase.from("profiles").select("*").eq("email", currentUser.email).maybeSingle();
         userProf = pData;
         if (userProf) userId = userProf.id;
+      }
+
+      // Sync cross-device read timestamp from profile
+      if (userProf?.notifications_last_read) {
+        const dbLastRead = new Date(userProf.notifications_last_read);
+        if (!isNaN(dbLastRead.getTime())) {
+          setLastRead((prev) => (!prev || dbLastRead > prev ? dbLastRead : prev));
+        }
       }
 
       // A. Member Milestone Level-Up Notifications (Silver 45%, Gold 66%, Platinum 81%, Diamond 91%)
@@ -155,30 +178,46 @@ export default function Navbar() {
           if (percentage >= 91) {
             notifs.push({
               id: `member-tier-diamond-${userId}`,
-              message: `👑 Diamond Rank Unlocked (${percentage}%)! Your profile is among the top 1% of architecture professionals.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "👑",
+              message: `Diamond Rank Unlocked (${percentage}%)! Your profile is among the top 1% of architecture professionals.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           } else if (percentage >= 81) {
             notifs.push({
               id: `member-tier-platinum-${userId}`,
-              message: `💎 Platinum Member Unlocked (${percentage}%)! You receive priority recommendations and exclusive alerts.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "💎",
+              message: `Platinum Member Unlocked (${percentage}%)! You receive priority recommendations and exclusive alerts.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           } else if (percentage >= 66) {
             notifs.push({
               id: `member-tier-gold-${userId}`,
-              message: `🏆 Gold Member Unlocked (${percentage}%)! You can now publish job openings and feature your profile.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "🏆",
+              message: `Gold Member Unlocked (${percentage}%)! You can now publish job openings and feature your profile.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           } else if (percentage >= 45) {
             notifs.push({
               id: `member-tier-silver-${userId}`,
-              message: `🥈 Silver Member Unlocked (${percentage}%)! You can now claim existing studios or register a new practice.`,
+              category: "growth",
+              categoryLabel: "Milestone",
+              icon: "🥈",
+              message: `Silver Member Unlocked (${percentage}%)! You can now claim existing studios or register a new practice.`,
               time: profTime,
-              link: `/profile/${userProf.username || ""}`
+              link: `/profile/${userProf.username || ""}`,
+              actionText: "View Profile →"
             });
           }
         } catch (e) {
@@ -200,9 +239,13 @@ export default function Navbar() {
             if (compLvl.score >= 45) {
               notifs.push({
                 id: `comp-tier-${c.id}-${compLvl.tier}`,
-                message: `${compLvl.icon} ${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.tier === 'gold' || compLvl.tier === 'platinum' || compLvl.tier === 'diamond' ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
+                category: "growth",
+                categoryLabel: "Studio Milestone",
+                icon: compLvl.icon,
+                message: `${compLvl.isInstitution ? "Institution Milestone" : "Studio Milestone"}: ${c.firm_name} is a ${compLvl.label} (${compLvl.score}%).${compLvl.tier === 'gold' || compLvl.tier === 'platinum' || compLvl.tier === 'diamond' ? (compLvl.isInstitution ? ' Eligible to post academic openings!' : ' Eligible to post job openings!') : ''}`,
                 time: compTime,
-                link: compLvl.isInstitution ? `/institutions/${c.slug}` : `/companies/${c.slug}`
+                link: compLvl.isInstitution ? `/institutions/${c.slug}` : `/companies/${c.slug}`,
+                actionText: "View Studio →"
               });
             }
           });
@@ -226,16 +269,24 @@ export default function Navbar() {
             if (j.status === "published") {
               notifs.push({
                 id: `job-pub-${j.id}`,
-                message: `✅ Your job listing for "${j.position}" at ${j.firm_name} has been approved and published!`,
+                category: "dispatches",
+                categoryLabel: "Published",
+                icon: "✅",
+                message: `Your job listing for "${j.position}" at ${j.firm_name} has been approved and published!`,
                 time: jTime,
-                link: `/jobs`
+                link: `/jobs`,
+                actionText: "View Job →"
               });
             } else if (j.status === "rejected") {
               notifs.push({
                 id: `job-rej-${j.id}`,
-                message: `⚠️ Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
+                category: "dispatches",
+                categoryLabel: "Needs Revision",
+                icon: "⚠️",
+                message: `Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
                 time: jTime,
-                link: `/post-job`
+                link: `/post-job`,
+                actionText: "Resubmit →"
               });
             }
           });
@@ -244,217 +295,328 @@ export default function Navbar() {
         }
       }
       
-      // 1. CEO Instagram Notifs
-      if (role === "ceo") {
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        const { data } = await supabase.from('jobs')
-          .select('id, firm_name, position, posted_date, status')
-          .eq('status', 'published')
-          .gte('posted_date', yesterday)
-          .order('posted_date', { ascending: false });
-          
-        if (data) {
-            const groupedJobs: Record<string, any> = {};
-            data.forEach((job: any) => {
-              if (!groupedJobs[job.firm_name]) {
-                groupedJobs[job.firm_name] = job;
-              }
-            });
-            Object.values(groupedJobs).forEach((job: any) => {
-              notifs.push({
-                id: job.id + '-pub',
-                message: `${job.firm_name} hiring post is successfully published on the website`,
-                time: job.posted_date,
-                link: null
-              });
-            });
-          }
-      }
-      
-      // 2. Admin/Superadmin/CEO/JobAdmin missing logo notifs
-      if (["superadmin", "admin", "ceo", "jobadmin", "companyadmin"].includes(role)) {
-        let userId = currentUser.id;
-        if (!userId && currentUser.username) {
-          const { data: pData } = await supabase.from("profiles").select("id").eq("username", currentUser.username).maybeSingle();
-          if (pData) userId = pData.id;
-        }
-        
-        if (userId) {
-          // Fetch missing logos only for companies created by the logged-in user
-          const { data: noLogoComps } = await supabase
-            .from("companies")
-            .select("id, firm_name, created_at, logo_url")
-            .eq("created_by", userId);
-            
-          if (noLogoComps) {
-            const missingLogos = noLogoComps.filter((c: any) => !c.logo_url || c.logo_url.trim() === "");
-            const now = new Date();
-
-            // First 3 days: notify for each individual company
-            const recentMissing = missingLogos.filter((comp: any) => {
-              const createdDate = new Date(comp.created_at || now);
-              const ageDays = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-              return ageDays <= 3;
-            });
-
-            recentMissing.forEach((comp: any) => {
-              notifs.push({
-                id: comp.id + '-logo',
-                message: `The company you added (${comp.firm_name}) is missing a logo. Please add one.`,
-                time: comp.created_at || now.toISOString(),
-                link: `/admin/companies?filter=missing-logo`
-              });
-            });
-
-            // Older than 3 days: notify weekly on Sundays as a digest
-            const olderMissing = missingLogos.filter((comp: any) => {
-              const createdDate = new Date(comp.created_at || now);
-              const ageDays = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-              return ageDays > 3;
-            });
-
-            const isSunday = now.getDay() === 0;
-            if (isSunday && olderMissing.length > 0) {
-              const count = olderMissing.length;
-              const names = olderMissing.slice(0, 2).map((c: any) => c.firm_name).join(', ');
-              const extra = count > 2 ? ` and ${count - 2} other${count - 2 > 1 ? 's' : ''}` : '';
-              notifs.push({
-                id: 'sunday-digest-missing-logos-' + now.toISOString().split('T')[0],
-                message: `Weekly Reminder: You have ${count} ${count === 1 ? 'company' : 'companies'} (${names}${extra}) missing logos. Please upload them.`,
-                time: (function(){ const d = new Date(); d.setHours(9, 0, 0, 0); return d.toISOString(); })(),
-                link: `/admin/companies?filter=missing-logo`
-              });
-            }
-          }
-        }
-      }
-
-      // 3. Admin Pending Claims Notifs
-      if (["superadmin", "admin", "ceo", "jobadmin"].includes(role)) {
+      // D. CEO & Super Admin Action-Oriented Notifications (Approvals, Replies, Growth, Dispatches)
+      if (isCeoOrSuper) {
+        // 1. Studio Claim Requests (Pending) -> Needs Approval
         try {
-          const { count: pendingClaimsCount } = await supabase
-            .from("company_claims")
-            .select("*", { count: "exact", head: true })
-            .eq("status", "pending");
-
-          if (pendingClaimsCount && pendingClaimsCount > 0) {
-            notifs.push({
-              id: "pending-claims-" + pendingClaimsCount,
-              message: `Company Claims: ${pendingClaimsCount} studio claim request(s) waiting for review.`,
-              time: new Date().toISOString(),
-              link: "/admin/claims",
-            });
-          }
-        } catch (e) {
-          // Table not ready yet
-        }
-      }
-
-      // 4. User Claim Status Updates (for all logged in users)
-      if (currentUser) {
-        try {
-          let uId = currentUser.id;
-          if (!uId && (currentUser.username || currentUser.email)) {
-            const { data: pData } = await supabase
-              .from("profiles")
-              .select("id")
-              .eq(currentUser.username ? "username" : "email", currentUser.username || currentUser.email)
-              .maybeSingle();
-            if (pData) uId = pData.id;
-          }
-
-          if (uId) {
-            const { data: userClaims } = await supabase
-              .from("company_claims")
-              .select("*")
-              .eq("user_id", uId)
-              .order("updated_at", { ascending: false })
-              .limit(5);
-
-            if (userClaims) {
-              userClaims.forEach((c: any) => {
-                if (c.status === "approved") {
-                  notifs.push({
-                    id: "claim-approved-" + c.id,
-                    message: `🎉 Great news! Your claim for "${c.company_name}" has been approved as a Gold Verified Studio.`,
-                    time: c.reviewed_at || c.updated_at || c.created_at,
-                    link: c.company_slug ? `/companies/${c.company_slug}` : null,
-                  });
-                } else if (c.status === "scrutiny_needed") {
-                  notifs.push({
-                    id: "claim-scrutiny-" + c.id,
-                    message: `⚠️ Notice for "${c.company_name}": Additional scrutiny is needed. ${c.admin_notes || "Admin will review further."}`,
-                    time: c.reviewed_at || c.updated_at || c.created_at,
-                    link: c.company_slug ? `/companies/${c.company_slug}` : null,
-                  });
-                } else if (c.status === "rejected") {
-                  notifs.push({
-                    id: "claim-rejected-" + c.id,
-                    message: `Claim update: Your claim for "${c.company_name}" was not approved. Note: ${c.admin_notes || "Could not verify authorization."}`,
-                    time: c.reviewed_at || c.updated_at || c.created_at,
-                    link: null,
-                  });
-                }
-              });
-            }
-          }
-        } catch (e) {
-          // gracefully ignore if table not ready
-        }
-      }
-      
-      // 3. User activities, Email dispatches & Studio requests for CEO & Admins
-      if (["ceo", "superadmin", "admin", "jobadmin"].includes(role)) {
-        try {
-          const { data: emailLogs } = await supabase
-            .from("contact_inquiries")
-            .select("id, name, email, subject, message, created_at")
-            .in("subject", [
-              "NOTIFIED_COMPANY_JOB_POSTING",
-              "COMPANY_JOB_EMAIL_SENT",
-              "COMPANY_JOB_EMAIL_PENDING",
-              "NEW_USER_REGISTERED",
-              "USER_VERIFIED",
-              "USER_PHONE_VERIFIED",
-              "STUDIO_CLAIM_REQUEST",
-              "NEW_STUDIO_REGISTERED",
-            ])
+          const { data: claims } = await supabase
+            .from("company_claim_requests")
+            .select("id, company_name, company_slug, requester_name, work_email, created_at, status")
+            .eq("status", "pending")
             .order("created_at", { ascending: false })
-            .limit(30);
+            .limit(15);
 
-          (emailLogs || []).forEach((log: any) => {
-            let icon = "✉️";
-            let link: string | null = `/admin/jobs`;
-
-            if (log.subject === "COMPANY_JOB_EMAIL_PENDING") {
-              icon = "⏳";
-              link = "/admin/jobs";
-            } else if (log.subject === "NEW_USER_REGISTERED") {
-              icon = "👤";
-              link = "/admin/users";
-            } else if (log.subject === "USER_VERIFIED") {
-              icon = "🔒";
-              link = "/admin/users";
-            } else if (log.subject === "USER_PHONE_VERIFIED") {
-              icon = "📱";
-              link = "/admin/users";
-            } else if (log.subject === "STUDIO_CLAIM_REQUEST") {
-              icon = "🏛️";
-              link = "/admin/claims";
-            } else if (log.subject === "NEW_STUDIO_REGISTERED") {
-              icon = "🏢";
-              link = "/admin/companies";
-            }
-
+          (claims || []).forEach((cl: any) => {
             notifs.push({
-              id: `email-log-${log.id}`,
-              message: `${icon} ${log.message}`,
-              time: log.created_at,
-              link,
+              id: `claim-${cl.id}`,
+              category: "approvals",
+              categoryLabel: "Needs Approval",
+              icon: "🏛️",
+              message: `Studio Claim Request: ${cl.requester_name || "An architect"} requested ownership of ${cl.company_name}.`,
+              time: cl.created_at,
+              link: `/admin/companies?tab=claims`,
+              actionText: "Review Claim →"
             });
           });
         } catch (err) {
-          console.warn("Failed to fetch email logs for notifications:", err);
+          console.warn("Error fetching claim requests for notifs:", err);
+        }
+
+        // 2. Pending Candidate Job Submissions -> Needs Approval
+        try {
+          const { data: pendingJobs } = await supabase
+            .from("jobs")
+            .select("id, firm_name, position, created_at, posted_date, status")
+            .eq("status", "pending")
+            .order("created_at", { ascending: false })
+            .limit(10);
+
+          (pendingJobs || []).forEach((pj: any) => {
+            notifs.push({
+              id: `pending-job-${pj.id}`,
+              category: "approvals",
+              categoryLabel: "Needs Approval",
+              icon: "📝",
+              message: `Candidate Job Review: New opening for "${pj.position}" at ${pj.firm_name} is awaiting approval.`,
+              time: pj.created_at || pj.posted_date || new Date().toISOString(),
+              link: `/admin/jobs`,
+              actionText: "Review Job →"
+            });
+          });
+        } catch (err) {
+          console.warn("Error fetching pending jobs for notifs:", err);
+        }
+
+        // 3. Visitor Contact Inquiries, Suggestions, New Users & Emails
+        try {
+          const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+          const { data: contactMsgs } = await supabase
+            .from("contact_inquiries")
+            .select("id, name, email, subject, message, created_at, is_read")
+            .order("created_at", { ascending: false })
+            .limit(50);
+
+          const SYSTEM_SUBJECTS = new Set([
+            "NOTIFIED_COMPANY_JOB_POSTING",
+            "COMPANY_JOB_EMAIL_SENT",
+            "COMPANY_JOB_EMAIL_PENDING",
+            "NEW_USER_REGISTERED",
+            "USER_VERIFIED",
+            "USER_PHONE_VERIFIED",
+            "STUDIO_CLAIM_REQUEST",
+            "NEW_STUDIO_REGISTERED",
+          ]);
+
+          (contactMsgs || []).forEach((log: any) => {
+            const subj = (log.subject || "").trim();
+            const logTime = new Date(log.created_at);
+
+            if (!SYSTEM_SUBJECTS.has(subj) && !subj.startsWith("[Direct Chat]")) {
+              const preview = log.message ? (log.message.length > 70 ? log.message.slice(0, 70) + "..." : log.message) : "";
+              notifs.push({
+                id: `inquiry-${log.id}`,
+                category: "replies",
+                categoryLabel: "Needs Reply",
+                icon: "💬",
+                message: `${log.name ? log.name + ': ' : ''}"${subj}" — ${preview}`,
+                time: log.created_at,
+                link: `/admin/contact?tab=inbox`,
+                actionText: "Reply in Inbox →"
+              });
+            } else if (subj === "NEW_STUDIO_REGISTERED") {
+              notifs.push({
+                id: `studio-reg-${log.id}`,
+                category: "approvals",
+                categoryLabel: "Needs Approval",
+                icon: "🏢",
+                message: log.message,
+                time: log.created_at,
+                link: `/admin/companies?tab=submissions`,
+                actionText: "Review Studio →"
+              });
+            } else if (subj === "NEW_USER_REGISTERED") {
+              if (logTime >= new Date(twoWeeksAgo)) {
+                notifs.push({
+                  id: `growth-reg-${log.id}`,
+                  category: "growth",
+                  categoryLabel: "Growth & Users",
+                  icon: "👤",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/users`,
+                  actionText: "View Users →"
+                });
+              }
+            } else if (subj === "USER_VERIFIED") {
+              if (logTime >= new Date(twoWeeksAgo)) {
+                notifs.push({
+                  id: `growth-verif-${log.id}`,
+                  category: "growth",
+                  categoryLabel: "Growth & Users",
+                  icon: "🔒",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/users`,
+                  actionText: "View Users →"
+                });
+              }
+            } else if (subj === "USER_PHONE_VERIFIED") {
+              if (logTime >= new Date(twoWeeksAgo)) {
+                notifs.push({
+                  id: `growth-phone-${log.id}`,
+                  category: "growth",
+                  categoryLabel: "Growth & Users",
+                  icon: "📱",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/users`,
+                  actionText: "View Users →"
+                });
+              }
+            } else if (subj === "COMPANY_JOB_EMAIL_PENDING" || subj === "COMPANY_JOB_EMAIL_SENT" || subj === "NOTIFIED_COMPANY_JOB_POSTING") {
+              // 1 week retention for dispatches as requested
+              if (logTime >= new Date(oneWeekAgo)) {
+                notifs.push({
+                  id: `dispatch-email-${log.id}`,
+                  category: "dispatches",
+                  categoryLabel: "Dispatches",
+                  icon: subj === "COMPANY_JOB_EMAIL_PENDING" ? "⏳" : "✉️",
+                  message: log.message,
+                  time: log.created_at,
+                  link: `/admin/mails`,
+                  actionText: "View Dispatches →"
+                });
+              }
+            }
+          });
+        } catch (err) {
+          console.warn("Failed to fetch contact inquiries for notifications:", err);
+        }
+
+        // 4. Live Visitor Direct Chats (Unread) -> Needs Reply
+        try {
+          const { data: directChats } = await supabase
+            .from("chat_messages")
+            .select("id, session_id, message, sender, is_read, created_at")
+            .eq("sender", "visitor")
+            .eq("is_read", false)
+            .order("created_at", { ascending: false })
+            .limit(20);
+
+          if (directChats && directChats.length > 0) {
+            const sessionMap: Record<string, any> = {};
+            directChats.forEach((m: any) => {
+              if (!sessionMap[m.session_id]) {
+                sessionMap[m.session_id] = m;
+              }
+            });
+
+            Object.values(sessionMap).forEach((chat: any) => {
+              const preview = chat.message ? (chat.message.length > 65 ? chat.message.slice(0, 65) + "..." : chat.message) : "New visitor message";
+              notifs.push({
+                id: `chat-${chat.session_id}`,
+                category: "replies",
+                categoryLabel: "Needs Reply",
+                icon: "⚡",
+                message: `Live Visitor Chat: "${preview}"`,
+                time: chat.created_at,
+                link: `/admin/contact?tab=chat&session=${chat.session_id}`,
+                actionText: "Open Live Chat →"
+              });
+            });
+          }
+        } catch (err) {
+          // chat_messages might be optional or fallback
+        }
+
+        // 5. Site-Wide Published Jobs Feed (Past 1 Week / 7 Days)
+        try {
+          const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: pubJobs } = await supabase
+            .from('jobs')
+            .select('id, firm_name, position, posted_date, status')
+            .eq('status', 'published')
+            .gte('posted_date', oneWeekAgo)
+            .order('posted_date', { ascending: false })
+            .limit(30);
+
+          (pubJobs || []).forEach((j: any) => {
+            notifs.push({
+              id: `pub-job-${j.id}`,
+              category: "dispatches",
+              categoryLabel: "Job Published",
+              icon: "🚀",
+              message: `${j.firm_name} hiring post for "${j.position}" is published on website.`,
+              time: j.posted_date || new Date().toISOString(),
+              link: `/jobs`,
+              actionText: "View Opening →"
+            });
+          });
+        } catch (err) {
+          console.warn("Failed to fetch published jobs for CEO notifs:", err);
+        }
+      }
+
+      // E. Job Admin Exclusive Notifications (Published Posts + Weekly Earnings Digest)
+      if (isJobAdmin && userId) {
+        // 1. Published jobs authored by this Job Admin
+        try {
+          const { data: myPublishedJobs } = await supabase
+            .from("jobs")
+            .select("id, firm_name, position, posted_date, status, updated_at")
+            .eq("author_id", userId)
+            .eq("status", "published")
+            .order("posted_date", { ascending: false })
+            .limit(10);
+
+          (myPublishedJobs || []).forEach((j: any) => {
+            notifs.push({
+              id: `jobadmin-pub-${j.id}`,
+              category: "dispatches",
+              categoryLabel: "Published",
+              icon: "✅",
+              message: `Your job listing for "${j.position}" at ${j.firm_name} is published live!`,
+              time: j.posted_date || j.updated_at || new Date().toISOString(),
+              link: `/jobs`,
+              actionText: "View Job →"
+            });
+          });
+        } catch (err) {
+          console.warn("Error fetching jobadmin published jobs:", err);
+        }
+
+        // 2. Weekly Motivational Activity & Earnings Summary
+        try {
+          const now = new Date();
+          const currentDay = now.getDay();
+          const diffToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
+
+          const thisMonday = new Date(now);
+          thisMonday.setDate(now.getDate() + diffToMonday);
+          thisMonday.setHours(0, 0, 0, 0);
+
+          const lastMonday = new Date(thisMonday);
+          lastMonday.setDate(thisMonday.getDate() - 7);
+
+          const lastSunday = new Date(thisMonday);
+          lastSunday.setMilliseconds(-1);
+
+          const threeWeeksAgo = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
+          const { data: recentJobs } = await supabase
+            .from("jobs")
+            .select("id, posted_date, created_at, status")
+            .eq("author_id", userId)
+            .eq("status", "published")
+            .gte("posted_date", threeWeeksAgo);
+
+          let rupeesPerPost = 10;
+          try {
+            const { data: st } = await supabase.from("site_settings").select("rupees_per_post").single();
+            if (st?.rupees_per_post) rupeesPerPost = st.rupees_per_post;
+          } catch (e) {}
+
+          let thisWeekCount = 0;
+          let lastWeekCount = 0;
+
+          (recentJobs || []).forEach((j: any) => {
+            const pDate = new Date(j.posted_date || j.created_at);
+            if (pDate >= thisMonday) {
+              thisWeekCount++;
+            } else if (pDate >= lastMonday && pDate <= lastSunday) {
+              lastWeekCount++;
+            }
+          });
+
+          const thisWeekEarned = thisWeekCount * rupeesPerPost;
+          const lastWeekEarned = lastWeekCount * rupeesPerPost;
+
+          let motivationMsg = "";
+          if (thisWeekCount > lastWeekCount) {
+            const pct = Math.round(((thisWeekCount - lastWeekCount) / Math.max(lastWeekCount, 1)) * 100);
+            motivationMsg = `💼 Weekly Summary: You posted ${thisWeekCount} jobs this week and earned ₹${thisWeekEarned}! (Last week: ${lastWeekCount} jobs, ₹${lastWeekEarned} — 🔥 +${pct}% increase!). Keep up the great momentum!`;
+          } else if (thisWeekCount < lastWeekCount) {
+            motivationMsg = `💼 Weekly Summary: You posted ${thisWeekCount} jobs this week and earned ₹${thisWeekEarned}. (Last week: ${lastWeekCount} jobs, ₹${lastWeekEarned}). A fresh week is here — let's boost your postings and earnings!`;
+          } else if (thisWeekCount > 0) {
+            motivationMsg = `💼 Weekly Summary: You posted ${thisWeekCount} jobs this week and earned ₹${thisWeekEarned}. Steady posting performance!`;
+          } else {
+            motivationMsg = `💼 Weekly Kickoff: You haven't posted any jobs yet this week (Last week: ${lastWeekCount} jobs, ₹${lastWeekEarned}). Post openings to earn ₹${rupeesPerPost} per post!`;
+          }
+
+          const weekNumber = Math.ceil((((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000) + 1) / 7);
+          notifs.push({
+            id: `jobadmin-weekly-${now.getFullYear()}-w${weekNumber}`,
+            category: "growth",
+            categoryLabel: "Weekly Earnings",
+            icon: "💼",
+            message: motivationMsg,
+            time: thisMonday.toISOString(),
+            link: `/admin/activity`,
+            actionText: "View My Activity & Earnings →"
+          });
+        } catch (err) {
+          console.warn("Error calculating weekly activity digest for Job Admin:", err);
         }
       }
 
@@ -467,16 +629,115 @@ export default function Navbar() {
   const handleBellClick = () => {
     setShowNotif(!showNotif);
     setCalloutDismissed(true);
-    if (!showNotif) {
-      const now = new Date();
-      setLastRead(now);
-      localStorage.setItem("notifLastRead", now.toISOString());
+  };
+
+  const markAllAsRead = () => {
+    const now = new Date();
+    setLastRead(now);
+    localStorage.setItem("notifLastRead", now.toISOString());
+    const allIds = notifications.map((n) => n.id);
+    setReadNotifIds(allIds);
+    setUnreadNotifIds([]);
+    localStorage.setItem("readNotifIds", JSON.stringify(allIds));
+    localStorage.removeItem("unreadNotifIds");
+    if (currentUser?.id) {
+      supabase
+        .from("profiles")
+        .update({ notifications_last_read: now.toISOString() })
+        .eq("id", currentUser.id)
+        .then(() => {})
+        .catch(() => {});
     }
   };
 
-  const unreadNotifs = notifications.filter(n => !lastRead || new Date(n.time) > lastRead);
+  const toggleReadStatus = (notifId: string) => {
+    const isCurrentlyUnread = isNotifUnread({ id: notifId });
+    if (isCurrentlyUnread) {
+      // Mark as READ
+      setUnreadNotifIds((prev) => {
+        const next = prev.filter((id) => id !== notifId);
+        localStorage.setItem("unreadNotifIds", JSON.stringify(next));
+        return next;
+      });
+      setReadNotifIds((prev) => {
+        if (prev.includes(notifId)) return prev;
+        const next = [...prev, notifId];
+        localStorage.setItem("readNotifIds", JSON.stringify(next));
+        return next;
+      });
+    } else {
+      // Mark as UNREAD
+      setReadNotifIds((prev) => {
+        const next = prev.filter((id) => id !== notifId);
+        localStorage.setItem("readNotifIds", JSON.stringify(next));
+        return next;
+      });
+      setUnreadNotifIds((prev) => {
+        if (prev.includes(notifId)) return prev;
+        const next = [...prev, notifId];
+        localStorage.setItem("unreadNotifIds", JSON.stringify(next));
+        return next;
+      });
+    }
+  };
+
+  const handleNotificationClick = (n: any) => {
+    if (n.id) {
+      setUnreadNotifIds((prev) => {
+        const next = prev.filter((id) => id !== n.id);
+        localStorage.setItem("unreadNotifIds", JSON.stringify(next));
+        return next;
+      });
+      setReadNotifIds((prev) => {
+        if (prev.includes(n.id)) return prev;
+        const next = [...prev, n.id];
+        localStorage.setItem("readNotifIds", JSON.stringify(next));
+        return next;
+      });
+    }
+    if (n.link) {
+      window.open(n.link, "_blank", "noopener,noreferrer");
+      setShowNotif(false);
+    }
+  };
+
+  const isNotifUnread = (n: any) => {
+    if (unreadNotifIds.includes(n.id)) return true;
+    if (readNotifIds.includes(n.id)) return false;
+    if (!lastRead) return true;
+    return new Date(n.time) > lastRead;
+  };
+
+  const unreadNotifs = notifications.filter(isNotifUnread);
   const hasUnread = unreadNotifs.length > 0;
   const unreadCount = unreadNotifs.length;
+
+  const approvalCount = notifications.filter((n) => n.category === "approvals").length;
+  const replyCount = notifications.filter((n) => n.category === "replies").length;
+  const growthCount = notifications.filter((n) => n.category === "growth").length;
+  const dispatchCount = notifications.filter((n) => n.category === "dispatches").length;
+
+  const isCeoOrSuper = ["ceo", "superadmin", "admin"].includes(userRoleNormalized);
+  const displayedNotifs =
+    isCeoOrSuper && notifActiveTab !== "all"
+      ? notifications.filter((n) => n.category === notifActiveTab)
+      : notifications;
+
+  const modalFilteredNotifs = useMemo(() => {
+    let list = isCeoOrSuper && notifActiveTab !== "all"
+      ? notifications.filter((n) => n.category === notifActiveTab)
+      : notifications;
+
+    if (notifModalSearch.trim()) {
+      const q = notifModalSearch.toLowerCase().trim();
+      list = list.filter(
+        (n) =>
+          (n.message || "").toLowerCase().includes(q) ||
+          (n.categoryLabel || "").toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [notifications, notifActiveTab, isCeoOrSuper, notifModalSearch]);
 
   const timeAgo = (dateStr: string) => {
     if (!dateStr) return '';
@@ -489,6 +750,216 @@ export default function Navbar() {
     const days = Math.floor(hrs / 24);
     return `${days} day${days !== 1 ? 's' : ''} ago`;
   };
+
+  const renderNotificationDropdown = () => (
+    <div className="absolute right-0 top-10 mt-2 w-[340px] sm:w-[400px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-[999] text-black animate-in fade-in zoom-in-95 duration-150">
+      {/* Header */}
+      <div className="p-3.5 sm:p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-gray-950 text-base">Notifications</span>
+          {unreadCount > 0 && (
+            <span className="bg-red-600 text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full">
+              {unreadCount} new
+            </span>
+          )}
+        </div>
+        {notifications.length > 0 && (
+          <button
+            type="button"
+            onClick={markAllAsRead}
+            className="text-xs font-semibold text-gray-500 hover:text-black transition cursor-pointer"
+          >
+            Mark all as read
+          </button>
+        )}
+      </div>
+
+      {/* Filter Tabs for CEO & Super Admin */}
+      {isCeoOrSuper && (
+        <div className="flex items-center gap-1.5 p-2 bg-gray-100/70 border-b border-gray-200/70 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("all")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer ${
+              notifActiveTab === "all"
+                ? "bg-black text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            All ({notifications.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("approvals")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "approvals"
+                ? "bg-amber-600 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>🚨 Approvals</span>
+            {approvalCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "approvals"
+                    ? "bg-amber-800 text-white"
+                    : "bg-amber-100 text-amber-800 font-extrabold"
+                }`}
+              >
+                {approvalCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("replies")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "replies"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>💬 Replies</span>
+            {replyCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "replies"
+                    ? "bg-blue-800 text-white"
+                    : "bg-blue-100 text-blue-800 font-extrabold"
+                }`}
+              >
+                {replyCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("growth")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "growth"
+                ? "bg-emerald-700 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>🎉 Growth</span>
+            {growthCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "growth"
+                    ? "bg-emerald-900 text-white"
+                    : "bg-emerald-100 text-emerald-800 font-extrabold"
+                }`}
+              >
+                {growthCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setNotifActiveTab("dispatches")}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1 ${
+              notifActiveTab === "dispatches"
+                ? "bg-zinc-800 text-white shadow-xs"
+                : "text-gray-600 hover:text-black hover:bg-gray-200/60"
+            }`}
+          >
+            <span>📢 Dispatches</span>
+            {dispatchCount > 0 && (
+              <span
+                className={`text-[10px] px-1 rounded-full ${
+                  notifActiveTab === "dispatches"
+                    ? "bg-zinc-950 text-white"
+                    : "bg-gray-200 text-gray-800 font-extrabold"
+                }`}
+              >
+                {dispatchCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Notification Items List */}
+      <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-100">
+        {displayedNotifs.length === 0 ? (
+          <div className="p-8 text-center text-gray-400 text-sm">
+            No notifications in this category
+          </div>
+        ) : (
+          displayedNotifs.map((n: any) => {
+            const isItemUnread = isNotifUnread(n);
+            return (
+              <div
+                key={n.id}
+                onClick={() => handleNotificationClick(n)}
+                className={`p-3.5 transition text-left cursor-pointer group flex items-start gap-3 ${
+                  isItemUnread ? "bg-blue-50/40 hover:bg-blue-50/80" : "hover:bg-gray-50"
+                }`}
+              >
+                <div className="text-xl shrink-0 mt-0.5">{n.icon || "🔔"}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    {n.categoryLabel && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
+                        {n.categoryLabel}
+                      </span>
+                    )}
+                    <span className="text-[11px] text-gray-400 shrink-0 font-medium">
+                      {timeAgo(n.time)}
+                    </span>
+                  </div>
+                  <p className="text-[13px] font-medium leading-snug text-gray-900 group-hover:text-black">
+                    {n.message}
+                  </p>
+                  {n.actionText && (
+                    <div className="mt-1.5 text-xs font-bold text-blue-600 group-hover:text-black group-hover:underline flex items-center gap-1">
+                      <span>{n.actionText}</span>
+                      <ExternalLink size={11} className="inline-block" />
+                    </div>
+                  )}
+                </div>
+                <div className="shrink-0 flex items-center gap-1 self-center mt-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleReadStatus(n.id);
+                    }}
+                    title={isItemUnread ? "Mark as read" : "Mark as unread"}
+                    className={`p-1 rounded-md transition cursor-pointer ${
+                      isItemUnread
+                        ? "text-blue-600 hover:bg-blue-100 hover:text-blue-800"
+                        : "text-gray-400 hover:bg-gray-200/70 hover:text-gray-700"
+                    }`}
+                  >
+                    {isItemUnread ? <MailOpen size={13} /> : <Mail size={13} />}
+                  </button>
+                  {isItemUnread && (
+                    <span className="w-2 h-2 rounded-full bg-blue-600" />
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Footer: See All in Large Dialog Box */}
+      <div className="p-2.5 bg-gray-50/90 border-t border-gray-100 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => {
+            setShowNotif(false);
+            setShowAllNotifsModal(true);
+          }}
+          className="w-full py-2 px-3 text-center font-bold text-xs text-gray-800 hover:text-black bg-white hover:bg-gray-100 rounded-xl border border-gray-200 transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          <Maximize2 size={13} />
+          <span>See All Notifications (Large Dialog)</span>
+        </button>
+      </div>
+    </div>
+  );
 
 useEffect(() => {
     supabase.from("site_settings").select("logo_url").eq("id", "global").maybeSingle().then(({data}) => {
@@ -828,32 +1299,7 @@ useEffect(() => {
               </div>
             )}
 
-            {showNotif && (
-              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
-                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
-                  ) : (
-                    notifications.map((n: any) => (
-                      <div 
-                        key={n.id} 
-                        className={`p-4 border-b border-gray-50 flex flex-col gap-1 transition text-left ${n.link ? 'cursor-pointer hover:bg-gray-100' : 'hover:bg-gray-50'}`}
-                        onClick={() => {
-                          if (n.link) {
-                            router.push(n.link);
-                            setShowNotif(false);
-                          }
-                        }}
-                      >
-                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+            {showNotif && renderNotificationDropdown()}
           </div>
         )}
       </div>
@@ -1104,32 +1550,7 @@ useEffect(() => {
               </div>
             )}
 
-            {showNotif && (
-              <div className="absolute right-0 top-10 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-[999] text-black">
-                <div className="p-4 border-b border-gray-100 font-bold text-left text-black">Notifications</div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-6 text-gray-500 text-sm text-center">No notifications yet</div>
-                  ) : (
-                    notifications.map((n: any) => (
-                      <div 
-                        key={n.id} 
-                        className={`p-4 border-b border-gray-50 flex flex-col gap-1 transition text-left ${n.link ? 'cursor-pointer hover:bg-gray-100' : 'hover:bg-gray-50'}`}
-                        onClick={() => {
-                          if (n.link) {
-                            router.push(n.link);
-                            setShowNotif(false);
-                          }
-                        }}
-                      >
-                        <p className="text-sm font-medium leading-tight text-gray-800">{n.message}</p>
-                        <p className="text-xs text-gray-400">{timeAgo(n.time)}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
+            {showNotif && renderNotificationDropdown()}
           </div>
         )}
 
@@ -1387,13 +1808,16 @@ useEffect(() => {
           const email = prompt("Enter your registered email address to receive a password reset link:");
           if (!email) return;
           try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-              redirectTo: `${window.location.origin}/reset-password`,
+            const res = await fetch("/api/auth/forgot-password", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email: email.trim() }),
             });
-            if (error) {
-              alert(error.message);
+            const data = await res.json();
+            if (res.ok) {
+              alert(data.message || "Password reset link has been sent to your email!");
             } else {
-              alert("Password reset link has been sent to your email!");
+              alert(data.error || "Failed to send reset link. Please verify your email.");
             }
           } catch (e) {
             alert("Failed to send reset link. Please try again.");
@@ -1450,30 +1874,59 @@ if (error) {
 }
 
 if (data.user) {
+  let userProfile = null;
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
     .eq("email", data.user.email)
     .single();
 
-  if (profile) {
-    localStorage.setItem(
-      "currentUser",
-      JSON.stringify({
-        fullName: profile.full_name,
-        displayName: profile.display_name,
-        email: profile.email,
-        username: profile.username,
-        role: profile.role,
-        profession: profile.profession,
-      })
-    );
+  userProfile = profile;
+
+  // Auto-heal missing profile row if earlier registration was blocked by RLS
+  if (!userProfile) {
+    try {
+      const healRes = await fetch("/api/auth/create-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: data.user.id,
+          email: data.user.email,
+          username: data.user.email?.split("@")[0],
+          fullName: data.user.user_metadata?.full_name || data.user.email?.split("@")[0],
+          displayName: data.user.user_metadata?.display_name || data.user.email?.split("@")[0],
+          role: "user",
+        }),
+      });
+      const healData = await healRes.json();
+      if (healData.profile) userProfile = healData.profile;
+    } catch (e) {
+      console.warn("Auto-heal profile error:", e);
+    }
   }
+
+  const sessionObj = {
+    id: data.user.id,
+    fullName: userProfile?.full_name || data.user.email?.split("@")[0],
+    displayName: userProfile?.display_name || userProfile?.full_name || data.user.email?.split("@")[0],
+    email: data.user.email,
+    username: userProfile?.username || data.user.email?.split("@")[0],
+    role: userProfile?.role || "user",
+    profession: userProfile?.profession || "Architect",
+  };
+
+  localStorage.setItem("currentUser", JSON.stringify(sessionObj));
+  setCurrentUser(sessionObj);
 }
 
 setShowAuthPopup(false);
 
-window.location.reload();
+// If currently on a quiz page, do NOT reload (which would wipe out the active quiz or scorecard)
+if (window.location.pathname.startsWith("/quizzes")) {
+  window.dispatchEvent(new CustomEvent("ti2a-auth-login", { detail: data.user }));
+} else {
+  window.location.reload();
+}
 
       }}
       className="w-full bg-black text-white py-3 rounded-xl hover:opacity-90 transition"
@@ -2248,32 +2701,61 @@ window.location.reload();
         if (authData.user) {
           console.log("AUTH USER:", authData.user);
 
-          const {
-            data: profileData,
-            error: profileError,
-          } = await supabase
-            .from("profiles")
-            .insert([
-              {
-                id: authData.user.id,
-                username,
-                full_name: fullName,
-                display_name: displayName,
-                email,
-                phone: fullPhone || null,
-                profession,
-                role: "user",
-                bio: "",
-              },
-            ])
-            .select();
+          let profileCreated = false;
+          try {
+            const {
+              data: profileData,
+              error: profileError,
+            } = await supabase
+              .from("profiles")
+              .insert([
+                {
+                  id: authData.user.id,
+                  username,
+                  full_name: fullName,
+                  display_name: displayName,
+                  email,
+                  phone: fullPhone || null,
+                  profession,
+                  role: "user",
+                  bio: "",
+                },
+              ])
+              .select();
 
-          console.log("PROFILE DATA:", profileData);
-          console.log("PROFILE ERROR:", profileError);
+            if (!profileError && profileData?.length) {
+              profileCreated = true;
+            } else if (profileError) {
+              console.warn("Client profile insert error, invoking backend fallback:", profileError);
+            }
+          } catch (insertErr) {
+            console.warn("Client insert failed:", insertErr);
+          }
 
-          if (profileError) {
-            alert(profileError.message);
-            return;
+          // Fallback: If client insert failed (e.g. Row Level Security policy blocked it), create via service role
+          if (!profileCreated) {
+            try {
+              const res = await fetch("/api/auth/create-profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  userId: authData.user.id,
+                  email,
+                  username,
+                  fullName,
+                  displayName,
+                  phone: fullPhone || null,
+                  profession,
+                  role: "user",
+                }),
+              });
+              const data = await res.json();
+              if (data.success) {
+                profileCreated = true;
+              }
+            } catch (backendErr) {
+              console.error("Backend profile fallback error:", backendErr);
+            }
           }
 
           console.log("PROFILE CREATED SUCCESSFULLY");
@@ -2447,6 +2929,230 @@ window.location.reload();
                 className="py-3 px-5 rounded-xl bg-black hover:bg-gray-800 text-white font-bold text-xs sm:text-sm transition cursor-pointer"
               >
                 Get Started
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FULL DIALOG BOX: ALL NOTIFICATIONS & ACTIVITY CENTER */}
+      {showAllNotifsModal && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150"
+          onClick={() => setShowAllNotifsModal(false)}
+        >
+          <div 
+            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 text-black animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-gray-200 flex items-center justify-between bg-gray-50/80 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-black text-white flex items-center justify-center shadow-md shrink-0">
+                  <Bell size={20} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-black text-gray-900 leading-tight">Notification Center</h2>
+                    {unreadCount > 0 && (
+                      <span className="bg-red-600 text-white text-xs font-black px-2 py-0.5 rounded-full">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Comprehensive overview of all administrative requests, visitor inquiries, team dispatches, and user growth
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={markAllAsRead}
+                    className="text-xs font-bold px-3 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 text-gray-700 transition cursor-pointer"
+                  >
+                    Mark All as Read
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowAllNotifsModal(false)}
+                  className="w-9 h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-100 flex items-center justify-center text-gray-600 hover:text-black transition cursor-pointer"
+                  title="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="p-3 sm:p-4 bg-gray-100/60 border-b border-gray-200 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between shrink-0">
+              <div className="relative flex-1">
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search notifications by keyword, firm, or user..."
+                  value={notifModalSearch}
+                  onChange={(e) => setNotifModalSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-black font-medium"
+                />
+              </div>
+
+              {isCeoOrSuper && (
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("all")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer ${
+                      notifActiveTab === "all" ? "bg-black text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    All ({notifications.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("approvals")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "approvals" ? "bg-amber-600 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>🚨 Approvals</span>
+                    {approvalCount > 0 && <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-black">{approvalCount}</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("replies")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "replies" ? "bg-blue-600 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>💬 Replies</span>
+                    {replyCount > 0 && <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded-full font-black">{replyCount}</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("growth")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "growth" ? "bg-emerald-700 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>🎉 Growth</span>
+                    {growthCount > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-black">{growthCount}</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNotifActiveTab("dispatches")}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      notifActiveTab === "dispatches" ? "bg-zinc-800 text-white shadow-xs" : "bg-white text-gray-600 border border-gray-200 hover:text-black"
+                    }`}
+                  >
+                    <span>📢 Dispatches</span>
+                    {dispatchCount > 0 && <span className="text-[10px] bg-gray-200 text-gray-800 px-1.5 py-0.2 rounded-full font-black">{dispatchCount}</span>}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Body (Scrollable List with Large Cards) */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
+              {modalFilteredNotifs.length === 0 ? (
+                <div className="py-16 text-center text-gray-400">
+                  <p className="text-base font-bold text-gray-600">No notifications match your filter</p>
+                  <p className="text-xs text-gray-400 mt-1">Try switching categories or clearing your search keywords</p>
+                </div>
+              ) : (
+                modalFilteredNotifs.map((n: any) => {
+                  const isItemUnread = isNotifUnread(n);
+                  return (
+                    <div
+                      key={n.id}
+                      className={`p-4 sm:p-5 rounded-2xl border transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                        isItemUnread
+                          ? "bg-blue-50/50 border-blue-200 shadow-xs"
+                          : "bg-white border-gray-200/80 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                        <div className="text-2xl shrink-0 mt-0.5">{n.icon || "🔔"}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                            {n.categoryLabel && (
+                              <span className="text-[11px] font-black uppercase tracking-wider text-gray-700 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md">
+                                {n.categoryLabel}
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-400 font-medium">
+                              {new Date(n.time).toLocaleString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              })}
+                            </span>
+                            <span className="text-xs text-gray-300">•</span>
+                            <span className="text-xs text-gray-500 font-semibold">
+                              {timeAgo(n.time)}
+                            </span>
+                            {isItemUnread && (
+                              <span className="text-[10px] font-black uppercase bg-blue-600 text-white px-2 py-0.5 rounded-full ml-auto">
+                                New
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm sm:text-base font-medium text-gray-900 leading-snug">
+                            {n.message}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 self-end sm:self-center flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleReadStatus(n.id);
+                          }}
+                          title={isItemUnread ? "Mark as read" : "Mark as unread"}
+                          className={`px-3 py-2 rounded-xl border transition cursor-pointer flex items-center gap-1.5 text-xs font-bold ${
+                            isItemUnread
+                              ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                              : "bg-white text-gray-500 border-gray-200 hover:text-black hover:bg-gray-100"
+                          }`}
+                        >
+                          {isItemUnread ? <MailOpen size={14} /> : <Mail size={14} />}
+                          <span className="hidden sm:inline">
+                            {isItemUnread ? "Mark Read" : "Mark Unread"}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleNotificationClick(n)}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer whitespace-nowrap"
+                        >
+                          <span>{n.actionText || "Open in New Tab"}</span>
+                          <ExternalLink size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3.5 sm:p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500 shrink-0">
+              <span>Showing {modalFilteredNotifs.length} notification{modalFilteredNotifs.length !== 1 ? 's' : ''}</span>
+              <button
+                type="button"
+                onClick={() => setShowAllNotifsModal(false)}
+                className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-xl transition cursor-pointer"
+              >
+                Close Dialog
               </button>
             </div>
           </div>

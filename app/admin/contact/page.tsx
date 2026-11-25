@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import AdminQuickMenu from "@/components/admin/AdminQuickMenu";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useRouter } from "next/navigation";
@@ -342,6 +342,25 @@ const MultiChannelManager = ({
   );
 };
 
+function formatChatDateTime(dateStr?: string) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+
+  const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  if (isToday) return `Today, ${timeStr}`;
+  if (isYesterday) return `Yesterday, ${timeStr}`;
+
+  const sameYear = d.getFullYear() === now.getFullYear();
+  return `${d.toLocaleDateString("en-GB", { day: "numeric", month: "short", ...(sameYear ? {} : { year: "numeric" }) })}, ${timeStr}`;
+}
+
 export default function ContactSettingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"chat" | "inbox" | "settings">("chat");
@@ -352,6 +371,7 @@ export default function ContactSettingsPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [loadingChat, setLoadingChat] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const activeSessionIdRef = useRef<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
   const [chatSearchQuery, setChatSearchQuery] = useState("");
@@ -399,12 +419,21 @@ export default function ContactSettingsPage() {
       return;
     }
 
-    // Auto-redirect if accessed with ?tab=sent
+    // Auto-redirect or switch tab based on URL query params
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("tab") === "sent") {
+      const tabParam = urlParams.get("tab");
+      if (tabParam === "sent") {
         router.replace("/admin/mails");
         return;
+      }
+      if (tabParam === "inbox" || tabParam === "chat" || tabParam === "settings") {
+        setActiveTab(tabParam);
+      }
+      const sessionParam = urlParams.get("session");
+      if (sessionParam) {
+        setActiveSessionId(sessionParam);
+        activeSessionIdRef.current = sessionParam;
       }
     }
 
@@ -496,13 +525,53 @@ export default function ContactSettingsPage() {
     }
   };
 
-  const CANNED_REPLIES = [
-    { label: "Jobs Search", text: "Hi! You can browse and filter all active architecture vacancies across Chennai, Bangalore, and all India at https://trappedintoarchitecture.com/jobs" },
-    { label: "Post a Job", text: "Hello! Architecture studios can post verified openings and internship drops directly at https://trappedintoarchitecture.com/post-a-job" },
-    { label: "WhatsApp Channel", text: "Join our official WhatsApp channel for instant city-wise architectural job alerts: https://whatsapp.com/channel/0029Vaz1p0kCRs1uBTCWpJ2X" },
-    { label: "Portfolio Guidance", text: "Feel free to share your Google Drive / Behance portfolio link or paste screenshots here for guidance!" },
-    { label: "Studio Hiring", text: "For urgent studio recruitment or hiring multiple architects, you can also reach our team directly at admin.ti2a@gmail.com." }
-  ];
+  const getCannedReplies = (name?: string | null) => {
+    const raw = (name || "").trim();
+    const isGeneric = !raw || /^visitor\b|^guest\b/i.test(raw);
+    const displayName = isGeneric ? "" : raw;
+    const greeting = displayName ? `Hi ${displayName}, thanks for reaching out! ` : "Hi! Thanks for reaching out! ";
+    const hiName = displayName ? `Hi ${displayName}! ` : "Hi! ";
+
+    return [
+      { 
+        label: "👋 Welcome & Jobs / WhatsApp", 
+        text: `${greeting}You can explore all our latest verified architecture openings at https://trappedintoarchitecture.com/jobs or contact Admin directly on WhatsApp at +91 8608609661 for fast assistance.` 
+      },
+      { 
+        label: "🌍 Dubai / Gulf Jobs", 
+        text: `${hiName}Currently our portal is concentrated on verified architecture jobs across India. If you are specifically looking for Dubai / Gulf architecture opportunities, please contact Admin directly on WhatsApp at https://wa.me/918608609661 and we can guide you!` 
+      },
+      { 
+        label: "⚡ Fast WhatsApp Reply", 
+        text: `${hiName}It may take some time for Admin to reply here on the website. For an instant response and direct updates, please message Admin on WhatsApp: https://wa.me/918608609661` 
+      },
+      { 
+        label: "📝 Ask Details to Register", 
+        text: `Hi! Could you please share your name and WhatsApp number or email so Admin can register your verified profile and assist you directly?` 
+      },
+      { 
+        label: "⭐ Register Free Profile", 
+        text: `${hiName}You can create your free verified profile at https://trappedintoarchitecture.com/profile to bookmark vacancies, apply with 1-click, and get direct WhatsApp job alerts!` 
+      },
+      { 
+        label: "🔍 Browse India Jobs", 
+        text: `${hiName}You can browse and filter all active architecture vacancies across Chennai, Bangalore, Mumbai, Delhi, and all India at https://trappedintoarchitecture.com/jobs` 
+      },
+      { 
+        label: "🏢 Post a Job / Hire", 
+        text: `Hello! Architecture studios can post verified openings and internship drops directly at https://trappedintoarchitecture.com/post-a-job` 
+      },
+      { 
+        label: "🤝 Studio Hiring Support", 
+        text: `For urgent studio recruitment or hiring multiple architects, Admin can assist you directly on WhatsApp at https://wa.me/918608609661` 
+      }
+    ];
+  };
+
+  // Sync ref with state to prevent stale closure during polling
+  useEffect(() => {
+    activeSessionIdRef.current = activeSessionId;
+  }, [activeSessionId]);
 
   // Auto-refresh chat messages every 6s while activeTab is chat
   useEffect(() => {
@@ -521,8 +590,10 @@ export default function ContactSettingsPage() {
         const data = await res.json();
         const msgs: ChatMessage[] = data.messages || [];
         setChatMessages(msgs);
-        if (msgs.length > 0 && !activeSessionId) {
+        // Only set default if no session is currently selected
+        if (msgs.length > 0 && !activeSessionIdRef.current) {
           setActiveSessionId(msgs[0].session_id);
+          activeSessionIdRef.current = msgs[0].session_id;
         }
       }
     } catch (err: any) {
@@ -544,7 +615,11 @@ export default function ContactSettingsPage() {
         })
       });
       setChatMessages((prev) =>
-        prev.map((m) => (m.session_id === sessionId ? { ...m, status: nextStatus } : m))
+        prev.map((m) =>
+          m.session_id === sessionId
+            ? { ...m, status: nextStatus, is_read: nextStatus === "resolved" }
+            : m
+        )
       );
     } catch (err: any) {
       alert("Error updating status: " + err.message);
@@ -623,10 +698,27 @@ export default function ContactSettingsPage() {
         const unreadCount = sorted.filter((m) => m.sender === "visitor" && !m.is_read).length;
         const isResolved = latest?.status === "resolved" || sorted.some(m => m.status === "resolved");
 
+        // Detect visitor intent if anonymous to provide human-readable label
+        const firstVisitorMsg = sorted.find((m) => m.sender === "visitor")?.message || "";
+        const lowerFirst = firstVisitorMsg.toLowerCase();
+        let intentLabel = "";
+        if (lowerFirst.includes("verified architecture jobs") || lowerFirst.includes("looking for") || lowerFirst.includes("jobs")) {
+          intentLabel = "Jobs Inquiry";
+        } else if (lowerFirst.includes("post an architecture job") || lowerFirst.includes("post a job") || lowerFirst.includes("hire")) {
+          intentLabel = "Studio Hiring";
+        } else if (lowerFirst.includes("portfolio") || lowerFirst.includes("resume") || lowerFirst.includes("guidance")) {
+          intentLabel = "Portfolio Review";
+        } else if (lowerFirst.includes("feature") || lowerFirst.includes("question") || lowerFirst.includes("query")) {
+          intentLabel = "Platform Query";
+        }
+
+        const fallbackName = intentLabel 
+          ? `Visitor • ${intentLabel}` 
+          : `Visitor #${sessionId.slice(0, 8)}`;
+
         return {
           sessionId,
-          senderName:
-            identifiedMsg?.sender_name || latest?.sender_name || `Visitor #${sessionId.slice(0, 6)}`,
+          senderName: identifiedMsg?.sender_name || latest?.sender_name || fallbackName,
           senderContact: identifiedMsg?.sender_contact || latest?.sender_contact || null,
           clientIp: (latest as any)?.client_ip || null,
           status: (isResolved ? "resolved" : "active") as "active" | "resolved",
@@ -652,7 +744,37 @@ export default function ContactSettingsPage() {
       .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
   }, [chatMessages, chatSearchQuery, chatStatusFilter]);
 
-  const activeSession = chatSessions.find((s) => s.sessionId === activeSessionId) || chatSessions[0] || null;
+  // Thread counts for All / Active / Resolved
+  const threadCounts = useMemo(() => {
+    const groups: { [key: string]: ChatMessage[] } = {};
+    chatMessages.forEach((msg) => {
+      const sid = msg.session_id || "unknown";
+      if (!groups[sid]) groups[sid] = [];
+      groups[sid].push(msg);
+    });
+
+    let total = 0;
+    let active = 0;
+    let resolved = 0;
+
+    Object.values(groups).forEach((msgs) => {
+      total++;
+      const isResolved = msgs.some((m) => m.status === "resolved");
+      if (isResolved) resolved++;
+      else active++;
+    });
+
+    return { total, active, resolved };
+  }, [chatMessages]);
+
+  const activeSession = useMemo(() => {
+    if (activeSessionId) {
+      const found = chatSessions.find((s) => s.sessionId === activeSessionId);
+      if (found) return found;
+    }
+    return chatSessions[0] || null;
+  }, [chatSessions, activeSessionId]);
+
   const unreadChatCount = chatMessages.filter((m) => m.sender === "visitor" && !m.is_read).length;
 
   const toggleReadStatus = async (id: string, currentStatus: boolean, e?: React.MouseEvent) => {
@@ -867,7 +989,7 @@ export default function ContactSettingsPage() {
                         chatStatusFilter === "all" ? "bg-white text-black shadow-2xs" : "text-gray-500 hover:text-black"
                       }`}
                     >
-                      All
+                      All ({threadCounts.total})
                     </button>
                     <button
                       type="button"
@@ -876,7 +998,7 @@ export default function ContactSettingsPage() {
                         chatStatusFilter === "active" ? "bg-white text-emerald-700 shadow-2xs font-extrabold" : "text-gray-500 hover:text-black"
                       }`}
                     >
-                      Active
+                      Active ({threadCounts.active})
                     </button>
                     <button
                       type="button"
@@ -885,7 +1007,7 @@ export default function ContactSettingsPage() {
                         chatStatusFilter === "resolved" ? "bg-white text-gray-700 shadow-2xs" : "text-gray-500 hover:text-black"
                       }`}
                     >
-                      Resolved
+                      Resolved ({threadCounts.resolved})
                     </button>
                   </div>
 
@@ -921,7 +1043,10 @@ export default function ContactSettingsPage() {
                         <button
                           key={session.sessionId}
                           type="button"
-                          onClick={() => setActiveSessionId(session.sessionId)}
+                          onClick={() => {
+                            setActiveSessionId(session.sessionId);
+                            activeSessionIdRef.current = session.sessionId;
+                          }}
                           className={`w-full text-left p-3.5 transition cursor-pointer flex flex-col gap-1.5 ${
                             isActive
                               ? "bg-white border-l-4 border-l-black shadow-2xs"
@@ -939,8 +1064,8 @@ export default function ContactSettingsPage() {
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-gray-400 shrink-0">
-                              {session.lastMessageAt ? new Date(session.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                            <span className="text-[10px] text-gray-400 shrink-0 font-medium">
+                              {formatChatDateTime(session.lastMessageAt)}
                             </span>
                           </div>
 
@@ -1000,10 +1125,10 @@ export default function ContactSettingsPage() {
                           {activeSession.senderContact && (
                             <span className="text-gray-700 font-medium">Contact: {activeSession.senderContact}</span>
                           )}
-                          {activeSession.clientIp && (
-                            <span>IP: {activeSession.clientIp}</span>
+                          {activeSession.lastMessageAt && (
+                            <span>Last message: <strong className="text-gray-600 font-semibold">{formatChatDateTime(activeSession.lastMessageAt)}</strong></span>
                           )}
-                          <span className="font-mono text-[10px] text-gray-400">Session: {activeSession.sessionId.slice(0, 10)}</span>
+                          <span className="font-mono text-[10px] text-gray-400">ID: {activeSession.sessionId.slice(0, 10)}</span>
                         </div>
                       </div>
 
@@ -1021,7 +1146,7 @@ export default function ContactSettingsPage() {
                           title="Toggle resolved state"
                         >
                           <CheckCircle2 size={13} />
-                          <span>{activeSession.status === "resolved" ? "Reopen" : "Mark Resolved"}</span>
+                          <span>{activeSession.status === "resolved" ? "Reopen Thread" : "Mark Resolved ✓"}</span>
                         </button>
 
                         {/* WhatsApp Button */}
@@ -1073,8 +1198,8 @@ export default function ContactSettingsPage() {
                               <span className="text-[10px] font-bold text-gray-500">
                                 {isAdmin ? "Admin Ti2A" : (msg.sender_name || activeSession.senderName)}
                               </span>
-                              <span className="text-[9px] text-gray-400">
-                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              <span className="text-[9px] text-gray-400 font-medium">
+                                {formatChatDateTime(msg.created_at)}
                               </span>
                             </div>
                             <div
@@ -1115,9 +1240,9 @@ export default function ContactSettingsPage() {
                       <div className="flex items-center gap-1.5 overflow-x-auto pb-2.5 mb-2 text-[11px] border-b border-gray-100">
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
                           <Lightbulb size={12} className="text-amber-500" />
-                          Quick Canned:
+                          1-Click Replies:
                         </span>
-                        {CANNED_REPLIES.map((c, cIdx) => (
+                        {getCannedReplies(activeSession.senderName).map((c, cIdx) => (
                           <button
                             key={cIdx}
                             type="button"

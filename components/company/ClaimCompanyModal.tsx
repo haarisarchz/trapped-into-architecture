@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Building2, ShieldCheck, Send, CheckCircle2, Sparkles, AlertCircle, Lock, ArrowRight } from "lucide-react";
+import { X, Building2, ShieldCheck, Send, CheckCircle2, Sparkles, AlertCircle, Lock, ArrowRight, KeyRound, RefreshCw } from "lucide-react";
 import { calculateProfileCompletion } from "@/utils/profileCompletion";
 import { supabase } from "@/lib/supabase";
 import { trackEvent } from "@/utils/analytics";
@@ -13,6 +13,7 @@ interface ClaimCompanyModalProps {
   companyId?: string;
   companySlug: string;
   companyName: string;
+  onClaimSuccess?: (companyId: string) => void;
 }
 
 export default function ClaimCompanyModal({
@@ -21,22 +22,34 @@ export default function ClaimCompanyModal({
   companyId,
   companySlug,
   companyName,
+  onClaimSuccess,
 }: ClaimCompanyModalProps) {
+  const [step, setStep] = useState<"form" | "otp" | "success">("form");
   const [fullName, setFullName] = useState("");
   const [workEmail, setWorkEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [designation, setDesignation] = useState("");
+  const [designation, setDesignation] = useState("Principal Architect");
   const [verificationNotes, setVerificationNotes] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [userCompletion, setUserCompletion] = useState<number | null>(null);
   const [userUsername, setUserUsername] = useState<string>("");
 
+  // OTP Verification state
+  const [claimRequestId, setClaimRequestId] = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [resendingOtp, setResendingOtp] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setStep("form");
+      setOtpCode("");
+      setErrorMsg("");
       const userStr = localStorage.getItem("currentUser");
       if (userStr) {
         try {
@@ -59,30 +72,24 @@ export default function ClaimCompanyModal({
                 if (prof.username) setUserUsername(prof.username);
                 const { data: edus } = await supabase.from('profile_educations').select("*").eq("user_id", prof.id);
                 const { data: exps } = await supabase.from('profile_experiences').select("*").eq("user_id", prof.id);
-                const res = calculateProfileCompletion(prof, edus || [], exps || []);
-                setUserCompletion(res.percentage);
-              } else {
-                setUserCompletion(20);
+                const completion = calculateProfileCompletion(prof, edus || [], exps || []);
+                setUserCompletion(completion.percentage);
               }
             });
-        } catch (e) {}
-      } else {
-        setIsLoggedIn(false);
-        setUserCompletion(null);
+        } catch (e) {
+          setIsLoggedIn(false);
+        }
       }
     } else {
       document.body.style.overflow = "unset";
-      setSubmitted(false);
-      setErrorMsg("");
     }
     return () => {
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Request OTP to the company's official email
+  const handleInitiateClaim = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!workEmail) {
       setErrorMsg("Please enter your official work email.");
@@ -102,54 +109,107 @@ export default function ClaimCompanyModal({
         } catch (e) {}
       }
 
-      const { error } = await supabase.from("company_claim_requests").insert([
-        {
-          company_id: companyId || null,
-          company_slug: companySlug,
-          company_name: companyName,
-          user_id: userId,
-          requester_name: fullName,
-          work_email: workEmail,
-          phone_number: phoneNumber,
-          designation,
-          verification_notes: verificationNotes,
-          status: "pending",
-        },
-      ]);
-
-      if (error) {
-        console.warn("Could not save to company_claim_requests:", error.message);
-      }
-      // Dispatch CEO notification for studio claim request
-      fetch("/api/notify/ceo", {
+      const res = await fetch("/api/companies/claim-otp/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: "STUDIO_CLAIM_REQUEST",
-          data: {
-            companyId: companyId || null,
-            studioSlug: companySlug,
-            studioName: companyName,
-            userId,
-            requesterName: fullName,
-            workEmail,
-            phoneNumber,
-            designation,
-            verificationNotes,
-          },
+          companyId,
+          companySlug,
+          requesterUserId: userId,
+          requesterEmail: workEmail,
         }),
-      }).catch((e) => console.warn("Failed to notify CEO of studio claim request:", e));
+      });
 
-      setSubmitted(true);
-      trackEvent("claim_studio_submit", {
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Fallback: If no official studio email is found on file, save standard manual claim request
+        if (data.error && data.error.includes("does not have an official email")) {
+          const { error: manualErr } = await supabase.from("company_claim_requests").insert([
+            {
+              company_id: companyId || null,
+              company_slug: companySlug,
+              company_name: companyName,
+              user_id: userId,
+              requester_name: fullName,
+              work_email: workEmail,
+              phone_number: phoneNumber,
+              designation,
+              verification_notes: verificationNotes,
+              status: "pending",
+            },
+          ]);
+          if (manualErr) throw manualErr;
+          setStep("success");
+          setSuccessMsg("Claim request submitted! Our admin team will verify and activate your studio access.");
+          return;
+        }
+        throw new Error(data.error || "Failed to dispatch verification code.");
+      }
+
+      setClaimRequestId(data.requestId);
+      setMaskedEmail(data.maskedEmail);
+      setStep("otp");
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to initiate verification.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Verify OTP Code
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.trim().length < 6) {
+      setErrorMsg("Please enter the 6-digit verification code.");
+      return;
+    }
+
+    setVerifyingOtp(true);
+    setErrorMsg("");
+
+    try {
+      const userStr = localStorage.getItem("currentUser");
+      let userId: string | null = null;
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          userId = user.id || null;
+        } catch (e) {}
+      }
+
+      const res = await fetch("/api/companies/claim-otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: claimRequestId,
+          companyId,
+          code: otpCode.trim(),
+          userId,
+          designation,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to verify code.");
+      }
+
+      setStep("success");
+      setSuccessMsg(data.message || `Ownership of ${companyName} has been verified and linked to your profile!`);
+      if (onClaimSuccess && companyId) {
+        onClaimSuccess(companyId);
+      }
+      trackEvent("claim_studio_verified", {
         company_id: companyId || null,
         company_slug: companySlug,
         company_name: companyName,
       });
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to submit claim request.");
+      setErrorMsg(err.message || "Invalid verification code.");
     } finally {
-      setSubmitting(false);
+      setVerifyingOtp(false);
     }
   };
 
@@ -172,7 +232,7 @@ export default function ClaimCompanyModal({
                 Claim {companyName}
               </h3>
               <p className="text-xs text-gray-500">
-                {/university|college|institute|academic|school/i.test(companyName) ? "Verify institutional administration to manage academic profile & updates" : "Verify studio leadership to manage jobs, portfolio & team"}
+                Verify studio leadership via official company email OTP
               </p>
             </div>
           </div>
@@ -199,13 +259,6 @@ export default function ClaimCompanyModal({
             <p className="text-xs text-gray-600 mb-5 leading-relaxed max-w-sm mx-auto">
               Your profile is currently at <strong>{userCompletion}%</strong>. To protect architectural practices from false claims, only members at <strong>Silver Tier (45%)</strong> or above can claim studio profiles.
             </p>
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left text-xs text-gray-700 space-y-1.5 mb-5 max-w-sm mx-auto">
-              <p className="font-bold text-gray-900">How to reach 45% (under 60 seconds):</p>
-              <p>&bull; Upload Avatar (+10%)</p>
-              <p>&bull; Add Education Degree (+15%)</p>
-              <p>&bull; Add Phone or WhatsApp (+10%)</p>
-              <p>&bull; Add Tagline or Bio (+10%)</p>
-            </div>
             <div className="flex flex-col sm:flex-row gap-2.5 justify-center max-w-sm mx-auto">
               <Link
                 href={`/profile/${userUsername || ""}?tab=details`}
@@ -214,57 +267,92 @@ export default function ClaimCompanyModal({
                 <span>Complete Profile (+{45 - userCompletion}% needed)</span>
                 <ArrowRight size={14} />
               </Link>
-              <button
-                type="button"
-                onClick={onClose}
-                className="w-full sm:w-auto py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition"
-              >
-                Cancel
-              </button>
             </div>
           </div>
-        ) : submitted ? (
+        ) : step === "success" ? (
           <div className="py-8 text-center flex flex-col items-center">
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
               <CheckCircle2 size={36} />
             </div>
-            <h4 className="text-xl font-bold text-gray-900 mb-2">Claim Request Received!</h4>
+            <h4 className="text-xl font-bold text-gray-900 mb-2">Studio Ownership Confirmed! 🎉</h4>
             <p className="text-gray-600 text-sm max-w-sm mb-6 leading-relaxed">
-              Thank you! Our platform team will verify your credentials for <strong>{companyName}</strong> and activate your verified studio management privileges shortly.
+              {successMsg || `You are now the verified administrator of ${companyName}. You can post vacancies, update studio portfolio, and verify team members.`}
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full max-w-sm">
-              <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  `Check out ${companyName} on Trapped Into Architecture! Explore our practice profile, projects, and careers: ${
-                    typeof window !== "undefined" ? window.location.origin : "https://trappedintoarchitecture.com"
-                  }/companies/${companySlug}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
+              <Link
+                href="/post-job"
+                className="w-full py-3 px-5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-bold transition text-center shadow-xs"
               >
-                <span>📲</span>
-                <span>Share Studio on WhatsApp</span>
-              </a>
+                Post a Job Now ↗
+              </Link>
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full sm:w-auto bg-black text-white px-6 py-3 rounded-xl text-xs font-bold hover:bg-gray-800 transition cursor-pointer"
+                className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition"
               >
-                Done
+                Close
               </button>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLoggedIn && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-900 flex items-start gap-2">
-                <Sparkles size={16} className="text-blue-600 shrink-0 mt-0.5" />
+        ) : step === "otp" ? (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 flex items-start gap-2.5">
+              <KeyRound size={20} className="text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-sm text-gray-900 mb-0.5">Verification Code Dispatched</p>
                 <p>
-                  You are submitting as a guest representative. Once approved, this studio profile will be verified and linked to your contact info.
+                  We sent a 6-digit verification code to the studio&apos;s registered official address: <strong className="text-black">{maskedEmail}</strong>.
                 </p>
               </div>
+            </div>
+
+            {errorMsg && (
+              <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
+                {errorMsg}
+              </div>
             )}
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                Enter 6-Digit Code *
+              </label>
+              <input
+                type="text"
+                maxLength={6}
+                required
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="• • • • • •"
+                className="w-full text-center tracking-[12px] text-2xl font-mono font-bold py-3 px-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:border-black focus:bg-white focus:outline-none transition shadow-inner"
+              />
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                type="submit"
+                disabled={verifyingOtp || otpCode.length < 6}
+                className="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-2xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {verifyingOtp ? <span>Verifying code...</span> : <span>Confirm &amp; Link Studio Profile</span>}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep("form")}
+                className="text-xs text-gray-500 hover:text-black py-1 text-center"
+              >
+                ← Back to edit details
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleInitiateClaim} className="space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl text-xs text-blue-900 flex items-start gap-2">
+              <Sparkles size={16} className="text-blue-600 shrink-0 mt-0.5" />
+              <p>
+                An OTP will be sent to the studio&apos;s official contact inbox to verify you have direct authorization to manage <strong>{companyName}</strong>.
+              </p>
+            </div>
 
             {errorMsg && (
               <div className="p-3 bg-red-50 text-red-700 text-xs rounded-xl border border-red-200">
@@ -289,7 +377,7 @@ export default function ClaimCompanyModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Official Work Email *
+                  Official Work / Studio Email *
                 </label>
                 <input
                   type="email"
@@ -317,7 +405,7 @@ export default function ClaimCompanyModal({
 
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                Your Role / Designation *
+                Your Role / Designation at Firm *
               </label>
               <select
                 required
@@ -325,26 +413,12 @@ export default function ClaimCompanyModal({
                 onChange={(e) => setDesignation(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-black bg-white"
               >
-                <option value="">Select your role</option>
                 <option value="Principal Architect">Principal Architect / Head</option>
                 <option value="Founder / Partner">Founder / Partner / Director</option>
                 <option value="HR / Studio Manager">HR / Talent Manager</option>
                 <option value="Associate / Senior Architect">Associate / Senior Architect</option>
                 <option value="Authorized Representative">Authorized Representative</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
-                Verification Proof (LinkedIn / Website / Studio Note)
-              </label>
-              <textarea
-                rows={3}
-                value={verificationNotes}
-                onChange={(e) => setVerificationNotes(e.target.value)}
-                placeholder="Paste your LinkedIn profile URL, link to official studio website team page, or verification note..."
-                className="w-full px-4 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-black resize-none"
-              />
             </div>
 
             <div className="pt-2">
@@ -354,11 +428,11 @@ export default function ClaimCompanyModal({
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 rounded-2xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {submitting ? (
-                  <span>Submitting claim...</span>
+                  <span>Dispatching verification code...</span>
                 ) : (
                   <>
-                    <Send size={16} />
-                    <span>Submit Claim Request</span>
+                    <KeyRound size={16} />
+                    <span>Send Verification Code to Official Email</span>
                   </>
                 )}
               </button>

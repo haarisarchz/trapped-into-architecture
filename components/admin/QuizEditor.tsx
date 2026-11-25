@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { 
   Plus, Trash2, ArrowUp, ArrowDown, Save, Sparkles, UploadCloud, 
   Loader2, CheckCircle2, ArrowLeft, Image as ImageIcon, HelpCircle, Eye, RefreshCw, Wand2,
-  ZoomIn, X, Check, Filter, AlertCircle
+  ZoomIn, X, Check, Filter, AlertCircle, CheckSquare, Square, LayoutList, Grid, Layers,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search, RotateCcw
 } from "lucide-react";
 import { getQuestionDifficulty, QuestionDifficulty } from "@/lib/quizDifficulty";
 
@@ -21,6 +22,11 @@ interface Question {
   accepted_aliases: string[];
   explanation_clue: string;
   difficulty?: QuestionDifficulty;
+  is_removed?: boolean;
+  quiz_id?: string;
+  source?: "this_quiz" | "other_quiz";
+  source_quiz_id?: string;
+  source_quiz_title?: string;
 }
 
 interface QuizEditorProps {
@@ -62,8 +68,24 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
   // Questions State
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [filterDifficulty, setFilterDifficulty] = useState<"all" | QuestionDifficulty>("all");
+  const [filterDifficulty, setFilterDifficulty] = useState<"all" | QuestionDifficulty | "removed">("all");
   const [zoomImageUrl, setZoomImageUrl] = useState<{ url: string; title: string } | null>(null);
+  
+  // Staged difficulty changes & retained items in active filter
+  const [pendingDiff, setPendingDiff] = useState<Record<number, QuestionDifficulty>>({});
+  const [retainedInFilter, setRetainedInFilter] = useState<Record<number, boolean>>({});
+
+  // Navigation, unsaved changes & dirty tracking
+  const [allQuizzes, setAllQuizzes] = useState<{ id: string; title: string; slug: string }[]>([]);
+  const [isDirty, setIsDirty] = useState<boolean>(false);
+  const [pendingNavUrl, setPendingNavUrl] = useState<string | null>(null);
+
+  // Bulk Selection & View Mode
+  const [selectedIndices, setSelectedIndices] = useState<Record<number, boolean>>({});
+  const [questionViewMode, setQuestionViewMode] = useState<"detailed" | "compact">("detailed");
+  const [showGeneratorAccordion, setShowGeneratorAccordion] = useState<boolean>(false);
+  const [syncingDatabase, setSyncingDatabase] = useState<boolean>(false);
+  const [questionSearchQuery, setQuestionSearchQuery] = useState<string>("");
 
   // 1-Click Generator Configuration
   const [questionCol, setQuestionCol] = useState<"building_photo" | "architect_photo" | "building_name" | "puzzle_clues">("building_photo");
@@ -77,10 +99,27 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
   useEffect(() => {
     loadCatalogRows();
+    loadAllQuizzesList();
     if (quizId) {
       loadQuizData();
     }
   }, [quizId]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
+
+  const loadAllQuizzesList = async () => {
+    const { data } = await supabase.from("quizzes").select("id, title, slug").order("created_at", { ascending: true });
+    if (data) setAllQuizzes(data);
+  };
 
   const loadCatalogRows = async () => {
     const { data } = await supabase.from("architecture_catalog").select("*").limit(100);
@@ -111,17 +150,18 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
       if (quesData && quesData.length > 0) {
         setQuestions(quesData.map(q => {
-          const explicitDiff = Array.isArray(q.accepted_aliases)
-            ? q.accepted_aliases.find((a: string) => typeof a === "string" && a.startsWith("diff:"))?.split(":")[1]
-            : null;
-          const resolvedDiff = (explicitDiff as QuestionDifficulty) || getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases);
+          const cleanAliases = Array.isArray(q.accepted_aliases) ? q.accepted_aliases : [];
+          const isRemoved = (q as any).is_removed === true || cleanAliases.some((a: string) => typeof a === "string" && (a === "status:removed" || a === "archived:true"));
+          const explicitDiff = cleanAliases.find((a: string) => typeof a === "string" && a.startsWith("diff:"))?.split(":")[1];
+          const resolvedDiff = (explicitDiff as QuestionDifficulty) || getQuestionDifficulty(q.correct_answer || q.question_text || "", cleanAliases);
 
           return {
             ...q,
             question_type: (q.question_type as any) || "choose",
             options: Array.isArray(q.options) ? q.options : [],
-            accepted_aliases: Array.isArray(q.accepted_aliases) ? q.accepted_aliases : [],
-            difficulty: resolvedDiff || "medium"
+            accepted_aliases: cleanAliases,
+            difficulty: resolvedDiff || "medium",
+            is_removed: isRemoved
           };
         }));
       }
@@ -152,9 +192,147 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     });
   };
 
-  // Update difficulty for a specific question
+  // Update difficulty for a specific question immediately
   const updateQuestionDifficulty = (index: number, diff: QuestionDifficulty) => {
     updateQuestion(index, { difficulty: diff });
+  };
+
+  // Stage pending difficulty selection (requires tick mark confirmation)
+  const handleSelectDifficulty = (originalIndex: number, diff: QuestionDifficulty) => {
+    const current = questions[originalIndex]?.difficulty || "medium";
+    if (current === diff) {
+      setPendingDiff(prev => {
+        const next = { ...prev };
+        delete next[originalIndex];
+        return next;
+      });
+      return;
+    }
+    setPendingDiff(prev => ({ ...prev, [originalIndex]: diff }));
+  };
+
+  // Confirm and apply staged difficulty change via tick mark
+  const confirmDifficultyChange = (originalIndex: number) => {
+    const targetDiff = pendingDiff[originalIndex];
+    if (!targetDiff) return;
+
+    updateQuestion(originalIndex, { difficulty: targetDiff });
+    setRetainedInFilter(prev => ({ ...prev, [originalIndex]: true }));
+    setPendingDiff(prev => {
+      const next = { ...prev };
+      delete next[originalIndex];
+      return next;
+    });
+    setToastMsg({ text: `Question moved to ${targetDiff.toUpperCase()} (${targetDiff === "easy" ? "100" : targetDiff === "medium" ? "200" : "500"} pts)!`, type: "success" });
+    setTimeout(() => setToastMsg(null), 2500);
+  };
+
+  // Cancel staged difficulty change
+  const cancelDifficultyChange = (originalIndex: number) => {
+    setPendingDiff(prev => {
+      const next = { ...prev };
+      delete next[originalIndex];
+      return next;
+    });
+  };
+
+  // ⚡ Apply all staged category changes across all questions at once (Common Apply)
+  const applyAllStagedChanges = () => {
+    const pendingKeys = Object.keys(pendingDiff).map(k => parseInt(k, 10));
+    if (pendingKeys.length === 0) return;
+
+    setQuestions(prev => prev.map((q, idx) => {
+      const targetDiff = pendingDiff[idx];
+      if (!targetDiff) return q;
+      const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+      return {
+        ...q,
+        difficulty: targetDiff,
+        accepted_aliases: [`diff:${targetDiff}`, ...cleanAliases]
+      };
+    }));
+
+    // Retain questions in active filter so they do not disappear unexpectedly
+    setRetainedInFilter(prev => {
+      const updated = { ...prev };
+      pendingKeys.forEach(k => { updated[k] = true; });
+      return updated;
+    });
+
+    const count = pendingKeys.length;
+    setPendingDiff({});
+    setToastMsg({ text: `✓ Applied category changes to ${count} question(s)!`, type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Filter change helper: switches filter and clears retained items
+  const handleFilterChange = (newFilter: "all" | QuestionDifficulty | "removed") => {
+    setFilterDifficulty(newFilter);
+    setRetainedInFilter({});
+    setPendingDiff({});
+  };
+
+  // Bulk Selection Handlers
+  const handleToggleSelectQuestion = (idx: number) => {
+    setSelectedIndices(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
+  const handleSelectAllVisible = (visibleIndices: number[]) => {
+    const allSelected = visibleIndices.length > 0 && visibleIndices.every(idx => selectedIndices[idx]);
+    const updated = { ...selectedIndices };
+    visibleIndices.forEach(idx => {
+      updated[idx] = !allSelected;
+    });
+    setSelectedIndices(updated);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIndices({});
+  };
+
+  const handleBulkSetCategory = async (targetCategory: QuestionDifficulty) => {
+    const indicesToUpdate = Object.keys(selectedIndices)
+      .map(k => parseInt(k, 10))
+      .filter(k => selectedIndices[k]);
+
+    if (indicesToUpdate.length === 0) return;
+
+    // Update in React state
+    setQuestions(prev => prev.map((q, idx) => {
+      if (!selectedIndices[idx]) return q;
+      const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+      return {
+        ...q,
+        difficulty: targetCategory,
+        accepted_aliases: [`diff:${targetCategory}`, ...cleanAliases]
+      };
+    }));
+
+    // If quiz is saved in database, sync to Supabase right away
+    if (quizId) {
+      try {
+        const updates = indicesToUpdate.map(async (origIdx) => {
+          const q = questions[origIdx];
+          if (!q?.id) return;
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
+          await supabase
+            .from("quiz_questions")
+            .update({
+              accepted_aliases: [`diff:${targetCategory}`, ...cleanAliases]
+            })
+            .eq("id", q.id);
+        });
+        await Promise.all(updates);
+      } catch (err) {
+        console.warn("Bulk update db sync note:", err);
+      }
+    }
+
+    setToastMsg({ 
+      text: `Updated ${indicesToUpdate.length} questions to ${targetCategory === "master" ? "Architecture Master (300 pts)" : "Popular (100 pts)"}!`, 
+      type: "success" 
+    });
+    setSelectedIndices({});
   };
 
   // Update option text
@@ -346,9 +524,267 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  const removeQuestion = (idx: number) => {
-    const updated = questions.filter((_, i) => i !== idx).map((q, i) => ({ ...q, order_index: i + 1 }));
-    setQuestions(updated);
+  // 🔄 Update & Synchronize questions from Architectural Catalog Database
+  const handleUpdateFromCatalog = async () => {
+    setSyncingDatabase(true);
+    try {
+      // 1. Fetch latest catalog rows
+      const { data: latestCatalog, error: catErr } = await supabase
+        .from("architecture_catalog")
+        .select("*");
+      
+      if (catErr || !latestCatalog || latestCatalog.length === 0) {
+        throw new Error(catErr?.message || "No catalog data found in database");
+      }
+
+      setCatalogRows(latestCatalog);
+
+      // Build lookup dictionaries
+      const catalogByName = new Map<string, any>();
+      const catalogByImage = new Map<string, any>();
+
+      latestCatalog.forEach(row => {
+        const d = row.data || {};
+        if (d.building_name) catalogByName.set(d.building_name.toLowerCase().trim(), d);
+        if (d.base_building_name) catalogByName.set(d.base_building_name.toLowerCase().trim(), d);
+        if (d.display_name) catalogByName.set(d.display_name.toLowerCase().trim(), d);
+        if (d.building_photo) catalogByImage.set(d.building_photo.toLowerCase().trim(), d);
+      });
+
+      let updatedDetailsCount = 0;
+      let photoUpdatedCount = 0;
+
+      // Update existing questions
+      const updatedQuestions = questions.map((q) => {
+        const cleanAnswer = (q.correct_answer || "").toLowerCase().trim();
+        const cleanPhoto = (q.media_url || "").toLowerCase().trim();
+
+        // 1. Primary ground-truth match by landmark photo (100% unique per building)
+        let match = cleanPhoto ? catalogByImage.get(cleanPhoto) : null;
+        if (!match && cleanAnswer) {
+          match = catalogByName.get(cleanAnswer);
+        }
+        if (!match && cleanAnswer) {
+          for (const [key, val] of catalogByName.entries()) {
+            if (cleanAnswer === key || key.startsWith(cleanAnswer)) {
+              match = val;
+              break;
+            }
+          }
+        }
+
+        if (match) {
+          let wasChanged = false;
+          let newMediaUrl = q.media_url;
+          let newExplanation = q.explanation_clue;
+
+          // If catalog has photo and current is different or missing
+          if (match.building_photo && match.building_photo.trim() !== "" && match.building_photo !== q.media_url) {
+            newMediaUrl = match.building_photo;
+            photoUpdatedCount++;
+            wasChanged = true;
+          }
+
+          // If catalog has richer clues
+          if (match.puzzle_clues && (!q.explanation_clue || q.explanation_clue.length < 20)) {
+            newExplanation = match.puzzle_clues;
+            wasChanged = true;
+          }
+
+          // Sync category tag
+          const resolvedDiff = (match.difficulty as QuestionDifficulty) || getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases);
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
+          
+          if (wasChanged || q.difficulty !== resolvedDiff) {
+            updatedDetailsCount++;
+          }
+
+          return {
+            ...q,
+            media_url: newMediaUrl,
+            explanation_clue: newExplanation,
+            difficulty: resolvedDiff,
+            accepted_aliases: [`diff:${resolvedDiff}`, ...cleanAliases]
+          };
+        }
+
+        // Even without catalog match, resolve latest difficulty
+        const resolvedDiff = getQuestionDifficulty(q.correct_answer || q.question_text || "", q.accepted_aliases);
+        const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+        return {
+          ...q,
+          difficulty: resolvedDiff,
+          accepted_aliases: [`diff:${resolvedDiff}`, ...cleanAliases]
+        };
+      });
+
+      // Check if there are new buildings in the catalog not currently in this quiz
+      const existingAnswers = new Set(questions.map(q => (q.correct_answer || "").toLowerCase().trim()));
+      const missingCatalogRows = latestCatalog.filter(row => {
+        const bName = (row.data?.building_name || "").toLowerCase().trim();
+        const baseName = (row.data?.base_building_name || "").toLowerCase().trim();
+        return bName && !existingAnswers.has(bName) && !existingAnswers.has(baseName);
+      });
+
+      let finalQuestions: any[] = updatedQuestions;
+      let newlyAddedCount = 0;
+
+      if (missingCatalogRows.length > 0) {
+        const shouldAdd = window.confirm(
+          `Found ${missingCatalogRows.length} new building(s) in the Architectural Database not currently present in this quiz.\n\nWould you like to import them as new questions now?`
+        );
+        if (shouldAdd) {
+          const allAnswerValues = Array.from(new Set(latestCatalog.map(r => r.data?.building_name).filter(Boolean)));
+          const newQuestions: any[] = missingCatalogRows.map((row, idx) => {
+            const d = row.data || {};
+            const targetAnswer = d.building_name || d.display_name || "Architectural Landmark";
+            const distractors = allAnswerValues
+              .filter(v => v !== targetAnswer)
+              .sort(() => Math.random() - 0.5)
+              .slice(0, 3);
+            const options = [targetAnswer, ...distractors].sort(() => Math.random() - 0.5);
+            const diff = (d.difficulty as QuestionDifficulty) || getQuestionDifficulty(targetAnswer);
+
+            return {
+              order_index: updatedQuestions.length + idx + 1,
+              question_type: "choose",
+              question_text: "Identify this iconic architectural landmark from the photo:",
+              media_type: d.building_photo ? "image" : "none",
+              media_url: d.building_photo || "",
+              options,
+              correct_answer: targetAnswer,
+              accepted_aliases: [`diff:${diff}`, targetAnswer],
+              explanation_clue: d.puzzle_clues || `${targetAnswer} was designed by ${d.architect || "Master Architect"} (${d.opened_year || ""}).`,
+              difficulty: diff
+            };
+          });
+
+          finalQuestions = [...updatedQuestions, ...newQuestions];
+          newlyAddedCount = newQuestions.length;
+        }
+      }
+
+      setQuestions(finalQuestions);
+
+      // If quiz already exists in Supabase, sync immediately to database
+      if (quizId) {
+        await supabase.from("quiz_questions").delete().eq("quiz_id", quizId);
+        const questionsToInsert = finalQuestions.map((q, idx) => {
+          const diffVal = q.difficulty || "medium";
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
+          return {
+            quiz_id: quizId,
+            order_index: idx + 1,
+            question_type: q.question_type,
+            question_text: q.question_text.trim(),
+            media_type: q.media_url ? "image" : "none",
+            media_url: (q.media_url || "").trim(),
+            options: q.options || [],
+            correct_answer: (q.correct_answer || "").trim(),
+            accepted_aliases: [`diff:${diffVal}`, ...cleanAliases],
+            explanation_clue: (q.explanation_clue || "").trim()
+          };
+        });
+        await supabase.from("quiz_questions").insert(questionsToInsert);
+      }
+
+      setToastMsg({
+        text: `✓ Updated from Architectural Database: ${updatedDetailsCount} synced, ${photoUpdatedCount} photos refreshed${newlyAddedCount > 0 ? `, ${newlyAddedCount} new questions imported` : ""}!`,
+        type: "success"
+      });
+      setTimeout(() => setToastMsg(null), 4000);
+    } catch (err: any) {
+      console.error(err);
+      alert("Error updating from architectural database: " + (err.message || String(err)));
+    } finally {
+      setSyncingDatabase(false);
+    }
+  };
+
+  // Soft delete: marks question as removed for this quiz
+  const removeQuestion = async (idx: number) => {
+    const targetQ = questions[idx];
+    if (!targetQ) return;
+
+    const cleanAliases = (targetQ.accepted_aliases || []).filter(a => typeof a === "string" && a !== "status:removed" && a !== "archived:true");
+    const updatedAliases = [...cleanAliases, "status:removed"];
+
+    setQuestions(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], is_removed: true, accepted_aliases: updatedAliases };
+      return copy;
+    });
+
+    if (targetQ.id && quizId) {
+      try {
+        await supabase
+          .from("quiz_questions")
+          .update({ accepted_aliases: updatedAliases })
+          .eq("id", targetQ.id);
+      } catch (err) {
+        console.warn("DB remove question notice:", err);
+      }
+    }
+
+    setIsDirty(true);
+    setToastMsg({ text: "Question moved to 'Removed Questions' for this quiz.", type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Restore question back to active in this quiz
+  const restoreQuestion = async (idx: number) => {
+    const targetQ = questions[idx];
+    if (!targetQ) return;
+
+    const cleanAliases = (targetQ.accepted_aliases || []).filter(a => typeof a === "string" && a !== "status:removed" && a !== "archived:true");
+
+    setQuestions(prev => {
+      const copy = [...prev];
+      copy[idx] = {
+        ...copy[idx],
+        is_removed: false,
+        accepted_aliases: cleanAliases
+      };
+      return copy;
+    });
+
+    if (targetQ.id && quizId) {
+      try {
+        await supabase
+          .from("quiz_questions")
+          .update({
+            accepted_aliases: cleanAliases
+          })
+          .eq("id", targetQ.id);
+      } catch (err) {
+        console.warn("DB restore update notice:", err);
+      }
+    }
+
+    setIsDirty(true);
+    setToastMsg({ text: "Question restored back to active quiz!", type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Permanently delete question from database
+  const permanentlyDeleteQuestion = async (idx: number) => {
+    const targetQ = questions[idx];
+    if (!targetQ) return;
+
+    if (!confirm(`Are you sure you want to permanently delete "${targetQ.correct_answer || targetQ.question_text}" from the database? This cannot be undone.`)) return;
+
+    if (targetQ.id) {
+      try {
+        await supabase.from("quiz_questions").delete().eq("id", targetQ.id);
+      } catch (err) {
+        console.error("DB delete notice:", err);
+      }
+    }
+
+    setQuestions(prev => prev.filter((_, i) => i !== idx));
+    setIsDirty(true);
+    setToastMsg({ text: "Question permanently deleted from database.", type: "success" });
+    setTimeout(() => setToastMsg(null), 3000);
   };
 
   const handleSaveQuiz = async (publishState?: boolean) => {
@@ -367,13 +803,31 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
     setSaving(true);
     try {
+      // Auto-commit any pending category selections
+      let activeQuestions = [...questions];
+      const pendingKeys = Object.keys(pendingDiff).map(k => parseInt(k, 10));
+      if (pendingKeys.length > 0) {
+        activeQuestions = activeQuestions.map((q, idx) => {
+          const targetDiff = pendingDiff[idx];
+          if (!targetDiff) return q;
+          const cleanAliases = (q.accepted_aliases || []).filter((a: any) => typeof a === "string" && !a.startsWith("diff:"));
+          return {
+            ...q,
+            difficulty: targetDiff,
+            accepted_aliases: [`diff:${targetDiff}`, ...cleanAliases]
+          };
+        });
+        setQuestions(activeQuestions);
+        setPendingDiff({});
+      }
+
       const pub = publishState !== undefined ? publishState : isPublished;
       const quizPayload = {
         title: title.trim(),
         slug: slug.trim().toLowerCase(),
         description: description.trim(),
         category,
-        cover_image: coverImage.trim() || questions[0]?.media_url || "",
+        cover_image: coverImage.trim() || activeQuestions[0]?.media_url || "",
         is_published: pub,
         updated_at: new Date().toISOString()
       };
@@ -400,9 +854,13 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       if (activeQuizId) {
         await supabase.from("quiz_questions").delete().eq("quiz_id", activeQuizId);
 
-        const questionsToInsert = questions.map((q, idx) => {
+        const questionsToInsert = activeQuestions.map((q, idx) => {
           const diffVal = q.difficulty || "medium";
-          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:"));
+          const cleanAliases = (q.accepted_aliases || []).filter(a => typeof a === "string" && !a.startsWith("diff:") && a !== "status:removed" && a !== "archived:true");
+          const finalAliases = [`diff:${diffVal}`, ...cleanAliases];
+          if (q.is_removed) {
+            finalAliases.push("status:removed");
+          }
 
           return {
             quiz_id: activeQuizId,
@@ -413,7 +871,7 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
             media_url: q.media_url.trim(),
             options: q.options || [],
             correct_answer: q.correct_answer.trim(),
-            accepted_aliases: [`diff:${diffVal}`, ...cleanAliases],
+            accepted_aliases: finalAliases,
             explanation_clue: (q.explanation_clue || "").trim()
           };
         });
@@ -424,6 +882,8 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         if (qInsertErr) throw qInsertErr;
       }
 
+      setIsPublished(pub);
+      setIsDirty(false);
       setToastMsg({ text: `Quiz saved successfully! (${pub ? "Published Live" : "Saved as Draft"})`, type: "success" });
       setTimeout(() => {
         if (onBack) onBack();
@@ -437,14 +897,45 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
     }
   };
 
-  // Difficulty counts
-  const countEasy = questions.filter(q => q.difficulty === "easy").length;
-  const countMedium = questions.filter(q => q.difficulty === "medium").length;
-  const countHard = questions.filter(q => q.difficulty === "hard").length;
+  // Active vs. Removed counts strictly for this quiz
+  const countRemoved = questions.filter(q => q.is_removed).length;
+  const countActive = questions.filter(q => !q.is_removed).length;
+  const countPopular = questions.filter(q => !q.is_removed && (q.difficulty === "popular" || q.difficulty === "easy")).length;
+  const count5050 = questions.filter(q => !q.is_removed && (q.difficulty === "50-50" || q.difficulty === "medium")).length;
+  const countMaster = questions.filter(q => !q.is_removed && (q.difficulty === "master" || q.difficulty === "hard")).length;
 
   const filteredQuestionsWithOriginalIndices = questions
     .map((q, idx) => ({ q, originalIndex: idx }))
-    .filter(({ q }) => filterDifficulty === "all" || q.difficulty === filterDifficulty);
+    .filter(({ q, originalIndex }) => {
+      // 1. Removed status filter
+      if (filterDifficulty === "removed") {
+        if (!q.is_removed) return false;
+      } else {
+        if (q.is_removed) return false;
+
+        // Difficulty category filter
+        if (filterDifficulty !== "all" && !retainedInFilter[originalIndex]) {
+          const rawDiff = q.difficulty || "popular";
+          const qTier = (rawDiff === "master" || rawDiff === "hard") ? "master" :
+                        (rawDiff === "50-50" || rawDiff === "medium") ? "50-50" : "popular";
+          if (qTier !== filterDifficulty) return false;
+        }
+      }
+
+      // 2. Question text, answer & options search query filter
+      if (questionSearchQuery.trim()) {
+        const term = questionSearchQuery.toLowerCase().trim();
+        const text = (q.question_text || "").toLowerCase();
+        const ans = (q.correct_answer || "").toLowerCase();
+        const clue = (q.explanation_clue || "").toLowerCase();
+        const opts = (q.options || []).join(" ").toLowerCase();
+        const numStr = String(originalIndex + 1);
+        const matches = text.includes(term) || ans.includes(term) || clue.includes(term) || opts.includes(term) || numStr === term;
+        if (!matches) return false;
+      }
+
+      return true;
+    });
 
   if (loading) {
     return (
@@ -496,14 +987,79 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
 
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-200">
-        <button 
-          onClick={onBack ? onBack : () => router.push("/admin/quizzes")}
-          className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-black transition"
-        >
-          <ArrowLeft size={16} /> Back to Quizzes Hub
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button 
+            type="button"
+            onClick={() => {
+              if (isDirty) {
+                setPendingNavUrl("back");
+              } else if (onBack) {
+                onBack();
+              } else {
+                router.push("/admin/quizzes");
+              }
+            }}
+            className="flex items-center gap-1.5 text-xs font-bold text-gray-600 hover:text-black transition cursor-pointer"
+          >
+            <ArrowLeft size={16} /> Back to Quizzes Hub
+          </button>
+
+          {allQuizzes.length > 0 && (() => {
+            const currentIdx = allQuizzes.findIndex(q => q.id === quizId);
+            const prevQ = currentIdx > 0 ? allQuizzes[currentIdx - 1] : null;
+            const nextQ = currentIdx >= 0 && currentIdx < allQuizzes.length - 1 ? allQuizzes[currentIdx + 1] : null;
+
+            return (
+              <div className="flex items-center gap-1.5 pl-3 border-l border-gray-200">
+                <button
+                  type="button"
+                  disabled={!prevQ}
+                  onClick={() => {
+                    if (!prevQ) return;
+                    if (isDirty) setPendingNavUrl(prevQ.id);
+                    else router.push(`/admin/quizzes/edit/${prevQ.id}`);
+                  }}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg border border-gray-200 hover:border-gray-400 bg-white disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 transition cursor-pointer"
+                  title={prevQ ? `Previous Quiz: ${prevQ.title}` : "No previous quiz"}
+                >
+                  <ChevronLeft size={14} />
+                  <span>Prev Quiz</span>
+                </button>
+
+                <span className="text-[11px] font-mono text-gray-400 px-1">
+                  {currentIdx >= 0 ? `${currentIdx + 1} / ${allQuizzes.length}` : ""}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={!nextQ}
+                  onClick={() => {
+                    if (!nextQ) return;
+                    if (isDirty) setPendingNavUrl(nextQ.id);
+                    else router.push(`/admin/quizzes/edit/${nextQ.id}`);
+                  }}
+                  className="px-2.5 py-1 text-xs font-bold rounded-lg border border-gray-200 hover:border-gray-400 bg-white disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 transition cursor-pointer"
+                  title={nextQ ? `Next Quiz: ${nextQ.title}` : "No next quiz"}
+                >
+                  <span>Next Quiz</span>
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            );
+          })()}
+        </div>
 
         <div className="flex items-center gap-2">
+          {isPublished ? (
+            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Published
+            </span>
+          ) : (
+            <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+              Draft Mode
+            </span>
+          )}
+
           {quizId && slug && (
             <a 
               href={`/quizzes/${slug}`} 
@@ -514,117 +1070,289 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
               <Eye size={14} /> Test Live Quiz
             </a>
           )}
-          <button 
-            onClick={() => handleSaveQuiz(false)}
-            disabled={saving}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition border border-gray-300 disabled:opacity-50"
-          >
-            Save as Draft
-          </button>
-          <button 
-            onClick={() => handleSaveQuiz(true)}
-            disabled={saving}
-            className="px-6 py-2 bg-black hover:bg-gray-800 text-white text-xs font-extrabold rounded-xl transition shadow-sm flex items-center gap-2 disabled:opacity-50"
-          >
-            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            {saving ? "Publishing..." : "Publish Quiz Live"}
-          </button>
+
+          {isPublished ? (
+            <>
+              <button 
+                type="button"
+                onClick={() => handleSaveQuiz(false)}
+                disabled={saving}
+                className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition border border-amber-300 disabled:opacity-50"
+                title="Unpublish this quiz and return it to draft"
+              >
+                Revert to Draft
+              </button>
+              <button 
+                type="button"
+                onClick={() => handleSaveQuiz(undefined)}
+                disabled={saving}
+                className="px-5 py-2 bg-black hover:bg-gray-800 text-white text-xs font-extrabold rounded-xl transition shadow-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                type="button"
+                onClick={() => handleSaveQuiz(false)}
+                disabled={saving}
+                className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition border border-gray-300 disabled:opacity-50"
+              >
+                Save as Draft
+              </button>
+              <button 
+                type="button"
+                onClick={() => handleSaveQuiz(true)}
+                disabled={saving}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition shadow-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                {saving ? "Publishing..." : "Publish Quiz Live"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* STEP 1: 1-CLICK COLUMN-BASED QUIZ GENERATOR (COLLAPSIBLE / ACCORDION) */}
-      <div className="bg-gradient-to-br from-blue-50/70 via-indigo-50/50 to-white rounded-3xl border border-blue-200 p-6 shadow-xs mb-8">
-        <div className="flex items-center justify-between gap-4">
+      {/* ARCHITECTURAL CATALOG GENERATOR / SYNC BAR */}
+      {(!quizId && questions.length === 0) ? (
+        <div className="bg-gradient-to-br from-blue-50/70 via-indigo-50/50 to-white rounded-3xl border border-blue-200 p-6 shadow-xs mb-8">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
+                ⚡
+              </span>
+              <div>
+                <h2 className="text-base font-black text-gray-900">
+                  Auto-Generate from Architectural Catalog ({catalogRows.length} Buildings)
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Build question sets automatically from building photos, architects, and metadata.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={generateQuizFromDatabase}
+              disabled={generating}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition shadow-sm flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+              Generate Questions
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5 pt-4 border-t border-blue-200/60">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                1. Clue / Question Source
+              </label>
+              <select
+                value={questionCol}
+                onChange={e => setQuestionCol(e.target.value as any)}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value="building_photo">🖼️ Building Photo</option>
+                <option value="architect_photo">👤 Architect's Photo</option>
+                <option value="building_name">🏛️ Building Name</option>
+                <option value="puzzle_clues">💡 Puzzle Clue / Description</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                2. Target Answer
+              </label>
+              <select
+                value={answerCol}
+                onChange={e => setAnswerCol(e.target.value as any)}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value="building_name">🏛️ Building Name</option>
+                <option value="architect">👤 Architect / Firm</option>
+                <option value="opened_year">📅 Opened Year</option>
+                <option value="city">📍 City</option>
+                <option value="architectural_style">🎨 Architectural Style</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                3. Format
+              </label>
+              <select
+                value={answerFormat}
+                onChange={e => setAnswerFormat(e.target.value as any)}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value="choose">Choose (4 Options)</option>
+                <option value="fill_up">Fill-ups (Full Text)</option>
+                <option value="missing_letters">Missing Letters Mask</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                4. Count
+              </label>
+              <select
+                value={questionCount}
+                onChange={e => setQuestionCount(Number(e.target.value))}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value={10}>10 Questions</option>
+                <option value={20}>20 Questions</option>
+                <option value={45}>45 Questions (Full Catalog)</option>
+                <option value={999}>All {catalogRows.length} Projects</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-blue-50/80 via-white to-gray-50 border border-blue-200/70 rounded-2xl p-4 shadow-2xs">
           <div className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
-              ⚡
+            <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+              🏛️
             </span>
             <div>
-              <h2 className="text-base font-black text-gray-900">
-                Auto-Generate from Architectural Catalog ({catalogRows.length} Buildings)
-              </h2>
-              <p className="text-xs text-gray-500">
-                Build or regenerate question sets automatically from building photos, architects, and metadata.
+              <p className="text-xs font-extrabold text-gray-900 flex items-center gap-2">
+                <span>Architectural Catalog Database ({catalogRows.length} Buildings)</span>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300">
+                  Ready to Sync
+                </span>
+              </p>
+              <p className="text-[11px] text-gray-500">
+                Update question photos, clues, and category points to match latest catalog edits.
               </p>
             </div>
           </div>
 
-          <button
-            onClick={generateQuizFromDatabase}
-            disabled={generating}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition shadow-sm flex items-center gap-2 shrink-0"
-          >
-            {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
-            Generate Questions
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5 pt-4 border-t border-blue-200/60">
-          <div>
-            <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-              1. Clue / Question Source
-            </label>
-            <select
-              value={questionCol}
-              onChange={e => setQuestionCol(e.target.value as any)}
-              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleUpdateFromCatalog}
+              disabled={syncingDatabase}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+              title="Click to sync updated photos, trivia clues, and categories from the architectural database"
             >
-              <option value="building_photo">🖼️ Building Photo</option>
-              <option value="architect_photo">👤 Architect's Photo</option>
-              <option value="building_name">🏛️ Building Name</option>
-              <option value="puzzle_clues">💡 Puzzle Clue / Description</option>
-            </select>
-          </div>
+              {syncingDatabase ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+              <span>{syncingDatabase ? "Updating Database..." : "Update from Architectural Database"}</span>
+            </button>
 
-          <div>
-            <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-              2. Target Answer
-            </label>
-            <select
-              value={answerCol}
-              onChange={e => setAnswerCol(e.target.value as any)}
-              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+            <button
+              type="button"
+              onClick={() => setShowGeneratorAccordion(!showGeneratorAccordion)}
+              className="px-3 py-2 text-xs font-bold text-gray-600 hover:text-black border border-gray-300 rounded-xl bg-white hover:bg-gray-50 transition flex items-center gap-1 cursor-pointer"
             >
-              <option value="building_name">🏛️ Building Name</option>
-              <option value="architect">👤 Architect / Firm</option>
-              <option value="opened_year">📅 Opened Year</option>
-              <option value="city">📍 City</option>
-              <option value="architectural_style">🎨 Architectural Style</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-              3. Format
-            </label>
-            <select
-              value={answerFormat}
-              onChange={e => setAnswerFormat(e.target.value as any)}
-              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
-            >
-              <option value="choose">Choose (4 Options)</option>
-              <option value="fill_up">Fill-ups (Full Text)</option>
-              <option value="missing_letters">Missing Letters Mask</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
-              4. Count
-            </label>
-            <select
-              value={questionCount}
-              onChange={e => setQuestionCount(Number(e.target.value))}
-              className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
-            >
-              <option value={10}>10 Questions</option>
-              <option value={20}>20 Questions</option>
-              <option value={45}>45 Questions (Full Catalog)</option>
-              <option value={999}>All {catalogRows.length} Projects</option>
-            </select>
+              <span>{showGeneratorAccordion ? "Hide Generator" : "Advanced Generator"}</span>
+              {showGeneratorAccordion ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
           </div>
         </div>
-      </div>
+      )}
+
+      {showGeneratorAccordion && (quizId || questions.length > 0) && (
+        <div className="bg-gradient-to-br from-blue-50/70 via-indigo-50/50 to-white rounded-3xl border border-blue-200 p-6 shadow-xs mb-8 animate-in fade-in">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="w-9 h-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0">
+                ⚡
+              </span>
+              <div>
+                <h2 className="text-base font-black text-gray-900">
+                  Auto-Generate Questions from Catalog ({catalogRows.length} Buildings)
+                </h2>
+                <p className="text-xs text-amber-800 font-medium">
+                  ⚠️ Note: Generating new questions will replace your current {questions.length} questions.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm(`Are you sure you want to re-generate? This will replace the current ${questions.length} questions.`)) {
+                  generateQuizFromDatabase();
+                }
+              }}
+              disabled={generating}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl transition shadow-sm flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              {generating ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />}
+              Regenerate All Questions
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-5 pt-4 border-t border-blue-200/60">
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                1. Clue / Question Source
+              </label>
+              <select
+                value={questionCol}
+                onChange={e => setQuestionCol(e.target.value as any)}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value="building_photo">🖼️ Building Photo</option>
+                <option value="architect_photo">👤 Architect's Photo</option>
+                <option value="building_name">🏛️ Building Name</option>
+                <option value="puzzle_clues">💡 Puzzle Clue / Description</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                2. Target Answer
+              </label>
+              <select
+                value={answerCol}
+                onChange={e => setAnswerCol(e.target.value as any)}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value="building_name">🏛️ Building Name</option>
+                <option value="architect">👤 Architect / Firm</option>
+                <option value="opened_year">📅 Opened Year</option>
+                <option value="city">📍 City</option>
+                <option value="architectural_style">🎨 Architectural Style</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                3. Format
+              </label>
+              <select
+                value={answerFormat}
+                onChange={e => setAnswerFormat(e.target.value as any)}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value="choose">Choose (4 Options)</option>
+                <option value="fill_up">Fill-ups (Full Text)</option>
+                <option value="missing_letters">Missing Letters Mask</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                4. Count
+              </label>
+              <select
+                value={questionCount}
+                onChange={e => setQuestionCount(Number(e.target.value))}
+                className="w-full px-3 py-2 text-xs font-bold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
+              >
+                <option value={10}>10 Questions</option>
+                <option value={20}>20 Questions</option>
+                <option value={45}>45 Questions (Full Catalog)</option>
+                <option value={999}>All {catalogRows.length} Projects</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* STEP 2: QUIZ META DETAILS */}
       <div className="bg-white rounded-3xl border border-gray-200 p-6 shadow-xs mb-8">
@@ -654,11 +1382,19 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
               onChange={e => setCategory(e.target.value)}
               className="w-full px-3.5 py-2.5 text-xs font-semibold border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-white"
             >
-              <option value="Guess the Building">Guess the Building</option>
-              <option value="Guess the Architect">Guess the Architect</option>
-              <option value="Guess the Year">Guess the Year</option>
-              <option value="Guess the Location">Guess the Location</option>
-              <option value="Guess the Style">Guess the Style</option>
+              <option value="Iconic Buildings">🏛️ Iconic Buildings</option>
+              <option value="Master Architects">📐 Master Architects</option>
+              <option value="Building Geography">🌍 Building Geography</option>
+              <option value="Styles & Theory">🎨 Styles & Theory</option>
+              <option value="Architects & Portfolios">👥 Architects & Portfolios</option>
+              <option value="Detective Trivia">🔍 Detective Trivia</option>
+              <option value="Iconic Landmarks">🏛️ Iconic Landmarks</option>
+              <option value="Architects & Studios">📐 Architects & Studios</option>
+              <option value="World Geography">🌍 World Geography</option>
+              <option value="Guess the Building">🏛️ Guess the Building</option>
+              <option value="Architects & Firms">📐 Architects & Firms</option>
+              <option value="History & Milestones">⏳ History & Milestones</option>
+              <option value="Architecture Trivia">🔍 Architecture Trivia</option>
             </select>
           </div>
 
@@ -693,93 +1429,220 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
       {/* STEP 3: QUESTIONS LIST & INLINE DIFFICULTY / TEXT EDITOR */}
       <div className="mb-6">
         
-        {/* Section Header with Difficulty Breakdown & Filters */}
-        <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-xs mb-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* STICKY Section Header with Difficulty Breakdown, Search, Controls & Common Apply */}
+        <div className="sticky top-2 z-30 bg-white/95 backdrop-blur-md rounded-3xl border border-gray-200/90 p-4 sm:p-5 shadow-lg mb-5 transition-all">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+            
+            {/* Title & Question Count */}
             <div>
               <h3 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
                 📝 Questions Management ({questions.length})
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Adjust difficulty (Easy 1 pt, Medium 2 pts, Hard 5 pts), enlarge photos, edit prompts, and reorder questions.
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                Popular (100 pts) vs Architecture Master (300 pts)
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={addBlankQuestion}
-                className="px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs"
-              >
-                <Plus size={14} /> Add Question
-              </button>
-              {questions.length > 0 && (
-                <button 
-                  onClick={() => {
-                    if (confirm("Are you sure you want to clear all questions?")) setQuestions([]);
-                  }} 
-                  className="px-3 py-2 text-xs text-red-600 hover:bg-red-50 border border-red-200 rounded-xl font-bold transition"
+            {/* Real-time Search Input */}
+            <div className="relative flex-1 min-w-[200px] max-w-sm w-full">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search questions, landmarks, answers..."
+                value={questionSearchQuery}
+                onChange={e => setQuestionSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-7 py-2 text-xs font-medium border border-gray-200 bg-gray-50/80 rounded-xl focus:outline-none focus:border-black focus:bg-white transition"
+              />
+              {questionSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setQuestionSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer"
+                  title="Clear search"
                 >
-                  Clear All
+                  <X size={13} />
                 </button>
               )}
             </div>
+
+            {/* Top Action Controls: DB Sync, Add, Quick Save */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={handleUpdateFromCatalog}
+                disabled={syncingDatabase}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                title="Update building photos, trivia clues, and categories from database"
+              >
+                {syncingDatabase ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
+                <span className="hidden sm:inline">{syncingDatabase ? "Updating..." : "Update DB"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={addBlankQuestion}
+                className="px-3.5 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Plus size={14} /> <span className="hidden sm:inline">Add Question</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSaveQuiz(undefined)}
+                disabled={saving}
+                className="px-4 py-2 bg-black hover:bg-gray-800 text-white text-xs font-extrabold rounded-xl transition shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                title="Save all changes to database"
+              >
+                {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                <span>Save</span>
+              </button>
+            </div>
           </div>
 
-          {/* Difficulty Breakdown Badges & Filter Tabs */}
-          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold text-gray-700">Filter View:</span>
-              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+          {/* Difficulty Breakdown Badges, Filter Tabs, Common Apply Button & View Mode */}
+          <div className="mt-3.5 pt-3.5 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-xs font-black uppercase tracking-wider text-gray-700">Filter:</span>
+              <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl flex-wrap">
                 <button
-                  onClick={() => setFilterDifficulty("all")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                  type="button"
+                  onClick={() => handleFilterChange("all")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                     filterDifficulty === "all" ? "bg-white text-black shadow-xs font-extrabold" : "text-gray-600 hover:text-black"
                   }`}
                 >
-                  All ({questions.length})
+                  All ({countActive})
                 </button>
                 <button
-                  onClick={() => setFilterDifficulty("easy")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                    filterDifficulty === "easy" ? "bg-emerald-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-emerald-700"
+                  type="button"
+                  onClick={() => handleFilterChange("popular")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                    filterDifficulty === "popular" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-800"
                   }`}
                 >
-                  🟢 Easy ({countEasy})
+                  Popular ({countPopular})
                 </button>
                 <button
-                  onClick={() => setFilterDifficulty("medium")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                    filterDifficulty === "medium" ? "bg-amber-500 text-black shadow-xs font-black" : "text-gray-600 hover:text-amber-700"
+                  type="button"
+                  onClick={() => handleFilterChange("50-50")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                    filterDifficulty === "50-50" ? "bg-blue-600 text-white shadow-xs font-black" : "text-gray-600 hover:text-blue-800"
                   }`}
                 >
-                  🟡 Medium ({countMedium})
+                  50-50 ({count5050})
                 </button>
                 <button
-                  onClick={() => setFilterDifficulty("hard")}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
-                    filterDifficulty === "hard" ? "bg-red-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-red-700"
+                  type="button"
+                  onClick={() => handleFilterChange("master")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                    filterDifficulty === "master" ? "bg-purple-600 text-white shadow-xs font-extrabold" : "text-gray-600 hover:text-purple-800"
                   }`}
                 >
-                  🔴 Hard ({countHard})
+                  Architecture Master ({countMaster})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange("removed")}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    filterDifficulty === "removed" ? "bg-gray-900 text-white shadow-xs font-extrabold" : "text-gray-500 hover:text-red-700"
+                  }`}
+                >
+                  <span>🗑️ Removed Questions</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    countRemoved > 0 ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                  }`}>
+                    {countRemoved}
+                  </span>
                 </button>
               </div>
             </div>
 
-            <div className="text-[11px] font-bold text-gray-500 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-200">
-              Scoring: Easy = 1 pt • Medium = 2 pts • Hard = 5 pts
+            {/* Right: View Mode Toggle AND Common Apply Button */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* ⚡ COMMON APPLY BUTTON (Appears when there are staged category selections) */}
+              {Object.keys(pendingDiff).length > 0 && (
+                <div className="flex items-center gap-1.5 animate-in fade-in zoom-in-95">
+                  <button
+                    type="button"
+                    onClick={applyAllStagedChanges}
+                    className="px-3.5 py-1.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black shadow-md transition flex items-center gap-1.5 cursor-pointer ring-2 ring-amber-400/80 hover:scale-105 active:scale-95"
+                    title="Apply all staged category changes"
+                  >
+                    <Check size={14} className="stroke-[3] text-emerald-400" />
+                    <span>Apply All Changes ({Object.keys(pendingDiff).length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPendingDiff({})}
+                    className="px-2 py-1 text-xs text-gray-500 hover:text-red-600 rounded-lg transition font-bold cursor-pointer"
+                    title="Cancel all staged category changes"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {/* View Mode Toggle: Detailed vs Compact */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black uppercase tracking-wider text-gray-500">View:</span>
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setQuestionViewMode("detailed")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      questionViewMode === "detailed" ? "bg-white text-black shadow-xs font-black" : "text-gray-500 hover:text-black"
+                    }`}
+                    title="Detailed View with all 4 multiple-choice options and clues"
+                  >
+                    <LayoutList size={13} />
+                    <span>Detailed</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuestionViewMode("compact")}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                      questionViewMode === "compact" ? "bg-white text-black shadow-xs font-black" : "text-gray-500 hover:text-black"
+                    }`}
+                    title="Compact Quick Review without option clutter"
+                  >
+                    <Grid size={13} />
+                    <span>Compact</span>
+                  </button>
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
 
         {/* QUESTIONS LIST */}
+        {filterDifficulty === "removed" && countRemoved > 0 && (
+          <div className="mb-4 p-4 bg-gray-900 text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+            <div>
+              <h4 className="text-sm font-extrabold flex items-center gap-2 text-white">
+                <span>🗑️ Removed Questions ({countRemoved})</span>
+              </h4>
+              <p className="text-xs text-gray-300 mt-0.5">
+                These questions are currently excluded from this quiz. Click <strong>&quot;Add Back to Quiz&quot;</strong> to restore any question individually.
+              </p>
+            </div>
+          </div>
+        )}
+
         {filteredQuestionsWithOriginalIndices.length === 0 ? (
           <div className="bg-white rounded-3xl border-2 border-dashed border-gray-300 p-12 text-center text-gray-400">
             <p className="text-base font-bold text-gray-700 mb-1">
-              {questions.length === 0 ? "No questions in this quiz yet" : "No questions match the selected difficulty filter"}
+              {questions.length === 0 
+                ? "No questions in this quiz yet" 
+                : filterDifficulty === "removed" 
+                ? "No removed questions in this quiz"
+                : "No questions match the selected difficulty filter"}
             </p>
             <p className="text-xs text-gray-500 mb-4">
               {questions.length === 0 
                 ? "Click 'Generate Questions' above or 'Add Question' to start." 
+                : filterDifficulty === "removed"
+                ? "Any question you remove using the trash icon will appear here so you can restore it anytime."
                 : "Switch filter to 'All' to view your questions."}
             </p>
             {questions.length === 0 ? (
@@ -798,66 +1661,262 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
               </button>
             )}
           </div>
+        ) : questionViewMode === "compact" ? (
+          /* COMPACT QUICK REVIEW VIEW (Image, Question, Correct Answer, Category) */
+          <div className="space-y-2">
+            {filteredQuestionsWithOriginalIndices.map(({ q, originalIndex }) => {
+              const isSelected = Boolean(selectedIndices[originalIndex]);
+              const isMaster = q.difficulty === "master" || q.difficulty === "hard";
+              const stagedDiff = pendingDiff[originalIndex];
+              const hasPending = stagedDiff !== undefined && stagedDiff !== q.difficulty;
+
+              return (
+                <div 
+                  key={originalIndex}
+                  className={`bg-white rounded-2xl border p-3 shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:shadow-sm ${
+                    isSelected ? "ring-2 ring-black border-black/60 bg-amber-50/20" : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="w-6 h-6 rounded-full bg-black text-white text-[11px] font-black flex items-center justify-center shrink-0">
+                      {originalIndex + 1}
+                    </span>
+                    {q.media_url ? (
+                      <div 
+                        onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || q.question_text })}
+                        className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden bg-gray-100 shrink-0 cursor-zoom-in relative group/th"
+                        title="Click to preview photo"
+                      >
+                        <img src={q.media_url} alt="" className="w-full h-full object-contain" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                        <ImageIcon size={16} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-gray-800 truncate" title={q.question_text}>
+                        {q.question_text}
+                      </p>
+                      <p className="text-xs text-gray-900 font-extrabold mt-0.5 truncate">
+                        Ans: <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">{q.correct_answer || "(No answer set)"}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectDifficulty(originalIndex, "popular")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          hasPending && (stagedDiff === "popular" || stagedDiff === "easy" || stagedDiff === "medium")
+                            ? "bg-amber-500 text-black ring-2 ring-amber-600 font-black shadow-xs"
+                            : !hasPending && (!isMaster)
+                            ? "bg-amber-500 text-black shadow-xs font-black"
+                            : "text-gray-500 hover:text-black hover:bg-white/70"
+                        }`}
+                      >
+                        Popular (100)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectDifficulty(originalIndex, "master")}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                          hasPending && (stagedDiff === "master" || stagedDiff === "hard")
+                            ? "bg-blue-600 text-white ring-2 ring-blue-700 font-black shadow-xs"
+                            : !hasPending && (isMaster)
+                            ? "bg-blue-600 text-white shadow-xs font-extrabold"
+                            : "text-gray-500 hover:text-black hover:bg-white/70"
+                        }`}
+                      >
+                        Master (300)
+                      </button>
+                    </div>
+
+                    {hasPending && (
+                      <div className="flex items-center gap-1 animate-in fade-in">
+                        <button
+                          type="button"
+                          onClick={() => confirmDifficultyChange(originalIndex)}
+                          className="px-2 py-1 rounded-lg bg-black hover:bg-gray-800 text-white text-[10px] font-black flex items-center gap-1 shadow-xs transition cursor-pointer"
+                          title="Apply this change"
+                        >
+                          <Check size={11} className="stroke-[3] text-emerald-400" />
+                          <span>Apply</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => cancelDifficultyChange(originalIndex)}
+                          className="p-1 text-gray-400 hover:text-black rounded transition cursor-pointer"
+                          title="Cancel"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => moveQuestionUp(originalIndex)}
+                        disabled={originalIndex === 0}
+                        className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition disabled:opacity-20 cursor-pointer"
+                        title="Move Up"
+                      >
+                        <ArrowUp size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveQuestionDown(originalIndex)}
+                        disabled={originalIndex === questions.length - 1}
+                        className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-lg transition disabled:opacity-20 cursor-pointer"
+                        title="Move Down"
+                      >
+                        <ArrowDown size={14} />
+                      </button>
+                      {q.is_removed ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => restoreQuestion(originalIndex)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs cursor-pointer"
+                            title="Add Back to Quiz"
+                          >
+                            <RotateCcw size={12} /> Restore
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => permanentlyDeleteQuestion(originalIndex)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Permanently Delete Question"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(originalIndex)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                          title="Remove question from this quiz (moves to Removed pool)"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          /* DETAILED CARD VIEW */
           <div className="space-y-5">
             {filteredQuestionsWithOriginalIndices.map(({ q, originalIndex }) => {
               const currentDiff = q.difficulty || "medium";
+              const stagedDiff = pendingDiff[originalIndex];
+              const hasPending = stagedDiff !== undefined && stagedDiff !== currentDiff;
+              const isRetained = filterDifficulty !== "all" && retainedInFilter[originalIndex] && currentDiff !== filterDifficulty;
 
               return (
                 <div 
                   key={originalIndex} 
                   className={`bg-white rounded-3xl border p-5 sm:p-6 shadow-xs transition duration-200 hover:shadow-md ${
-                    currentDiff === "easy" ? "border-emerald-200/80 hover:border-emerald-400" :
-                    currentDiff === "hard" ? "border-red-200/80 hover:border-red-400" :
-                    "border-amber-200/80 hover:border-amber-400"
+                    hasPending
+                      ? "ring-2 ring-black border-black/50 shadow-sm"
+                      : isRetained
+                      ? "border-amber-400 bg-amber-50/20"
+                      : currentDiff === "easy" ? "border-emerald-200/80 hover:border-emerald-400" :
+                      currentDiff === "hard" ? "border-red-200/80 hover:border-red-400" :
+                      "border-amber-200/80 hover:border-amber-400"
                   }`}
                 >
                   
                   {/* TOP ROW: Question #, Interactive Difficulty Selector & Actions */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-gray-100">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       <span className="w-8 h-8 rounded-full bg-black text-white text-xs font-black flex items-center justify-center shrink-0 shadow-xs">
                         {originalIndex + 1}
                       </span>
 
-                      {/* 🟢🟡🔴 MANUAL DIFFICULTY SELECTOR BUTTONS */}
-                      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
-                        <button
-                          type="button"
-                          onClick={() => updateQuestionDifficulty(originalIndex, "easy")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                            currentDiff === "easy"
-                              ? "bg-emerald-600 text-white shadow-xs font-extrabold"
-                              : "text-gray-600 hover:text-black hover:bg-white/60"
-                          }`}
-                          title="Set as Easy (1 point for player)"
-                        >
-                          <span>🟢</span> Easy (1 pt)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateQuestionDifficulty(originalIndex, "medium")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                            currentDiff === "medium"
-                              ? "bg-amber-500 text-black shadow-xs font-black"
-                              : "text-gray-600 hover:text-black hover:bg-white/60"
-                          }`}
-                          title="Set as Medium (2 points for player)"
-                        >
-                          <span>🟡</span> Medium (2 pts)
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateQuestionDifficulty(originalIndex, "hard")}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                            currentDiff === "hard"
-                              ? "bg-red-600 text-white shadow-xs font-extrabold"
-                              : "text-gray-600 hover:text-black hover:bg-white/60"
-                          }`}
-                          title="Set as Hard (5 points for player)"
-                        >
-                          <span>🔴</span> Hard (5 pts)
-                        </button>
+                      {/* MANUAL 3-TIER DIFFICULTY SELECTOR WITH TICK MARK CONFIRMATION */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200/80">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDifficulty(originalIndex, "popular")}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                              hasPending && (stagedDiff === "popular" || stagedDiff === "easy")
+                                ? "bg-amber-500 text-black ring-2 ring-amber-600 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && (currentDiff === "popular" || currentDiff === "easy")
+                                ? "bg-amber-500 text-black shadow-xs font-black"
+                                : "text-gray-600 hover:text-black hover:bg-white/70"
+                            }`}
+                            title="Set as Popular"
+                          >
+                            Popular
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDifficulty(originalIndex, "50-50")}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                              hasPending && (stagedDiff === "50-50" || stagedDiff === "medium")
+                                ? "bg-blue-600 text-white ring-2 ring-blue-700 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && (currentDiff === "50-50" || currentDiff === "medium")
+                                ? "bg-blue-600 text-white shadow-xs font-black"
+                                : "text-gray-600 hover:text-black hover:bg-white/70"
+                            }`}
+                            title="Set as 50-50 Intermediate"
+                          >
+                            50-50
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectDifficulty(originalIndex, "master")}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                              hasPending && (stagedDiff === "master" || stagedDiff === "hard")
+                                ? "bg-purple-600 text-white ring-2 ring-purple-700 ring-offset-1 font-black shadow-xs"
+                                : !hasPending && (currentDiff === "master" || currentDiff === "hard")
+                                ? "bg-purple-600 text-white shadow-xs font-extrabold"
+                                : "text-gray-600 hover:text-black hover:bg-white/70"
+                            }`}
+                            title="Set as Architecture Master"
+                          >
+                            Master
+                          </button>
+                        </div>
+
+                        {/* TICK MARK CONFIRMATION BUTTON (Appears upon selecting a different difficulty) */}
+                        {hasPending && (
+                          <div className="flex items-center gap-1 animate-in fade-in zoom-in-95 duration-150">
+                            <button
+                              type="button"
+                              onClick={() => confirmDifficultyChange(originalIndex)}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-black hover:bg-gray-800 text-white rounded-xl text-xs font-black shadow-md transition cursor-pointer hover:scale-105 active:scale-95"
+                              title="Click tick mark to apply this difficulty change"
+                            >
+                              <Check size={14} className="stroke-[3] text-emerald-400" />
+                              <span>Apply {stagedDiff?.toUpperCase()} ✓</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => cancelDifficultyChange(originalIndex)}
+                              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                              title="Cancel change"
+                            >
+                              <X size={15} />
+                            </button>
+                          </div>
+                        )}
+
+                        {/* RETAINED NOTICE IF QUESTION WAS MOVED OUT OF CURRENT FILTER TAB */}
+                        {isRetained && (
+                          <span className="text-[11px] font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                            <span>✓ Moved to {currentDiff.toUpperCase()}</span>
+                            <span className="text-gray-600 font-normal">(Kept in view so you don&apos;t lose it)</span>
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -881,16 +1940,52 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                       >
                         <ArrowDown size={16} />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => removeQuestion(originalIndex)}
-                        className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition ml-2"
-                        title="Delete Question"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {q.is_removed ? (
+                        <div className="flex items-center gap-2 ml-2">
+                          <button
+                            type="button"
+                            onClick={() => restoreQuestion(originalIndex)}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                            title="Add Back to Quiz"
+                          >
+                            <RotateCcw size={14} /> Add Back to Quiz
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => permanentlyDeleteQuestion(originalIndex)}
+                            className="p-1.5 text-gray-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                            title="Permanently Delete Question from Database"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => removeQuestion(originalIndex)}
+                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition ml-2 cursor-pointer"
+                          title="Remove question from this quiz (moves to Removed pool)"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
+
+                  {q.is_removed && (
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-xs font-bold text-amber-900">
+                      <div className="flex items-center gap-2">
+                        <span>⚠️ This question is excluded from the active quiz. It remains safely saved in the database.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => restoreQuestion(originalIndex)}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-xs transition shrink-0 cursor-pointer"
+                      >
+                        <RotateCcw size={12} /> Add Back to Quiz
+                      </button>
+                    </div>
+                  )}
 
                   {/* BODY: IMAGE PREVIEW (LARGE) & EDITABLE FIELDS */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
@@ -909,13 +2004,14 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                       {q.media_url ? (
                         <div 
                           onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || "Clue Photo" })}
-                          className="relative h-44 sm:h-48 w-full rounded-2xl overflow-hidden border border-gray-200 bg-gray-900 group cursor-pointer shadow-xs hover:border-black transition"
+                          className="relative h-48 sm:h-52 w-full rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 group cursor-pointer shadow-xs hover:border-black transition flex items-center justify-center p-1.5"
+                          title="Click to view full photo in original aspect ratio"
                         >
                           <img 
                             referrerPolicy="no-referrer"
                             src={q.media_url} 
                             alt="Clue preview" 
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                            className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = "none";
                             }}
@@ -1028,18 +2124,111 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                         </div>
                       )}
 
-                      {/* Explanation Trivia Clue */}
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                          💡 Architectural Trivia / Facts (Revealed in Practice Mode & Review):
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={q.explanation_clue || ""}
-                          onChange={e => updateQuestion(originalIndex, { explanation_clue: e.target.value })}
-                          className="w-full px-3 py-1.5 text-xs text-gray-700 border border-gray-200 rounded-xl focus:outline-none focus:border-black bg-gray-50/50"
-                          placeholder="Architectural style, location trivia, design significance..."
-                        />
+                      {/* 2-COLUMN BOTTOM ROW: TRIVIA / FACTS (LEFT 50%) & GAMEPLAY CLUES ONE-BY-ONE BELOW (RIGHT 50%) */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch mt-1">
+                        
+                        {/* LEFT (HALF WIDTH): ARCHITECTURAL TRIVIA / FACTS TEXTAREA */}
+                        <div className="flex flex-col h-full">
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
+                            💡 Architectural Trivia / Facts (Practice &amp; Review):
+                          </label>
+                          <textarea
+                            rows={4}
+                            value={q.explanation_clue || ""}
+                            onChange={e => updateQuestion(originalIndex, { explanation_clue: e.target.value })}
+                            className="w-full flex-1 min-h-[110px] px-3.5 py-2.5 text-xs text-gray-800 border border-gray-200 rounded-xl focus:outline-none focus:border-black bg-gray-50/60 leading-relaxed resize-y font-medium"
+                            placeholder="Architectural style, location trivia, design significance..."
+                          />
+                        </div>
+
+                        {/* RIGHT (HALF WIDTH): LIVE GAMEPLAY CLUES ONE-BY-ONE BELOW */}
+                        {(() => {
+                          const ans = (q.correct_answer || "").toLowerCase().trim();
+                          const qPhoto = (q.media_url || "").toLowerCase().trim();
+
+                          // 1. Primary ground-truth match by landmark photo (100% unique per building across all 65 catalog entries)
+                          let cat = catalogRows.find(c => {
+                            const photo = (c.data?.building_photo || "").toLowerCase().trim();
+                            return qPhoto && photo && (photo === qPhoto || qPhoto.endsWith(photo) || photo.endsWith(qPhoto));
+                          })?.data;
+
+                          // 2. Secondary fallback by exact building name if photo is missing or non-matching
+                          if (!cat && ans) {
+                            cat = catalogRows.find(c => {
+                              const d = c.data || {};
+                              const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
+                              return bName && (bName === ans || bName.startsWith(ans));
+                            })?.data;
+                          }
+
+                          const isMasterArchitects = 
+                            category === "Master Architects" || 
+                            slug.includes("master-architect") || 
+                            (title || "").toLowerCase().includes("master architect");
+
+                          const isGeographyQuiz = 
+                            category === "Building Geography" || 
+                            slug.includes("geography") || 
+                            slug.includes("where-in-the-world") ||
+                            (title || "").toLowerCase().includes("geography");
+
+                          const cleanBaseBuildingName = 
+                            cat?.base_building_name || 
+                            (cat?.building_name ? cat.building_name.split(',')[0].trim() : '') || 
+                            (cat?.display_name ? cat.display_name.split(',')[0].trim() : '') || 
+                            "Iconic Architectural Landmark";
+
+                          // 1st Clue and 2nd Clue config per quiz type
+                          let clue1Label = "📍 Clue 1 (Location):";
+                          let clue1Value = (cat?.city || cat?.country) ? `${cat.city || ""}${cat.city && cat.country ? ", " : ""}${cat.country || ""}` : "City, Country";
+
+                          let clue2Label = "🏛️ Clue 2 (Architect / Movement):";
+                          let clue2Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
+
+                          if (isMasterArchitects) {
+                            // In Master Architects quiz: First clue is Location, Second clue is Building Name!
+                            clue1Label = "📍 Clue 1 (Location):";
+                            clue1Value = (cat?.city || cat?.country) ? `${cat.city || ""}${cat.city && cat.country ? ", " : ""}${cat.country || ""}` : "City, Country";
+
+                            clue2Label = "🏛️ Clue 2 (Building Name):";
+                            clue2Value = cat?.building_name || cat?.display_name ? `${cat.building_name || cat.display_name}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Iconic Architectural Landmark";
+                          } else if (isGeographyQuiz) {
+                            // In Geography quiz: First clue is Building Name (strictly NO location revealed!), Second clue is Architect
+                            clue1Label = "🏛️ Clue 1 (Building Name):";
+                            clue1Value = cleanBaseBuildingName;
+
+                            clue2Label = "👤 Clue 2 (Architect & Era):";
+                            clue2Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
+                          }
+
+                          return (
+                            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex flex-col justify-between h-full">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-extrabold text-slate-800 flex items-center gap-1.5 text-[11px]">
+                                  <span>🔍 Live Gameplay Clues (Catalog Preview):</span>
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-mono">
+                                  Auto-resolved for players
+                                </span>
+                              </div>
+                              <div className="flex flex-col gap-2 text-[11px] flex-1 justify-center">
+                                <div className="p-2.5 bg-blue-50/90 border border-blue-200/90 rounded-lg text-blue-950 flex items-center justify-between gap-2 shadow-2xs">
+                                  <span className="font-extrabold flex items-center gap-1 text-blue-900 shrink-0">
+                                    <span>{clue1Label}</span>
+                                  </span>
+                                  <p className="font-bold truncate text-right">{clue1Value}</p>
+                                </div>
+                                <div className="p-2.5 bg-purple-50/90 border border-purple-200/90 rounded-lg text-purple-950 flex items-center justify-between gap-2 shadow-2xs">
+                                  <span className="font-extrabold flex items-center gap-1 text-purple-900 shrink-0">
+                                    <span>{clue2Label}</span>
+                                  </span>
+                                  <p className="font-bold truncate text-right">{clue2Value}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                       </div>
 
                     </div>
@@ -1061,27 +2250,54 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
             <p className="text-sm font-bold text-gray-900">
               {questions.length} Questions Ready
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              🟢 {countEasy} Easy • 🟡 {countMedium} Medium • 🔴 {countHard} Hard
+            <p className="text-xs text-gray-500 mt-0.5 font-bold">
+              <span className="text-amber-800">{countPopular} Popular</span> • <span className="text-blue-800">{count5050} 50-50</span> • <span className="text-purple-800">{countMaster} Master</span>
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => handleSaveQuiz(false)}
-              disabled={saving}
-              className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition border border-gray-300"
-            >
-              Save as Draft
-            </button>
-            <button 
-              onClick={() => handleSaveQuiz(true)}
-              disabled={saving}
-              className="px-8 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-extrabold rounded-xl transition shadow-md flex items-center gap-2"
-            >
-              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-              Publish Quiz Live
-            </button>
+            {isPublished ? (
+              <>
+                <button 
+                  type="button"
+                  onClick={() => handleSaveQuiz(false)}
+                  disabled={saving}
+                  className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition border border-amber-300"
+                  title="Unpublish this quiz and return it to draft"
+                >
+                  Revert to Draft
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => handleSaveQuiz(undefined)}
+                  disabled={saving}
+                  className="px-7 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-extrabold rounded-xl transition shadow-md flex items-center gap-2"
+                >
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                  {saving ? "Saving Changes..." : "Save Changes"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  type="button"
+                  onClick={() => handleSaveQuiz(false)}
+                  disabled={saving}
+                  className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition border border-gray-300"
+                >
+                  Save as Draft
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => handleSaveQuiz(true)}
+                  disabled={saving}
+                  className="px-8 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition shadow-md flex items-center gap-2"
+                >
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                  {saving ? "Publishing..." : "Publish Quiz Live"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -1093,6 +2309,49 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
         }`}>
           <CheckCircle2 size={16} />
           <span>{toastMsg.text}</span>
+        </div>
+      )}
+
+      {/* UNSAVED CHANGES CONFIRMATION MODAL */}
+      {pendingNavUrl && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl border border-gray-200 max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center gap-3 mb-3 text-amber-600">
+              <AlertCircle size={24} />
+              <h3 className="text-base font-black text-gray-950">Unsaved Changes</h3>
+            </div>
+            <p className="text-xs text-gray-600 mb-5 leading-relaxed">
+              You have modified this quiz without saving. If you navigate to another quiz now, any unsaved adjustments will be discarded.
+            </p>
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setPendingNavUrl(null)}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Stay on Page
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const dest = pendingNavUrl;
+                  setPendingNavUrl(null);
+                  setIsDirty(false);
+                  if (dest === "back") {
+                    if (onBack) onBack();
+                    else router.push("/admin/quizzes");
+                  } else if (dest.startsWith("/")) {
+                    router.push(dest);
+                  } else {
+                    router.push(`/admin/quizzes/edit/${dest}`);
+                  }
+                }}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Discard &amp; Leave
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

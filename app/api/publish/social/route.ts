@@ -42,10 +42,14 @@ function getTwitterOAuthHeader(
 
   return `OAuth ${headerParts.join(", ")}`;
 }
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { generateJobUrl } from "@/utils/jobUrl";
 import { generateSocialHashtags } from "@/utils/socialHashtags";
 import { formatWhatsAppPost, formatInstagramCaption, sanitizeInstagramHandle } from "@/utils/socialFormats";
+
+// Global in-memory deduplication cache to prevent rapid concurrent or back-to-back duplicate triggers
+const publishedJobCache = new Map<string, number>();
+const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
 
 const PLATFORMS = ["whatsapp", "telegram", "facebook", "instagram", "instagram_story", "x", "linkedin"];
 
@@ -105,12 +109,43 @@ export async function POST(req: Request) {
 
     if (!job_id) return NextResponse.json({ error: "Missing job_id" }, { status: 400 });
 
+    // Clean up memory cache entries older than 6 hours
+    const nowTime = Date.now();
+    for (const [k, v] of publishedJobCache.entries()) {
+      if (nowTime - v > SIX_HOURS_MS) {
+        publishedJobCache.delete(k);
+      }
+    }
+
+    // Safeguard 1: In-memory cache check (prevents rapid concurrent or duplicate triggers)
+    if (!retry_platform && publishedJobCache.has(job_id)) {
+      console.log(`Social Publish: Job ${job_id} was already triggered within the last 6 hours (in-memory cache). Skipping.`);
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        reason: "Job was already triggered recently (in-memory deduplication safeguard).",
+        job_id
+      });
+    }
+
     // 1. Fetch the trigger job
-    const { data: triggerJob, error: jobError } = await supabase.from("jobs").select("*").eq("id", job_id).single();
+    const { data: triggerJob, error: jobError } = await supabaseAdmin.from("jobs").select("*").eq("id", job_id).single();
     if (jobError || !triggerJob) return NextResponse.json({ error: "Job not found" }, { status: 404 });
 
+    // Safeguard 2: Status check.
+    // If a job is still in 'scheduled' status, social publishing MUST NOT run.
+    // It must first be transitioned to 'published' in the database by /api/cron/schedule or admin.
+    if (!retry_platform && triggerJob.status === "scheduled") {
+      console.warn(`Social Publish: Job ${job_id} is still in 'scheduled' status. Transition to 'published' is required before social publishing.`);
+      return NextResponse.json({
+        error: "Job is still in scheduled status. Database transition to 'published' is required before posting to social channels.",
+        skipped: true,
+        status: triggerJob.status
+      }, { status: 400 });
+    }
+
     // 2. Fetch all siblings in this exact batch (same firm, same posted_date, same image)
-    let query = supabase.from("jobs").select("*")
+    let query = supabaseAdmin.from("jobs").select("*")
       .eq("firm_name", triggerJob.firm_name);
     
     if (triggerJob.posted_date) query = query.eq("posted_date", triggerJob.posted_date);
@@ -121,6 +156,17 @@ export async function POST(req: Request) {
     const { data: siblings } = await query;
     const batchJobs = siblings && siblings.length > 0 ? siblings : [triggerJob];
     const batchIds = batchJobs.map(j => j.id);
+
+    // Safeguard 3: In-memory batch sibling check
+    if (!retry_platform && batchIds.some(id => publishedJobCache.has(id))) {
+      console.log(`Social Publish: Sibling in batch for job ${job_id} was already triggered within 6 hours. Skipping.`);
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        reason: "A job in this multi-position batch was already processed recently.",
+        batch_ids: batchIds
+      });
+    }
 
     // 3. Batch-level deduplication check
     // Multi-position jobs share the same flyer image and firm. 
@@ -137,10 +183,15 @@ export async function POST(req: Request) {
       });
     }
 
+    // Lock all jobs in this batch into memory cache immediately to protect against concurrent triggers
+    if (!retry_platform) {
+      batchIds.forEach(id => publishedJobCache.set(id, Date.now()));
+    }
+
     // 4. Fetch company data to get the social media usernames/handles
     let companyData = null;
     if (batchJobs[0].company_id) {
-      const { data: comp } = await supabase.from("companies").select("*").eq("id", batchJobs[0].company_id).maybeSingle();
+      const { data: comp } = await supabaseAdmin.from("companies").select("*").eq("id", batchJobs[0].company_id).maybeSingle();
       companyData = comp;
     }
 
@@ -154,7 +205,7 @@ export async function POST(req: Request) {
       // Check if ANY job in this batch has already been published on this platform
       let existingLog = null;
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from("social_publishing_logs")
           .select("*")
           .in("job_id", batchIds)
@@ -170,7 +221,7 @@ export async function POST(req: Request) {
       }
       
       try {
-        const { error: upsertError } = await supabase.from("social_publishing_logs").upsert({
+        const { error: upsertError } = await supabaseAdmin.from("social_publishing_logs").upsert({
             job_id: triggerJob.id,
             platform,
             status: "publishing",
@@ -553,7 +604,7 @@ export async function POST(req: Request) {
       }
 
       try {
-        await supabase.from("social_publishing_logs").update({
+        await supabaseAdmin.from("social_publishing_logs").update({
           status: success ? "published" : "failed",
           error_message: success ? null : errorMsg,
           updated_at: new Date().toISOString(),
@@ -569,7 +620,7 @@ export async function POST(req: Request) {
           attempt_count: 1,
           updated_at: new Date().toISOString()
         }));
-        try { await supabase.from("social_publishing_logs").upsert(siblingLogs, { onConflict: "job_id, platform" }); } catch(err) {}
+        try { await supabaseAdmin.from("social_publishing_logs").upsert(siblingLogs, { onConflict: "job_id, platform" }); } catch(err) {}
       }
 
       return { platform, status: success ? "published" : "failed", error: errorMsg };
@@ -582,7 +633,7 @@ export async function POST(req: Request) {
     const anySuccess = results.some(r => r.status === "fulfilled" && (r.value as any)?.status === "published");
     if (anySuccess) {
       const nowIso = new Date().toISOString();
-      await supabase
+      await supabaseAdmin
         .from("jobs")
         .update({ scheduled_at: nowIso })
         .in("id", batchIds);

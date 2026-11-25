@@ -7,7 +7,8 @@ import Navbar from "../../../components/Navbar";
 import { 
   Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, 
   EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine, UploadCloud, Loader2,
-  ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, X, Sparkles, Filter, CheckCircle2
+  ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, X, Sparkles, Filter, CheckCircle2,
+  LayoutList, LayoutGrid, ZoomIn, Eye, ExternalLink
 } from "lucide-react";
 
 // Initialize Supabase
@@ -70,16 +71,19 @@ export default function CatalogPage() {
   const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const [showFiltersRow, setShowFiltersRow] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState<"all" | "india" | "pritzker">("all");
-  const [sortCol, setSortCol] = useState<string | null>("opened_year");
+  const [sortCol, setSortCol] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [savingAll, setSavingAll] = useState(false);
   const [statusNotification, setStatusNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+  // Row Density: Compact vs Expanded (large photos directly in cell)
+  const [rowDensity, setRowDensity] = useState<"compact" | "expanded">("expanded");
+  const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
 
   // Excel UX States
   const [activeColMenu, setActiveColMenu] = useState<string | null>(null);
   const [insertPos, setInsertPos] = useState<{ colId: string, direction: 'left' | 'right' } | null>(null);
   const [uploadingCells, setUploadingCells] = useState<Record<string, boolean>>({});
-  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Ref for table scroll control
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -320,31 +324,45 @@ export default function CatalogPage() {
     }
   };
 
-  // Horizontal Scroll Action
-  const scrollHorizontal = (dir: 'left' | 'right') => {
-    if (!tableContainerRef.current) return;
-    const offset = dir === 'left' ? -400 : 400;
-    tableContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-  };
-
-  const handleTableScroll = () => {
-    if (!tableContainerRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
-    const maxScroll = scrollWidth - clientWidth;
-    if (maxScroll > 0) {
-      setScrollProgress(Math.round((scrollLeft / maxScroll) * 100));
-    } else {
-      setScrollProgress(0);
+  const handleGalleryImageUpload = async (rowId: string, file?: File) => {
+    if (!file) return;
+    const cellKey = `${rowId}-building_photo`;
+    setUploadingCells(prev => ({ ...prev, [cellKey]: true }));
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "/building-photos");
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      if (data.url) {
+        const targetRow = rows.find(r => r.id === rowId);
+        if (targetRow) {
+          const updatedRow = {
+            ...targetRow,
+            data: { ...targetRow.data, building_photo: data.url }
+          };
+          await saveRow(updatedRow, targetRow.is_locked ?? true);
+          setStatusNotification({ msg: "Building photo updated and saved!", type: "success" });
+          setTimeout(() => setStatusNotification(null), 3000);
+        }
+      }
+    } catch (err: any) {
+      alert("Error uploading photo: " + err.message);
+    } finally {
+      setUploadingCells(prev => ({ ...prev, [cellKey]: false }));
     }
   };
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const pct = Number(e.target.value);
-    setScrollProgress(pct);
-    if (!tableContainerRef.current) return;
-    const { scrollWidth, clientWidth } = tableContainerRef.current;
-    const maxScroll = scrollWidth - clientWidth;
-    tableContainerRef.current.scrollLeft = (pct / 100) * maxScroll;
+  const handleRemoveBuildingPhoto = async (row: any) => {
+    if (!confirm(`Remove building photo for "${row.data?.building_name || 'this building'}"?`)) return;
+    const updatedRow = {
+      ...row,
+      data: { ...row.data, building_photo: "" }
+    };
+    await saveRow(updatedRow, row.is_locked ?? true);
+    setStatusNotification({ msg: "Photo removed!", type: "success" });
+    setTimeout(() => setStatusNotification(null), 3000);
   };
 
   // Sorting Handler
@@ -428,11 +446,89 @@ export default function CatalogPage() {
     
     if (row.is_locked) {
       if (col.type === "image") {
+        if (rowDensity === "expanded") {
+          return val ? (
+            <div className="flex flex-col items-center gap-2 p-1.5 min-w-[220px]">
+              <div className="relative group/cellimg rounded-xl overflow-hidden border border-gray-200 shadow-xs bg-gray-100 w-52 h-44 shrink-0">
+                <img 
+                  src={val} 
+                  alt="preview" 
+                  className="w-full h-full object-cover group-hover/cellimg:scale-105 transition cursor-pointer"
+                  onClick={() => setLightboxImage({ url: val, title: row.data?.building_name || "Photo" })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setLightboxImage({ url: val, title: row.data?.building_name || "Photo" })}
+                  className="absolute bottom-2 right-2 p-1.5 bg-black/75 hover:bg-black text-white rounded-lg opacity-0 group-hover/cellimg:opacity-100 transition shadow-xs"
+                  title="Zoom full image"
+                >
+                  <ZoomIn size={14} />
+                </button>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <button 
+                  type="button"
+                  onClick={() => setLightboxImage({ url: val, title: row.data?.building_name || "Photo" })}
+                  className="text-blue-600 hover:underline font-mono text-[11px] flex items-center gap-1 font-bold"
+                >
+                  <Eye size={12} /> View Full
+                </button>
+                <label 
+                  className="text-gray-600 hover:text-black font-mono text-[11px] cursor-pointer flex items-center gap-1 font-bold"
+                  title="Replace photo"
+                >
+                  <UploadCloud size={12} /> Replace
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="hidden" 
+                    onChange={(e) => handleCatalogImageUpload(row.id, col.id, e.target.files?.[0])}
+                  />
+                </label>
+                <button 
+                  type="button"
+                  onClick={() => handleRemoveBuildingPhoto(row)}
+                  className="text-red-500 hover:text-red-700 text-[11px] font-bold"
+                  title="Clear photo"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-52 h-44 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-3 text-center bg-gray-50/50 min-w-[220px]">
+              <span className="text-2xl mb-1 text-gray-300">🖼️</span>
+              <span className="text-[11px] text-gray-400 font-semibold mb-2">No photo attached</span>
+              <label className="px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-lg cursor-pointer transition flex items-center gap-1">
+                <UploadCloud size={13} /> Upload Photo
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => handleCatalogImageUpload(row.id, col.id, e.target.files?.[0])}
+                />
+              </label>
+            </div>
+          );
+        }
+
+        // Compact Mode Image Cell
         return val ? (
-          <a href={val} target="_blank" rel="noreferrer" className="flex items-center gap-2 group">
-            <img src={val} alt="preview" className="h-8 w-8 object-cover rounded border border-gray-200 group-hover:opacity-80 transition shrink-0 shadow-xs" />
-            <span className="text-[11px] text-blue-600 underline truncate max-w-[100px] font-mono">View Photo</span>
-          </a>
+          <div className="flex items-center gap-2 group min-w-[120px]">
+            <img 
+              src={val} 
+              alt="preview" 
+              className="h-8 w-8 object-cover rounded border border-gray-200 group-hover:opacity-80 transition shrink-0 shadow-xs cursor-pointer"
+              onClick={() => setLightboxImage({ url: val, title: row.data?.building_name || "Photo" })} 
+            />
+            <button 
+              type="button"
+              onClick={() => setLightboxImage({ url: val, title: row.data?.building_name || "Photo" })}
+              className="text-[11px] text-blue-600 underline truncate max-w-[100px] font-mono hover:text-blue-800"
+            >
+              View Photo
+            </button>
+          </div>
         ) : <span className="text-gray-300 text-xs italic">No image</span>;
       }
       if (col.type === "link") {
@@ -440,7 +536,7 @@ export default function CatalogPage() {
       }
       return (
         <div 
-          className="truncate px-2 py-1 text-xs font-medium text-gray-800" 
+          className={`truncate px-2 py-1 text-xs font-medium text-gray-800 ${rowDensity === "expanded" ? "py-4 max-h-[200px] whitespace-normal line-clamp-6" : ""}`} 
           title={typeof val === "string" ? val : JSON.stringify(val)}
         >
           {val || <span className="text-gray-300">-</span>}
@@ -451,8 +547,44 @@ export default function CatalogPage() {
     // Editable cell
     if (col.type === "image") {
       const isUploading = uploadingCells[`${row.id}-${col.id}`];
+      if (rowDensity === "expanded") {
+        return (
+          <div className="flex flex-col items-center gap-2 p-1.5 min-w-[220px]">
+            {val ? (
+              <div className="relative group/cellimg rounded-xl overflow-hidden border border-gray-200 shadow-xs bg-gray-100 w-52 h-40 shrink-0">
+                <img src={val} alt="preview" className="w-full h-full object-cover" />
+              </div>
+            ) : null}
+            <div className="flex items-center gap-1 w-full">
+              <input 
+                type="text" 
+                placeholder="Image URL..."
+                value={val}
+                onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
+                className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-hidden focus:border-black font-mono text-[11px]"
+              />
+              <label 
+                className={`cursor-pointer p-1.5 rounded transition shrink-0 flex items-center justify-center ${
+                  isUploading ? "bg-gray-200 text-gray-400" : "bg-black text-white hover:bg-gray-800"
+                }`} 
+                title="Upload photo to ImageKit"
+              >
+                {isUploading ? <Loader2 size={13} className="animate-spin" /> : <UploadCloud size={13} />}
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  disabled={isUploading}
+                  onChange={(e) => handleCatalogImageUpload(row.id, col.id, e.target.files?.[0])}
+                />
+              </label>
+            </div>
+          </div>
+        );
+      }
+
       return (
-        <div className="flex items-center gap-1.5 w-full">
+        <div className="flex items-center gap-1.5 w-full min-w-[140px]">
           {val ? (
             <div className="relative shrink-0">
               <img src={val} alt="preview" className="h-7 w-7 object-cover rounded border border-gray-200" />
@@ -463,7 +595,7 @@ export default function CatalogPage() {
             placeholder="URL or Upload..."
             value={val}
             onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
-            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-black min-w-[80px]"
+            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-hidden focus:border-black min-w-[80px]"
           />
           <label 
             className={`cursor-pointer p-1.5 rounded transition shrink-0 flex items-center justify-center ${
@@ -506,10 +638,10 @@ export default function CatalogPage() {
   return (
     <>
       <Navbar />
-      <div className="h-screen max-h-screen bg-gray-50 flex flex-col pt-[80px] overflow-hidden" onClick={() => setActiveColMenu(null)}>
+      <div className="min-h-screen bg-gray-50 flex flex-col pt-[80px]" onClick={() => setActiveColMenu(null)}>
         
-        {/* HEADER TOOLBAR */}
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex flex-wrap items-center justify-between gap-3 z-10 shrink-0 shadow-xs">
+        {/* HEADER TOOLBAR (Sticky at top) */}
+        <div className="sticky top-[80px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2 text-gray-900">
               🏛️ Architecture Catalog 
@@ -585,18 +717,18 @@ export default function CatalogPage() {
           )}
         </div>
 
-        {/* SEARCH & QUICK CATEGORY FILTER BAR */}
+        {/* SEARCH & QUICK CATEGORY FILTER BAR (Sticky below header) */}
         {!setupRequired && !loading && (
-          <div className="bg-white border-b border-gray-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="sticky top-[141px] z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
             {/* Search Input */}
-            <div className="relative min-w-[280px] max-w-md flex-1">
+            <div className="relative min-w-[260px] max-w-sm flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input 
                 type="text"
                 placeholder="Global search across all columns..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-8 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:border-black bg-gray-50/50"
+                className="w-full pl-8 pr-8 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-hidden focus:border-black bg-gray-50/50"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black">
@@ -634,6 +766,32 @@ export default function CatalogPage() {
               </button>
             </div>
 
+            {/* Row Density Switcher: Compact vs Expanded (Large Photos in cell) */}
+            <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setRowDensity("compact")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+                  rowDensity === "compact" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
+                }`}
+                title="Compact rows for high data density"
+              >
+                <LayoutList size={14} />
+                <span>Compact</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRowDensity("expanded")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+                  rowDensity === "expanded" ? "bg-white text-black shadow-xs" : "text-gray-500 hover:text-black"
+                }`}
+                title="Expanded rows with large photos (~2 projects visible per screen)"
+              >
+                <ImageIcon size={14} />
+                <span>Large Photos</span>
+              </button>
+            </div>
+
             {/* Active status & clear filters */}
             <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
               <div>
@@ -657,59 +815,10 @@ export default function CatalogPage() {
           </div>
         )}
 
-        {/* HORIZONTAL SCROLL NAVIGATOR SLIDER */}
-        {!setupRequired && !loading && (
-          <div className="bg-gray-100/90 border-b border-gray-200 px-6 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-                Horizontal Scroll Cursor:
-              </span>
-              <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1 border border-gray-300 shadow-xs">
-                <button 
-                  onClick={() => scrollHorizontal('left')} 
-                  className="p-1 hover:bg-gray-100 text-gray-700 hover:text-black rounded transition shadow-xs" 
-                  title="Slide Left across columns"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={scrollProgress} 
-                  onChange={handleSliderChange} 
-                  className="w-36 sm:w-64 accent-black cursor-ew-resize"
-                  title="Drag slider to scroll sideways across all 16 columns"
-                />
-                <button 
-                  onClick={() => scrollHorizontal('right')} 
-                  className="p-1 hover:bg-gray-100 text-gray-700 hover:text-black rounded transition shadow-xs" 
-                  title="Slide Right across columns"
-                >
-                  <ChevronRight size={16} />
-                </button>
-                <span className="text-[11px] font-mono text-gray-700 font-bold ml-1 w-12 text-right">
-                  {scrollProgress}%
-                </span>
-              </div>
-              <span className="text-[11px] text-gray-500 hidden md:inline">
-                ({visibleColumns.length} Columns Total — slide right to view Pritzker, style, dimensions, photos & trivia)
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-gray-500 bg-white border border-gray-200 px-2 py-0.5 rounded shadow-xs">
-                💡 Tip: Hold <kbd className="font-bold text-gray-800">Shift</kbd> + Scroll Wheel to glide sideways
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* TABLE CONTENT AREA */}
-        <div className="flex-1 p-4 md:p-6 overflow-hidden flex flex-col bg-gray-100/60">
+        {/* MAIN CONTENT AREA: NATURAL VERTICAL SCROLL WITH HORIZONTALLY SCROLLABLE TABLE */}
+        <div className="p-4 md:p-6 pb-20 flex-1">
           {loading ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 font-bold gap-2">
+            <div className="py-24 flex flex-col items-center justify-center text-gray-500 font-bold gap-2">
               <Loader2 size={24} className="animate-spin text-black" />
               <span>Loading Architecture Catalog...</span>
             </div>
@@ -737,12 +846,10 @@ export default function CatalogPage() {
           ) : (
             <div 
               ref={tableContainerRef}
-              onScroll={handleTableScroll}
-              className="bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-200 flex-1 overflow-x-scroll overflow-y-auto relative excel-scrollbar"
-              style={{ maxHeight: 'calc(100vh - 280px)' }}
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto excel-scrollbar"
             >
               <table className="w-max min-w-full text-left border-collapse table-fixed select-text">
-                <thead className="bg-gray-50 sticky top-0 z-30 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+                <thead className="bg-gray-50 sticky top-[195px] z-20 shadow-xs">
                   {/* MAIN HEADER ROW */}
                   <tr>
                     {/* Index Col # */}
@@ -993,6 +1100,32 @@ export default function CatalogPage() {
           <button onClick={() => setStatusNotification(null)} className="ml-2 hover:opacity-80">
             <X size={14} />
           </button>
+        </div>
+      )}
+
+      {/* Lightbox Image Preview Modal */}
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[120] flex flex-col items-center justify-center p-4 select-none animate-in fade-in duration-200"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[85vh] w-full flex flex-col items-center">
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute -top-10 right-0 text-white/80 hover:text-white p-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition"
+            >
+              <X size={18} /> Close
+            </button>
+            <img 
+              src={lightboxImage.url} 
+              alt={lightboxImage.title}
+              className="max-h-[75vh] w-auto max-w-full rounded-2xl shadow-2xl object-contain border border-white/10" 
+              onClick={(e) => e.stopPropagation()}
+            />
+            <p className="text-white text-xs font-bold mt-3 text-center px-4 py-1.5 bg-black/60 rounded-full border border-white/10 backdrop-blur-xs">
+              {lightboxImage.title}
+            </p>
+          </div>
         </div>
       )}
 
