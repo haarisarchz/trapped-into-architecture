@@ -273,7 +273,7 @@ export default function QuizzesHubPage() {
       case "visual-recognition-match-architect-building-photo":
         return fallbackCover || "/quizzes/salk-institute.jpg";
       case "architects-portfolio-match-celebrated-project-name":
-        return fallbackCover || "/quizzes/heydar-aliyev-center.jpg";
+        return "/quizzes/heydar-aliyev-center.jpg";
       case "the-visionaries-faces-of-architecture":
         return fallbackCover || "/architect-photos/le-corbusier.jpg";
       default:

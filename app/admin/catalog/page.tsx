@@ -112,6 +112,19 @@ export const ARCHITECT_PORTRAIT_MAP: Record<string, string> = {
   "oma": "/architect-photos/rem-koolhaas.jpg",
   "rem koolhaas (oma)": "/architect-photos/rem-koolhaas.jpg",
   "oma / rem koolhaas": "/architect-photos/rem-koolhaas.jpg",
+  "alvar aalto, aino aalto": "/architect-photos/alvar-aalto.jpg",
+  "frei otto, günter behnisch": "/architect-photos/frei-otto.jpg",
+  "renzo piano, richard rogers": "/architect-photos/renzo-piano.jpg",
+  "rem koolhaas, ole scheeren": "/architect-photos/rem-koolhaas.jpg",
+  "kazuyo sejima, ryue nishizawa": "/architect-photos/sanaa-sejima-nishizawa.jpg",
+  "le corbusier, pierre jeanneret": "/architect-photos/le-corbusier.jpg",
+  "ludwig mies van der rohe, lilly reich": "/architect-photos/ludwig-mies-van-der-rohe.jpg",
+  "ludwig mies van der rohe, philip johnson": "/architect-photos/ludwig-mies-van-der-rohe.jpg",
+  "santiago calatrava, félix candela": "/architect-photos/santiago-calatrava.jpg",
+  "frank gehry, vlado milunić": "/architect-photos/frank-gehry.jpg",
+  "jacques herzog, pierre de meuron": "/architect-photos/herzog-de-meuron.jpg",
+  "b. v. doshi, m. f. husain": "/architect-photos/b-v-doshi.jpg",
+  "raj rewal, mahendra raj": "/architect-photos/raj-rewal.jpg",
   "luis barragán": "/architect-photos/luis-barragan.jpg",
   "luis barragan": "/architect-photos/luis-barragan.jpg",
   "richard meier": "/architect-photos/richard-meier.jpg",
@@ -125,7 +138,34 @@ export const getArchitectPhotoByName = (name?: string): string => {
   for (const [key, photo] of Object.entries(ARCHITECT_PORTRAIT_MAP)) {
     if (clean.includes(key) || key.includes(clean)) return photo;
   }
+  const lead = clean.split(/[,&/]/)[0].trim();
+  for (const [key, photo] of Object.entries(ARCHITECT_PORTRAIT_MAP)) {
+    if (lead.includes(key) || key.includes(lead)) return photo;
+  }
   return "";
+};
+
+export const getStandardizedArchitect = (rawArchitect?: string): string => {
+  if (!rawArchitect) return "";
+  let clean = rawArchitect.trim();
+  const mapping: Record<string, string> = {
+    "Alvar Aalto (with Aino Aalto)": "Alvar Aalto, Aino Aalto",
+    "Frei Otto & Günter Behnisch": "Frei Otto, Günter Behnisch",
+    "Renzo Piano & Richard Rogers": "Renzo Piano, Richard Rogers",
+    "Rem Koolhaas & Ole Scheeren (OMA)": "Rem Koolhaas, Ole Scheeren",
+    "Kazuyo Sejima & Ryue Nishizawa (SANAA)": "Kazuyo Sejima, Ryue Nishizawa",
+    "Le Corbusier (with Pierre Jeanneret)": "Le Corbusier, Pierre Jeanneret",
+    "Ludwig Mies van der Rohe (with Lilly Reich)": "Ludwig Mies van der Rohe, Lilly Reich",
+    "Ludwig Mies van der Rohe (with Philip Johnson)": "Ludwig Mies van der Rohe, Philip Johnson",
+    "Santiago Calatrava (with Félix Candela)": "Santiago Calatrava, Félix Candela",
+    "Frank Gehry (with Vlado Milunić)": "Frank Gehry, Vlado Milunić",
+    "Jacques Herzog & Pierre de Meuron": "Jacques Herzog, Pierre de Meuron",
+    "B. V. Doshi (with M. F. Husain)": "B. V. Doshi, M. F. Husain",
+    "Raj Rewal & Mahendra Raj": "Raj Rewal, Mahendra Raj",
+    "Norman Foster (Foster + Partners)": "Norman Foster"
+  };
+  if (mapping[clean]) return mapping[clean];
+  return clean;
 };
 
 export const CATALOG_LOCATION_MAP: Record<string, { city: string; state_region: string; country?: string }> = {
@@ -255,39 +295,51 @@ export default function CatalogPage() {
     }
     return {};
   });
-  const resizingColRef = useRef<{ colId: string; startX: number; startWidth: number } | null>(null);
+  const resizingColRef = useRef<{ colId: string; startX: number; startWidth: number; minW?: number } | null>(null);
 
-  // Intelligent width calculation: longest word decides the minimum width
-  const computeLongestWordWidth = (title: string, id: string): number => {
-    if (id === "building_photo" || id === "architect_photo") return 160;
-    if (id === "puzzle_clues") return 210;
-    if (id === "building_name") return 190;
-    if (!title) return 100;
-    
-    // Find length of longest single word
-    const words = title.split(/[\s/&+-]+/);
-    let maxLen = 0;
-    for (const w of words) {
-      if (w.length > maxLen) maxLen = w.length;
+  // Strict width calculation: longest word sets the physical minimum width of the column
+  const computeMinColWidth = (col: any): number => {
+    if (col.id === "building_photo" || col.id === "architect_photo") {
+      return rowDensity === "expanded" ? 140 : 100;
     }
-    // Allow title to wrap to 2-3 lines: width is tightly fit to longest word + UI controls
-    return Math.max(85, Math.min(220, Math.round(maxLen * 8.5 + 46)));
+    if (col.id === "building_name") return 160;
+    const words = (col.title || "").split(/[\s/&+-]+/);
+    let maxWordLen = 0;
+    for (const w of words) {
+      if (w.length > maxWordLen) maxWordLen = w.length;
+    }
+    // Strict rule: 10.5px bold uppercase font: ~8px per character + 26px padding/margins
+    return Math.max(68, Math.round(maxWordLen * 8.2 + 26));
+  };
+
+  const computeOptimalColWidth = (col: any): number => {
+    if (col.id === "building_photo" || col.id === "architect_photo") {
+      return rowDensity === "expanded" ? 180 : 120;
+    }
+    if (col.id === "building_name") return 200;
+    if (col.id === "puzzle_clues") return 220;
+    const minW = computeMinColWidth(col);
+    return Math.max(minW, Math.min(210, Math.round((col.title || "").length * 6.5 + 42)));
   };
 
   const getColWidth = (col: any): number => {
-    if (colWidths[col.id]) return colWidths[col.id];
-    return computeLongestWordWidth(col.title, col.id);
+    const minW = computeMinColWidth(col);
+    if (colWidths[col.id]) return Math.max(minW, colWidths[col.id]);
+    return computeOptimalColWidth(col);
   };
 
   const handleResizeStart = (e: React.MouseEvent, colId: string, currentWidth: number) => {
     e.preventDefault();
     e.stopPropagation();
-    resizingColRef.current = { colId, startX: e.clientX, startWidth: currentWidth };
+    const colObj = columns.find(c => c.id === colId) || { id: colId, title: "" };
+    const minW = computeMinColWidth(colObj);
+    resizingColRef.current = { colId, startX: e.clientX, startWidth: currentWidth, minW };
 
     const onMouseMove = (moveEvent: MouseEvent) => {
       if (!resizingColRef.current) return;
       const delta = moveEvent.clientX - resizingColRef.current.startX;
-      const newWidth = Math.max(70, resizingColRef.current.startWidth + delta);
+      const minBound = (resizingColRef.current as any).minW || 68;
+      const newWidth = Math.max(minBound, resizingColRef.current.startWidth + delta);
       setColWidths(prev => ({ ...prev, [resizingColRef.current!.colId]: newWidth }));
     };
 
@@ -314,8 +366,28 @@ export default function CatalogPage() {
   const [insertPos, setInsertPos] = useState<{ colId: string, direction: 'left' | 'right' } | null>(null);
   const [uploadingCells, setUploadingCells] = useState<Record<string, boolean>>({});
   
-  // Ref for table scroll control
+  // Ref for table scroll control & persistent floating horizontal scrollbar
   const tableContainerRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const isSyncingScroll = useRef(false);
+
+  const handleTableScroll = () => {
+    if (isSyncingScroll.current) return;
+    if (tableContainerRef.current && bottomScrollRef.current) {
+      isSyncingScroll.current = true;
+      bottomScrollRef.current.scrollLeft = tableContainerRef.current.scrollLeft;
+      requestAnimationFrame(() => { isSyncingScroll.current = false; });
+    }
+  };
+
+  const handleBottomScroll = () => {
+    if (isSyncingScroll.current) return;
+    if (tableContainerRef.current && bottomScrollRef.current) {
+      isSyncingScroll.current = true;
+      tableContainerRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
+      requestAnimationFrame(() => { isSyncingScroll.current = false; });
+    }
+  };
 
   const moveColumn = (draggedId: string, targetId: string) => {
     if (!draggedId || !targetId || draggedId === targetId) return;
@@ -433,19 +505,55 @@ export default function CatalogPage() {
     }
 
     if (rowData) {
-      const enrichedRows = rowData.map((r: any) => {
+      // 1. Permanently delete the 5 obsolete projects from catalog
+      const OBSOLETE_IDS = [
+        "ed3de6af-1b31-43a5-8bf5-14d2b355fc2a", // Chichu Art Museum, Japan
+        "60107e9f-6da1-4dcf-a3a6-d1b97ccff786", // Casa Luis Barragán, Mexico
+        "336d40cc-9976-44e8-9630-3670d4f73050", // IIFM Bhopal, India
+        "439045a4-28e1-40bc-82a4-883bb6779d01", // IIT Kanpur Campus, India
+        "51b5ac6a-c8b5-4cf4-9371-39888965fd5a", // The Getty Center, United States
+      ];
+      const hasObsolete = rowData.some((r: any) => OBSOLETE_IDS.includes(r.id));
+      if (hasObsolete) {
+        supabase.from("architecture_catalog").delete().in("id", OBSOLETE_IDS).then();
+      }
+
+      // 2. Filter out obsolete projects so catalog strictly displays 60 projects
+      const activeRows = rowData.filter((r: any) => !OBSOLETE_IDS.includes(r.id));
+
+      // 3. User standardized photo assignments
+      const USER_STANDARDIZED_PHOTOS: Record<string, { building_photo?: string; architect_photo?: string }> = {
+        "centre pompidou, france": { building_photo: "/quizzes/centre-pompidou.jpg" },
+        "kanchanjunga apartments, india": { building_photo: "/quizzes/kanchanjunga-apartments-mumbai.jpg" },
+        "sangath, india": { building_photo: "/quizzes/sangath-doshi.jpg", architect_photo: "/architect-photos/b-v-doshi.jpg" },
+        "iim bangalore, india": { architect_photo: "/architect-photos/b-v-doshi.jpg" },
+        "amdavad ni gufa, india": { architect_photo: "/architect-photos/b-v-doshi.jpg" },
+        "gateway arch, united states": { architect_photo: "/architect-photos/eero-saarinen.jpg" },
+        "twa flight center, united states": { architect_photo: "/architect-photos/eero-saarinen.jpg" },
+      };
+
+      const enrichedRows = activeRows.map((r: any) => {
         const d = r.data || {};
         const bName = d.building_name || d.display_name || "";
         const cleanLoc = getCleanCityAndState(bName, d.city, d.state_region);
+        const cleanArch = getStandardizedArchitect(d.architect);
         
         let updatedData = { 
           ...d, 
           city: cleanLoc.city, 
-          state_region: cleanLoc.state_region 
+          state_region: cleanLoc.state_region,
+          architect: cleanArch
         };
 
-        if (!d.architect_photo && d.architect) {
-          const autoPhoto = getArchitectPhotoByName(d.architect);
+        const bLower = bName.toLowerCase().trim();
+        if (USER_STANDARDIZED_PHOTOS[bLower]) {
+          const p = USER_STANDARDIZED_PHOTOS[bLower];
+          if (p.building_photo) updatedData.building_photo = p.building_photo;
+          if (p.architect_photo) updatedData.architect_photo = p.architect_photo;
+        }
+
+        if (!updatedData.architect_photo && updatedData.architect) {
+          const autoPhoto = getArchitectPhotoByName(updatedData.architect);
           if (autoPhoto) {
             updatedData.architect_photo = autoPhoto;
           }
@@ -783,8 +891,8 @@ export default function CatalogPage() {
       if (col.type === "image") {
         if (rowDensity === "expanded") {
           return val ? (
-            <div className="flex flex-col items-center gap-2 p-1.5 min-w-[220px]">
-              <div className="relative group/cellimg rounded-xl overflow-hidden border border-gray-200 shadow-xs bg-gray-100 w-52 h-44 shrink-0">
+            <div className="flex flex-col items-center gap-1.5 p-1 w-full max-w-full overflow-hidden">
+              <div className="relative group/cellimg rounded-xl overflow-hidden border border-gray-200 shadow-xs bg-gray-100 w-full max-w-[220px] aspect-[4/3] max-h-44 shrink-0">
                 <img 
                   src={val} 
                   alt="preview" 
@@ -831,8 +939,8 @@ export default function CatalogPage() {
               </div>
             </div>
           ) : (
-            <div className="w-52 h-44 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-3 text-center bg-gray-50/50 min-w-[220px]">
-              <span className="text-2xl mb-1 text-gray-300">🖼️</span>
+            <div className="w-full max-w-[220px] aspect-[4/3] max-h-44 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center p-2 text-center bg-gray-50/50">
+              <span className="text-xl mb-1 text-gray-300">🖼️</span>
               <span className="text-[11px] text-gray-400 font-semibold mb-2">No photo attached</span>
               <label className="px-3 py-1.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-lg cursor-pointer transition flex items-center gap-1">
                 <UploadCloud size={13} /> Upload Photo
@@ -849,7 +957,7 @@ export default function CatalogPage() {
 
         // Compact Mode Image Cell
         return val ? (
-          <div className="flex items-center gap-2 group min-w-[120px]">
+          <div className="flex items-center gap-2 group w-full max-w-full overflow-hidden">
             <img 
               src={val} 
               alt="preview" 
@@ -884,9 +992,9 @@ export default function CatalogPage() {
       const isUploading = uploadingCells[`${row.id}-${col.id}`];
       if (rowDensity === "expanded") {
         return (
-          <div className="flex flex-col items-center gap-2 p-1.5 min-w-[220px]">
+          <div className="flex flex-col items-center gap-1.5 p-1 w-full max-w-full overflow-hidden">
             {val ? (
-              <div className="relative group/cellimg rounded-xl overflow-hidden border border-gray-200 shadow-xs bg-gray-100 w-52 h-40 shrink-0">
+              <div className="relative group/cellimg rounded-xl overflow-hidden border border-gray-200 shadow-xs bg-gray-100 w-full max-w-[220px] aspect-[4/3] max-h-40 shrink-0">
                 <img src={val} alt="preview" className="w-full h-full object-cover" />
               </div>
             ) : null}
@@ -967,6 +1075,9 @@ export default function CatalogPage() {
   };
 
   const visibleColumns = columns.filter(c => c.is_visible);
+  const totalTableWidth = useMemo(() => {
+    return 48 + visibleColumns.reduce((sum, col) => sum + getColWidth(col), 0) + 96;
+  }, [visibleColumns, colWidths, rowDensity]);
   const indiaCount = useMemo(() => rows.filter(r => (r.data?.country || "").toLowerCase().includes("india")).length, [rows]);
   const pritzkerCount = useMemo(() => rows.filter(r => r.data?.pritzker_prize_year != null && String(r.data.pritzker_prize_year).trim() !== "").length, [rows]);
 
@@ -975,8 +1086,8 @@ export default function CatalogPage() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 flex flex-col pt-[80px]" onClick={() => setActiveColMenu(null)}>
         
-        {/* HEADER TOOLBAR (Sticky at top) */}
-        <div className="sticky top-[80px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
+        {/* HEADER TOOLBAR (Sticky at top, solid white) */}
+        <div className="sticky top-[80px] z-40 bg-white border-b border-gray-200 px-6 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2 text-gray-900">
               🏛️ Architecture Catalog 
@@ -1052,9 +1163,9 @@ export default function CatalogPage() {
           )}
         </div>
 
-        {/* SEARCH & QUICK CATEGORY FILTER BAR (Sticky below header) */}
+        {/* SEARCH & QUICK CATEGORY FILTER BAR (Sticky below header, solid white) */}
         {!setupRequired && !loading && (
-          <div className="sticky top-[141px] z-20 bg-white/95 backdrop-blur-md border-b border-gray-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
+          <div className="sticky top-[136px] z-30 bg-white border-b border-gray-200 px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 shadow-xs">
             {/* Search Input */}
             <div className="relative min-w-[260px] max-w-sm flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -1213,16 +1324,18 @@ export default function CatalogPage() {
               </button>
             </div>
           ) : (
-            <div 
-              ref={tableContainerRef}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto excel-scrollbar relative select-text [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar-thumb]:bg-gray-400 hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100"
-            >
+            <>
+              <div 
+                ref={tableContainerRef}
+                onScroll={handleTableScroll}
+                className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto excel-scrollbar relative select-text [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar-thumb]:bg-gray-400 hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100"
+              >
               <table className="w-max min-w-full text-left border-collapse table-fixed select-text">
                 <thead className="bg-gray-50 sticky top-0 z-30 shadow-xs">
                   {/* MAIN HEADER ROW */}
                   <tr>
                     {/* Index Col # */}
-                    <th className="px-3 py-3 text-xs font-bold text-gray-500 uppercase w-12 min-w-[48px] text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 top-0 z-40">
+                    <th className="px-3 py-3 text-xs font-bold text-gray-500 uppercase w-12 min-w-[48px] text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 top-0 z-30">
                       #
                     </th>
                     
@@ -1266,9 +1379,9 @@ export default function CatalogPage() {
                             setDraggedColId(null);
                             setDragOverColId(null);
                           }}
-                          className={`px-2.5 py-2 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors select-none ${
+                          className={`px-2 py-2 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors select-none ${
                             isBuildingName && isFirstCol
-                              ? "sticky left-12 top-0 z-40 bg-gray-100 border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
+                              ? "sticky left-12 top-0 z-30 bg-gray-100 border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
                               : isSorted
                               ? "bg-blue-50/70 border-b-2 border-b-blue-500"
                               : "bg-gray-50 hover:bg-gray-100"
@@ -1278,34 +1391,31 @@ export default function CatalogPage() {
                             dragOverColId === col.id ? "border-l-4 border-l-blue-600 bg-blue-100/70" : ""
                           }`}
                         >
-                          {/* Column Header Content with Drag handle & Click to Sort */}
-                          <div className="flex items-start justify-between gap-1 relative z-10 w-full min-w-0">
+                          {/* Column Header Content: Clean, No 6-dots, No Letter-breaking, Floating Options Button */}
+                          <div className="flex items-center justify-between relative z-10 w-full min-w-0 pr-4">
                             <div 
-                              className="flex items-start gap-1 cursor-grab active:cursor-grabbing py-0.5 group/sort flex-1 min-w-0"
+                              className="flex items-center gap-1 cursor-grab active:cursor-grabbing py-0.5 group/sort flex-1 min-w-0"
                               title={`Drag to reorder • Click to sort by ${col.title}`}
                             >
-                              <GripVertical size={12} className="text-gray-400 group-hover:text-gray-700 shrink-0 opacity-40 group-hover:opacity-100 transition mt-0.5" />
                               <span 
                                 onClick={() => handleSort(col.id)}
-                                className={`uppercase tracking-wider font-extrabold text-[10.5px] leading-snug cursor-pointer hover:underline text-left whitespace-normal break-words line-clamp-3 select-none flex-1 min-w-0 ${isSorted ? "text-blue-900" : "text-gray-700 group-hover:text-black"}`}
+                                className={`uppercase tracking-wider font-extrabold text-[10.5px] leading-tight cursor-pointer hover:underline text-left whitespace-normal break-normal [word-break:keep-all] [overflow-wrap:normal] select-none flex-1 min-w-0 ${isSorted ? "text-blue-900" : "text-gray-700 group-hover:text-black"}`}
                               >
                                 {col.title}
                               </span>
-                              {isSorted ? (
+                              {isSorted && (
                                 sortDir === "asc" ? (
-                                  <ArrowUp size={12} className="text-blue-600 shrink-0 font-bold mt-0.5" />
+                                  <ArrowUp size={12} className="text-blue-600 shrink-0 font-bold" />
                                 ) : (
-                                  <ArrowDown size={12} className="text-blue-600 shrink-0 font-bold mt-0.5" />
+                                  <ArrowDown size={12} className="text-blue-600 shrink-0 font-bold" />
                                 )
-                              ) : (
-                                <ArrowUpDown size={10} className="text-gray-400 opacity-40 group-hover/sort:opacity-100 shrink-0 transition mt-0.5" />
                               )}
                             </div>
 
-                            {/* Dropdown Options Trigger */}
+                            {/* Dropdown Options Trigger: Absolutely Positioned so 0px stolen from text width */}
                             <button 
                               onClick={(e) => { e.stopPropagation(); setActiveColMenu(activeColMenu === col.id ? null : col.id); }} 
-                              className="text-gray-400 hover:text-black hover:bg-gray-200 rounded p-1 opacity-0 group-hover:opacity-100 transition focus:opacity-100 shrink-0 mt-0.5"
+                              className="absolute right-0.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black hover:bg-gray-200 rounded p-0.5 opacity-0 group-hover:opacity-100 transition focus:opacity-100 shrink-0"
                               title="Column Options"
                             >
                               <ChevronDown size={12} />
@@ -1357,16 +1467,16 @@ export default function CatalogPage() {
                     })}
                     
                     {/* Action Column */}
-                    <th className="px-3 py-3 text-xs font-bold text-gray-600 uppercase sticky right-0 top-0 bg-gray-100 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.04)] z-40 w-24 min-w-[96px] text-center">
+                    <th className="px-3 py-3 text-xs font-bold text-gray-600 uppercase sticky right-0 top-0 bg-gray-100 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.04)] z-30 w-24 min-w-[96px] text-center">
                       Action
                     </th>
                   </tr>
 
                   {/* COLUMN-SPECIFIC FILTER INPUT ROW */}
                   {showFiltersRow && (
-                    <tr className="bg-gray-100/95 border-b border-gray-200 shadow-xs">
+                    <tr className="bg-gray-100 border-b border-gray-200 shadow-xs">
                       {/* Under # column */}
-                      <th className="p-1.5 text-center border-r border-gray-200 bg-gray-200 sticky left-0 z-40">
+                      <th className="p-1.5 text-center border-r border-gray-200 bg-gray-200 sticky left-0 z-30">
                         <Filter size={11} className="mx-auto text-gray-500" />
                       </th>
                       {visibleColumns.map((col) => {
@@ -1378,7 +1488,7 @@ export default function CatalogPage() {
                             style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                             className={`p-1.5 border-r border-gray-200 ${
                               isFirstPinned 
-                                ? "sticky left-12 z-40 bg-gray-200 border-r-2 border-r-gray-300" 
+                                ? "sticky left-12 z-30 bg-gray-200 border-r-2 border-r-gray-300" 
                                 : "bg-gray-100"
                             }`}
                           >
@@ -1408,7 +1518,7 @@ export default function CatalogPage() {
                         );
                       })}
                       {/* Action column reset button */}
-                      <th className="p-1.5 sticky right-0 bg-gray-200 border-l border-gray-200 z-40 text-center">
+                      <th className="p-1.5 sticky right-0 bg-gray-200 border-l border-gray-200 z-30 text-center">
                         {Object.keys(columnFilters).length > 0 && (
                           <button 
                             onClick={() => setColumnFilters({})}
@@ -1456,7 +1566,7 @@ export default function CatalogPage() {
                             <td 
                               key={col.id} 
                               style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
-                              className={`px-2 py-1.5 border-r border-gray-100 align-middle ${
+                              className={`px-2 py-1.5 border-r border-gray-100 align-middle overflow-hidden ${
                                 isFirstPinned 
                                   ? `sticky left-12 z-20 font-bold border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)] ${
                                       isRowLocked ? "bg-white text-gray-900" : "bg-amber-50/70"
@@ -1505,6 +1615,16 @@ export default function CatalogPage() {
                 </tbody>
               </table>
             </div>
+
+              <div 
+                ref={bottomScrollRef}
+                onScroll={handleBottomScroll}
+                className="sticky bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-300 py-1.5 px-3 overflow-x-auto shadow-md rounded-b-2xl [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-thumb]:bg-gray-400 hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100"
+                title="Slide horizontally across all columns"
+              >
+                <div style={{ width: `${totalTableWidth}px`, height: "1px" }} />
+              </div>
+            </>
           )}
         </div>
       </div>
