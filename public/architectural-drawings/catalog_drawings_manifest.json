@@ -1,0 +1,392 @@
+[
+  {
+    "building": "Fallingwater",
+    "slug": "fallingwater",
+    "plan": true,
+    "section": true
+  },
+  {
+    "building": "Sydney Opera House",
+    "slug": "sydney-opera-house",
+    "plan": true,
+    "section": true
+  },
+  {
+    "building": "Grand Louvre Pyramid",
+    "slug": "grand-louvre-pyramid",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "The Gherkin",
+    "slug": "the-gherkin",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Sagrada Família",
+    "slug": "sagrada-familia",
+    "plan": true,
+    "section": false
+  },
+  {
+    "building": "Guggenheim Museum Bilbao",
+    "slug": "guggenheim-museum-bilbao",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Walt Disney Concert Hall",
+    "slug": "walt-disney-concert-hall",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Centre Pompidou",
+    "slug": "centre-pompidou",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "The Shard",
+    "slug": "the-shard",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Lotus Temple",
+    "slug": "lotus-temple",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Gateway Arch",
+    "slug": "gateway-arch",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "CCTV Headquarters",
+    "slug": "cctv-headquarters",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "The Oculus",
+    "slug": "the-oculus",
+    "plan": false,
+    "section": true
+  },
+  {
+    "building": "Reichstag New German Parliament",
+    "slug": "reichstag-new-german-parliament",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Heydar Aliyev Center",
+    "slug": "heydar-aliyev-center",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Villa Savoye",
+    "slug": "villa-savoye",
+    "plan": true,
+    "section": true
+  },
+  {
+    "building": "Chapelle Notre Dame du Haut",
+    "slug": "chapelle-notre-dame-du-haut",
+    "plan": true,
+    "section": false
+  },
+  {
+    "building": "Unité d'Habitation",
+    "slug": "unite-dhabitation",
+    "plan": true,
+    "section": true
+  },
+  {
+    "building": "Barcelona Pavilion",
+    "slug": "barcelona-pavilion",
+    "plan": true,
+    "section": false
+  },
+  {
+    "building": "Farnsworth House",
+    "slug": "farnsworth-house",
+    "plan": true,
+    "section": true
+  },
+  {
+    "building": "Seagram Building",
+    "slug": "seagram-building",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Solomon R. Guggenheim Museum",
+    "slug": "solomon-r-guggenheim-museum",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Church of the Light",
+    "slug": "church-of-the-light",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Dancing House",
+    "slug": "dancing-house",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Casa Batlló",
+    "slug": "casa-batllo",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Casa Milà",
+    "slug": "casa-mila",
+    "plan": true,
+    "section": false
+  },
+  {
+    "building": "Salk Institute for Biological Studies",
+    "slug": "salk-institute-for-biological-studies",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Kanchanjunga Apartments",
+    "slug": "kanchanjunga-apartments",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Jawahar Kala Kendra",
+    "slug": "jawahar-kala-kendra",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "IIM Ahmedabad",
+    "slug": "iim-ahmedabad",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "IIM Bangalore",
+    "slug": "iim-bangalore",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Sangath",
+    "slug": "sangath",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "The Glass House",
+    "slug": "the-glass-house",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Cathedral of Brasília",
+    "slug": "cathedral-of-brasilia",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "TWA Flight Center",
+    "slug": "twa-flight-center",
+    "plan": true,
+    "section": true
+  },
+  {
+    "building": "Elbphilharmonie",
+    "slug": "elbphilharmonie",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Lloyd's Building",
+    "slug": "lloyds-building",
+    "plan": true,
+    "section": false
+  },
+  {
+    "building": "Louvre Abu Dhabi",
+    "slug": "louvre-abu-dhabi",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "City of Arts and Sciences",
+    "slug": "city-of-arts-and-sciences",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Palace of Assembly",
+    "slug": "palace-of-assembly",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Robie House",
+    "slug": "robie-house",
+    "plan": true,
+    "section": true
+  },
+  {
+    "building": "Row House in Sumiyoshi",
+    "slug": "row-house-in-sumiyoshi",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Chichu Art Museum",
+    "slug": "chichu-art-museum",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Hearst Tower",
+    "slug": "hearst-tower",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "HSBC Main Building",
+    "slug": "hsbc-main-building",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "National Assembly Building of Bangladesh",
+    "slug": "national-assembly-building-of-bangladesh",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Amdavad ni Gufa",
+    "slug": "amdavad-ni-gufa",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Gandhi Smarak Sangrahalaya",
+    "slug": "gandhi-smarak-sangrahalaya",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Bharat Bhavan",
+    "slug": "bharat-bhavan",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Champalimaud Centre for the Unknown",
+    "slug": "champalimaud-centre-for-the-unknown",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Therme Vals",
+    "slug": "therme-vals",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Rolex Learning Center",
+    "slug": "rolex-learning-center",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Sendai Mediatheque",
+    "slug": "sendai-mediatheque",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Munich Olympic Stadium Roof",
+    "slug": "munich-olympic-stadium-roof",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Casa Luis Barragán",
+    "slug": "casa-luis-barragan",
+    "plan": true,
+    "section": false
+  },
+  {
+    "building": "Yoyogi National Gymnasium",
+    "slug": "yoyogi-national-gymnasium",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Matrimandir",
+    "slug": "matrimandir",
+    "plan": false,
+    "section": true
+  },
+  {
+    "building": "Hall of Nations",
+    "slug": "hall-of-nations",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Centre for Development Studies",
+    "slug": "centre-for-development-studies",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "IIFM Bhopal",
+    "slug": "iifm-bhopal",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "IIT Kanpur Campus",
+    "slug": "iit-kanpur-campus",
+    "plan": true,
+    "section": false
+  },
+  {
+    "building": "MAXXI Museum",
+    "slug": "maxxi-museum",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Villa Mairea",
+    "slug": "villa-mairea",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "Paimio Sanatorium",
+    "slug": "paimio-sanatorium",
+    "plan": false,
+    "section": false
+  },
+  {
+    "building": "The Getty Center",
+    "slug": "the-getty-center",
+    "plan": true,
+    "section": false
+  }
+]

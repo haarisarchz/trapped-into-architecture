@@ -10,7 +10,7 @@ import {
   CheckCircle2, XCircle, Share2, MessageCircle, Copy, 
   RotateCcw, Sparkles, Award, ShieldAlert, Flame, Zap,
   ChevronRight, Building2, Briefcase, BookOpen, GraduationCap,
-  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp, SlidersHorizontal, Crown, X, ZoomIn
+  Download, Eye, SkipForward, Check, Lock, ChevronDown, ChevronUp, SlidersHorizontal, Crown, X, ZoomIn, Globe
 } from "lucide-react";
 import { 
   getQuestionsForGameDifficulty, 
@@ -58,23 +58,79 @@ export default function QuizPlayPage() {
   const challengerDiff = searchParams.get("difficulty");
   const challengerAccuracy = searchParams.get("accuracy");
 
+  // Quiz play continuous session duration rounded to nearer 30 minutes
+  const getQuizPlaySessionMinutes = (count: number) => {
+    return Math.max(30, Math.round(count / 30) * 30);
+  };
+
+  const getTimeEstimate = (count: number, _diff?: string) => {
+    const mins = getQuizPlaySessionMinutes(count);
+    return `${mins} mins`;
+  };
+
   const [quiz, setQuiz] = useState<any>(null);
   const [allQuestionsPool, setAllQuestionsPool] = useState<Question[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [questionCountChoice, setQuestionCountChoice] = useState<number>(20);
+  const [questionCountChoice, setQuestionCountChoice] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const c = parseInt(p.get("count") || "", 10);
+      if (c > 0) return c;
+    }
+    return 20;
+  });
   const [loading, setLoading] = useState(true);
 
   // Pre-game config states
-  const [gameMode, setGameMode] = useState<GameMode>("challenge");
-  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [gameMode, setGameMode] = useState<GameMode>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const m = p.get("mode") as GameMode;
+      if (m) return m;
+    }
+    return "challenge";
+  });
+  const [difficulty, setDifficulty] = useState<Difficulty>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const d = p.get("difficulty") as Difficulty;
+      if (d) return d;
+    }
+    return "medium";
+  });
   const [gameStarted, setGameStarted] = useState(false);
-  const [isGameOver, setIsGameOver] = useState(false);
+  const [isGameOver, setIsGameOver] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const cached = localStorage.getItem(`ti2a_last_result_${slug}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.summary && Date.now() - (parsed.timestamp || 0) < 24 * 3600 * 1000) {
+          return true;
+        }
+      }
+    } catch (e) {}
+    return false;
+  });
   const [showCustomOptions, setShowCustomOptions] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
 
+  // Play Again Modal State
+  const [showPlayAgainModal, setShowPlayAgainModal] = useState<boolean>(false);
+  const [playAgainMode, setPlayAgainMode] = useState<GameMode>("challenge");
+  const [playAgainDiff, setPlayAgainDiff] = useState<Difficulty>("medium");
+  const [playAgainCount, setPlayAgainCount] = useState<number>(20);
+
   // Sidebar: Leaderboard & other quizzes
   const [leaderboardScope, setLeaderboardScope] = useState<"quiz" | "overall">("quiz");
-  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<Difficulty>("medium");
+  const [leaderboardDifficulty, setLeaderboardDifficulty] = useState<Difficulty>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search);
+      const d = p.get("difficulty") as Difficulty;
+      if (d) return d;
+    }
+    return "medium";
+  });
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
   const [otherQuizzes, setOtherQuizzes] = useState<any[]>([]);
@@ -87,6 +143,7 @@ export default function QuizPlayPage() {
   const [fillInput, setFillInput] = useState("");
   const [practiceFeedback, setPracticeFeedback] = useState<Record<number, { isSubmitted: boolean; isCorrect: boolean }>>({});
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
   const [isQuestionReady, setIsQuestionReady] = useState(false);
   const isQuestionReadyRef = useRef(false);
   const fallbackWatchdogRef = useRef<NodeJS.Timeout | null>(null);
@@ -96,9 +153,9 @@ export default function QuizPlayPage() {
   const [zoomImageUrl, setZoomImageUrl] = useState<{ url: string; title: string } | null>(null);
   const [pressedZoomImage, setPressedZoomImage] = useState<string | null>(null);
 
-  // Continuous Total Timer & Duration State
-  const [totalAllottedTime, setTotalAllottedTime] = useState<number>(180); // in seconds
-  const [timerSeconds, setTimerSeconds] = useState<number>(180);
+  // Continuous Total Timer & Duration State (Rounded to nearer 30-min session: 1800s)
+  const [totalAllottedTime, setTotalAllottedTime] = useState<number>(1800);
+  const [timerSeconds, setTimerSeconds] = useState<number>(1800);
   const [totalTimeElapsed, setTotalTimeElapsed] = useState<number>(0);
 
   // Clues & Catalog Metadata for progressive hints
@@ -121,7 +178,19 @@ export default function QuizPlayPage() {
     totalAllottedTime: number;
     timedOut: boolean;
     cluesUsed?: number;
-  } | null>(null);
+  } | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const cached = localStorage.getItem(`ti2a_last_result_${slug}`);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.summary && Date.now() - (parsed.timestamp || 0) < 24 * 3600 * 1000) {
+          return parsed.summary;
+        }
+      }
+    } catch (e) {}
+    return null;
+  });
 
   const [showQuestionReview, setShowQuestionReview] = useState(false);
   const [generatingScorecard, setGeneratingScorecard] = useState(false);
@@ -184,9 +253,28 @@ export default function QuizPlayPage() {
       const lastResultStr = localStorage.getItem(`ti2a_last_result_${slug}`);
       if (lastResultStr) {
         const lastResult = JSON.parse(lastResultStr);
-        if (lastResult?.summary && Date.now() - (lastResult.timestamp || 0) < 2 * 3600 * 1000) {
+        if (lastResult?.summary && Date.now() - (lastResult.timestamp || 0) < 24 * 3600 * 1000) {
           setResultsSummary(lastResult.summary);
           setIsGameOver(true);
+          if (Array.isArray(lastResult.questions) && lastResult.questions.length > 0) {
+            setQuestions(lastResult.questions);
+          }
+          if (lastResult.userAnswers) {
+            setUserAnswers(lastResult.userAnswers);
+          }
+          if (lastResult.skippedQuestions) {
+            setSkippedQuestions(lastResult.skippedQuestions);
+          }
+          if (lastResult.unlockedClues) {
+            setUnlockedClues(lastResult.unlockedClues);
+          }
+          if (lastResult.difficulty) {
+            setDifficulty(lastResult.difficulty);
+            setLeaderboardDifficulty(lastResult.difficulty);
+          }
+          if (lastResult.gameMode) {
+            setGameMode(lastResult.gameMode);
+          }
         }
       }
     } catch (e) {}
@@ -367,7 +455,7 @@ export default function QuizPlayPage() {
     }
   };
 
-  // Leaderboard fetch: 3 tiers (Easy, Medium, Hard), ranked by Accuracy %
+  // Leaderboard fetch: 3 tiers (Easy, Medium, Hard) with 1 Personal Best per user and Overall points aggregation
   const fetchLeaderboard = async () => {
     setLoadingLeaderboard(true);
     try {
@@ -383,46 +471,101 @@ export default function QuizPlayPage() {
       let query = supabase
         .from("quiz_scores")
         .select("id, display_name, points, score, total_questions, difficulty, time_taken_seconds, created_at, user_id, guest_session_id, quiz_id")
-        .in("difficulty", diffValues)
-        .order("points", { ascending: false });
+        .in("difficulty", diffValues);
 
       if (leaderboardScope === "quiz" && quiz?.id) {
         query = query.eq("quiz_id", quiz.id);
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await query.limit(300);
       if (error) throw error;
 
       if (data) {
-        // Distinguish real participants from namesake/seed entries
-        // Namesake rows have user_id === null AND guest_session_id === null
-        const realParticipants = data.filter(e => e.user_id !== null || (e.guest_session_id !== null && !e.display_name?.startsWith("Architect_#anon")));
-        const seedParticipants = data.filter(e => e.user_id === null && e.guest_session_id === null);
+        let playerEntries: any[] = [];
 
-        // RULE: Once every category/difficulty has 5 or more real participants, the pre-loaded namesake entries completely disappear!
-        let activeBoard: any[] = [];
-        if (realParticipants.length >= 5) {
-          activeBoard = realParticipants;
+        if (leaderboardScope === "quiz") {
+          // "THIS QUIZ": Deduplicate by player so each user has strictly ONE entry (their Personal Best)
+          const playerMap = new Map<string, any>();
+          for (const entry of data) {
+            const key = entry.user_id 
+              ? `user_${entry.user_id}` 
+              : (entry.guest_session_id ? `guest_${entry.guest_session_id}` : `name_${entry.display_name}`);
+            
+            const existing = playerMap.get(key);
+            if (!existing) {
+              playerMap.set(key, entry);
+            } else {
+              const exAcc = (existing.total_questions || 10) > 0 ? (existing.score || 0) / (existing.total_questions || 10) : 0;
+              const enAcc = (entry.total_questions || 10) > 0 ? (entry.score || 0) / (entry.total_questions || 10) : 0;
+              if (
+                (entry.points || 0) > (existing.points || 0) ||
+                ((entry.points || 0) === (existing.points || 0) && enAcc > exAcc)
+              ) {
+                playerMap.set(key, entry);
+              }
+            }
+          }
+          playerEntries = Array.from(playerMap.values());
         } else {
-          // If fewer than 5 real participants, show all real participants first, then fill remaining spots with seed entries up to 5 total
-          const remainingSlots = Math.max(0, 5 - realParticipants.length);
-          activeBoard = [...realParticipants, ...seedParticipants.slice(0, remainingSlots)];
+          // "OVERALL QUIZZES": Aggregate cumulative points, total questions, and quizzes played across all categories
+          const playerMap = new Map<string, {
+            id: string;
+            display_name: string;
+            user_id: string | null;
+            guest_session_id: string | null;
+            points: number;
+            score: number;
+            total_questions: number;
+            quizzes_played: Set<string>;
+            time_taken_seconds: number;
+          }>();
+
+          for (const entry of data) {
+            const key = entry.user_id 
+              ? `user_${entry.user_id}` 
+              : (entry.guest_session_id ? `guest_${entry.guest_session_id}` : `name_${entry.display_name}`);
+            
+            const existing = playerMap.get(key);
+            if (!existing) {
+              playerMap.set(key, {
+                id: entry.id,
+                display_name: entry.display_name,
+                user_id: entry.user_id,
+                guest_session_id: entry.guest_session_id,
+                points: entry.points || 0,
+                score: entry.score || 0,
+                total_questions: entry.total_questions || 10,
+                quizzes_played: new Set(entry.quiz_id ? [entry.quiz_id] : []),
+                time_taken_seconds: entry.time_taken_seconds || 0
+              });
+            } else {
+              existing.points += (entry.points || 0);
+              existing.score += (entry.score || 0);
+              existing.total_questions += (entry.total_questions || 10);
+              if (entry.quiz_id) existing.quizzes_played.add(entry.quiz_id);
+              existing.time_taken_seconds += (entry.time_taken_seconds || 0);
+            }
+          }
+
+          playerEntries = Array.from(playerMap.values()).map(p => ({
+            ...p,
+            quizzes_count: p.quizzes_played.size
+          }));
         }
 
-        const ranked = activeBoard.map(entry => {
+        const ranked = playerEntries.map(entry => {
           const acc = (entry.total_questions || 10) > 0 
             ? Math.round(((entry.score || 0) / (entry.total_questions || 10)) * 100) 
             : 0;
           return { ...entry, acc };
         }).sort((a, b) => {
-          if (b.acc !== a.acc) return b.acc - a.acc; // Higher accuracy first
-          // If equal accuracy, real users rank higher than seed
+          if ((b.points || 0) !== (a.points || 0)) {
+            return (b.points || 0) - (a.points || 0); // Higher points first
+          }
+          if (b.acc !== a.acc) return b.acc - a.acc;
           const aIsReal = a.user_id !== null || a.guest_session_id !== null;
           const bIsReal = b.user_id !== null || b.guest_session_id !== null;
           if (aIsReal !== bIsReal) return aIsReal ? -1 : 1;
-          if ((b.points || 0) !== (a.points || 0)) {
-            return (b.points || 0) - (a.points || 0); // Higher points
-          }
           return (a.time_taken_seconds || 9999) - (b.time_taken_seconds || 9999);
         });
 
@@ -548,17 +691,11 @@ export default function QuizPlayPage() {
       isQuestionReadyRef.current = false;
     }
 
-    // Allotted time per question by Game Difficulty:
-    // Easy Mode: 15s/Q (100% Popular questions)
-    // Medium Mode: 10s/Q (50% Popular + 50% Architecture Master)
-    // Hard Mode: 5s/Q (75% Master + 25% Popular) • Lightning instinct pace!
-    let perQuestionSeconds = 10;
-    const diffKey = (activeDiff || "medium").toLowerCase();
-    if (diffKey === "easy" || diffKey === "popular") perQuestionSeconds = 15;
-    else if (diffKey === "hard" || diffKey === "master") perQuestionSeconds = 5;
-    else perQuestionSeconds = 10;
-
-    const totalAllotted = sampled.length * perQuestionSeconds;
+    // Quiz play timer: Continuous session timer for the whole quiz play
+    // Rounded to the nearer 30 minutes (minimum 30 minutes = 1800s)
+    // No strict per-question cutoffs; answers can take 2s or 30s freely without rushing
+    const sessionMinutes = getQuizPlaySessionMinutes(sampled.length);
+    const totalAllotted = sessionMinutes * 60; // in seconds (e.g. 1800s for 30 mins)
     setTotalAllottedTime(totalAllotted);
     setTimerSeconds(totalAllotted);
     setTotalTimeElapsed(0);
@@ -591,6 +728,7 @@ export default function QuizPlayPage() {
       slug === "architects-oeuvre-pair-the-masterpieces" || 
       !currentQ.media_url;
 
+    setImageLoadError(false);
     if (hasNoPromptPhoto) {
       setImageLoaded(true);
       setIsQuestionReady(true);
@@ -600,13 +738,12 @@ export default function QuizPlayPage() {
       setIsQuestionReady(false);
       isQuestionReadyRef.current = false;
 
-      // Safety fallback: if an image takes > 2.8s (e.g. slow/failed network), 
-      // automatically unpause the timer and allow interaction so user is never stuck
+      // Safety fallback: if an image takes > 4.5s (e.g. slow network), 
+      // automatically unpause the timer and allow interaction so user is never permanently stuck
       fallbackWatchdogRef.current = setTimeout(() => {
-        setImageLoaded(true);
         setIsQuestionReady(true);
         isQuestionReadyRef.current = true;
-      }, 2800);
+      }, 4500);
 
       // Preload next 3 questions ahead in queue
       for (let i = 1; i <= 3; i++) {
@@ -1032,24 +1169,72 @@ export default function QuizPlayPage() {
           }
         }
 
-        const { data: scoreRow, error: scoreErr } = await supabase
+        // Database Retention Policy: Keep strictly the Top 2 Best Scores per player for this quiz + difficulty
+        let playerQuery = supabase
           .from("quiz_scores")
-          .insert([{
-            quiz_id: quiz.id,
-            user_id: currentUser?.id || null,
-            guest_session_id: guestId,
-            display_name: displayName,
-            score: correctCount,
-            total_questions: questions.length,
-            points: totalPoints,
-            difficulty,
-            time_taken_seconds: totalTimeElapsed
-          }])
-          .select("id")
-          .single();
+          .select("id, points, created_at")
+          .eq("quiz_id", quiz.id)
+          .eq("difficulty", difficulty);
 
-        if (scoreRow?.id) {
-          savedAttemptId = scoreRow.id;
+        if (currentUser?.id) {
+          playerQuery = playerQuery.eq("user_id", currentUser.id);
+        } else {
+          playerQuery = playerQuery.eq("guest_session_id", guestId);
+        }
+
+        const { data: existingAttempts } = await playerQuery.order("points", { ascending: false });
+
+        if (existingAttempts && existingAttempts.length >= 2) {
+          // If 2 or more attempts already exist: check if new score beats the 2nd best
+          const secondBest = existingAttempts[1];
+          if (totalPoints > (secondBest.points || 0)) {
+            // Superior score: insert new attempt
+            const { data: scoreRow } = await supabase
+              .from("quiz_scores")
+              .insert([{
+                quiz_id: quiz.id,
+                user_id: currentUser?.id || null,
+                guest_session_id: guestId,
+                display_name: displayName,
+                score: correctCount,
+                total_questions: questions.length,
+                points: totalPoints,
+                difficulty,
+                time_taken_seconds: totalTimeElapsed
+              }])
+              .select("id")
+              .single();
+
+            if (scoreRow?.id) savedAttemptId = scoreRow.id;
+
+            // Prune any attempt(s) ranked 3rd or lower to keep strictly the Top 2
+            const idsToDelete = existingAttempts.slice(1).map(r => r.id);
+            if (idsToDelete.length > 0) {
+              await supabase.from("quiz_scores").delete().in("id", idsToDelete);
+            }
+          } else {
+            // New score did not beat top 2: preserve best existing attempts
+            savedAttemptId = existingAttempts[0].id;
+          }
+        } else {
+          // Under 2 attempts: insert normally
+          const { data: scoreRow } = await supabase
+            .from("quiz_scores")
+            .insert([{
+              quiz_id: quiz.id,
+              user_id: currentUser?.id || null,
+              guest_session_id: guestId,
+              display_name: displayName,
+              score: correctCount,
+              total_questions: questions.length,
+              points: totalPoints,
+              difficulty,
+              time_taken_seconds: totalTimeElapsed
+            }])
+            .select("id")
+            .single();
+
+          if (scoreRow?.id) savedAttemptId = scoreRow.id;
         }
 
         // If guest, track plays and preserve pending attempt in localStorage so they can claim it upon registration
@@ -1098,11 +1283,19 @@ export default function QuizPlayPage() {
     };
 
     setResultsSummary(summaryObj);
+    setLeaderboardDifficulty(difficulty);
+    setLeaderboardScope("quiz");
 
     // Save scorecard to localStorage so page refresh or login never loses the score
     try {
       localStorage.setItem(`ti2a_last_result_${slug}`, JSON.stringify({
         summary: summaryObj,
+        questions,
+        userAnswers,
+        skippedQuestions,
+        unlockedClues,
+        difficulty,
+        gameMode,
         timestamp: Date.now()
       }));
 
@@ -1712,333 +1905,23 @@ export default function QuizPlayPage() {
             {/* LEFT / MAIN COLUMN (8 cols): Quiz container + Portals */}
             <div className="lg:col-span-8 flex flex-col gap-8">
 
-              {/* 1. PRE-GAME SETUP SCREEN */}
-              {!gameStarted ? (
+              {/* 1. POST-GAME SUMMARY & SCORECARD SCREEN (Persists across reload until user starts a new game) */}
+              {isGameOver && resultsSummary ? (
                 <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-10 shadow-sm text-center">
-                  
-                  {challengerName && challengerScore && (
-                    <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-2 border-amber-400 text-left flex items-center gap-3.5">
-                      <span className="text-3xl">⚔️</span>
-                      <div>
-                        <p className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900">
-                          Challenge Received!
-                        </p>
-                        <p className="text-sm font-bold text-gray-900">
-                          <span className="text-blue-600 underline font-black">{challengerName}</span> scored{" "}
-                          <span className="font-mono text-amber-700 font-extrabold">{challengerScore} Points</span>
-                          {challengerAccuracy ? ` (${challengerAccuracy}% Accuracy)` : ""} on {challengerDiff || "medium"} mode!
-                        </p>
-                        <p className="text-xs text-gray-500">Can you outscore them and win this challenge?</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="relative w-full h-48 sm:h-64 rounded-2xl mb-6 overflow-hidden bg-gradient-to-br from-gray-900 to-black border border-gray-200 shadow-xs flex items-center justify-center">
-                    <img referrerPolicy="no-referrer"
-                      src={quiz.cover_image || "/quizzes/fallingwater-kaufmann-residence.jpg"} 
-                      alt={quiz.title} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => { 
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/quizzes/fallingwater-kaufmann-residence.jpg";
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-                    <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-                      <span className="px-3 py-1 bg-black/75 backdrop-blur-md text-amber-300 text-xs font-black rounded-full border border-amber-400/30">
-                        ⚡ Tournament Ready
-                      </span>
-                      <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-black text-xs font-bold rounded-full">
-                        {allQuestionsPool.length || 65} Questions
-                      </span>
-                    </div>
-                  </div>
-
-                  <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full uppercase tracking-wider">
-                    {quiz.category}
-                  </span>
-                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mt-2 mb-2">
-                    {quiz.title}
-                  </h1>
-                  <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto leading-relaxed mb-6">
-                    {quiz.description || "Test your architectural visual recall, beat the continuous countdown timer, and claim your spot on the official leaderboard."}
-                  </p>
-
-                  {/* PROMINENT QUICK START SECTION */}
-                  <div className="bg-gradient-to-b from-amber-50/90 to-orange-50/40 border-2 border-amber-400 rounded-3xl p-6 sm:p-8 mb-6 text-center shadow-xs">
-                    <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
-                      <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-black text-white rounded-full">
-                        ⚡ Quick Start Recommended
-                      </span>
-                      <span className="text-xs font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full">
-                        20 Questions &bull; Challenge Mode &bull; Medium (10s/Q &bull; 3m 20s &bull; 300 Pts/Q)
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-600 mb-5 max-w-md mx-auto">
-                      Jump straight into the quiz challenge with standard tournament settings and earn your spot on the leaderboard.
-                    </p>
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      <button
-                        onClick={() => handleStartGame("medium", 20, "challenge")}
-                        className="w-full sm:w-auto px-10 py-4 bg-black hover:bg-gray-800 text-white text-base font-extrabold rounded-2xl transition shadow-lg flex items-center justify-center gap-2.5 cursor-pointer"
-                      >
-                        <Play size={18} fill="currentColor" />
-                        <span>Quick Start Quiz</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowRulesModal(true)}
-                        className="w-full sm:w-auto px-5 py-4 bg-white hover:bg-gray-50 text-gray-900 text-xs font-bold rounded-2xl transition border border-gray-300 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                      >
-                        <BookOpen size={15} className="text-amber-500" />
-                        <span>How to Play &amp; Rules</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* ADVANCED CUSTOMIZATION TOGGLE */}
-                  <div className="border border-gray-200 rounded-2xl overflow-hidden mb-6 text-left">
-                    <button
-                      type="button"
-                      onClick={() => setShowCustomOptions(!showCustomOptions)}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition text-xs font-bold text-gray-700 cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2">
-                        <SlidersHorizontal size={14} className="text-gray-500" />
-                        <span>Customize Game Options (Mode, Difficulty, Question Count)</span>
-                      </span>
-                      <ChevronDown size={16} className={`transition-transform duration-200 ${showCustomOptions ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {showCustomOptions && (
-                      <div className="p-5 border-t border-gray-200 bg-white space-y-6 animate-in fade-in duration-150">
-                        {/* Step 1: Select Game Mode (Challenge vs Practice) */}
-                        <div>
-                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
-                            1. Select Gameplay Mode:
-                          </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <button
-                              onClick={() => setGameMode("challenge")}
-                              className={`p-4 rounded-2xl border text-left transition ${
-                                gameMode === "challenge" 
-                                  ? "bg-amber-50/70 border-amber-500 shadow-xs ring-1 ring-amber-500" 
-                                  : "bg-white border-gray-200 hover:border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
-                                  🏆 Challenge Mode
-                                </p>
-                                <span className="text-[10px] font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full uppercase">
-                                  Official Leaderboard
-                                </span>
-                              </div>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1.5">Continuous Countdown & Speed Bonus</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                Total session countdown timer, no answers revealed during gameplay. Full scorecard & speed bonuses awarded upon submission.
-                              </p>
-                            </button>
-
-                            <button
-                              onClick={() => setGameMode("practice")}
-                              className={`p-4 rounded-2xl border text-left transition ${
-                                gameMode === "practice" 
-                                  ? "bg-blue-50/70 border-blue-500 shadow-xs ring-1 ring-blue-500" 
-                                  : "bg-white border-gray-200 hover:border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-extrabold text-blue-900 flex items-center gap-1.5">
-                                  💡 Practice & Study Mode
-                                </p>
-                                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full uppercase">
-                                  Untimed Learning
-                                </span>
-                              </div>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1.5">Immediate Trivia & Clues</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                No timer pressure. Reveals correct answers and architectural clues immediately after each selection.
-                              </p>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Step 2: Select Difficulty Mode (3 Tiers: Easy, Medium, Hard) */}
-                        <div>
-                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
-                            2. Select Difficulty Mode:
-                          </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDifficulty("easy");
-                                if (questionCountChoice > 20) setQuestionCountChoice(10);
-                              }}
-                              className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
-                                difficulty === "easy" || difficulty === "popular"
-                                  ? "bg-emerald-50/90 border-emerald-500 shadow-xs ring-2 ring-emerald-500/20" 
-                                  : "bg-white border-gray-200 hover:border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                                  🟢 Easy Mode
-                                </p>
-                                <span className="text-[10px] font-black bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full">
-                                  150 PTS/Q
-                                </span>
-                              </div>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">100% Popular Landmarks</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                15s/Q • No Choice Shuffle • Clue deduction: -50 pts
-                              </p>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDifficulty("medium");
-                                if (questionCountChoice < 20) setQuestionCountChoice(20);
-                              }}
-                              className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
-                                difficulty === "medium"
-                                  ? "bg-amber-50/90 border-amber-500 shadow-xs ring-2 ring-amber-500/20" 
-                                  : "bg-white border-gray-200 hover:border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-black text-amber-950 uppercase tracking-wider">
-                                  🟡 Medium Mode
-                                </p>
-                                <span className="text-[10px] font-black bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full">
-                                  300 PTS/Q
-                                </span>
-                              </div>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">50-50 + Balanced Mix</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                10s/Q • Shuffled Choices • Clue deduction: -100 pts
-                              </p>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => setDifficulty("hard")}
-                              className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
-                                difficulty === "hard" || difficulty === "master"
-                                  ? "bg-purple-50/90 border-purple-600 shadow-xs ring-2 ring-purple-500/20" 
-                                  : "bg-white border-gray-200 hover:border-gray-300"
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-black text-purple-950 uppercase tracking-wider">
-                                  🔴 Hard Mode
-                                </p>
-                                <span className="text-[10px] font-black bg-purple-200/80 text-purple-900 px-2 py-0.5 rounded-full">
-                                  450 PTS/Q
-                                </span>
-                              </div>
-                              <p className="text-[11px] font-bold text-gray-800 mt-1">Architecture Master Pool</p>
-                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-                                5s/Q • Sequential Clue Lock 🔒 • Clue deduction: -150 pts
-                              </p>
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Step 3: Select Round Length (Strictly dynamically conditioned on selected difficulty) */}
-                        <div>
-                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
-                            3. Round Length (Questions):
-                          </label>
-                          <div className={`grid gap-3 ${
-                            (() => {
-                              const totalAvailable = allQuestionsPool.length > 0 ? allQuestionsPool.length : 60;
-                              const isCompactPool = totalAvailable <= 35;
-                              const isEasy = difficulty === "easy" || difficulty === "popular";
-                              const isMedium = difficulty === "medium";
-                              return isEasy ? "grid-cols-2" : (isMedium && !isCompactPool) ? "grid-cols-2" : "grid-cols-3";
-                            })()
-                          }`}>
-                            {(() => {
-                              const isEasy = difficulty === "easy" || difficulty === "popular";
-                              const isMedium = difficulty === "medium";
-                              const totalAvailable = allQuestionsPool.length > 0 ? allQuestionsPool.length : 60;
-                              const isCompactPool = totalAvailable <= 35;
-
-                              const countOptions = isEasy ? [
-                                { count: 10, label: "10 Questions", time: "2m 30s", desc: "100% Popular" },
-                                { count: Math.min(20, totalAvailable), label: `${Math.min(20, totalAvailable)} Questions`, time: "5m 00s", desc: "Popular + 50-50" }
-                              ] : isMedium ? (
-                                isCompactPool ? [
-                                  { count: 10, label: "10 Questions", time: "1m 40s", desc: "Popular & 50-50" },
-                                  { count: 20, label: "20 Questions", time: "3m 20s", desc: "All 50-50 + Split" },
-                                  { count: totalAvailable, label: `All (${totalAvailable} Qs)`, time: `${Math.floor((totalAvailable * 10) / 60)}m ${(totalAvailable * 10) % 60}s`, desc: "Full Master Roster" }
-                                ] : [
-                                  { count: 20, label: "20 Questions", time: "3m 20s", desc: "All 50-50 + Split" },
-                                  { count: 50, label: "50 Questions", time: "8m 20s", desc: "Full Balanced Marathon" }
-                                ]
-                              ) : (
-                                isCompactPool ? [
-                                  { count: 10, label: "10 Questions", time: "50s", desc: "100% Master" },
-                                  { count: 20, label: "20 Questions", time: "1m 40s", desc: "100% Master" },
-                                  { count: totalAvailable, label: `All (${totalAvailable} Qs)`, time: `${Math.floor((totalAvailable * 5) / 60)}m ${(totalAvailable * 5) % 60}s`, desc: "Full Master Roster" }
-                                ] : [
-                                  { count: 10, label: "10 Questions", time: "50s", desc: "100% Master" },
-                                  { count: 20, label: "20 Questions", time: "1m 40s", desc: "100% Master" },
-                                  { count: 50, label: "50 Questions", time: "4m 10s", desc: "75% Master • 15% 50-50 • 10% Pop" }
-                                ]
-                              );
-
-                              return countOptions.map(item => (
-                                <button
-                                  key={item.count}
-                                  type="button"
-                                  onClick={() => setQuestionCountChoice(item.count)}
-                                  className={`p-3 rounded-2xl border text-center transition cursor-pointer ${
-                                    questionCountChoice === item.count
-                                      ? "bg-black text-white border-black shadow-xs font-bold"
-                                      : "bg-white text-gray-800 border-gray-200 hover:border-gray-300"
-                                  }`}
-                                >
-                                  <p className="text-xs font-bold">{item.label}</p>
-                                  <p className={`text-[10px] mt-0.5 ${questionCountChoice === item.count ? "text-gray-300" : "text-gray-400"}`}>
-                                    {gameMode === "challenge" ? `Time: ${item.time}` : "Untimed"}
-                                  </p>
-                                  <p className={`text-[9px] mt-0.5 font-medium ${questionCountChoice === item.count ? "text-amber-300" : "text-gray-500"}`}>
-                                    {item.desc}
-                                  </p>
-                                </button>
-                              ));
-                            })()}
-                          </div>
-                        </div>
-
-                        <div className="pt-2 text-center">
-                          <button
-                            onClick={() => handleStartGame()}
-                            className="w-full sm:w-auto px-8 py-3 bg-black hover:bg-gray-800 text-white text-sm font-extrabold rounded-2xl transition shadow-md flex items-center justify-center gap-2 mx-auto cursor-pointer"
-                          >
-                            <Play size={15} fill="currentColor" />
-                            <span>Start with Custom Settings</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : isGameOver && resultsSummary ? (
-
-                /* 2. POST-GAME SUMMARY & SCORECARD SCREEN */
-                <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-10 shadow-sm text-center">
-                  <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4 text-3xl">
+                  <div className="w-16 h-16 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-3 text-3xl">
                     🏆
                   </div>
+                  {quiz?.title && (
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold mb-3 shadow-2xs">
+                      <span>🎯</span> {quiz.title}
+                    </div>
+                  )}
                   <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
-                    Challenge Complete!
+                    {gameMode === "challenge" ? "Challenge Complete!" : "Practice Complete!"}
                   </h2>
-                  <p className="text-xs text-gray-500 mt-1">Here is your verified performance breakdown</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Verified performance breakdown for <span className="font-semibold text-gray-700">{quiz?.title || "Architecture Quiz"}</span>
+                  </p>
 
                   {/* 5 Score Metric Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 my-6">
@@ -2424,8 +2307,13 @@ export default function QuizPlayPage() {
                   {/* Actions */}
                   <div className="flex items-center justify-center gap-3">
                     <button
-                      onClick={() => handleStartGame()}
-                      className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5"
+                      onClick={() => {
+                        setPlayAgainMode(gameMode);
+                        setPlayAgainDiff(difficulty);
+                        setPlayAgainCount(questionCountChoice || questions.length || 20);
+                        setShowPlayAgainModal(true);
+                      }}
+                      className="px-5 py-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow"
                     >
                       <RotateCcw size={14} /> Play Again
                     </button>
@@ -2435,6 +2323,323 @@ export default function QuizPlayPage() {
                     >
                       Browse Other Quizzes
                     </Link>
+                  </div>
+                </div>
+              ) : !gameStarted ? (
+
+                /* 2. PRE-GAME SETUP SCREEN */
+                <div className="bg-white rounded-3xl border border-gray-200 p-6 sm:p-10 shadow-sm text-center">
+                  
+                  {challengerName && challengerScore && (
+                    <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border-2 border-amber-400 text-left flex items-center gap-3.5">
+                      <span className="text-3xl">⚔️</span>
+                      <div>
+                        <p className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900">
+                          Challenge Received!
+                        </p>
+                        <p className="text-sm font-bold text-gray-900">
+                          <span className="text-blue-600 underline font-black">{challengerName}</span> scored{" "}
+                          <span className="font-mono text-amber-700 font-extrabold">{challengerScore} Points</span>
+                          {challengerAccuracy ? ` (${challengerAccuracy}% Accuracy)` : ""} on {challengerDiff || "medium"} mode!
+                        </p>
+                        <p className="text-xs text-gray-500">Can you outscore them and win this challenge?</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="relative w-full h-48 sm:h-64 rounded-2xl mb-6 overflow-hidden bg-gradient-to-br from-gray-900 to-black border border-gray-200 shadow-xs flex items-center justify-center">
+                    <img referrerPolicy="no-referrer"
+                      src={quiz.cover_image || "/quizzes/fallingwater-kaufmann-residence.jpg"} 
+                      alt={quiz.title} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => { 
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/quizzes/fallingwater-kaufmann-residence.jpg";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                    <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+                      <span className="px-3 py-1 bg-black/75 backdrop-blur-md text-amber-300 text-xs font-black rounded-full border border-amber-400/30">
+                        ⚡ Tournament Ready
+                      </span>
+                      <span className="px-3 py-1 bg-white/90 backdrop-blur-md text-black text-xs font-bold rounded-full">
+                        {allQuestionsPool.length || 65} Questions
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                    {quiz.category}
+                  </span>
+                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mt-2 mb-2">
+                    {quiz.title}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-gray-600 max-w-xl mx-auto leading-relaxed mb-6">
+                    {quiz.description || "Test your architectural visual recall, beat the continuous countdown timer, and claim your spot on the official leaderboard."}
+                  </p>
+
+                  {/* PROMINENT QUICK START SECTION */}
+                  <div className="bg-gradient-to-b from-amber-50/90 to-orange-50/40 border-2 border-amber-400 rounded-3xl p-6 sm:p-8 mb-6 text-center shadow-xs">
+                    <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
+                      <span className="text-[11px] font-black uppercase tracking-wider px-3 py-1 bg-black text-white rounded-full">
+                        ⚡ Quick Start Recommended
+                      </span>
+                      <span className="text-xs font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full">
+                        {questionCountChoice} Questions &bull; {gameMode === "challenge" ? "Challenge Mode" : "Practice Mode"} &bull; {difficulty.toUpperCase()} ({getTimeEstimate(questionCountChoice, difficulty)})
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-5 max-w-md mx-auto">
+                      Jump straight into the quiz challenge with tournament settings and earn your spot on the leaderboard.
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        onClick={() => handleStartGame(difficulty, questionCountChoice, gameMode)}
+                        className="w-full sm:w-auto px-10 py-4 bg-black hover:bg-gray-800 text-white text-base font-extrabold rounded-2xl transition shadow-lg flex items-center justify-center gap-2.5 cursor-pointer"
+                      >
+                        <Play size={18} fill="currentColor" />
+                        <span>Quick Start Quiz</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowRulesModal(true)}
+                        className="w-full sm:w-auto px-5 py-4 bg-white hover:bg-gray-50 text-gray-900 text-xs font-bold rounded-2xl transition border border-gray-300 flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                      >
+                        <BookOpen size={15} className="text-amber-500" />
+                        <span>How to Play &amp; Rules</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ADVANCED CUSTOMIZATION TOGGLE */}
+                  <div className="border border-gray-200 rounded-2xl overflow-hidden mb-6 text-left">
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomOptions(!showCustomOptions)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition text-xs font-bold text-gray-700 cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <SlidersHorizontal size={14} className="text-gray-500" />
+                        <span>Customize Game Options (Mode, Difficulty, Question Count)</span>
+                      </span>
+                      <ChevronDown size={16} className={`transition-transform duration-200 ${showCustomOptions ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {showCustomOptions && (
+                      <div className="p-5 border-t border-gray-200 bg-white space-y-6 animate-in fade-in duration-150">
+                        {/* Step 1: Select Game Mode (Challenge vs Practice) */}
+                        <div>
+                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
+                            1. Select Gameplay Mode:
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setGameMode("challenge")}
+                              className={`p-4 rounded-2xl border text-left transition ${
+                                gameMode === "challenge" 
+                                  ? "bg-amber-50/70 border-amber-500 shadow-xs ring-1 ring-amber-500" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+                                  🏆 Challenge Mode
+                                </p>
+                                <span className="text-[10px] font-bold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full uppercase">
+                                  Official Leaderboard
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1.5">Continuous Countdown & Speed Bonus</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Total session countdown timer, no answers revealed during gameplay. Full scorecard & speed bonuses awarded upon submission.
+                              </p>
+                            </button>
+
+                            <button
+                              onClick={() => setGameMode("practice")}
+                              className={`p-4 rounded-2xl border text-left transition ${
+                                gameMode === "practice" 
+                                  ? "bg-blue-50/70 border-blue-500 shadow-xs ring-1 ring-blue-500" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-extrabold text-blue-900 flex items-center gap-1.5">
+                                  💡 Practice & Study Mode
+                                </p>
+                                <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full uppercase">
+                                  Untimed Learning
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1.5">Immediate Trivia & Clues</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                No timer pressure. Reveals correct answers and architectural clues immediately after each selection.
+                              </p>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Step 2: Select Difficulty Mode (3 Tiers: Easy, Medium, Hard) */}
+                        <div>
+                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
+                            2. Select Difficulty Mode:
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDifficulty("easy");
+                                if (questionCountChoice > 20) setQuestionCountChoice(10);
+                              }}
+                              className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
+                                difficulty === "easy" || difficulty === "popular"
+                                  ? "bg-emerald-50/90 border-emerald-500 shadow-xs ring-2 ring-emerald-500/20" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                                  🟢 Easy Mode
+                                </p>
+                                <span className="text-[10px] font-black bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full">
+                                  150 PTS/Q
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">100% Popular Landmarks</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Relaxed 30m Session • No Choice Shuffle • Clue deduction: -50 pts
+                              </p>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDifficulty("medium");
+                                if (questionCountChoice < 20) setQuestionCountChoice(20);
+                              }}
+                              className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
+                                difficulty === "medium"
+                                  ? "bg-amber-50/90 border-amber-500 shadow-xs ring-2 ring-amber-500/20" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-amber-950 uppercase tracking-wider">
+                                  🟡 Medium Mode
+                                </p>
+                                <span className="text-[10px] font-black bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full">
+                                  300 PTS/Q
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">50-50 + Balanced Mix</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Relaxed 30m Session • Shuffled Choices • Clue deduction: -100 pts
+                              </p>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setDifficulty("hard")}
+                              className={`p-3.5 rounded-2xl border text-left transition cursor-pointer ${
+                                difficulty === "hard" || difficulty === "master"
+                                  ? "bg-purple-50/90 border-purple-600 shadow-xs ring-2 ring-purple-500/20" 
+                                  : "bg-white border-gray-200 hover:border-gray-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black text-purple-950 uppercase tracking-wider">
+                                  🔴 Hard Mode
+                                </p>
+                                <span className="text-[10px] font-black bg-purple-200/80 text-purple-900 px-2 py-0.5 rounded-full">
+                                  450 PTS/Q
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-bold text-gray-800 mt-1">Architecture Master Pool</p>
+                              <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+                                Relaxed 30m Session • Sequential Clue Lock 🔒 • Clue deduction: -150 pts
+                              </p>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Step 3: Select Round Length (Strictly dynamically conditioned on selected difficulty) */}
+                        <div>
+                          <label className="block text-xs font-extrabold text-gray-900 uppercase tracking-wider mb-2">
+                            3. Round Length (Questions):
+                          </label>
+                          <div className={`grid gap-3 ${
+                            (() => {
+                              const totalAvailable = allQuestionsPool.length > 0 ? allQuestionsPool.length : 60;
+                              const isCompactPool = totalAvailable <= 35;
+                              const isEasy = difficulty === "easy" || difficulty === "popular";
+                              const isMedium = difficulty === "medium";
+                              return isEasy ? "grid-cols-2" : (isMedium && !isCompactPool) ? "grid-cols-2" : "grid-cols-3";
+                            })()
+                          }`}>
+                            {(() => {
+                              const isEasy = difficulty === "easy" || difficulty === "popular";
+                              const isMedium = difficulty === "medium";
+                              const totalAvailable = allQuestionsPool.length > 0 ? allQuestionsPool.length : 60;
+                              const isCompactPool = totalAvailable <= 35;
+
+                              const countOptions = isEasy ? [
+                                { count: 10, label: "10 Questions", time: getTimeEstimate(10, difficulty), desc: "100% Popular" },
+                                { count: Math.min(20, totalAvailable), label: `${Math.min(20, totalAvailable)} Questions`, time: getTimeEstimate(Math.min(20, totalAvailable), difficulty), desc: "Popular + 50-50" }
+                              ] : isMedium ? (
+                                isCompactPool ? [
+                                  { count: 10, label: "10 Questions", time: getTimeEstimate(10, difficulty), desc: "Popular & 50-50" },
+                                  { count: 20, label: "20 Questions", time: getTimeEstimate(20, difficulty), desc: "All 50-50 + Split" },
+                                  { count: totalAvailable, label: `All (${totalAvailable} Qs)`, time: getTimeEstimate(totalAvailable, difficulty), desc: "Full Master Roster" }
+                                ] : [
+                                  { count: 20, label: "20 Questions", time: getTimeEstimate(20, difficulty), desc: "All 50-50 + Split" },
+                                  { count: 50, label: "50 Questions", time: getTimeEstimate(50, difficulty), desc: "Full Balanced Marathon" }
+                                ]
+                              ) : (
+                                isCompactPool ? [
+                                  { count: 10, label: "10 Questions", time: getTimeEstimate(10, difficulty), desc: "100% Master" },
+                                  { count: 20, label: "20 Questions", time: getTimeEstimate(20, difficulty), desc: "100% Master" },
+                                  { count: totalAvailable, label: `All (${totalAvailable} Qs)`, time: getTimeEstimate(totalAvailable, difficulty), desc: "Full Master Roster" }
+                                ] : [
+                                  { count: 10, label: "10 Questions", time: getTimeEstimate(10, difficulty), desc: "100% Master" },
+                                  { count: 20, label: "20 Questions", time: getTimeEstimate(20, difficulty), desc: "100% Master" },
+                                  { count: 50, label: "50 Questions", time: getTimeEstimate(50, difficulty), desc: "75% Master • 15% 50-50 • 10% Pop" }
+                                ]
+                              );
+
+                              return countOptions.map(item => (
+                                <button
+                                  key={item.count}
+                                  type="button"
+                                  onClick={() => setQuestionCountChoice(item.count)}
+                                  className={`p-3 rounded-2xl border text-center transition cursor-pointer ${
+                                    questionCountChoice === item.count
+                                      ? "bg-black text-white border-black shadow-xs font-bold"
+                                      : "bg-white text-gray-800 border-gray-200 hover:border-gray-300"
+                                  }`}
+                                >
+                                  <p className="text-xs font-bold">{item.label}</p>
+                                  <p className={`text-[10px] mt-0.5 ${questionCountChoice === item.count ? "text-gray-300" : "text-gray-400"}`}>
+                                    {gameMode === "challenge" ? `Time: ${item.time}` : "Untimed"}
+                                  </p>
+                                  <p className={`text-[9px] mt-0.5 font-medium ${questionCountChoice === item.count ? "text-amber-300" : "text-gray-500"}`}>
+                                    {item.desc}
+                                  </p>
+                                </button>
+                              ));
+                            })()}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 text-center">
+                          <button
+                            onClick={() => handleStartGame()}
+                            className="w-full sm:w-auto px-8 py-3 bg-black hover:bg-gray-800 text-white text-sm font-extrabold rounded-2xl transition shadow-md flex items-center justify-center gap-2 mx-auto cursor-pointer"
+                          >
+                            <Play size={15} fill="currentColor" />
+                            <span>Start with Custom Settings</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -2831,26 +3036,46 @@ export default function QuizPlayPage() {
                                 className="relative rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 flex items-center justify-center shadow-xs group cursor-pointer flex-1 min-h-[230px] max-h-[350px] md:max-h-[380px] p-2 select-none"
                                 title="Press & hold or click to inspect photo"
                               >
-                                {!imageLoaded && (
+                                {!imageLoaded && !imageLoadError && (
                                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 text-gray-300 z-10 p-4 text-center">
                                     <span className="w-8 h-8 rounded-full border-3 border-amber-400 border-t-transparent animate-spin mb-2.5"></span>
-                                    <span className="text-xs font-bold text-white tracking-wide">Loading architectural photo...</span>
+                                    <span className="text-xs font-bold text-white tracking-wide">Loading photo...</span>
                                     <span className="text-[11px] font-mono text-amber-300 font-bold mt-1 bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-500/30">
                                       ⏱️ Timer is paused until photo appears
                                     </span>
                                   </div>
                                 )}
-                                <img 
-                                  key={`photo-img-${currentQ.id || currentIndex}-${currentQ.media_url}`}
-                                  referrerPolicy="no-referrer"
-                                  src={currentQ.media_url} 
-                                  alt="Question photo" 
-                                  className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-[1.02]"
-                                  onLoad={handleImageLoaded}
-                                  onError={() => {
-                                    handleImageLoaded();
-                                  }}
-                                />
+                                {imageLoadError ? (
+                                  <div className="flex flex-col items-center justify-center p-6 text-center text-gray-300 z-10">
+                                    <span className="text-3xl mb-2">🏛️</span>
+                                    <p className="text-xs font-bold text-white mb-1">Architectural Visual Reference</p>
+                                    <p className="text-[11px] text-gray-400 font-mono mb-3">Photo temporarily unavailable on network</p>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setImageLoadError(false);
+                                        setImageLoaded(false);
+                                      }}
+                                      className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-black rounded-lg transition shadow-xs"
+                                    >
+                                      Reload Image
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <img 
+                                    key={`photo-img-${currentQ.id || currentIndex}-${currentQ.media_url}`}
+                                    referrerPolicy="no-referrer"
+                                    src={currentQ.media_url} 
+                                    alt="Question photo" 
+                                    className={`w-full h-full object-contain transition-transform duration-200 group-hover:scale-[1.02] ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                                    onLoad={handleImageLoaded}
+                                    onError={() => {
+                                      setImageLoadError(true);
+                                      handleImageLoaded();
+                                    }}
+                                  />
+                                )}
                                 <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-[10px] text-gray-300 font-bold opacity-0 group-hover:opacity-100 transition flex items-center gap-1">
                                   <ZoomIn size={11} /> Hold to zoom • Click to enlarge
                                 </div>
@@ -3126,7 +3351,7 @@ export default function QuizPlayPage() {
                 </div>
 
                 {/* 3-Tier Tabs: Easy / Medium / Hard */}
-                <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-4">
+                <div className="grid grid-cols-3 gap-1 bg-gray-100 p-1 rounded-xl mb-3">
                   <button
                     type="button"
                     onClick={() => setLeaderboardDifficulty("easy")}
@@ -3161,6 +3386,21 @@ export default function QuizPlayPage() {
                     Hard
                   </button>
                 </div>
+
+                {/* Active Scope & Quiz Name Indicator */}
+                {leaderboardScope === "quiz" ? (
+                  <div className="mb-3.5 px-3 py-2 bg-amber-50/90 border border-amber-200/90 rounded-xl text-xs font-bold text-amber-950 flex items-center gap-2 shadow-2xs">
+                    <Trophy size={14} className="text-amber-600 shrink-0" />
+                    <span className="truncate" title={quiz?.title || "This Quiz"}>
+                      {quiz?.title || "This Quiz"}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="mb-3.5 px-3 py-2 bg-blue-50/90 border border-blue-200/90 rounded-xl text-xs font-bold text-blue-950 flex items-center gap-2 shadow-2xs">
+                    <Globe size={14} className="text-blue-600 shrink-0" />
+                    <span className="truncate">Overall Standings (All 7 Quizzes)</span>
+                  </div>
+                )}
 
                 {loadingLeaderboard ? (
                   <div className="p-8 text-center text-xs text-gray-400 font-medium">
@@ -3213,6 +3453,7 @@ export default function QuizPlayPage() {
                                 )}
                               </p>
                               <p className="text-[10px] text-gray-400 uppercase font-mono">
+                                {leaderboardScope === "overall" && entry.quizzes_count ? `${entry.quizzes_count} Quizzes • ` : ""}
                                 {entry.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{acc}% Acc</span>
                               </p>
                             </div>
@@ -3225,6 +3466,43 @@ export default function QuizPlayPage() {
                         </div>
                       );
                     })}
+
+                    {/* STICKY ROW FOR CURRENT USER IF RANKED OUTSIDE TOP 10 */}
+                    {(() => {
+                      const userRank = leaderboard.findIndex(entry => currentUser && (
+                        entry.user_id === currentUser.id ||
+                        (currentUser.username && entry.display_name === currentUser.username) ||
+                        (currentUser.name && entry.display_name === currentUser.name)
+                      ));
+                      if (userRank < 10) return null;
+                      const userEntry = leaderboard[userRank];
+                      return (
+                        <div className="pt-2 border-t-2 border-dashed border-blue-200 mt-2">
+                          <div className="flex items-center justify-between p-2.5 rounded-xl border bg-blue-50/90 border-blue-400 ring-1 ring-blue-300 shadow-xs">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 bg-blue-600 text-white shadow-2xs">
+                                {userRank + 1}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-xs font-black text-blue-900 truncate flex items-center gap-1.5">
+                                  <span>{userEntry.display_name}</span>
+                                  <span className="bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-md">
+                                    YOU
+                                  </span>
+                                </p>
+                                <p className="text-[10px] text-blue-700 uppercase font-mono">
+                                  {leaderboardScope === "overall" && userEntry.quizzes_count ? `${userEntry.quizzes_count} Quizzes • ` : ""}
+                                  {userEntry.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{userEntry.acc}% Acc</span>
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-mono font-extrabold text-blue-700 shrink-0">
+                              {userEntry.points} PTS
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -3384,6 +3662,268 @@ export default function QuizPlayPage() {
                   Learn About GOLD Perks &rarr;
                 </Link>
               </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* PLAY AGAIN: SELECT GAME MODE & DIFFICULTY MODAL */}
+      {showPlayAgainModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl border border-gray-200 max-w-lg w-full p-6 sm:p-7 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 my-8">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setShowPlayAgainModal(false)}
+              className="absolute top-5 right-5 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Header */}
+            <div className="mb-5 pr-8 text-left">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  {quiz?.category || "Quiz Arena"}
+                </span>
+                <span className="text-xs font-mono text-gray-400 font-bold">
+                  {allQuestionsPool.length || questions.length || 60} Questions Available
+                </span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-gray-950 leading-tight">
+                Play Again: Choose Game Mode
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Select your game mode, difficulty pace, and question round length for the next challenge.
+              </p>
+            </div>
+
+            {/* 1. Game Mode Selection */}
+            <div className="mb-5 text-left">
+              <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
+                <span>1. Game Mode</span>
+                <span className="text-[11px] font-normal text-gray-400 lowercase">select your play style</span>
+              </label>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Challenge Mode */}
+                <button
+                  type="button"
+                  onClick={() => setPlayAgainMode("challenge")}
+                  className={`p-3.5 rounded-2xl border text-left transition cursor-pointer relative ${
+                    playAgainMode === "challenge" 
+                      ? "bg-amber-500/10 border-amber-500 text-gray-950 ring-2 ring-amber-500/30 shadow-xs" 
+                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                      <Zap size={11} className="text-amber-600 fill-amber-500" /> Competitive Play
+                    </span>
+                    {playAgainMode === "challenge" && (
+                      <CheckCircle2 size={16} className="text-amber-600 shrink-0" />
+                    )}
+                  </div>
+                  <h4 className="text-sm font-black text-gray-900 mb-1">
+                    Challenge Mode
+                  </h4>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    Continuous countdown timer, leaderboard ranking, and speed bonus.
+                  </p>
+                </button>
+
+                {/* Practice Mode */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isGoldTier) {
+                      setShowGoldModal(true);
+                    } else {
+                      setPlayAgainMode("practice");
+                    }
+                  }}
+                  className={`p-3.5 rounded-2xl border text-left transition cursor-pointer relative ${
+                    playAgainMode === "practice" 
+                      ? "bg-purple-500/10 border-purple-500 text-gray-950 ring-2 ring-purple-500/30 shadow-xs" 
+                      : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-300 flex items-center gap-1">
+                      <Crown size={11} className="text-purple-700 fill-purple-600" /> Gold Tier Benefit
+                    </span>
+                    {playAgainMode === "practice" && (
+                      <CheckCircle2 size={16} className="text-purple-600 shrink-0" />
+                    )}
+                  </div>
+                  <h4 className="text-sm font-black text-gray-900 mb-1 flex items-center gap-1.5">
+                    Practice Mode
+                    {!isGoldTier && <Lock size={12} className="text-amber-600" />}
+                  </h4>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    Instant answers after each question with relaxed, self-paced exploration.
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. Difficulty Tier Selection */}
+            <div className="mb-5 text-left">
+              <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
+                <span>2. Difficulty Tier</span>
+                <span className="text-[11px] font-normal text-gray-400 lowercase">adjusts points, question mix & pace</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "easy", label: "🟢 Easy", pts: "150 PTS", sub: "100% Popular", time: "15s / Q", activeClass: "border-emerald-500 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
+                  { id: "medium", label: "🟡 Medium", pts: "300 PTS", sub: "50-50 Blend", time: "10s / Q", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
+                  { id: "hard", label: "🔴 Hard", pts: "450 PTS", sub: "Master Pool", time: "5s / Q", activeClass: "border-purple-600 bg-purple-50/70 text-purple-950 ring-2 ring-purple-500/20" }
+                ].map(d => {
+                  const isSelected = playAgainDiff === d.id || (d.id === "easy" && playAgainDiff === "popular") || (d.id === "hard" && playAgainDiff === "master");
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => {
+                        setPlayAgainDiff(d.id as Difficulty);
+                        const totalAvailable = allQuestionsPool.length || questions.length || 60;
+                        if (d.id === "easy" && playAgainCount > 20) setPlayAgainCount(10);
+                        if (d.id === "medium" && playAgainCount < 20 && totalAvailable > 35) setPlayAgainCount(20);
+                        if (playAgainCount > totalAvailable) setPlayAgainCount(totalAvailable);
+                      }}
+                      className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                        isSelected 
+                          ? `${d.activeClass} font-black shadow-xs` 
+                          : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60"
+                      }`}
+                    >
+                      <span className="text-xs font-black uppercase tracking-wider mb-0.5">
+                        {d.label}
+                      </span>
+                      <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-md mb-0.5 ${
+                        isSelected ? "bg-black/10 text-gray-900" : "bg-gray-100 text-gray-700"
+                      }`}>
+                        {d.pts}
+                      </span>
+                      <span className={`text-[10px] font-bold ${isSelected ? "text-gray-900" : "text-gray-500"}`}>
+                        {d.sub}
+                      </span>
+                      <span className="text-[10px] text-gray-400 font-mono mt-0.5">
+                        {d.time}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. Questions Count */}
+            <div className="mb-6 text-left">
+              <label className="text-xs font-black uppercase tracking-wider text-gray-700 block mb-2 flex items-center justify-between">
+                <span>3. Questions Count</span>
+                <span className="text-[11px] font-normal text-gray-400 lowercase">dynamic round time</span>
+              </label>
+              <div className={`grid gap-2 ${
+                (() => {
+                  const totalAvailable = allQuestionsPool.length || questions.length || 60;
+                  const isCompactPool = totalAvailable <= 35;
+                  const isEasy = playAgainDiff === "easy" || playAgainDiff === "popular";
+                  const isMedium = playAgainDiff === "medium";
+                  return isEasy ? "grid-cols-2" : (isMedium && !isCompactPool) ? "grid-cols-2" : "grid-cols-3";
+                })()
+              }`}>
+                {(() => {
+                  const totalAvailable = allQuestionsPool.length || questions.length || 60;
+                  const isCompactPool = totalAvailable <= 35;
+                  const isEasy = playAgainDiff === "easy" || playAgainDiff === "popular";
+                  const isMedium = playAgainDiff === "medium";
+                  const countItems = isEasy ? [
+                    { count: 10, label: "10 Questions" },
+                    { count: Math.min(20, totalAvailable), label: `${Math.min(20, totalAvailable)} Questions` }
+                  ] : isMedium ? (
+                    isCompactPool ? [
+                      { count: 10, label: "10 Questions" },
+                      { count: 20, label: "20 Questions" },
+                      { count: totalAvailable, label: `All (${totalAvailable} Qs)` }
+                    ] : [
+                      { count: 20, label: "20 Questions" },
+                      { count: 50, label: "50 Questions" }
+                    ]
+                  ) : (
+                    isCompactPool ? [
+                      { count: 10, label: "10 Questions" },
+                      { count: 20, label: "20 Questions" },
+                      { count: totalAvailable, label: `All (${totalAvailable} Qs)` }
+                    ] : [
+                      { count: 10, label: "10 Questions" },
+                      { count: 20, label: "20 Questions" },
+                      { count: 50, label: "50 Questions" }
+                    ]
+                  );
+
+                  return countItems.map(c => {
+                    const isSelected = playAgainCount === c.count;
+                    const dynamicTime = getTimeEstimate(c.count, playAgainDiff);
+                    return (
+                      <button
+                        key={c.count}
+                        type="button"
+                        onClick={() => setPlayAgainCount(c.count)}
+                        className={`p-3 rounded-2xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                          isSelected 
+                            ? "bg-black text-white border-black font-black shadow-xs ring-2 ring-black/20" 
+                            : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/60 font-semibold"
+                        }`}
+                      >
+                        <span className="text-xs block font-black">{c.label}</span>
+                        <span className={`text-[11px] font-mono mt-0.5 ${isSelected ? "text-gray-300 font-bold" : "text-gray-500"}`}>
+                          ⏱ {playAgainMode === "challenge" ? dynamicTime : "Untimed"}
+                        </span>
+                      </button>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
+            {/* Start Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!currentUser) {
+                  const plays = Math.max(
+                    parseInt(localStorage.getItem("tia_guest_plays_count") || "0", 10),
+                    unclaimedScoresCount
+                  );
+                  if (plays >= 2) {
+                    setShowPlayAgainModal(false);
+                    setShowGuestGateModal(true);
+                    return;
+                  }
+                }
+                setShowPlayAgainModal(false);
+                setShowGoldModal(false);
+                try {
+                  localStorage.removeItem(`ti2a_last_result_${slug}`);
+                } catch (e) {}
+                handleStartGame(playAgainDiff, playAgainCount, playAgainMode);
+              }}
+              className="w-full py-3.5 bg-black hover:bg-gray-800 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition cursor-pointer"
+            >
+              <RotateCcw size={16} />
+              <span>Launch Quiz ({playAgainCount} Qs &bull; {playAgainDiff.toUpperCase()})</span>
+            </button>
+
+            <div className="mt-3 text-center">
+              <button
+                type="button"
+                onClick={() => setShowPlayAgainModal(false)}
+                className="text-xs text-gray-500 hover:text-gray-800 font-bold underline transition cursor-pointer"
+              >
+                Cancel &amp; Keep Viewing Scorecard
+              </button>
             </div>
 
           </div>

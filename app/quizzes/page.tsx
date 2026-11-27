@@ -37,19 +37,14 @@ export default function QuizzesHubPage() {
   const [isGoldTier, setIsGoldTier] = useState<boolean>(false);
   const [pendingScore, setPendingScore] = useState<any>(null);
 
-  // Dynamic time estimate helper per question count & game difficulty:
-  // Easy: 15s/Q (100% Popular), Medium: 10s/Q (50/50 Blend), Hard: 5s/Q (75% Master)
-  const getTimeEstimate = (count: number, diff: string) => {
-    let perQ = 10;
-    const diffLower = (diff || "medium").toLowerCase();
-    if (diffLower === "easy" || diffLower === "popular") perQ = 15;
-    else if (diffLower === "hard" || diffLower === "master") perQ = 5;
-    else perQ = 10;
-    const totalSecs = count * perQ;
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
-    if (mins === 0) return `${secs}s`;
-    return secs === 0 ? `${mins} mins` : `${mins}m ${secs}s`;
+  // Quiz play continuous session duration rounded to nearer 30 minutes
+  const getQuizPlaySessionMinutes = (count: number) => {
+    return Math.max(30, Math.round(count / 30) * 30);
+  };
+
+  const getTimeEstimate = (count: number, _diff?: string) => {
+    const mins = getQuizPlaySessionMinutes(count);
+    return `${mins} mins`;
   };
 
   // Leaderboard state (3-tier game difficulty: "easy", "medium", "hard")
@@ -163,36 +158,95 @@ export default function QuizzesHubPage() {
         query = query.eq("quiz_id", leaderboardQuizFilter);
       }
 
-      const { data, error } = await query.limit(50);
+      const { data, error } = await query.limit(300);
       if (error) throw error;
 
       if (data) {
-        // Distinguish real participants from namesake/seed entries
-        const realParticipants = data.filter(e => e.user_id !== null || (e.guest_session_id !== null && !e.display_name?.startsWith("Architect_#anon")));
-        const seedParticipants = data.filter(e => e.user_id === null && e.guest_session_id === null);
+        let playerEntries: any[] = [];
 
-        // RULE: Once every category/difficulty has 5 or more real participants, the pre-loaded namesake entries completely disappear!
-        let activeBoard: any[] = [];
-        if (realParticipants.length >= 5) {
-          activeBoard = realParticipants;
+        if (leaderboardQuizFilter !== "all") {
+          // Specific quiz: Deduplicate by player so each user has strictly ONE entry (Personal Best)
+          const playerMap = new Map<string, any>();
+          for (const entry of data) {
+            const key = entry.user_id 
+              ? `user_${entry.user_id}` 
+              : (entry.guest_session_id ? `guest_${entry.guest_session_id}` : `name_${entry.display_name}`);
+            
+            const existing = playerMap.get(key);
+            if (!existing) {
+              playerMap.set(key, entry);
+            } else {
+              const exAcc = (existing.total_questions || 10) > 0 ? (existing.score || 0) / (existing.total_questions || 10) : 0;
+              const enAcc = (entry.total_questions || 10) > 0 ? (entry.score || 0) / (entry.total_questions || 10) : 0;
+              if (
+                (entry.points || 0) > (existing.points || 0) ||
+                ((entry.points || 0) === (existing.points || 0) && enAcc > exAcc)
+              ) {
+                playerMap.set(key, entry);
+              }
+            }
+          }
+          playerEntries = Array.from(playerMap.values());
         } else {
-          const remainingSlots = Math.max(0, 5 - realParticipants.length);
-          activeBoard = [...realParticipants, ...seedParticipants.slice(0, remainingSlots)];
+          // Overall All Quizzes: Aggregate cumulative points, questions, and quizzes played
+          const playerMap = new Map<string, {
+            id: string;
+            display_name: string;
+            user_id: string | null;
+            guest_session_id: string | null;
+            points: number;
+            score: number;
+            total_questions: number;
+            quizzes_played: Set<string>;
+            time_taken_seconds: number;
+          }>();
+
+          for (const entry of data) {
+            const key = entry.user_id 
+              ? `user_${entry.user_id}` 
+              : (entry.guest_session_id ? `guest_${entry.guest_session_id}` : `name_${entry.display_name}`);
+            
+            const existing = playerMap.get(key);
+            if (!existing) {
+              playerMap.set(key, {
+                id: entry.id,
+                display_name: entry.display_name,
+                user_id: entry.user_id,
+                guest_session_id: entry.guest_session_id,
+                points: entry.points || 0,
+                score: entry.score || 0,
+                total_questions: entry.total_questions || 10,
+                quizzes_played: new Set(entry.quiz_id ? [entry.quiz_id] : []),
+                time_taken_seconds: entry.time_taken_seconds || 0
+              });
+            } else {
+              existing.points += (entry.points || 0);
+              existing.score += (entry.score || 0);
+              existing.total_questions += (entry.total_questions || 10);
+              if (entry.quiz_id) existing.quizzes_played.add(entry.quiz_id);
+              existing.time_taken_seconds += (entry.time_taken_seconds || 0);
+            }
+          }
+
+          playerEntries = Array.from(playerMap.values()).map(p => ({
+            ...p,
+            quizzes_count: p.quizzes_played.size
+          }));
         }
 
-        const ranked = activeBoard.map(entry => {
+        const ranked = playerEntries.map(entry => {
           const acc = (entry.total_questions || 10) > 0 
             ? Math.round(((entry.score || 0) / (entry.total_questions || 10)) * 100) 
             : 0;
           return { ...entry, acc };
         }).sort((a, b) => {
-          if (b.acc !== a.acc) return b.acc - a.acc; // Higher accuracy first
-          const aIsReal = a.user_id !== null || a.guest_session_id !== null;
-          const bIsReal = b.user_id !== null || b.guest_session_id !== null;
-          if (aIsReal !== bIsReal) return aIsReal ? -1 : 1;
           if ((b.points || 0) !== (a.points || 0)) {
             return (b.points || 0) - (a.points || 0);
           }
+          if (b.acc !== a.acc) return b.acc - a.acc;
+          const aIsReal = a.user_id !== null || a.guest_session_id !== null;
+          const bIsReal = b.user_id !== null || b.guest_session_id !== null;
+          if (aIsReal !== bIsReal) return aIsReal ? -1 : 1;
           return (a.time_taken_seconds || 9999) - (b.time_taken_seconds || 9999);
         });
 
@@ -208,21 +262,19 @@ export default function QuizzesHubPage() {
   const getFeaturedQuizImage = (slug: string, fallbackCover?: string) => {
     switch (slug) {
       case "iconic-world-landmarks-guess-the-building":
-        return "/quizzes/fallingwater-kaufmann-residence.jpg";
+        return fallbackCover || "/quizzes/fallingwater-kaufmann-residence.jpg";
       case "master-architects-who-designed-it":
-        return "/quizzes/chapelle-notre-dame-du-haut-ronchamp.jpg";
+        return fallbackCover || "/quizzes/chapelle-notre-dame-du-haut-ronchamp.jpg";
       case "where-in-the-world-guess-the-city-country":
         return fallbackCover || "/quizzes/sydney-opera-house.jpg";
-      case "timeline-challenge-when-was-it-built":
-        return "/quizzes/villa-savoye.jpg";
       case "architectural-styles-and-movements":
-        return "/quizzes/centre-pompidou.jpg";
-      case "architectural-detective-guess-the-clues":
-        return "/quizzes/guggenheim-museum-bilbao.jpg";
-      case "architects-oeuvre-pair-the-masterpieces":
-        return "/quizzes/salk-institute.jpg";
+        return fallbackCover || "/quizzes/guggenheim-museum-bilbao.jpg";
+      case "visual-recognition-match-architect-building-photo":
+        return fallbackCover || "/quizzes/salk-institute.jpg";
+      case "architects-portfolio-match-celebrated-project-name":
+        return fallbackCover || "/quizzes/the-shard.jpg";
       case "the-visionaries-faces-of-architecture":
-        return "/architect-photos/le-corbusier.jpg";
+        return fallbackCover || "/architect-photos/le-corbusier.jpg";
       default:
         return fallbackCover || "/quizzes/fallingwater-kaufmann-residence.jpg";
     }
@@ -236,14 +288,12 @@ export default function QuizzesHubPage() {
         return "Match legendary structures with their master architects and studios.";
       case "where-in-the-world-guess-the-city-country":
         return "Pinpoint the cities and countries of iconic architectural marvels.";
-      case "timeline-challenge-when-was-it-built":
-        return "Order landmark constructions chronologically across history.";
       case "architectural-styles-and-movements":
         return "Classify Brutalism, Bauhaus, Deconstructivism, and modern forms.";
-      case "architectural-detective-guess-the-clues":
-        return "Deduce the building from structural details, materials, and plans.";
-      case "architects-oeuvre-pair-the-masterpieces":
-        return "Recognize the distinctive oeuvres and signatures of master architects.";
+      case "visual-recognition-match-architect-building-photo":
+        return "Match visionary architects with photos of their iconic masterworks.";
+      case "architects-portfolio-match-celebrated-project-name":
+        return "Connect master architects to their full portfolios of celebrated works.";
       case "the-visionaries-faces-of-architecture":
         return "Identify celebrated world master architects from their iconic portrait photographs.";
       default:
@@ -256,13 +306,13 @@ export default function QuizzesHubPage() {
     "master-architects-who-designed-it": "📐 Architect Identification",
     "where-in-the-world-guess-the-city-country": "🌍 Location Identification",
     "architectural-styles-and-movements": "🎨 Style Classification",
-    "architects-oeuvre-pair-the-masterpieces": "👥 Portfolio Matching",
-    "the-visionaries-faces-of-architecture": "👤 Portrait Recognition",
-    "architectural-detective-guess-the-clues": "🕵️ Forensic Deduction"
+    "visual-recognition-match-architect-building-photo": "📸 Photo Matching",
+    "architects-portfolio-match-celebrated-project-name": "👥 Portfolio Matching",
+    "the-visionaries-faces-of-architecture": "👤 Portrait Recognition"
   };
 
   const categories = [
-    { id: "all", label: "🌟 All Quizzes (6)" },
+    { id: "all", label: "🌟 All Quizzes (7)" },
     { id: "Iconic Buildings", label: "🏛️ Iconic Buildings" },
     { id: "Master Architects", label: "📐 Master Architects" },
     { id: "Building Geography", label: "🌍 Building Geography" },
@@ -836,7 +886,7 @@ export default function QuizzesHubPage() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    {leaderboard.slice(0, 6).map((entry, idx) => {
+                    {leaderboard.slice(0, 10).map((entry, idx) => {
                       const isCurrentUserEntry = currentUser && (
                         entry.user_id === currentUser.id || 
                         (currentUser.username && entry.display_name === currentUser.username) ||
@@ -877,6 +927,7 @@ export default function QuizzesHubPage() {
                                 )}
                               </p>
                               <p className="text-[10px] text-gray-400 uppercase font-mono">
+                                {leaderboardQuizFilter === "all" && entry.quizzes_count ? `${entry.quizzes_count} Quizzes • ` : ""}
                                 {entry.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{entry.acc}% Acc</span>
                               </p>
                             </div>
@@ -889,6 +940,44 @@ export default function QuizzesHubPage() {
                         </div>
                       );
                     })}
+
+                    {/* STICKY ROW FOR CURRENT USER IF RANKED OUTSIDE TOP 10 */}
+                    {(() => {
+                      const userRank = leaderboard.findIndex(entry => currentUser && (
+                        entry.user_id === currentUser.id ||
+                        (currentUser.username && entry.display_name === currentUser.username) ||
+                        (currentUser.name && entry.display_name === currentUser.name)
+                      ));
+                      if (userRank < 10) return null;
+                      const userEntry = leaderboard[userRank];
+                      const userDisplay = userEntry.display_name?.startsWith("@") ? userEntry.display_name : `@${userEntry.display_name || "Architect"}`;
+                      return (
+                        <div className="pt-2 border-t-2 border-dashed border-blue-200 mt-2">
+                          <div className="flex items-center justify-between p-2 rounded-xl border bg-blue-50/90 border-blue-400 ring-1 ring-blue-300 shadow-xs">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 bg-blue-600 text-white">
+                                {userRank + 1}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-xs font-black text-blue-900 truncate flex items-center gap-1">
+                                  <span>{userDisplay}</span>
+                                  <span className="bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
+                                    YOU
+                                  </span>
+                                </p>
+                                <p className="text-[10px] text-blue-700 uppercase font-mono">
+                                  {leaderboardQuizFilter === "all" && userEntry.quizzes_count ? `${userEntry.quizzes_count} Quizzes • ` : ""}
+                                  {userEntry.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{userEntry.acc}% Acc</span>
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-mono font-extrabold text-blue-700 shrink-0">
+                              {userEntry.points} PTS
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -911,15 +1000,15 @@ export default function QuizzesHubPage() {
                 <div className="space-y-2 text-gray-600 leading-normal text-xs">
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-emerald-800 shrink-0">🟢 Easy:</span>
-                    <span>150 Pts &bull; 15s/Q &bull; 100% Popular Landmarks &bull; -50 pts/clue &bull; No Choice Shuffle</span>
+                    <span>150 Pts &bull; Relaxed 30m Session &bull; 100% Popular Landmarks &bull; -50 pts/clue &bull; No Choice Shuffle</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-amber-800 shrink-0">🟡 Medium:</span>
-                    <span>300 Pts &bull; 10s/Q &bull; 50-50 + Balanced Mix &bull; -100 pts/clue &bull; Shuffled Choices</span>
+                    <span>300 Pts &bull; Relaxed 30m Session &bull; 50-50 + Balanced Mix &bull; -100 pts/clue &bull; Shuffled Choices</span>
                   </div>
                   <div className="flex items-start gap-1.5">
                     <span className="font-black text-purple-800 shrink-0">🔴 Hard:</span>
-                    <span>450 Pts &bull; 5s/Q &bull; Master Pool &bull; -150 pts/clue &bull; Sequential Clue Lock 🔒</span>
+                    <span>450 Pts &bull; Relaxed 30m Session &bull; Master Pool &bull; -150 pts/clue &bull; Sequential Clue Lock 🔒</span>
                   </div>
                   <div className="pt-2 border-t border-gray-100 flex items-start gap-1.5 text-blue-800 font-medium">
                     <span className="font-black">⚡ Modes:</span>
@@ -1054,9 +1143,9 @@ export default function QuizzesHubPage() {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "easy", label: "🟢 Easy", pts: "150 PTS", sub: "100% Popular", time: "15s / Q", activeClass: "border-emerald-500 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
-                    { id: "medium", label: "🟡 Medium", pts: "300 PTS", sub: "50-50 Blend", time: "10s / Q", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
-                    { id: "hard", label: "🔴 Hard", pts: "450 PTS", sub: "Master Pool", time: "5s / Q", activeClass: "border-purple-600 bg-purple-50/70 text-purple-950 ring-2 ring-purple-500/20" }
+                    { id: "easy", label: "🟢 Easy", pts: "150 PTS", sub: "100% Popular", time: "30m session", activeClass: "border-emerald-500 bg-emerald-50/70 text-emerald-950 ring-2 ring-emerald-500/20" },
+                    { id: "medium", label: "🟡 Medium", pts: "300 PTS", sub: "50-50 Blend", time: "30m session", activeClass: "border-amber-500 bg-amber-50/70 text-amber-950 ring-2 ring-amber-500/20" },
+                    { id: "hard", label: "🔴 Hard", pts: "450 PTS", sub: "Master Pool", time: "30m session", activeClass: "border-purple-600 bg-purple-50/70 text-purple-950 ring-2 ring-purple-500/20" }
                   ].map(d => {
                     const isSelected = modalDifficulty === d.id || (d.id === "easy" && modalDifficulty === "popular") || (d.id === "hard" && modalDifficulty === "master");
                     return (

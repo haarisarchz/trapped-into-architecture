@@ -1,0 +1,44 @@
+{
+  "barcelona-pavilion": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/barcelona-pavilion/barcelona-pavilion-plan.png"
+  },
+  "casa-luis-barragan": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/casa-luis-barragan/casa-luis-barragan-plan.jpg"
+  },
+  "casa-mila": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/casa-mila/casa-mila-plan.jpg"
+  },
+  "fallingwater": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/fallingwater/fallingwater-plan.jpg",
+    "section": "https://ik.imagekit.io/ti2a/architectural-drawings/fallingwater/fallingwater-section.jpg"
+  },
+  "farnsworth-house": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/farnsworth-house/farnsworth-house-plan.jpg",
+    "section": "https://ik.imagekit.io/ti2a/architectural-drawings/farnsworth-house/farnsworth-house-section.jpg"
+  },
+  "lloyds-building": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/lloyds-building/lloyds-building-plan.jpg"
+  },
+  "matrimandir": {
+    "section": "https://ik.imagekit.io/ti2a/architectural-drawings/matrimandir/matrimandir-section.jpg"
+  },
+  "robie-house": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/robie-house/robie-house-plan.jpg",
+    "section": "https://ik.imagekit.io/ti2a/architectural-drawings/robie-house/robie-house-section.jpg"
+  },
+  "sagrada-familia": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/sagrada-familia/sagrada-familia-plan.jpg"
+  },
+  "sydney-opera-house": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/sydney-opera-house/sydney-opera-house-plan.jpg",
+    "section": "https://ik.imagekit.io/ti2a/architectural-drawings/sydney-opera-house/sydney-opera-house-section.jpg"
+  },
+  "twa-flight-center": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/twa-flight-center/twa-flight-center-plan.jpg",
+    "section": "https://ik.imagekit.io/ti2a/architectural-drawings/twa-flight-center/twa-flight-center-section.jpg"
+  },
+  "villa-savoye": {
+    "plan": "https://ik.imagekit.io/ti2a/architectural-drawings/villa-savoye/villa-savoye-plan.jpg",
+    "section": "https://ik.imagekit.io/ti2a/architectural-drawings/villa-savoye/villa-savoye-section.jpg"
+  }
+}

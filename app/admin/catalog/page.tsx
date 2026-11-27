@@ -54,6 +54,80 @@ INSERT INTO catalog_columns (id, title, type, order_index, is_core) VALUES
 ('puzzle_clues', 'Puzzle Clues & Trivia', 'text', 16, false)
 ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, type = EXCLUDED.type, order_index = EXCLUDED.order_index;`;
 
+export const ARCHITECT_PORTRAIT_MAP: Record<string, string> = {
+  "frank lloyd wright": "/architect-photos/frank-lloyd-wright.jpg",
+  "le corbusier": "/architect-photos/le-corbusier.jpg",
+  "ludwig mies van der rohe": "/architect-photos/ludwig-mies-van-der-rohe.jpg",
+  "mies van der rohe": "/architect-photos/ludwig-mies-van-der-rohe.jpg",
+  "antoni gaudi": "/architect-photos/antoni-gaudi.jpg",
+  "antoni gaudí": "/architect-photos/antoni-gaudi.jpg",
+  "zaha hadid": "/architect-photos/zaha-hadid.jpg",
+  "zaha hadid architects": "/architect-photos/zaha-hadid.jpg",
+  "frank gehry": "/architect-photos/frank-gehry.jpg",
+  "gehry partners": "/architect-photos/frank-gehry.jpg",
+  "i. m. pei": "/architect-photos/i-m-pei.jpg",
+  "i.m. pei": "/architect-photos/i-m-pei.jpg",
+  "im pei": "/architect-photos/i-m-pei.jpg",
+  "norman foster": "/architect-photos/norman-foster.jpg",
+  "foster + partners": "/architect-photos/norman-foster.jpg",
+  "foster and partners": "/architect-photos/norman-foster.jpg",
+  "santiago calatrava": "/architect-photos/santiago-calatrava.jpg",
+  "jorn utzon": "/architect-photos/jorn-utzon.jpg",
+  "jørn utzon": "/architect-photos/jorn-utzon.jpg",
+  "tadao ando": "/architect-photos/tadao-ando.jpg",
+  "louis kahn": "/architect-photos/louis-kahn.jpg",
+  "renzo piano": "/architect-photos/renzo-piano.jpg",
+  "renzo piano building workshop": "/architect-photos/renzo-piano.jpg",
+  "eero saarinen": "/architect-photos/eero-saarinen.jpg",
+  "oscar niemeyer": "/architect-photos/oscar-niemeyer.jpg",
+  "alvar aalto": "/architect-photos/alvar-aalto.jpg",
+  "philip johnson": "/architect-photos/philip-johnson.jpg",
+  "jean nouvel": "/architect-photos/jean-nouvel.jpg",
+  "ateliers jean nouvel": "/architect-photos/jean-nouvel.jpg",
+  "richard rogers": "/architect-photos/richard-rogers.jpg",
+  "rogers stirk harbour": "/architect-photos/richard-rogers.jpg",
+  "herzog & de meuron": "/architect-photos/herzog-de-meuron.jpg",
+  "herzog and de meuron": "/architect-photos/herzog-de-meuron.jpg",
+  "jacques herzog & pierre de meuron": "/architect-photos/herzog-de-meuron.jpg",
+  "b. v. doshi": "/architect-photos/b-v-doshi.jpg",
+  "b.v. doshi": "/architect-photos/b-v-doshi.jpg",
+  "balkrishna doshi": "/architect-photos/b-v-doshi.jpg",
+  "balkrishna v. doshi": "/architect-photos/b-v-doshi.jpg",
+  "charles correa": "/architect-photos/charles-correa.jpg",
+  "laurie baker": "/architect-photos/laurie-baker.jpg",
+  "peter zumthor": "/architect-photos/peter-zumthor.jpg",
+  "kenzo tange": "/architect-photos/kenzo-tange.jpg",
+  "kenzō tange": "/architect-photos/kenzo-tange.jpg",
+  "frei otto": "/architect-photos/frei-otto.jpg",
+  "toyo ito": "/architect-photos/toyo-ito.jpg",
+  "toyo ito & associates": "/architect-photos/toyo-ito.jpg",
+  "sanaa": "/architect-photos/sanaa-sejima-nishizawa.jpg",
+  "kazuyo sejima": "/architect-photos/sanaa-sejima-nishizawa.jpg",
+  "kazuyo sejima & ryue nishizawa": "/architect-photos/sanaa-sejima-nishizawa.jpg",
+  "sanaa (kazuyo sejima & ryue nishizawa)": "/architect-photos/sanaa-sejima-nishizawa.jpg",
+  "raj rewal": "/architect-photos/raj-rewal.jpg",
+  "fariborz sahba": "/architect-photos/fariborz-sahba.jpg",
+  "roger anger": "/architect-photos/roger-anger.jpg",
+  "rem koolhaas": "/architect-photos/rem-koolhaas.jpg",
+  "oma": "/architect-photos/rem-koolhaas.jpg",
+  "rem koolhaas (oma)": "/architect-photos/rem-koolhaas.jpg",
+  "oma / rem koolhaas": "/architect-photos/rem-koolhaas.jpg",
+  "luis barragán": "/architect-photos/luis-barragan.jpg",
+  "luis barragan": "/architect-photos/luis-barragan.jpg",
+  "richard meier": "/architect-photos/richard-meier.jpg",
+  "achyut kanvinde": "/architect-photos/achyut-kanvinde.jpg",
+  "anant raje": "/architect-photos/anant-raje.jpg"
+};
+
+export const getArchitectPhotoByName = (name?: string): string => {
+  if (!name) return "";
+  const clean = name.toLowerCase().trim();
+  for (const [key, photo] of Object.entries(ARCHITECT_PORTRAIT_MAP)) {
+    if (clean.includes(key) || key.includes(clean)) return photo;
+  }
+  return "";
+};
+
 export default function CatalogPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -124,7 +198,25 @@ export default function CatalogPage() {
     const { data: rowData } = await supabase.from("architecture_catalog").select("*").order("created_at", { ascending: false });
     
     if (colData) setColumns(colData);
-    if (rowData) setRows(rowData);
+    if (rowData) {
+      const enrichedRows = rowData.map((r: any) => {
+        const d = r.data || {};
+        if (!d.architect_photo && d.architect) {
+          const autoPhoto = getArchitectPhotoByName(d.architect);
+          if (autoPhoto) {
+            return {
+              ...r,
+              data: {
+                ...d,
+                architect_photo: autoPhoto
+              }
+            };
+          }
+        }
+        return r;
+      });
+      setRows(enrichedRows);
+    }
     setLoading(false);
   };
 
@@ -442,7 +534,10 @@ export default function CatalogPage() {
   }, [rows, categoryFilter, searchQuery, columnFilters, sortCol, sortDir]);
 
   const renderCellInput = (row: any, col: any) => {
-    const val = row.data[col.id] || "";
+    let val = row.data?.[col.id] || "";
+    if (col.id === "architect_photo" && !val && row.data?.architect) {
+      val = getArchitectPhotoByName(row.data.architect);
+    }
     
     if (row.is_locked) {
       if (col.type === "image") {
@@ -792,6 +887,27 @@ export default function CatalogPage() {
               </button>
             </div>
 
+            {/* Quick Horizontal Scroll Buttons */}
+            <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => tableContainerRef.current?.scrollBy({ left: -400, behavior: "smooth" })}
+                className="p-1.5 hover:bg-white text-gray-700 hover:text-black rounded-lg transition"
+                title="Scroll table left"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider px-1.5 select-none">Scroll Cols</span>
+              <button
+                type="button"
+                onClick={() => tableContainerRef.current?.scrollBy({ left: 400, behavior: "smooth" })}
+                className="p-1.5 hover:bg-white text-gray-700 hover:text-black rounded-lg transition"
+                title="Scroll table right"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+
             {/* Active status & clear filters */}
             <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
               <div>
@@ -846,14 +962,14 @@ export default function CatalogPage() {
           ) : (
             <div 
               ref={tableContainerRef}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto excel-scrollbar"
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-auto max-h-[calc(100vh-215px)] excel-scrollbar relative select-text [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-thumb]:bg-gray-400 hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100"
             >
               <table className="w-max min-w-full text-left border-collapse table-fixed select-text">
-                <thead className="bg-gray-50 sticky top-[195px] z-20 shadow-xs">
+                <thead className="bg-gray-50 sticky top-0 z-30 shadow-xs">
                   {/* MAIN HEADER ROW */}
                   <tr>
                     {/* Index Col # */}
-                    <th className="px-3 py-3 text-xs font-bold text-gray-500 uppercase w-12 min-w-[48px] text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 z-40">
+                    <th className="px-3 py-3 text-xs font-bold text-gray-500 uppercase w-12 min-w-[48px] text-center border-r border-b border-gray-200 bg-gray-100 sticky left-0 top-0 z-40">
                       #
                     </th>
                     
@@ -865,7 +981,7 @@ export default function CatalogPage() {
                           key={col.id} 
                           className={`px-3 py-2.5 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors ${
                             isBuildingName 
-                              ? "sticky left-12 z-40 bg-gray-100 min-w-[240px] w-[240px] border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
+                              ? "sticky left-12 top-0 z-40 bg-gray-100 min-w-[240px] w-[240px] border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
                               : isSorted
                               ? "min-w-[190px] w-[190px] bg-blue-50/70 border-b-2 border-b-blue-500"
                               : "min-w-[190px] w-[190px] bg-gray-50 hover:bg-gray-100"
@@ -942,7 +1058,7 @@ export default function CatalogPage() {
                     })}
                     
                     {/* Action Column */}
-                    <th className="px-3 py-3 text-xs font-bold text-gray-600 uppercase sticky right-0 bg-gray-100 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.04)] z-40 w-24 min-w-[96px] text-center">
+                    <th className="px-3 py-3 text-xs font-bold text-gray-600 uppercase sticky right-0 top-0 bg-gray-100 border-l border-b border-gray-200 shadow-[-4px_0_10px_rgba(0,0,0,0.04)] z-40 w-24 min-w-[96px] text-center">
                       Action
                     </th>
                   </tr>

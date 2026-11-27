@@ -74,7 +74,7 @@ export default function QuizRulesModal({ isOpen, onClose }: QuizRulesModalProps)
                   <span className="font-black text-emerald-700 text-xs">150 PTS</span>
                 </div>
                 <ul className="mt-2 space-y-1 text-[11px] text-emerald-900/90 font-medium">
-                  <li>• <strong>15s</strong> per question</li>
+                  <li>• <strong>Relaxed 30-min</strong> session timer</li>
                   <li>• <strong>10 or 20</strong> questions</li>
                   <li>• <strong>100% Popular</strong> landmarks</li>
                   <li>• Choices <strong>NOT shuffled</strong></li>
@@ -88,7 +88,7 @@ export default function QuizRulesModal({ isOpen, onClose }: QuizRulesModalProps)
                   <span className="font-black text-amber-700 text-xs">300 PTS</span>
                 </div>
                 <ul className="mt-2 space-y-1 text-[11px] text-amber-900/90 font-medium">
-                  <li>• <strong>10s</strong> per question</li>
+                  <li>• <strong>Relaxed 30-min</strong> session timer</li>
                   <li>• <strong>20 or 50</strong> questions</li>
                   <li>• <strong>50-50</strong> + balanced mix</li>
                   <li>• Choices <strong>shuffled</strong></li>
@@ -102,7 +102,7 @@ export default function QuizRulesModal({ isOpen, onClose }: QuizRulesModalProps)
                   <span className="font-black text-purple-700 text-xs">450 PTS</span>
                 </div>
                 <ul className="mt-2 space-y-1 text-[11px] text-purple-900/90 font-medium">
-                  <li>• <strong>5s</strong> per question</li>
+                  <li>• <strong>Relaxed 30-min</strong> session timer</li>
                   <li>• <strong>10, 20 or 50</strong> questions</li>
                   <li>• <strong>Master</strong> deep tier</li>
                   <li>• <strong>Sequential Clue Lock 🔒</strong></li>
@@ -198,7 +198,7 @@ export default function QuizRulesModal({ isOpen, onClose }: QuizRulesModalProps)
                   <span>Challenge Mode (Tournament)</span>
                 </p>
                 <p className="text-gray-600 mt-1">
-                  Continuous countdown timer for the whole round. Speed bonus awarded for fast completions. Verified scores enter the official Global Leaderboard.
+                  Continuous countdown timer for the whole quiz play (rounded to nearer 30 minutes). Answer questions at your own pace without per-question pressure. Speed bonus awarded for fast completions. Verified scores enter the official Global Leaderboard.
                 </p>
               </div>
 
