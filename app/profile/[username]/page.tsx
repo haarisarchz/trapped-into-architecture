@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ExternalLink,
   MapPin,
+  Trophy,
 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
@@ -45,7 +46,16 @@ export default function ProfilePage() {
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"details" | "saved" | "companies" | "settings">("details");
+  const [activeTab, setActiveTab] = useState<"details" | "saved" | "companies" | "settings" | "quizzes">("details");
+  const [quizStats, setQuizStats] = useState<{
+    rank: number | null;
+    totalPlayers: number;
+    totalPoints: number;
+    quizzesPlayed: number;
+    attemptsCount: number;
+    avgAccuracy: number;
+    scores: any[];
+  } | null>(null);
 
   // Related Sub-data
   const [educations, setEducations] = useState<EducationEntry[]>([]);
@@ -70,7 +80,7 @@ export default function ProfilePage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isUploadingDoc]);
 
-  const handleTabChange = (tab: "details" | "saved" | "companies" | "settings") => {
+  const handleTabChange = (tab: "details" | "saved" | "companies" | "settings" | "quizzes") => {
     if (isUploadingDoc && tab !== activeTab) {
       if (!confirm("A document is currently uploading. Switching tabs may interrupt your upload. Are you sure you want to navigate away?")) {
         return;
@@ -245,6 +255,61 @@ export default function ProfilePage() {
           const local = JSON.parse(localStorage.getItem(`ti2a_shortlists_${profile.id}`) || "[]");
           setSavedShortlists(local);
         }
+
+        // Fetch Architecture Quiz scores and calculate All-India Standing & Rank
+        try {
+          const { data: userScores } = await supabase
+            .from("quiz_scores")
+            .select("id, points, score, total_questions, difficulty, time_taken_seconds, created_at, quiz_id, quizzes(title, slug)")
+            .or(`user_id.eq.${profile.id},display_name.eq.${profile.username},display_name.eq.@${profile.username}`)
+            .order("created_at", { ascending: false });
+
+          if (userScores && userScores.length > 0) {
+            // Fetch all scores to compute relative rank
+            const { data: allScores } = await supabase
+              .from("quiz_scores")
+              .select("user_id, display_name, points");
+
+            const playerPoints = new Map<string, number>();
+            for (const s of (allScores || [])) {
+              const key = s.user_id 
+                ? `user_${s.user_id}` 
+                : (s.display_name || "").replace(/^@/, "").toLowerCase();
+              playerPoints.set(key, (playerPoints.get(key) || 0) + (s.points || 0));
+            }
+
+            const ranked = Array.from(playerPoints.entries()).sort((a, b) => b[1] - a[1]);
+            const userKey1 = `user_${profile.id}`;
+            const userKey2 = (profile.username || "").toLowerCase();
+            const userRankIndex = ranked.findIndex(([k]) => k === userKey1 || k === userKey2);
+
+            let totalPoints = 0;
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+            const uniqueQuizzes = new Set<string>();
+
+            for (const s of userScores) {
+              totalPoints += (s.points || 0);
+              totalCorrect += (s.score || 0);
+              totalQuestions += (s.total_questions || 10);
+              if (s.quiz_id) uniqueQuizzes.add(s.quiz_id);
+            }
+
+            const avgAcc = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+
+            setQuizStats({
+              rank: userRankIndex >= 0 ? userRankIndex + 1 : null,
+              totalPlayers: ranked.length,
+              totalPoints,
+              quizzesPlayed: uniqueQuizzes.size || userScores.length,
+              attemptsCount: userScores.length,
+              avgAccuracy: avgAcc,
+              scores: userScores,
+            });
+          }
+        } catch (e) {
+          console.warn("Error fetching quiz stats for profile:", e);
+        }
       } catch (err) {
         console.error("Error loading full profile:", err);
       } finally {
@@ -394,6 +459,8 @@ export default function ProfilePage() {
             totalExpFormatted={totalExp.formatted}
             badgeTier={completion.badgeTier}
             isVip={completion.isVip}
+            quizStats={quizStats}
+            onTabChange={handleTabChange}
             onAvatarUpdate={handleAvatarUpdate}
           />
 
@@ -459,6 +526,30 @@ export default function ProfilePage() {
                   }`}
                 >
                   {favoriteCompanies.length}
+                </span>
+              )}
+            </button>
+
+            {/* TAB: Quizzes & Leaderboard Rank */}
+            <button
+              onClick={() => handleTabChange("quizzes")}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition text-sm cursor-pointer ${
+                activeTab === "quizzes"
+                  ? "bg-black text-white shadow-sm"
+                  : "text-gray-600 hover:text-black hover:bg-gray-100"
+              }`}
+            >
+              <Trophy size={16} className={activeTab === "quizzes" ? "text-amber-400" : "text-amber-500"} />
+              <span>Quizzes &amp; Rank</span>
+              {quizStats?.rank && (
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full font-black ${
+                    activeTab === "quizzes"
+                      ? "bg-amber-400 text-black"
+                      : "bg-amber-100 text-amber-900 border border-amber-300"
+                  }`}
+                >
+                  #{quizStats.rank}
                 </span>
               )}
             </button>
@@ -810,6 +901,181 @@ export default function ProfilePage() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB CONTENT: QUIZZES & STANDINGS */}
+          {activeTab === "quizzes" && (
+            <div className="space-y-6">
+              {/* Main Rank Banner */}
+              <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="p-2.5 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200">
+                        <Trophy size={22} />
+                      </span>
+                      <div>
+                        <h2 className="text-xl font-black text-gray-900">
+                          Architecture Quiz Standings &amp; Rank
+                        </h2>
+                        <p className="text-xs text-gray-500">
+                          Official TI2A tournament standing, accuracy, and total competitive points
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    href="/quizzes"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-gray-800 text-white rounded-xl font-bold text-xs shadow-sm transition shrink-0"
+                  >
+                    <span>Play Quizzes &amp; Compete</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+
+                {/* 4-Stat Metric Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                  <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-4">
+                    <p className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">
+                      All-India Rank
+                    </p>
+                    <p className="text-2xl md:text-3xl font-black text-amber-950">
+                      {quizStats?.rank ? `#${quizStats.rank}` : "Unranked"}
+                    </p>
+                    <p className="text-[11px] text-amber-700 font-medium mt-1">
+                      {quizStats?.totalPlayers ? `Top among ${quizStats.totalPlayers} architects` : "Play to enter rankings"}
+                    </p>
+                  </div>
+
+                  <div className="bg-blue-50/80 border border-blue-200/90 rounded-2xl p-4">
+                    <p className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">
+                      Total Points
+                    </p>
+                    <p className="text-2xl md:text-3xl font-black text-blue-950 font-mono">
+                      {(quizStats?.totalPoints || 0).toLocaleString()}
+                    </p>
+                    <p className="text-[11px] text-blue-700 font-medium mt-1">
+                      Cumulative tournament PTS
+                    </p>
+                  </div>
+
+                  <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4">
+                    <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1">
+                      Quizzes Completed
+                    </p>
+                    <p className="text-2xl md:text-3xl font-black text-emerald-950">
+                      {quizStats?.quizzesPlayed || 0}
+                    </p>
+                    <p className="text-[11px] text-emerald-700 font-medium mt-1">
+                      {quizStats?.attemptsCount || 0} total sessions
+                    </p>
+                  </div>
+
+                  <div className="bg-purple-50/80 border border-purple-200/90 rounded-2xl p-4">
+                    <p className="text-xs font-bold text-purple-800 uppercase tracking-wider mb-1">
+                      Average Accuracy
+                    </p>
+                    <p className="text-2xl md:text-3xl font-black text-purple-950">
+                      {quizStats?.avgAccuracy || 0}%
+                    </p>
+                    <p className="text-[11px] text-purple-700 font-medium mt-1">
+                      Across all quiz answers
+                    </p>
+                  </div>
+                </div>
+
+                {/* Score History Table */}
+                <div className="mt-8">
+                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-3">
+                    Recent Quiz Attempts &amp; Scores
+                  </h3>
+
+                  {(!quizStats || !quizStats.scores || quizStats.scores.length === 0) ? (
+                    <div className="text-center py-10 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                      <p className="text-sm font-bold text-gray-600 mb-1">No quiz attempts yet</p>
+                      <p className="text-xs text-gray-400 mb-4">
+                        Test your architectural recall, beat the 30-min continuous timer, and secure your place on the verified leaderboard!
+                      </p>
+                      <Link
+                        href="/quizzes"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl shadow-sm hover:bg-gray-800 transition"
+                      >
+                        Start First Quiz &rarr;
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-2xl border border-gray-200">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-gray-50 text-gray-600 font-black uppercase text-[10px] tracking-wider border-b border-gray-200">
+                          <tr>
+                            <th className="py-3 px-4">Quiz Title</th>
+                            <th className="py-3 px-4">Difficulty</th>
+                            <th className="py-3 px-4">Score</th>
+                            <th className="py-3 px-4">Accuracy</th>
+                            <th className="py-3 px-4">Points</th>
+                            <th className="py-3 px-4">Date</th>
+                            <th className="py-3 px-4 text-right">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 bg-white font-medium">
+                          {quizStats.scores.map((sc: any, idx: number) => {
+                            const quizTitle = sc.quizzes?.title || "Architecture Quiz";
+                            const quizSlug = sc.quizzes?.slug || "";
+                            const acc = sc.total_questions > 0 
+                              ? Math.round((sc.score / sc.total_questions) * 100) 
+                              : 0;
+                            const dateStr = sc.created_at 
+                              ? new Date(sc.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                              : "Recently";
+
+                            return (
+                              <tr key={idx} className="hover:bg-gray-50/80 transition">
+                                <td className="py-3.5 px-4 font-bold text-gray-900 max-w-[260px] truncate">
+                                  {quizTitle}
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                    sc.difficulty === "hard" || sc.difficulty === "master"
+                                      ? "bg-blue-100 text-blue-900"
+                                      : sc.difficulty === "easy" || sc.difficulty === "popular"
+                                      ? "bg-emerald-100 text-emerald-900"
+                                      : "bg-amber-100 text-amber-900"
+                                  }`}>
+                                    {sc.difficulty || "medium"}
+                                  </span>
+                                </td>
+                                <td className="py-3.5 px-4 font-mono font-bold text-gray-800">
+                                  {sc.score} / {sc.total_questions || 10}
+                                </td>
+                                <td className="py-3.5 px-4 font-bold text-emerald-700">
+                                  {acc}%
+                                </td>
+                                <td className="py-3.5 px-4 font-mono font-black text-blue-700">
+                                  +{sc.points} PTS
+                                </td>
+                                <td className="py-3.5 px-4 text-gray-500 text-[11px]">
+                                  {dateStr}
+                                </td>
+                                <td className="py-3.5 px-4 text-right">
+                                  {quizSlug && (
+                                    <Link
+                                      href={`/quizzes/${quizSlug}`}
+                                      className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 underline underline-offset-2"
+                                    >
+                                      Replay &rarr;
+                                    </Link>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

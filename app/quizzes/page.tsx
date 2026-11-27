@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import { trackEvent } from "@/utils/analytics";
 import { 
   Trophy, Play, Clock, HelpCircle, Users, Sparkles, 
-  ArrowRight, ArrowDown, Filter, ChevronLeft, ChevronRight, Award, Flame, Search, Lock, 
+  ArrowRight, ArrowDown, Filter, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Award, Flame, Search, Lock, 
   CheckCircle2, XCircle, SlidersHorizontal, Zap, BookOpen, ShieldCheck, X, Crown, AlertCircle
 } from "lucide-react";
 import QuizRulesModal from "@/components/QuizRulesModal";
@@ -52,6 +52,7 @@ export default function QuizzesHubPage() {
   const [leaderboardQuizFilter, setLeaderboardQuizFilter] = useState<string>("all");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
+  const [showExpandedLeaderboard, setShowExpandedLeaderboard] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -272,7 +273,7 @@ export default function QuizzesHubPage() {
       case "visual-recognition-match-architect-building-photo":
         return fallbackCover || "/quizzes/salk-institute.jpg";
       case "architects-portfolio-match-celebrated-project-name":
-        return fallbackCover || "/quizzes/the-shard.jpg";
+        return fallbackCover || "/quizzes/heydar-aliyev-center.jpg";
       case "the-visionaries-faces-of-architecture":
         return fallbackCover || "/architect-photos/le-corbusier.jpg";
       default:
@@ -562,15 +563,15 @@ export default function QuizzesHubPage() {
                     return (
                       <div 
                         key={quiz.id}
-                        className="bg-white rounded-3xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-lg hover:border-black transition duration-200 flex flex-col sm:flex-row group"
+                        className="bg-white rounded-3xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-lg hover:border-black transition duration-200 flex flex-col sm:flex-row group min-h-[195px]"
                       >
                         {/* Left Docked Photo: Natural 4:3 Proportion, Zero Horizontal Stretching */}
-                        <div className="w-full sm:w-60 md:w-72 h-52 sm:h-auto bg-gray-900 relative shrink-0 overflow-hidden">
+                        <div className="w-full sm:w-60 md:w-72 h-52 sm:h-auto sm:self-stretch bg-gray-900 relative shrink-0 overflow-hidden">
                           <img 
                             referrerPolicy="no-referrer"
                             src={featuredImg} 
                             alt={quiz.title} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                            className="w-full h-full sm:absolute sm:inset-0 object-cover group-hover:scale-105 transition duration-500"
                             onError={(e) => { (e.target as HTMLElement).style.display = "none"; }}
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent sm:hidden" />
@@ -886,7 +887,7 @@ export default function QuizzesHubPage() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    {leaderboard.slice(0, 10).map((entry, idx) => {
+                    {leaderboard.slice(0, showExpandedLeaderboard ? 50 : 5).map((entry, idx) => {
                       const isCurrentUserEntry = currentUser && (
                         entry.user_id === currentUser.id || 
                         (currentUser.username && entry.display_name === currentUser.username) ||
@@ -941,14 +942,36 @@ export default function QuizzesHubPage() {
                       );
                     })}
 
-                    {/* STICKY ROW FOR CURRENT USER IF RANKED OUTSIDE TOP 10 */}
+                    {/* Expand/Collapse Standings Toggle (5 default -> up to 50 players) */}
+                    {leaderboard.length > 5 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowExpandedLeaderboard(!showExpandedLeaderboard)}
+                        className="w-full mt-2 py-2 px-3 text-xs font-bold text-gray-700 hover:text-black bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        {showExpandedLeaderboard ? (
+                          <>
+                            <span>Show Top 5 Only</span>
+                            <ChevronUp size={14} className="text-gray-500" />
+                          </>
+                        ) : (
+                          <>
+                            <span>View Full Standings ({Math.min(leaderboard.length, 50)} Players)</span>
+                            <ChevronDown size={14} className="text-gray-500" />
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {/* STICKY ROW FOR CURRENT USER IF RANKED OUTSIDE VISIBLE STANDINGS */}
                     {(() => {
+                      const displayLimit = showExpandedLeaderboard ? 50 : 5;
                       const userRank = leaderboard.findIndex(entry => currentUser && (
                         entry.user_id === currentUser.id ||
                         (currentUser.username && entry.display_name === currentUser.username) ||
                         (currentUser.name && entry.display_name === currentUser.name)
                       ));
-                      if (userRank < 10) return null;
+                      if (userRank < 0 || userRank < displayLimit) return null;
                       const userEntry = leaderboard[userRank];
                       const userDisplay = userEntry.display_name?.startsWith("@") ? userEntry.display_name : `@${userEntry.display_name || "Architect"}`;
                       return (

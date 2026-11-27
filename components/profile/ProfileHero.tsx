@@ -11,6 +11,7 @@ import {
   Share2,
   Copy,
   Check,
+  Trophy,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getBadgeDetails, BadgeTier } from "@/utils/profileCompletion";
@@ -21,6 +22,8 @@ interface ProfileHeroProps {
   totalExpFormatted: string;
   badgeTier: BadgeTier;
   isVip: boolean;
+  quizStats?: any;
+  onTabChange?: (tab: string) => void;
   onAvatarUpdate: (newUrl: string) => void;
 }
 
@@ -30,6 +33,8 @@ export default function ProfileHero({
   totalExpFormatted,
   badgeTier,
   isVip,
+  quizStats,
+  onTabChange,
   onAvatarUpdate,
 }: ProfileHeroProps) {
   const [likesCount, setLikesCount] = useState<number>(user.likes_count || 0);
@@ -436,6 +441,20 @@ export default function ProfileHero({
                   <Briefcase size={12} className="text-gray-500" />
                   {totalExpFormatted}
                 </span>
+              )}
+
+              {/* Architecture Quiz Standing Badge */}
+              {quizStats && quizStats.totalPoints > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onTabChange ? onTabChange("quizzes") : window.location.href = "/quizzes"}
+                  className="inline-flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1 rounded-full font-bold transition shadow-2xs cursor-pointer group"
+                  title="View Architecture Quiz Standing & Score History"
+                >
+                  <Trophy size={13} className="text-amber-600 group-hover:scale-110 transition" />
+                  <span>Rank #{quizStats.rank || "—"}</span>
+                  <span className="text-amber-700 font-mono text-[11px]">({quizStats.totalPoints.toLocaleString()} PTS)</span>
+                </button>
               )}
             </div>
           </div>

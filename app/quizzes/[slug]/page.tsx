@@ -133,6 +133,7 @@ export default function QuizPlayPage() {
   });
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(true);
+  const [showExpandedLeaderboard, setShowExpandedLeaderboard] = useState<boolean>(false);
   const [otherQuizzes, setOtherQuizzes] = useState<any[]>([]);
 
   // Active Game State
@@ -3412,7 +3413,7 @@ export default function QuizPlayPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {leaderboard.slice(0, 10).map((entry, idx) => {
+                    {leaderboard.slice(0, showExpandedLeaderboard ? 50 : 5).map((entry, idx) => {
                       const acc = entry.total_questions > 0 
                         ? Math.round((entry.score / entry.total_questions) * 100) 
                         : 0;
@@ -3467,14 +3468,36 @@ export default function QuizPlayPage() {
                       );
                     })}
 
-                    {/* STICKY ROW FOR CURRENT USER IF RANKED OUTSIDE TOP 10 */}
+                    {/* Expand/Collapse Standings Toggle (5 default -> up to 50 players) */}
+                    {leaderboard.length > 5 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowExpandedLeaderboard(!showExpandedLeaderboard)}
+                        className="w-full mt-2 py-2 px-3 text-xs font-bold text-gray-700 hover:text-black bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        {showExpandedLeaderboard ? (
+                          <>
+                            <span>Show Top 5 Only</span>
+                            <ChevronUp size={14} className="text-gray-500" />
+                          </>
+                        ) : (
+                          <>
+                            <span>View Full Standings ({Math.min(leaderboard.length, 50)} Players)</span>
+                            <ChevronDown size={14} className="text-gray-500" />
+                          </>
+                        )}
+                      </button>
+                    )}
+
+                    {/* STICKY ROW FOR CURRENT USER IF RANKED OUTSIDE VISIBLE STANDINGS */}
                     {(() => {
+                      const displayLimit = showExpandedLeaderboard ? 50 : 5;
                       const userRank = leaderboard.findIndex(entry => currentUser && (
                         entry.user_id === currentUser.id ||
                         (currentUser.username && entry.display_name === currentUser.username) ||
                         (currentUser.name && entry.display_name === currentUser.name)
                       ));
-                      if (userRank < 10) return null;
+                      if (userRank < 0 || userRank < displayLimit) return null;
                       const userEntry = leaderboard[userRank];
                       return (
                         <div className="pt-2 border-t-2 border-dashed border-blue-200 mt-2">
@@ -3492,7 +3515,7 @@ export default function QuizPlayPage() {
                                 </p>
                                 <p className="text-[10px] text-blue-700 uppercase font-mono">
                                   {leaderboardScope === "overall" && userEntry.quizzes_count ? `${userEntry.quizzes_count} Quizzes • ` : ""}
-                                  {userEntry.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{userEntry.acc}% Acc</span>
+                                  {userEntry.total_questions || 10} Qs • <span className="text-emerald-700 font-bold">{userEntry.acc || 0}% Acc</span>
                                 </p>
                               </div>
                             </div>
