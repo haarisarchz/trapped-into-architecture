@@ -1138,7 +1138,7 @@ export default function CatalogPage() {
           ) : (
             <div 
               ref={tableContainerRef}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-auto max-h-[calc(100vh-215px)] excel-scrollbar relative select-text [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-thumb]:bg-gray-400 hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100"
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-x-auto excel-scrollbar relative select-text [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar-thumb]:bg-gray-400 hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100"
             >
               <table className="w-max min-w-full text-left border-collapse table-fixed select-text">
                 <thead className="bg-gray-50 sticky top-0 z-30 shadow-xs">
