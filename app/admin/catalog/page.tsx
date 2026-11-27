@@ -245,6 +245,70 @@ export default function CatalogPage() {
   const [draggedColId, setDraggedColId] = useState<string | null>(null);
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
 
+  // Column Width Resizing State (Saved to localStorage)
+  const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("ti2a_catalog_col_widths");
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
+    return {};
+  });
+  const resizingColRef = useRef<{ colId: string; startX: number; startWidth: number } | null>(null);
+
+  // Intelligent width calculation: longest word decides the minimum width
+  const computeLongestWordWidth = (title: string, id: string): number => {
+    if (id === "building_photo" || id === "architect_photo") return 160;
+    if (id === "puzzle_clues") return 210;
+    if (id === "building_name") return 190;
+    if (!title) return 100;
+    
+    // Find length of longest single word
+    const words = title.split(/[\s/&+-]+/);
+    let maxLen = 0;
+    for (const w of words) {
+      if (w.length > maxLen) maxLen = w.length;
+    }
+    // Allow title to wrap to 2-3 lines: width is tightly fit to longest word + UI controls
+    return Math.max(85, Math.min(220, Math.round(maxLen * 8.5 + 46)));
+  };
+
+  const getColWidth = (col: any): number => {
+    if (colWidths[col.id]) return colWidths[col.id];
+    return computeLongestWordWidth(col.title, col.id);
+  };
+
+  const handleResizeStart = (e: React.MouseEvent, colId: string, currentWidth: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resizingColRef.current = { colId, startX: e.clientX, startWidth: currentWidth };
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!resizingColRef.current) return;
+      const delta = moveEvent.clientX - resizingColRef.current.startX;
+      const newWidth = Math.max(70, resizingColRef.current.startWidth + delta);
+      setColWidths(prev => ({ ...prev, [resizingColRef.current!.colId]: newWidth }));
+    };
+
+    const onMouseUp = () => {
+      if (resizingColRef.current) {
+        setColWidths(prev => {
+          try {
+            localStorage.setItem("ti2a_catalog_col_widths", JSON.stringify(prev));
+          } catch (e) {}
+          return prev;
+        });
+      }
+      resizingColRef.current = null;
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
   // Excel UX States
   const [activeColMenu, setActiveColMenu] = useState<string | null>(null);
   const [insertPos, setInsertPos] = useState<{ colId: string, direction: 'left' | 'right' } | null>(null);
@@ -1061,6 +1125,19 @@ export default function CatalogPage() {
                 <ImageIcon size={14} />
                 <span>Large Photos</span>
               </button>
+              {Object.keys(colWidths).length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setColWidths({});
+                    try { localStorage.removeItem("ti2a_catalog_col_widths"); } catch (e) {}
+                  }}
+                  className="px-2 py-1 text-[11px] font-bold text-gray-500 hover:text-black hover:bg-white rounded-md transition ml-1"
+                  title="Reset all column widths to smart auto-fit"
+                >
+                  Reset Widths
+                </button>
+              )}
             </div>
 
             {/* Quick Horizontal Scroll Buttons */}
@@ -1153,9 +1230,11 @@ export default function CatalogPage() {
                       const isBuildingName = col.id === "building_name";
                       const isSorted = sortCol === col.id;
                       const isFirstCol = visibleColumns[0]?.id === col.id;
+                      const width = getColWidth(col);
                       return (
                         <th 
                           key={col.id} 
+                          style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                           draggable={true}
                           onDragStart={(e) => {
                             e.dataTransfer.setData("text/plain", col.id);
@@ -1187,12 +1266,12 @@ export default function CatalogPage() {
                             setDraggedColId(null);
                             setDragOverColId(null);
                           }}
-                          className={`px-3 py-2.5 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors select-none cursor-grab active:cursor-grabbing ${
+                          className={`px-2.5 py-2 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors select-none ${
                             isBuildingName && isFirstCol
-                              ? "sticky left-12 top-0 z-40 bg-gray-100 min-w-[240px] w-[240px] border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
+                              ? "sticky left-12 top-0 z-40 bg-gray-100 border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
                               : isSorted
-                              ? "min-w-[190px] w-[190px] bg-blue-50/70 border-b-2 border-b-blue-500"
-                              : "min-w-[190px] w-[190px] bg-gray-50 hover:bg-gray-100"
+                              ? "bg-blue-50/70 border-b-2 border-b-blue-500"
+                              : "bg-gray-50 hover:bg-gray-100"
                           } ${
                             draggedColId === col.id ? "opacity-30 bg-blue-100" : ""
                           } ${
@@ -1200,36 +1279,36 @@ export default function CatalogPage() {
                           }`}
                         >
                           {/* Column Header Content with Drag handle & Click to Sort */}
-                          <div className="flex items-center justify-between gap-1 relative z-10">
+                          <div className="flex items-start justify-between gap-1 relative z-10 w-full min-w-0">
                             <div 
-                              className="flex items-center gap-1.5 cursor-grab active:cursor-grabbing py-1 group/sort flex-1 truncate"
+                              className="flex items-start gap-1 cursor-grab active:cursor-grabbing py-0.5 group/sort flex-1 min-w-0"
                               title={`Drag to reorder • Click to sort by ${col.title}`}
                             >
-                              <GripVertical size={13} className="text-gray-400 group-hover:text-gray-700 shrink-0 opacity-40 group-hover:opacity-100 transition" />
+                              <GripVertical size={12} className="text-gray-400 group-hover:text-gray-700 shrink-0 opacity-40 group-hover:opacity-100 transition mt-0.5" />
                               <span 
                                 onClick={() => handleSort(col.id)}
-                                className={`uppercase tracking-wider font-bold truncate text-[11px] cursor-pointer hover:underline ${isSorted ? "text-blue-900" : "text-gray-700 group-hover:text-black"}`}
+                                className={`uppercase tracking-wider font-extrabold text-[10.5px] leading-snug cursor-pointer hover:underline text-left whitespace-normal break-words line-clamp-3 select-none flex-1 min-w-0 ${isSorted ? "text-blue-900" : "text-gray-700 group-hover:text-black"}`}
                               >
                                 {col.title}
                               </span>
                               {isSorted ? (
                                 sortDir === "asc" ? (
-                                  <ArrowUp size={13} className="text-blue-600 shrink-0 font-bold" />
+                                  <ArrowUp size={12} className="text-blue-600 shrink-0 font-bold mt-0.5" />
                                 ) : (
-                                  <ArrowDown size={13} className="text-blue-600 shrink-0 font-bold" />
+                                  <ArrowDown size={12} className="text-blue-600 shrink-0 font-bold mt-0.5" />
                                 )
                               ) : (
-                                <ArrowUpDown size={11} className="text-gray-400 opacity-40 group-hover/sort:opacity-100 shrink-0 transition" />
+                                <ArrowUpDown size={10} className="text-gray-400 opacity-40 group-hover/sort:opacity-100 shrink-0 transition mt-0.5" />
                               )}
                             </div>
 
                             {/* Dropdown Options Trigger */}
                             <button 
                               onClick={(e) => { e.stopPropagation(); setActiveColMenu(activeColMenu === col.id ? null : col.id); }} 
-                              className="text-gray-400 hover:text-black hover:bg-gray-200 rounded p-1 opacity-0 group-hover:opacity-100 transition focus:opacity-100 shrink-0"
+                              className="text-gray-400 hover:text-black hover:bg-gray-200 rounded p-1 opacity-0 group-hover:opacity-100 transition focus:opacity-100 shrink-0 mt-0.5"
                               title="Column Options"
                             >
-                              <ChevronDown size={13} />
+                              <ChevronDown size={12} />
                             </button>
                           </div>
                           
@@ -1265,15 +1344,13 @@ export default function CatalogPage() {
                             </div>
                           )}
 
-                          {/* Excel-style Plus Line on Hover between columns */}
+                          {/* Drag to Resize Column Width Edge */}
                           <div 
-                            className="absolute top-0 right-[-6px] w-3 h-full cursor-col-resize group/edge flex items-center justify-center z-20"
-                            onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'right'}); setShowColModal(true); }}
+                            className="absolute top-0 right-[-3px] w-3 h-full cursor-col-resize group/edge flex items-center justify-center z-30 select-none hover:bg-blue-500/20"
+                            onMouseDown={(e) => handleResizeStart(e, col.id, width)}
+                            title="Drag to resize column width"
                           >
-                            <div className="h-full w-[2px] bg-blue-500 opacity-0 group-hover/edge:opacity-100 transition-opacity"></div>
-                            <div className="hidden group-hover/edge:flex absolute bg-blue-500 text-white rounded-full w-4 h-4 items-center justify-center text-[10px] z-30 shadow-md border border-white">
-                              <Plus size={10} strokeWidth={3} />
-                            </div>
+                            <div className="h-full w-[2px] bg-transparent group-hover/edge:bg-blue-600 transition-colors"></div>
                           </div>
                         </th>
                       );
@@ -1294,9 +1371,11 @@ export default function CatalogPage() {
                       </th>
                       {visibleColumns.map((col) => {
                         const isFirstPinned = visibleColumns[0]?.id === col.id;
+                        const width = getColWidth(col);
                         return (
                           <th 
                             key={`filter-${col.id}`}
+                            style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                             className={`p-1.5 border-r border-gray-200 ${
                               isFirstPinned 
                                 ? "sticky left-12 z-40 bg-gray-200 border-r-2 border-r-gray-300" 
@@ -1372,9 +1451,11 @@ export default function CatalogPage() {
                         {/* Data Cells */}
                         {visibleColumns.map((col) => {
                           const isFirstPinned = visibleColumns[0]?.id === col.id;
+                          const width = getColWidth(col);
                           return (
                             <td 
                               key={col.id} 
+                              style={{ width: `${width}px`, minWidth: `${width}px`, maxWidth: `${width}px` }}
                               className={`px-2 py-1.5 border-r border-gray-100 align-middle ${
                                 isFirstPinned 
                                   ? `sticky left-12 z-20 font-bold border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)] ${
