@@ -127,6 +127,56 @@ export default function Navbar() {
     } catch (e) {}
   }, []);
 
+// Helper to group multiple positions posted in the same job form into a single notification
+function groupJobsByBatch(jobs: any[]) {
+  const groups: Array<{
+    firm_name: string;
+    positions: string[];
+    jobIds: string[];
+    time: string;
+    firstJobId: string;
+  }> = [];
+
+  (jobs || []).forEach((j: any) => {
+    const firm = (j.firm_name || "Studio").trim();
+    const pos = (j.position || "").trim();
+    const timeStr = j.posted_date || j.updated_at || j.created_at || new Date().toISOString();
+    const timeMs = new Date(timeStr).getTime();
+
+    // Group jobs from the same firm posted within a 4-hour window (same flyer/form batch)
+    const existingGroup = groups.find((g) => {
+      if (g.firm_name.toLowerCase() !== firm.toLowerCase()) return false;
+      const gTimeMs = new Date(g.time).getTime();
+      return Math.abs(timeMs - gTimeMs) < 4 * 60 * 60 * 1000;
+    });
+
+    if (existingGroup) {
+      if (pos && !existingGroup.positions.some((p) => p.toLowerCase() === pos.toLowerCase())) {
+        existingGroup.positions.push(pos);
+      }
+      existingGroup.jobIds.push(j.id);
+    } else {
+      groups.push({
+        firm_name: firm,
+        positions: pos ? [pos] : [],
+        jobIds: [j.id],
+        time: timeStr,
+        firstJobId: j.id,
+      });
+    }
+  });
+
+  return groups;
+}
+
+function formatPositionsText(positions: string[]) {
+  if (!positions || positions.length === 0) return "";
+  if (positions.length === 1) return `"${positions[0]}"`;
+  if (positions.length === 2) return `2 positions ("${positions[0]}" & "${positions[1]}")`;
+  if (positions.length === 3) return `3 positions ("${positions[0]}", "${positions[1]}", "${positions[2]}")`;
+  return `${positions.length} positions ("${positions[0]}", "${positions[1]}" +${positions.length - 2} more)`;
+}
+
   useEffect(() => {
     const fetchNotifs = async () => {
       if (!currentUser) return;
@@ -134,6 +184,7 @@ export default function Navbar() {
       const isCeoOrSuper = ["ceo", "superadmin", "admin"].includes(role);
       const isJobAdmin = role === "jobadmin";
       const notifs: any[] = [];
+      const seenDispatchKeys = new Set<string>();
 
       let userId = currentUser.id;
       let userProf: any = null;
@@ -262,33 +313,43 @@ export default function Navbar() {
             .select("id, firm_name, position, status, updated_at, posted_date")
             .eq("author_id", userId)
             .order("posted_date", { ascending: false })
-            .limit(5);
+            .limit(20);
 
-          (userJobs || []).forEach((j: any) => {
+          const publishedUserJobs = (userJobs || []).filter((j: any) => j.status === "published");
+          const rejectedUserJobs = (userJobs || []).filter((j: any) => j.status === "rejected");
+
+          const userJobGroups = groupJobsByBatch(publishedUserJobs);
+
+          userJobGroups.forEach((group) => {
+            const posText =
+              group.positions.length > 1
+                ? `Your job listings for ${formatPositionsText(group.positions)} at ${group.firm_name} have been approved and published!`
+                : `Your job listing for "${group.positions[0] || "position"}" at ${group.firm_name} has been approved and published!`;
+
+            notifs.push({
+              id: `job-pub-${group.firstJobId}`,
+              category: "dispatches",
+              categoryLabel: "Published",
+              icon: "✅",
+              message: posText,
+              time: group.time,
+              link: `/jobs`,
+              actionText: group.positions.length > 1 ? "View Jobs →" : "View Job →"
+            });
+          });
+
+          rejectedUserJobs.forEach((j: any) => {
             const jTime = j.updated_at || j.posted_date || new Date().toISOString();
-            if (j.status === "published") {
-              notifs.push({
-                id: `job-pub-${j.id}`,
-                category: "dispatches",
-                categoryLabel: "Published",
-                icon: "✅",
-                message: `Your job listing for "${j.position}" at ${j.firm_name} has been approved and published!`,
-                time: jTime,
-                link: `/jobs`,
-                actionText: "View Job →"
-              });
-            } else if (j.status === "rejected") {
-              notifs.push({
-                id: `job-rej-${j.id}`,
-                category: "dispatches",
-                categoryLabel: "Needs Revision",
-                icon: "⚠️",
-                message: `Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
-                time: jTime,
-                link: `/post-job`,
-                actionText: "Resubmit →"
-              });
-            }
+            notifs.push({
+              id: `job-rej-${j.id}`,
+              category: "dispatches",
+              categoryLabel: "Needs Revision",
+              icon: "⚠️",
+              message: `Your job submission for "${j.position}" was not approved. Review details and resubmit.`,
+              time: jTime,
+              link: `/post-job`,
+              actionText: "Resubmit →"
+            });
           });
         } catch (e) {
           console.warn("Could not fetch user job status notif:", e);
@@ -438,16 +499,24 @@ export default function Navbar() {
             } else if (subj === "COMPANY_JOB_EMAIL_PENDING" || subj === "COMPANY_JOB_EMAIL_SENT" || subj === "NOTIFIED_COMPANY_JOB_POSTING") {
               // 1 week retention for dispatches as requested
               if (logTime >= new Date(oneWeekAgo)) {
-                notifs.push({
-                  id: `dispatch-email-${log.id}`,
-                  category: "dispatches",
-                  categoryLabel: "Dispatches",
-                  icon: subj === "COMPANY_JOB_EMAIL_PENDING" ? "⏳" : "✉️",
-                  message: log.message,
-                  time: log.created_at,
-                  link: `/admin/mails`,
-                  actionText: "View Dispatches →"
-                });
+                // Deduplicate dispatches to the same studio / recipient within a 4-hour window
+                const dispatchRecipient = (log.email || log.name || log.message || "").toLowerCase().trim();
+                const dispatchHourBucket = Math.floor(new Date(log.created_at).getTime() / (4 * 60 * 60 * 1000));
+                const dispatchKey = `${dispatchRecipient}-${dispatchHourBucket}`;
+
+                if (!seenDispatchKeys.has(dispatchKey)) {
+                  seenDispatchKeys.add(dispatchKey);
+                  notifs.push({
+                    id: `dispatch-email-${log.id}`,
+                    category: "dispatches",
+                    categoryLabel: "Dispatches",
+                    icon: subj === "COMPANY_JOB_EMAIL_PENDING" ? "⏳" : "✉️",
+                    message: log.message,
+                    time: log.created_at,
+                    link: `/admin/mails`,
+                    actionText: "View Dispatches →"
+                  });
+                }
               }
             }
           });
@@ -500,18 +569,26 @@ export default function Navbar() {
             .eq('status', 'published')
             .gte('posted_date', oneWeekAgo)
             .order('posted_date', { ascending: false })
-            .limit(30);
+            .limit(60);
 
-          (pubJobs || []).forEach((j: any) => {
+          // Group multiple positions from the same job form into a single notification
+          const jobGroups = groupJobsByBatch(pubJobs || []);
+
+          jobGroups.forEach((group) => {
+            const posText =
+              group.positions.length > 1
+                ? `hiring post for ${formatPositionsText(group.positions)} is published on website.`
+                : `hiring post for "${group.positions[0] || "Architecture Role"}" is published on website.`;
+
             notifs.push({
-              id: `pub-job-${j.id}`,
+              id: `pub-job-${group.firstJobId}`,
               category: "dispatches",
               categoryLabel: "Job Published",
               icon: "🚀",
-              message: `${j.firm_name} hiring post for "${j.position}" is published on website.`,
-              time: j.posted_date || new Date().toISOString(),
+              message: `${group.firm_name} ${posText}`,
+              time: group.time,
               link: `/jobs`,
-              actionText: "View Opening →"
+              actionText: group.positions.length > 1 ? "View Openings →" : "View Opening →"
             });
           });
         } catch (err) {
@@ -529,18 +606,25 @@ export default function Navbar() {
             .eq("author_id", userId)
             .eq("status", "published")
             .order("posted_date", { ascending: false })
-            .limit(10);
+            .limit(30);
 
-          (myPublishedJobs || []).forEach((j: any) => {
+          const myJobGroups = groupJobsByBatch(myPublishedJobs || []);
+
+          myJobGroups.forEach((group) => {
+            const posText =
+              group.positions.length > 1
+                ? `Your job listings for ${formatPositionsText(group.positions)} at ${group.firm_name} are published live!`
+                : `Your job listing for "${group.positions[0] || "position"}" at ${group.firm_name} is published live!`;
+
             notifs.push({
-              id: `jobadmin-pub-${j.id}`,
+              id: `jobadmin-pub-${group.firstJobId}`,
               category: "dispatches",
               categoryLabel: "Published",
               icon: "✅",
-              message: `Your job listing for "${j.position}" at ${j.firm_name} is published live!`,
-              time: j.posted_date || j.updated_at || new Date().toISOString(),
+              message: posText,
+              time: group.time,
               link: `/jobs`,
-              actionText: "View Job →"
+              actionText: group.positions.length > 1 ? "View Jobs →" : "View Job →"
             });
           });
         } catch (err) {
