@@ -8,7 +8,7 @@ import {
   Save, Lock, Unlock, Plus, Image as ImageIcon, Trash2, Edit2, Link as LinkIcon, 
   EyeOff, ChevronDown, ArrowLeftToLine, ArrowRightToLine, UploadCloud, Loader2,
   ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, X, Sparkles, Filter, CheckCircle2,
-  LayoutList, LayoutGrid, ZoomIn, Eye, ExternalLink
+  LayoutList, LayoutGrid, ZoomIn, Eye, ExternalLink, GripVertical, ArrowLeft, ArrowRight
 } from "lucide-react";
 
 // Initialize Supabase
@@ -128,6 +128,93 @@ export const getArchitectPhotoByName = (name?: string): string => {
   return "";
 };
 
+export const CATALOG_LOCATION_MAP: Record<string, { city: string; state_region: string; country?: string }> = {
+  "the getty center, united states": { city: "Los Angeles", state_region: "California", country: "United States" },
+  "paimio sanatorium, finland": { city: "Paimio", state_region: "Southwest Finland", country: "Finland" },
+  "villa mairea, finland": { city: "Noormarkku", state_region: "Satakunta", country: "Finland" },
+  "maxxi museum, italy": { city: "Rome", state_region: "Lazio", country: "Italy" },
+  "iit kanpur campus, india": { city: "Kanpur", state_region: "Uttar Pradesh", country: "India" },
+  "casa luis barragán, mexico": { city: "Mexico City", state_region: "Mexico City", country: "Mexico" },
+  "munich olympic stadium roof, germany": { city: "Munich", state_region: "Bavaria", country: "Germany" },
+  "national assembly building of bangladesh, bangladesh": { city: "Dhaka", state_region: "Dhaka Division", country: "Bangladesh" },
+  "sendai mediatheque, japan": { city: "Sendai", state_region: "Miyagi Prefecture", country: "Japan" },
+  "rolex learning center, switzerland": { city: "Lausanne", state_region: "Vaud", country: "Switzerland" },
+  "therme vals, switzerland": { city: "Vals", state_region: "Graubünden", country: "Switzerland" },
+  "champalimaud centre for the unknown, portugal": { city: "Lisbon", state_region: "Lisbon District", country: "Portugal" },
+  "iifm bhopal, india": { city: "Bhopal", state_region: "Madhya Pradesh", country: "India" },
+  "gandhi smarak sangrahalaya, india": { city: "Ahmedabad", state_region: "Gujarat", country: "India" },
+  "amdavad ni gufa, india": { city: "Ahmedabad", state_region: "Gujarat", country: "India" },
+  "robie house, united states": { city: "Chicago", state_region: "Illinois", country: "United States" },
+  "row house in sumiyoshi, japan": { city: "Osaka", state_region: "Osaka Prefecture", country: "Japan" },
+  "chichu art museum, japan": { city: "Naoshima", state_region: "Kagawa Prefecture", country: "Japan" },
+  "hearst tower, united states": { city: "New York City", state_region: "New York", country: "United States" },
+  "hsbc main building, hong kong": { city: "Hong Kong", state_region: "Hong Kong SAR", country: "Hong Kong" },
+  "bharat bhavan, india": { city: "Bhopal", state_region: "Madhya Pradesh", country: "India" },
+  "centre for development studies, india": { city: "Thiruvananthapuram", state_region: "Kerala", country: "India" },
+  "hall of nations, india": { city: "New Delhi", state_region: "Delhi (NCT)", country: "India" },
+  "matrimandir, india": { city: "Auroville", state_region: "Tamil Nadu", country: "India" },
+  "yoyogi national gymnasium, japan": { city: "Tokyo", state_region: "Tokyo Metropolis", country: "Japan" },
+  "the glass house, united states": { city: "New Canaan", state_region: "Connecticut", country: "United States" },
+  "seagram building, united states": { city: "New York City", state_region: "New York", country: "United States" },
+  "solomon r. guggenheim museum, united states": { city: "New York City", state_region: "New York", country: "United States" },
+  "church of the light, japan": { city: "Ibaraki", state_region: "Osaka Prefecture", country: "Japan" },
+  "dancing house, czech republic": { city: "Prague", state_region: "Prague", country: "Czech Republic" },
+  "casa batlló, spain": { city: "Barcelona", state_region: "Catalonia", country: "Spain" },
+  "casa milà, spain": { city: "Barcelona", state_region: "Catalonia", country: "Spain" },
+  "salk institute for biological studies, united states": { city: "La Jolla", state_region: "California", country: "United States" },
+  "kanchanjunga apartments, india": { city: "Mumbai", state_region: "Maharashtra", country: "India" },
+  "jawahar kala kendra, india": { city: "Jaipur", state_region: "Rajasthan", country: "India" },
+  "iim ahmedabad, india": { city: "Ahmedabad", state_region: "Gujarat", country: "India" },
+  "iim bangalore, india": { city: "Bengaluru", state_region: "Karnataka", country: "India" },
+  "sangath, india": { city: "Ahmedabad", state_region: "Gujarat", country: "India" },
+  "cathedral of brasília, brazil": { city: "Brasília", state_region: "Federal District", country: "Brazil" },
+  "twa flight center, united states": { city: "New York City", state_region: "New York", country: "United States" },
+  "elbphilharmonie, germany": { city: "Hamburg", state_region: "Hamburg", country: "Germany" },
+  "lloyd's building, united kingdom": { city: "London", state_region: "England", country: "United Kingdom" },
+  "louvre abu dhabi, united arab emirates": { city: "Abu Dhabi", state_region: "Emirate of Abu Dhabi", country: "United Arab Emirates" },
+  "city of arts and sciences, spain": { city: "Valencia", state_region: "Valencian Community", country: "Spain" },
+  "palace of assembly, india": { city: "Chandigarh", state_region: "Chandigarh (UT)", country: "India" },
+  "fallingwater, united states": { city: "Mill Run", state_region: "Pennsylvania", country: "United States" },
+  "farnsworth house, united states": { city: "Plano", state_region: "Illinois", country: "United States" },
+  "barcelona pavilion, spain": { city: "Barcelona", state_region: "Catalonia", country: "Spain" },
+  "unité d'habitation, france": { city: "Marseille", state_region: "Provence-Alpes-Côte d'Azur", country: "France" },
+  "chapelle notre dame du haut, france": { city: "Ronchamp", state_region: "Bourgogne-Franche-Comté", country: "France" },
+  "villa savoye, france": { city: "Poissy", state_region: "Île-de-France", country: "France" },
+  "heydar aliyev center, azerbaijan": { city: "Baku", state_region: "Absheron", country: "Azerbaijan" },
+  "reichstag new german parliament, germany": { city: "Berlin", state_region: "Berlin", country: "Germany" },
+  "the oculus, united states": { city: "New York City", state_region: "New York", country: "United States" },
+  "cctv headquarters, china": { city: "Beijing", state_region: "Beijing Municipality", country: "China" },
+  "gateway arch, united states": { city: "St. Louis", state_region: "Missouri", country: "United States" },
+  "lotus temple, india": { city: "New Delhi", state_region: "Delhi (NCT)", country: "India" },
+  "the shard, united kingdom": { city: "London", state_region: "England", country: "United Kingdom" },
+  "centre pompidou, france": { city: "Paris", state_region: "Île-de-France", country: "France" },
+  "walt disney concert hall, united states": { city: "Los Angeles", state_region: "California", country: "United States" },
+  "guggenheim museum bilbao, spain": { city: "Bilbao", state_region: "Basque Country", country: "Spain" },
+  "sagrada família, spain": { city: "Barcelona", state_region: "Catalonia", country: "Spain" },
+  "the gherkin, united kingdom": { city: "London", state_region: "England", country: "United Kingdom" },
+  "grand louvre pyramid, france": { city: "Paris", state_region: "Île-de-France", country: "France" },
+  "sydney opera house, australia": { city: "Sydney", state_region: "New South Wales", country: "Australia" }
+};
+
+export const getCleanCityAndState = (buildingName?: string, rawCity?: string, rawState?: string) => {
+  if (buildingName) {
+    const cleanName = buildingName.toLowerCase().trim();
+    for (const [key, val] of Object.entries(CATALOG_LOCATION_MAP)) {
+      if (cleanName.includes(key) || key.includes(cleanName)) {
+        return { city: val.city, state_region: val.state_region };
+      }
+    }
+  }
+  let cleanCity = (rawCity || "").trim();
+  let cleanState = (rawState || "").trim();
+  if (cleanCity.includes(",")) {
+    const parts = cleanCity.split(",");
+    cleanCity = parts[0].trim();
+    if (!cleanState && parts[1]) cleanState = parts[1].trim();
+  }
+  return { city: cleanCity, state_region: cleanState };
+};
+
 export default function CatalogPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -154,6 +241,10 @@ export default function CatalogPage() {
   const [rowDensity, setRowDensity] = useState<"compact" | "expanded">("expanded");
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string } | null>(null);
 
+  // Column Drag and Drop Reordering State
+  const [draggedColId, setDraggedColId] = useState<string | null>(null);
+  const [dragOverColId, setDragOverColId] = useState<string | null>(null);
+
   // Excel UX States
   const [activeColMenu, setActiveColMenu] = useState<string | null>(null);
   const [insertPos, setInsertPos] = useState<{ colId: string, direction: 'left' | 'right' } | null>(null);
@@ -161,6 +252,65 @@ export default function CatalogPage() {
   
   // Ref for table scroll control
   const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const moveColumn = (draggedId: string, targetId: string) => {
+    if (!draggedId || !targetId || draggedId === targetId) return;
+    setColumns(prev => {
+      const newCols = [...prev];
+      const fromIdx = newCols.findIndex(c => c.id === draggedId);
+      const toIdx = newCols.findIndex(c => c.id === targetId);
+      if (fromIdx === -1 || toIdx === -1) return prev;
+
+      const [moved] = newCols.splice(fromIdx, 1);
+      newCols.splice(toIdx, 0, moved);
+
+      const updated = newCols.map((c, idx) => ({ ...c, order_index: idx + 1 }));
+
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("ti2a_catalog_col_order", JSON.stringify(updated.map(c => c.id)));
+        } catch (e) {}
+      }
+
+      // Persist order_index to database
+      updated.forEach(async (c) => {
+        try {
+          await supabase.from("catalog_columns").update({ order_index: c.order_index }).eq("id", c.id);
+        } catch (e) {}
+      });
+
+      return updated;
+    });
+  };
+
+  const moveColumnStep = (colId: string, direction: 'left' | 'right') => {
+    setColumns(prev => {
+      const newCols = [...prev];
+      const idx = newCols.findIndex(c => c.id === colId);
+      if (idx === -1) return prev;
+      const targetIdx = direction === 'left' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= newCols.length) return prev;
+
+      const [moved] = newCols.splice(idx, 1);
+      newCols.splice(targetIdx, 0, moved);
+
+      const updated = newCols.map((c, i) => ({ ...c, order_index: i + 1 }));
+
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("ti2a_catalog_col_order", JSON.stringify(updated.map(c => c.id)));
+        } catch (e) {}
+      }
+
+      updated.forEach(async (c) => {
+        try {
+          await supabase.from("catalog_columns").update({ order_index: c.order_index }).eq("id", c.id);
+        } catch (e) {}
+      });
+
+      return updated;
+    });
+  };
 
   const checkDatabase = async () => {
     setLoading(true);
@@ -197,23 +347,49 @@ export default function CatalogPage() {
     const { data: colData } = await supabase.from("catalog_columns").select("*").order("order_index", { ascending: true });
     const { data: rowData } = await supabase.from("architecture_catalog").select("*").order("created_at", { ascending: false });
     
-    if (colData) setColumns(colData);
+    if (colData) {
+      let orderedCols = [...colData];
+      if (typeof window !== "undefined") {
+        try {
+          const cached = localStorage.getItem("ti2a_catalog_col_order");
+          if (cached) {
+            const idOrder: string[] = JSON.parse(cached);
+            orderedCols.sort((a, b) => {
+              const idxA = idOrder.indexOf(a.id);
+              const idxB = idOrder.indexOf(b.id);
+              if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+              if (idxA !== -1) return -1;
+              if (idxB !== -1) return 1;
+              return (a.order_index || 0) - (b.order_index || 0);
+            });
+          }
+        } catch (e) {}
+      }
+      setColumns(orderedCols);
+    }
+
     if (rowData) {
       const enrichedRows = rowData.map((r: any) => {
         const d = r.data || {};
+        const bName = d.building_name || d.display_name || "";
+        const cleanLoc = getCleanCityAndState(bName, d.city, d.state_region);
+        
+        let updatedData = { 
+          ...d, 
+          city: cleanLoc.city, 
+          state_region: cleanLoc.state_region 
+        };
+
         if (!d.architect_photo && d.architect) {
           const autoPhoto = getArchitectPhotoByName(d.architect);
           if (autoPhoto) {
-            return {
-              ...r,
-              data: {
-                ...d,
-                architect_photo: autoPhoto
-              }
-            };
+            updatedData.architect_photo = autoPhoto;
           }
         }
-        return r;
+        return {
+          ...r,
+          data: updatedData
+        };
       });
       setRows(enrichedRows);
     }
@@ -976,25 +1152,64 @@ export default function CatalogPage() {
                     {visibleColumns.map((col) => {
                       const isBuildingName = col.id === "building_name";
                       const isSorted = sortCol === col.id;
+                      const isFirstCol = visibleColumns[0]?.id === col.id;
                       return (
                         <th 
                           key={col.id} 
-                          className={`px-3 py-2.5 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors ${
-                            isBuildingName 
+                          draggable={true}
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/plain", col.id);
+                            e.dataTransfer.effectAllowed = "move";
+                            setDraggedColId(col.id);
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = "move";
+                            if (dragOverColId !== col.id) {
+                              setDragOverColId(col.id);
+                            }
+                          }}
+                          onDragLeave={() => {
+                            if (dragOverColId === col.id) {
+                              setDragOverColId(null);
+                            }
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const sourceId = e.dataTransfer.getData("text/plain") || draggedColId;
+                            if (sourceId && sourceId !== col.id) {
+                              moveColumn(sourceId, col.id);
+                            }
+                            setDraggedColId(null);
+                            setDragOverColId(null);
+                          }}
+                          onDragEnd={() => {
+                            setDraggedColId(null);
+                            setDragOverColId(null);
+                          }}
+                          className={`px-3 py-2.5 text-xs font-bold text-gray-700 border-r border-b border-gray-200 relative group transition-colors select-none cursor-grab active:cursor-grabbing ${
+                            isBuildingName && isFirstCol
                               ? "sticky left-12 top-0 z-40 bg-gray-100 min-w-[240px] w-[240px] border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)]" 
                               : isSorted
                               ? "min-w-[190px] w-[190px] bg-blue-50/70 border-b-2 border-b-blue-500"
                               : "min-w-[190px] w-[190px] bg-gray-50 hover:bg-gray-100"
+                          } ${
+                            draggedColId === col.id ? "opacity-30 bg-blue-100" : ""
+                          } ${
+                            dragOverColId === col.id ? "border-l-4 border-l-blue-600 bg-blue-100/70" : ""
                           }`}
                         >
-                          {/* Column Header Content with Click to Sort */}
+                          {/* Column Header Content with Drag handle & Click to Sort */}
                           <div className="flex items-center justify-between gap-1 relative z-10">
                             <div 
-                              onClick={() => handleSort(col.id)}
-                              className="flex items-center gap-1.5 cursor-pointer select-none py-1 group/sort flex-1 truncate"
-                              title={`Click to sort by ${col.title} (${isSorted ? (sortDir === 'asc' ? 'Ascending' : 'Descending') : 'Click to Sort'})`}
+                              className="flex items-center gap-1.5 cursor-grab active:cursor-grabbing py-1 group/sort flex-1 truncate"
+                              title={`Drag to reorder • Click to sort by ${col.title}`}
                             >
-                              <span className={`uppercase tracking-wider font-bold truncate text-[11px] ${isSorted ? "text-blue-900" : "text-gray-700 group-hover/sort:text-black"}`}>
+                              <GripVertical size={13} className="text-gray-400 group-hover:text-gray-700 shrink-0 opacity-40 group-hover:opacity-100 transition" />
+                              <span 
+                                onClick={() => handleSort(col.id)}
+                                className={`uppercase tracking-wider font-bold truncate text-[11px] cursor-pointer hover:underline ${isSorted ? "text-blue-900" : "text-gray-700 group-hover:text-black"}`}
+                              >
                                 {col.title}
                               </span>
                               {isSorted ? (
@@ -1023,6 +1238,13 @@ export default function CatalogPage() {
                             <div className="absolute top-full right-0 mt-1 bg-white shadow-2xl border border-gray-200 rounded-xl py-1.5 w-48 z-[100] text-sm font-medium text-gray-700 font-sans normal-case">
                               <button onClick={() => { handleSort(col.id); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
                                 <ArrowUpDown size={13} /> Sort {col.title}
+                              </button>
+                              <div className="h-px bg-gray-100 my-1"></div>
+                              <button onClick={(e) => { e.stopPropagation(); moveColumnStep(col.id, 'left'); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
+                                <ArrowLeft size={13} /> Move Column Left
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); moveColumnStep(col.id, 'right'); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
+                                <ArrowRight size={13} /> Move Column Right
                               </button>
                               <div className="h-px bg-gray-100 my-1"></div>
                               <button onClick={(e) => { e.stopPropagation(); setInsertPos({colId: col.id, direction: 'left'}); setShowColModal(true); setActiveColMenu(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
@@ -1071,12 +1293,12 @@ export default function CatalogPage() {
                         <Filter size={11} className="mx-auto text-gray-500" />
                       </th>
                       {visibleColumns.map((col) => {
-                        const isBuildingName = col.id === "building_name";
+                        const isFirstPinned = visibleColumns[0]?.id === col.id;
                         return (
                           <th 
                             key={`filter-${col.id}`}
                             className={`p-1.5 border-r border-gray-200 ${
-                              isBuildingName 
+                              isFirstPinned 
                                 ? "sticky left-12 z-40 bg-gray-200 border-r-2 border-r-gray-300" 
                                 : "bg-gray-100"
                             }`}
@@ -1149,12 +1371,12 @@ export default function CatalogPage() {
                         
                         {/* Data Cells */}
                         {visibleColumns.map((col) => {
-                          const isBuildingName = col.id === "building_name";
+                          const isFirstPinned = visibleColumns[0]?.id === col.id;
                           return (
                             <td 
                               key={col.id} 
                               className={`px-2 py-1.5 border-r border-gray-100 align-middle ${
-                                isBuildingName 
+                                isFirstPinned 
                                   ? `sticky left-12 z-20 font-bold border-r-2 border-r-gray-300 shadow-[4px_0_8px_rgba(0,0,0,0.04)] ${
                                       isRowLocked ? "bg-white text-gray-900" : "bg-amber-50/70"
                                     }` 
