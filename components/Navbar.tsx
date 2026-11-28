@@ -2949,6 +2949,41 @@ if (window.location.pathname.startsWith("/quizzes")) {
 
           console.log("PROFILE CREATED SUCCESSFULLY");
 
+          // Score Preservation: Instantly claim any pending guest quiz attempt upon registration
+          try {
+            const pendingStr = localStorage.getItem("pending_quiz_attempt");
+            const guestId = localStorage.getItem("quiz_guest_id");
+            if (pendingStr || guestId) {
+              let pendingObj: any = null;
+              try { if (pendingStr) pendingObj = JSON.parse(pendingStr); } catch (e) {}
+              const activeGuestId = pendingObj?.guestSessionId || guestId;
+              if (activeGuestId) {
+                const targetName = displayName || fullName || username || "Architect";
+                await supabase
+                  .from("quiz_scores")
+                  .update({
+                    user_id: authData.user.id,
+                    display_name: targetName,
+                  })
+                  .is("user_id", null)
+                  .eq("guest_session_id", activeGuestId);
+
+                if (pendingObj?.attemptId) {
+                  await supabase
+                    .from("quiz_scores")
+                    .update({
+                      user_id: authData.user.id,
+                      display_name: targetName,
+                    })
+                    .is("user_id", null)
+                    .eq("id", pendingObj.attemptId);
+                }
+              }
+            }
+          } catch (claimErr) {
+            console.warn("Registration quiz score claim error:", claimErr);
+          }
+
           // Dispatch CEO Alert for New User Registration
           fetch("/api/notify/ceo", {
             method: "POST",
