@@ -3020,11 +3020,15 @@ export default function QuizPlayPage() {
                       }
 
                       // Standard Quiz Layout: Left Question Image + Right Answer Options
+                      // For Architect's Portfolio, prompt photo is strictly withheld (revealed only in Clue 2) to avoid direct giveaway
+                      const isPortfolioQuiz = slug === "architects-portfolio-match-celebrated-project-name";
+                      const showPromptPhoto = Boolean(currentQ.media_url) && !isPortfolioQuiz;
+
                       return (
-                        <div className={`grid grid-cols-1 ${currentQ.media_url ? 'md:grid-cols-12 gap-5' : 'gap-4'} mb-6 items-stretch`}>
+                        <div className={`grid grid-cols-1 ${showPromptPhoto ? 'md:grid-cols-12 gap-5' : 'gap-4'} mb-6 items-stretch`}>
                           
                           {/* Left: Question Architectural Photo (Matches height of answers, un-cropped natural aspect ratio) */}
-                          {currentQ.media_url && (
+                          {showPromptPhoto && (
                             <div key={`photo-col-${currentQ.id || currentIndex}-${currentQ.media_url}`} className="md:col-span-5 flex flex-col">
                               <div 
                                 key={`photo-box-${currentQ.id || currentIndex}-${currentQ.media_url}`}
@@ -3084,10 +3088,10 @@ export default function QuizPlayPage() {
                             </div>
                           )}
 
-                          {/* Right: Answer Choices (Height-matched alongside photo) */}
-                          <div className={`${currentQ.media_url ? 'md:col-span-7' : 'w-full'} flex flex-col justify-center`}>
+                          {/* Right: Answer Choices (Height-matched alongside photo or full 2-col width when photo is withheld) */}
+                          <div className={`${showPromptPhoto ? 'md:col-span-7' : 'w-full'} flex flex-col justify-center`}>
                             {currentQ.question_type === "choose" && currentQ.options && (
-                              <div className={`grid grid-cols-1 ${currentQ.media_url ? 'gap-2.5' : 'sm:grid-cols-2 gap-3'} transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+                              <div className={`grid grid-cols-1 ${showPromptPhoto ? 'gap-2.5' : 'sm:grid-cols-2 gap-3'} transition-opacity duration-200 ${!isQuestionReady ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
                                 {currentQ.options.map((opt, optIdx) => {
                                   const isSelected = userAnswers[currentIndex] === opt;
                                   const showPracticeCorrect = gameMode === "practice" && practiceFeedback[currentIndex]?.isSubmitted && opt === currentQ.correct_answer;
