@@ -523,10 +523,12 @@ export default function CatalogPage() {
 
       // 3. User standardized photo assignments
       const USER_STANDARDIZED_PHOTOS: Record<string, { building_photo?: string; architect_photo?: string }> = {
-        "centre pompidou, france": { building_photo: "/quizzes/centre-pompidou.jpg" },
+        "centre pompidou, france": { building_photo: "/quizzes/centre-pompidou-2.jpg" },
+        "iim ahmedabad, india": { building_photo: "/quizzes/iim-ahmedabad-louis-kahn-2.jpg" },
+        "iim bangalore, india": { building_photo: "/quizzes/iim-bangalore-doshi-2.jpg", architect_photo: "/architect-photos/b-v-doshi.jpg" },
+        "centre for development studies, india": { building_photo: "/quizzes/centre-for-development-studies-baker-2.jpg" },
         "kanchanjunga apartments, india": { building_photo: "/quizzes/kanchanjunga-apartments-mumbai.jpg" },
         "sangath, india": { building_photo: "/quizzes/sangath-doshi.jpg", architect_photo: "/architect-photos/b-v-doshi.jpg" },
-        "iim bangalore, india": { architect_photo: "/architect-photos/b-v-doshi.jpg" },
         "amdavad ni gufa, india": { architect_photo: "/architect-photos/b-v-doshi.jpg" },
         "gateway arch, united states": { architect_photo: "/architect-photos/eero-saarinen.jpg" },
         "twa flight center, united states": { architect_photo: "/architect-photos/eero-saarinen.jpg" },

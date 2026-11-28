@@ -1988,58 +1988,65 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                   )}
 
                   {/* BODY: IMAGE PREVIEW (LARGE) & EDITABLE FIELDS */}
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
-                    
-                    {/* LEFT (4 cols): LARGE CLUE IMAGE WITH ENLARGE CLICK */}
-                    <div className="md:col-span-4 flex flex-col gap-2">
-                      <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center justify-between">
-                        <span>Clue Photograph</span>
-                        {q.media_url && (
-                          <span className="text-[10px] text-blue-600 font-bold flex items-center gap-0.5">
-                            <ZoomIn size={11} /> Click to Enlarge
-                          </span>
-                        )}
-                      </label>
+                  {(() => {
+                    const isVisualRecognition = slug === "visual-recognition-match-architect-building-photo";
+                    const isPortfolioQuiz = slug === "architects-portfolio-match-celebrated-project-name";
+                    const hasNoCluePhoto = isVisualRecognition || isPortfolioQuiz;
 
-                      {q.media_url ? (
-                        <div 
-                          onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || "Clue Photo" })}
-                          className="relative h-48 sm:h-52 w-full rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 group cursor-pointer shadow-xs hover:border-black transition flex items-center justify-center p-1.5"
-                          title="Click to view full photo in original aspect ratio"
-                        >
-                          <img 
-                            referrerPolicy="no-referrer"
-                            src={q.media_url} 
-                            alt="Clue preview" 
-                            className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1.5 backdrop-blur-[2px]">
-                            <ZoomIn size={18} /> View Full Photo
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                        {/* LEFT (4 cols): LARGE CLUE IMAGE WITH ENLARGE CLICK (Hidden for Visual Recognition & Portfolio where prompt photo is withheld) */}
+                        {!hasNoCluePhoto && (
+                          <div className="md:col-span-4 flex flex-col gap-2">
+                            <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider flex items-center justify-between">
+                              <span>Clue Photograph</span>
+                              {q.media_url && (
+                                <span className="text-[10px] text-blue-600 font-bold flex items-center gap-0.5">
+                                  <ZoomIn size={11} /> Click to Enlarge
+                                </span>
+                              )}
+                            </label>
+
+                            {q.media_url ? (
+                              <div 
+                                onClick={() => setZoomImageUrl({ url: q.media_url, title: q.correct_answer || "Clue Photo" })}
+                                className="relative h-48 sm:h-52 w-full rounded-2xl overflow-hidden border border-gray-200 bg-slate-950 group cursor-pointer shadow-xs hover:border-black transition flex items-center justify-center p-1.5"
+                                title="Click to view full photo in original aspect ratio"
+                              >
+                                <img 
+                                  referrerPolicy="no-referrer"
+                                  src={q.media_url} 
+                                  alt="Clue preview" 
+                                  className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold gap-1.5 backdrop-blur-[2px]">
+                                  <ZoomIn size={18} /> View Full Photo
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="h-44 w-full rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-gray-400 p-4 text-center">
+                                <ImageIcon size={28} className="mb-1 text-gray-300" />
+                                <span className="text-xs font-medium">No Image URL Set</span>
+                              </div>
+                            )}
+
+                            {/* Image URL input */}
+                            <input 
+                              type="text"
+                              placeholder="https://ik.imagekit.io/..."
+                              value={q.media_url}
+                              onChange={e => updateQuestion(originalIndex, { media_url: e.target.value })}
+                              className="w-full px-3 py-1.5 text-[11px] font-mono border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-gray-50/50"
+                              title="ImageKit or image URL"
+                            />
                           </div>
-                        </div>
-                      ) : (
-                        <div className="h-44 w-full rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-gray-400 p-4 text-center">
-                          <ImageIcon size={28} className="mb-1 text-gray-300" />
-                          <span className="text-xs font-medium">No Image URL Set</span>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Image URL input */}
-                      <input 
-                        type="text"
-                        placeholder="https://ik.imagekit.io/..."
-                        value={q.media_url}
-                        onChange={e => updateQuestion(originalIndex, { media_url: e.target.value })}
-                        className="w-full px-3 py-1.5 text-[11px] font-mono border border-gray-300 rounded-xl focus:outline-none focus:border-black bg-gray-50/50"
-                        title="ImageKit or image URL"
-                      />
-                    </div>
-
-                    {/* RIGHT (8 cols): EDITABLE PROMPT & OPTIONS */}
-                    <div className="md:col-span-8 flex flex-col gap-4">
+                        {/* RIGHT (8 or 12 cols): EDITABLE PROMPT & OPTIONS */}
+                        <div className={`${hasNoCluePhoto ? "md:col-span-12" : "md:col-span-8"} flex flex-col gap-4`}>
                       
                       {/* Question Prompt */}
                       <div>
@@ -2093,15 +2100,56 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                                     <Check size={14} />
                                   </button>
 
-                                  <input 
-                                    type="text"
-                                    value={opt}
-                                    onChange={e => updateOptionText(originalIndex, optIdx, e.target.value)}
-                                    className={`flex-1 px-2.5 py-1 text-xs font-bold bg-transparent focus:outline-none ${
-                                      isCorrect ? "text-emerald-950 font-black" : "text-gray-800"
-                                    }`}
-                                    placeholder={`Option ${optIdx + 1}`}
-                                  />
+                                  {/* Visual Thumbnail if option is an image URL */}
+                                  {opt && (opt.startsWith('/') || opt.startsWith('http') || opt.endsWith('.jpg') || opt.endsWith('.png')) ? (
+                                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                      <div 
+                                        onClick={() => setZoomImageUrl({ url: opt, title: "Building Choice Photo" })}
+                                        className="w-16 h-12 rounded-lg overflow-hidden border border-gray-300 shrink-0 bg-gray-950 shadow-xs cursor-pointer group relative"
+                                        title="Click to zoom image"
+                                      >
+                                        <img src={opt} alt="option preview" className="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
+                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[10px] transition">
+                                          <ZoomIn size={12} />
+                                        </div>
+                                      </div>
+                                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                        {(() => {
+                                          const optFilename = opt.split('/').pop()?.split('?')[0].replace(/-2\.(jpg|png|jpeg|webp)$/i, '').replace(/\.(jpg|png|jpeg|webp)$/i, '').toLowerCase().trim() || "";
+                                          const matchOpt = catalogRows.find(c => {
+                                            const p = (c.data?.building_photo || "").toLowerCase();
+                                            const pName = p.split('/').pop()?.split('?')[0].replace(/-2\.(jpg|png|jpeg|webp)$/i, '').replace(/\.(jpg|png|jpeg|webp)$/i, '').trim();
+                                            return pName && pName === optFilename;
+                                          })?.data;
+                                          const optBuilding = matchOpt?.base_building_name || (matchOpt?.building_name ? matchOpt.building_name.split(',')[0].trim() : '') || (matchOpt?.display_name ? matchOpt.display_name.split(',')[0].trim() : '');
+                                          return optBuilding ? (
+                                            <div className="text-[11px] font-bold text-gray-800 truncate leading-tight">
+                                              🏛️ {optBuilding} {matchOpt?.architect ? <span className="text-[10px] text-gray-500 font-semibold">({matchOpt.architect})</span> : null}
+                                            </div>
+                                          ) : null;
+                                        })()}
+                                        <input 
+                                          type="text"
+                                          value={opt}
+                                          onChange={e => updateOptionText(originalIndex, optIdx, e.target.value)}
+                                          className={`w-full text-[10px] font-mono truncate bg-transparent focus:outline-none ${
+                                            isCorrect ? "text-emerald-800 font-semibold" : "text-gray-400"
+                                          }`}
+                                          title={opt}
+                                        />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <input 
+                                      type="text"
+                                      value={opt}
+                                      onChange={e => updateOptionText(originalIndex, optIdx, e.target.value)}
+                                      className={`flex-1 px-2.5 py-1 text-xs font-bold bg-transparent focus:outline-none ${
+                                        isCorrect ? "text-emerald-950 font-black" : "text-gray-800"
+                                      }`}
+                                      placeholder={`Option ${optIdx + 1}`}
+                                    />
+                                  )}
                                 </div>
                               );
                             })}
@@ -2146,18 +2194,44 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                           const ans = (q.correct_answer || "").toLowerCase().trim();
                           const qPhoto = (q.media_url || "").toLowerCase().trim();
 
-                          // 1. Primary ground-truth match by landmark photo (100% unique per building across all 65 catalog entries)
+                          const cleanStem = (str: string) => {
+                            if (!str) return "";
+                            const filename = str.split('/').pop()?.split('?')[0] || str;
+                            return filename.replace(/-2\.(jpg|png|jpeg|webp)$/i, '').replace(/\.(jpg|png|jpeg|webp)$/i, '').toLowerCase().trim();
+                          };
+
+                          const qStem = cleanStem(qPhoto);
+                          const ansStem = cleanStem(ans);
+
+                          // 1. Primary ground-truth match by landmark photo
                           let cat = catalogRows.find(c => {
                             const photo = (c.data?.building_photo || "").toLowerCase().trim();
-                            return qPhoto && photo && (photo === qPhoto || qPhoto.endsWith(photo) || photo.endsWith(qPhoto));
+                            if (!photo) return false;
+                            if (qPhoto && (photo === qPhoto || qPhoto.endsWith(photo) || photo.endsWith(qPhoto))) return true;
+                            if (qStem && cleanStem(photo) === qStem) return true;
+                            return false;
                           })?.data;
 
-                          // 2. Secondary fallback by exact building name if photo is missing or non-matching
+                          // 2. Secondary fallback by exact building name OR photo URL in answer (e.g. Visual Recognition)
                           if (!cat && ans) {
                             cat = catalogRows.find(c => {
+                              const photo = (c.data?.building_photo || "").toLowerCase().trim();
+                              if (ansStem && cleanStem(photo) === ansStem) return true;
                               const d = c.data || {};
                               const bName = (d.building_name || d.display_name || d.base_building_name || "").toLowerCase().trim();
-                              return bName && (bName === ans || bName.startsWith(ans));
+                              return bName && (bName === ans || bName.startsWith(ans) || ans.startsWith(bName));
+                            })?.data;
+                          }
+
+                          // 3. Tertiary fallback by trivia text or question text
+                          if (!cat) {
+                            const trivia = (q.explanation_clue || "").toLowerCase();
+                            const qText = (q.question_text || "").toLowerCase();
+                            cat = catalogRows.find(c => {
+                              const d = c.data || {};
+                              const bBase = (d.base_building_name || "").toLowerCase();
+                              if (bBase && bBase.length > 3 && (trivia.includes(bBase) || qText.includes(bBase))) return true;
+                              return false;
                             })?.data;
                           }
 
@@ -2172,6 +2246,17 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                             slug.includes("where-in-the-world") ||
                             (title || "").toLowerCase().includes("geography");
 
+                          const isStylesQuiz = 
+                            slug === "architectural-styles-and-movements" || 
+                            category === "Styles & Theory" ||
+                            slug.includes("styles");
+
+                          const isVisualRecognition = 
+                            slug === "visual-recognition-match-architect-building-photo";
+
+                          const isPortfolioQuiz = 
+                            slug === "architects-portfolio-match-celebrated-project-name";
+
                           const cleanBaseBuildingName = 
                             cat?.base_building_name || 
                             (cat?.building_name ? cat.building_name.split(',')[0].trim() : '') || 
@@ -2185,20 +2270,41 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                           let clue2Label = "🏛️ Clue 2 (Architect / Movement):";
                           let clue2Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
 
-                          if (isMasterArchitects) {
+                          if (isStylesQuiz) {
+                            // In Styles quiz: Clue 1 is Architect, Clue 2 is Building Name!
+                            clue1Label = "👤 Clue 1 (Architect / Firm):";
+                            clue1Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
+
+                            clue2Label = "🏛️ Clue 2 (Building Name):";
+                            clue2Value = cleanBaseBuildingName;
+                          } else if (isGeographyQuiz) {
+                            // In Geography quiz: Clue 1 is Architect, Clue 2 is Building Name!
+                            clue1Label = "👤 Clue 1 (Architect / Studio):";
+                            clue1Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
+
+                            clue2Label = "🏛️ Clue 2 (Building Name):";
+                            clue2Value = cleanBaseBuildingName;
+                          } else if (isVisualRecognition) {
+                            // In Visual Recognition: Clue 1 is Location, Clue 2 is Architectural Style!
+                            clue1Label = "📍 Clue 1 (Location):";
+                            clue1Value = (cat?.city || cat?.country) ? `${cat.city || ""}${cat.city && cat.country ? ", " : ""}${cat.country || ""}` : "City, Country";
+
+                            clue2Label = "🏛️ Clue 2 (Architectural Style):";
+                            clue2Value = cat?.architectural_style || "Architectural Movement";
+                          } else if (isPortfolioQuiz) {
+                            // In Portfolio quiz: Clue 1 is Style, Clue 2 is Building Photo!
+                            clue1Label = "🏛️ Clue 1 (Architectural Style):";
+                            clue1Value = cat?.architectural_style || "Architectural Movement";
+
+                            clue2Label = "📷 Clue 2 (Building Photo Reveal):";
+                            clue2Value = cat?.building_photo || q.media_url || "Building Photo";
+                          } else if (isMasterArchitects) {
                             // In Master Architects quiz: First clue is Location, Second clue is Building Name!
                             clue1Label = "📍 Clue 1 (Location):";
                             clue1Value = (cat?.city || cat?.country) ? `${cat.city || ""}${cat.city && cat.country ? ", " : ""}${cat.country || ""}` : "City, Country";
 
                             clue2Label = "🏛️ Clue 2 (Building Name):";
                             clue2Value = cat?.building_name || cat?.display_name ? `${cat.building_name || cat.display_name}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Iconic Architectural Landmark";
-                          } else if (isGeographyQuiz) {
-                            // In Geography quiz: First clue is Building Name (strictly NO location revealed!), Second clue is Architect
-                            clue1Label = "🏛️ Clue 1 (Building Name):";
-                            clue1Value = cleanBaseBuildingName;
-
-                            clue2Label = "👤 Clue 2 (Architect & Era):";
-                            clue2Value = cat?.architect ? `${cat.architect}${cat.opened_year ? ` (${cat.opened_year})` : ""}` : "Visionary Architect";
                           }
 
                           return (
@@ -2234,6 +2340,8 @@ export default function QuizEditor({ quizId, onBack }: QuizEditorProps) {
                     </div>
 
                   </div>
+                );
+              })()}
 
                 </div>
               );

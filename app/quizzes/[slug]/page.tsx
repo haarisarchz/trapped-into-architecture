@@ -667,30 +667,28 @@ export default function QuizPlayPage() {
     } catch (e) {}
 
     // Preload ALL questions in this round immediately so all question transitions are instant
+    // Preload all quiz images (both question photos and option photos for Visual Recognition)
     if (typeof window !== "undefined") {
       sampled.forEach(q => {
         if (q.media_url) {
           const img = new Image();
           img.src = q.media_url;
         }
+        if (Array.isArray(q.options)) {
+          q.options.forEach((opt: string) => {
+            if (opt && (opt.startsWith('/') || opt.startsWith('http') || opt.endsWith('.jpg') || opt.endsWith('.png'))) {
+              const optImg = new Image();
+              optImg.src = opt;
+            }
+          });
+        }
       });
     }
 
-    // Set initial question readiness for Question 0
-    const noPromptImage = 
-      slug === "visual-recognition-match-architect-building-photo" || 
-      slug === "architects-portfolio-match-celebrated-project-name" || 
-      slug === "architects-oeuvre-pair-the-masterpieces";
-    const firstQHasImage = !noPromptImage && Boolean(sampled[0]?.media_url);
-    if (!firstQHasImage) {
-      setImageLoaded(true);
-      setIsQuestionReady(true);
-      isQuestionReadyRef.current = true;
-    } else {
-      setImageLoaded(false);
-      setIsQuestionReady(false);
-      isQuestionReadyRef.current = false;
-    }
+    // Instant zero-lag question readiness (questions and choices never freeze behind image downloads)
+    setImageLoaded(true);
+    setIsQuestionReady(true);
+    isQuestionReadyRef.current = true;
 
     // Quiz play timer: Continuous session timer for the whole quiz play
     // Rounded to the nearer 30 minutes (minimum 30 minutes = 1800s)
@@ -730,28 +728,30 @@ export default function QuizPlayPage() {
       !currentQ.media_url;
 
     setImageLoadError(false);
+    // Instant zero-lag question readiness: questions and options render at 0ms without waiting for image network roundtrip
+    setIsQuestionReady(true);
+    isQuestionReadyRef.current = true;
     if (hasNoPromptPhoto) {
       setImageLoaded(true);
-      setIsQuestionReady(true);
-      isQuestionReadyRef.current = true;
     } else {
       setImageLoaded(false);
-      setIsQuestionReady(false);
-      isQuestionReadyRef.current = false;
 
-      // Safety fallback: if an image takes > 4.5s (e.g. slow network), 
-      // automatically unpause the timer and allow interaction so user is never permanently stuck
-      fallbackWatchdogRef.current = setTimeout(() => {
-        setIsQuestionReady(true);
-        isQuestionReadyRef.current = true;
-      }, 4500);
-
-      // Preload next 3 questions ahead in queue
-      for (let i = 1; i <= 3; i++) {
-        const nextQ = questions[currentIndex + i];
-        if (nextQ?.media_url) {
-          const img = new Image();
-          img.src = nextQ.media_url;
+      // Preload next 4 questions' images and choice thumbnails ahead in queue
+      if (typeof window !== "undefined") {
+        for (let i = 1; i <= 4; i++) {
+          const nextQ = questions[currentIndex + i];
+          if (nextQ?.media_url) {
+            const img = new Image();
+            img.src = nextQ.media_url;
+          }
+          if (Array.isArray(nextQ?.options)) {
+            nextQ.options.forEach((opt: string) => {
+              if (opt && (opt.startsWith('/') || opt.startsWith('http') || opt.endsWith('.jpg') || opt.endsWith('.png'))) {
+                const optImg = new Image();
+                optImg.src = opt;
+              }
+            });
+          }
         }
       }
     }
@@ -952,23 +952,23 @@ export default function QuizPlayPage() {
       isPhoto: false as boolean | undefined
       };
     } else if (isGeographyQuiz) {
-      // In Building Geography: Location is the TARGET ANSWER. Clue 1 must ONLY be the Building Name (strictly NO location revealed!), Clue 2 is Architect & Era!
+      // In Building Geography: Location is the TARGET ANSWER. Clue 1 is Architect, Clue 2 is Building Name!
       clue1 = {
+        label: "Architect Clue",
+        revealedLabel: "Architect Revealed",
+        bannerTitle: "Architect Hint:",
+        icon: "👤",
+        text: match?.architect ? `${match.architect}${match.opened_year ? ' (Opened ' + match.opened_year + ')' : ''}` : "Master Architect",
+        badgeColor: "blue"
+      };
+      clue2 = {
         label: "Building Name Clue",
         revealedLabel: "Building Name Revealed",
         bannerTitle: "Building Name Hint:",
         icon: "🏛️",
         text: cleanBuildingName,
-        badgeColor: "blue"
-      };
-      clue2 = {
-        label: "Architect & Era Clue",
-        revealedLabel: "Architect Revealed",
-        bannerTitle: "Architect & Era Hint:",
-        icon: "👤",
-        text: arch,
         badgeColor: "purple",
-      isPhoto: false as boolean | undefined
+        isPhoto: false as boolean | undefined
       };
     } else if (slug === "timeline-challenge-when-was-it-built") {
       // In Timeline: Year is the TARGET ANSWER.
@@ -987,38 +987,16 @@ export default function QuizPlayPage() {
         icon: "🏛️",
         text: `${bName}${match?.architect ? ' by ' + match.architect : ''}`,
         badgeColor: "purple",
-      isPhoto: false as boolean | undefined
+        isPhoto: false as boolean | undefined
       };
     } else if (slug === "architectural-styles-and-movements") {
-      // In Styles: Clue 1 is Architect who designed it. Clue 2 is Building Name & Location with Country.
+      // In Styles: Clue 1 is Architect / Firm. Clue 2 is Building Name (strictly NO location revealed!).
       clue1 = {
         label: "Architect Clue",
         revealedLabel: "Architect Revealed",
-        bannerTitle: "Architect Hint:",
+        bannerTitle: "Architect / Firm Hint:",
         icon: "👤",
         text: match?.architect || "Master Architect",
-        badgeColor: "blue"
-      };
-      clue2 = {
-        label: "Building & Location Clue",
-        revealedLabel: "Building & Location Revealed",
-        bannerTitle: "Building & Location Hint:",
-        icon: "📍",
-        text: `${bName}${loc ? ', ' + loc : ''}`,
-        badgeColor: "purple",
-      isPhoto: false as boolean | undefined
-      };
-    } else if (
-      slug === "visual-recognition-match-architect-building-photo" ||
-      slug === "architects-oeuvre-pair-the-masterpieces"
-    ) {
-      // In Visual Recognition: Choices are 4 photos. Clue 1 is Location. Clue 2 is Building Name.
-      clue1 = {
-        label: "Location Clue",
-        revealedLabel: "Location Revealed",
-        bannerTitle: "Location Hint:",
-        icon: "📍",
-        text: loc || "International Landmark",
         badgeColor: "blue"
       };
       clue2 = {
@@ -1026,19 +1004,41 @@ export default function QuizPlayPage() {
         revealedLabel: "Building Name Revealed",
         bannerTitle: "Building Name Hint:",
         icon: "🏛️",
-        text: bName || cleanBuildingName,
+        text: cleanBuildingName || bName,
         badgeColor: "purple",
-      isPhoto: false as boolean | undefined
+        isPhoto: false as boolean | undefined
       };
-    } else if (slug === "architects-portfolio-match-celebrated-project-name") {
-      // In Architect's Portfolio: Choices are 4 names. Clue 1 is Location. Clue 2 is Building Photo.
-      const photoUrl = match?.building_photo || q.media_url;
+    } else if (
+      slug === "visual-recognition-match-architect-building-photo" ||
+      slug === "architects-oeuvre-pair-the-masterpieces"
+    ) {
+      // In Visual Recognition: Choices are 4 photos. Clue 1 is Location. Clue 2 is Architectural Style.
       clue1 = {
         label: "Location Clue",
         revealedLabel: "Location Revealed",
         bannerTitle: "Location Hint:",
         icon: "📍",
         text: loc || "International Landmark",
+        badgeColor: "blue"
+      };
+      clue2 = {
+        label: "Architectural Style Clue",
+        revealedLabel: "Architectural Style Revealed",
+        bannerTitle: "Architectural Style Hint:",
+        icon: "🏛️",
+        text: match?.architectural_style || "Architectural Movement",
+        badgeColor: "purple",
+        isPhoto: false as boolean | undefined
+      };
+    } else if (slug === "architects-portfolio-match-celebrated-project-name") {
+      // In Architect's Portfolio: Choices are 4 names. Clue 1 is Architectural Style. Clue 2 is Building Photo Reveal.
+      const photoUrl = match?.building_photo || q.media_url;
+      clue1 = {
+        label: "Architectural Style Clue",
+        revealedLabel: "Architectural Style Revealed",
+        bannerTitle: "Architectural Style Hint:",
+        icon: "🏛️",
+        text: match?.architectural_style || "Architectural Movement",
         badgeColor: "blue"
       };
       clue2 = {
